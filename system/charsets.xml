@@ -1,0 +1,18 @@
+<charsets>
+  <charset id="CP1250"     label="54812" subtitleFont="boxee.ttf"/>
+  <charset id="CP1251"     label="54815" subtitleFont="boxee.ttf"/>
+  <charset id="CP1252"     label="54824" subtitleFont="boxee.ttf"/>
+  <charset id="CP1253"     label="54816" subtitleFont="boxee.ttf"/>
+  <charset id="CP1254"     label="54822" subtitleFont="boxee.ttf"/>
+  <charset id="CP1255"     label="54817" subtitleFont="boxee.ttf"/>
+  <charset id="CP1256"     label="54810" subtitleFont="boxee.ttf"/>
+  <charset id="CP1257"     label="54811" subtitleFont="boxee.ttf"/>
+  <charset id="CP1258"     label="54823" subtitleFont="boxee.ttf"/>
+  <charset id="GBK"        label="54813" subtitleFont="boxee.ttf"/>
+  <charset id="BIG5"       label="54814" subtitleFont="boxee.ttf"/>
+  <charset id="BIG5-HKSCS" label="54818" subtitleFont="boxee.ttf"/>
+  <charset id="SHIFT_JSIS" label="54819" subtitleFont="boxee.ttf"/>
+  <charset id="CP949"      label="54820" subtitleFont="boxee.ttf"/>
+  <charset id="CP874"      label="54821" subtitleFont="boxee.ttf"/>
+  <charset id="UTF-8"      label="54825" subtitleFont="boxee.ttf"/>
+</charsets>

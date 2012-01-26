@@ -1,0 +1,7 @@
+1. in ./src/plugins/gfxdrivers/directfb/qdirectfbscreen.cpp
+
+  comment out all DOUBLE so it will not do double buffering
+
+2. in ./src/gui/embedded/directfb.pri
+ 
+  uncomment DEFINES += QT_NO_DIRECTFB_WM

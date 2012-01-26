@@ -1,0 +1,46 @@
+Index: App_Python_Wrapper.cpp
+===================================================================
+--- App_Python_Wrapper.cpp	(revision 18073)
++++ App_Python_Wrapper.cpp	(working copy)
+@@ -15091,7 +15091,7 @@
+ SWIGINTERN PyObject *_wrap_MC_ShowDialogSelect(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+   PyObject *resultobj = 0;
+   std::string *arg1 = 0 ;
+-  std::vector< std::string,std::allocator< std::string > > *arg2 = 0 ;
++  std::vector< std::string,std::allocator< std::string > > list;
+   int res1 = SWIG_OLDOBJ ;
+   void *argp2 = 0 ;
+   int res2 = 0 ;
+@@ -15111,15 +15111,25 @@
+     }
+     arg1 = ptr;
+   }
+-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_std__string_std__allocatorT_std__string_t_t,  0  | 0);
+-  if (!SWIG_IsOK(res2)) {
+-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "MC_ShowDialogSelect" "', argument " "2"" of type '" "std::vector< std::string,std::allocator< std::string > > const &""'"); 
++
++  if (!PyList_Check(obj1)) {
++    SWIG_exception_fail(SWIG_ValueError, "in method '" "MC_ShowDialogSelect" "', argument " "2"" of type '" "std::vector< std::string,std::allocator< std::string > > const &""'");
+   }
+-  if (!argp2) {
+-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "MC_ShowDialogSelect" "', argument " "2"" of type '" "std::vector< std::string,std::allocator< std::string > > const &""'"); 
++
++  for (int i=0; i<PyList_Size(obj1); i++)
++  {
++    std::string *ptr1 = (std::string *)0;
++
++    PyObject *line = PyList_GetItem(obj1, i);
++    res2 = SWIG_AsPtr_std_string(line, &ptr1);
++    if (!SWIG_IsOK(res2)) {
++      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "MC_ShowDialogSelect" "', argument " "2"" of type '" "std::vector< std::string,std::allocator< std::string > > const &""'");
++    }
++    list.push_back(*ptr1);
++    delete ptr1;
+   }
+-  arg2 = reinterpret_cast< std::vector< std::string,std::allocator< std::string > > * >(argp2);
+-  result = (int)XAPP::MC::ShowDialogSelect((std::string const &)*arg1,(std::vector< std::string,std::allocator< std::string > > const &)*arg2);
++
++  result = (int)XAPP::MC::ShowDialogSelect((std::string const &)*arg1, list);
+   resultobj = SWIG_From_int(static_cast< int >(result));
+   if (SWIG_IsNewObj(res1)) delete arg1;
+   return resultobj;

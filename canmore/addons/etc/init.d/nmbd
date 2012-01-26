@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# Script name can be the called name, or something more meaningful.
+SCRIPTNAME=$0
+
+. /etc/init.d/init_utilities
+
+start_function() {
+    # Start nmbd if so equipped
+    if [ ! -f /data/etc/smb.disabled ]; then
+	    try_command /opt/local/sbin/nmbd -s /data/etc/smb.conf
+    fi
+}
+
+stop_function() {
+    # Terminate daemons, remove modules, remove device nodes here
+    NMBD_PID=`ps -ef | grep -v grep | grep "/opt/local/sbin/nmbd" | awk '{print $2}'`
+    if [[ "x$NMBD_PID" == "x" ]]; then 
+        echo "nmbd not running; cannot kill"
+    else
+        kill $NMBD_PID
+    fi
+}
+
+case $1 in
+    "start")
+    start_function
+    ;;
+    "stop")
+    stop_function
+    ;;
+    "restart")
+    stop_function
+    start_function
+    ;;
+    *)
+    echo "Usage: $0 {start|stop|restart}"
+esac

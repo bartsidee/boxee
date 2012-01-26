@@ -1,0 +1,192 @@
+
+=====================================================================
+How to prepare your host machine to build boxee and CE4100 SDK
+=====================================================================
+
+Install Ubuntu Desktop.
+
+# sudo apt-get install wget patch flex bison gettext libtool autoconf cmake nasm gperf g++ gawk doxygen swig libsdl-image1.2-dev liblzo2-dev php5-cli
+
+If you are using Ubuntu 9.10 or earlier:
+
+# sudo apt-get install python2.4-minimal
+
+If you are using Ubuntu 10.04 32 bit or newer:
+
+# cd /tmp
+# wget http://mirrors.kernel.org/ubuntu/pool/main/p/python2.4/python2.4-minimal_2.4.6-1ubuntu3.2.9.10.1_i386.deb
+# sudo dpkg --install python2.4*deb 
+
+If you are using Ubuntu 10.04 64 bit or newer:
+
+# cd /tmp
+# wget http://mirrors.kernel.org/ubuntu/pool/main/p/python2.4/python2.4-minimal_2.4.6-1ubuntu3.2.9.10.1_amd64.deb
+# sudo dpkg --install python2.4*deb 
+
+=====================================================================
+How to build the CE4100 SDK 
+=====================================================================
+
+# sudo mkdir /mnt/iso
+
+Go to intel's site, under Intel Media Processor 3100
+Download the tar.gz and extract it. This will create a bunch of ISO files.
+
+For each file (start with BASE):
+# sudo mount -t iso9660 -o loop,ro <filename>.iso /mnt/iso
+# cd /mnt/iso
+# bash installer
+# cd ..
+# sudo umount /mnt/iso
+
+This extracted everything to $HOME/IntelCE-<version>
+
+# cd $HOME/IntelCE-<version>
+# make menuconfig
+# sudo make
+
+Wait a few hours...
+
+Then, setup NFS, DHCP, TFTP, etc according to the Intel docs
+
+=====================================================================
+Setup CE4100 box
+=====================================================================
+
+1. During boot hit CTRL-C to enter RedBoot console
+2. Type: fconfig and hit enter
+
+load -v -r -m tftp -h 10.5.0.1 -b 0x200000 bzImage.pr13.11
+exec -b 0x200000 -l 0x300000 -c "console=ttyS0,115200 root=/dev/nfs nfsroot=10.5.0.1:/home/yuvalt/IntelCE-13.94515/project_build_i686/IntelCE/root,nolock rw mem=exactmap memmap=1M@0 memmap=639M@1M ip=dhcp"
+
+Hit enter until the end. Last question answer "y".
+
+=====================================================================
+Boxee specific environment
+=====================================================================
+
+# sudo mkdir /opt/canmore
+# sudo ln -s $HOME/IntelCE-<version>/build_i686/staging_dir /opt/canmore/IntelCE
+# sudo ln -s $HOME/IntelCE-<version>/build_i686/staging_dir/bin /opt/canmore/toolchains
+# sudo ln -s $HOME/IntelCE-<version>/project_build_i686/IntelCE/root /opt/canmore/targetfs
+# sudo ln -s $HOME/IntelCE-<version> /opt/canmore/sdk
+# cd /opt/canmore
+# sudo tar xvfJ $(SRC)/canmore/local.tar.xz 
+
+Add /opt/canmore/toolcahin to PATH in ~/.bash_profile Try to run i686-cm-linux-gcc.
+
+Remote the config.h from Intel SDK as it's causing Boxee build problems:
+# cd /opt/canmore/IntelCE/include
+# mv config.h config.h.orig
+
+Add "DisableHWTextureUpload=1" in /etc/powervr.ini .
+
+edit /etc/platform_config/ce4100/platform_config.hcfg:
+       media_base_address = 0x28000000      //640M
+
+=====================================================================
+Building debug/non-optimized version
+=====================================================================
+
+./bootstrap
+autoconf
+# for debug build do the following:
+./canmore/configure.sh -d 
+# for optimized build do the following:
+./canmore/configure.sh
+make Boxee
+for 32-bit: make -C tools/TexturePacker -f Makefile.host
+for 64-bit: make -C tools/TexturePacker -f Makefile.host64
+make -C skin/boxee/media nocompress
+
+=====================================================================
+Installation
+=====================================================================
+
+Copy the 3rd party libraries to the target filesystem. This needs to be 
+done once whenever the targetfs-addons.tar.xz changes:
+
+# mkdir /opt/canmore/targetfs/opt/local
+# cd /opt/canmore/targetfs/opt/local
+# tar xvfj $(SRC)/canmore/targetfs-local.tar.xz
+
+The following copies all the required files to /opt/canmore/targetfs/opt/boxee:
+
+# ./canmore/install_full.sh 
+
+=====================================================================
+Run Boxee
+=====================================================================
+
+From the CE4100 console:
+
+/opt/boxee/run_boxee.sh
+
+Getting to a console if your box launches straight into boxee:
+
+Get the IP of the box from network status. telnet into that IP.
+Kill the run_boxee and Boxee processes (in that order) and the console
+should now be 'live'.
+
+Stopping boxee from launching automatically at boot:
+
+After doing the above, remove the /etc/rc3.d boxee script. This will
+boot you to console instead of to boxee.
+
+Running boxee from your developer working copy:
+
+The easy method is to get to the console on your boxee box, mount the
+working directory you use via nfs, and launch boxee from there.
+On the boxee console:
+mkdir /mnt/work
+mount -t nfs <dev_machine_ip>:/opt/canmore/targetfs/opt/boxee /mnt/work -o nolock
+
+=====================================================================
+3rd Parties
+=====================================================================
+
+Libraries:
+
+zlib (http://www.zlib.net/)
+zzip (http://zziplib.sourceforge.net/)
+bzip2 (http://bzip.org/)
+c-ares (http://c-ares.haxx.se/)
+expat (http://expat.sourceforge.net/)
+fribidi (http://www.fribidi.org/)
+gdbm (http://www.gnu.org/software/gdbm/)
+libvpx (http://www.webmproject.org/)
+libxml2 (http://xmlsoft.org/)
+lzo2 (http://www.oberhumer.com/opensource/lzo/)
+pcre (ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/)
+libpng (http://www.libpng.org/pub/png/libpng.html)
+libsamplerate (http://www.mega-nerd.com/SRC/)
+sdl (http://www.libsdl.org/)
+openssl (http://www.openssl.org/)
+libcurl (http://curl.haxx.se/)
+glib (http://www.gtk.org/)
+libmms (http://sourceforge.net/projects/libmms/)
+jasper (http://www.ece.uvic.ca/~mdadams/jasper/)
+jsoncpp (http://jsoncpp.sourceforge.net/)
+tiff (http://www.libtiff.org/)
+sqlite (http://www.sqlite.org/)
+libmad (http://www.underbit.com/products/mad/)a
+libogg (http://www.xiph.org/ogg/)
+libvorbis (http://www.xiph.org/ogg/)
+freetype (http://www.freetype.org/)
+faad2 (http://www.audiocoding.com/faad2.html)
+flac (http://flac.sourceforge.net/)
+libsmbclient (http://www.samba.org/)
+python 2.4 (http://www.python.org/)
+libdaemon
+regex
+
+System Tools / Processes:
+
+dbus (http://www.freedesktop.org/wiki/Software/dbus)
+avahi (http://avahi.org)
+compcache (http://code.google.com/p/compcache/)
+lirc (http://www.lirc.org/)
+fuse (http://fuse.sourceforge.net/)
+ntfs-3g (http://www.tuxera.com/community/ntfs-3g-download/)
+xmlstarlet (http://xmlstar.sourceforge.net/)
+tzdata (http://www.twinsun.com/tz/tz-link.htm)

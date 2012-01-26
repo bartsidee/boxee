@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<langs>
+	<lang id="english" display_name="English" dir_name="English"></lang>
+	<lang id="german" display_name="Deutsch" dir_name="German"></lang>
+	<lang id="spanish" display_name="Español" dir_name="Spanish"></lang>
+	<lang id="french" display_name="Français" dir_name="French"></lang>
+	<lang id="italian" display_name="Italiano" dir_name="Italian"></lang>
+	<lang id="swedish" display_name="Svenska" dir_name="Swedish"></lang>
+	<lang id="hebrew" display_name="עברית" dir_name="Hebrew"></lang>
+	<lang id="danish" display_name="Dansk" dir_name="Danish"></lang>
+	<lang id="dutch" display_name="Nederlands" dir_name="Dutch"></lang>
+	<lang id="russian" display_name="Русский" dir_name="Russian"></lang>
+	<lang id="turkish" display_name="Türkçe" dir_name="Turkish"></lang>
+	<lang id="arabic" display_name="عربي" dir_name="Arabic"></lang>
+	<lang id="portuguese_brazil" display_name="Português" dir_name="Portuguese (Brazil)"></lang>
+	<lang id="norwegian" display_name="Norsk" dir_name="Norwegian"></lang>
+	<lang id="finnish" display_name="Suomi" dir_name="Finnish"></lang>
+	<lang id="czech" display_name="Čeština" dir_name="Czech"></lang>
+	<lang id="polish" display_name="Polski" dir_name="Polish"></lang>
+</langs>
+

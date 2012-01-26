@@ -1,0 +1,210 @@
+ChangeLog:
+--------------------
+
+2011-05-02
+ - fix wrong ATSC 8VSB and 16VSB identifiers for xine output, thanks to M.Krufky
+ - now assume country = US, if frontend type = ATSC. This should work, since
+   most non-US countries using ATSC still use the same channel lists as US.
+ - now assume vdr format vdr-1.7, if VSB/QAM-B scan with vdr settings.
+   ATSC users of VDR anyway need to patch their sources or upgrade to
+   latest developer releases.
+ - check if choosen frontend type fits to choosen scan type
+ - extend -a option to allow string /dev/dvb/adapterN/frontendM
+   you may now use -a (0..7) or -a /dev/dvb/adapter(0..7)/frontend(0..7)
+
+2011-04-10
+ - fix qam setting BR
+ - add option -C <charset>, output coding (default: guess users codepage).
+   if given, w_scan uses iconv to translate to this charset,
+    i.e. 'w_scan -fc -cDE -C utf-8'
+   if not given, w_scan tries to *guess* your charset and translates to that.
+ - now guess users country if -c <country> not given.
+ - add compiler flags: Wall, Wextra, Wno-comment, Wswitch-default, Wno-unused-parameter
+ - remove all remaining <TAB> whitespaces.
+
+2011-03-29
+ - add Brasil ISDB-T/DVB-C, thanks to Mauro Carvalho Chehab
+ - changed command line option '-S':
+   - ordering of srates
+   - add 6086
+   - add 5217
+   - remove 7000, because unreasonable
+ - update man page accordingly 
+ - update S23E5 TP16
+
+2011-03-13
+ - update S41E9 and rename to S42E0
+
+2011-03-06
+ - NOTE@maintainers: it's called 'w_scan', not 'w-scan' or 'wscan'.<br>
+   Please fix if mistyped in your repo.
+ - fix memory leak in parse-dvbscan.c:142 (dvbscan_parse_tuningdata; char * buf)
+ - fix memory leak in parse-dvbscan.c:489 (dvbscan_parse_rotor_positions; char * buf)
+ - fix double deallocating pointer in scan.c:2999 (main; int frontend_fd)
+ - fix memory leak in scan.c:2654 (main; char * country)
+ - fix memory leak in scan.c:2722 (main; char * satellite)
+ - fix memory leak in scan.c:3192 (main; char * initdata)
+ - remove unused videodev.h from countries.c. Thanks to Felix Kaechele. 
+ - fix octals in countries.c (backport from vdr-plugin wirbelscan-0.0.7)
+ - check/report hardware frequency and symbolrate limits to avoid error
+   messages in syslog
+ - fix option -L (VLC output) in case of DVB-S. Thanks to Juergen Lock.
+
+2011-02-06
+ - bugfix: fix wrong comparison in check_frontend(), which lets the caller assume
+   that to not yet have pll lock and wait until timeout is over. This may speed up
+   each tuning to a new transponder a little. Thanks to Dick Streefland. 
+ - set PILOT_AUTO on satellite transponders found by NIT. There's no flag inside NIT
+   to find explicitly 'ON' or 'OFF', so AUTO is the very best approach here.
+   Thanks to Dick Streefland.
+ - change <TAB> to <SPACE> in satellites.{c,h} and countries.{c.h} for better compat
+   with wirbelscan-0.0.6.
+ - add channel identifier USERLIST to channellist_t for compat with wirbelscan-0.0.6
+
+2010-12-04
+ - add experimental output format libvlc xspl playlist. Thanks to Zouhair Souissi for libVLC m3u patch,
+   which was partially used for implementation.
+ - update manpage
+ - multiple AC3 pids
+ - bug fix: missing string termination in parse_psip_vct (ATSC only)
+ - cosmetics
+ 
+2010-10-01
+ - add: DVB-C symbol rates 6956, 6956.5 for New Zealand
+ - mplayer output format as suggested by Pedro A. Aranda
+ - cosmetics
+
+2010-05-29
+ - bugfix: if compiled with DVB-API-5.x, but using DVB-API-3.2 @ DVB-S,
+   IF was not assigned before tuning. Thanks to Juergen Lock.
+ - added some descriptor id's
+ - update Astra 1E/1G/3A
+ - changed help examples (wrong country id). Thanks to Tobias Grimm.
+
+2010-03-16
+ - update Hispasat 1C/1D S30W0
+ - zero pids fix
+ - add Telstar 5 S97W0
+ - add ATSC channel syntax VDR-1.7.14
+ - add DVB-C symbol rates 5156, 5483
+ 
+2009-12-30
+ - DVB-T UK: default to 8k transmission mode
+
+2009-11-18
+ - allow any 5.xx DVB API 
+ - removed some compiling warnings w. glibc-2.10.1/gcc-4.4.2 
+ - update transponders S28E2
+
+2009-08-08
+ - bugfix: increased buffer size for print_channel (scan.c:882; scan.c:1877) to avoid stack smashing,
+   see https://bugzilla.redhat.com/show_bug.cgi?id=513871 (reported by "Stephen" and Felix Kaechele)
+ - changed struct tvct_channel to avoid gcc-4.4 warnings
+ - is_nearly_same_frequency changed to allow 2MHz on sat; 500kHz otherwise
+ - bugfix: is_different_transponder_deep_scan:304 auto = "ROLLOFF_AUTO"
+ 
+2009-05-23
+ - added S160E (requested by realkano)
+ - using configure scripts now. If anybody can help improving configure script - you're welcome..
+ - added README instruction how to use on UTF8 system
+ - skip some channels on dvb-c
+ - added missing 'break' in scan.c.598
+
+2009-05-16
+ - small corrections to README
+ - fixed permission to folder doc
+ - fixed cr/lf on some files
+ - fixed missing space characters in channel names
+ - fixed small bug which causes endless loop in rare cases (DVB-T only)
+ - added man page for w_scan
+
+2009-01-01/2009-04-25
+ - SYNTAX CHANGE:
+   w_scan now needs (!) command switch -c for defining your country. use uppercase two letters
+   for specifying your country, as defined by ISO 3166-1 use -c? for list:
+		DE = Germany
+		US = United States
+		GB = United Kingdom
+		FR = France
+		...
+ - restructured code
+ - changed DVB-C frequency list
+ - added freq list for Australia
+ - improved freq lists for FR, GB, FI 
+ - added Option -e, extended scan flags, which allows to extend the scan to
+    * additional scan QAM_128 (default: QAM_AUTO with fallback to QAM_64 + QAM_256)
+    or
+    * scan these additional symbolrates (default: 6900 and 6875 only) 
+        6111, 6250, 6790, 6811, 5900, 5000, 3450, 6950, 7000, 6952
+   NOTE: expert settings, will slow down by a factor of up to 10.
+ - reintroduced possibility to set manually
+	- DVB-C modulation (new option -Q)
+	- DVB-C coderate (new option -S)
+	- DVB-C inversion (option -i)
+	NOTE: these are experts settings only!
+ - applied some code cleanups from Michael Krufky
+ - applied 6MHz DVB-T scan patch for Taiwan (thanks to Michael Krufky)
+ - added onid to kaffeine channels (suggested by Zend HetMij)
+ - added support for parsing of dvbscan initial tuning data
+		(new option -I)
+ - started re-implementation of DVB-S (not yet finished)
+		-> new options:
+			-s (satellite setting, use -s? for list)
+			-r (rotor position)
+			-l (LNB setting)
+			-D (DiSEqC switch)
+ - w_scan now shares the list of satellites with wirbelscan plugin (0.0.5 pre1 or higher)
+ - removed folder patches (obsolet)
+ 
+2008-11-06
+ - improved frontend detection (thanks to Hans Werner)
+ - added a patch for single frequency scanning, see folder patches.
+   This patch is not applied by default, if you need this feature,
+   please apply patch and recompile. (thanks to Martin Dudok van Heel)
+2008-08-15
+ - added ATSC scanning support for terrestrial VSB & QAM Annex-B digital cable.
+ (thanks to Michael Krufky)
+ - removed vpid offset for H.264 channels
+2008-07-20
+ - added Copyright note, following the license of 'scan' from linuxtv-dvb-apps.
+ - changed install location of {pci,usb}.{ids,classes} to /usr/share/w_scan
+2007-12-09/2008-01-05
+ - added H.264/AVC Video support
+ - added ATSC A/53B Audio, ADTS Audio Stream, ISO/IEC 14496-3 Audio (not supp. up to now by vdr)
+ (thanks to Steven Ellis)
+ -additionally:
+  -- support for ca-ids, no longer just setting ca-id=1 for encrypted channels
+  -- support for language identifiers in vdr channels.conf
+  -- no longer searching for 'other services' by default.
+  -- added a lot of comments for information in moreverbose mode
+  -- Makefile target dist added
+2007-09-09
+ - added kaffeine channels.dvb format, switch -k
+2007-08-07
+ - w_scan will no longer stop if frontend params cannot be set correctly.
+   This is necessary, because newest mercurial dvb drivers seem to have sometimes
+   difficulties with scanning complete frequency range. Additionally some cards added
+   to pci.ids.
+2006-09-03
+ - added output format (dvb)scan initial-tuning-data
+2006-09-01
+ - applied w_scan-onid patch by Hartmut Birr which fixes that w_scan now
+   records original_network ID instead of network ID
+ - updated version of w_scan start script (which actually needs to be tested !)
+2006-08-10
+ - w_scan start script (first version)
+2006-07-05:
+ - removed QAM256 option "-Q", w_scan now uses either QAM_AUTO or (if not supported by hardware) 
+   it will do a two-step scan starting with QAM64 and QAM256
+2006-02-16:
+ - changed initialization for all cards, fix for airstar2 dvb-t and avermedia 771 dvb-t
+ - xine output option -X
+ - added dvb-c frequencies 113MHz, 121MHz and 858MHz, dvb-c freqs revised
+ - dvb-c now scanning sr=6900 *and* sr=6875 both by default, therefore removed option -s
+ - this version is tested with
+	- fujitsu-siemens dvb-c ff
+	- cinergy t2 usb2.0 dvb-t
+	- airstar2 dvb-t
+	- avertv avermedia 771 dvb-t
+	(please report other working/non-working cards to me..)
+2005-07-11: first version

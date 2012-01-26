@@ -1,0 +1,95 @@
+<friends>
+	<timestamp>1185714624</timestamp>
+	<friend>
+		<object type="user" id="idan">
+		<name>idan digidan</name>
+		<presence>online</presence>
+		<thumb>http://srv.boxee.tv/temp/thumb.jpg</thumb>
+		<actions>
+			<message type="listen">
+				<timestamp>1185713024</timestamp>
+				<description>listening to xbmc podcast</description>
+				<object type="music" id="mus1234">
+					<name>xbmc podcast</name>
+				</object>
+			</message>
+			<message type="friend">
+				<timestamp>1185712024</timestamp>
+				<description>idan and tomas are now friends</description>
+				<object type="user" id="tsella">
+					<version>1</version>
+					<name>tomas</name>
+					<profile>http://srv.boxee.tv/profiles/tsella</profile>
+					<thumb>http://srv.boxee.tv/profiles/tsella/thumb</thumb>
+				</object>
+			</message>
+		</actions>
+		</object>
+	</friend>
+	<friend>
+		<object type="user" id="miko">
+		<name>miko hagever</name>
+		<presence>online</presence>
+		<thumb>http://www.avatar.com/miko</thumb>
+		<actions>
+			<message type="watch">
+				<timestamp>1185713024</timestamp>
+				<description>watching the movie 300</description>
+				<object type="movie" id="mov3221">
+					<name>300</name>
+					<trailer>http://srv.boxee.tv/trailers/mov3221</trailer>
+					<info_link>http://srv.boxee.tv/info/mov3221</info_link>
+					<cover_art>http://srv.boxee.tv/cover/mov3221</cover_art>
+				</object>
+			</message>
+			<message type="friend">
+				<timestamp>1185712024</timestamp>
+				<description>miko hagever and tomas are now friends</description>
+				<object type="user" id="tsella">
+					<name>tomas</name>
+					<profile_link>http://srv.boxee.tv/profiles/tsella</profile_link>
+				</object>
+			</message>
+		</actions>
+		</object>
+	</friend>
+	<friend>
+		<object type="user" id="tsella">
+		<name>tomas</name>
+		<presence>away</presence>
+		<thumb>http://www.avatar.com/tomas</thumb>
+		<actions>
+		<message type="recommend">
+			<timestamp>1185714114</timestamp>
+			<description>tomas recommended the movie die hard 4 to avner ronen</description>
+			<object type="movie" id="mov1111">
+				<name>die hard 4</name>
+				<trailer>http://srv.boxee.tv/trailers/mov1111</trailer>
+				<info_link>http://srv.boxee.tv/info/mov1111</info_link>
+				<cover_art>http://srv.boxee.tv/cover/mov1111</cover_art>
+			</object>
+			<object type="user" id="avneron">
+				<name>avner ronen</name>
+				<profile_link>http://srv.boxee.tv/profiles/avneron</profile_link>
+			</object>
+		</message>
+		<message type="friend">
+			<timestamp>1185711224</timestamp>
+			<description>tomas and avner are now friends</description>
+			<object type="user" id="avneron">
+				<name>avner ronen</name>
+				<profile_link>http://srv.boxee.tv/profiles/avneron</profile_link>
+			</object>
+		</message>
+		<message type="friend">
+			<timestamp>1185710024</timestamp>
+			<description>tomas and idan are now friends</description>
+			<object type="user" id="idan">
+				<name>idan cohen</name>
+				<profile_link>http://srv.boxee.tv/profiles/idan</profile_link>
+			</object>
+		</message>
+		</actions>
+		</object>
+	</friend>
+</friends>

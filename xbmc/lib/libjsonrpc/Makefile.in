@@ -1,0 +1,17 @@
+INCLUDES=-I. -I../ -I../../ -I../../../ -I../../utils -I../../FileSystem -I../../linux -I../../cores -I../../../guilib -I../libjson/include
+
+SRCS=JSONRPC.cpp PlayerOperations.cpp AVPlayerOperations.cpp PicturePlayerOperations.cpp AVPlaylistOperations.cpp PlaylistOperations.cpp FileOperations.cpp AudioLibrary.cpp VideoLibrary.cpp FileItemHandler.cpp SystemOperations.cpp XBMCOperations.cpp TCPServer.cpp JSONServiceDescription.cpp DeviceOperations.cpp GUIOperations.cpp InputOperations.cpp
+
+LIB= libjsonrpc.a
+
+all : ServiceDescription.h $(LIB)
+
+ServiceDescription.h : ServiceMethods.json
+	cpp -P -DBOXEE ServiceMethods.json  > BoxeeServiceMethods.json
+	cat BoxeeServiceMethods.json  | sed 's/"/\\"/g' | sed 's/.*/\"&\"/'  > BoxeeServiceMethods.h
+	rm BoxeeServiceMethods.json
+	cat ServiceDescription.h.template | awk '/{1}/ { system("cat BoxeeServiceMethods.h"); next } {print}' > ServiceDescription.h
+	rm BoxeeServiceMethods.h
+
+include ../../../Makefile.include
+-include $(patsubst %.cpp,%.P,$(patsubst %.c,%.P,$(SRCS)))

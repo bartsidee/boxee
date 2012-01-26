@@ -1,0 +1,96 @@
+Index: App_Python_Wrapper.cpp
+===================================================================
+--- App_Python_Wrapper.cpp	(revision 16251)
++++ App_Python_Wrapper.cpp	(working copy)
+@@ -2925,6 +2925,9 @@
+       throw stop_iteration();
+     }
+ 
++    virtual bool atEnd() const { return false; }
++    virtual bool atStart() const { return false; }
++
+     // Random access iterator methods, but not required in Python
+     virtual ptrdiff_t distance(const SwigPyIterator &/*x*/) const
+     {
+@@ -2941,7 +2944,7 @@
+ 
+     PyObject *next()     
+     {
+-      SWIG_PYTHON_THREAD_BEGIN_BLOCK; // disable threads       
++      SWIG_PYTHON_THREAD_BEGIN_BLOCK; // disable threads
+       PyObject *obj = value();
+       incr();       
+       SWIG_PYTHON_THREAD_END_BLOCK; // re-enable threads
+@@ -3737,7 +3740,6 @@
+       return current;
+     }
+ 
+-    
+     bool equal (const SwigPyIterator &iter) const
+     {
+       const self_type *iters = dynamic_cast<const self_type *>(&iter);
+@@ -3846,6 +3848,15 @@
+       return new self_type(*this);
+     }
+ 
++    virtual bool atEnd() const
++    {
++      return (base::current == end);
++    }
++    virtual bool atStart() const
++    {
++      return (base::current == begin);
++    }
++
+     SwigPyIterator *incr(size_t n = 1)
+     {
+       while (n--) {
+@@ -5079,6 +5090,11 @@
+     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SwigPyIterator_value" "', argument " "1"" of type '" "swig::SwigPyIterator const *""'"); 
+   }
+   arg1 = reinterpret_cast< swig::SwigPyIterator * >(argp1);
++  if ( (arg1)->atEnd() ) {
++    SWIG_SetErrorObj(PyExc_StopIteration, SWIG_Py_Void());
++    SWIG_fail;
++  }
++
+   try {
+     result = (PyObject *)((swig::SwigPyIterator const *)arg1)->value();
+   }
+@@ -5447,6 +5463,12 @@
+     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SwigPyIterator_next" "', argument " "1"" of type '" "swig::SwigPyIterator *""'"); 
+   }
+   arg1 = reinterpret_cast< swig::SwigPyIterator * >(argp1);
++
++  if ( (arg1)->atEnd() ) {
++    SWIG_SetErrorObj(PyExc_StopIteration, SWIG_Py_Void());
++    SWIG_fail;
++  }
++
+   try {
+     result = (PyObject *)(arg1)->next();
+   }
+@@ -5479,6 +5501,11 @@
+     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SwigPyIterator___next__" "', argument " "1"" of type '" "swig::SwigPyIterator *""'"); 
+   }
+   arg1 = reinterpret_cast< swig::SwigPyIterator * >(argp1);
++  if ( (arg1)->atEnd() ) {
++    SWIG_SetErrorObj(PyExc_StopIteration, SWIG_Py_Void());
++    SWIG_fail;
++  }
++
+   try {
+     result = (PyObject *)(arg1)->__next__();
+   }
+@@ -5511,6 +5538,11 @@
+     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SwigPyIterator_previous" "', argument " "1"" of type '" "swig::SwigPyIterator *""'"); 
+   }
+   arg1 = reinterpret_cast< swig::SwigPyIterator * >(argp1);
++  if ( (arg1)->atStart() ) {
++    SWIG_SetErrorObj(PyExc_StopIteration, SWIG_Py_Void());
++    SWIG_fail;
++  }
++
+   try {
+     result = (PyObject *)(arg1)->previous();
+   }

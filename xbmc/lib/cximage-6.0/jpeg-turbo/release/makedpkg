@@ -1,0 +1,62 @@
+#!/bin/sh
+
+set -u
+set -e
+trap onexit INT
+trap onexit TERM
+trap onexit EXIT
+
+TMPDIR=
+
+onexit()
+{
+	if [ ! "$TMPDIR" = "" ]; then
+		sudo rm -rf $TMPDIR
+	fi
+}
+
+usage()
+{
+	echo "$0 <package name> <version> <build> <DEB architecture> <source dir.>"
+	exit 1
+}
+
+if [ $# -lt 5 ]; then usage $0; fi
+PACKAGE_NAME=$1
+VERSION=$2
+BUILD=$3
+DEBARCH=$4
+SRCDIR=$5
+
+umask 022
+rm -f $PACKAGE_NAME\_$DEBARCH.deb
+TMPDIR=`mktemp -d /tmp/$PACKAGE_NAME-build.XXXXXX`
+mkdir $TMPDIR/DEBIAN
+(cat $SRCDIR/release/deb-control.tmpl | sed s/{__PKGNAME}/$PACKAGE_NAME/g \
+	| sed s/{__VERSION}/$VERSION/g | sed s/{__BUILD}/$BUILD/g \
+	| sed s/{__ARCH}/$DEBARCH/g > $TMPDIR/DEBIAN/control)
+
+if [ "$DEBARCH" = "amd64" ]; then
+	__LIB=lib
+else
+	__LIB=lib32
+fi
+make install prefix=$TMPDIR/opt/$PACKAGE_NAME libdir=$TMPDIR/opt/$PACKAGE_NAME/$__LIB
+rm -f $TMPDIR/opt/$PACKAGE_NAME/$__LIB/*.la
+mkdir -p $TMPDIR/usr/$__LIB
+mv $TMPDIR/opt/$PACKAGE_NAME/$__LIB/libturbojpeg.* $TMPDIR/usr/$__LIB
+/sbin/ldconfig -n $TMPDIR/opt/$PACKAGE_NAME/$__LIB
+/sbin/ldconfig -n $TMPDIR/usr/$__LIB
+mkdir -p $TMPDIR/usr/include
+mv $TMPDIR/opt/$PACKAGE_NAME/include/turbojpeg.h $TMPDIR/usr/include
+mkdir -p $TMPDIR/usr/share/doc/$PACKAGE_NAME-$VERSION
+install -m 644 $SRCDIR/LICENSE.txt $TMPDIR/usr/share/doc/$PACKAGE_NAME-$VERSION
+install -m 644 $SRCDIR/LGPL.txt $TMPDIR/usr/share/doc/$PACKAGE_NAME-$VERSION
+install -m 644 $SRCDIR/README-turbo.txt $TMPDIR/usr/share/doc/$PACKAGE_NAME-$VERSION
+install -m 644 $SRCDIR/README $TMPDIR/usr/share/doc/$PACKAGE_NAME-$VERSION
+install -m 644 $SRCDIR/libjpeg.doc $TMPDIR/usr/share/doc/$PACKAGE_NAME-$VERSION
+
+sudo chown -Rh root:root $TMPDIR/*
+dpkg -b $TMPDIR $PACKAGE_NAME\_$DEBARCH.deb
+
+exit

@@ -1,0 +1,205 @@
+Index: src/DirectFB-1.2/gfxdrivers/IntelCE/GraphicsBlitting.c
+===================================================================
+--- src/DirectFB-1.2/gfxdrivers/IntelCE/GraphicsBlitting.c	(revision 111797)
++++ src/DirectFB-1.2/gfxdrivers/IntelCE/GraphicsBlitting.c	(working copy)
+@@ -4,7 +4,7 @@
+ //
+ // LGPL LICENSE SUMMARY
+ //
+-// Copyright(c) 2007-2009. Intel Corporation. All rights reserved.
++// Copyright(c) 2007-2010. Intel Corporation. All rights reserved.
+ //
+ // This program is free software; you can redistribute it and/or modify 
+ // it under the terms of version 2.1 of the GNU Lesser General Public 
+@@ -67,6 +67,7 @@
+ 
+ ///////////////// Includes ////////////////
+ #include <directfb.h>
++#include <direct/IntelCE_LoggingUtilities.h>
+ 
+ #include <EGL/egl.h>
+ #include <GLES/gl.h>
+@@ -82,6 +83,7 @@
+ ///////////////// Debug Domains ////////////////
+ D_DEBUG_DOMAIN( IntelCE_Gfx_Blit, "IntelCE/Gfx/Blit", "IntelCE Graphics Blit" );
+ D_DEBUG_DOMAIN( OPENGL, "IntelCE/Gfx/OpenGL", "OpenGL ES Commands" );
++D_DEBUG_DOMAIN( IntelCE_Gfx_Blit_Verbose, "IntelCE_V/Gfx/Blit", "IntelCE Graphics Blit" );
+ 
+ 
+ //-----------------------------------------------------------------------------
+@@ -200,6 +202,7 @@
+     CardState*      pPrevState, 
+     DFBRectangle*   pSrcRect, 
+     DFBRectangle*   pDstRect, 
++    bool            isStretchBlit,
+     bool*           pUsedOpenGL )
+ {
+     bool result = true;
+@@ -291,20 +294,135 @@
+             result = false;
+             goto exit;
+         }
++        
++        /* This is a workaround for the SRB hardware clip problem. If the
++           destination rectangle is partially outside the destination surface,
++           then the hardware clip in SRB will not work properly. To workaround
++           this problem, for standard blit, the source and destination
++           rectangles will be re-calculated to make the new destination inside
++           destination surface. 
++           Stretch blit will fall back to software rendering if the destination
++           rectangle is outside the destination surface. */
++        DFBRectangle finalSrcRect = *pSrcRect;
++        DFBRectangle finalDstRect = *pDstRect;
++        bool isVisible = true;
++        
++#if DIRECT_BUILD_DEBUG
++        char accelMsg[ACCEL_MASK_MIN_STRING_LEN];
++        if ( isStretchBlit) 
++        {
++            sprintf( accelMsg, "DFXL_STRETCHBLIT");
++        }
++        else
++        {
++            sprintf( accelMsg, "DFXL_BLIT");
++        }
++#endif
++        
++        DFBRectangle maxDstRect = 
++        { 
++            0,
++            0,
++            pDstSurface->config.size.w,
++            pDstSurface->config.size.h 
++        };
++        
++        isVisible = dfb_rectangle_intersect( &finalDstRect, &maxDstRect );
++        
++        D_ASSERT( isVisible );
++        
++        if (finalDstRect.w < pDstRect->w || finalDstRect.h < pDstRect->h) 
++        {
++            if ( !isStretchBlit) // standard blit
++            {
++                D_ASSERT( pBlitInfo->clip_rect.origin.x >= maxDstRect.x );
++                D_ASSERT( pBlitInfo->clip_rect.origin.y >= maxDstRect.y );
++                D_ASSERT( pBlitInfo->clip_rect.width <= maxDstRect.w );
++                D_ASSERT( pBlitInfo->clip_rect.height <= maxDstRect.h );
++        
++                if ( finalDstRect.x > pDstRect->x )
++                {
++                    finalSrcRect.x += finalDstRect.x - pDstRect->x;
++                    finalSrcRect.w -= finalDstRect.x - pDstRect->x;
++                }
++        
++                if ( finalDstRect.y > pDstRect->y )
++                {
++                    finalSrcRect.y += finalDstRect.y - pDstRect->y;
++                    finalSrcRect.h -= finalDstRect.y - pDstRect->y;
++                }
++        
++                int dstRect_x2 = pDstRect->x + pDstRect->w - 1;
++                int dstRect_y2 = pDstRect->y + pDstRect->h - 1 ;
++                int finalDstRect_x2 = finalDstRect.x + finalDstRect.w - 1;
++                int finalDstRect_y2 = finalDstRect.y + finalDstRect.h - 1 ;
++        
++                if ( finalDstRect_x2 < dstRect_x2 )
++                {
++                    finalSrcRect.w -= dstRect_x2 - finalDstRect_x2;
++                }
++        
++                if ( finalDstRect_y2 < dstRect_y2 )
++                {
++                    finalSrcRect.h -= dstRect_y2 - finalDstRect_y2;
++                }
++        
++                D_ASSERT( finalSrcRect.w == finalDstRect.w );
++                D_ASSERT( finalSrcRect.h == finalDstRect.h );
++                                     
++                D_DEBUG_AT( IntelCE_Gfx_Blit_Verbose, 
++                            "Standard blit,"
++                            "explicitly clipping src and dest rects."
++                            "PF:%s Op:%s "
++                            "SrcRect(%d,%d,%d,%d) DstRect(%d,%d,%d,%d) "
++                            "dstSurface(%d,%d,%d,%d) "
++                            "finalSrcRect(%d,%d,%d,%d)"
++                            "finalDstRect(%d,%d,%d,%d) "
++                            "%s()- %s:%d\n", 
++                            PixelFormatDebug(pDstSurface->config.format),
++                            accelMsg,
++                            pSrcRect->x,pSrcRect->y,pSrcRect->w,pSrcRect->h,
++                            pDstRect->x,pDstRect->y,pDstRect->w,pDstRect->h,
++                            maxDstRect.x, maxDstRect.y,
++                            maxDstRect.w, maxDstRect.h,
++                            finalSrcRect.x, finalSrcRect.y,
++                            finalSrcRect.w, finalSrcRect.h,
++                            finalDstRect.x, finalDstRect.y,
++                            finalDstRect.w, finalDstRect.h,
++                            __FUNCTION__, __FILE__, __LINE__ );
++            }
++            else  // stretch blit
++            {
++                D_DEBUG_AT( IntelCE_Gfx_Blit, 
++                            "Stretch blit: "
++                            "dest rect partially outside dest surface, "
++                            "fallback to CPU-based rendering. "
++                            "PF:%s Op:%s "
++                            "%s()- %s:%d\n", 
++                            PixelFormatDebug(pDstSurface->config.format),
++                            accelMsg, __FUNCTION__, __FILE__, __LINE__ );
++        
++                LOG_AT("Rejected Last StretchBlit", "HW DestSurfID:%d... \n", 
++                       GetCoreSurfaceID(pDstSurface));
++        
++                result = false;
++                goto exit; // exit and fall back to software
++            }
++        }
+ 
+         // Setup the source and dest rectangles
+         gdl_rectangle_t source_rect = 
+         {
+-            origin: {x: pSrcRect->x, y: pSrcRect->y},
+-            width:  pSrcRect->w,
+-            height: pSrcRect->h
++            origin: {x: finalSrcRect.x, y: finalSrcRect.y},
++            width:  finalSrcRect.w,
++            height: finalSrcRect.h
+         };
+ 
+         gdl_rectangle_t destination_rect = 
+         {
+-            origin: {x: pDstRect->x, y: pDstRect->y},
+-            width:  pDstRect->w,
+-            height: pDstRect->h
++            origin: {x: finalDstRect.x, y: finalDstRect.y},
++            width:  finalDstRect.w,
++            height: finalDstRect.h
+         };
+ 
+         pBlitInfo->src_rect = source_rect;
+@@ -522,7 +640,11 @@
+     }
+ 
+     // Perform the common blitting related operations.
+-    result = _GraphicsCommonBlit(pPrevState, pSrcRect, &dstRect,&usedOpenGL);
++    result = _GraphicsCommonBlit(pPrevState, 
++                                 pSrcRect, 
++                                 &dstRect,
++                                 false,           // false for standard blit
++                                 &usedOpenGL);
+ 
+ exit:
+     #if DIRECT_BUILD_DEBUG
+@@ -603,7 +725,11 @@
+ 
+     // Peform the blit and increment the queued operations
+     bool usedOpenGL;
+-    result = _GraphicsCommonBlit(pPrevState, pSrcRect,pDstRect, &usedOpenGL);
++    result = _GraphicsCommonBlit(pPrevState, 
++                                 pSrcRect,
++                                 pDstRect, 
++                                 true,          // true for stretch blit
++                                 &usedOpenGL);
+ 
+ exit:
+     #if DIRECT_BUILD_DEBUG

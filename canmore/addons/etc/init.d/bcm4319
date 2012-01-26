@@ -1,0 +1,49 @@
+#!/bin/sh
+
+# Script name can be the called name, or something more meaningful.
+SCRIPTNAME=bcm4319
+PATH=/usr/local/bin:/usr/bin:/bin:/sbin
+
+. /etc/init.d/init_utilities
+
+start_function() {
+    WIRELESS_DIR=/opt/local/etc/Wireless/BCM4319/
+
+    #load firmware to wireless hw
+    $WIRELESS_DIR/bcmdl $WIRELESS_DIR/bcm94319wlusbnp4l.nvm $WIRELESS_DIR/usb-g-cdc-full11n-reclaim-roml-wme-idsup-40m.bin.trx
+    sleep 2;
+
+    #load kernel module
+    insmod $WIRELESS_DIR/dhd.ko
+    sleep 2;
+
+    # interface up
+    ifconfig eth1 up
+    sleep 2;
+
+    # supplicant up
+    /opt/local/sbin/wl -i eth1 up
+}
+
+stop_function() {
+    wl -i eth1 down
+   
+    ifconfig eth1 down
+  
+    rmmod dhd
+}
+
+case $1 in
+    "start")
+        start_function
+        ;;
+    "stop")
+        stop_function
+        ;;
+    "restart")
+        stop_function
+        start_function
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart}"
+esac

@@ -1,0 +1,31 @@
+<shortcuts>
+    <shortcut>
+        <name>MLB</name>
+        <thumbnail>http://dir.boxee.tv/apps/mlb/thumb.png</thumbnail>
+        <adult>false</adult>
+        <path>app://mlb/</path>
+        <is-folder>false</is-folder>
+        <country>all</country>
+        <country-allow>true</country-allow>
+        <readonly>false</readonly>
+    </shortcut>
+    <shortcut>
+	    <name>Pandora</name>
+	    <thumbnail>http://dir.boxee.tv/apps/pandora/thumb.png</thumbnail>
+        <adult>false</adult>
+	    <path>app://pandora/</path>
+        <is-folder>false</is-folder>
+        <country>all</country>
+        <country-allow>true</country-allow>
+        <readonly>false</readonly>
+    </shortcut>
+    <shortcut>
+        <name>How I Met Your Mother</name>
+        <thumbnail>http://www.thetvdb.com/banners/_cache/posters/75760-3.jpg</thumbnail>
+        <adult>false</adult>
+        <command>ActivateWindow(10483,boxee://tvshows/episodes?local=true&amp;remote=true&amp;seriesId=304418)</command>
+        <country>all</country>
+        <country-allow>true</country-allow>
+        <readonly>false</readonly>
+    </shortcut>
+</shortcuts>

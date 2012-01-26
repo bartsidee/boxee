@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# Script name can be the called name, or something more meaningful.
+SCRIPTNAME=$0
+
+. /etc/init.d/init_utilities
+
+start_function() {
+    mkdir -p /opt/local/var/lib/dbus/ && /opt/local/bin/dbus-uuidgen --ensure
+    mkdir -p /opt/local/var/run/dbus
+    LD_LIBRARY_PATH=/opt/local/lib /opt/local/bin/dbus-daemon --system
+}
+
+stop_function() {
+    # Terminate daemons, remove modules, remove device nodes here
+    PID=`ps -ef | grep -v grep | grep "/opt/local/bin/dbus-daemon" | awk '{print $2}'`
+    if [[ "x$PID" == "x" ]]; then 
+        echo "dbus not running; cannot kill"
+    else
+        kill $PID
+	rm -f /opt/local/var/run/dbus/pid
+    fi
+}
+
+case $1 in
+    "start")
+    start_function
+    ;;
+    "stop")
+    stop_function
+    ;;
+    "restart")
+    stop_function
+    start_function
+    ;;
+    *)
+    echo "Usage: $0 {start|stop|restart}"
+esac

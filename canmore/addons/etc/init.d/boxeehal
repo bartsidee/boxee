@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# Script name can be the called name, or something more meaningful.
+SCRIPTNAME=$0
+CHRONOS=/opt/local/bin/chronos
+
+. /etc/init.d/init_utilities
+
+start_function() {
+    # Start Boxee HAL if so equipped
+    hostname `cat /etc/hostname`
+    if [ -e ${CHRONOS} ]; then
+        ${CHRONOS}
+    else
+        debug_print "Chronos not found, Setting default date/time 1/1/2010 00:00"
+        /bin/date 010100002010
+    fi
+    debug_print "Trying to start Boxee HAL"
+    # remove before final shipment
+    mkdir -p /tmp/corefiles
+    echo "/tmp/corefiles/core" > /proc/sys/kernel/core_pattern
+    try_command /opt/boxee/hal/BoxeeHal
+}
+
+stop_function() {
+    # Terminate daemons, remove modules, remove device nodes here
+    BH_PID=`ps | grep -v grep | grep "/opt/boxee/hal/BoxeeHal" | awk '{print $1}'`
+    if [[ "x$BH_PID" == "x" ]]; then 
+        echo "Boxee HAL not running; cannot kill"
+    else
+        kill $BH_PID
+    fi
+}
+
+case $1 in
+    "start")
+    start_function
+    ;;
+    "stop")
+    stop_function
+    ;;
+    "restart")
+    stop_function
+    start_function
+    ;;
+    *)
+    echo "Usage: $0 {start|stop|restart}"
+esac

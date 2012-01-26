@@ -1,0 +1,41 @@
+#!/bin/sh
+
+# Script name can be the called name, or something more meaningful.
+SCRIPTNAME=$0
+
+. /etc/init.d/init_utilities
+
+start_function() {
+    # Start lircd if so equipped
+    debug_print "Trying to start lircd"
+    /bin/mknod /dev/lirc c 61 0    
+    /sbin/insmod /lib/modules/2.6.28/lirc_dev.ko
+    /sbin/insmod /lib/modules/2.6.28/lirc_mceusb.ko
+    mkdir -p /var/run/lirc
+    try_command /opt/local/sbin/lircd --device=/dev/lirc0 /opt/local/etc/lircd.conf
+}
+
+stop_function() {
+    # Terminate daemons, remove modules, remove device nodes here
+    LIRCD_PID=`ps | grep -v grep | grep "/opt/local/sbin/lircd" | awk '{print $1}'`
+    if [[ "x$LIRCD_PID" == "x" ]]; then 
+        echo "lircd not running; cannot kill"
+    else
+        kill $LIRD_PID
+    fi
+}
+
+case $1 in
+    "start")
+    start_function
+    ;;
+    "stop")
+    stop_function
+    ;;
+    "restart")
+    stop_function
+    start_function
+    ;;
+    *)
+    echo "Usage: $0 {start|stop|restart}"
+esac

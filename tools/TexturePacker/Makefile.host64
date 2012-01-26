@@ -1,0 +1,20 @@
+INCLUDES =-I../../xbmc/utils -I../../guilib -I../../xbmc/linux -I../../xbmc/lib/libsquish -I./PVRTexLib/
+DEFINES =  -D_LINUX
+
+OBJS = \
+	SDL_anigif.o \
+	XBTFWriter.o \
+	XBMCTex.o \
+	XBTF.o
+
+TARGET = TexturePacker
+CLEAN_FILES=$(TARGET)
+
+$(TARGET) : $(OBJS)
+	g++ -o $(TARGET) $(OBJS) libsquish-i686_x64-linux.a -llzo2 -lSDL -lSDL_image PVRTexLib/Linux/libPVRTexLib.a 
+
+.cpp.o:
+	g++ -c $(DEFINES) $(INCLUDES) $< -o $@ -g
+
+clean:
+	rm -f $(TARGET) $(OBJS)

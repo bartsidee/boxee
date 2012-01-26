@@ -1,0 +1,15 @@
+To build for Boxee, you need scons.
+
+On linux
+
+# sudo apt-get install scons
+
+Then run:
+
+Linux
+-----
+# scons platform=i486-linux
+
+Canmore (Intel CE4100)
+----------------------
+# scons platform=i686-linux

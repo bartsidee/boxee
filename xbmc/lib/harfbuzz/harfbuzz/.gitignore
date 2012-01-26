@@ -1,0 +1,15 @@
+Makefile.in
+config.guess
+config.sub
+ltmain.sh
+Makefile
+aclocal.m4
+autom4te.cache/
+config.h
+config.h.in
+configure
+harfbuzz.pc
+libtool
+stamp-h1
+test/Makefile
+configure.lineno

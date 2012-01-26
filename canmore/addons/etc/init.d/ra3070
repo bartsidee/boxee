@@ -1,0 +1,32 @@
+#!/bin/sh
+
+# Script name can be the called name, or something more meaningful.
+SCRIPTNAME=ra3070
+PATH=/usr/local/bin:/usr/bin:/bin:/sbin
+
+. /etc/init.d/init_utilities
+
+start_function() {
+    insmod /lib/modules/2.6.35/rt3070sta.ko
+    ifconfig ra0 up
+}
+
+stop_function() {
+    ifconfig ra0 down
+    rmmod /lib/modules/2.6.35/rt3070sta.ko
+}
+
+case $1 in
+    "start")
+        start_function
+        ;;
+    "stop")
+        stop_function
+        ;;
+    "restart")
+        stop_function
+        start_function
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart}"
+esac

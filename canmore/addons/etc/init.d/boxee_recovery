@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# Script name can be the called name, or something more meaningful.
+SCRIPTNAME=$0
+BIN_NAME=/opt/boxee/RecoveryConsole
+
+. /etc/init.d/init_utilities
+
+start_function() {
+    # Start Boxee if so equipped
+    debug_print "Trying to start Boxee Recovery"
+    for r in 480p 576p 720p 1080p 1080i
+    do
+        tvmode $r
+        if [ $? -eq 0 ]; then
+            break;
+        fi
+    done
+    try_command $BIN_NAME -qws &
+}
+
+stop_function() {
+    # Terminate daemons, remove modules, remove device nodes here
+    BH_PID=`ps | grep -v grep | grep "${BIN_NAME}" | awk '{print $1}'`
+    if [[ "x$BH_PID" == "x" ]]; then 
+        echo "Boxee Recovery not running; cannot kill"
+    else
+        kill $BH_PID
+    fi
+}
+
+case $1 in
+    "start")
+    start_function
+    ;;
+    "stop")
+    stop_function
+    ;;
+    "restart")
+    stop_function
+    start_function
+    ;;
+    *)
+    echo "Usage: $0 {start|stop|restart}"
+esac

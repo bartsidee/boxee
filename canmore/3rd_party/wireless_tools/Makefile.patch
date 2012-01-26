@@ -1,0 +1,14 @@
+8c8
+<   PREFIX = /usr/local
+---
+>   PREFIX = /opt/canmore/local
+12c12
+< CC = gcc
+---
+> CC = /opt/canmore/toolchains/i686-cm-linux-gcc
+14,15c14,15
+< AR = ar
+< RANLIB = ranlib
+---
+> AR = /opt/canmore/toolchains/i686-cm-linux-ar
+> RANLIB =  /opt/canmore/toolchains/i686-cm-linux-ranlib

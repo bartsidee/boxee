@@ -1,0 +1,108 @@
+
+boxee library - python extensions
+---------------------------------
+
+the boxee library exports methods for interacting with the boxee service.
+the library is written in c++. this python flavor is gerenated from the c++ source code using SWIG (www.swig.org).
+
+currently the python boxee library extensions can only be used with python version 2.4.
+
+in order to use the library you will need the following files:
+-  boxee.py
+-  boxee.pyc
+-  _boxee.so  (actually this is the only file you really need...)
+
+the original ".h" files are attached for clarity. in general - all the classes defined are available from python. however, due to the fact that the python extension is code-generated, "boxee.py" is not as comfortable reference as the ".h" files are. so look in the ".h" files in order to understand which classes and members are available (some are described next on this README).
+
+
+classes
+-------
+Boxee - this class is the main interface with the boxee service. 
+        apart from the service API, this class has 2 static methods for initialize and deinitialize the api.
+        so the first thing to do would be to call (only once) the initialize method.
+        after initialization, instances of this class can be used to interact with the boxee service.
+        
+BXGeneralMessage - a general class describing an action.
+                   a message has a type, subtype (both strings) and a map of key/value string pairs.
+                   this class exposes methods for quering/setting its values.
+                   every action is represented by this class.
+
+BXBoxeeFeed - simply a vector of BXGeneralMessage objects.
+
+BXFriend - a class representing a friend. a friend has a unique string id, a general map of attributes 
+           (string to string map), a current action (BXGeneralMessage) and a history of previous messages
+
+BXFriendsList - a map of friends. in order to iterate over the map you have the FriendsListIterator class.
+
+files:
+-------
+a configuration file currently controls the behavior of the library.
+boxee.config file contains mainly URL's for the server's actions.
+if a url is pointing to "file://" then no network access takes place. instead the referenced file is used as a response.
+
+example usage:
+--------------
+
+vulkan@vulkan-laptop:~/boxee/xbmc/xbmc/lib/libBoxee$ python2.4
+Python 2.4.4 (#2, Apr 12 2007, 21:03:11) 
+[GCC 4.1.2 (Ubuntu 4.1.2-0ubuntu4)] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from boxee import *
+>>> Boxee.Initialize()
+True
+>>> bx=Boxee()
+>>> cred=BXCredentials()
+>>> cred.SetUserName('vulkan')
+>>> cred.SetPassword('secret')
+>>> bx.SetCredentials(cred)
+>>> feed=BXBoxeeFeed()
+>>> bx.GetBoxeeFeed(feed)
+True
+>>> feed.GetNumOfActions()
+4
+>>> feed.GetAction(0).GetMessageType()
+'recommend'
+>>> feed.GetAction(0).GetMessageSubType()
+'movie'
+>>> feed.GetAction(0).GetValue("movie_id")
+'65234556'
+>>> feed.GetAction(0).GetValue("user_id")
+'tsella'
+>>> friend=BXFriend()
+>>> bx.AddFriend('idan',friend)
+True
+>>> friend.GetFriendId()
+'idan'
+>>> friend.GetLastAction().GetMessageType()
+'movie'
+>>> friend.GetLastAction().GetValue("name")
+'the 6th sense'
+>>> friend.GetHistoryCount()
+2
+>>> list=BXFriendsList()
+>>> bx.RetrieveFriendsList(list)
+True
+>>> list.GetCount()
+2
+>>> iter=list.Iterate()
+>>> iter.GetFriend().GetFriendId()
+'idan'
+>>> iter.Next()
+True
+>>> iter.GetFriend().GetFriendId()
+'tsella'
+>>> iter.GetFriend().GetLastAction().GetMessageType()
+'recommend'
+>>> iter.IsEndOfList()
+False
+>>> iter.Next()
+False
+>>> iter.IsEndOfList()
+True
+>>> action=BXGeneralMessage()
+>>> action.SetMessageType("recommend")
+>>> action.SetMessageSubType("movie")
+>>> action.SetValue("movie_id","2342342")
+>>> bx.SetUserAction(action)
+False
+>>> 

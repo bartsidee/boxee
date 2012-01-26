@@ -1,0 +1,4177 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!--$Revision: 10303 $-->
+<strings>
+  <string id="0">بالغ</string>
+  <string id="1">صور</string>
+  <string id="2">موسيقى</string>
+  <string id="3">فيديو</string>
+  <string id="4">دليل التلفاز</string>
+  <string id="5">إعدادات</string>
+  <string id="6">XBMC SVN</string>
+  <string id="7">مدير الملفات</string>
+  <string id="8">الطقس</string>
+  <string id="9">مركز وسائط xbmc</string>
+
+  <string id="11">الإثنين</string>
+  <string id="12">الثلاثاء</string>
+  <string id="13">الأربعاء</string>
+  <string id="14">الخميس</string>
+  <string id="15">الجمعة</string>
+  <string id="16">السبت</string>
+  <string id="17">الأحد</string>
+
+  <string id="21">يناير</string>
+  <string id="22">فبراير</string>
+  <string id="23">مارس</string>
+  <string id="24">أبريل</string>
+  <string id="25">مايو</string>
+  <string id="26">يونيو</string>
+  <string id="27">يوليو</string>
+  <string id="28">أغسطس</string>
+  <string id="29">سبتمبر</string>
+  <string id="30">أكتوبر</string>
+  <string id="31">نوفمبر</string>
+  <string id="32">ديسمبر</string>
+
+  <string id="41">إثنين</string>
+  <string id="42">ثلاثاء</string>
+  <string id="43">أربعاء</string>
+  <string id="44">خميس</string>
+  <string id="45">جمعة</string>
+  <string id="46">سبت</string>
+  <string id="47">أحد</string>
+
+  <string id="98">العرض: تلقائي</string>
+  <string id="99">العرض: تلقائي كبير</string>
+  <string id="100">العرض: الأيقونات</string>
+  <string id="101">العرض: قائمة</string>
+  <string id="102">مسح</string>
+  <string id="103">فرز حسب: الاسم</string>
+  <string id="104">فرز حسب: التاريخ</string>
+  <string id="105">فرز حسب: الحجم</string>
+  <string id="106">لا</string>
+  <string id="107">نعم</string>
+  <string id="108">عرض الشرائح</string>
+  <string id="109">إنشاء صور مصغرة</string>
+  <string id="110">إنشاء صور مصغرة</string>
+  <string id="111">اختصارات</string>
+  <string id="112">توقف مؤقت</string>
+  <string id="113"></string>
+  <string id="114"></string>
+  <string id="115">نسخ</string>
+  <string id="116">نقل</string>
+  <string id="117">حذف</string>
+  <string id="118">إعادة تسمية</string>
+  <string id="119">مجلد جديد</string>
+  <string id="120">تأكيد نسخ الملف</string>
+  <string id="121">تأكيد نقل الملف</string>
+  <string id="122">تأكيد حذف الملف؟</string>
+  <string id="123">نسخ هذه الملفات؟</string>
+  <string id="124">نقل هذه الملفات؟</string>
+  <string id="125">حذف هذه الملفات؟ - لا يمكن التراجع عن حذف الملفات!</string>
+  <string id="126">الحالة</string>
+  <string id="127">الوحدات</string>
+  <string id="128">عام</string>
+  <string id="129">عرض الشرائح</string>
+  <string id="130">معلومات النظام</string>
+  <string id="131">عرض</string>
+  <string id="132">ألبومات</string>
+  <string id="133">فنانون</string>
+  <string id="134">أغنيات</string>
+  <string id="135">أنواع</string>
+  <string id="136">قوائم التشغيل</string>
+  <string id="137">بحث</string>
+  <string id="138">معلومات النظام</string>
+  <string id="139">درجات الحرارة:</string>
+  <string id="140">وحدة المعالجة المركزية:</string>
+  <string id="141">وحدة معالجة الرسومات:</string>
+  <string id="142">الوقت:</string>
+  <string id="143">الحالي:</string>
+  <string id="144">البناء:</string>
+  <string id="145">الشبكة:</string>
+  <string id="146">النوع:</string>
+  <string id="147">ثابت</string>
+  <string id="148">DHCP</string>
+  <string id="149">عنوان MAC</string>
+  <string id="150">عنوان IP</string>
+  <string id="151">الرابط: </string>
+  <string id="152">مزدوج نصفي</string>
+  <string id="153">مزدوج الاتجاه</string>
+  <string id="154">المخزن</string>
+  <string id="155">المحرك</string>
+  <string id="156">خالي</string>
+  <string id="157">الفيديو</string>
+  <string id="158">ذاكرة خالية</string>
+  <string id="159">بلا رابط</string>
+  <string id="160">خالي</string>
+  <string id="161">غير متوفر</string>
+  <string id="162">العلبة مفتوحة</string>
+  <string id="163">قراءة</string>
+  <string id="164">بلا قرص</string>
+  <string id="165">وجود القرص</string>
+  <string id="166">الشكل</string>
+  <string id="167">تمكين ملقم FTP</string>
+  <string id="168">تمكين مزامنة وقت الإنترنت</string>
+  <string id="169">مستوى الدقة</string>
+  <string id="170">مطابقة معدل تحديث الشاشة مع الفيديو</string>
+  <string id="171"></string>
+  <string id="172">تاريخ الإصدار</string>
+  <string id="173"></string>
+  <string id="174"></string>
+  <string id="175">حالات</string>
+  <string id="176">أنماط</string>
+  <string id="177"></string>
+  <string id="178"></string>
+  <string id="179">أغنية</string>
+  <string id="180">المدة</string>
+  <string id="181">تحديد ألبوم</string>
+  <string id="182">مقاطع</string>
+  <string id="183">مراجعة</string>
+  <string id="184">تحديث</string>
+  <string id="185">بحث عن ألبوم</string>
+  <string id="186">موافق</string>
+  <string id="187">تعذر العثور على ألبومات!</string>
+  <string id="188">تحديد الكل</string>
+  <string id="189">مسح معلومات الوسائط</string>
+  <string id="190">حفظ</string>
+  <string id="191">نقل</string>
+  <string id="192">محو</string>
+  <string id="193">مسح</string>
+  <string id="194">بحث...</string>
+  <string id="195">تعذر العثور على معلومات!</string>
+  <string id="196">تحديد الفيلم:</string>
+  <string id="197">الاستعلام عن معلومات %s</string>
+  <string id="198">تحميل تفاصيل الفيلم</string>
+  <string id="199"></string>
+  <string id="200"></string>
+  <string id="201"></string>
+  <string id="202">خط العلامات</string>
+  <string id="203">مخطط الموضوع</string>
+  <string id="204"></string>
+  <string id="205">التصويتات:</string>
+  <string id="206">مجموعة العمل</string>
+  <string id="207">الموضوع</string>
+  <string id="208">تشغيل</string>
+  <string id="209">التالي</string>
+  <string id="210">السابق</string>
+  <string id="213">معايرة واجهة المستخدم...</string>
+  <string id="214">تنسيق الشاشة والمسح الفائق...</string>
+  <string id="215">تليين</string>
+  <string id="216">كمية التكبير/التصغير</string>
+  <string id="217">معدل البكسل</string>
+  <string id="218">محرك أقراص DVD</string>
+  <string id="219">رجاء إدخال القرص</string>
+  <string id="220">مشاركة عن بُعد</string>
+  <string id="221">الشبكة غير متصلة</string>
+  <string id="222">إلغاء</string>
+  <string id="224">السرعة</string>
+  <string id="225">وقت الانتقال بين الصور</string>
+  <string id="226">اختبار الأنماط...</string>
+  <string id="227">بحث عن اسطوانات الصوت على الإنترنت</string>
+  <string id="228">تحويل قائمة التشغيل قيد التحميل</string>
+  <string id="229">وقت تنزيل HDD</string>
+  <string id="230">مرشحات الفيديو</string>
+  <string id="231">لا شيء</string>
+  <string id="232">نقطة</string>
+  <string id="233">خطي</string>
+  <string id="234">متباين الخواص</string>
+  <string id="235">التخمسية</string>
+  <string id="236">مكعب غاوسي</string>
+  <string id="237">تصغير</string>
+  <string id="238">تكبير</string>
+  <string id="239">محو قائمة التشغيل عند الانتهاء</string>
+  <string id="240">تشغيل تلقائي لفيديو DVD</string>
+  <string id="241">تشغيل تلقائي لـ VCD/SVCD</string>
+  <string id="242">تشغيل تلقائي لاسطوانة صوت</string>
+  <string id="243">تشغيل تلقائي لألعاب Xbox</string>
+  <string id="244">تشغيل تلقائي لملفات الفيديو</string>
+  <string id="245">تشغيل تلقائي للموسيقى</string>
+  <string id="246">تشغيل تلقائي للصور</string>
+  <string id="247">سيناريوهات</string>
+  <string id="248">اللغة</string>
+  <string id="249">موسيقى</string>
+  <string id="250">تصور</string>
+  <string id="251">تحديد دليل الوجهة</string>
+  <string id="252">إخراج الاستريو إلى كل مكبرات الصوت</string>
+  <string id="253">عدد القنوات</string>
+  <string id="254">- ملقم قادر على DTS</string>
+  <string id="255">CDDB</string>
+  <string id="256">إحضار معلومات الاسطوانة</string>
+  <string id="257">خطأ</string>
+  <string id="258">تمكين قراءة العلامات</string>
+  <string id="259">فتح</string>
+  <string id="260">تكنولوجيا تدفق</string>
+  <string id="261">في انتظار البدء...</string>
+  <string id="262">إخراج السيناريو</string>
+  <string id="263">تمكين ملقم الويب</string>
+  <string id="264">تسجيل</string>
+  <string id="265">إيقاف التسجيل</string>
+  <string id="266">فرز حسب: المقطع</string>
+  <string id="267">فرز حسب: الوقت</string>
+  <string id="268">فرز حسب: العنوان</string>
+  <string id="269">فرز حسب: الفنان</string>
+  <string id="270">فرز حسب: الألبوم</string>
+  <string id="271">أهم 100</string>
+  <string id="272">تعويض مسح علوي-أيسر</string>
+  <string id="273">تعويض مسح سفلي-أيمن</string>
+  <string id="274">وضع الترجمة</string>
+  <string id="275">ضبط معدل البكسل</string>
+  <string id="276">ضبط السهم لتغيير كمية المسح</string>
+  <string id="277">ضبط الشريط لتغيير وضع الترجمة</string>
+  <string id="278">ضبط المستطيل حتى يكون مربع بشكل كامل</string>
+  <string id="279">تعذر تحميل الإعدادات</string>
+  <string id="280">استخدام إعدادات افتراضية</string>
+  <string id="281">رجاء فحص ملفات XML</string>
+  <string id="282">تم العثور على %i عناصر</string>
+  <string id="283">نتائج البحث</string>
+  <string id="284">تعذر العثور على نتائج</string>
+  <string id="286">مرشح معالجة سابقة</string>
+  <string id="287">تحميل الترجمات</string>
+  <string id="288">الخط</string>  <!-- Subtitles font -->
+  <string id="289">الحجم</string>  <!-- Subtitles size --> 
+  <string id="290">ضغط نطاق ديناميكي</string>
+  <string id="291">الفيديو</string>
+  <string id="292">الصوت</string>
+  <string id="293">استعراض الترجمات</string>
+  <string id="294">إنشاء علامة مرجعية</string>
+  <string id="296">محو العلامات المرجعية</string>
+  <string id="297">موازنة الصوت</string>
+  <string id="298">العلامات المرجعية</string>
+  <string id="299">تحديد موقع المقطع الجديد</string>
+  <string id="300">تحديد موقع الصورة المصغرة الجديدة</string>
+  <string id="301">تحديد موقع مجلد التطبيقات</string>
+  <string id="303">تأخير</string>
+  <string id="304">اللغة</string>
+  <string id="305">ممكَّن</string>
+  <string id="306">بدون صفحات بينية فارعة</string>
+  <string id="307">- معالجة سابقة تلقائية</string>
+  <string id="308">- مرشح إلغاء قفل رأسي</string>
+  <string id="309">- مرشح إلغاء قفل أفقي</string>
+  <string id="310">- سطوع/تباين تلقائي</string>
+  <string id="311">- تقسيم</string>
+  <string id="312">(0=تلقائي)</string>
+  <string id="313">تنظيف قاعدة البيانات</string>
+  <string id="314">تحضير...</string>
+  <string id="315">خطأ قاعدة البيانات</string>
+  <string id="316">بحث عن أغنيات...</string>
+  <string id="317">تم بنجاح تنظيف قاعدة البيانات</string>
+  <string id="318">تنظيف الأغنيات...</string>
+  <string id="319">خطأ أثناء تنظيف الأغنيات</string>
+  <string id="320">تنظيف الفنانين...</string>
+  <string id="321">خطأ في تنظيف الفنانين</string>
+  <string id="322">تنظيف الأنواع...</string>
+  <string id="323">خطأ في تنظيف الأنواع</string>
+  <string id="324">تنظيف المسارات...</string>
+  <string id="325">خطأ في تنظيف المسارات</string>
+  <string id="326">تنظيف الألبومات...</string>
+  <string id="327">خطأ في تنظيف الألبومات</string>
+  <string id="328">كتابة التغييرات...</string>
+  <string id="329">خطأ في كتابة التغييرات</string>
+  <string id="330">قد يستغرق هذا بعض الوقت...</string>
+  <string id="331">ضغط قاعدة البيانات...</string>
+  <string id="332">خطأ في ضغط قاعدة البيانات</string>
+  <string id="333">هل تريد تنظيف المكتبة؟</string>
+  <string id="334">تنظيف المكتبة...</string>
+  <string id="335">بدء</string>
+  <string id="336">تحويل معدل الإطار</string>
+  <string id="337">إخراج الصوت</string>
+  <string id="338">تناظري</string>
+  <string id="339">رقمي (S/PDIF)</string>
+  <string id="340">فنانون متنوعون</string>
+  <string id="341">تشغيل القرص</string>
+  <string id="342">أفلام</string>
+  <string id="343">ضبط معدل الإطار</string>
+  <string id="344">ممثلون</string>
+  <string id="345">السنة</string>
+  <string id="350">البرامج</string>
+  <string id="351">إيقاف</string>
+  <string id="352">معتم</string>
+  <string id="353">أسود</string>
+  <string id="354">ممرات المصفوفة</string>
+  <string id="355">البدء بعد</string>
+  <string id="356">وضع شاشة التوقف</string>
+  <string id="357">موقت وظيفة الإغلاق</string>
+  <string id="358">كل الألبومات</string>
+  <string id="359">الألبومات المضافة حديثاً</string>
+  <string id="360">شاشة التوقف</string>
+  <string id="361">عرض الشرائح R.</string>
+  <string id="362">مستوى بهتان شاشة التوقف</string>
+  <string id="363">فرز حسب: الملف</string>
+  <string id="364">- مستقبل قادر على دولبي رقمي</string>
+  <string id="365">فرز حسب: الاسم</string>
+  <string id="366">فرز حسب: السنة</string>
+  <string id="367">فرز حسب: التقيم</string>
+  <string id="368">IMDb</string>
+  <string id="369">العنوان</string>
+  <string id="370">عواصف رعدية</string>
+  <string id="371">جزئي</string>
+  <string id="372">غالباً</string>
+  <string id="373">مشمس</string>
+  <string id="374">غائم</string>
+  <string id="375">ثلوج</string>
+  <string id="376">مطر</string>
+  <string id="377">خفيف</string>
+  <string id="378">صباحاً</string>
+  <string id="379">مساءاً</string>
+  <string id="380">أمطار شديدة</string>
+  <string id="381">قليل</string>
+  <string id="382">متبعثر</string>
+  <string id="383">رياح</string>
+  <string id="384">قوي</string>
+  <string id="385">معتدل</string>
+  <string id="386">صافي</string>
+  <string id="387">سحب</string>
+  <string id="388">مبكراً</string>
+  <string id="389">مطر شديد</string>
+  <string id="390">هبوب رياح</string>
+  <string id="391">منخفض</string>
+  <string id="392">متوسط</string>
+  <string id="393">مرتفع</string>
+  <string id="394">ضباب</string>
+  <string id="395">ضباب رقيق</string>
+  <string id="396">تحديد الموقع</string>
+  <string id="397">وقت التحديث</string>
+  <string id="398">وحدات درجة الحرارة</string>
+  <string id="399">وحدات السرعة</string>
+  <string id="400">الطقس</string>
+  <string id="401">درجة الحرارة</string>
+  <string id="402">شعور كـ</string>
+  <string id="403">فهرس UV</string>
+  <string id="404">رياح</string>
+  <string id="405">نقطة الندى</string>
+  <string id="406">الرطوبة</string>
+  <string id="407">من</string>
+  <string id="408">عند</string>
+  <string id="409">الافتراضات</string>
+
+  <string id="410">الوصول إلى خدمة الطقس</string>
+  <string id="411">الحصول على الطقس لـ:</string>
+  <string id="412">تعذر الحصول على بيانات الطقس</string>
+  <string id="413">يدوي</string>
+  <string id="414">بلا مراجعة لهذا الألبوم</string>
+  <string id="415">تنزيل الصورة المصغرة...</string>
+  <string id="416">غير متاح</string>
+  <string id="417">العرض: أيقونات كبيرة</string>
+  <string id="418"></string>
+  <string id="419"></string>
+  <string id="420"></string>
+  <string id="421"></string>
+  <string id="422">حذف معلومات الألبوم</string>
+  <string id="423">حذف معلومات الاسطوانة</string>
+  <string id="424">تحديد</string>
+  <string id="425">تعذر العثور على معلومات الألبوم</string>
+  <string id="426">تعذر العثور على معلومات الاسطوانة</string>
+  <string id="427">قرص</string>
+  <string id="428">أدخل CD/DVD صحيح</string>
+  <string id="429">رجاء إدخال CD/DVD التالي</string>
+  <string id="430">فرز حسب: رقم DVD</string>
+  <string id="431">بلا ذاكرة احتياطية</string>
+  <string id="432">إزالة الفيلم من المكتبة</string>
+  <string id="433">إزالة '%s' بالفعل؟</string>
+  <string id="434"></string>
+  <string id="435"></string>
+  <string id="436"></string>
+  <string id="437">قرص قابل للإزالة</string>
+  <string id="438">ملف مفتوح</string>
+  <string id="439">ذاكرة احتياطية</string>
+  <string id="440">قرص صلب</string>
+  <string id="441">UDF</string>
+  <string id="442">شبكة محلية</string>
+  <string id="443">الإنترنت</string>
+  <string id="444">الفيديو</string>
+  <string id="445">الصوت</string>
+  <string id="446">DVD</string>
+  <string id="447">تشغيل تلقائي</string>
+  <string id="448">LCD</string>
+  <string id="449">ممكَّن</string>
+  <string id="450">أعمدة</string>
+  <string id="451">عنوان الصف 1</string>
+  <string id="452">عنوان الصف 2</string>
+  <string id="453">عنوان الصف 3</string>
+  <string id="454">عنوان الصف 4</string>
+  <string id="455">الصفوف</string>
+  <string id="456">الوضع</string>
+  <string id="457">تبديل العرض</string>
+  <string id="459">فرعيات</string>
+  <string id="460">تدفق الصوت</string>
+  <string id="461">[نشط]</string>
+  <string id="462">ترجمة</string>
+  <string id="463">ضوء خلفي</string>
+  <string id="464">سطوع</string>
+  <string id="465">تباين</string>
+  <string id="466">جاما</string>
+  <string id="467">النوع</string>
+  <string id="468">نقل الشريط لتغيير وضع OSD</string>
+  <string id="469">وضع OSD</string>
+  <string id="470">المشاركون</string>
+  <string id="471">Modchip</string>
+  <string id="474">إيقاف</string>
+  <string id="475">موسيقى فقط</string>
+  <string id="476">موسيقى وفيديو</string>
+  <string id="477">تعذر تحميل قائمة التشغيل</string>
+  <string id="478">OSD</string>
+  <string id="479">الشكل واللغة</string>
+  <string id="480">المظهر</string>
+  <string id="481">خيارات الصوت</string>
+  <string id="482">حول XBMC</string>
+  <string id="483"></string>
+  <string id="484"></string>
+  <string id="485">حذف ألبوم</string>
+  <string id="486">تكرار</string>
+  <string id="487">تكرار واحد</string>
+  <string id="488">تكرار مجلد</string>
+  <string id="489">تشغيل تلقائي للعنصر التالي</string>
+  <string id="491">- استخدام أيقونات كبيرة</string>
+  <string id="492">تغيير حجم VobSubs</string>
+  <string id="493">خيارات متقدمة (للخبراء فقط!)</string>
+  <string id="494">المساحة الرأسية الكلية للصوت</string>
+  <string id="495">رفع معدل معاينة الفيديو إلى مستوى دقة وحدة معالجة الرسومات</string>
+  <string id="496">معايرة</string>
+  <string id="497">إخفاء امتدادات الوسائط</string>
+  <string id="498">فرز حسب: النوع</string>
+  <string id="499">تعذر الاتصال بخدمة البحث على الإنترنت</string>
+  <string id="500">فشل تنزيل معلومات الألبوم</string>
+  <string id="501">بحث عن أسماء الألبومات...</string>
+  <string id="502">فتح</string>
+  <string id="503">شغال</string>
+  <string id="504">فارغ</string>
+  <string id="505">تحميل معلومات الوسائط من الملفات...</string>
+  <string id="507">فرز حسب: الاستخدام</string>
+  <string id="510">تمكين التصورات</string>
+  <string id="511">تمكين تبديل وضع الفيديو</string>
+  <string id="512">نافذة بدء التشغيل</string>
+  <string id="513">نافذة الصفحة الرئيسية</string>
+  <string id="514">إعدادات يدوية</string>
+  <string id="515">النوع</string>
+  <string id="516">عمل أرشيفات مخزنة مع ملف واحد واضح</string>
+  <string id="517">الألبومات المشغلة حديثاً</string>
+  <string id="518">تشغيل</string>
+  <string id="519">تشغيل في...</string>
+  <string id="520">تحرير عنوان XBE</string>
+  <string id="521">نصوص</string>
+  <string id="522">إزالة المصدر</string>
+  <string id="523">تبديل الوسائط</string>
+  <string id="524">تحديد قائمة التشغيل</string>
+  <string id="525">قائمة تشغيل جديدة...</string>
+  <string id="526">إضافة إلى قائمة التشغيل</string>
+  <string id="527">إضافة يدوية إلى المكتبة</string>
+  <string id="528">إدخال عنوان</string>
+  <string id="529">الخطأ: عنوان مكرر</string>
+  <string id="530">تحديد النوع</string>
+  <string id="531">نوع جديد</string>
+  <string id="532">إضافة يدوية</string>
+  <string id="533">إدخال النوع</string>
+  <string id="534">العرض: %s</string>
+  <string id="535">قائمة</string>
+  <string id="536">الأيقونات</string>
+  <string id="537">قائمة كبيرة</string>
+  <string id="538">أيقونات كبيرة</string>
+  <string id="539">عريض</string>
+  <string id="540">عرض كبير</string>
+  <string id="541">أيقونات الألبوم</string>
+  <string id="542">أيقونات DVD</string>
+  <string id="543">DVD</string>
+  <string id="544">معلومات الوسائط</string>
+  <string id="545">جهاز إخراج الصوت</string>
+  <string id="546">جهاز إخراج المنفذ</string>
+  <string id="547">لا توجد سيرة ذاتية لهذا الفنان</string>
+  <string id="548">صوت متعدد القنوات Downmix إلى استريو</string>
+  <string id="549">التحكم في الحجم الرئيسي</string>
+
+  <string id="550">فرز حسب: %s</string>
+  <string id="551">الاسم</string>
+  <string id="552">التاريخ</string>
+  <string id="553">الحجم</string>
+  <string id="554">المقطع</string>
+  <string id="555">الوقت</string>
+  <string id="556">العنوان</string>
+  <string id="557">الفنان</string>
+  <string id="558">الألبوم</string>
+  <string id="559">قائمة التشغيل</string>
+  <string id="560">المعرف</string>
+  <string id="561">الملف</string>
+  <string id="562">السنة</string>
+  <string id="563">تم التقييم</string>
+  <string id="564">النوع</string>
+  <string id="565">الاستخدام</string>
+  <string id="566">فنان الألبوم</string>
+  <string id="567">تشغيل العد</string>
+  <string id="568">آخر تشغيل</string>
+  <string id="569">التعليق</string>
+  <string id="570">تاريخ الإضافة</string>
+  <string id="571">افتراضي</string>
+  <string id="572">الاستوديو</string>
+  <string id="573">المسار</string>
+  <string id="574">الترجمات</string>
+  <string id="575">عرض متقدم</string>
+  <string id="576">إخفاء متقدم</string>
+
+  <string id="580">اتجاه الفرز</string>
+  <string id="581">طريقة الفرز</string>
+  <string id="582">وضع العرض</string>
+  <string id="583">تذكر العروض لمجلدات مختلفة</string>
+  <string id="584">تصاعدي</string>
+  <string id="585">تنازلي</string>
+  <string id="586">تحرير قائمة التشغيل</string>
+  <string id="587">مرشح</string>
+  <string id="588">إلغاء وضع الحفلة</string>
+  <string id="589">وضع الحفلة</string>
+  <string id="590">عشوائي</string>
+  <string id="591">إيقاف</string>
+  <string id="592">واحد</string>
+  <string id="593">الكل</string>
+  <string id="594">إيقاف</string>
+  <string id="595">تكرار: إيقاف</string>
+  <string id="596">تكرار: واحد</string>
+  <string id="597">تكرار: الكل</string>
+
+  <string id="600">تقسيم اسطوانة صوت</string>
+  <string id="601">متوسط</string>
+  <string id="602">قياسي</string>
+  <string id="603">فائق</string>
+  <string id="604">معدل إرسال بتات ثابت</string>
+  <string id="605">تقسيم...</string>
+  <string id="606"></string>
+  <string id="607">إلى:</string>
+  <string id="608">تعذر تقسيم الاسطوانة أو المقطع</string>
+  <string id="609">لم يتم ضبط CDDARipPath.</string>
+  <string id="610">تقسيم مقطع صوتي</string>
+  <string id="611">إدخال رقم</string>
+
+  <string id="620">تقسيم الاسطوانة</string>
+  <string id="621">مشفر</string>
+  <string id="622">الجودة</string>
+  <string id="623">معدل إرسال بت</string>
+  <string id="624">تضمين رقم المقطع</string>
+  <string id="625">كل أغنيات</string>
+  <string id="629">وضع العرض</string>
+  <string id="630">عادي</string>
+  <string id="631">تكبير/تصغير</string>
+  <string id="632">تمديد 4:3</string>
+  <string id="633">تمديد 14:9</string>
+  <string id="634">تمديد 16:9</string>
+  <string id="635">الحجم الأصلي</string>
+  <string id="636">مخصص</string>
+  <string id="637">إعادة تشغيل</string>
+  <string id="638">إعادة تشغيل وضع الاكتساب</string>
+  <string id="639">استخدام مستويات المقاطع</string>
+  <string id="640">استخدام مستويات الألبوم</string>
+  <string id="641">مستوى PreAmp - إعادة تشغيل الملفات المكتسبة</string>
+  <string id="642">مستوى PreAmp - بلا إعادة تشغيل للملفات المكتسبة</string>
+  <string id="643">تجنب الإرفاق عند إعادة تشغيل الملفات المكتسبة</string>
+  <string id="644">جمع الأشرطة السوداء</string>
+  <string id="645">في حاجة إلى فك ملف كبير. متابعة؟</string>
+  <string id="646">إزالة من المكتبة</string>
+  <string id="647">تصدير مكتبة الفيديو</string>
+  <string id="648">استيراد مكتبة الفيديو</string>
+  <string id="649">استيراد</string>
+  <string id="650">تصدير</string>
+  <string id="651">استعراض المكتبة</string>
+  <string id="652">سنوات</string>
+  <string id="653">تحديث المكتبة</string>
+  <string id="654">عرض معلومات الإصلاح</string>
+  <string id="655">استعراض القابل للتنفيذ</string>
+  <string id="656">استعراض قائمة التشغيل</string>
+  <string id="657">استعراض للمجلد</string>
+  <string id="658">معلومات الأغنية</string>
+  <string id="659"></string>
+  <string id="660">تكبير الحجم</string>
+  <string id="661">اختبار مجلد تصدير</string>
+  <string id="662">هذا الملف لم يعد متوفراً.</string>
+  <string id="663">هل تريد إزالته من المكتبة؟</string>
+  <string id="664">استعراض السيناريو</string>
+
+  <string id="700">تنظيف المكتبة</string>
+  <string id="701">إزالة الأغنيات القديمة من المكتبة</string>
+  <string id="702">تم مسح هذا المسار من قبل</string>
+  <string id="705">الشبكة</string>
+  <string id="706">- مضيف بروكسي HTTP</string>
+  <string id="707">- منفذ بروكسي HTTP</string>
+  <string id="708">تمكين بروكسي HTTP</string>
+  <string id="709">- اسم مستخدم بروكسي HTTP</string>
+  <string id="710">- كلمة مرور بروكسي HTTP</string>
+  <string id="711">بروتوكول الإنترنت (IP)</string>
+  <string id="712">تم تحديد منفذ غير صالح. يجب أن تكون القيمة بين 1 و 65535.</string>
+  <string id="713">بروكسي</string>
+  <string id="714">مضيف بروكسي HTTP فارغ[CR]سيتم تعطيل البروكسي</string>
+  <string id="715">- تكوين</string>
+  <string id="716">تلقائياً (استخدام DHCP)</string>
+  <string id="717">يدوياً</string>
+  <string id="718">افتراضي (لوحة قياس)</string>
+  <string id="719">- عنوان IP</string>
+  <string id="720">- قناع الشبكة</string>
+  <string id="721">- بوابة افتراضية</string>
+  <string id="722">- ملقم DNS</string>
+  <string id="723">حفظ وإعادة تشغيل</string>
+  <string id="724">تم تحديد عنوان غير صالح. يجب أن تكون القيمة AAA.BBB.CCC.DDD</string>
+  <string id="725">مع أرقام بين 0 و 255.</string>
+  <string id="726">لم يتم حفظ التغييرات. تابع بدون حفظ؟</string>
+  <string id="727">ملقم الويب</string>
+  <string id="728">ملقم FTP</string>
+  <string id="729">وقت الإنترنت</string>
+  <string id="730">- منفذ ملقم الويب</string>
+  <string id="731">مضيف ملقم الوقت</string>
+  <string id="732">حفظ وتطبيق</string>
+  <string id="733">- كلمة مرور ملقم الويب (اسم المستخدم: boxee)</string>
+  <string id="734">بلا مرور</string>
+  <string id="735">مجموعة الحروف</string> <!-- Subtitles character set -->
+  <string id="736">الأسلوب</string>         <!-- Subtitles style -->
+  <string id="737">اللون</string>         <!-- Subtitles color -->
+  <string id="738">عادي</string>
+  <string id="739">أسود عريض</string>
+  <string id="740">مائل</string>
+  <string id="741">أسود عريض مائل</string>
+  <string id="742">أبيض</string>
+  <string id="743">أصفر</string>
+  <string id="744">ملفات</string>
+  <string id="745">لا توجد معلومات ممسوحة لهذا العرض</string>
+  <string id="746">رجاء إقفال وضع المكتبة</string>
+  <string id="747">خطأ أثناء تحميل الصورة</string>
+  <string id="748">تحرير المسار</string>
+  <string id="749">صورة مرآة</string>
+  <string id="750">هل أنت متأكد؟</string>
+  <string id="751">إزالة المصدر</string>
+  <string id="752"></string>
+  <string id="753"></string>
+  <string id="754">إضافة رابط برنامج</string>
+  <string id="755">تحرير مسار برنامج</string>
+  <string id="756">تحرير اسم برنامج</string>
+  <string id="757">تحرير عمق مسار</string>
+  <string id="758"></string>
+  <string id="759">العرض: قائمة كبيرة</string>
+  <string id="760">أصفر</string>
+  <string id="761">أبيض</string>
+  <string id="762">أزرق</string>
+  <string id="763">أخضر فاتح</string>
+  <string id="764">أخضر مصفر</string>
+  <string id="765">أزرق مخضر</string>
+  <string id="766">محفوظ</string>
+  <string id="767">محفوظ</string>
+  <string id="768">محفوظ</string>
+  <string id="769">محفوظ</string>
+  <string id="770">المشاركة غير متوفرة</string>
+  <string id="771">- محدد FATX تلقائي</string>
+  <string id="772">الصوت</string>
+  <string id="773">بحث</string>
+  <string id="774">مجلد عرض الشرائح</string>
+  <string id="775">واجهة الشبكة</string>
+  <string id="776">- اسم شبكة لاسلكية</string>
+  <string id="777">- كلمة مرور لاسلكية</string>
+  <string id="778">- خصوصية لاسلكية</string>
+  <string id="779">حفظ وتطبيق تغييرات الشبكة...</string>
+  <string id="780">بلا تشفير</string>
+  <string id="781">WEP</string>
+  <string id="782">WPA</string>
+  <string id="783">WPA2</string>
+  <string id="784">تطبيق إعدادات الشبكة رجاء الانتظار.</string>
+  <string id="785">تم بنجاح تكوين الشبكة</string>
+  <string id="786">لم يتم تكوين إعدادات الشبكة بشكل صحيح</string>
+  <string id="787">تم تعطيل الواجهة</string>
+  <string id="788">تم بنجاح تعطيل واجهة الشبكة</string>
+  <string id="789">اسم شبكة لاسلكية</string>
+
+  <string id="790">ملقم الحدث</string>
+  <string id="791">تمكين ملقم الحدث</string>
+  <string id="792">منفذ</string>
+  <string id="793">نطاق المنفذ</string>
+  <string id="794">السماح باتصال أجهزة أخرى</string>
+  <string id="795">تأخير التكرار الأولي (م ث)</string>
+  <string id="796">تأخير التكرار المستمر (م ث)</string>
+  <string id="797">أقصى عدد للعملاء</string>
+  <string id="800">أصدقاء</string>
+  <string id="801">بالغون</string>
+  <string id="802">مجموعة الحروف</string>
+  <string id="803">AirPlay</string>
+  <string id="1000">معاينة شاشة التوقف...</string>
+  <string id="1001">تعذر الاتصال</string>
+  <string id="1002">تعذر الاتصال بموقع الشبكة.</string>
+  <string id="1003">قد يكون هذا نتيجة لعدم اتصال الشبكة.</string>
+  <string id="1004">هل تريد إضافته بأي حال؟</string>
+  <string id="1005"></string>
+  <string id="1006">عنوان IP</string>
+  <string id="1007">إضافة موقع الشبكة</string>
+  <string id="1008">البروتوكول</string>
+  <string id="1009">عنوان الملقم</string>
+  <string id="1010">اسم الملقم</string>
+  <string id="1011">مسار عن بُعد</string>
+  <string id="1012">مجلد مشترك</string>
+  <string id="1013">منفذ</string>
+  <string id="1014">اسم المستخدم</string>
+  <string id="1015">استعراض ملقم الشبكة</string>
+  <string id="1016">إدخال عنوان الشبكة الخاص بالملقم</string>
+  <string id="1017">إدخال المسار على الملقم</string>
+  <string id="1018">إدخال رقم المنفذ</string>
+  <string id="1019">إدخال اسم المستخدم</string>
+  <string id="1020">إضافة مصدر %s</string>
+  <string id="1021">أدخل المسارات أو استعرض مواقع الوسائط.</string>
+  <string id="1022">أدخل اسماً لمصدر الوسائط هذا.</string>
+  <string id="1023">استعراض لمشاركة جديدة</string>
+  <string id="1024">استعراض</string>
+  <string id="1025">تعذر استرجاع معلومات الدليل.</string>
+  <string id="1026">إضافة مصدر</string>
+  <string id="1027">تحرير مصدر</string>
+  <string id="1028">تحرير مصدر %s</string>
+  <string id="1029">إدخال العلامة الجديدة</string>
+  <string id="1030">استعراض الصورة</string>
+  <string id="1031">استعراض مجلد الصور</string>
+  <string id="1032">إضافة موقع الشبكة...</string>
+  <string id="1033">استعراض الملف</string>
+  <string id="1034">القائمة الفرعية</string>
+  <string id="1035">تمكين أزرار القوائم الفرعية</string>
+  <string id="1036">تفضيلات</string>
+  <string id="1037">توصيلات الفيديو</string>
+  <string id="1038">توصيلات الموسيقى</string>
+  <string id="1039">توصيلات الصورة</string>
+  <string id="1040">تحميل الدليل</string>
+  <string id="1041">تم استرجاع %i عناصر</string>
+  <string id="1042">تم استرجاع %i من %i عناصر</string>
+  <string id="1043">توصيلات البرنامج</string>
+  <string id="1044">ضبط الصورة المصغرة للتوصيلة</string>
+  <string id="1045">إعدادات التوصيلة</string>
+  <string id="1046">نقاط الوصول</string>
+  <string id="1047">ضم شبكة أخرى...</string>
+  <string id="1048">اسم مستخدم ملقم الويب</string>
+  <string id="1049">إعدادات السيناريو</string>
+  <string id="1050">فرادى</string>
+  <string id="1051">عروض</string>
+  <string id="1052">اسم المضيف</string>
+  <string id="1053">تريلر</string>
+
+  <string id="1200">عميل SMB</string>
+  <string id="1202">مجموعة العمل</string>
+  <string id="1203">اسم المستخدم الافتراضي</string>
+  <string id="1204">كلمة المرور الافتراضية</string>
+  <string id="1205">مسح دقيق</string>
+
+  <string id="1207">ملقم WINS</string>
+  <string id="1208">رفع مشاركات SMB</string>
+  <string id="1209">استخدم اتصال واحد لكل ملقم</string>
+
+  <string id="1210">إزالة</string>
+  <string id="1211">موسيقى</string>
+  <string id="1212">الفيديو</string>
+  <string id="1213">صور</string>
+  <string id="1214">ملفات</string>
+  <string id="1215">موسيقى وفيديو </string>
+  <string id="1216">الموسيقى والصور</string>
+  <string id="1217">الموسيقى والملفات</string>
+  <string id="1218">الفيديو والصور</string>
+  <string id="1219">الفيديو والملفات</string>
+  <string id="1220">الصور والملفات</string>
+  <string id="1221">الموسيقى والفيديو والصور</string>
+  <string id="1222">الموسيقى والفيديو والصور والملفات</string>
+  <string id="1223">معطل</string>
+  <string id="1226">الملفات والموسيقى والفيديو</string>
+  <string id="1227">الملفات والصور والموسيقى</string>
+  <string id="1228">الملفات والصور والفيديو</string>
+  <string id="1229">الموسيقى والبرامج</string>
+  <string id="1230">الفيديو والبرامج</string>
+  <string id="1231">الصور والبرامج</string>
+  <string id="1232">الموسيقى والفيديو والصور والبرامج</string>
+  <string id="1233">البرامج والفيديو والموسيقى</string>
+  <string id="1234">البرامج والصور والموسيقى</string>
+  <string id="1235">البرامج والصور والفيديو</string>
+
+  <string id="1245">اسم مستخدم FTP</string>
+  <string id="1246">كلمة مرور FTP</string>
+  <string id="1247">تم بنجاح ضبط كلمة المرور</string>
+
+  <string id="1250">اكتشاف تلقائي</string>
+  <string id="1251">اكتشاف تلقائي للنظام</string>
+  <string id="1252">الكنية</string>
+  <string id="1253"></string>
+  <string id="1254">طلب الاتصال</string>
+  <string id="1255">إرسال مستخدم وكلمة مرور FTP</string>
+  <string id="1256">فاصل الطنين</string>
+  <string id="1257">هل تريد الاتصال بالنظام المكتشف تلقائياً؟</string>
+
+  <string id="1260">نشر Zeroconf</string>
+
+  <string id="1300">جهاز صوت مخصص</string>
+  <string id="1301">جهاز إخراج مخصص</string>
+  
+  <string id="1396">تراكم</string>
+  <string id="1397">و</string>
+  <string id="1398">تجميد</string>
+  <string id="1399">متأخر</string>
+  <string id="1400">منعزل</string>
+  <string id="1401">وابل رعدي</string>
+  <string id="1402">رعد</string>
+  <string id="1403">أحد</string>
+  <string id="1404">ثقيل</string>
+  <string id="1405">في</string>
+  <string id="1406">ال</string>
+  <string id="1407">منطقة مجاورة</string>
+  <string id="1408">ثلج</string>
+  <string id="1409">بلورات</string>
+  <string id="1410">هادئ</string>
+  <string id="1411">مع</string>
+  <string id="1412">عاصف</string>
+  <string id="1413">زذاذ</string>
+  <string id="1414">عاصفة رعدية</string>
+  <string id="1415">زذاذ</string>
+  <string id="1416">ضبابي</string>
+  <string id="1417">حبوب</string>
+  <string id="1418">عواصف T</string>
+  <string id="1419">أمطار T</string>
+
+  <!-- strings through to 1450 reserved for weather translation -->
+
+  <string id="1450">قم بإيقاف تشغيل الشاشة عند السبات بالنسبة لـ</string>
+  <!-- strings through to 1470 reserved for power-saving -->
+
+  <string id="2050">وقت التشغيل</string>
+
+  <string id="2100">فشل السيناريو! : %s</string>
+
+  <string id="4501">نوع LCD</string>
+
+  <string id="10000">الرئيسية</string>
+  <string id="10001">البرامج</string>
+  <string id="10002">صور</string>
+  <string id="10003">مدير الملفات</string>
+  <string id="10004">إعدادات</string>
+  <string id="10005">موسيقى</string>
+  <string id="10006">فيديو</string>
+  <string id="10007">معلومات النظام</string>
+  <string id="10008">عام</string>
+  <string id="10009">عرض</string>
+  <string id="10010">إعدادات / مظهر - معايرة وحدة معالجة الرسومات</string>
+  <string id="10011">إعدادات / فيديو - معايرة الشاشة</string>
+  <string id="10012">صور</string>
+  <string id="10013">عناصر \التحكم[CR]الرئيسية</string>
+  <string id="10014">اجتماعي</string>
+  <string id="10015">موسيقى</string>
+  <string id="10016">النظام</string>
+  <string id="10017">الوسائط</string>
+  <string id="10018">الشبكة</string>
+  <string id="10019">عام</string>
+  <string id="10020">سيناريوهات</string>
+  <string id="10021"></string>
+  <string id="10022"></string>
+  <string id="10023"></string>
+  <string id="10025"></string>
+  <string id="10028">فيديو/قائمة تشغيل</string>
+  <string id="10034">ملفات تعريف</string>
+  <string id="10035">[B]عناصر التحكم الأساسية[/B]</string>
+
+  <string id="10100">نعم/لا حوار</string>
+  <string id="10101">حوار التقدم</string>
+
+  <string id="10210">بحث عن ترجمات...</string>
+  <string id="10211">تخزين احتياطي أو بحث عن ترجمات...</string>
+  <string id="10212">إنهاء</string>
+  <string id="10213">تخزين</string>
+  <string id="10214">تدفق مفتوح</string>
+
+  <string id="10500">موسيقى/قائمة تشغيل</string>
+  <string id="10501">موسيقى/ملفات</string>
+  <string id="10502">موسيقى/مكتبة</string>
+  <string id="10503">محرر قائمة التشغيل</string>
+  <string id="10504">أهم 100 أغنية</string>
+  <string id="10505">أهم 100 ألبوم</string>
+  <string id="10506">البرامج</string>
+  <string id="10507">تكوين</string>
+  <string id="10508">تقديرات الطقس</string>
+  <string id="10509">ألعاب الشبكة</string>
+  <string id="10510">توسعات</string>
+  <string id="10511">معلومات النظام</string>
+  <string id="10512"></string>
+  <string id="10513"></string>
+  <string id="10514"></string>
+  <string id="10515"></string>
+  <string id="10516">موسيقى - مكتبة</string>
+  <string id="10517">تشغيل الآن - موسيقى</string>
+  <string id="10518"></string>
+  <string id="10519"></string>
+  <string id="10520"></string>
+  <string id="10521"></string>
+  <string id="10522">تشغيل الآن - فيديو</string>
+  <string id="10523">معلومات الألبوم</string>
+  <string id="10524">معلومات الفيلم</string>
+
+  <string id="12000">تحديد الحوار</string>
+  <string id="12001">موسيقى/معلومات</string>
+  <string id="12002">تم الحوار</string>
+  <string id="12003">فيديو/معلومات</string>
+  <string id="12004">سيناريوهات/معلومات</string>
+  <string id="12005">فيديو شاشة كاملة</string>
+  <string id="12006">تصور الصوت</string>
+  <string id="12007"></string>
+  <string id="12008">حوار تجميع الملفات</string>
+  <string id="12009">إعادة بناء الفهرس...</string>
+  <string id="12010">عودة إلى نافذة الموسيقى</string>
+  <string id="12011">عودة إلى نافذة الفيديو</string>
+  <string id="12012">تحديث قائمة المدرب</string>
+  <string id="12013">المدرب</string>
+  <string id="12014">تعذر العثور على مدربين</string>
+  <string id="12015">إعدادات المدرب</string>
+  <string id="12016">كل المدربين المسجلين مفقودين. تحديث قائمتك</string>
+  <string id="12017">استئناف تلقائي من الوضع الأخير</string>
+  <string id="12018">لا</string>
+  <string id="12019">نعم</string>
+  <string id="12020">طلب</string>
+  <string id="12021">بدء من البداية</string>
+  <string id="12022">استنئاف من %s</string>
+  <string id="12023">التحقق من صحة المدربين الموجودين...</string>
+  <string id="12024">إنشاء صور مصغرة تلقائياً للفيديو بدون رسم توضيحي</string>
+  <string id="12025">لا تحل الفيديو تحت هذا الحجم (ميجا بايت)</string>
+  <string id="12026">توقف مؤقت للفيديو عند الخروج من شاشة التشغيل</string>
+  <string id="12027">تحديد جودة الفيديو</string>  
+  <string id="12028">توفر مستويات عديدة من الجودة</string>  
+  <string id="12029">حفظ التفضيل الخاص بي</string>  
+  <string id="12030">حفظ</string>
+  <string id="12031">1080p</string>
+  <string id="12032">720p</string>
+  <string id="12033">قياسي</string>
+  <string id="12034">توفر العديد من التريلر</string>
+
+  <string id="12310">0</string>
+  <string id="12311">1</string>
+  <string id="12312">2</string>
+  <string id="12313">3</string>
+  <string id="12314">4</string>
+  <string id="12315">5</string>
+  <string id="12316">6</string>
+  <string id="12317">7</string>
+  <string id="12318">8</string>
+  <string id="12319">9</string>
+  <string id="12320">c</string>
+  <string id="12321">موافق</string>
+  <string id="12322">*</string>
+  <string id="12325">مقفل! إدخال الكود...</string>
+  <string id="12326">إدخال كلمة المرور</string>
+  <string id="12327">إدخال كود رئيسي</string>
+  <string id="12328">إدخال كود الفتح</string>
+  <string id="12329">أو الضغط على C للإلغاء</string>
+  <string id="12330">إدخال مكون زر لوحة اللعب و</string>
+  <string id="12331">الضغط على بدء، أو عودة للإلغاء</string>
+  <string id="12332">ضبط القفل</string>
+  <string id="12333">فتح</string>
+  <string id="12334">إعادة ضبط القفل</string>
+  <string id="12335">إزالة القفل</string>
+  <string id="12337">كلمة مرور رقمية</string>
+  <string id="12338">مكون زر لوحة اللعب</string>
+  <string id="12339">كلمة مرور كاملة النص</string>
+  <string id="12340">إدخال كلمة مرور جديدة</string>
+  <string id="12341">إعادة إدخال كلمة مرور جديدة</string>
+  <string id="12342">كلمة مرور غير صحيحة،</string>
+  <string id="12343">إعادة محاول لليسار </string>
+  <string id="12344">كلمات المرور المدخلة غير متطابقة.</string>
+  <string id="12345">تم رفض الوصول.</string>
+  <string id="12346">تم تجاوز حد تكرار كلمة المرور.</string>
+  <string id="12347">سوف يتم إغلاق النظام الآن.</string>
+  <string id="12348">عنصر مقفل</string>
+  <string id="12353">إلغاء تنشيط القفل</string>
+  <string id="12356">تغيير القفل</string>
+  <string id="12357">قفل المصدر</string>
+  <string id="12358">إدخال كلمة المرور كان فارغاً. حاول مرة أخرى.</string>
+  <string id="12360">قفل رئيسي</string>
+  <string id="12362">إغلاق النظام إذا تجاوز محاولات قفل الرئيسي</string>
+  <string id="12367">كود الرئيسي غير صالح!</string>
+  <string id="12368">رجاء إدخال كود رئيسي صالح!</string>
+  <string id="12373">إعدادات ومدير الملفات</string>
+  <string id="12376">ضبط كافتراضي لكل الأفلام</string>
+  <string id="12377">سيؤدي هذا إلى إعادة ضبط القيم المحفوظة مسبقاً</string>
+  <string id="12378">عرض كل صورة لـ</string>
+  <string id="12379">استخدام توازن وتكبير/تصغير</string>
+  <string id="12380">تشغيل فيديو NTSC بمعدلات PAL</string>
+  <string id="12381">تشغيل فيديو PAL بمعدلات NTSC</string>
+  <string id="12382">تشغيل فيديو NTSC في PAL60</string>
+  <string id="12383">12 ساعة</string>
+  <string id="12384">24 ساعة</string>
+  <string id="12385">يوم/شهر</string>
+  <string id="12386">شهر/يوم</string>
+  <string id="12387"></string>
+  <string id="12390">وقت عمل النظام</string>
+  <string id="12391">دقائق</string>
+  <string id="12392">ساعات</string>
+  <string id="12393">أيام</string>
+  <string id="12394">وقت العمل الإجمالي</string>
+
+  <string id="12600">الطقس</string>
+
+  <string id="12900">شاشة التوقف</string>
+  <string id="12901">OSD لشاشة كاملة</string>
+
+  <string id="13000">النظام</string>
+  <string id="13001">تنزيل HD فوري</string>
+  <string id="13002">فيديو فقط</string>
+  <string id="13003">- تأخير</string>
+  <string id="13004">- أدنى مدة للملف</string>
+  <string id="13005">إغلاق</string>
+  <string id="13006">لوحة القياس</string>
+  <string id="13007">استخدام مسار لوحة قياس مخصصة</string>
+  <string id="13008">إغلاق الوظيفة</string> 
+  <string id="13009">خروج</string> 
+  <string id="13010">سبات</string>
+  <string id="13011">توقف</string>
+  <string id="13012">إنهاء</string>
+  <string id="13013">تمهيد</string>
+  <string id="13014">تقليل</string>
+  <string id="13015">إجراء زر الطاقة</string>
+
+  <string id="13020">هل هناك جلسة أخرى نشطة، ربما عبر ssh؟</string>
+  <string id="13021">محرك أقراص قابل للإزالة محمول</string>
+  <string id="13022">إزالة جهاز غير آمنة</string>
+  <string id="13023">تمت إزالة الجهاز بنجاح</string>
+  <string id="13024">تم توصيل قضيب التوجيه</string>
+  <string id="13025">تم فصل قضيب التوجيه</string>
+  <string id="13026">تم توصيل قرص قابل للإزالة</string>
+  <string id="13027">تم فصل قرص قابل للإزالة</string>
+  <string id="13028">تم فصل قرص قابل للإزالة مع وجود أخطاء</string>
+
+  <string id="13100">مرشح Flicker</string>
+  <string id="13101">دع برنامج التشغيل يختار (مطلوب إعادة التشغيل)</string>
+  <string id="13105">مزامنة فارغة رأسية</string>
+  <string id="13106">معطل</string>
+  <string id="13107">ممكَّن أثناء تشغيل الفيديو</string>
+  <string id="13108">ممكَّن دائماً</string>
+  <string id="13109">اختبار وتطبيق مستوى الدقة...</string>
+  <string id="13110">حفظ مستوى الدقة؟</string>
+  <string id="13111">هل تريد الاحتفاظ بمستوى الدقة هذا؟</string>
+  
+  <string id="13112">تدرج لأعلى بجودة عالية</string>
+  <string id="13113">معطل</string>
+  <string id="13114">ممكَّن لمحتوى تعريف قياسي</string>
+  <string id="13115">ممكَّن دائماً</string>
+  
+  <string id="13116">طريقة التدريج لأعلى</string>
+  <string id="13117">مكعب ثنائي</string>
+  <string id="13118">لانكزوس</string>
+  <string id="13119">مزامنة</string>
+  <string id="13120">VDPAU</string>
+  <string id="13121">مستوى تدريج لأعلى VDPAU HQ</string>
+  <string id="13122">تحويل ألوان لمستوى استوديو VDPAU</string>
+
+  <string id="13130">محو الشاشة</string>
+  <string id="13131">معطل</string>
+  <string id="13132">عروض فارغة</string>
+
+  <string id="13140">تم اكتشاف اتصالات نشطة!</string>
+  <string id="13141">إذا تابعت، لن يكون بمقدورك التحكم في Boxee</string>
+  <string id="13142">بعد الآن. هل أنت متأكد أنك تريد إيقاف ملقم الأحداث؟</string>
+  <string id="13144">نغيير وضع Apple Remote؟</string>
+  <string id="13145">تغيير هذا الوضع قد يوقف Apple Remotes من العمل مع Boxee.[CR]هل تريد المتابعة؟</string>
+  <string id="13148">نغيير وضع التحكم عن بُعد؟</string>
+  <string id="13149">رجاء إعادة تشغيل Boxee لتنشيط</string>
+  <string id="13150">مفتاح HDD:</string>
+  <string id="13151">درجة حرارة HDD:</string>
+  <string id="13152">موديل DVD:</string>
+  <string id="13153">جهاز DVD:</string>
+  <string id="13154">موديل HDD:</string>
+  <string id="13155">مسلسل HDD:</string>
+  <string id="13156">جهاز HDD:</string>
+  <string id="13157">كلمة مرور HDD:</string>
+  <string id="13158">حالة قفل HDD:</string>
+  <string id="13159">قناع الشبكة الفرعية</string>
+  <string id="13160">بوابة</string>
+  <string id="13161">DNS أساسي</string>
+  <string id="13162">فشلت التهيئة</string>
+  
+  <string id="13163">لوحة الألعاب</string>
+  <string id="13164">لوحة المفاتيح</string>
+  <string id="13165">الماوس</string>
+  <string id="13166">سماعة رأس/ميكروفون</string>
+  <string id="13167">وحدة الذاكرة</string>
+  <string id="13168">IR عن بُعد</string>
+  <string id="13169">منفذ المتحكم</string>
+  
+  
+  <string id="13170">أبداً</string>
+  <string id="13171">على الفور</string>
+  <string id="13172">بعد %i ثواني</string>
+  <string id="13173">تاريخ تثبيت HDD:</string>
+  <string id="13174">حساب دائرة طاقة HDD:</string>
+
+  <string id="13200">ملفات تعريف</string>
+  <string id="13201">حذف ملف التعريف '%s'؟</string>
+  <string id="13204">آخر ملف تعريف محمل:</string>
+  <string id="13205">غير معروف</string>
+  <string id="13206">استبدال</string>
+  <string id="13208">ساعة المنبه</string>
+  <string id="13209">فاصل ساعة المنبه (بالدقائق)</string>
+  <string id="13210">بدأ، المنبه في %im</string>
+  <string id="13211">المنبه!</string>
+  <string id="13212">تم الإلغاء مع ترك %im%</string>
+
+  <string id="13248">تمكين مع الافتراضي</string>
+  <string id="13249">بحث عن ترجمات في RARs</string>
+  <string id="13250">استعراض الترجمة...</string>
+  <string id="13251">نقل العنصر</string>
+  <string id="13252">نقل العنصر هنا</string>
+  <string id="13253">إلغاء النقل</string>
+
+  <string id="13270">الجهاز:</string>
+  <string id="13271">استخدام CPU:</string>
+  
+  <string id="13274">متصل، ولكن لا يتوفر DNS</string>
+  <string id="13275">محرك الأقراص</string>
+  <string id="13276">DVD-ROM</string>
+  <string id="13277">المخزن</string>
+  <string id="13278">افتراضي</string>
+  <string id="13279">الشبكة</string>
+  <string id="13280">الفيديو</string>
+  <string id="13281">الجهاز</string>
+  <string id="13282">_</string>
+  <string id="13283">نظام التشغيل:</string>
+  <string id="13284">سرعة CPU:</string>
+  <string id="13285">BIOS مكتشف:</string>
+  <string id="13286">مشفر الفيديو:</string>
+  <string id="13287">دقة الشاشة</string>
+  <string id="13288">إصدار Xbox:</string>
+  <string id="13289">رقم مسلسل Xbox:</string>
+  <string id="13290">مصنع Xbox:</string>
+  <string id="13291">Modchip:</string>
+  <string id="13292">كابل A/V:</string>
+  <string id="13293">الفيديو ومنطقة XBE:</string>
+  <string id="13294">منطقة DVD:</string>
+  <string id="13295">الإنترنت:</string>
+  <string id="13296">متصل</string>
+  <string id="13297">غير متصل. فحص إعدادات الشبكة.</string>
+  <string id="13298">مفتاح مباشر Xbox:</string>
+  <string id="13299">درجة حرارة الهدف</string>
+  <string id="13300">سرعة المروحة</string>
+  <string id="13301">التحكم في درجة الحرارة تلقائياً</string>
+  <string id="13302">تجاوز سرعة المروحة</string>
+  <string id="13303">- الخطوط</string>
+  <string id="13304">تمكين قلب السلاسل ثنائية الاتجاه</string>
+  <string id="13305">تمكين تغذيات RSS</string>
+  <string id="13306">إخفاء عناصر المجلد الأساسية</string>
+  <string id="13307">تتبع قالب التسمية</string>
+  <string id="13308">إعادة التشغيل؟</string>
+  <string id="13309">بدلاً من XBMC فقط؟</string>
+  <string id="13310">تأثير التكبير/التصغير</string>
+  <string id="13311">تأثير التعويم</string>
+  <string id="13312">تقليل الشريط الأسود</string>
+  <string id="13313">إعادة التشغيل</string>
+  <string id="13314">بهتان</string>
+  <string id="13315">إعادة إنشاء صور مصغرة</string>
+  <string id="13316">صور مصغرة متكررة</string>
+  <string id="13317">عرض جانبي</string>
+  <string id="13318">عرض متكرر</string>
+  <string id="13319">عشوائي</string>
+  <string id="13320">استريو</string>
+  <string id="13321">يسار فقط</string>
+  <string id="13322">يمين فقط</string>
+  <string id="13323">تمكين دعم الكاروكي</string>
+  <string id="13324">شفافية الخلفية</string>
+  <string id="13325">شفافية الواجهة</string>
+  <string id="13326">تأخير A/V</string>
+  <string id="13327">الكاروكي</string>
+  <string id="13328">تعذر العثور على %s</string>
+  <string id="13329">خطأ أثناء فتح %s</string>
+  <string id="13330">تعذر تحميل %s</string>
+  <string id="13331">الخطأ: ذاكرة ممتلئة</string>
+  <string id="13332">نقل لأعلى</string>
+  <string id="13333">نقل لأسفل</string>
+  <string id="13334">تحرير العلامة</string>
+  <string id="13335">عمل افتراضي</string>
+  <string id="13336">زر إزالة</string>
+  <string id="13338">LED أمامي</string>
+  <string id="13339">لون LED أمامي</string>
+  <string id="13340">اتركه كما هو</string>
+  <string id="13341">أخضر</string>
+  <string id="13342">برتقالي</string>
+  <string id="13343">أحمر</string>
+  <string id="13344">أزرق</string>
+  <string id="13345">إيقاف تبديل LED عند التشغيل</string>
+  <string id="13346">معلومات الفيلم</string>
+  <string id="13347">عنصر الصف</string>
+  <string id="13348">بحث عن IMDb...</string>
+  <string id="13349">مسح لمحتوى جديد</string>
+  <string id="13350">تشغيل الآن...</string>
+  <string id="13351">معلومات الألبوم</string>
+  <string id="13352">إضافة عنصر إلى المكتبة</string>
+  <string id="13353">إيقاف المسح</string>
+  <string id="13354">طريقة الإخراج</string>
+  <string id="13355">ظل بكسل بجودة منخفضة</string>
+  <string id="13356">تراكبات الجهاز</string>
+  <string id="13357">ظل بكسل بجودة عالية</string>
+  <string id="13358">تشغيل العنصر</string>
+  <string id="13359">ضبط صورة مصغرة للفنان</string>
+  <string id="13360">إنشاء صور مصغرة</string>
+  <string id="13361">تمكين الصوت</string>
+  <string id="13375">تمكين الجهاز</string>
+  <string id="13376">مستوى الصوت</string>
+  <string id="13377">وضع عرض افتراضي</string>
+  <string id="13378">سطوع افتراضي</string>
+  <string id="13379">تباين افتراضي</string>
+  <string id="13380">جاما افتراضي</string>
+  <string id="13381">استعادة الفيديو</string>
+  <string id="13382">قناع الصوت - المنفذ 1</string>
+  <string id="13383">قناع الصوت - المنفذ 2</string>
+  <string id="13384">قناع الصوت - المنفذ 3</string>
+  <string id="13385">قناع الصوت - المنفذ 4</string>
+  <string id="13386">استخدام بحث حسب الوقت</string>
+  <string id="13387">تتبع قالب التسمية لليمين</string>
+  <string id="13388">ضبط مسبق</string>
+  <string id="13389">لا يوجد ضبط مسبق متوفر لهذا التصور</string>
+  <string id="13390">لا توجد إعدادات متوفرة لهذا التصور</string>
+  <string id="13391">إخراج/تحميل</string>
+  <string id="13392">استخدام التصور عند تشغيل الصوت</string>
+  <string id="13393">حساب الحجم</string>
+  <string id="13394">حساب حجم المجلد</string>
+  <string id="13395">إعدادات الفيديو</string>
+  <string id="13396">إعدادات الصوت والترجمة</string>
+  <string id="13397">تمكين الترجمات</string>
+  <string id="13398">اختصارات</string>
+  <string id="13399">تجاهل الرموز عند الفرز</string>
+  <string id="13400">بهتان مقاطع الألبوم</string>
+  <string id="13401">استعراض %s</string>
+  <string id="13402">عرض وضع المقطع</string>
+  <string id="13403">محو الافتراضي</string>
+  <string id="13404">استعادة</string>
+  <string id="13405">الحصول على صورة مصغرة</string>
+  <string id="13406">معلومات الصورة</string>
+  <string id="13407">%s ضبط مسبق</string>
+  <string id="13408">(تقييم مستخدم IMDb)</string>
+  <string id="13409">أهم 250</string>
+  <string id="13410">توليف Last.fm</string>
+  <string id="13411">أقل سرعة مروحة</string>
+  <string id="13412"></string>
+  <string id="13413">تنزيل</string>
+  <string id="13414">إخفاء الفنانين الذي يظهرون فقط على النصوص</string>
+  <string id="13415">طريقة الإخراج</string>
+  <string id="13416">اكتشاف تلقائي</string>
+  <string id="13417">ظلال أساسية (ARB)</string>
+  <string id="13418">ظلال متقدمة (GLSL)</string>
+  <string id="13419">البرنامج</string>
+  <string id="13420">إزالة بأمان</string>
+  <string id="13421">VDPAU</string>
+  <string id="13422">بدء عرض شرائح هنا</string>
+  <string id="13423">تطبيق مجموعة أحرف جديدة</string>
+  <string id="13424">فشل في بدء جهاز الصوت</string>
+  <string id="13425">فحص إعدادات الصوت</string>
+
+  <string id="13500">طريقة مزامنة A/V</string>
+  <string id="13501">ساعة الصوت</string>
+  <string id="13502">ساعة الصوت (صوت نقطي/وهمي)</string>
+  <string id="13503">ساعة الفيديو (صوت معاد)</string>
+  <string id="13504">أقصى قدر معاد (%)</string>
+  <string id="13505">جودة المعاد</string>
+  <string id="13506">منخفض(سريع)</string>
+  <string id="13507">متوسط</string>
+  <string id="13508">مرتفع</string>
+  <string id="13509">مرتفع فعلاً (منخفض)</string>
+  <string id="13510">تشغيل المزامنة للعرض</string>
+
+  <string id="13600">Apple عن بُعد</string>
+  <string id="13601">وضع عن بُعد</string>
+  <string id="13602">تشغيل دائم</string>
+  <string id="13603">وقت تأخير التسلسل</string>
+  
+  <string id="13610">معطل</string>
+  <string id="13611">قياسي</string>
+  <string id="13612">دولي عن بُعد</string>
+  <string id="13613">متعدد عن بُعد (انسجام)</string>
+  
+  <string id="13620">خطأ Apple عن بُعد</string>
+  <string id="13621">تعذر تمكين دعم Apple عن بُعد</string>
+  
+  <string id="13622">استخدام إخراج عالي الدقة</string>
+
+  <string id="14000">تجميع</string>
+  <string id="14001">فك</string>
+  <string id="14003">تنزيل ملف قائمة التشغيل...</string>
+  <string id="14004">تنزيل قائمة التدفقات...</string>
+  <string id="14005">تدقيق قائمة التدفقات...</string>
+  <string id="14006">فشل تنزيل قائمة التدفقات</string>
+  <string id="14007">فشل تنزيل ملف قائمة التشغيل</string>
+  <string id="14008"></string>
+  <string id="14009">دليل اللعبات</string>
+  <string id="14010">تبديل تلقائي للصور المصغرة حسب</string>
+  <string id="14011">تمكين التبديل التلقائي لعرض الصور المصغرة</string>
+  <string id="14012">- استخدام أيقونات كبيرة</string>
+  <string id="14013">- تبديل حسب</string>
+  <string id="14014">- نسبة</string>
+  <string id="14015">لا توجد ملفات وصورة واحدة على الأقل</string>
+  <string id="14016">ملف واحد على الأقل وصورة مصغرة</string>
+  <string id="14017">نسبة الصور المصغرة</string>
+  <string id="14018">خيارات العرض</string>
+  <string id="14019">موقع الطقس</string>
+  <string id="14020">تغيير كود المنطقة 2</string>
+  <string id="14021">تغيير كود المنطقة 3</string>
+  <string id="14022">المكتبة</string>
+  <string id="14023">بلا تلفاز</string>
+  <string id="14024">أدخل اسم أقرب مدينة</string>
+  <string id="14025">ذاكرة فيديو/صوت/DVD - قرص صلب</string>
+  <string id="14026">ذاكرة الفيديو - DVD-ROM</string>
+  <string id="14027">- شبكة محلية</string>
+  <string id="14028">- الإنترنت</string>
+  <string id="14030">ذاكرة الصوت - DVD-ROM</string>
+  <string id="14031">- شبكة محلية</string>
+  <string id="14032">- الإنترنت</string>
+  <string id="14034">ذاكرة DVD - DVD-ROM</string>
+  <string id="14035">- شبكة محلية</string>
+  <string id="14036">ملقمات</string>
+  <string id="14037">عام</string>
+  <string id="14038">تم تغيير إعدادات الشبكة</string>
+  <string id="14039">مطلوب إعادة تشغيل لتفعيل الإعدادات</string>
+  <string id="14040">هل تريد إعادة التشغيل الآن؟</string>
+  <string id="14041">معالجة لاحقة</string>
+  <string id="14042"></string>
+  <string id="14043">- الإغلاق أثناء التشغيل</string>
+  <string id="14044">%i دقائق</string>
+  <string id="14045">%i ثواني</string>
+  <string id="14046">%i ميلي ثانية</string>
+  <string id="14047">%i %%</string>
+  <string id="14048">%i كيلوبايت</string>
+  <string id="14049">%i كيلوبايت</string>
+  <string id="14050">%i دي بايت</string>
+  <string id="14051">تنسيق الوقت</string>
+  <string id="14052">تنسيق التاريخ</string>
+  <string id="14053">مرشحات GUI</string>
+  <string id="14054">تمكين عمليات البحث على الإنترنت</string>
+  <string id="14055">استخدام مسح الخلفية</string>
+  <string id="14056">إيقاف المسح</string>
+  <string id="14057">غير ممكن أثناء مسح معلومات الوسائط</string>
+  <string id="14058">تأثير حبيبي الفيلم</string>
+  <string id="14059">بحث عن صور مصغرة على مشاركات عن بُعد</string>
+  <string id="14060">ذاكرة نوع غير معروف - الإنترنت</string>
+  <string id="14061">تلقائي</string>
+  <string id="14062">أدخل اسم مستخدم لـ</string>
+  <string id="14063">التاريخ والوقت</string>
+  <string id="14064">ضبط التاريخ</string>
+  <string id="14065">ضبط الوقت</string>
+  <string id="14066">أدخل الوقت في 24 ساعة بتنسيق HH:MM</string>
+  <string id="14067">أدخل التاريخ بتنسيق DD/MM/YYYY</string>
+  <string id="14068">أدخل عنوان IP</string>
+  <string id="14069">تطبيق هذه الإعدادات الآن؟</string>
+  <string id="14070">تطبيق التغييرات الآن</string>
+  <string id="14071">السماح لإعادة تسمية الملف وحذفه</string>
+  <string id="14072"></string>
+  <string id="14073"></string>
+  <string id="14074">ضبط التوقيت الزمني</string>
+  <string id="14075">استخدام التوقيت الصيفي</string>
+  <string id="14076">تفضيل</string>
+  <string id="14077">إزالة</string>
+  <string id="14078">- ألوان</string>
+  <string id="14079">دولة التوقيت الزمني</string>
+  <string id="14080">التوقيت الزمني</string>
+  <string id="14081">قوائم الملفات</string>
+  <string id="14082">عرض معلومات صورة EXIF</string>
+  <string id="14083">استخدام نافذة شاشة كاملة بدلاً من شاشة كاملة حقيقية</string>
+  <string id="14084">أغنيات الطابور على التحديد</string>
+  <string id="14085">تشغيل اسطوانات الصوت تلقائياً</string>
+  <string id="14086">تشغيل</string>
+  <string id="14087">DVDs</string>
+  <string id="14088">تشغيل DVDs تلقائياً</string>
+  <string id="14089">الخط المستخدم للترجمات النصية</string>
+  <string id="14090">دولي</string>
+  <string id="14091">مجموعة الحروف</string>
+  <string id="14092">إصلاح</string>
+  <string id="14093">السرية</string>
+  <string id="14094">أجهزة الإدخال</string>
+  <string id="14095">توفير الطاقة</string>
+  <string id="14096">تنسيق الوقت</string>
+  <string id="14097">مقياس درجة الحرارة</string>
+
+  <string id="15000"></string>
+  <string id="15001"></string>
+  <string id="15002"></string>
+  <string id="15003"></string>
+  <string id="15004"></string>
+  <string id="15005"></string>
+  <string id="15006"></string>
+  <string id="15007"></string>
+  <string id="15008"></string>
+  <string id="15009"></string>
+  <string id="15010"></string>
+  <string id="15011"></string>
+  <string id="15012"></string>
+  <string id="15013"></string>
+  <string id="15014"></string>
+  <string id="15015">إزالة</string>
+  <string id="15016">ألعاب</string>
+  <string id="15017"></string>
+  <string id="15018"></string>
+  <string id="15019">إضافة</string>
+  <string id="15020"></string>
+  <string id="15021"></string>
+  <string id="15022"></string>
+  <string id="15023"></string>
+  <string id="15024"></string>
+  <string id="15025"></string>
+  <string id="15026"></string>
+  <string id="15027"></string>
+  <string id="15028"></string>
+  <string id="15029"></string>
+  <string id="15030"></string>
+  <string id="15031"></string>
+  <string id="15032"></string>
+  <string id="15033"></string>
+  <string id="15034"></string>
+  <string id="15035"></string>
+  <string id="15036"></string>
+  <string id="15037"></string>
+  <string id="15038"></string>
+  <string id="15039"></string>
+  <string id="15040"></string>
+  <string id="15041"></string>
+  <string id="15042"></string>
+  <string id="15043"></string>
+  <string id="15044"></string>
+  <string id="15045"></string>
+  <string id="15046"></string>
+  <string id="15047"></string>
+  <string id="15048"></string>
+  <string id="15049"></string>
+  <string id="15050"></string>
+  <string id="15051"></string>
+  <string id="15052">كلمة المرور</string>
+  <string id="15053"></string>
+  <string id="15054"></string>
+  <string id="15055"></string>
+  <string id="15056"></string>
+  <string id="15057"></string>
+  <string id="15058"></string>
+  <string id="15059"></string>
+  <string id="15060"></string>
+  <string id="15061"></string>
+  <string id="15100">المكتبة</string>
+  <string id="15101">قاعدة البيانات</string>
+  <string id="15102">* كل الألبومات</string>
+  <string id="15103">* كل الفنانين</string>
+  <string id="15104">* كل الأغنيات</string>
+  <string id="15105">* كل الأنواع</string>
+  <string id="15106"></string>
+  <string id="15107">تخزين...</string>
+  <string id="15108">أصوات التنقل</string>
+  <string id="15109">افتراضي</string>
+  <string id="15111">- الموضع</string>
+  <string id="15112">موضوع افتراضي</string>
+
+  <string id="15200">Last.fm</string>
+  <string id="15201">إرسال أغنيات إلى Last.fm</string>
+  <string id="15202">اسم مستخدم Last.fm</string>
+  <string id="15203">كلمة مرور Last.fm</string>
+  <string id="15204">تعذرت المصافحة: نوم...</string>
+  <string id="15205">الرجاء التحديث XBMC</string>
+  <string id="15206">ترخيص سيء: حدد اسم المستخدم وكلمة المرور</string>
+  <string id="15207">متصل</string>
+  <string id="15208">غير متصل</string>
+  <string id="15209">إرسال فاصل %i</string>
+  <string id="15210">أغنيات %i مخزنة</string>
+  <string id="15211">إرسال...</string>
+  <string id="15212">إرسال في خلال %i ثواني</string>
+  <string id="15213">التشغيل باستخدام...</string>
+  <string id="15214">استخدام مزامنة A/V سلسة</string>
+  <string id="15215">إخفاء أسماء الملفات في عرض صور مصغرة</string>
+  <string id="15216">التشغيل في وضع الحفلة</string>
+  <string id="15217">إرسال أغنيات إلى Libre.fm</string>
+  <string id="15218">اسم مستخدم Libre.fm</string>
+  <string id="15219">كلمة مرور Libre.fm</string>
+  <string id="15220">Libre.fm</string>
+  <string id="15221">Scrobbler</string>
+
+  <string id="15250">إرسال راديو Last.fm إلى Last.fm</string>
+  <string id="15251">الاتصال بـ Last.fm</string>
+  <string id="15252">تحديد المحطة...</string>
+  <string id="15253">بحث عن نفس الفنانين...</string>
+  <string id="15254">بحث عن نفس العلامات...</string>
+  <string id="15255">ملف التعريف الخاص بك (%name%)</string>
+  <string id="15256">أهم العلامات الكلية</string>
+  <string id="15257">أهم فنانين للعلامة %name%</string>
+  <string id="15258">أهم ألبومات للعلامة %name%</string>
+  <string id="15259">أهم مقاطع للعلامة %name%</string>
+  <string id="15260">استمع إلى علامة الراديو %name% Last.fm</string>
+  <string id="15261">نفس الفنانين كـ %name%</string>
+  <string id="15262">أهم ألبومات %name%</string>
+  <string id="15263">أهم مقاطع %name%</string>
+  <string id="15264">أهم علامات %name%</string>
+  <string id="15265">أكبر مراوح لـ %name%</string>
+  <string id="15266">استمع إلى الراديو %name% للمراوح Last.fm</string>
+  <string id="15267">استمع إلى نفس الفنانين %name% لراديو Last.fm</string>
+  <string id="15268">أهم فنانين للمستخدم %name%</string>
+  <string id="15269">أهم ألبومات للمستخدم %name%</string>
+  <string id="15270">أهم مقاطع للمستخدم %name%</string>
+  <string id="15271">أصدقاء للمستخدم %name%</string>
+  <string id="15272">جيران المستخدم %name%</string>
+  <string id="15273">مخطط الفنان الأسبوعي لـ %name%</string>
+  <string id="15274">مخطط الألبوم الأسبوعي لـ %name%</string>
+  <string id="15275">مخطط المقطع الأسبوعي لـ %name%</string>
+  <string id="15276">استمع إلى جيران %name% للراديو Last.fm</string>
+  <string id="15277">استمع إلى الموظف %name% للراديو Last.fm</string>
+  <string id="15278">استمع إلى مقاطع محببة %name% للراديو Last.fm</string>
+  <string id="15279">استرجاع القائمة من Last.fm...</string>
+  <string id="15280">لا يمكن استرجاع القائمة من Last.fm</string>
+  <string id="15281">أدخل اسم فنان للبحث عن أسماء ذات صلة</string>
+  <string id="15282">أدخل اسم علامة للبحث عن أسماء مماثلة</string>
+  <string id="15283">مقاطع تم الاستماع إليها بواسطة %name%</string>
+  <string id="15284">استمع إلى توصيات %name% للراديو Last.fm</string>
+  <string id="15285">أهم علامات للمستخدم %name%</string>
+  <string id="15286">استمع إلى قائمة تشغيل %name% للراديو Last.fm</string>
+  <string id="15287">هل تريد إضافة المقطع الحالي إلى المقاطع المحببة الخاصة بك.</string>
+  <string id="15288">هل تريد منع المقطع الحالي؟</string>
+  <string id="15289">تمت الإضافة إلى المقاطع المحببة: '%s'.</string>
+  <string id="15290">تعذرت إضافة '%s' إلى المقاطع المحببة لك</string>
+  <string id="15291">ممنوع: '%s'.</string>
+  <string id="15292">تعذر منع '%s'.</string>
+  <string id="15293">مقاطع محببة حديثاً بواسطة %name%</string>
+  <string id="15294">مقاطع ممنوعة حديثاً بواسطة %name%</string>
+  <string id="15295">إزالة من المقاطع المحببة</string>
+  <string id="15296">إلغاء المنع</string>
+  <string id="15297">هل تريد إزالة هذا المقطع من المقاطع المحببة لك؟</string>
+  <string id="15298">هل تريد إلغاء منع هذا المقطع؟</string>
+
+  <string id="15300">تعذر العثور على المسار أو أنه غير صالح</string>
+  <string id="15301">تعذر الاتصال بملقم الشبكة</string>
+  <string id="15302">تعذر العثور على ملقمات</string>
+  <string id="15303">تعذر العثور على مجموعة العمل</string>
+
+  <string id="15310">فتح مصدر متعدد المسارات</string>
+  <string id="15311">المسار:</string>
+
+  <string id="16000">عام</string>
+  <string id="16001">تكوين جهاز الصوت...</string>
+  <string id="16002">بحث على الإنترنت</string>
+  <string id="16003">المشغل</string>
+  <string id="16004">تشغيل الوسائط من القرص</string>
+  <string id="16005">متقدم</string>
+
+  <string id="16008">أدخل عنواناً جديداً</string>
+  <string id="16009">أدخل اسم الفيلم</string>
+  <string id="16010">أدخل اسم ملف التعريف</string>
+  <string id="16011">أدخل اسم الألبوم</string>
+  <string id="16012">أدخل اسم قائمة التشغيل</string>
+  <string id="16013">أدخل اسم ملف جديد</string>
+  <string id="16014">أدخل اسم مجلد</string>
+  <string id="16015">أدخل الدليل</string>
+  <string id="16016">الخيارات المتوفرة: %A, %T, %N, %B, %D, %G, %Y, %F, %S</string>
+  <string id="16017">أدخل سلسلة البحث</string>
+  <string id="16018">لا شيء</string>
+  <string id="16019">تحديد تلقائي</string>
+  <string id="16020">إلغاء الاشتباك</string>
+  <string id="16021">تمايل</string>
+  <string id="16022">تمايل (معكوس)</string>
+  <string id="16023">تعامل مشتبك</string>
+  <string id="16024">إلغاء...</string>
+  <string id="16025">أدخل اسم الفنان</string>
+  <string id="16026">تم إيقاف تشغيل قائمة التشغيل</string>
+  <string id="16027">العديد من العناصر الفاشلة المتعاقبة</string>
+  <string id="16028">أدخل القيمة</string>
+
+  <string id="16030">تم إيقاف وضع الحفلة</string>
+  <string id="16031">لا توجد أغنيات متطابقة في المكتبة.</string>
+  <string id="16032">تعذرت تهيئة قاعدة البيانات.</string>
+  <string id="16033">تعذر فتح قاعدة البيانات.</string>
+  <string id="16034">تعذر الحصول على أغنيات من قاعدة البيانات.</string>
+  <string id="16035">قائمة تشغيل وضع الحفلة</string>
+
+  <string id="16100">كل ملفات الفيديو</string>
+  <string id="16101">غير مشاهد</string>
+  <string id="16102">مشاهد</string>
+  <string id="16103">تحديد كمشاهد</string>
+  <string id="16104">تحديد كغير مشاهد</string>
+  <string id="16105">تحرير العنوان</string>
+  <string id="16106">استخدام NTSC-M &amp; NTSC-J</string>
+  <string id="16107">استخدام NTSC-M فقط</string>
+  <string id="16108">استخدام NTSC-J فقط</string>
+  <string id="16109">استخدام PAL-60 فقط</string>
+  <string id="16110">للعبات 60 هرتز</string>
+
+  <string id="16200">تم إيقاف العملية</string>
+  <string id="16201">فشل النسخ</string>
+  <string id="16202">فشل في نسخ ملف واحد على الأقل</string>
+  <string id="16203">فشل النقل</string>
+  <string id="16204">فشل في نقل ملف واحد على الأقل</string>  
+  <string id="16205">فشل الحذف</string>
+  <string id="16206">فشل في حذف ملف واحد على الأقل</string>
+
+  <string id="16300">طريقة تدريج الفيديو</string>
+  <string id="16301">أقرب جار</string>
+  <string id="16302">خطي مزدوج</string>
+  <string id="16303">مكعب ثنائي</string>
+  <string id="16304">Lanczos2</string>
+  <string id="16305">Lanczos3</string>
+  <string id="16306">Sinc8</string>
+  
+  <string id="16307">مكعب ثنائي (برنامج)</string>
+  <string id="16308">Lanczos (برنامج)</string>  
+  <string id="16309">مزامنة (برنامج)</string>
+
+  <string id="16310">(VDPAU)مؤقت</string>
+  <string id="16311">(VDPAU)مؤقت/فضائي</string>
+  <string id="16312">(VDPAU)تقليل الضوضاء</string>
+  <string id="16313">(VDPAU)حدة</string>
+  <string id="16314">Inverse Telecine</string>
+  <string id="17500">انتهاء وقت سكون الشاشة</string> 
+
+  <string id="19000">تبديل إلى القناة</string>
+
+  <string id="20000">مجلد تقسيم CDDA</string>
+  <string id="20001">استخدام مشغل DVD خارجي</string>
+  <string id="20002">مشغل DVD خارجي</string>
+  <string id="20003">مجلد المدربين</string>
+  <string id="20004">مجلد اللقطة</string>
+  <string id="20005">مجلد التسجيلات</string>
+  <string id="20006">مجلد قوائم التشغيل</string>
+  <string id="20007">تسجيلات</string>
+  <string id="20008">لقطات</string>
+  <string id="20009">استخدام XBMC</string>
+  <string id="20010"></string>
+  <string id="20011">قوائم تشغيل الموسيقى</string>
+  <string id="20012">قوائم تشغيل الفيديو</string>
+  <string id="20013">هل تريد تشغيل اللعبة؟</string>
+  <string id="20014">فرز حسب: قائمة التشغيل</string>
+  <string id="20015">صورة مصغرة عن بُعد</string>
+  <string id="20016">الصورة المصغرة الحالية</string>
+  <string id="20017">الصورة المصغرة المحلية</string>
+  <string id="20018">بلا صورة مصغرة</string>
+  <string id="20019">اختيار الموجز</string>
+  <string id="20020"></string>
+  <string id="20021"></string>
+  <!-- string id 20022 will always be set to an empty string (LocalizeStrings.cpp)-->
+  <string id="20022"></string>
+  <string id="20023">تباين</string>
+  <string id="20024">مسح جديد</string>
+  <string id="20025">مسح الكل</string>
+  <string id="20026">الموقع</string>
+
+  <!-- string id's 20027 thru 20035 are reserved for temperaturestrings  (LocalizeStrings.cpp)-->
+
+  <string id="20038">نافذة تأمين الموسيقى</string>
+  <string id="20039">نافذة تأمين الفيديو</string>
+  <string id="20040">نافذة تأمين الصور</string>
+  <string id="20041">نوافذ تأمين البرامج والحفظ والسيناريوهات</string>
+  <string id="20042">تأمين مدير الملفات</string>
+  <string id="20043">تأمين الإعدادات</string>
+  <string id="20044">بدء التحديث</string>
+  <string id="20045">إدخال وضع رئيسي</string>
+  <string id="20046">ترك وضع رئيسي</string>
+  <string id="20047">إنشاء ملف التعريف '%s'؟</string>
+  <string id="20048">بدء مع إعدادات حديثة</string>
+  <string id="20049">أفضل توفر</string>
+  <string id="20050">تبديل تلقائي بين 16x9 و 4x3</string>
+  <string id="20051">معاملة الملفات المجمعة كملف فردي</string>
+  <string id="20052">تنبيه</string>
+  <string id="20053">وضع رئيسي أيسر</string>
+  <string id="20054">وضع رئيسي مدخل</string>
+  <string id="20055">صورة Allmusic.com</string>
+  <string id="20056">خطأ في تسجيل الدخول</string>
+  <string id="20057">إزالة الموجز</string>
+  <string id="20058">إضافة ملف تعريف...</string>
+  <string id="20059">معلومات الاستعلام عن كل الألبومات</string>
+  <string id="20060">معلومات الوسائط</string>
+  <string id="20061">منفصل</string>
+  <string id="20062">مشاركة مع الافتراضي</string>
+  <string id="20063">مشاركات مع الافتراضي (قراءة فقط)</string>
+  <string id="20064">نسخ الافتراضي</string>
+  <string id="20065">صورة ملف التعريف</string>
+  <string id="20066">تأمين التفضيلات</string>
+  <string id="20067">تحرير ملف التعريف</string>
+  <string id="20068">دخول</string>
+  <string id="20069">تعذر إنشاء مجلد</string>
+  <string id="20070">دليل ملفات التعريف</string>
+  <string id="20071">بدء مع مصادر وسائط حديثة</string>
+  <string id="20072">التأكد من أن المجلد المحدد قابل للكتابة عليه</string>
+  <string id="20073">وأن اسم المجلد الجديد صالح</string>
+  <string id="20074">تقدير المحتوى</string>
+  <string id="20075">إدخال كود تأمين رئيسي</string>
+  <string id="20076">طلب كود تأمين رئيسي عند بدء التشغيل</string>
+  <string id="20077">إعدادات الشكل</string>
+  <string id="20078">- بلا ضبط رابط -</string>
+  <string id="20079">تمكين الرسوم المتحركة</string>
+  <string id="20080">تعطيل RSS أثناء الموسيقى</string>
+  <string id="20081">تمكين أزرار الاختصارات</string>
+  <string id="20082">عرض البرامج في القائمة الرئيسية</string>
+  <string id="20083">عرض معلومات الموسيقى</string>
+  <string id="20084">عرض معلومات الطقس</string>
+  <string id="20085">عرض معلومات النظام</string>
+  <string id="20086">عرض مساحة قرص متوفرة C: E: F:</string>
+  <string id="20087">عرض مساحة قرص متوفرة E: F: G:</string>
+  <string id="20088">معلومات الطقس</string>
+  <string id="20089">مساحة القرص الخالية</string>
+  <string id="20090">أدخل اسم مشاركة موجودة</string>
+  <string id="20091">كود تأمين</string>
+  <string id="20092">تحميل ملف التعريف</string>
+  <string id="20093">اسم ملف التعريف</string>
+  <string id="20094">مصادر الوسائط</string>
+  <string id="20095">إدخال كود تأمين رئيسي</string>
+  <string id="20096">تسجيل الدخول إلى الشاشة</string>
+  <string id="20097">بحث عن معلومات الألبوم</string>
+  <string id="20098">بحث عن معلومات خاصة بالألبوم</string>
+  <string id="20099">لا يمكن تقسيم الاسطوانة أو المقطع أثناء التشغيل من الاسطوانة</string>
+  <string id="20100">كود تأمين رئيسي وإعدادات</string> 
+  <string id="20101">يعمل إدخال كود التأمين الرئيسي دائماً على تمكين وضع رئيسي</string>
+  <string id="20102">أو النسخ من الافتراضي؟</string>
+  <string id="20103">حفظ التغييرات على ملف التعريف؟</string>
+  <string id="20104">تم العثور على الإعدادات القديمة.</string>
+  <string id="20105">هل تريد استخدامها؟</string>
+  <string id="20106">تم العثور على مصادر وسائط قديمة.</string>
+  <string id="20107">منفصل (مؤمن)</string>
+  <string id="20108">جذر</string>
+  <string id="20109">- تكبير/تصغير</string>
+  <string id="20110">إعدادات UPnP</string>
+  <string id="20111">بدء تلقائي لعميل UPnP</string>
+  <string id="20112">آخر تسجيل دخول: %s</string>
+  <string id="20113">لم يتم تسجيل الدخول أبداً</string>
+  <string id="20114">ملف التعريف %i / %i</string>
+  <string id="20115">تسجيل دخول المستخدم / تحديد ملف تعريف</string>
+  <string id="20116">استخدام تأمين على شاشة تسجيل الدخول</string>
+  <string id="20117">اسم مستخدم أو كلمة مرور غير صحيحة، رجاء الإعادة المحاولة.</string>
+  <string id="20118">يتطلب هذا ضبط التأمين الرئيسي.</string>
+  <string id="20119">هل تريد ضبطها الآن؟</string>
+  <string id="20120">تحميل معلومات البرنامج</string>
+  <string id="20121">تشغيل الحفلة!</string>
+  <string id="20122">صحيح</string>
+  <string id="20123">مشروبات مختلطة</string>
+  <string id="20124">تعبئة النظارات</string>
+  <string id="20125">مسجل الدخول كـ</string>
+  <string id="20126">تسجيل الخروج</string>
+  <string id="20127">كلمة المرور التي أدخلتها لا تتوافق مع كلمة المرور المسجلة في نظامنا. الرجاء تكرار المحاولة.</string>
+  <string id="20128">اذهب إلى الجذر</string>
+  <string id="20129">ينسج</string>
+  <string id="20130">ينسج (معكوس)</string>
+  <string id="20131">مزيد</string>
+  <string id="20132">إعادة تشغيل الفيديو</string>
+  <string id="20133">تحرير موقع الشبكة</string>
+  <string id="20134">إزالة موقع الشبكة</string>
+  <string id="20135">هل تريد مسح المجلد؟</string>
+  <string id="20136">وحدة الذاكرة</string>
+  <string id="20137">تم تحميل وحدة الذاكرة</string>
+  <string id="20138">تعذر تحميل وحدة الذاكرة</string>
+  <string id="20139">في المنفذ %i، الفتحة %i</string>
+  <string id="20140">تأمين شاشة التوقف</string>
+  <string id="20141">ضبط</string>
+  <string id="20142">اسم المستخدم</string>
+  <string id="20143">إدخال كلمة مرور لـ</string>
+  <string id="20144">موقت الإغلاق</string>
+  <string id="20145">فاصل الإغلاق (بالدقائق)</string>
+  <string id="20146">بدأ، إغلاق في %im</string>
+  <string id="20147">إغلاق في 30 دقيقة</string>
+  <string id="20148">إغلاق في 60 دقيقة</string>
+  <string id="20149">إغلاق في 120 دقيقة</string>
+  <string id="20150">موقت إغلاق مخصص</string>
+  <string id="20151">إلغاء موقت الإغلاق</string>
+  <string id="20152">اسم المستخدم وكلمة المرور لـ %s</string>
+  <string id="20153">استعراض...</string>
+  <string id="20154">معلومات أساسية</string>
+  <string id="20155">معلومات المخزن</string>
+  <string id="20156">معلومات القرص الصلب</string>
+  <string id="20157">معلومات DVD-ROM</string>
+  <string id="20158">معلومات الشبكة</string>
+  <string id="20159">معلومات الفيديو</string>
+  <string id="20160">معلومات الجهاز</string>
+  <string id="20161">الإجمالي</string>
+  <string id="20162">المستخدم</string>
+  <string id="20163">من</string>
+  <string id="20164">القفل غير مدعم</string>
+  <string id="20165">غير مقفل</string>
+  <string id="20166">مقفل</string>
+  <string id="20167">مجمد</string>
+  <string id="20168">يتطلب إعادة الضبط</string>
+  <string id="20169">أسبوع</string>
+  <string id="20170">خط</string>
+  <string id="20171">شبكة Windows (SMB)</string>
+  <string id="20172">ملقم XBMSP</string>
+  <string id="20173">ملقم FTP</string>
+  <string id="20174">مشاركة موسيقى iTunes (DAAP)</string>
+  <string id="20175">ملقم UPnP</string>
+  <string id="20176">عرض معلومات الفيديو</string>
+  <string id="20177">تم</string>
+  <string id="20178">تحويل</string>
+  <string id="20179">تأمين Caps</string>
+  <string id="20180">رموز</string>
+  <string id="20181">Backspace</string>
+  <string id="20182">مسافة</string>
+  <string id="20183">إعادة تحميل الشكل</string>
+  <string id="20184">تدوير باستخدام معلومات EXIF</string>
+  <string id="20185">استخدام أنماط عرض الملصق لعروض التلفاز</string>
+  <string id="20186">رجاء الانتظار</string>
+  <string id="20187">نسخة احتياطية EEPROM</string>
+  <string id="20188">نسخة احتياطية BIOS</string>
+  <string id="20189">تمكين الرفع التلقائي للموضوع والمعاينة</string>
+  <string id="20190">مخصص</string>
+  <string id="20191">تمكين تسجيل الإصلاح</string>
+  <string id="20192">تنزيل معلومات إضافية على تحديثات المكتبة</string>
+  <string id="20193"></string>
+  <string id="20194">ممسحة افتراضية</string>
+  <string id="20195">تغيير الممسحة</string>
+  <string id="20196">تصدير مكتبة الموسيقى</string>
+  <string id="20197">استيراد مكتبة الموسيقى</string>
+  <string id="20198">تعذر العثور على فنان!</string>
+  <string id="20199">فشل تنزيل معلومات الفنان</string>
+
+  <!-- string id's 20200 thru 20211 are reserved for speedstrings (LocalizeStrings.cpp)-->
+  
+  <string id="20250">تشغيل الحفلة! (ملفات الفيديو)</string>
+  <string id="20251">مشروبات مختلطة (ملفات الفيديو)</string>
+  <string id="20252">تعبئة النظارات (ملفات الفيديو)</string>
+  <string id="20253">إعادة تشغيل الألبوم</string>
+  <string id="20254">إعدادات الطقس...</string>
+
+  <string id="20300">دليل ملقمات الويب (HTTP)</string>
+  <string id="20301">دليل ملقمات الويب (HTTPS)</string>
+  <string id="20302">تعذر الكتابة على المجلد:</string>
+  <string id="20303">هل تريد التجاوز والمتابعة؟</string>
+  <string id="20304">تغذية RSS</string>
+  <string id="20305"></string>
+
+  <string id="20306">غير معروف. رجاء إضافة MD5 من xbmc.log إلى BiosIDs.ini.</string>
+  <string id="20307">DNS ثانوي</string>
+  <string id="20308">ملقم DHCP:</string>
+  <string id="20309">عمل مجلد جديد</string>
+  <string id="20310">تعتيم LCD عند التشغيل</string>
+  <string id="20311">غير معروف أو محمل (محمي)</string>
+  <string id="20312">تعتيم LCD عند الإيقاف المؤقت</string>
+  <string id="20313">تبديل LED عند الإيقاف المؤقت</string>
+  <string id="20314">ملفات الفيديو - المكتبة</string>
+  <string id="20315">حفظ اللعبات</string>
+  <string id="20316">فرز حسب: المعرف</string>
+  <string id="20317">تنزيل عمليات الحفظ</string>
+  <string id="20318">حفظ اللعبة المثبتة على HDD</string>
+  <string id="20319">فشل في تنزيل حفظ اللعبة</string>
+  <string id="20320">حدد حفظ اللعبة للتنزيل والتثبيت</string>
+  <string id="20321">تعذر العثور على حفظ أونلاين للعبة محددة</string>
+  <string id="20322">انتقل إلى حفظ اللعبة</string>
+  <string id="20323">حفظ اللعبات</string>
+  <string id="20324">تشغيل جزء...</string>
+  <string id="20325">إعادة ضبط المعايرة</string>
+  <string id="20326">سيؤدي هذا إلى إعادة ضبط قيم المعايرة لـ %s</string>
+  <string id="20327">إلى القيم الافتراضية.</string>
+  <string id="20328">استعراض للوجهة</string>
+  <string id="20329"></string>
+  <string id="20330">استخدام أسماء المجلدات لعمليات البحث</string>
+  <string id="20331">الملف</string>
+  <string id="20332">استخدام أسماء ملفات أو مجلدات في عمليات البحث؟</string>
+  <string id="20333">ضبط المحتوى</string>
+  <string id="20334">المجلد</string>
+  <string id="20335">بحث عن محتوى بشكل متكرر؟</string>
+  <string id="20336">إلغاء تأمين المصادر</string>
+  <string id="20337">ممثل</string>
+  <string id="20338">فيلم</string>
+  <string id="20339">مخرج</string>
+  <string id="20340">هل تريد إزالة كل العناصر من داخل</string>
+  <string id="20341">هذا المسار من المكتبة؟</string>
+  <string id="20342">أفلام</string>
+  <string id="20343">عروض</string>
+  <string id="20344">يحتوي هذا الدليل على</string>
+  <string id="20345">تشغيل مسح تلقائي</string>
+  <string id="20346">مسح متكرر</string>
+  <string id="20347">كـ</string>
+  <string id="20348">مخرجون</string>
+  <string id="20349">تعذر العثور على ملفات فيديو في هذا المسار!</string>
+  <string id="20350">تصويتات</string>
+  <string id="20351">معلومات عرض التلفاز</string>
+  <string id="20352">معلومات الحدث</string>
+  <string id="20353">تحميل تفاصيل العرض التلفزيوني</string>
+  <string id="20354">بحث عن دليل حدث</string>
+  <string id="20355">تحميل معلومات لأحداث في الدليل</string>
+  <string id="20356">تحديد عرض تلفزيوني:</string>
+  <string id="20357">إدخال اسم العرض التلفزيوني</string>
+  <string id="20358">الجلسة %i</string>
+  <string id="20359">حدث</string>
+  <string id="20360">أحداث</string>
+  <string id="20361">تحميل تفاصيل الحدث</string>
+  <string id="20362">إزالة حدث من المكتبة</string>
+  <string id="20363">إزالة عرض تلفزيوني من المكتبة</string>
+  <string id="20364">عرض تلفزيوني</string>
+  <string id="20365">موضوع الحدث</string>
+  <string id="20366">* كل الجلسات</string>
+  <string id="20367">إخفاء المشاهد</string>
+  <string id="20368">كود الحدث</string>
+  <string id="20369">إخفاء الموضوع للعناصر غير المشاهدة</string>
+  <string id="20370">* مخفي لمنع المفسدين *</string>
+  <string id="20371">ضبط موجز الفصل</string>
+  <string id="20372">صورة الفصل</string>
+  <string id="20373">فصل</string>
+  <string id="20374">تنزيل معلومات الفيلم</string>
+  <string id="20375">إلغاء تعيين المحتوى</string>
+  <string id="20376"></string>
+  <string id="20377">تحديث معلومات عرض تلفزيوني</string>
+  <string id="20378">تحديث معلومات لكل الأحداث</string>
+  <string id="20379">يحتوي المجلد المحتوى على عرض تلفزيوني فردي</string>
+  <string id="20380">استثناء المجلد المحدد من عمليات المسح</string>
+  <string id="20381">خاص</string>
+  <string id="20382"></string>
+  <string id="20383">يحتوي المجلد المحدد على فيديو فردي</string>
+  <string id="20384">رابط بعرض تلفزيوني</string>
+  <string id="20385">إزالة رابط بعرض تلفزيوني</string>
+  <string id="20386">أفلام مضافة حديثاً</string>
+  <string id="20387">أحداث مضافة حديثاً</string>
+  <string id="20388">استوديوهات</string>
+  <string id="20389">فيديو الموسيقى</string>
+  <string id="20390">فيديو موسيقى مضاف حديثاً</string>
+  <string id="20391">فيديو الموسيقى</string>
+  <string id="20392">إزالة فيديو الموسيقى من المكتبة</string>
+  <string id="20393">معلومات فيديو الموسيقى</string>
+  <string id="20394">تحميل معلومات فيديو الموسيقى</string>
+  <string id="20395">مختلط</string>
+  <string id="20396">انتقل إلى الألبومات حسب الفنان</string>
+  <string id="20397">انتقل إلى الألبوم</string>
+  <string id="20398">تشغيل الأغنية</string>
+  <string id="20399">انتقل إلى فيديو الموسيقى من الألبوم</string>
+  <string id="20400">انتقل إلى فيديو الموسيقى حسب الفنان</string>
+  <string id="20401">تشغيل فيديو الموسيقى</string>
+  <string id="20402"></string>
+  <string id="20403">ضبط موجز الممثل</string>
+  <string id="20404"></string>
+  <string id="20405">إزالة علامة مرجعية للحدث</string>
+  <string id="20406">ضبط علامة مرجعية للحدث</string>
+  <string id="20407">إعدادات الممسحة</string>
+  <string id="20408">تنزيل معلومات فيديو الموسيقى</string>
+  <string id="20409">تنزيل معلومات عرض تلفزيوني</string>
+  <string id="20410">مستخرج</string>
+  <string id="20411">مسطح</string>
+  <string id="20412">عروض تلفزيونية مسطحة</string>
+  <string id="20413">احصل على Fanart</string>
+  <string id="20414">عرض Fanart في مكتبات الفيديو والموسيقى</string>
+  <string id="20415">مسح لمحتوى جديد</string>
+  <string id="20416">أول عرض تلفزيوني</string>
+  <string id="20417">الكاتب</string>
+  <string id="20418">تنظيف أسماء الملفات والمجلدات</string>
+  <string id="20419"></string>
+  <string id="20420">أبداً</string>
+  <string id="20421">إذا كانت جلسة واحدة فقط</string>
+  <string id="20422">دائماً</string>
+  <string id="20423">له استخراج</string>
+  <string id="20424">خطأ</string>
+  <string id="20425">عرض Fanart</string>
+  <string id="20426">تصدير إلى ملف فردي أو منفصل</string>
+  <string id="20427">ملفات لكل إدخال؟</string>
+  <string id="20428">ملف فردي</string>
+  <string id="20429">منفصل</string>
+  <string id="20430">تصدير الموجزات وfanart</string>
+  <string id="20431">استبدال الملفات القديمة؟</string>
+  <string id="20432">استثناء المسار من تحديثات المكتبة</string> 
+  <string id="20433">استخراج معلومات البيانات الأساسية للوسائط</string>
+  <string id="20434">مجموعات</string>
+  <string id="20435">إضافات</string>
+  
+  <!-- up to 21329 is reserved for the video db !! !-->
+
+  <string id="21330">عرض الملفات والدلائل المخفية</string>
+  
+  <string id="21331">عميل TuxBox</string>
+  <string id="21332">تحذير: جهاز TuxBox المستهدف في وضع التسجيل!</string>
+  <string id="21333">سيتم إيقاف التدفق!</string>
+  <string id="21334">محو للقناة: فشل %s!</string>
+  <string id="21335">هل أنت متأكد أن تريد بدء التدفق؟</string>
+  <string id="21336">الاتصال بـ: %s</string>
+  <string id="21337">جهاز TuxBox</string>
+  <!-- up to 21355 is reserved for the TuxBox Client!! !-->
+  
+  <string id="21356">موسيقى UPnP</string>
+  <string id="21357">فيديو UPnP</string>
+  <string id="21358">صور UPnP</string>
+  <string id="21359">إضافة مشاركة الوسائط...</string>
+  <string id="21360">تمكين ملقم UPnP</string>
+  <string id="21361">إدارة مشاركات موسيقى UPnP</string>
+  <string id="21362">إدارة مشاركات فيديو UPnP</string>
+  <string id="21363">إدارة مشاركات صور UPnP</string>
+  <string id="21364">تحرير مشاركة الوسائط</string>
+  <string id="21365">إزالة مشاركة الوسائط</string>
+  <string id="21366">دليل عناوين فرعية مخصصة</string>
+  <string id="21367">دليل الأفلام والعناوين الفرعية البديلة</string>
+  
+  <string id="21369">تمكين الماوس</string>
+  <string id="21370">تشغيل أصوات التنقل أثناء تشغيل الوسائط</string>
+  <string id="21371">صورة مصغرة</string>
+  <string id="21372">منطقة مشغل DVD إجبارية</string>
+  <string id="21373">جهاز الفيديو</string>
+  <string id="21374">منظر الفيديو</string>
+  <string id="21375">عادي</string>
+  <string id="21376">تنسيق تشغيل فيديو</string>
+  <string id="21377">شاشة عريضة</string>
+  <string id="21378">تمكين 480p</string>
+  <string id="21379">تمكين 720p</string>
+  <string id="21380">تمكين 1080i</string>
+  <string id="21381">إدخال اسم لقائمة تشغيل جديدة</string>
+  <string id="21382">تعطيل إضافة أزرار مصدر في قوائم الملفات</string>
+  <string id="21383">تمكين أشرطة التمرير</string>
+  <string id="21384">ثبت ترشيح المشاهد في مكتبة الفيديو</string>
+  <string id="21385">فتح</string>
+  <string id="21386">مستوى إدارة الصوت</string>
+  <string id="21387">سريع</string>
+  <string id="21388">هادئ</string>
+  <string id="21389">تمكين</string>  
+  <string id="21390">مستوى إدارة الطاقة</string>
+  <string id="21391">طاقة مرتفعة</string>
+  <string id="21392">طاقة منخفضة</string>
+  <string id="21393">بديل مرتفع</string>
+  <string id="21394">بديل منخفض</string>
+  <string id="21395">تعذر تخزين الملفات أكبر من 4 جيجابايت</string>
+  <string id="21396">الفصل</string>
+  <string id="21397">ظل بكسل بجودة عالية v2</string>
+  <string id="21398">تمكين قائمة التشغيل عند بدء التشغيل</string>
+  <string id="21399">استخدام رسوم متحركة بينية</string>
+  <string id="21400">يحتوي على</string>
+  <string id="21401">لا يحتوي على</string>
+  <string id="21402">يكون</string>
+  <string id="21403">لا يكون</string>
+  <string id="21404">بدء مع</string>
+  <string id="21405">انتهاء مع</string>
+  <string id="21406">أكبر من</string>
+  <string id="21407">أقل من</string>
+  <string id="21408">بعد</string>
+  <string id="21409">قبل</string>
+  <string id="21410">في الماضي</string>
+  <string id="21411">ليس في الماضي</string>
+  <string id="21412">ممسحات</string>
+  <string id="21413">ممسحة الفيلم الافتراضي</string>
+  <string id="21414">ممسحة العرض التلفزيوني الافتراضي</string>
+  <string id="21415">ممسحة فيديو الموسيقى الافتراضي</string>
+  <string id="21416">تمكين الرجوع بناءً على لغة الممسحة</string>
+  <string id="21417">- إعدادات الممسحة</string>
+  <string id="21418">متعدد اللغات</string>
+  <string id="21419">الفصول</string>
+
+  <string id="21420">القيمة المطابقة</string>
+  <string id="21421">قاعدة قائمة تشغيل ذكية</string>
+  <string id="21422">مطابقة العناصر في</string>
+  <string id="21423">قاعدة جديدة...</string>
+  <string id="21424">يجب مطابقة العناصر</string>
+  <string id="21425">كل القواعد</string>
+  <string id="21426">واحد أو أكثر من الملفات</string>
+  <string id="21427">حدد على</string>
+  <string id="21428">بلا حد</string>
+  <string id="21429">ترتيب حسب</string>
+  <string id="21430">تصاعدي</string>
+  <string id="21431">تنازلي</string>
+  <string id="21432">تحرير قائمة تشغيل ذكية</string>
+  <string id="21433">اسم قائمة التشغيل</string>
+  <string id="21434">بحث عن عناصر في</string>
+  <string id="21435">تحرير</string>
+  <string id="21436">%i عناصر</string>
+  <string id="21437">قائمة تشغيل ذكية جديدة...</string>
+  <string id="21438">محرك الأقراص %c</string>
+  <string id="21439">تحرير قواعد وضع الحفلة</string>
+  <string id="21440">مجلد الرئيسية</string>
+  <string id="21441">عد المشاهد</string>
+  <string id="21442">عنوان الحدث</string>
+  <string id="21443">دقة الفيديو</string>
+  <string id="21444">قنوات صوت</string>
+  <string id="21445">ترميز الفيديو</string>
+  <string id="21446">ترميز الصوت</string>
+  <string id="21447">لغة الصوت</string>
+  <string id="21448">ترجمة لغة</string>
+  <string id="21449">جهاز التحكم عن بعد يرسل ضغوط لوحة المفاتيح</string>
+  <string id="21450">العناوين</string>
+
+  <string id="21800">اسم الملف</string>
+  <string id="21801">مسار الملف</string>
+  <string id="21802">حجم الملف</string>
+  <string id="21803">توقيت/تاريخ الملف</string>
+  <string id="21804">مؤشر الشريحة</string>
+  <string id="21805">مستوى الدقة</string>
+  <string id="21806">التعليق</string>
+  <string id="21807">اللون/أبيض وأسود</string>
+  <string id="21808">عملية JPEG</string>
+
+  <string id="21820">التاريخ/الوقت</string>
+  <string id="21821">الوصف</string>
+  <string id="21822">عمل الكاميرا</string>
+  <string id="21823">طراز الكاميرا</string>
+  <string id="21824">تعليق EXIF</string>
+  <string id="21825">جهاز</string>
+  <string id="21826">فتحة</string>
+  <string id="21827">البعد البؤري</string>
+  <string id="21828">المسافة البؤرية</string>
+  <string id="21829">العرض</string>
+  <string id="21830">وقت العرض</string>
+  <string id="21831">منحى العرض</string>
+  <string id="21832">وضع العرض</string>
+  <string id="21833">الفلاش المستخدم</string>
+  <string id="21834">توازن الأبيض</string>
+  <string id="21835">مصدر الضوء</string>
+  <string id="21836">وضع القياس</string>
+  <string id="21837">ISO</string>
+  <string id="21838">التكبير/التصغير الرقمي</string>
+  <string id="21839">عرض CCD</string>
+  <string id="21840">خط عرض GPS</string>
+  <string id="21841">خط طول GPS</string>
+  <string id="21842">خط عرض GPS</string>
+  <string id="21843">التوجيه</string>
+
+  <string id="21860">الفئات التكميلية</string>
+  <string id="21861">الكلمات الرئيسية</string>
+  <string id="21862">تعليق</string>
+  <string id="21863">المؤلف</string>
+  <string id="21864">العنوان الرئيسي</string>
+  <string id="21865">تعليمات خاصة</string>
+  <string id="21866">الفئة</string>
+  <string id="21867">فرعي</string>
+  <string id="21868">العنوان الفرعي</string>
+  <string id="21869">رصيد</string>
+  <string id="21870">مصدر</string>
+  <string id="21871">ملاحظة حقوق التأليف والنشر</string>
+  <string id="21872">اسم الموضوع</string>
+  <string id="21873">المدينة</string>
+  <string id="21874">الدولة</string>
+  <string id="21875">البلد</string>
+  <string id="21876">المرجع Tx الأصلي</string>
+  <string id="21877">تاريخ الإنشاء</string>
+  <string id="21878">علم حقوق التأليف والنشر</string>
+  <string id="21879">كود الدولة</string>
+  <string id="21880">خدمة المرجع</string>
+  <string id="21881">تمكين إخراج UPnP</string>
+  <string id="21882">محاولة لتخطي المقدمة قبل قائمة DVD</string>
+  <string id="21883">اسطوانات الصوت المقسمة</string>
+  <string id="21884">معلومات الاستعلام عن كل الفنانين</string>
+  <string id="21885">تحميل بيانات الألبوم</string>
+  <string id="21886">تحميل معلومات الفنان</string>
+  <string id="21887">السيرة الذاتية</string>
+  <string id="21888">الإصدارات</string>
+  <string id="21889">البحث عن الفنان</string>
+  <string id="21890">اختيار الفنان</string>
+  <string id="21891">معلومات الفنان</string>
+  <string id="21892">الأدوات</string>
+  <string id="21893">ولد</string>
+  <string id="21894">تشكّل</string>
+  <string id="21895">موضوعات</string>
+  <string id="21896">حلّ</string>
+  <string id="21897">توفى</string>
+  <string id="21898">سنوات نشطة</string>
+  <string id="21899">علامة</string>
+  <string id="21900">ولد/تشكل</string>
+ 
+  <!-- strings 21900 thru 21999 reserved for slideshow info -->
+
+  <string id="22000">تحديث المكتية عند بدء التشغيل</string>
+  <string id="22001">تحديث المكتبة في الخلفية دائما</string>
+  <string id="22002">- DNS لاحقة</string>
+  <string id="22003">تمكين تحرير وقوائم الحكم</string>
+  <string id="22004">تأخر بنحو: %2.3fs</string>
+  <string id="22005">تقدم بنحو: %2.3fs</string>
+  <string id="22006">موازنة الترجمة</string>
+  <string id="22007">افتح جهة بيع GL:</string>
+  <string id="22008">افتح جهة عرض GL:</string>
+  <string id="22009">افتح نسخة GL:</string>
+  <string id="22010">درجة حرارة GPU:</string>
+  <string id="22011">درجة حرارة CPU:</string>
+  <string id="22012">مجموع الذاكرة</string>
+  <string id="22013">البيانات الشخصية</string>
+  <string id="22014">استخدام التعتيم إذا توقفت أثناء تشغيل الفيديو</string>
+  <string id="22015">جميع التسجيلات</string>
+  <string id="22016">حسب العنوان</string>
+  <string id="22017">حسب المجموعة</string>
+  <string id="22018">قنوات حية</string>
+  <string id="22019">تسجيلات حسب العنوان</string>
+  <string id="22020">دليل</string>
+  <string id="22021">يسمح بخطأ في نسبة الجانب (%)</string>
+  <string id="22022">إدراج ملفات الفيديو في القوائم</string>
+
+  <!-- strings 22030 thru 22060 reserved for karaoke -->
+  <string id="22030">الخط</string>
+  <string id="22031">ترجمة حجم الخط</string>
+  <string id="22032">ترجمة لون الخط</string>
+  <string id="22033">ترجمة الخط charset</string>
+  <string id="22034">إخراج العناوين كاريوكي بصيغة HTML</string>
+  <string id="22035">إخراج العناوين كاريوكي بصيغة CSV</string>
+  <string id="22036">استيراد عناوين كاريوكي...</string>
+  <string id="22037">محدد أغنية popup التلقائية</string>
+  <string id="22038">تصدير عناوين كاريوكي...</string>
+  <string id="22039">أدخل رقم الأغنية</string>
+  <string id="22040">أبيض/أخضر</string>
+  <string id="22041">أبيض/أحمر</string>
+  <string id="22042">أبيض/أزرق</string>
+  <string id="22043">أسود/أبيض</string>
+
+  <string id="23000">توصيلة الطقس</string>
+  <string id="23001">- إعدادات التوصيلة</string>
+
+  <string id="23050">تفعيل برامج التلفزيون</string>
+
+  <!-- strings 23100 thru 23150 reserved for external player -->
+  <string id="23100">المشغل الخارجي نشط</string>
+  <string id="23101">انقر فوق موافق لإنهاء المشغل</string>
+  <string id="23102"></string>
+  <string id="23103"></string>
+  <string id="23104">انقر فوق موافق عند انتهاء التشغيل</string>
+  <string id="23105"></string>
+  <string id="23106"></string>
+
+  <!-- strings 29800 thru 29998 reserved strings used only in the default Project Mayhem III skin and not c++ code -->
+  <string id="29800">وضع المكتبة</string>
+  <string id="29801">مفاتيح لوحة المفاتيح</string>
+  <string id="29802">عبور الصوت المستخدم</string>
+  
+  <string id="29999">تطبيق تصفية وضع الوميض على الألعاب</string>
+
+  <!-- strings 30000 thru 30999 reserved for plugins and plugin settings -->
+  <!-- strings 31000 thru 31999 reserved for skins -->
+  <!-- strings 32000 thru 32999 reserved for scripts -->
+  
+  <!-- strings 33000 thru 33999 reserved for common strings used in addons -->
+  <string id="33001">جودة المستخرج</string>
+  <string id="33002">تيار</string>
+  <string id="33003">تنزيل</string>
+  <string id="33004">حمل والعب</string>
+  <string id="33005">حمل وحفظ</string>
+  <string id="33006">اليوم</string>
+  <string id="33007">غدا</string>
+  <string id="33008">حفظ</string>
+  <string id="33009">نسخ</string>
+  <string id="33010">ضبط دليل التنزيل</string>
+  <string id="30011">البحث عن المدة</string>
+  <string id="33012">قصير</string>
+  <string id="33013">طويل</string>
+  <string id="33014">استخدام مشغل DVD بدلا من المشغل العادي</string>
+  <string id="33015">اطلب التحميل قبل تشغيل الفيديو</string>
+  <string id="33016">لقطات</string>
+  <string id="33017">توصيلة إعادة التشغيل للتمكين</string>
+  <string id="33018">هذه الليلة</string>
+  <string id="33019">ليلة غدا</string>
+  <string id="33020">الشرط</string>
+  <string id="33021">الترسيب</string>
+  <string id="33022">ترسيب</string>
+  <string id="33023">رطب</string>
+  <string id="33024">شعور</string>
+  <string id="33025">لاحظ</string>
+  <string id="33026">الخروج عن المعتاد</string>
+  <string id="33027">شروق الشمس</string>
+  <string id="33028">الغروب</string>
+  <string id="33029">التفاصيل</string>
+  <string id="33030">أوت لوك</string>
+  <string id="33031">Coverflow</string>
+  <string id="33032">ترجمة النص</string>
+  <string id="33033">فئة %s قائمة الخريطة</string>
+  <string id="33034">36 ساعة</string>
+  <string id="33035">خرائط</string>
+  <string id="33036">كل ساعة</string>
+  <string id="33037">نهاية الأسبوع</string>
+  <string id="33038">%s يوم</string>
+  <string id="33049">تنبيه</string>
+  <string id="33050">تنبيهات</string>
+  <string id="33051">اختر</string>
+  <string id="33052">فحص</string>
+  <string id="33053">تهيئة</string>
+  <string id="33054">المواسم</string>
+  <string id="33055">استخدم</string>
+  <string id="33056">شاهد</string>
+  <string id="33057">استمع إلى</string>
+  <string id="33058">انظر إلى</string>
+  <string id="33059">تهيئة</string>
+  <string id="33060">الطاقة</string>
+  <string id="33061">القائمة</string>
+  <string id="33062">شغل</string>
+  <string id="33063">الخيارات</string>
+  <string id="33065">المحرر</string>
+  <string id="33066">حول</string>
+  <string id="33067">تصنيف النجم</string>
+  <string id="33068">الخلفية</string>
+  <string id="33069">الخلفيات</string>
+  <string id="33070">تخصيص الخلفية</string>
+  <string id="33071">تخصيص الخلفيات</string>
+  <string id="33072">عرض تمهيدي</string>
+  <string id="33073">عرض التغيير</string>
+  <string id="33074">يتطلب هذا الإصدار من %s</string>
+  <string id="33075">إصدار XBMC لـ %s أو أكبر للتشغيل.</string>
+  <string id="33076">الرجاء التحديث XBMC.</string>
+  <string id="33077">تعذر العثور على معلومات!</string>
+  <string id="33078">الصفحة التالية</string>
+
+  <!-- strings 50000+ are reserved for Boxee -->
+  <string id="50000">إضافة جديدة...</string>
+  <string id="50001">تعذر تهيئة شبكة الاتصال.</string>
+  <string id="50002">تأكد من صحة إعداداتك وحاول مرة أخرى.</string>
+  <string id="50003">تم تهيئة شبكة الاتصال بنجاح.</string>
+  <string id="50004">ومع ذلك، فإن الإنترنت غير قابل للوصول إليه.</string>
+  <string id="50005">المحتوى المحلي</string>
+  <string id="50006">لم يتم العثور على الملفات الموجودة في المصدر</string>
+  <string id="50007">لم يتم العثور على أجهزة</string>
+  <string id="50008">تنسيق الشاشة والمسح الفائق</string>
+  <string id="50009">استعادة افتراضات</string>
+  <string id="50010">المسح</string>
+  <string id="50011">نسبة الواجهة</string>
+  <string id="50012">متقدم</string>
+  <string id="50013">هل أنت متأكد أنك تريد إغلاق Boxee الآن؟</string>
+  <string id="51000">الاسم</string>
+  <string id="51001">التاريخ</string>
+  <string id="51002">وسائل إعلام الإنترنت</string>
+  <string id="51003">جاري التحميل...</string>
+  <string id="51004">مصادر مفقودة</string>
+  <string id="51005">لم يتم تحديد مصادر لوسائل الإعلام الخاصة بك.</string>
+  <string id="51006">هل تريد تحديدهم الآن؟</string>
+  <string id="51007">رفض</string>
+  <string id="51008">وقف</string>
+  <string id="51009">تشغيل</string>
+  <string id="51010">استعراض</string>
+  <!--string id="51010">Can't get boxee feed</string-->
+  <string id="51011">محرك أقراص DVD</string>
+
+  <string id="51012">أصدقاء (التحميل)</string>
+  <string id="51013">أصدقاء (%d)</string>
+  <string id="51014">فشل في قراءة تغذية آر إس إس</string>
+  <string id="51015">يرجى التحقق من اتصالات الكبل وتأكد من أن المتلقي/التلفزيون في وضع صامت.</string>
+  <string id="51016">إذا استمر عدم تمكنك من سماع أي صوت يرجى مراجعة صفحة حل المشكلات من خلال boxee.tv/troubleshooting.</string>
+  <string id="51018">يجب أن يحتوي مفتاح الشبكة فقط على</string>
+  <string id="51019">أحرف نظام العد السداسي عشر</string>
+  <string id="51020">مصادر الوسائط</string>
+  <string id="51021">هل أنت متأكد أنك تريد حذف:</string>
+  <string id="51022">مصدر الفيديو</string>
+  <string id="51023">مصدر الموسيقى</string>
+  <string id="51024">مصدر الصور</string>
+  <string id="51025">هل أنت متأكد أنك تريد حذف هذا المصدر؟</string>
+  <string id="51026">بدء التحميل...</string>
+  <string id="51027">تنزيل</string>
+  <string id="51028">أضف التحميل على قائمة الانتظار؟</string>
+  <string id="51029">خروج التحميل</string>
+  <string id="51030">التحميل في قائمة الانتظار بالفعل</string>
+  <string id="51031">استبدل التحميل الحالي؟</string>
+  <string id="51032">تحديد الكل</string>
+  <string id="51033">المشاركة...</string>
+  <string id="51034">التقيم...</string>
+  <string id="51035">يوجد مصدر بنفس الاسم مسبقا</string>
+  <string id="51036">يجب ألا يكون اسم المصدر فارغا</string>
+  <string id="51037">Boxee ستتولى مسح [B]%s[/B]</string>
+  <string id="51038">تم تحديث مصدر وسائل الإعلام بنجاح</string>
+  <string id="51039">تم حذف مصدر وسائل الإعلام بنجاح</string>
+  <string id="51040">يجب تحديد نوع وسائط إعلام على الأقل</string>
+  <string id="51041">يجب ألا يكون مسار المصدر فارغا</string>
+  <string id="51042">يجب تحديد نوع المسح [CR] على الأقل</string>
+  <string id="51043">سيتم إعادة مسح مصدر وسائل الإعلام</string>
+  <string id="51044">أدخل يدويا بروتوكول الإنترنت/الاسم...</string>
+  <string id="51045">يتم مسح الألبوم...</string>
+  <string id="51046">Boxee يمسح حاليا %s</string>
+  <string id="51047">تم العثور على مواد %d في %s.</string>
+  <string id="51048">[CR]Boxee سوف تحاول التعرف عليهم.</string>
+  
+  <string id="51050">دخول</string>
+  <string id="51051">Boxee لا يمكن الاتصال بالإنترنت</string>
+  <string id="51052">يمكنك الاستمرار في استخدام Boxee لكن بعض خصائصه</string>
+  <string id="51053">لن تكون متاحة.</string>
+  <string id="51054">اتصال إنترنت غير متوفر.</string>
+  <string id="51055">لا يمكن لتسجيل الدخول إضافة مستخدم جديد...</string>
+  <string id="51056">يرجى التحقق من الاتصال الإنترنت.</string>
+  <string id="51057">--------------------------------------</string>
+  <string id="51058">حقل اسم المستخدم فارغ.</string>
+  <string id="51059">حقل كلمة المرور فارغ.</string>
+  <string id="51070">عودة</string>
+  <string id="51075">تعذر تسجيل الدخول.</string>
+  <string id="51100">تشغيل</string>
+  <string id="51101">مغامرة</string>
+  <string id="51102">الرسوم المتحركة</string>
+  <string id="51103">السيرة الذاتية</string>
+  <string id="51104">كوميديا</string>
+  <string id="51105">الجريمة</string>
+  <string id="51106">وثائقي</string>
+  <string id="51107">دراما</string>
+  <string id="51108">الأسرة</string>
+  <string id="51109">خيال</string>
+  <string id="51110">فيلم-Noir</string>
+  <string id="51111">عرض اللعبة</string>
+  <string id="51112">اللعب مؤخرا</string>
+  <string id="51113">رعب</string>
+  <string id="51114">موسيقى</string>
+  <string id="51115">موسيقي</string>
+  <string id="51116">سر</string>
+  <string id="51117">أخبار</string>
+  <string id="51118">تلفزيون-واقعي</string>
+  <string id="51119">رومانسي</string>
+  <string id="51120">الخيال العلمي</string>
+  <string id="51121">قصير</string>
+  <string id="51122">رياضي</string>
+  <string id="51123">حواري</string>
+  <string id="51124">روائي مثير</string>
+  <string id="51125">حروب</string>
+  <string id="51126">غرب</string>
+  <!--  Views -->
+  <string id="51200">2 صف</string>
+  <string id="51201">3 صف</string>
+  <string id="51202">مفصل</string>
+  <string id="51203">خط</string>
+
+  <string id="51254">محلي</string>
+
+  <!-- sources -->
+  <!--  <string id="51300">Settings / Media Sources / Local / Add New Source</string> -->
+  <string id="51300">إعدادات/مصادر إعلامية/إضافة مصدر جديد</string> 
+  <string id="51301">إعدادات/مصادر إعلامية/شبكة/إضافة مصدر جديد</string>
+  <string id="51302">الشبكة</string>
+  <string id="51303">إعدادات/مصادر إعلامية/تطبيقات الشبكة/إضافة مصدر جديد</string>
+  <string id="51304">إعدادات/مصادر إعلامية/إضافة مصادر يدويا/إضافة مصدر جديد</string>
+  <string id="51350">قابل للنقل</string>
+  <string id="51360">المجلد الرئيسي</string>
+  <string id="51361">فيديو مجهول</string>
+  <string id="51362">مجلدات محلية ومشاركات شبكات</string>
+  <string id="51363">غير مسمى</string>
+    
+  <!-- browse screen labels -->
+  <string id="51400">التوصيات</string>
+  <string id="51401">نشاط الأصدقاء</string>
+  <string id="51402">تمت الإضافة مؤخرا</string>
+  <string id="51403">مستخدم مؤخرا</string>
+  <string id="51404">أصدقاء</string>
+  <string id="51405">نشاط</string>
+  <string id="51406">مصادري</string>
+  <string id="51407">ألبومات</string>
+  <string id="51408">فنانون</string>
+  <string id="51409">التطبيقات/الموسيقى</string>
+  <string id="51410">أشرطة الفيديو</string>
+  <string id="51411">التطبيقات/الفيديو</string>
+  <string id="51412">صوري</string>
+  <string id="51413">التطبيقات/الصور</string>
+  <string id="51414">لم تحل بعد</string>
+  <string id="51415">التطبيقات</string>
+  <string id="51416">شاهد لاحقا</string>
+  <string id="51500">Boxee</string>
+  <string id="51501">بدء التشغيل</string>
+  <string id="51502">بدء Boxee عند تسجيل الدخول</string>
+  <string id="51503">تشغيل عميل RTorrent عندما يبدأ Boxee</string>
+  <string id="51504">تعطيل عن بعد</string>
+  <string id="51505">هل أنت متأكد أنك تريد تعطيل جهاز التحكم عن بعد الأبل؟[CR]إذا اخترت موافق، فسوف يتوقف جهاز التحكم عن العمل.</string>
+  <string id="51508">اضغط على %s للعودة إلى ملء الشاشة</string>
+  <string id="51509">أدخل اسم الفيلم....</string>
+  <string id="51510">جاري الحل...</string>
+  <string id="51511">أدخل عنوان الألبوم واسم الفنان مفصولا بفاصلة...</string>
+  <string id="51512">أدخل عنوان المسلسل والموسم ورقم الحلقة مفصولا بفواصل...</string>
+  <string id="51513">مشاركة وسائل الإعلام</string>
+  <string id="51514">هذا المجلد ليس تحت مشاركة وسائل الإعلام</string>
+  <string id="51515">أضاف ألبوم</string>
+  <string id="51516">أضاف الفيديو</string>
+  <string id="51517">عنوان الفيلم</string>
+  <string id="51518">عنوان البرنامج التلفزيوني والموسم والحلقة</string>
+  <string id="51519">الألبوم، الفنان</string>
+  <string id="51520">خطأ</string>
+  <string id="51521">يتعذر إضافة فيلم.</string>
+  <string id="51522">يتعذر الحصول على تفاصيل الفيلم.</string>
+  <string id="51523">تمكين الدعم عن بعد لجناح الملقم البعيد لبروتوكول الإنترنت</string>
+  <string id="51524">عرض الخيارات المنبثقة في نهاية التشغيل</string>
+  <string id="51525">عرض</string>
+  <string id="51526">أصوات</string>
+  <string id="51527">إقليمي ولغة</string> 
+  <string id="51528">تشغيل</string> 
+  <string id="51529">التخيل الموسيقي</string> 
+  <string id="51530">ترشيح المحتوى</string> 
+  <string id="51531">الانتظار إلى أن يتم المسح</string> 
+  <string id="51532">المسح</string> 
+  <string id="51533">المسح الأخير %s</string> 
+  <string id="51534">[COLOR red]قطع[/COLOR]</string> 
+  <string id="51535">تحديد</string>
+  <string id="51536">تم العثور على ملف %d</string>
+  <string id="51537">تم العثور على ملف %d. %d فقد التطابق</string>
+  <string id="51538">تم العثور على ملفات %d</string>
+  <string id="51539">تم العثور على ملفات %d. %d فقد التطابق</string>
+
+  <string id="51542">إعادة المسح</string>
+  <string id="51543">يجري مسح المصدر حاليا: تم العثور على %d، تم تحديد مواد %d، مواد %d المتبقية...</string>
+  <string id="51544">تم مسح المصدر مسبقا %s. تم تحديد مواد %d، لم تكن مواد %d. هل ترغب في تحديد مسح آخر؟</string>
+  <string id="51545">لم يتم مسح المصدر بعد. هل تريد المسح الآن؟</string>
+  <string id="51546"></string>
+  <string id="51547">هل ترغب في تحديد مسح آخر لمصادر فيديو؟</string>
+  
+  <string id="51548">إخراج</string>
+  
+  <string id="51550">مصادر الملف</string> 
+  <string id="51551">الوسائط</string> 
+  <string id="51552">حول</string>
+  <string id="51553">قانوني</string>
+
+  <string id="51555">%d دقيقة (دقائق) مضت</string>
+  <string id="51556">%d ساعة (ساعات) مضت</string>
+  <string id="51557">%d يوم (أيام) مضت</string>
+
+  <string id="51560">معلومات وسائل الإعلام واضحة</string>
+  <string id="51561">هل أنت متأكد أنك تريد معلومات وسائط واضحة من المكتبة؟[CR](ملفات وسائل الإعلام ستبقى على حالها)</string>
+  <string id="51562">مسح الصورة المصغرة</string>
+  <string id="51563">هل أنت متأكد أنك تريد مسح الصور المصغرة؟[CR](ملفات وسائل الإعلام ستبقى على حالها)</string>
+  <string id="51564">[CR][COLOR red]ملاحظة: التمهيد \مطلوب[/COLOR]</string>
+
+  <string id="51565">ملفاتي الخاصة</string>
+  <string id="51566">تصفح من الويب</string>
+  <string id="51567">لست متأكدا</string>
+  <string id="51568">يمكنك تغيير هذه الإعدادات في وقت لاحق عبر إعدادات -&gt;عام-&gt;قائمة</string>
+  <string id="51569">ما الذي تشاهده غالباً؟</string>
+  <string id="51570">سوف تجعل Boxee أنه من الأسهل بالنسبة لك الوصول إلى مواد الفيديو التي تشاهدها أكثر من غيرها.</string>
+  <string id="51571">إعادة مسح مصادر إعلامية</string>
+  <string id="51572">هل أنت متأكد أنك تريد إعادة مسح مصادر الوسائط؟</string>
+
+  <string id="51577">استعادة الإعدادات الافتراضية...</string>
+  <string id="51578">استعادة الإعدادات الافتراضية</string>
+  <string id="51579">هل أنت متأكد أنك تريد استعادة الإعدادات الافتراضية؟</string>
+  <string id="51582">[COLOR red][B][CR]ملاحظة: مطلوب إعادة التشغيل[/B][/COLOR].</string>
+  <string id="51583">إعادة التشغيل</string>
+  <string id="51585">إعادة بدء</string>
+  <string id="51590">الوسائط المشتركة مع الأصدقاء</string>
+
+  <!-- Error messages -->
+  <string id="51600">[B]تحميل خطأ[/B]</string>
+  <string id="51601">يتعذر الوصول إلى الملف أو الدليل أو الجهاز.</string>
+  <string id="51602">الموارد غير متوفرة</string>
+  <string id="51603">المستخدم موجود بالفعل</string>
+  <string id="51604">هل أنت متأكد من أن هذا ليس هو الفيلم صحيح؟</string>
+  <string id="51605">المسار غير متوفر</string>
+  <string id="51606">لم يحدد أي صديق</string>
+  <string id="51607">تعذر الاتصال بـ last.fm</string>
+  <string id="51608">يرجى التأكد من اسم المستخدم وكلمة المرور</string>
+  <string id="51609">تم الضبط بشكل صحيح </string>
+  <string id="51610">عدم تغيير المستوى عندما يكون في وضع الصوت الرقمي</string>
+  <string id="51590">الوسائط المشتركة مع الأصدقاء</string>
+
+  <!-- Player Error messages -->
+  <string id="51670">التشغيل غير معتمد في هذا الفيديو</string>
+  <string id="51671">إيقاف هذا الفيديو غير مدعم</string>
+  <string id="51672">البحث في هذا الفيديو غير مدعم</string>
+  <string id="51673">تغيير الصوت في هذا الفيديو غير مدعم</string>
+  <string id="51674">إما أن يكون التنسيق غير مدعم أو الملف معطوب.</string>
+  <string id="51675">مصدر وسائل الإعلام أو ملف غير قابل للوصول.</string>
+  <string id="51676">خطأ تشغيل</string>
+  <string id="51677">هذا الفيديو غير متوفر حاليا.</string>
+  <string id="51678">جاري التحميل...</string>
+  
+  <string id="51700">إعدادات -&gt; مصادر إعلامية</string>
+  <string id="51701">يرجى تحديد المواقع التي يتم تخزينها في ملفات الفيديو والموسيقى والصور. [CR] Boxee سوف تمسح تلقائيا المجلدات المحددة لوسائل الإعلام.</string>
+  <string id="51702">فيديو محلي</string>
+  <string id="51703">موسيقى محلية</string>
+  <string id="51704">صور محلية</string>
+
+  <!-- boxee_browse menu -->
+  <string id="51710">ترتيب</string>
+  <string id="51711">عرض</string>
+  <string id="51712">استعراض</string>
+  <string id="51713">وسائل إعلام محلية</string>
+  <string id="51714">إضافة مصدر[CR]</string>  
+  <string id="51715">البحث أو عنوان</string>
+
+  <!-- boxee_friends_list -->
+  <string id="51720">إضافة/إدارة</string>
+  
+  <!-- boxee_loading_media_dialog -->
+  <string id="51735">تحميل وسائل الإعلام.  رجاء الانتظار.</string>
+    
+  <!-- boxee_logging_in -->
+  <string id="51740">جاري الاتصال...</string>
+  
+  <!-- boxee_main_menu -->
+  <string id="51750">الجديد</string>
+  <string id="51751">أشرطة الفيديو</string>
+  <string id="51752">مواد الفيديو الإنترنت</string>
+  <string id="51753">الموسيقى خاصتي</string>
+  <string id="51754">موسيقى الإنترنت</string>
+  <string id="51755">صوري</string>
+  <string id="51756">صور الإنترنت</string>
+  <string id="51757">الملف الشخصي</string>
+  <string id="51758">التنزيلات</string>
+  <string id="51759">CD/DVD</string>
+  <string id="51760">إنهاء</string>
+  
+  <!-- boxee_media_source_list -->
+  <string id="51780">إعدادات / مصادر إعلامية</string>
+  <string id="51781">القائمة</string>
+  <string id="51782">إضافة مصدر جديد</string>
+  
+  <!-- boxee_media_action -->
+  <string id="51792">المزيد</string>
+  <string id="51793">الإدراك</string>
+  <string id="51794">فيديو الموسيقى</string>
+  <string id="51795">فيديو موسيقى MTV</string>
+  <string id="51796">التعرف على (المسار وليس المصدر)</string>
+    
+  <!-- boxee_media_info -->
+  <string id="51801">موصى به</string>
+  <string id="51816">اقرأ المزيد</string>
+  <string id="51817">المعدل</string>
+  <string id="51818">دقيقة</string>
+  
+  <!-- boxee_media_source_add_folder -->
+  <string id="51840">حدد مجلد معين للرصد.</string>
+  
+  <!--boxee_media_source_add_share -->
+  <string id="51841">توافر مشاركات الشبكة أو الأجهزة المحلية المتاحة.</string>
+  <string id="51842">مصادر إعادة المسح</string>
+  
+  <!-- boxee_media_source_info -->
+  <string id="51845">الرجاء اختيار موقع الشبكة أو جهاز تخزين المرفق محليا.</string>
+  <string id="51846">اسم المشاركة</string>
+  <string id="51847">موقع المشاركة</string>
+  <string id="51848">نوع الوسيط</string>
+  <string id="51849">أبداً</string>
+  <string id="51850">إضافة/تحديث</string>
+  <string id="51851">يحتاج Boxee إلى إعادة البدء لتطبيق هذه التغييرات.</string>
+  <string id="51852">نوع المسح</string>
+  <string id="51853">مرة</string>
+  <string id="51854">يومي</string>
+  <string id="51855">متكرر جدا</string>
+  <string id="51856">كل ساعة</string>
+  <string id="51857">(لن يمسح)</string>
+  
+  <!-- boxee_video_context -->
+  <string id="51860">تشغيل</string>
+  <string id="51861">توقف مؤقت</string>
+  <string id="51862">x2</string>
+  <string id="51863">x4</string>  
+  <string id="51864">x8</string> 
+  <string id="51865">x16</string>  
+  <string id="51866">x32</string>
+  <string id="51867">FFW</string>
+  <string id="51868">RWD</string>
+  <string id="51869">معلومات</string>
+
+  <!-- boxee_media_sources -->
+  <string id="51870">إضافة مصادر</string>
+  <string id="51871">إضافة مصادر الشبكة</string>
+  <string id="51872">تطبيقات[CR]الشبكة</string>
+  <string id="51873">يدويا[CR]إضافة المصدر</string>
+  <string id="51874">ملفات مجهولة</string>
+  
+  <!-- boxee_music_context -->
+  <string id="51880">غناء</string>
+  
+  <!-- boxee_rate -->
+  <string id="51886">تعجبني!</string>
+  <string id="51887">لا</string>
+  <string id="51888">لا تعجبني</string>
+  <string id="51889">لا بأس</string>
+  <string id="51890">مقبولة</string>
+
+  <!-- boxee_user_logon -->
+  <string id="51891">اسم المستخدم</string>
+  <string id="51892">كلمة المرور</string>
+  <string id="51893">تذكر كلمة المرور</string>
+  <string id="51894">اسم المضيف/بروتوكول الإنترنت</string>
+  <string id="51895">البريد الإلكتروني</string>
+  <string id="51896">تأكيد كلمة المرور</string>
+  <string id="51897">اختيار كلمة المرور[CR]</string>
+  
+  <!-- boxee_wizard_network_manual -->
+  <string id="51898">الخطوة 03</string>
+  <string id="51899">التهيئة اليدوية</string>
+  <string id="51900">يرجى ملء عناوين بروتوكول الإنترنت في الحقول أدناه</string>
+  <string id="51901">عنوان IP</string>
+  <string id="51902">عنوان الراوتر</string>
+  <string id="51903">عنوان DNS</string>
+  <string id="51904">عودة</string>
+  <string id="51905">الخطوة التالية</string>
+
+  <!-- boxee_wizard_add_source -->
+  <string id="51906">إعدادات-&gt;مصادر إعلامية-&gt;إضافة مصدر-&gt;</string>
+  <string id="51907">الرجاء اختيار موقع على الشبكة أو جهاز تخزين مرفق محليا.[CR]بمجرد اختيار الجهاز الرجاء اختيار مجلد معين ترغب في الوصول إليه وتسميته.</string>
+  <string id="51908">محلي</string>
+  
+  <!-- boxee_wizard_add_source_manual -->
+  <string id="51909">عنوان بروتوكول الإنترنت/اسم المضيف:</string>
+  
+  <!-- boxee_wizard_audio -->
+  <string id="51910">معالج الصوت</string>
+  <string id="51911">الخطوة 02</string>
+  <string id="51912">مسح</string>
+  <string id="51913">اختبار اتصالات الصوت.[CR]الرجاء الانتظار حتى تسمع النوتات الموسيقية العديدة من مكبرات الصوت.</string>
+  <string id="51914">لا يوجد صوت؟ انقر هنا.</string>
+  
+  <!-- boxee_wizard_network -->
+  <string id="51915">معالج الشبكة</string>
+  <string id="51916">الرجاء اختيار إعدادات شبكة الاتصال لاتصالات الإنترنت والشبكة.</string>
+  <string id="51917">نوع المصادقة:</string>
+  <string id="51918">إنهاء</string>
+  
+  <!-- boxee_wizard_resolution -->  
+  <string id="51919">دقة المعالج</string>
+  <string id="51920">الخطوة 01</string>
+  <string id="51921">مع بعض عروض التلفزيون يمكنك ضبط دقة الشاشة لتظهر الصور أكبر أو أصغر.</string>
+  <string id="51922">الوضوح القياسي (SD)</string>
+  <string id="51923">عالي الوضوح (HD)</string>
+  <string id="51924">معايرة</string>
+
+  <!-- boxee_wizard_set_source_name -->
+  <string id="51925">تأكيد</string>
+  
+  <!-- boxee_browse_window -->
+  <string id="51926">[B]لم يتم العثور على أي نتائج.[/B][CR]يرجى ملاحظة أن بعض المحتويات قد لا تكون متوفرة في منطقتك.[CR]يمكن أن تتغير الإعدادات الجغرافية بموجب إعدادات [اللون الأصفر]/المظهر/خيارات العرض [/لون]</string>
+  <string id="51927">لم يتم العثور على نتائج[CR]بعض المحتويات غير متوفرة في وضع عدم الاتصال.</string>
+
+  <!-- boxee_dialog_confirm -->
+  <string id="51928">العودة إلى الدقة الأصلية في 6 ثواني</string>
+  <string id="51929">تعذر العثور على نتائج.</string>
+
+  <!-- boxee home -->
+  <string id="51930">سوف يظهر المحتوى المميز عندما يتمكن Boxee من الاتصال بالإنترنت.</string>
+  
+  <!-- custom_boxee_credits -->
+  <string id="51937">المشاركون</string>
+  <string id="51938">يستند Boxee إلى العمل الملهم للأفراد والمجموعات التالية الذين جعلوا مركز إعلام XBMC ممكنا.</string>
+  
+  <!-- custom_boxee_settings -->
+  <string id="51941">تحديث</string>
+  <string id="51942">إعادة صبط برنامج</string>
+  
+  <string id="51943">إعادة ضبط جهاز</string>
+  <string id="51944">مسح معلومات إعلامية من المكتبة (ملفات الوسائط ستبقى على حالها)...</string>
+  <string id="51945">إعادة الشبكة</string>
+  <string id="51946">ضبط صورة خلفية</string>
+  <string id="51947">ضبط مجلد صور الخلفية</string>
+  <string id="51948">أسماء واجهة الشاشة</string>
+  <string id="51949">تاريخ الإنشاء</string>
+  <string id="51950">معلومات</string>
+  <string id="51951">نسخة Boxee</string>
+  <string id="51952">مجموع الذاكرة</string>
+  <string id="51954">المخزن</string>
+  <string id="51955">من</string>
+  <string id="51956">مسح الصور المصغرة القديمة (ستبقى ملفات الإعلام على حالها)...</string>
+  <string id="51957">إعادة ضبط صور الخلفية</string>	
+  <string id="51958">تجاهل البادئات للمحتوى المحلي على أنواع أبجدية</string>
+
+  <string id="51959">تحديث التحميل.</string>
+  <string id="51960">Boxee سوف يكون بطيئ حتى الانتهاء.</string>
+
+  <!-- dialog_button_menu -->
+  <string id="51964">وسائل الإعلام قيد التشغيل حاليا.[CR][CR]هل ترغب في إعادة تشغيل؟</string>
+  <string id="51965">الخروج</string>
+
+  <!-- dialog_keyboard -->
+  <string id="51966">لوحة المفاتيح الافتراضية</string>
+  <string id="51967">@</string>
+  
+  <!-- dialog_message -->
+  <string id="51968">يرجى التحقق من اتصالات الكبل وتأكد من المتلقي/التلفزيون ليس صاما.[CR][CR]إذا استمر تعذر سماع أي صوت يرجى مراجعة صفحة حل المشكلات من خلال boxee.tv/troubleshooting</string>
+  
+  <!-- dialog_mute_bug -->
+  <string id="51969">صامت</string>
+  
+  <!-- dialog_numeric -->
+  <string id="51970">C</string>
+  <string id="51971">E</string>
+
+  <!-- dialog_plugin_settings -->
+  <string id="51972">إعدادات التطبيق</string>
+  <string id="51973">تطبيق</string>
+
+  <!-- dialog_progress -->
+  <string id="51974">جاري التحميل... رجاء الانتظار.</string>
+  <string id="51998">تحميل تعليقك... انتظر لحظة!</string>
+  <string id="51999">تفريغ التعليق...أضف بعض الأصدقاء!</string>
+  <string id="52000">قطع الشبكة...</string>
+  <string id="52001">تم قطع الشبكة...</string>
+  <string id="52002">يتاح ملقم Boxee...</string>
+  <string id="52003">معالج الإعداد</string>
+  
+  <!-- home -->
+  <string id="52004">مرحبا</string>
+  <string id="52005">الجديد؟</string>
+  <string id="52006">التوصيات</string>
+  <string id="52007">نشاط الأصدقاء</string>
+  <string id="52008">تمت الإضافة مؤخرا</string>
+  <string id="52009">مستخدم مؤخرا</string>
+  <string id="52010">جاري التحميل</string>
+  <string id="52011">غير متصل</string>
+  <string id="52012">عرض الكل</string>
+  <string id="52013">متصل!</string>
+  
+  <!-- music_osd -->
+  <string id="52015">موسيقى OSD</string>
+  <string id="52016">تم إضافة التطبيق بنجاح.[CR][CR]يمكنك العثور عليه الآن في مكتبة التطبيق.</string>
+  <string id="52017">تعذر إضافة[CR][اللون الأخضر]%s[/ لون].</string>
+  <string id="52018">تعذر ترقية التطبيق.</string>
+  <string id="52019">هل ترغب في إزالة التعليق المحدد؟</string>
+  <string id="52020">تعذر تحميل التعليق.</string>
+  <string id="52021">عرض وتشغيل إعدادات الفيديو</string>
+  <string id="52022">تشغيل الموسيقى وإعدادات راديو الإنترنت</string>
+  <string id="52023">ضبط عرض الشرائح</string>
+  <string id="52024">إعدادات شبكة ذات صلة</string>
+  <string id="52025">الشكل والمظهر والإعدادات الإقليمية</string>
+  <string id="52026">الأجهزة وإعدادات النظام</string>
+  <string id="52027">الكشف والتواصل مع أجهزة التخزين والشبكات المحلية</string>
+  <string id="52028">ابدأ معالج الإعداد الأولي</string>
+  <string id="52029">جميع الأنواع...</string>
+  <string id="52030">شاهد من وراء هذا البرنامج الرائع :)</string>
+  <string id="52031">حدد طلبا من القائمة لتعيين أو تغيير إعداداته.</string>
+  <string id="52032">مصادر الوسائط</string>
+  <string id="52033">التطبيقات</string>
+  <string id="52034">إدارة التطبيقات الخاصة بك وإضافة جديدة</string>
+  <string id="52035">أدخل عنوان المستودع</string>
+  <string id="52036">يتعذر الحصول على معلومات المستودع. تأكد من صحة الموقع وحاول مرة أخرى.</string>
+  <string id="52037">هل ترغب في إزالة مستودع[CR][اللون الأخضر]%s[/لون]؟</string>
+  <string id="52038">هل ترغب في إضافة تطبيق[CR][اللون الأخضر]%s[/لون]؟</string>
+  <string id="52039">إضافة مربع</string>
+
+  <!-- Media Sources and Applications -->  
+
+  <!-- source types -->
+  <string id="52040">مصادر الموسيقى</string>
+  <string id="52041">مصادر الفيديو</string>
+  <string id="52042">مصادر الصور</string>
+  <string id="52043">الأجهزة</string>
+  <string id="52044">المصادر</string>
+  
+  <string id="52050"></string>
+  <string id="52051">عمل المشغل غير مدعم حاليا</string>
+
+  <string id="52090">تطبيق[CR][اللون الأخضر]%s[/ لون] مثبت بالفعل</string>
+
+  <string id="52100">مصادر الملف</string>
+  <string id="52101">توافر مشاركات الشبكة أو الأجهزة المحلية المتاحة.</string>
+  <string id="52102">مصادر إعادة المسح</string>
+
+  <string id="52104">لا توجد مواقع ويب معلمة كمفضلة</string>
+  <string id="52105">محو التاريخ...</string>
+  <string id="52106">تم</string>
+  <string id="52107">تحرير</string>
+  <string id="52108">المستعرض</string>
+  <string id="52109">التاريخ</string>
+  <string id="52110">تشغيل الآن</string>
+  <string id="52111">تفضيلات</string>
+  <string id="52112">البودكاست</string>
+  <string id="52115">إضافة أجزاء</string>
+  <string id="52116">تعذر العثور على نتائج</string>
+  <string id="52117">أدخل عنوان فيلم أو عرض تلفزيوني</string>
+  <string id="52118">حاول تطبيق تفاصيل الموسم لجميع الملفات في مجلد</string>
+  <string id="52119">إزالة</string>
+  <string id="52120">فيلم؟</string>
+  <string id="52121">عرض تلفزيوني؟</string>
+  <string id="52122">الألبوم؟</string>
+  <string id="52123">إزالة؟</string>
+  <string id="52124">تطبيق سلسلة</string>
+  <string id="52125">إلى المجلد كاملا</string>
+  <string id="52126">تحديد</string>
+  <string id="52127">لا شيء مما سبق، يترك دون حل</string>
+  <string id="52128">لا شيء مما سبق، تم الإزالة من المكتبة</string>
+  <string id="52129">إزالة الفيديو من المكتبة</string>
+  <string id="52130">تحديد</string>
+  <string id="52131">إصدار</string>
+  <string id="52132">العلامات</string>
+  <string id="52133">التقطها</string>
+  <string id="52134">تاريخ الالتقاط</string>
+  <string id="52135">الكاميرا</string>
+  <string id="52136">النموذج</string>
+  <string id="52137">فتحة</string>
+  <string id="52140">تم إضافة التعليق بنجاح.[CR][CR]يمكنك العثور عليه الآن في مكتبة التطبيق.</string>
+  <string id="52150">الرجاء اختيار من بين الخيارات التالية لإضافة مصادر جديدة إلى Boxee.</string>
+  <string id="52151">التطبيقات</string>
+  <string id="52152">يدوياً</string>
+  <string id="52155">إضافة مصدر جديد</string>
+  <string id="52160">بواسطة</string>
+  <string id="52161">القناة</string>
+  <string id="52175">البوم خاطئ؟</string>
+  <string id="52176">أدخل عنوان الألبوم</string>
+  <string id="53001">بواسطة</string>
+  <string id="53002">أدخل رقم موسم</string>
+  <string id="53003">أدخل رقم حدث</string>
+  <string id="53004">إزالة الفيديو من[CR]المكتبة</string>
+
+  <!-- music visuallisation -->
+  <string id="53011">القناة</string>
+
+  <!-- tooltips -->
+  <string id="53021">يمكن أن تذهب لفتح[CR]القائمة الرئيسية</string>
+  <string id="53022">يمكن أن تذهب مباشرة لفتح[CR]قائمة التصفح</string>
+  <string id="53023">انقر هنا للتبديل إلى[CR]حاليا لتشغيل وسائل الإعلام</string>
+
+  <!-- keyboard -->
+  <string id="53031">QWERT</string>
+  <string id="53032">ABCD</string>
+
+  <!-- user guide -->
+  <string id="53118">دليل المستخدم</string>
+
+  <string id="53101">التنقل</string>
+  <string id="53102">التشغيل</string>
+  <string id="53103">جهاز تحكم عن بعد</string>
+  <string id="53104">لوحة المفاتيح</string>
+  <string id="53105">التنقل لأعلى وأسفل ويمينا ويسارا.</string>
+  <string id="53106">الاختيار باستخدام تشغيل/إيقاف مؤقت.</string>
+  <string id="53107">العودة إلى الشاشة السابقة باستخدام القائمة.</string>
+  <string id="53108">التنقل باستخدام مفاتيح الأسهم.</string>
+  <string id="53109">التحديد باستخدام مفتاح الدخول.</string>
+  <string id="53110">استخدام ''\'' للتبديل بين ملء الشاشة والنافذة.</string>
+  <string id="53111">إنهاء أو تعليق بالنقر فوق S.</string>
+  <string id="53112">انقر فوق خروج للعودة إلى الشاشة السابقة.</string>
+  <string id="53113">انقر فوق H للانتقال إلى الشاشة الرئيسية.</string>
+  <string id="53114">مستوى التحكم بالصوت باستخدام -/+</string>
+  <string id="53115">إظهار العرض على الشاشة والاختيارات باستخدام تشغيل/إيقاف مؤقت.</string>
+  <string id="53116">تخطي باستخدام الأزرار للخلف وللأمام.</string>
+  <string id="53117">إخفاء العرض على الشاشة باستخدام القائمة.</string>
+  <string id="53119">إظهار العرض على الشاشة والاختيارات باستخدام إدخال.</string>
+  <string id="53120">اضغط على X لوقف التشغيل.</string>
+  <string id="53121">تشغيل أو إيقاف مؤقت باستخدام شريط المسافة.</string>
+  <string id="53122">تخطي باستخدام مفاتيح الأسهم لليسار/اليمين.</string>
+  <string id="53123">إخفاء العرض على الشاشة بالنقر فوق خروج.</string>
+  <string id="53124">هذا هو مجرد قائمة أساسية لاختصارات لوحة المفاتيح. للحصول على قائمة كاملة، تحقق من الأسئلة الشائعة حول http://www.boxee.tv</string>
+
+  <string id="53130">صورة الخلفية</string>
+  <string id="53131">يرجى ملاحظة أنه ينصح بصور المناظر الطبيعية.</string>
+
+  <string id="53135">دليل المستخدم/التنقل</string>
+  <string id="53136">دليل المستخدم/التشغيل</string>
+
+  <string id="53140">حالة المكتبة</string>
+  <string id="53141">المسح الآن:</string>
+  <string id="53142">ساكن</string>
+  <string id="53143">ملخص المجلد</string>
+  <string id="53144">لا تغيير</string>
+  <string id="53145">الحل:</string>
+  <string id="53146">ملخص المشاركة</string>
+  <string id="53147">الإجمالي:</string>
+  <string id="53148">تم الحل:</string>
+  <string id="53149">لم تحل بعد:</string>
+  <string id="53150">جديد:</string>
+  <string id="53151">معلق:</string>
+  <string id="53152">تم الإيقاف:</string>
+  <string id="53153">غير متوفر:</string>
+  <string id="53154">تعريف:</string>
+  <string id="53155">المفضلة</string>
+
+  <string id="53160">ساكن...</string>
+  <string id="53161">مسح:</string>
+  <string id="53162">تعريف:</string>
+
+  <!-- Manual Resolve -->
+  <string id="53180">حل يدوي</string>
+  <string id="53181">لا توجد تفاصيل متوفرة لهذا العنوان.</string>
+  <string id="53182">هل تريد التعريف باستخدام ملف المعلومات (NFO) الموجود في المجلد أو البحث عن التفاصيل بشكل يدوي؟</string>
+  <string id="53183">تعريف الوسائط</string>
+  <string id="53184">NFO</string>
+  <string id="53185">يدوي</string>
+  <string id="53186">تم العثور على ملف NFO ولكن تعذر فتحه، برجاء مراجعة هيكل الملف.</string>
+
+  <!-- Update Manager -->
+  <string id="53200">الرجاء إدخال كلمة مرور OS</string>
+  <string id="53205">جاري التحديث...</string>
+  <string id="53206">جاري التشغيل...</string>
+  <string id="53207">خطأ غير معروف.</string>
+
+  <string id="53210">التحقق من صحة كلمة المرور...</string>
+  <string id="53211">كلمة المرور صالحة.</string>
+  <string id="53212">كلمة المرور غير صالحة.</string>
+  <string id="53213">جاري إعادة تشغيل Boxee....</string>
+  <string id="53214">هناك بالفعل تثبيت Boxee مرفق أسفل /مجلدات.</string>
+  <string id="53215">تعذر العثور على ملف التثبيت.</string>
+  <string id="53216">تعذر إرفاق ملف التثبيت.</string>
+  <string id="53217">تعذر العثور على ملف التثبيت المرفق أسفل /مجلدات.</string>
+  <string id="53218">تعذر العثور على ملف التثبيت المرفق MPKG أسفل /مجلدات.</string>
+  <string id="53219">توصي Boxee بالترقية الآن - إنه لشيء جيد بالنسبة لك!</string>
+  <string id="53220">[COLOR red]مطلوب هذا التحديث. يمكنك إما التحديث أو الإغلاق الآن.[/COLOR]</string>
+  <string id="53221">[COLOR red]مطلوب هذا التحديث.[/COLOR]</string>
+  <string id="53225">تفاصيل أقل</string>
+  <string id="53239">لاحقا</string>
+  <string id="53240">تحديث Boxee</string>
+  <string id="53241">تعذر التحديث.</string>
+  <string id="53242">الخطأ:</string>
+  <string id="53243">[CR]Boxee يتاح تحديث البرنامج.[CR]هل تريد تثبيته الآن؟</string>
+  <string id="53244">[COLOR red]* إذا اخترت إلغاء سيطلب منك التثبيت عند تسجيل الدخول الخاص بك.[/COLOR]</string>
+  <string id="53245">[CR]تحديث برنامج Boxee متاح.[CR]الرجاء الخروج من Boxee والتحديث من مدير تحديث أوبونتو.</string>
+  <string id="53246">[CR]تحديث برنامج Boxee متاح.[CR]الرجاء الخروج من Boxee والتحديث من قائمة تلفزيون أبل.</string>
+  <string id="53247">يتاح تحديث برنامج Boxee.</string>
+  <string id="53248">يتاح تحديث برنامج Boxee.</string>
+  <string id="53249">لقد ثبت بالفعل أحدث نسخة من Boxee.</string>
+  <string id="53250">0.9.8.4881</string>
+  <string id="53251">تحديث</string>
+  <string id="53252">التحديث الأخير</string>
+  <string id="53253">التحقق من وجود نسخة جديدة من Boxee...</string>
+  <string id="53254">[CR]Boxee يتاح نسخة جديدة من البرنامج.[CR]هل تريد تنزيله الآن؟</string>
+  <string id="53255">تحديث Boxee متوفر!</string>
+  <string id="53256">حدد "%s" لبدء التحديث إلى أحدث نسخة من Boxee.[CR][CR]سيعاد تشغيل Boxee بعد تثبيت التحديث.</string>
+  <string id="53257">تحديث Boxee</string>
+  <string id="53258">كن على مقربة! يبحث Boxee الآن عن الأحدث والأفضل.[CR]سيقوم جهاز Boxee بإعادة التشغيل عند الانتهاء.</string>
+  <string id="53259">تنزيل البرنامج:</string>
+  <string id="53260">التحديث الآن</string>
+  <string id="53261">نسخة جديدة متوفرة. انقر هنا.</string>
+  <string id="53262">للتفاصيل</string>
+  <string id="53263">إعادة تشغيل وترقية</string>
+  <string id="53264">جاري تنزيل نسخة جديدة...</string> 
+  <string id="53265">إضافة تعليق آر إس إس</string>
+  <string id="53266">المكتبة الصوتية</string>
+  <string id="53267">صوت إضافي</string>
+  <string id="53268">ALSA</string>
+
+  <!-- video for linux -->
+  <string id="53269">تمكين الأجهزة المساعدة على فك الشفرة ما يكون ذلك ممكنا</string>
+
+  <!-- app box labels -->
+  <string id="53270">مربع التطبيق/تطبيقات جديدة</string>
+  <string id="53271">تطبيقات جديدة</string>
+  <string id="53272">تطبيقاتي</string>
+  <string id="53273">تعليقاتي</string>
+  <string id="53274">المخزن</string>
+  <string id="53275">لا تتاح تطبيقات جديدة حاليا.</string>
+  <string id="53276">لا تتاح تطبيقات.</string>
+  <string id="53277">يتاح ترقية التطبيق</string>
+  <string id="53278">للتطبيق إعدادات</string>
+  <string id="53279">إضافة مخزن</string>
+  <string id="53280">إضافة تعليق جديد</string>
+  <string id="53281">عدم إتاحة تعليق</string>
+
+  <string id="53282">ترقية التطبيق</string>
+  <string id="53283">تغيير الإعدادات</string>
+  <string id="53284">إزالة التطبيق</string>
+
+  <string id="53285">الموقع:</string>
+  <string id="53286">النوع:</string>
+  <string id="53287">جاري تحديث Boxee...</string>
+  <string id="53288">Boxee تثبت التحديثات. قد يستغرق ذلك بضع دقائق.</string>
+  <string id="53289">التحديث:</string>
+
+  <string id="53290">إخفاء تعليقات البالغين والتطبيقات</string>
+  <string id="53291">يمكنك فقط الوصول إلى محتوى البالغين إذا كان عمرك على الأقل قد وصل إلى سن الرشد حسب المكان الذي تقيم فيه أو الذي يمكنك الوصول إلى المحتوى.</string>
+  <string id="53292">تحديد غالق محتوى البالغين...</string>
+  <string id="53293">إخفاء التعليقات والتطبيقات التي يتعذر تشغيلها في موقعك</string>
+  <string id="53294">كلمة المرور التي أدخلتها غير صحيحة.</string>
+  <string id="53295">تحذير</string>
+
+  <string id="53296">تفاصيل أقل</string>
+  <string id="53297">لن يتم عرض بعض المحتويات الموجودة في المكتبات والتطبيقات في موقعك، هل أنت متأكد أنك تريد تمكينه؟</string>
+  <string id="53298">قبول تحديثات الاختبار/البيتا (المستخدمون المتقدمون فقط)؟</string>
+
+  <string id="53300">شكل الشاشة</string>
+  <string id="53301">طبيعي (4:3)</string>
+  <string id="53302">شاشة عريضة بلازما / LCD TV</string>
+  <string id="53303">شاشة كمبيوتر عريضة LCD (16:10)</string>
+  <string id="53304">شاشة عريضة الترا (21:9)</string>
+  <string id="53305">حجم المسح</string>
+  <string id="53306">3%</string>
+  <string id="53307">4%</string>
+  <string id="53308">5%</string>
+  <string id="53309">6%</string>
+  <string id="53310">إزالة الاختصار المحدد؟</string>
+  <string id="53311">هذا الاختصار موجود بالفعل</string>
+  <string id="53400">معايرة الشاشة</string>
+  <string id="53401">هل ترغب في ضبط معايرة الشاشة أولا؟[CR][COLOR green]ملاحظة:[/COLOR] يمكنك أن تحدد دائما في وقت لاحق أسفل إعدادات-&gt; الشكل والشعور-&gt;الشاشة</string>
+  <string id="53402">حذف</string>
+  <string id="53403">مرحبا بكم في Boxee!</string>
+  <string id="53404">إضافة مستخدم</string>
+  <string id="53405">إزالة</string>
+  <string id="53406">إزالة مستخدم [COLOR green]'%s'[/COLOR]؟</string>
+ 
+  <string id="53407">المستخدم الحالي</string>
+  <string id="53408">المستخدم الجديد</string>
+  
+  <string id="53409">إزالة</string>
+  <string id="53410">إضافة مستخدم</string>
+  <string id="53411">دليل</string>
+  <string id="53412">الشبكة</string>
+  <string id="53413">إغلاق</string>
+  <string id="53414">يرجى التأكيد</string>
+  <string id="53415">هل أنت متأكد أنك تريد محو التاريخ؟</string>
+  <string id="53416">لا يمكن التراجع عن هذا الإجراء</string>
+  <string id="53420">تخطى</string>
+  
+  <string id="53425">تم</string>
+
+  <string id="53430">جاري تسجيل الدخول...</string>
+  
+  <string id="53432">تعذر الحصول على شروط الاستخدام</string>
+  <string id="53433">تعذر الحصول على سياسة الخصوصية</string>
+
+  <string id="53434">بالنقر فوق "تم" تقبل الآتي:</string>
+  <string id="53435">بالنقر فوق '%s' تقبل الآتي</string> 
+  <string id="53436">شروط الاستخدام</string>
+  <string id="53437">و</string>
+  <string id="53438">سياسة الخصوصية</string>  
+  <string id="53439">لاستخدام Boxee.</string>  
+  
+  <string id="53440">ماذا تريد أن تفعل؟</string>
+ 
+  <string id="53442">تسجيل الدخول إلى Boxee</string> 
+  <string id="53443">إنشاء مستخدم Boxee جديد</string>
+  <string id="53444">الخاص بك...</string>
+  <string id="53445">اسم المستخدم [COLOR green] %s [/COLOR] غير صالح. استخدام أحرف فقط (من الألف إلى الياء)، وأرقام (0-9)، ونقطة (.) أو شرطة سفلية (_).</string>
+  <string id="53446">اسم المستخدم [COLOR green] %s [/COLOR] غير متاح. اختر اسم آخر وحاول مرة أخرى.</string>
+  <string id="53447">تعذر للتحقق من اسم المستخدم [COLOR green] %s [/COLOR] ,الإتاحة</string>
+  <string id="53449">تم</string>
+      
+  <string id="53450">جيد</string>
+  <string id="53451">غير صالح</string>
+  <string id="53452">اختر اسم المستخدم</string>
+  <string id="53453">تم إنشاء حساب</string>
+  <string id="53454">تم الأمر! لقد أرسلنا إليك للتو بريداً إلكترونياً للتأكيد – اتبع الرابط لتنشيط حسابك وإدارة التفاصيل مثل الخدمات التشجيعية، تغذيات RSS، صورة ملف التعريف، والمزيد.</string>
+  <string id="53455">تعذر إنشاء مستخدم جديد</string>
+  <string id="53456">تعذر إنشاء ملف مستخدم جديد</string>
+  <string id="53457">أعد كتابة كلمة المرور[CR]</string>
+  <string id="53458">جيد</string>
+  <string id="53459">بلا توافق</string>
+  <string id="53473">فشل في تحديث تفاصيل المستخدم الجديد</string>
+  <string id="53460">%s %s في Boxee</string>
+  <string id="53461">رسالتك:</string>
+  <string id="53462">مشاركة</string>
+  <string id="53463">محبوب</string>
+  <string id="53464">نص مخصص</string>
+  <string id="53465">أضف تعليقك:</string>
+  <string id="53466">(عبر Boxee)</string> 
+  
+  <string id="53467">عنوان البريد الإلكتروني قيد الاستخدام بالفعل</string>
+  <string id="53468">كلمة المرور قصيرة للغاية</string> 
+  <string id="53469">تم غالباً!</string> 
+  <string id="53470">لإنهاء إعداد حساب Boxee الخاص بك، سوف تحتاج إلى قبول ...</string> 
+  <string id="53471">(عبر التلفاز المباشر من Boxee)</string>
+  <string id="53472">فشل في تحديث خدمات المستخدم الجديدة</string>
+  <string id="53480">تعذر تسجيل الدخول بعد استعادة اتصال إنترنت[CR]</string>
+  <string id="53485">مشاهدة</string>
+ 
+  <!-- boxee browse screen panel -->
+  <string id="53501">إنترنت ومحلي</string>
+  <string id="53502">وسائل إعلام الإنترنت</string>
+  <string id="53503">وسائل إعلام محلية</string>
+  
+  <string id="53504">الأكثر شيوعا</string>
+  <string id="53505">من الألف إلى الياء</string>
+  <string id="53506">تمت الإضافة مؤخرا</string>
+  <string id="53507">الأكثر استخداما</string>
+  
+  <string id="53508">جميع المواسم</string>
+  
+  <string id="53509">الكل</string>
+
+  <string id="53510">المواسم</string>
+
+  <string id="53511">جميع الأنواع</string>
+  <string id="53512">جميع المصادر</string>
+  <string id="53513">جميع وسائل الإعلام</string>
+  <string id="53514">الفيديو</string>
+  <string id="53515">موسيقى</string>
+  <string id="53516">صور</string>
+  <string id="53517">قائمة الانتظار</string>
+  <string id="53518">اكتشاف</string>
+  <string id="53519">صور</string>
+  <string id="53520">اللعب مؤخرا</string>
+  <string id="53521">أضف إلى عروضي[CR][LOWERCASE](حلقات قائمة الانتظار الجديدة)[/LOWERCASE]</string>
+  <string id="53522">إزالة من عروضي[CR]</string>
+  <string id="53523">إضافة إلى المفضلة</string>
+  <string id="53524">إزالة من المفضلة</string>
+  <string id="53525">خالي</string>
+  <string id="53526">غير مشاهد</string>
+  <string id="53527">إصدار جديد</string>
+  <string id="53528">الأقدم أولا</string>
+  <string id="53529">الأحدث أولا</string>
+  <string id="53530">التاريخ</string>
+  <string id="53531">أبجدي</string>
+  <string id="53532">تاريخ التعديل</string>
+  <string id="53533">الأقدم</string>
+  <string id="53534">الأحدث</string>
+
+  <string id="53535">أ-ي</string>
+  <string id="53536">ي-أ</string>
+  <string id="53537">الأحدث أولا</string>
+  <string id="53538">الأقدم أولا</string>
+  <string id="53539">الأحدث أولا</string>
+
+  <!-- dropdown dialog titles -->
+  <string id="53560">ترتيب</string>
+  <string id="53561">أنواع</string>
+  <string id="53562">المواسم</string>
+  <string id="53563">الأنواع</string>
+  <string id="53564">اسم المستخدم</string>
+
+  <!-- channel filter dropdown -->
+  <string id="53580">فلتر القنوات</string>
+  <string id="53581">تشجيعي</string>
+  <string id="53582">مجاني</string>
+  
+  <!-- Repository Browse Window -->
+  <string id="53600">ملاحظة</string>
+  <string id="53610">مستودع [COLOR green] Boxee [/COLOR] يتعذر إزالته</string>
+  <string id="53620">مخزني</string>
+  <string id="53621">إزالة مخزن</string>
+  <string id="53622">إضافات</string>
+  <string id="53623">إضافة مخزن</string>
+  <string id="53624">إزالة مخزن</string>
+  <string id="53625">إلغاء النقل</string>
+ 
+  <!-- network notification -->
+  <string id="53695">تحرير إعدادات شبكة الاتصال</string>
+  
+   <!-- Media Action Dialog -->
+  <string id="53700">ملاحظة</string>
+  <string id="53701">خطأ</string>
+  <string id="53702">[B]مسح اللعب مؤخرا[/B]</string>
+  <string id="53709">معلومات التقنية</string>
+  <string id="53710">معلومات</string>
+  <string id="53711">شاهد لاحقا</string> <!-- Add To Queue -->
+  <string id="53712">إزالة</string> <!-- Remove From Queue -->
+  <string id="53713">مشاهد</string>
+  <string id="53714">غير مشاهد</string>
+  <string id="53715">إضافة اختصار</string>
+  <string id="53716">إزالة اختصار</string>
+  <string id="53717">المزيد...</string>
+  <string id="53718">مستخرج</string>
+  <string id="53719">مشاركة</string>
+  <string id="53720">إزالة من السجل</string>
+  <string id="53721">رفض</string>
+  <string id="53722">استعراض</string>
+  <string id="53723">إعادة مسح الألبوم</string>
+  <string id="53724">جاري إعادة مسح الألبوم</string>
+  <string id="53725">ليس هذا الألبوم؟</string>
+  <string id="53726">إضافة المسار</string>
+  <string id="53727">تحديد الصورة الصغيرة</string>
+  <string id="53728">عودة</string>  
+  <string id="53729">تفضيل</string>  <!-- Add To Favorite -->  
+  <string id="53730">إزالة</string> <!-- Remove from Favorite --> 
+
+  <string id="53731">أضيف العنصر إلى المشاهدة في وقت لاحق</string>
+  <string id="53732">تم إزالة العنصر بنجاح</string>
+  <string id="53733">تم تحديد العنصر على أن تم مشاهدته</string>
+  <string id="53734">تم تحديد العنصر على أنه لم يتم مشاهدته</string>
+  <string id="53735">تعذر إضافة العنصر إلى قائمة المشاهدة في وقت لاحق</string>
+  <string id="53736">تعذر حذف العنصر من قائمة المشاهدة في وقت لاحق</string>
+  <string id="53737">تم إضافة مختصر العنصر إلى القائمة المنبثقة</string>
+  <string id="53738">تعذر إضافة مختصر العنصر...</string>
+  <string id="53739">تم إزالة مختصر العنصر</string>
+  <string id="53740">تعذر الإزالة من السجل...</string>
+  <string id="53741">مسح المصدر</string>
+  <string id="53742">لم يتم العثور على أجهزة محلية</string>
+
+  <string id="53743">Boxee في وضع غير متصل بالإنترنت</string>  
+  <string id="53744">لا يمكن أن تجعل Boxee هذا يحدث[CR]لأنك لم تكن متصلا بالإنترنت.</string>
+  <string id="53745">Boxee يحتاج إلى الاتصال بالإنترنت للعب[CR]من أجلك.</string>
+  <string id="53746">Boxee يحتاج إلى الاتصال بالإنترنت للعب[CR]من أجلك.</string>
+  <string id="53747">تعذر المشاركة بسبب عدم إتاحة الإنترنت[CR]</string>
+  <string id="53748">يتعذر على Boxee إضافة هذا إلى قائمة العرض في وقت لاحق[CR]دون اتصال بالإنترنت.</string>
+  <string id="53749">يتعذر على Boxee حذف هذا من قائمة العرض في وقت لاحق[CR]دون اتصال بالإنترنت.</string>
+  <string id="53750">تشغيل</string>
+  <string id="53751">ملف محلي</string>
+  <string id="53752"></string>     <!-- prefix to provider source in PLAY button (can be "on " or "from ") -->
+  <string id="53753">محلي</string>  
+  <string id="53755">استعراض</string>
+  <string id="53756">لا يمكن أن تدير Boxee تعليقاتك لأنك لم تكن متصلا بالإنترنت.</string>
+  <string id="53760">بدء</string>
+  <string id="53761">أضف إلى تطبيقاتي</string>
+  <string id="53762">إزالة من تطبيقاتي</string>
+  <string id="53765">تعذر إطلاق التطبيق [COLOR green]%s[/COLOR]</string>
+  <string id="53766">[COLOR green]%s[/COLOR][CR]يحتاج إلى اتصال إنترنت للبدء.</string>
+  <string id="53770">دعم الإعلانات</string>
+  <string id="53771">الكليب</string>
+  <string id="53772">مستخرج</string>
+  <string id="53773">الاشتراك</string>
+  <string id="53774">الاشتراك مطلوب</string>
+  <string id="53775">تعذر مسح قائمة التشغيل مؤخرا.</string>
+  <string id="53776">سيؤدي هذا إلى محو قائمة التشغيل الحديثة الخاصة بك. هل أنت متأكد؟</string>
+  <string id="53777">مستخرج</string>
+  
+  <!-- Apps/AppBox Browse Window -->
+  <string id="53800">الكل</string>
+  <string id="53801">الفيديو</string>
+  <string id="53802">موسيقى</string>
+  <string id="53803">صور</string>
+  <string id="53804">الرياضة</string>
+  <string id="53805">بالغ</string>
+  <string id="53820">الإصلاح</string>
+  <string id="53821">يمكن إزالة اختبار التطبيق [COLOR green] %s [/COLOR] يدويا</string>
+  <string id="53822">إزالة [COLOR green]%s[/COLOR] من تطبيقاتي المفضلة ؟</string>
+  <string id="53823">تعذر إزالة التطبيق [COLOR green]%s[/COLOR]</string>
+  <string id="53824">تم إضافة تطبيق إلى المفضلة</string>
+  <string id="53825">تفضيل</string>
+  <string id="53826">الكل</string>
+  <string id="53827">الفئات</string>
+
+  <string id="53830">تطبيقاتي</string>
+  <string id="53831">مكتبة التطبيقات</string>
+  <string id="53832">تطبيقات خارجية</string>
+
+  <string id="53840">تنزيل أحدث تطبيق %s. رجاء الانتظار...</string>
+  <string id="53841">خطأ في تحميل التطبيق</string>
+  <string id="53842">تثبيت التطبيق.</string>
+  <string id="53843">خطأ في تثبيت التطبيق</string>
+  <string id="53844">تثبيت التطبيق بنجاح</string>
+  <string id="53845">التحقق من التوقيع%s</string> 
+  <string id="53846">تعذر التحقق من التوقيع %s</string>
+  <string id="53847">%sتحقق من التوقيع</string>
+  <string id="53848">تنزيل. رجاء الانتظار...</string> 
+  
+
+ <!-- Home Window-->
+  <string id="53900">عرض الكل</string>                    <!-- All Queue label -->
+  <string id="53905">عرض الكل</string>                    <!-- All Recommend label -->
+  
+
+  <string id="53910">شاهد لاحقا</string>  				  <!-- Home Screen Buttons -->
+  <string id="53911">أصدقاء</string>
+  <string id="53912">عروض</string>
+  <string id="53913">أفلام</string>
+  <string id="53914">تطبيقات</string>
+  <string id="53915">ملفات</string>
+  <string id="53916">الويب</string>
+  <string id="53917">شاهد[CR]لاحقاً</string>
+
+  <string id="53920">الأفلام (الملفات)</string>
+  <string id="53921">العروض (الملفات)</string>
+
+
+  <!-- search -->
+  <string id="53950">3</string>                    <!-- search result highlight color [0-none 1-green, 2-red, 3-yellow] -->
+  <string id="53951">نتائج البحث</string>
+  <string id="53952">البحث عن:</string>
+  <string id="53953">مشاهدة</string>
+  <string id="53957">[B][COLOR orange]بحث على الويب عن &quot;%s&quot;[/COLOR][/B]</string>
+
+  <!-- share -->
+  <string id="54000">مشاركة</string>
+  <string id="54001">يراعى المشاركة.[CR]الرجاء إدخال الرسالة.</string>   
+    
+  <!-- browse menu -->
+  <string id="54010">بحث</string>
+  <string id="54011">العنوان أو كلمة</string>
+  <string id="54012">أرني</string>
+  <string id="54013">ترتيب</string>
+  <string id="54014">المرشحات</string>
+  <string id="54015">عرض</string>
+  <string id="54016">مصغر</string>
+  <string id="54017">قائمة</string>
+  <string id="54018">إضافات</string>
+  <string id="54019">المخزن</string>
+  <string id="54020">جاري التحميل</string>
+  <string id="54021">أصدقاء</string>
+  <string id="54022">اللعب مؤخرا</string>
+  <string id="54023">تصفح الملف</string>
+  <string id="54024">إضافة مشاركة الوسائط</string>
+  <string id="54025">مسح لوسائل الإعلام</string>
+  <string id="54026">أفلامي</string>
+  <string id="54027">استعراض المصادر</string>
+  <string id="54028">مسح مجلدات وسائل الإعلام</string>
+  <string id="54029">مجانا فقط</string>
+  <string id="54030">غير مشاهد فقط</string>
+  <string id="54031">الموسيقى خاصتي</string>
+  <string id="54032">غير مشاهد فقط</string>
+  <string id="54033">تطبيقاتي</string>
+  <string id="54034">مكتبة التطبيقات</string>
+  <string id="54035">إصدار</string>
+  <string id="54036">مشاركة</string>
+  <string id="54037">صوري</string>
+  <string id="54038">شاهد لاحقا</string>
+  <string id="54039">برامج التلفزيون خاصتي</string>
+  <string id="54040">مكتبة برامج التلفزيون</string>
+  <string id="54041">المنتج</string>
+  <string id="54042">بطولة</string>
+  <string id="54043">عام الإصدار</string>
+  <string id="54044">تاريخ البث</string>
+  <string id="54045">إخراج</string>
+  <string id="54046">من</string>
+  <string id="54047">التشغيل[CR]الآن</string>
+  <string id="54048">تطبيقات</string>
+  <string id="54049">عودة</string>
+  <string id="54050">المصدر الموصى به</string>
+  <string id="54051">مصادر أخرى</string>
+  <string id="54052">مشاركة</string>
+  <string id="54053">قائمة المسار</string>
+  <string id="54054">انتهى الآن</string>
+  <string id="54055">ماذا بعد؟</string>
+  <string id="54056">تشغيل التالي</string>
+  <string id="54057">إزالة[CR]من قائمة الانتظار</string>
+  <string id="54058">اذهب</string>
+  <string id="54059">العناصر</string>
+  <string id="54060">إغلاق</string>
+  <string id="54061">تسجيل الخروج</string>
+  <string id="54062">النوم</string>
+  <string id="54063">الخصائص</string>
+  <string id="54064">إدارة المصادر</string>
+  <string id="54065">المسح حاليا</string>
+  <string id="54066">الملفات المحلية</string>
+  <string id="54067">العثور %d على ملفات</string>
+  <string id="54068">تحديدها الآن</string>
+  <string id="54069">تم العثور على الملفات[CR]، وتحديدها</string>
+
+  <string id="54070">لا شيء</string>
+  <string id="54071">لوحة مفاتيح إضافية 1</string>
+  <string id="54072">لوحة مفاتيح إضافية 2</string>
+  <string id="54073">لوحة مفاتيح إضافية 3</string>
+
+  <string id="54074">تصفح عن التطبيقات</string>
+
+  <string id="54075">القنوات</string>
+
+  <string id="54076">إصدار </string>
+  <string id="54077">تم التقييم </string>
+
+  <string id="54083">تمكين تسجيل Curl</string>
+  <string id="54084">- عنوان جهة الوصول Syslog</string>
+  <string id="54085">تمكين إبلاغ Syslog</string>
+
+  <string id="54103">Boxee تتولى مسح المجلد الموسيقى على جهاز الكمبيوتر الخاص بك. قد يستغرق الأمر بعض الوقت لتظهر الموسيقى[CR]وفي غضون ذلك يمكنك:</string>
+  <string id="54104">2. الاستماع إلى تطبيقات موسيقى الإنترنت التابعة لـ Boxee</string>
+  <string id="54105">Boxee تتولى مسح مجلد برامج التلفزيون على جهاز الكمبيوتر الخاص بك. قد يستغرق الأمر بعض الوقت لبرماج التلفزيون[CR]وفي غضون ذلك يمكنك:</string>
+  <string id="54106">1. تصفح مكتبة برنامج التلفزيون</string>
+  <string id="54107">مسح المجلدات الأخرى الموجودة على الكمبيوتر أو الشبكة</string>
+  <string id="54108">العناوين! لم يتم العثور على البرنامج المساعد للفلاش.</string>
+  <string id="54109">تجدر الإشارة إلى أنه من أجل تشغيل معظم المحتوى[CR]على الانترنت، يطلب مساعدة الفلاش.[CR]لحل هذه المشكلة، يرجى زيارة [COLOR yellow][B]http://www.boxee.tv/flash[/B][/COLOR] </string>
+  <string id="54110">كشفت Boxee عن أن لديك أقل من 128MB من ذاكرة الفيديو.[CR]قد تواجه مشاكل في تشغيل Boxee.</string>
+  <string id="54111">عنوان ملقم واجهة Syslog غير صالح</string>
+
+  <string id="54120">- مستقبل قادر على دولبي رقمي آخر</string>
+  <string id="54121">- مستقبل قادر على دولبي TrueHD</string>
+  <string id="54122">- ملقم قادر على DTS-HD</string>
+  <string id="54123">رقمي (HDMI)</string>
+  <string id="54124">- مستقبل قادر على LPCM 7.1</string>
+  <string id="54150">تحذير: جهاز الاستقبال الخاص بك يشير إلى أنه لا يدعم bitstreaming دولبي رقمي</string>
+  <string id="54151">تحذير: جهاز الاستقبال الخاص بك يشير إلى أنه لا يدعم bitstreaming دولبي رقمي آخر</string>
+  <string id="54152">تحذير: جهاز الاستقبال الخاص بك يشير إلى أنه لا يدعم bitstreaming دولبي TrueHD</string>
+  <string id="54153">تحذير: جهاز الاستقبال الخاص بك يشير إلى أنه لا يدعم bitstreaming دولبي DTS</string>
+  <string id="54154">تحذير: جهاز الاستقبال الخاص بك يشير إلى أنه لا يدعم bitstreaming دولبي DTS-HD</string>
+  <string id="54155">جميع المخرجات</string>
+  <string id="54156">التحكم في مستوى الصوت أثناء التشغيل (إذا أمكن)</string>
+
+  <string id="54158">تلقائي</string>
+  <string id="54159">إيقاف</string>
+  <string id="54160">تشغيل</string>
+  <string id="54161">نسبة Dolby TrueHD DRC</string><!-- translate only percentage -->
+  <string id="54165">تمكين تأخر المخرج</string>
+
+
+  <!-- media source info -->
+  <string id="54200">موافق</string>
+  <string id="54201">إضافة</string>
+  <string id="54202">إضافة هذا الدليل</string>
+
+  <!-- boxee browse screen panel part II -->
+  <string id="54250">مستخدم مؤخرا</string>
+  
+  <!-- time formats -->
+  <string id="54500">12س</string>
+  <string id="54501">24س</string>
+  <string id="54502">h:mm:ss xx</string>
+  <string id="54503">H:mm:ss</string>
+  <string id="54550">اختر شبكة من القائمة، أو ادمج شبكة أخرى.</string>
+  <string id="54551">دمج شبكة</string>
+  <string id="54552">سوف نحتاج إلى كلمة مرور سرية حتى تتمكن من الاتصال.</string>
+  <string id="54553">دمج شبكة أخرى</string>
+  <string id="54554">نحتاج إلى اسم الشبكة التي تريد دمجها.</string>
+  <string id="54555">لم يتم إنشاء كل الشبكات بالتساوي، لذا نحتاج إلى معرفة نوع السرية التي تستخدمها.</string>
+  <string id="54556">إنها نسخة تجريبية! تعرف ما نحتاج إليه منك هنا. إذا لم تكن تعرف، اسأل أحد أصدقائك الأذكياء.</string>
+  <string id="54558">تحديث Boxee متوفر</string>
+  <string id="54559">الآن ونحن يمكننا الوصول إلى الإنترنت، دعنا نتأكد من توفر أحدث نسخة لديك من برنامج Boxee.</string>
+  <string id="54560">نجاح!</string>
+  <string id="54561">Boxee متصل بالإنترنت. استمتع الآن.</string>
+
+ <!-- first time use -->
+  <string id="54576">برنامج Boxee متصل الآن بالإنترنت.[CR][CR]الآن مع إمكانية الوصول إلى الإنترنت، دعنا نتأكد من الحصول على أحدث نسخة من Boxee.</string>
+  <string id="54577">تم الاتصال بنجاح</string>
+  <string id="54578">ملاحظات الإصدار</string>
+  <string id="54579">همم، لا يمكننا الاتصال بالراوتر الخاص بك. حاول إدخال إعدادات شبكتك بطريقة يدوية.</string>
+  <string id="54580">همم، إنترنت الراوتر لا يعمل. حاول الاتصال عبر الكمبيوتر الخاص بك لفحص الاتصال.</string>
+  <string id="54581">استطاع برنامج Boxee الاتصال بشبكتك، ولكن لا يمكن الوصول إلى الإنترنت.</string>
+  <string id="54582">كلمة المرور غير صحيحة، حاول ثانية.</string>
+  <string id="54583">أمن الشبكة</string>
+  <string id="54584">أدخل اسم الشبكة</string>
+  <string id="54585">حدد الشبكة اللاسلكية</string>
+  <string id="54586">سيقوم برنامج Boxee بالاتصال بشبكة لاسلكية</string>
+  <string id="54587">Boxee متصل براوتر من خلال كابل إيثرنت</string>
+  <string id="54588">كيف تريد أن يتصل Boxee بالإنترنت؟</string>
+  <string id="54592">ضبط شاشتك</string>
+  <string id="54590">قم الآن بمحاذاة [B][COLOR blue]سهم [/COLOR][/B]2 بالجزء السفلي الأيمن من شاشتك.[CR][CR]عند الانتهاء، اضغط على الزر [B][COLOR boxeegreenheidi]center[/COLOR][/B].</string>
+  <string id="54591">استخدم اللوحة الاتجاهية على الموديل الخاص بك لمحاذاة [B][COLOR blue]السهم 1[/COLOR][/B] بالجانب العلوي الأيسر من شاشتك.[CR][CR]عند الانتهاء، اضغط على الزر [B][COLOR boxeegreenheidi]center[/COLOR][/B].</string>
+  <string id="54592">ضبط شاشة العرض</string>
+  <string id="54593">هل يمكنك رؤية الحد [B][UPPERCASE][COLOR boxeegreenheidi]green[/COLOR][/UPPERCASE][/B] حول حافة شاشتك؟</string>
+  <string id="54594">فحص شاشة العرض</string>
+  <string id="54595">حدد مستوى دقة التلفاز</string>
+  <string id="54596">حدد مستوى دقة التلفاز للتأكد من أن Boxee يقدم أفضل صورة ممكنة.</string>
+  <string id="54597">إعداد شاشة العرض</string>
+  <string id="54588">يحتاج Boxee إلى الاتصال بالإنترنت حتى تتمكن من إعداده.</string>
+  <string id="54598">[B][UPPERCASE]مرحباً[/UPPERCASE] في[/B]</string>
+  <string id="54599">انضم</string>
+  <string id="54600">اللغة</string>
+  <string id="54601">حدد لغة الواجهة:</string>
+  <string id="54605">يبدو جيدا؟</string>
+  <string id="54610">مرحبا!</string>
+  <string id="54611">في غضون دقيقة واحدة، سيكون بمقدورك تشغيل آلاف الأفلام، العروض والمقاطع من الإنترنت والشبكة الرئسيسة الخاصة بك.[CR][CR]اضغط على زر مركز [UPPERCASE][COLOR boxeegreenheidi][B] [/UPPERCASE][/COLOR][/B] على الريموت الخاص بك لبدء التشغيل.</string>
+  <string id="54612">بدء</string>
+  <string id="54615">[UPPERCASE]اللغة[/UPPERCASE]</string>
+  <string id="54616">عليك أن تختار لغة</string>
+  <string id="54617">تعذر ضبط اللغة</string>
+  <string id="54618">[COLOR green]%s[/COLOR] كلمة مرور</string>
+  <string id="54619">الشبكة تتطلب كلمة مرور</string>  
+  <string id="54620">مستوى الدقة</string>
+  <string id="54621">اختر دقة العرض:</string>
+  <string id="54622">هل ترى هذا العرض بشكل صحيح؟</string>
+  <string id="54623">عليك أن تختار الدقة</string>
+  <string id="54624">أفضل بضبط الشاشة بشكل صحيح. بسيطة:</string>
+  <string id="54625">استخدام جهاز التحكم عن بعد لمحاذاة السهم # 1 إلى الزاوية اليسرى أعلى الشاشة.</string>  
+  <string id="54626">اضغط على تحديد بجهاز التحكم عن بعد عندما يكون جيدا.</string>
+  <string id="54627">كرر بالسهم  # 2 في أسفل اليمين.</string>
+  <string id="54628">يبدو جيدا!</string>  
+  <string id="54629">[UPPERCASE]الدقة[/UPPERCASE]</string>
+  <string id="54630">ضبط الصوت</string>
+  <string id="54631">اختر خرج الصوت الخاص بك:</string>
+  <string id="54632">HDMI</string>
+  <string id="54633">بصري</string>
+  <string id="54634">أستريو قياسي</string>
+  <string id="54635">تم الاتصال بنجاح إلى الشبكة</string>
+  <string id="54636">تم الاتصال بنجاح إلى الشبكة اللاسلكية</string>
+  <string id="54637">سلك إيثرنت غير موصل.</string>
+  <string id="54638">سلك الإيثرنت متصل، ولكن لا يمكن الاتصال بالإنترنت.</string>
+  <string id="54639">تعذر تهيئة الشبكة اللاسلكية</string>
+  <string id="54640">حاول مرة أخرى</string>
+ 
+  <string id="54641">هل لديك جهاز الاستقبال دولبي رقمي وDTS؟</string>
+  <string id="54642">نعم</string>
+  <string id="54643">لا</string>
+  <string id="54644">لست متأكدا</string>
+  <string id="54647">[UPPERCASE]إعدادات الصوت[/UPPERCASE]</string>
+  <string id="54648">عليك أن تختار خرج الصوت</string>
+  <string id="54649">عليك أن تحدد خيار DTS ودولبي الرقمي</string>
+  <string id="54650">[UPPERCASE]اختبار الصوت[/UPPERCASE]</string>
+  <string id="54651">هل تسمع موسيقى لآن من المكبر[CR]؟</string>
+  
+  <string id="54652">تبديل إلى الإيثرنت</string>
+  
+  <string id="54653">تم تحديد عنوان بروتوكول إنترنت غير صالح.</string>
+  
+  <string id="54654">جاري التحقق...</string>
+  <string id="54655">التالي</string>
+  <string id="54656">تعذر ترقية التحميل.</string>
+  <string id="54657">نجح ترقية التحميل.[CR]مطلوب إعادة التشغيل</string>
+  <string id="54658">تمهيد</string>
+  <string id="54659">إعادة التشغيل...</string>
+  
+  <string id="54660">سلكي</string>
+  <string id="54661">تم الاتصال بالشبكة[CR]باستخدام كابل إيثرنت سلكي.</string>
+  <string id="54662">كيف ترغب في تهيئة شبكة[CR]؟</string>
+  <string id="54663">تلقائيا</string>
+  <string id="54664">يدوياً</string>
+  <string id="54665">التبديل إلى اللاسلكي</string>
+  <string id="54667">تعذر التوصيل عبرالإيثرنت</string>
+  <string id="54668">يجب عليك تحديد خيار</string>
+  <string id="54669">[UPPERCASE]سلكي[/UPPERCASE]</string>
+  <string id="54670">لاسلكي</string>
+  <string id="54671">اختيار شبكة لاسلكية للانضمام</string>
+  <string id="54672">يجب عليك اختيار شبكة اتصال لاسلكية</string>
+  <string id="54673">أو</string>
+  <string id="54674">ضم شبكة أخرى...</string>
+  <string id="54675">متقدم</string>
+  <string id="54676">تعذر العثور على شبكات لاسلكية</string>
+  <string id="54677">بحث عن شبكات...</string>
+  <string id="54678">تعذر التوصيل عبر اللاسلكي</string>
+  <string id="54679">[UPPERCASE]لاسلكي[/UPPERCASE]</string>
+  <string id="54680">إعداد شبكة الاتصال</string>
+  <string id="54681">عنوان IP</string>
+  <string id="54682">قناع الشبكة</string>
+  <string id="54683">بوابة افتراضية</string>
+  <string id="54684">ملقم DNS</string>
+  <string id="54685">HTTP بروكسي</string>
+  <string id="54686">شبكات لاسلكية</string>
+  <string id="54687">كلمة مرور لاسلكية</string>
+  <string id="54688">خصوصية لاسلكية</string>
+  <string id="54689">تأكيد</string>
+  <string id="54690">[COLOR green]%s[/COLOR] تتطلب كلمة مرور</string>
+  <string id="54691">إظهار كلمة المرور</string>
+  <string id="54692">يبدأ</string>
+  <string id="54693">منذ تشييد المربع الخاص بك، تم تقديم نسخة جديدة من برنامج Boxee.[CR]فلنرقي!</string>
+  <string id="54694">اختر أمن الشبكة اللاسلكية</string>
+  <string id="54695">معالج</string>
+  <string id="54696">سلك الإيثرنت متصل، لكن تعذر في الحصول على اتصال بالإنترنت.</string>
+  <string id="54697">تم توصيل شبكة لاسلكية، ولكن تعذر الوصول إلى اتصال إنترنت.</string>
+  <string id="54698">حاول مرة أخرى</string>
+  <string id="54699">التبديل إلى اللاسلكي</string>
+
+  <!-- Settings for BoxeeBox -->
+  <string id="54700">ملقم SMB</string>
+  <string id="54702">تمكين مشاركة ملف ويندوز</string>
+  <string id="54703">- مشاركة كلمة المرور (اسم المتسخدم: الضيف)</string>
+  <string id="54704">-مشاركة مجموعة العمل</string>
+  <string id="54705">- اسم المضيف</string>
+  <string id="54720">التوقيت الزمني</string>
+  <string id="54722">دولة التوقيت الزمني</string>
+  <string id="54723">مدينة التوقيت الزمني</string>
+  <string id="54724">عنوان WiFi MAC</string>
+  <string id="54725">عنوان MAC إيثرنت</string>
+  <string id="54726">الجهاز</string>
+  <string id="54727">الرقم التسلسلي للجهاز</string>
+  <string id="54728">إصدار الجهاز</string>
+
+  <string id="54729">تبديل إلى الإيثرنت</string>
+  <string id="54730">ضبط الإعدادات...</string>
+  <string id="54731">تنزيل الآن</string>
+  <string id="54732">%d دقيقة متبقية</string>
+  <string id="54733">أقل من دقيقة متبقية</string>
+  <string id="54734">سوف يبدأ التحديث الآن، خلال ذلك[CR]سوف يقوم Box الخاص بك بتمهيد العديد من الأوقات.</string>
+  <string id="54735">جاري الحساب...</string>
+
+  <string id="54736">VPN</string>
+  <string id="54737">نوع الاتصال</string>
+  <string id="54738">PPTP</string>
+  <string id="54739">الملقم</string>
+  <string id="54740">الحساب</string>
+  <string id="54741">كلمة المرور</string>
+  <string id="54742">التشفير مطلوب</string>
+  <string id="54743">جاري الاتصال...</string>
+  <string id="54744">قطع الاتصال...</string>
+  <string id="54745">%s</string>
+  <string id="54746">الاتصال بـ VPN....</string>
+  <string id="54747">قطع الاتصال عن VPN؟</string>
+  <string id="54748">تعذر الاتصال بـ VPN.</string>
+  <string id="54749">البطارية خاصتك عن بعد قيد التشغيل الآن.</string>
+  
+  <string id="54750">بدء معالج إعدادات الشبكة...</string>
+  <string id="54751">متقدم</string>
+  
+  <string id="54752">رفض الجهاز</string>
+  <string id="54753">تمكين تدفق الفيديو من أجهزة iOS</string>
+  <string id="54754">السماح بمراقبة Boxee عبر شبكة محلية</string> 
+  <string id="54755">تشغيل</string>  
+  <string id="54758">تخصيص Boxee</string>  
+
+  <string id="54765">مطلوب إعادة التشغيل لتفعيل الإعدادات.[CR]هل ترغب في إعادة التشغيل الآن؟</string>
+  
+  <string id="54770">هل أنت متأكد أنك تريد ترك هذا الفيديو؟ ربما تم فقد تقدمك.</string>  
+  <string id="54771">لا تعرض هذه الرسالة مرة أخرى</string>
+  <string id="54772">أخبرني قبل إغلاق الفيديو</string>  
+  <string id="54775">بقاء</string>  
+  <string id="54776">ترك</string>  
+  <string id="54777">اذهب إلى المستعرض</string>  
+  <string id="54778">محو مواد مشتركة مع Adobe Flash...</string>
+  <string id="54779">محو مواد مشتركة مع Adobe Flash؟</string>
+
+    
+  <!-- Settings -->
+  <string id="54800">[B]بالغ[/B]</string>
+  <string id="54801">اجتماعي</string>
+  <string id="54802">موسيقى</string>
+  <string id="54803">[B]النظام[/B]</string>
+  <string id="54804">[B]الوسائط[/B]</string>
+  <string id="54805">[B]الشبكة[/B]</string>
+  <string id="54806">[B]عام[/B]</string>
+  <string id="54807">متقدم</string>
+  <string id="54808">الأجهزة</string>
+  <string id="54809">رئيسي</string>
+
+  <!-- Charsets -->
+  <string id="54810">العربية</string>
+  <string id="54811">البلطيقية</string>
+  <string id="54812">أوروبا الوسطى</string>
+  <string id="54813">الصينية المبسطة (GBK)</string>
+  <string id="54814">الصينية التقليدية (Big5)</string>
+  <string id="54815">السيريلية</string>
+  <string id="54816">اليونانية</string>
+  <string id="54817">العبرية</string>
+  <string id="54818">الكانتونية (Big5 HKSCS)</string>
+  <string id="54819">اليابانية (Shift JIS)</string>
+  <string id="54820">الكورية</string>
+  <string id="54821">التايلاندية</string>
+  <string id="54822">التركية</string>
+  <string id="54823">الفيتنامية</string>
+  <string id="54824">أوروبا الغربية</string>
+  <string id="54825">Unicode (UTF-8)</string>
+
+  <string id="54830">القائمة</string>
+  <string id="54831">عرض افتراضي للعروض</string>
+  <string id="54832">عرض افتراضي للأفلام</string>
+  <string id="54833">عرض افتراضي للتطبيقات</string>
+  <string id="54834">تفضيلات</string>
+  <string id="54835">ملفات</string>
+  <string id="54836">الكل</string>
+
+  <!-- Test bad pixels -->
+  <string id="54850">فحص البكسلات المعيبة...</string>
+  <string id="54851">فحص البكسلات المعيبة</string>
+  <string id="54852">تحديد عرض اللون:</string>
+  <string id="54855">أحمر</string>
+  <string id="54856">أخضر</string>
+  <string id="54857">أزرق</string>
+  <string id="54858">أبيض</string>
+  <string id="54859">أسود</string>
+  <string id="54860">دوري...</string>
+  <string id="54865">سلوك زر أعلى عن بعد</string>
+  <string id="54868">تشغيل/إيقاف مؤقت</string>
+
+  <!-- Black level -->
+  <string id="54870">مستوى أسود</string>
+  <string id="54871">PC [0..255]</string>
+  <string id="54872">VIDEO [16..235]</string>
+  
+  <!-- 3D mode -->
+  <string id="54880">- وضع ثلاثي الأبعاد نشط حالياً</string>
+  <string id="54881">لا شيء</string>
+  <string id="54882">جانب/جانب</string>
+  <string id="54883">أعلى/تحت</string>
+  <string id="54884">تلفاز متوافق مع إطار ثلاثي الأبعاد (جانب/جانب أو أعلى/تحت)</string>
+
+  <!-- Services -->
+  <string id="54885">محو بيانات Netflix...</string>
+  <string id="54886">إلغاء تنشيط VUDU...</string>
+  <string id="54887">الخدمات</string>
+  <string id="54888">لا توجد خدمات لتكوينها.</string>
+  <string id="54889">محو بيانات الخدمة؟</string>
+  <string id="54890">ESN لجهاز Netflix</string>
+
+  <!-- Browser --> 
+  <string id="54893">نأسف، تعذر علينا العثور على الصفحة التي كنت تبحث عنها.</string>
+  <string id="54894">مفضلة فارغة</string>
+  <string id="54895">محو ملفات الارتباط...</string>
+  <string id="54896">محو الذاكرة المؤقتة...</string>
+  <string id="54897">المستعرض</string>
+  <string id="54898">محو ملفات ارتباط المستعرض؟</string>
+  <string id="54899">محو الذاكرة المؤقتة للمستعرض؟</string>
+ 
+  <!-- Ready to watch dropdown -->
+  <string id="54900">جاهز للمشاهدة</string>
+  <string id="54901">الكل</string>
+  <string id="54902">تفضيلات</string>
+  <string id="54903">محلي</string>
+  <string id="54904">اشتراكات</string>
+  
+   <!-- Movie Store dropdown -->
+  <string id="54910">مخزن الأفلام</string>
+  <string id="54911">الكل</string>
+  
+  <!-- Shows Store dropdown -->
+  <string id="54920">مخزن العروض</string>
+  <string id="54921">الكل</string>
+  <string id="54922">مخزن التطبيقات</string>
+  
+  <string id="55000">عرض</string>
+  <string id="55001">عناوين</string>
+  <string id="55002">دقائق</string>
+  <string id="55003">ملفات الفيديو المشتركة</string>
+  <string id="55004">ملفات الفيديو</string>
+  <string id="55005">تعذر العثور على نتائج</string>
+
+  <!-- payment -->
+  <string id="55100">شراء</string>
+  <string id="55101">[COLOR green]%s[/COLOR] متوفر[CR]كجزء من هذه الحزم من %s:</string>
+  <string id="55102">انقر لمزيد من المعلومات</string>
+  <string id="55105">فشل في الحصول على بيانات من الملقم.</string>  
+  <string id="55110">عودة</string>  
+  <string id="55111">الحزمة</string>
+  <string id="55120">هل تقبل الشروط؟</string>
+  <string id="55121">سيتم تحميلك %s لكل %s. يمكنك الإلغاء في[CR]أي وقت عن طريق إدارة اشتراكك على موقع الويب الخاص بنا[CR]www.boxee.tv</string>
+  <string id="55122">لقد قرأت الأحكام والشروط</string>
+  <string id="55123">الأحكام والشروط</string>
+  <string id="55124">يجب عليك قبول الأحكام والشروط للمتابعة.</string>
+  <string id="55125">أقبل</string>  
+  <string id="55126">أرفض</string>
+  <string id="55130">الرجاء إدخال كلمة مرور Boxee</string>
+  <string id="55131">كلمة المرور</string>
+  <string id="55132">حقل كلمة المرور Boxee فارغ.</string>
+  <string id="55133">إظهار كلمة المرور</string>
+  <string id="55134">استمر</string>
+  <string id="55135">تعذر إتمام عملية الشراء</string>    
+  <string id="55140">Boxee ليس لديها بيانات الدفع.</string>
+  <string id="55141">يرجى الانتظار...</string>
+  <string id="55142">سأفعل هذا لاحقا</string>  
+  <string id="55143">أرسلت Boxee رابط إلى %s لإتمام المعاملات على الانترنت.</string>
+  <string id="55160">لقد حددت كل شيء!</string>
+  <string id="55161">شاهد الآن</string>
+  <string id="55195">تعذر تنفيذ هذا العمل</string>
+  <string id="55196">لا يوجد اتصال إنترنت.[CR]Boxee غير متصل الآن.</string>
+  <string id="55197">تم استعادة اتصال الإنترنت.[CR]Boxee متصل الآن.</string>
+  <string id="55198">لا يوجد اتصال إنترنت</string>
+
+  <string id="55200">معلومات سريعة</string>
+  <string id="55201">انقر فوق زر "القائمة" للانتقال إلى الوراء، وإطلاق قائمة Boxee.</string>
+  <string id="55202">اضغط عليها الآن لإغلاق هذه النافذة.</string>
+  <string id="55203">يمكن استخدام زر "قائمة" للتنقل للخلف وأيضاً لتشغيل قائمة Boxee. [CR][CR][B][COLOR blue]اضغط عليه الآن لإغلاق هذه النافذة. اضغط عليه مرة أخرى لتشغيل قائمة Boxee. [/COLOR][/B]</string>
+  <string id="55210">Boxee هو AirPlay ممكن!الآن يمكنك إلقاء الفيديو والموسيقى من iPhone أو iPad إلى جهاز Boxee الخاص بك والاستمتاع به مع كل شخص.</string>
+
+
+  <!-- Playback Settings -->
+  <string id="55300">اختيار الترجمات</string>
+  <string id="55301">الترجمات...</string>
+  <string id="55302">اختبار تدفق الصوت</string>
+  <string id="55303">تدفق الصوت...</string>
+  <string id="55304">اختيار مجموعة أحرف العنوان الفرعي</string>
+  <string id="55305">مجموعة الحروف...</string>
+
+  <!-- Browser -->
+  <string id="55400">أدخل عنوان الموقع أو مصطلح البحث</string>
+  <string id="55401">اترك المتصفح</string>  
+  <string id="55402">اضغط على "القائمة" للخيارات</string>
+  <string id="55403">المستعرض</string>
+  <string id="55404">هل أنت متأكد أنك تريد الخروج من المستعرض؟</string>
+  <string id="55405">عودة</string>
+  <string id="55406">إنهاء</string>
+  <string id="55407">هل أنت متأكد أنك تريد إزالة</string>
+  <string id="55408">إضافة مفضلة</string>
+  <string id="55409">يمكن أن يكون لديك 12 مفضلة فقط في boxee الخاص بك.</string>
+  <string id="55410">برجاء إزالة مفضلة قبل إضافة مفضلة جديدة.</string>
+  <string id="55411">فشل في إزالة المفضلة.</string>
+  <string id="55412">هل أنت متأكد أنك تريد الخروج من هذا التطبيق؟</string>
+  <string id="55414">نأسف!</string>
+
+  <string id="55416">التحكم في الشاشات المنبثقة</string>
+  <string id="55417">الموقع مطلوب لفتح '%s'</string>
+  <string id="55418">سماح</string>
+  <string id="55419">رفض</string>
+
+  <!-- Settings for pairing -->
+  <string id="55500">رمز المرور</string>
+  <string id="55501">أدخل رمز المرور أعلاه على '%s' لاقتران الجهاز مع Boxee</string>
+  <string id="55502">[COLOR red]رمز المرور الذي أدخلته غير صحيح.[CR]برجاء تكرار المحاولة.[/COLOR]</string>
+  <string id="55503">[COLOR green]نجاح![CR]تمت إضافة الجهاز إلى الأجهزة المقترنة الخاصة بك.[/COLOR]</string>
+  <string id="55510">الأجهزة المقترنة</string>
+  <string id="55511">الأجهزة</string>
+  <string id="55512">إزالة</string>  
+  <string id="55515">هل أنت متأكد أنك تريد إلغاء اقتران \الجهاز؟[CR]سوف تحتاج إلى إعادة ترخيص '%s' إذا كنت تريد استخدامه مع Boxee هذا مرة أخرى.</string>
+  <string id="55516">فشل في إلغاء اقتران الجهاز '%s'</string>
+  <string id="55520">لا توجد أجهزة مقترنة حالياً مع Boxee...</string>
+
+  <!-- Login Wizard -->
+  <string id="55610">ابدأ مع Boxee من خلال إنشاء حساب جديد أو تسجيل الدخول مستخدماً حساب Boxee الحالي الخاص بك.</string>
+  <string id="55615">تسجيل الدخول إلى حساب Boxee</string>
+  <string id="55620">البريد الإلكتروني</string>
+  <string id="55621">أحرف غير صالحة</string>
+  <string id="55625">اتصل ببرنامج Boxee من خلال Facebook لإنشاء حساب جديد بسرعة واحصل على توصيات بفيديو من أصدقائك والتي يتم إرسالها تلقائياً إلى تلفازك. وإلا، املأ حقول الاشتراك واضغط على التالي.</string>
+  <string id="55630">النوع</string>
+  <string id="55631">تاريخ الميلاد</string>
+  <string id="55632">تقديم</string>
+  <string id="55635">حدد النوع</string>
+  <string id="55636">ذكر</string>
+  <string id="55637">أنثى</string>
+  <string id="55638">أكثر من الكلام...</string>
+  <string id="55645">معلومات إضافية</string>
+  <string id="55646">لقد أوشكت على الانتهاء. تساعدك هذه الأشياء على تحقيق فهم أفضل. لذا نحافظ عليه في أمان ولا نشاركه مع أحد.</string>
+  <string id="55650">النوع</string>
+  <string id="55651">السنة</string>
+  <string id="55652">الشهر</string>
+  <string id="55653">اليوم</string>
+  <string id="55660">القانوني...[CR]مطول</string>
+  <string id="55661">لإنهاء إعداد حساب Boxee الخاص بك، قم بقبول شروط الاستخدام وسياسة الخصوصية.</string>
+  <string id="55670">جعل Boxee اجتماعياً</string>
+  <string id="55671">احصل على توصيات بفيديو من أصدقائك والتي يتم إرسالها مباشرة إلى تلفازك، ولا يفوتك أحدث فيديو فيروسي، وشارك تفضيلاتك!</string>
+  <string id="55672">يتعين ملء كل الحقول للمتابعة.</string>
+  <string id="55673">نأسف، يجب أن يكون عمرك 13 عاماً على الأقل حتى تتمكن من إنشاء حساب Boxee. سوف ننتظرك!</string>
+  <string id="55690">إزالة الحساب</string>
+  <string id="55691">هل أنت متأكد أنك تريد إزالة [COLOR white]%s[/COLOR] من هذا الجهاز؟[CR][CR]ملاحظة: لن يؤدي هذا إلى حذف الحساب.يمكنك إضافته في أي وقت.</string>
+  <string id="55695">ضبط Boxee لديك</string>
+  <string id="55696">أخبر Boxee عما سوف تشاهده في الغالب، وسوف نقوم بتخصيص تجربتك عن طريق عرض مقاطع الفيديو هذه في مكتبات العرض التلفزيوني والأفلام.[CR][CR]ملاحظة: يمكنك دائماً تغيير هذا التفضيل لاحقاً في قائمة "إعدادات".</string>
+  <string id="55699">بدء استخدام Boxee</string>
+
+
+  <!-- Empty Browse Screens -->
+  <string id="56000">قائمة شاهد لاحقاً خاصك فارغة.</string>
+  <string id="56001">سوف تظهر أحداث جديدة من العروض التلفزيونية التي تحددها كمفضلة هنا، أو يمكنك إضافة أي فيديو بطريقة يدوية عن طريق النقر فوق أيقونة "شاهد لاحقاً".</string>
+  <string id="56002">يمكنك أيضاً إضافة ملفات فيديو من الويب. تفضل بزيارة [COLOR yellow]http://www.boxee.tv/watchlater[/COLOR] للحصول على تعليمات.</string>
+  <string id="56003">قم بإضافة أصدقاء.</string>
+  <string id="56004">يمكنك مشاهدة ملفات فيديو بالاشتراك مع أصدقائك على Facebook و Twitter. [CR]قم بتنشيط هذه الخاصية من خلال اتصال حسابات Facebook و Twitter بـ Boxee.</string>
+  <string id="56005">إضافة تطبيق مفضل لديك</string>
+  <string id="56006">انقر فوق أيقونة "مفضلة" قبل تشغيل أي تطبيق لإضافته إلى مفضلاتك.</string>
+  <string id="56007">لم يظهر أي تاريخ بعد</string>
+  <string id="56008">سوف تظهر العناصر التي تشغلها في هذه القائمة بحيث يسهل العثور عليها عندما تريد تشغيلها مرة أخرى لاحقاً.</string>
+  <string id="56009">لا توجد صور محلية بعد</string>
+  <string id="56010">لعرض الصور الخاصة بك على Boxee، أضف مجلداً معيناً من محرك الأقراص الصلبة أو مصدر الشبكة.</string>
+  <string id="56011">استعراض تطبيق الصور</string>
+  <string id="56012">إضافة عرض مفضل لديك</string>
+  <string id="56013">انقر فوق الأيقونة "مفضلة" على شاشة الأحداث لأي عرض تحبه لإضافته إلى تفضيلاتك.</string>
+  <string id="56014">لا توجد موسيقى محلية بعد</string>
+  <string id="56015">للاستماع إلى الموسيقى الخاصة بك على[CR]Boxee، أضف مجلداً معيناً من محرك الأقراص[CR]الصلبة أو مصدر الشبكة.</string>
+  <string id="56016">أو...</string>
+  <string id="56017">استعراض المصادر</string>
+  <string id="56018">استعراض تطبيقات الموسيقى</string>
+  <string id="56019">لا شيء تراه</string>
+  <string id="56020">تعذر على Boxee العثور على أي ملفات فيديو في هذه الفئة والتي يمكن تشغيلها في منطقتك.</string>
+  <string id="56021">لا توجد ملفات بعد</string>
+  <string id="56022">للوصول إلى الملفات المحلية على Boxee، أضف مجلداً معيناً من محرك الأقراص الصلبة أو مصدر الشبكة.</string>
+  <string id="56023">لا توجد وسائط محلية بعد</string>
+  <string id="56024">لتشغيل الوسائط المحلية على Boxee، أضف مجلداً معيناً من محرك الأقراص الصلبة أو مصدر الشبكة.</string>
+  <string id="56025">PS. وفقاً لحجم المصدر، قد تستغرق Boxee بعض الوقت لمسحه بالكامل.</string>
+  <string id="56026">لا توجد مخازن بعد</string>
+  <string id="56027">المخازن عبارة عن مكتبات من التطبيقات المتوفرة من الأطراف الثالثة. يمكنك العثور عليها عن طريق البحث على الإنترنت.</string>
+  <string id="56028">إضافة مخزن</string>
+  <string id="56029">لا يوجد مصدر وسائط محلية بعد.</string>
+  <string id="56030">لتشغيل الوسائط المحلية على Boxee، أضف مجلداً معيناً من محرك الأقراص الصلبة أو مصدر الشبكة.</string>
+  <string id="56031">بمجرد أن تكون جاهزاً لإضافة واحد، انقر فوق الزر السفلي لإضافة URL الخاص به.</string>
+  <string id="56032">رجاء زيارة [COLOR yellow]www.boxee.tv/services[/COLOR]. </string>
+  <string id="56033">Boxee غير متصل...</string>
+  <string id="56034">المحتوي الذي تريد رؤيته غير متوفر لأن Boxee غير متصل بالإنترنت.</string>
+  <string id="56035">معالج الشبكة</string>
+  <string id="56036">لا توجد أحداث للعرض.</string>
+  <string id="56037">بلا تفضيلات.</string>
+  <string id="56038">المستودع فارغ.</string>
+  <string id="56039">لا توجد تطبيقات متوفرة حالياً في هذا المستودع.</string>
+  <string id="56040">لا توجد أفلام متوفرة للمرشح الحالي.</string>
+  <string id="56041">لا تتوفر تريلر في حالة عدم اتصال Boxee بالإنترنت.</string>
+  <string id="56042">لا يمكن لـ Boxee العثور على أي تريلر لتشغيله.</string>
+  <string id="56043">قم بعمل قائمة تشغيل للأفلام، العروض وملفات فيديو الويب لمشاهدتها في وقت لاحق.[CR][CR]احفظ ملفات الفيديو من YouTube، وVimeo والعديد من المواقع الأخرى باستخدام Boxee Bookmarklet.[CR][CR]قم بعمل مفضلة للعرض باستخدام زر نجمة ليتم إضافة أي حدث جديد تلقائياً إلى الطابور الخاص بك.</string>
+  <string id="56044">تعلم المزيد عن</string>
+  <string id="56046">ابدأ</string>
+  <string id="56047">رائع!</string>
+  <string id="56048">لقد أرسلنا تواً بريداً إلكترونياً إلى [COLOR green]%s[/COLOR] متضمناً إرشادات حول كيفية البدء.</string>
+  <string id="56049">لا توجد مصادر محلية بعد</string>
+  <string id="56050">لاستعراض المصادر المحلية على Boxee، أضف مجلداً معيناً من محرك الأقراص الصلبة أو مصدر الشبكة.</string>
+  <string id="56051">سوف تظهر أحداث جديدة من العروض التلفزيونية التي تحددها كمفضلة هنا، أو يمكنك إضافة أي فيديو بطريقة يدوية عن طريق النقر فوق أيقونة "شاهد لاحقاً".[CR]يمكنك أيضاً إضافة ملفات فيديو من الويب. تفضل بزيارة [COLOR yellow]http://www.boxee.tv/watchlater[/COLOR] للحصول على تعليمات.</string>
+
+  <string id="56061">لا توجد مصادر محلية...</string>
+  <string id="56062">لا توجد عناصر...</string>
+  <string id="56070">لا توجد مصادر بعد...</string>
+  <string id="56071">الوصول إلى مقاطع الفيديو، الأغنيات، أو الصور من أجهزة الكمبيوتر أو برامج تشغيل الشبكة.[CR][CR]لإضافة مصدر، استعرض ملفاتك وتنقل إلى دليل يحتوي على الوسائط الخاصة بك. ثم حدد الزر [COLOR boxeegreenheidi]+ [/COLOR] من أعلى يمين الشاشة.</string>
+  <string id="56080">البحث عن مقاطع فيديو مشتركة مع الأصدقاء...</string>
+  <string id="56081">قد يستغرق هذا بعض الوقت، لذا برجاء الصبر حتى يعمل Boxee.</string>
+  <string id="56085">عودة إلى الشاشة الرئيسية</string>
+
+
+  <!-- queue/watch later screen -->
+  <string id="57000">أضيف من </string>
+  <string id="57001">الويب </string>
+  <string id="57002">المكتبة </string>
+  <string id="57003">اليوم</string>
+  <string id="57004">منذ يوم</string>
+  <string id="57005">منذ أيام</string>
+  <string id="57006">عرض المفضلة</string>
+  <string id="57007">الأمس</string>
+  <string id="57008">الأقدم</string>
+  <string id="57010">شاهد لاحقاً</string>
+
+  <!-- history screen -->
+  <string id="57040">مشاهد </string> 
+  <string id="57041">مشغل </string> 
+
+  <string id="57100">تعذر إعداد الشبكة اللاسلكية.[CR]رجاء التحقق من كلمة مرورك وتكرار المحاولة.</string>
+  <string id="57101">تعذر التحقق من صحة شهادة SSL الخاصة بالموقع</string>
+
+  <!-- short versions of months (string 21) -->
+  <string id="57121">يناير</string>
+  <string id="57122">فبراير</string>
+  <string id="57123">مارس</string>
+  <string id="57124">أبريل</string>
+  <string id="57125">مايو</string>
+  <string id="57126">يونيو</string>
+  <string id="57127">يوليو</string>
+  <string id="57128">أغسطس</string>
+  <string id="57129">سبتمبر</string>
+  <string id="57130">أكتوبر</string>
+  <string id="57131">نوفمبر</string>
+  <string id="57132">ديسمبر</string>
+
+  <!-- subtitles settings -->
+  <string id="57200">افتراضي</string>
+  <string id="57201">57235</string>
+  <string id="57202">العربية،ara</string>
+  <string id="57203">الكاتالانية،cat</string>
+  <string id="57204">الصينية (المبسطة)،chi</string>
+  <string id="57205">الصينية (التقليدية)،zho</string>
+  <string id="57206">الكرواتية،cos</string>
+  <string id="57207">التشيكية،ces</string>
+  <string id="57208">الدانمركية،dan</string>
+  <string id="57209">الألمانية،deu</string>
+  <string id="57210">الهولندية,dut</string>
+  <string id="57211">الإيستونية،est</string>
+  <string id="57212">الإنجليزية،eng</string>
+  <string id="57213">الفنلندية،fin</string>
+  <string id="57214">الفرنسية,fra</string>
+  <string id="57215">اليونانية،gre</string>
+  <string id="57216">العبرية،heb</string>
+  <string id="57217">المجرية،hun</string>
+  <string id="57218">الإندونيسية،ind</string>
+  <string id="57219">الإيطالية،ita</string>
+  <string id="57220">اليابانية،jpn</string>
+  <string id="57221">الكورية،kor</string>
+  <string id="57222">الليتوانية،lit</string>
+  <string id="57223">النرويجية،nor</string>
+  <string id="57224">الفارسية،fas</string>
+  <string id="57225">البولندية،pol</string>
+  <string id="57226">البرتغالية،por</string>
+  <string id="57227">البرتغالية (البرازيل)،por</string>
+  <string id="57228">الروسية،rus</string>
+  <string id="57229">الصربية،srp</string>
+  <string id="57230">السلوفاكية،slk</string>
+  <string id="57231">السلوفينية،slv</string>
+  <string id="57232">الأسبانية،spa</string>
+  <string id="57233">السويدية،swe</string>
+  <string id="57234">التركية،tur</string>
+  <string id="57235">الأوكرانية،ukr</string>
+
+  <string id="57290">اللغة المفضلة</string> <!-- Audio & Subtitles Preferred Language -->
+  
+  <string id="57300">سياسة التحويل</string>
+  <string id="57301">تلقائي</string>
+  <string id="57302">الفيديو</string>
+  <string id="57303">فيلم</string>
+  <string id="57304">مكاني فقط</string>
+  <string id="57305">أهم حقل فقط</string>
+  <string id="57306">أبداً، إلا في حالة التدريج</string>
+  <string id="57307">أبداً</string>
+  
+  <string id="57310">إلغاء تدوير المرشح</string>
+  <string id="57315">مرشح غاوسي</string>
+
+  <string id="57400">اللغة</string>
+  <string id="57401">هل أنت متأكد أنك تريد تغيير لغتك إلى %s?[CR]مطلوب إعادة تشغيل لتفعيل التغيير.</string>
+
+  <!-- afp settings --> 
+  <string id="57500">عميل AFP</string>
+  
+  <!-- browse menu -->
+  <!-- Movie screen -->
+  <string id="57600">طابوري</string>
+  <string id="57601">مكتبة الأفلام</string>
+  <string id="57605">مكتبة العروض</string>
+  <string id="57606">عروضي</string>
+  <string id="57610">غير معرف</string>
+
+  <!-- Live TV -->
+  <string id="58000">تلفاز مباشر</string>
+  <string id="58001">مسح القنوات</string>
+  <string id="58002">اكتمل المسح.[CR]تم العثور على %d قنوات.</string>
+  <string id="58003">اكتمل المسح.[CR]لم يتم العثور على قنوات.</string>
+  <string id="58004">كل القنوات</string>
+  <string id="58005">تلفاز مباشر من Boxee</string>
+  <string id="58006">خلال دقائق معدودة، سوف تستمتع بمحطات تلفزيونية وإذاعية مفضلة لديك من خلال الواجهة الاجتماعية الفريدة لـ Boxee.[CR][CR]برجاء توصيل منفذ هوائي أو كابل بمحول تلفاز مباشر "دونجل" ثم حدد [COLOR boxeegreenheidi]التالي[/COLOR].</string>
+  <string id="58007">الرجاء توصيل كابل هوائي أو تلفزيوني بدونحل تلفاز مباشر.</string>
+  <string id="58010">هل أنت حالياً في</string>
+  <string id="58011">دليل البرنامج</string>
+  <string id="58012">للعثور على دليل البرنامج الصحيح لمنطقتك، نحتاج إلى تحديد موقعك.</string>
+  <string id="58013">حدد دولتك</string>
+  <string id="58014">حدد مدينتك</string>
+  <string id="58015">قائمة القنوات</string>
+  <string id="58016">سيقوم برنامج Boxee بالبحث على قوائم القنوات عن موقعك الذي حددته.[CR][CR]أخبر Boxee عن مصدر الإشارات التلفزيونية الخاصة بك، حتى نتمكن من الحصول على قوائم القنوات الصحيحة.</string>
+  <string id="58018">حدد ولايتك</string>
+  <string id="58019">الهوائي</string>
+  <string id="58020">أعد مسح دليل القنوات. تم العثور على %s قنوات حالياً...</string>
+  <string id="58021">مشاركة المشاهدين مع الأصدقاء</string>
+  <string id="58022">إعادة تكوين إعداد التلفاز المباشر...</string>
+  <string id="58023">بدء إعادة المسح</string>
+  <string id="58024">تشغيل الإعداد</string>
+  <string id="58025">الحالة</string>
+  <string id="58026">متصل</string>
+  <string id="58027">قطع الاتصال</string>
+  <string id="58028">الجهاز</string>
+  <string id="58029">الموقع</string>
+  <string id="58030">الكابل</string>
+  <string id="58031">رمز بريدي غير صالح، برجاء تكرار المحاولة</string>
+  <string id="58032">تحميل[CR]تلفاز مباشر...</string>
+  <string id="58033">جديد</string>
+  <string id="58034">مباشر</string>
+  <string id="58036">اتبع العروض المفضلة لديك</string>
+  <string id="58037">حدد العروض التي تحبها للحصول على أحداث جديدة يتم [CR]توصيلها تلقائياً إليك عند توفرها.</string>
+  <string id="58040">قدم Boxee طريقة جديدة لمشاركة ما تشاهده مع الأصدقاء &amp; العائلة على Facebook Timeline. [CR][CR]يمكنك إيقاف تشغيله في أي وقت في إعدادات &gt; تلفاز مباشر.</string>
+  <string id="58041">اجعل[CR]Boxee اجتماعياً</string>
+  <string id="58042">تجاوز</string>
+  <string id="58045">إشعارات</string>
+  <string id="58046">رائع – لقد قمنا بحفظ كل التفضيلات.[CR][CR]سيقوم Boxee الآن بإضافة أحداث جديدة عبر الإنترنت لتفضيلاتك على طابور التلفاز وسنرسل لك بريداً إلكترونياً أسبوعياً يتضمن ما يتم تشغيله على التلفاز المباشر خلال هذا الأسبوع.</string>
+  <string id="58047">أرسل لي بريداً إلكترونياً حول:</string>
+  <string id="58048">أحداث جديدة</string>
+  <string id="58049">كل الأحداث</string>
+  <string id="58050">[B]تلفاز مباشر[/B]</string>
+  <string id="58051">[B]ضعيفة أو لا توجد إشارة[B]</string>
+  <string id="58052">بلا إشارة</string>
+  <string id="58053">بلا قنوات</string>
+  <string id="58054">مسح</string>
+  <string id="58055">%d قنوات</string>
+  <string id="58056">دليل</string>
+  <string id="58057">احفظ نسبة أبعاد شاشة 4:3</string>
+  <string id="58058">شارك ما تشاهده مع الأصدقاء &amp; العائلة على Facebook Timeline.[CR][CR]كل ما تحتاج إليه هو منح Boxee الإذن لنشر أحداث الفيديو.[CR][CR]يمكنك إيقاف تشغيله في إعدادات &gt; تلفاز مباشر.</string>
+  <string id="58059">تحديث الإذونات</string>
+
+
+  <string id="58060">ضبط حد تقييم التلفاز...</string>
+  <string id="58061">تحديد حد تقييم التلفاز</string>
+  <string id="58062">حدد حد الأفلام التلفزيونية لمنع مشاهدتها في مكتبات عند الطلب، مكتبات محلية ومكتبات على الإنترنت.[CR]إذا كان لديك تلفاز مباشر من Boxee، سوف تظهر الأفلام في القوائم، ولكنها ستتطلب إدخال رمز مرور لعرضها.[CR]لا يمكن ترشيح الملفات المحلية غير المتماثلة.</string>
+  <string id="58063">تحديد حد تقييم الفيلم</string>
+  <string id="58064">حدد حد الأفلام لمنع مشاهدتها في مكتبات عند الطلب، مكتبات محلية ومكتبات على الإنترنت.[CR]إذا كان لديك تلفاز مباشر من Boxee، سوف تظهر العروض في القوائم، ولكنها ستتطلب إدخال رمز مرور لعرضها.[CR]لا يمكن ترشيح الملفات المحلية غير المتماثلة.</string>
+  <string id="58065">ضبط كلمة المرور</string>
+  <string id="58066">سوف تحتاج إلى إدخال رمز المرور هذا لعرض مجموعة المحتوى أعلى حد التقييم، بالإضافة إلى إجراء تغييرات على أدوات التحكم الرئيسية.</string>
+  <string id="58067">محتوى مقيد</string>
+  <string id="58068">تحتاج إلى رمز مرور لعرض هذا الفيديو...</string>
+  <string id="58069">ممم... ليس هذا بكل شيء. كرر المحاولة.</string>
+  <string id="58070">ضبط حد تقييم الفيلم...</string>
+  <string id="58071">ضبط رمز المرور لمحتوى مستحق...</string>
+  <string id="58072">تغيير رمز المرور لمحتوى مستحق...</string>
+  <string id="58073">تغيير رمز المرور</string>
+  <string id="58074">أدخل رمز المرور الحالي للمتابعة...</string>
+  <string id="58075">تم التحقق، أدخل الآن رمز المرور الجديد الخاص بك.</string>
+  <string id="58076">دقق أثناء البحث عن القنوات المتاحة في منطقتك.</string>
+  <string id="58077">انتقل إلى التلفاز المباشر</string>
+  <string id="58078">هممم، لم يتم العثور على قنوات... كرر المحاولة أو اضغط على عودة للإلغاء.</string>
+  <string id="58079">إلغاء المسح؟</string>
+  <string id="58080">هل أنت متأكد أنك تريد إيقاف مسح القنوات؟</string>
+  <string id="58081">بلا إنترنت</string>
+  <string id="58082">مطلوب اتصال بالإنترنت لمسح القنوات.</string>
+  <string id="58083">إغلاق</string>
+  <string id="58084">إلغاء المسح</string> 
+  <string id="58085">حذرني قبل إغلاق التلفاز المباشر</string>
+  <string id="58090">لم يتم العثور على قنوات</string>
+  <string id="58091">حاول نقل الهوائي الخاص بك إلى مكان مختلف. تأكد من توصيله بطريقة صحيحة.[CR][CR]يمكنك أيضاً توصيل كابل متحد المحور من مزود الإنترنت/الكالبات للحصول على قنوات QAM مجانية.</string>
+  <string id="58092">تأكد من اتصال الكابل بطريقة صحيحة بموالف USB، وأنه لا يخرج من الصندوق العلوي للضبط (استخدم اسبليتر). [CR][CR]يمكنك أيضاً توصيل هوائي مرفق بموالف USB (أو الخاص بك).</string>
+  <string id="58093">استخدام كابل</string>
+  <string id="58094">استخدام هوائي</string>
+  <string id="58095">إعادة تكوين[CR]تلفاز مباشر</string>
+  <string id="58096">تأكد من اتصال الهوائي أو سلك الكابل بموالف USB.[CR][CR]سيتم فقد التعديلات التي أجريتها على مخطط القنوات الحالي الخاص بك.</string>
+
+
+
+  <!--strings through from 80000-80999 reserved for server definitions -->
+  <string id="80000">استيراد من </string>
+  <string id="80001">انتقل إلى هنا للتنشيط:</string>
+  <string id="80002">حدد الملقمات التي تريد تضمينها في تغذيات الفيديو الخاصة بك</string>
+  <string id="80003">يمكن للتغذية الخاصة بك عرض ملفات الفيديو من Facebook، وTwitter وGoogle[CR]تدفقات رنين.[CR][CR]لتشغيل هذه الخاصية، يجب عليك زيارة موقع الويب الخاص بنا لتنشيط حساباتك: [CR]</string>
+  <string id="80004">تم تعطيل اتصال Facebook</string>
+  
+  <!--strings through from 81000-81099 reserved for payment server errors -->
+  <string id="81000">لا يمكن إتمام الإجراء نظراً لوجود خطأ في الملقم.</string>
+  <string id="81001">كلمة مرور غير صحيحة.</string>
+  <string id="81002">مطلوب الدفع</string>
+  <string id="81003">محاولة الاشتراك في منتجات غير نشطة</string>
+  <string id="81004">أنت مشترك بالفعل في هذا المنتج</string>
+  <string id="81005">خطأ التحقق من الصحة. حاول استخدام بطاقة ائتمان أخرى.</string>
+  <string id="81006">أنت غير مشترك حالياً في هذا المنتج</string>
+  
+  <!--strings from 82000-82099 reserved for item summary -->
+  
+  <string id="82000"> تم الترشيح بواسطة </string>
+  <string id="82001"> تم الفرز بواسطة </string>
+  <string id="82002"> من نوع </string>
+  <string id="82003">ألبومات من </string>
+  <string id="82004"> تقديم بواسطة </string>
+  <string id="82005">موسيقى حسب الفنان</string>
+  <string id="82006">موسيقى حسب الألبوم</string>
+
+  <!-- strings from 90000 - 90100 reserved for language templates -->
+
+  <string id="90000">%media%%sort%%filter%%source%</string> <!-- apps -->
+  <string id="90001">%media%%sort%%channel%%filter%%source%</string> <!-- movies -->
+  <string id="90002">%media%%sort%%channel%%filter%%source%</string> <!-- shows -->
+  <string id="90003">%media%sort%%filter%%</string> <!-- albums -->
+  <string id="90004">%media%sort%</string> <!-- photos -->
+  <string id="90005">%media%sort%</string> <!-- local -->
+  <string id="90006"></string> <!-- a prefix for sort (used in other languages) -->
+  <string id="90007"></string> <!-- a prefix for channel (used in other languages) -->
+  <string id="90008">%media%%sort%%channel%%filter%%source%</string> <!-- trailers -->
+
+  <!-- strings from 90040 - 90050 are title strings preceded by numbers -->
+  <string id="90040">تطبيقات</string><!-- 53914 is the title and was already translated in the past-->
+  <string id="90041">أفلام</string><!-- 342 is the title and was already translated in the past-->
+  <string id="90042">عروض</string><!-- 1051 is the title and was already translated in the past-->
+  <string id="90043">ألبومات</string><!-- 51407 is the title and was already translated in the past-->
+  <string id="90044">صور</string><!-- 53516/53519 is the title and was already translated in the past-->
+  <string id="90045">تريلر</string><!-- 1053 is the title and was already translated in the past-->
+  <string id="90046">فنانون</string><!-- 51408 is the title and was already translated in the past-->
+  <string id="90047">فيديو</string><!-- 10006 is the title and was already translated in the past-->
+  <string id="90048">أحداث</string><!-- 20360 is the title and was already translated in the past-->
+  <string id="90049">فيديو مجهول</string><!-- 51361 is the title and was already translated in the past-->
+  <string id="90050">العناصر</string><!-- 54059 is the title and was already translated in the past-->
+  <string id="90051">العنصر</string>
+
+  <!-- strings from 90100 - 90130 reserved for Advanced settings -->
+  <string id="90100">بيئة الملقم</string>
+  <string id="90101">تصنيف</string>
+  <string id="90102">إنتاج</string>
+  <string id="90103">تحديد بيئة الملقم:</string>
+  <string id="90104">بيئة الملقم</string>
+  <string id="90105">هل أنت متأكد أنك تريد تغيير بيئة الملقم؟</string>
+
+  <!-- strings from 90130 - 90180 reserved for EPG -->
+  <string id="90131">[B]صباحاً[/B]</string>
+  <string id="90132">[B]ظهراً[/B]</string>
+  <string id="90133">[B]مساءاً[/B]</string>
+  <string id="90134">[B]ليلاً[/B]</string>
+  <string id="90135">اليوم</string>
+  <string id="90136">غداً</string>
+  <string id="90137"> و </string> <!-- keep space at the begining and end-->
+  <string id="90138">%d آخرون يشاهدون.</string> <!-- place the %d where the number should appear, do no translate the %d, keep as is -->
+
+  <!-- more Browser -->
+  <string id="90210">محو المخزن المحلي...</string>
+  <string id="90211">محو المخزن المحلي للمتصفح؟</string>
+
+  <!-- VIDEO OSD -->
+  <string id="90212">إعدادات متقدمة</string>
+  <string id="90213">إنهاء الفيديو</string>
+  <string id="90214">إيقاف</string>
+  <string id="90215">عودة إلى المجلد الأساسي</string>
+  <string id="90216">استعراض محلي...</string>
+  <string id="90217">استعراض على الإنترنت...</string>
+  <string id="90218">هذا الفيديو لا يدعم البحث</string>
+
+  <!-- Live TV -->
+  <string id="90310">عودة إلى التلفاز المباشر</string>
+  <string id="90311">تحرير القنوات</string>
+  <string id="90312">تعطيل المشاركة</string>
+  <string id="90313">تمكين المشاركة</string>
+  <string id="90315">إخفاء أو إعادة تسمية القنوات لتخصيص المخطط.</string>
+  <string id="90316">الخروج من التلفاز المباشر</string>
+  <string id="90317">هل أنت متأكد أنك تريد مغادرة التلفاز المباشر؟</string>
+  <string id="90318">اسم القناة</string>
+  <string id="90319">لا يوجد لدينا قائمة جدولة لمنطقتك.</string>
+  <string id="90320">تحديد جدول مطابق:</string>
+  <string id="90321">بلا جدول</string>
+
+  <!-- Main Menu -->
+  <string id="90400">ابدأ في الكتابة في [B] بحث[/B]</string>
+
+  <!-- MEDIA ACTION -->
+  <string id="90450">تطبيق</string>
+  <string id="90451">عرض</string>
+  <string id="90452">نظرة عامة</string>
+  <string id="90453">الشخصيات والطاقم</string>
+  <string id="90454">مرتبط</string>
+
+  <!-- HOME SCREEN -->
+  <string id="90550">إعدادات الشبكة</string>
+
+</strings>

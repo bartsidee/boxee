@@ -1,0 +1,67 @@
+General fixes:
+=============
+
+- Instead of forming clusters immediately, only do it if we are reversing
+  the text.  We'd need a separate bit to indicate cluster start then.
+  Right now, BTW, for non-native direction runs, we get the cluster wrong...
+
+- Fix tt kern on/off and GPOS interaction
+
+- Remove fixed-size feature/lookup arrays in hb-ot-map
+
+API issues to fix before 1.0:
+============================
+
+- Figure out how many .so objects, how to link, etc
+
+- Real subclassing support for vfunc vectors
+
+- Add hb-cairo glue
+
+- Fix blob, remove mutex, etc.
+
+- Add sanitize API
+
+- Add glib GBoxedType stuff
+
+
+API to add (maybe after 1.0):
+============================
+
+- Add hb_font_create_linear()?
+
+- Add hb_shape_plan()/hb_shape_execute()
+
+- Add query API for aalt-like features?
+
+- SFNT api? get_num_faces?
+
+- Full matrix instead of scale?
+
+- Add segmentation API
+
+- Add hb-fribidi?
+
+
+hb-view enhancements:
+====================
+
+- Add --format
+- Add --width, --height, --auto-size, --align, etc?
+- Port to GOption, --help
+- Add XML and JSON formats
+
+
+Build fixes:
+===========
+
+- GNOME Bug 612402 - (hb-arm) HarfBuzz compilation fix for arm
+
+
+Optimizations:
+=============
+
+- Avoid allocating blob objects internally for for_data() faces?
+
+- Add caching layer to hb-ft
+

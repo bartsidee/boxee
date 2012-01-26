@@ -1,0 +1,10 @@
+--- /opt/canmore/targetfs.13.3/etc/udev/rules.d/50-udev-gen3.rules	2010-03-01 00:55:59.000000000 +0200
++++ etc/udev/rules.d/50-udev-gen3.rules	2010-06-13 22:48:06.564335735 +0300
+@@ -68,6 +68,7 @@
+ # block, tapes, block-releated
+ SUBSYSTEM=="block", KERNEL=="sr[0-9]*", SYMLINK+="scd%n"
+ SUBSYSTEM=="block", KERNEL=="sd[a-z]*", RUN+="/etc/udev/rules.d/disk_automount.sh"
++SUBSYSTEM=="mmc", KERNEL=="mmcblk[0-9]*", RUN+="/etc/udev/rules.d/disk_automount.sh"
+ SUBSYSTEM=="scsi", KERNEL=="[0-9]*:[0-9]*", ACTION=="add", ATTR{type}=="0|7|14", ATTR{timeout}="60"
+ SUBSYSTEM=="scsi", KERNEL=="[0-9]*:[0-9]*", ACTION=="add", ATTR{type}=="1", ATTR{timeout}="900"
+ KERNEL=="pktcdvd[0-9]*",	NAME="pktcdvd/%k"

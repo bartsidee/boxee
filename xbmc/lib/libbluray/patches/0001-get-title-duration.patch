@@ -1,0 +1,45 @@
+Index: src/libbluray/bluray.h
+===================================================================
+--- src/libbluray/bluray.h	(revision 16604)
++++ src/libbluray/bluray.h	(working copy)
+@@ -105,6 +105,16 @@
+ 
+ /**
+  *
++ *  Get title duration
++ *
++ * @param bd  BLURAY object
++ * @param title_idx title index number
++ * @return duration of the title, 0 on error
++ */
++uint64_t bd_get_title_duration(BLURAY *bd, uint32_t title_idx);
++
++/**
++ *
+  *  Get information about a playlist
+  *
+  * @param bd  BLURAY object
+Index: src/libbluray/bluray.c
+===================================================================
+--- src/libbluray/bluray.c	(revision 16604)
++++ src/libbluray/bluray.c	(working copy)
+@@ -956,6 +956,19 @@
+     return bd->title_list->count;
+ }
+ 
++uint64_t bd_get_title_duration(BLURAY *bd, uint32_t title_idx)
++{
++    if (!bd) {
++        DEBUG(DBG_BLURAY | DBG_CRIT, "bd_get_title_duration(NULL) failed (%p)\n", bd);
++        return 0;
++    }
++    if (bd->title_list) {
++        return bd->title_list->title_info[title_idx].duration;
++    }
++
++    return 0;
++}
++
+ static void _copy_streams(BLURAY_STREAM_INFO *streams, MPLS_STREAM *si, int count)
+ {
+     int ii;

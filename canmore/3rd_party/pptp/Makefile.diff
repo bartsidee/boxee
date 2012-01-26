@@ -1,0 +1,22 @@
+--- Makefile.orig	2010-07-16 00:21:44.883380849 +0300
++++ Makefile	2010-07-18 20:23:08.475597665 +0300
+@@ -4,14 +4,15 @@
+ 
+ #################################################################
+ # CHANGE THIS LINE to point to the location of your pppd binary.
+-PPPD = /usr/sbin/pppd
++PPPD = /opt/local/sbin/pppd
+ #################################################################
+ 
+-BINDIR=$(DESTDIR)/usr/sbin
+-MANDIR=$(DESTDIR)/usr/share/man/man8
++DESTDIR=/opt/canmore/local
++BINDIR=$(DESTDIR)/sbin
++MANDIR=$(DESTDIR)/share/man/man8
+ PPPDIR=$(DESTDIR)/etc/ppp
+ 
+-CC	= gcc
++CC	= i686-cm-linux-gcc
+ RM	= rm -f
+ OPTIMIZE= -O0
+ DEBUG	= -g

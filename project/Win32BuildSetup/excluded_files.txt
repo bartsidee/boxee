@@ -1,0 +1,5 @@
+.pdb
+.so
+-linux
+.dylib
+-osx

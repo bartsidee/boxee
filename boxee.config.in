@@ -1,0 +1,118 @@
+#
+# boxee-lib config file
+# this file contains parameters in the form of: key=value 
+# which will affect the behavior of the library
+#
+
+Boxee.Server = http://virgola.boxee.tv
+Boxee.Resolver.Server = http://res.boxee.tv
+Boxee.LoginUrl = http://virgola.boxee.tv/api/login
+Boxee.LogoutUrl = http://virgola.boxee.tv/api/logout
+
+# Recommendations request parameters
+Boxee.RecommendationsListFreqInMs = 30000
+Boxee.RecommendationsListUrl = http://virgola.boxee.tv/api/get_recommendations
+
+# Queue request parameters
+Boxee.QueueListFreqInMs = 30000
+Boxee.QueueListUrl = http://virgola.boxee.tv/api/get_queue
+
+# Friends request parameters
+Boxee.FriendsListFreqInMs = 600000
+Boxee.FriendsListUrl = http://virgola.boxee.tv/user/
+
+# Applications request parameters
+Boxee.ApplicationsListFreqInMs = 600000
+Boxee.ApplicationsListUrl = http://virgola.boxee.tv/api/get_applications
+
+# Subscriptions request parameters
+Boxee.SubscriptionsListFreqInMs = 600000
+Boxee.SubscriptionsListUrl = http://virgola.boxee.tv/api/get_subscriptions
+Boxee.DoSubscribeUrl = http://virgola.boxee.tv/api/subscribe
+Boxee.DoUnsubscribeUrl = http://virgola.boxee.tv/api/unsubscribe
+
+# Sources request parameters
+SourcesListFreqInMs = 600000
+Boxee.SourcesListUrl = http://virgola.boxee.tv/titles/sources
+
+# Excluded Sources request parameters
+ExcludedSourcesFreqInMs = 600000
+Boxee.ExcludedSourcesUrl = http://virgola.boxee.tv/api/excluded_sources
+
+# WebFavorites parameteres
+Boxee.AddWebFavoritesUrl = http://virgola.boxee.tv/api/bookmarkpost
+Boxee.RemoveWebFavoriteUrl = http://virgola.boxee.tv/api/bookmarkremove
+
+# Entitlements request parameters
+Boxee.EntitlementsListUrl = http://virgola.boxee.tv/api/getentitlements
+
+# Services request parameters
+Boxee.ServicesListFreqInMs = 600000
+Boxee.ServicesListUrl = http://virgola.boxee.tv/api/get_services
+
+# Featured request parameters
+Boxee.FeaturedListFreqInMs = 30000
+Boxee.FeaturedListUrl = http://virgola.boxee.tv/api/get_featured
+
+# AppBox request parameters
+Boxee.AppBoxApplicationsListFreqInMs = 600000
+Boxee.AppBoxApplicationsPrefixUrl = http://virgola.boxee.tv/appindex
+Boxee.AppBoxPopularitiesListFreqInMs = 600000
+Boxee.AppBoxPopularitiesUrl = http://virgola.boxee.tv/applications/popularity
+Boxee.AppBoxRepositoriesListFreqInMs = 600000
+Boxee.AppBoxRepositoriesUrl = http://virgola.boxee.tv/api/get_repositories
+
+#Autocomplete request parameters
+Boxee.Autocomplete = http://virgola.boxee.tv
+
+#Manual Resolve Request Parameters
+Boxee.ManualResolve = http://virgola.boxee.tv
+
+#Url for artist thumbnail
+Boxee.ArtistThumb = http://virgola.boxee.tv
+
+#For create new user
+Boxee.Username.Suggestions = http://virgola.boxee.tv/api/checkid?userid=
+Boxee.Create.User = https://virgola.boxee.tv/api/register
+Boxee.Term.Of.Use = http://virgola.boxee.tv/api/getlegal?page=tou
+Boxee.Privacy.Policy = http://virgola.boxee.tv/api/getlegal?page=privacy
+Boxee.Update.User.Details = http://virgola.boxee.tv/accountapi/updatedetails
+
+Boxee.ReportInstallRssUrl = http://virgola.boxee.tv/rss/subscribe_multi
+
+Boxee.TrailerUrl = http://virgola.boxee.tv/service/trailer
+Boxee.OsHashUrl = http://virgola.boxee.tv/service/gibh
+
+#Boxee.AddFriendUrl = http://tsella.homeip.net/add_friend.php
+Boxee.AddFriendUrl = file://./dummy_add_friend.xml
+Boxee.SetUserActionUrl = http://virgola.boxee.tv/action/add
+Boxee.ProfileUrl = http://virgola.boxee.tv/profile
+Boxee.PollFreq = 60
+
+#For empty WatchLater screen
+Boxee.WatchLater.GetStarted = https://virgola.boxee.tv/accountapi/tellmeabout/?about=watchlater
+
+WatchDog.CheckInternetConnectionLowInMs = 5000
+WatchDog.CheckInternetConnectionHiInMs = 1000
+WatchDog.PingFreqInMs = 240000
+WatchDog.TestSourcesFreqInMs = 60000
+WatchDog.ProcessSlowFreqInMs = 60000
+WatchDog.ChkupdFreqInMs = 60000
+WatchDog.ChkupdFreqOfflineInMs = 60000 
+WatchDog.TestNetUrl = http://virgola.boxee.tv
+WatchDog.TestServerUrl = http://virgola.boxee.tv/
+
+# Scanner thread interval in milliseconds
+Boxee.FileScanner.Scan.Interval = 120000
+Boxee.FileScanner.Delay.Start = 60000
+Boxee.MetadataEngine.Scan.Interval = 30000
+Boxee.MetadataEngine.Resolver.Interval = 100
+Boxee.MetadataEngine.Enabled = 1
+Boxee.UseBoxeeDB = 1
+Boxee.ResetMetadata = 0
+Boxee.FileScanner.ExtendedLog = 0
+Boxee.Resolver.UseHash = 1
+
+# Minimum video file size (in MB) for library recognition
+Boxee.Video.Threshold = 150 
+

@@ -1,0 +1,56 @@
+0000||(Defined at Interface level)
+0101||Audio Control Device
+0102||Audio Streaming
+0103||MIDI Streaming
+0201||Communications Direct Line
+0202||Communications Abstract
+0203||Telephone
+0204||Multi-Channel Communications
+0205||CAPI Control
+0206||Ethernet Networking
+0207||ATM Networking
+0208||Wireless Handset Control
+0209||Device Management
+020a||Mobile Direct Line
+020b||OBEX
+020c||Ethernet Emulation
+0300||HID
+0301||HID Boot Interface
+0601||Still Image Capture
+0701||Printer
+0801||Mass Storage/RBC
+0802||SFF-8020i, MMC-2 (ATAPI)
+0803||QIC-157
+0804||Floppy (UFI)
+0805||SFF-8070i
+0806||Mass Storage/SCSI
+0900||Hub
+0a00||Unused
+0a30||I.430 ISDN BRI
+0a31||HDLC
+0a32||Transparent
+0a50||Q.921M
+0a51||Q.921
+0a52||Q.921TM
+0a90||V.42bis
+0a91||Q.932 EuroISDN
+0a92||V.120 V.24 rate ISDN
+0a93||CAPI 2.0
+0afd||Host Based Driver
+0afe||CDC PUF
+0aff||Vendor specific
+0b00||Chip/SmartCard
+0d00||Content Security
+0e01||Video Control
+0e02||Video Streaming
+0e03||Video Interface Collection
+dc01||Reprogrammable Diagnostics
+e001||Radio Frequency
+e002||Wireless USB Wire Adapter
+ef01||Misc Device
+ef02||Misc Common Class
+ef03||Misc Device
+fe01||Device Firmware Update
+fe02||IRDA Bridge
+fe03||Test and Measurement
+ffff||Vendor Specific Class

@@ -1,0 +1,35 @@
+; Boxee Samba server configuration template
+; (c) 2010 Boxee, Inc.  http://www.boxee.tv
+;
+; Revision History
+; 20100617 - Inception
+; 20100929 - Update socket options and cache size
+; 20101130 - Remove [media] share
+
+; XXXGENTAGXXX
+
+[global]
+   workgroup = XXXWORKGROUPXXX
+   netbios name = XXXHOSTNAMEXXX
+; disable printing support
+   load printers = no
+   printcap name = /dev/null
+   printing = bsd
+   security = share
+   socket options = TCP_NODELAY IPTOS_LOWDELAY SO_RCVBUF=65536 SO_SNDBUF=65536
+   local master = no
+   disable spoolss = yes
+   show add printer wizard = no
+   ntlm auth = yes
+   lanman auth = yes
+   create mask = 0777
+   directory mask = 0777
+   username map = /data/etc/smbusers
+   log file = /tmp/smb.log.%m
+   private dir = /data/etc/
+   pid directory = /var/run/
+   lock directory = /tmp/smblock/
+   smb passwd file = /data/etc/smbpasswd
+   unix extensions = no
+   max stat cache size = 256
+

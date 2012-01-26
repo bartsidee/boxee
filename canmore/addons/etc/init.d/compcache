@@ -1,0 +1,36 @@
+#!/bin/sh
+
+# Script name can be the called name, or something more meaningful.
+SCRIPTNAME=$0
+
+. /etc/init.d/init_utilities
+
+start_function() {
+	/sbin/insmod /lib/modules/2.6.28/lzo_compress.ko
+	/sbin/insmod /lib/modules/2.6.28/lzo_decompress.ko
+	/sbin/insmod /lib/modules/2.6.28/ramzswap.ko num_devices=1
+	/opt/local/sbin/rzscontrol /dev/ramzswap0 --init
+	/sbin/swapon /dev/ramzswap0
+}
+
+stop_function() {
+	/sbin/swapoff /dev/ramzswap0
+	/sbin/rmmod ramzswap
+	/sbin/rmmod lzo_decompress
+	/sbin/rmmod lzo_compress
+}
+
+case $1 in
+    "start")
+    start_function
+    ;;
+    "stop")
+    stop_function
+    ;;
+    "restart")
+    stop_function
+    start_function
+    ;;
+    *)
+    echo "Usage: $0 {start|stop|restart}"
+esac

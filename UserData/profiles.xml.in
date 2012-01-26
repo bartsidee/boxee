@@ -1,0 +1,46 @@
+<profiles>
+    <lastloaded>1</lastloaded>
+    <useloginscreen>true</useloginscreen>
+    <profile>
+        <id></id>
+        <name>Master user</name>
+        <directory pathversion="1">special://masterprofile/</directory>
+        <thumbnail pathversion="1"></thumbnail>
+        <lastdate></lastdate>
+        <lockmode>0</lockmode>
+        <lockcode></lockcode>
+        <lastlockcode></lastlockcode>
+        <adultlockcode></adultlockcode>
+        <lockmusic>false</lockmusic>
+        <lockvideo>false</lockvideo>
+        <lockpictures>false</lockpictures>
+        <lockprograms>false</lockprograms>
+        <locksettings>false</locksettings>
+        <lockfiles>false</lockfiles>
+        <rememberpassword>false</rememberpassword>
+        <lockadult>true</lockadult>
+    </profile>
+    <profile>
+        <id>yuvalt</id>
+        <name>Yuval Tal</name>
+        <directory pathversion="1">profiles/yuvalt</directory>
+        <thumbnail pathversion="1">http://s3.boxee.tv/thumb/200x200/4/b/db303df40a988545e80a0ca2c03ccd.png</thumbnail>
+        <lastdate>01/01/1970 - 5:41 AM</lastdate>
+        <lockmode>3</lockmode>
+        <lockcode>RhrmtQD1gC1NUrNGQ83Mbg==</lockcode>
+        <lastlockcode>RhrmtQD1gC1NUrNGQ83Mbg==</lastlockcode>
+        <adultlockcode></adultlockcode>
+        <lockmusic>false</lockmusic>
+        <lockvideo>false</lockvideo>
+        <lockpictures>false</lockpictures>
+        <lockprograms>false</lockprograms>
+        <locksettings>false</locksettings>
+        <lockfiles>false</lockfiles>
+        <rememberpassword>false</rememberpassword>
+        <lockadult>true</lockadult>
+        <hasdatabases>true</hasdatabases>
+        <canwritedatabases>true</canwritedatabases>
+        <hassources>true</hassources>
+        <canwritesources>true</canwritesources>
+    </profile>
+</profiles>

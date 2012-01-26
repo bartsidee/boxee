@@ -1,0 +1,19 @@
+<sources>
+<add>
+    <video>
+    </video>
+    <music>
+    </music>
+    <pictures>
+    </pictures>
+</add>
+<delete>
+    <video>
+    </video>
+    <music>
+    </music>
+    <pictures>
+    </pictures>    
+</delete>
+</sources>
+

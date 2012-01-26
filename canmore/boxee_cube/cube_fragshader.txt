@@ -1,0 +1,21 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2008 Intel Corporation
+//
+// DISTRIBUTABLE AS SAMPLE SOURCE SOFTWARE
+//
+// This Distributable As Sample Source Software is subject to the terms and
+// conditions of the Intel Software License Agreement provided with the
+// Intel(R) Media Processor Software Development Kit.
+//------------------------------------------------------------------------------
+varying mediump vec4 basecolor;  // color from vertex shader 
+varying mediump vec2 texcoord;   // texture coordinate from vertex shader
+
+uniform sampler2D texture;  // passed from application
+
+void main(void)
+{    
+    mediump vec4 texcolor = texture2D(texture, texcoord);  // texture lookup
+
+    mediump vec4 tmpColor = basecolor * texcolor; 
+    gl_FragColor = vec4(tmpColor.xyz, 1);  // set the alpha value to be 1
+}

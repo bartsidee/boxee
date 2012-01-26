@@ -1,0 +1,1 @@
+BuildSetup.bat exit

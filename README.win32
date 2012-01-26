@@ -1,0 +1,65 @@
+TOC
+1. Introduction
+2. Getting the source code
+3. Installing the required packages
+4. How to compile
+5. How to run
+
+-----------------------------------------------------------------------------
+1. Introduction
+-----------------------------------------------------------------------------
+
+This is Boxee client for Windows. It's target is developers and not end-users. 
+We currently recommend Windows 7 as a development platform.
+
+
+-----------------------------------------------------------------------------
+2. Getting the source code
+-----------------------------------------------------------------------------
+
+You can obtain the source code from the boxee web site.
+
+-----------------------------------------------------------------------------
+3.0 Install Visual Studio 2010
+-----------------------------------------------------------------------------
+
+Install Visual Studio 2010. You can download the Express edition from Microsoft's site at
+(http://www.microsoft.com/visualstudio/en-us/products/2010-editions/express). 
+
+-----------------------------------------------------------------------------
+3.1 Install DirectX SDK 
+-----------------------------------------------------------------------------
+
+Get the latest DirectX SDK, available from Microsoft's site at
+(http://msdn.microsoft.com/en-us/directx/)
+
+-----------------------------------------------------------------------------
+3.2 Install NSIS 
+-----------------------------------------------------------------------------
+
+Get the latest NSIS version, available at (http://nsis.sourceforge.net/Download)
+
+-----------------------------------------------------------------------------
+4. How to compile
+-----------------------------------------------------------------------------
+
+In-order to debug boxee:
+Compile the VS 2010 project, project\VS2010Express\BOXEE for Windows.sln
+
+In-order to debug the code from the build directory, you need to copy all of 
+the required dlls and other files. If you have Python installed, you can do it
+by running the script: project\VS2010Express\prepare_for_debug.py <exe_to_run_dir>
+from its current working directory.
+ 
+In-order to create an installation file:
+Run the batch file: project\Win32BuildSetup\BuildSetup.bat
+(You'd probably want to run "BuildSetup.bat noexit", to see its output.)
+ 
+Note: Currently only the DirectX releases are supported.
+
+-----------------------------------------------------------------------------
+5. How to run
+-----------------------------------------------------------------------------
+
+- Istall the BoxeeSetup.exe file.
+- Click on the Boxee shortcut.

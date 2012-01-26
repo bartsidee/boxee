@@ -1,0 +1,52 @@
+Index: libavcodec/avcodec.h
+===================================================================
+--- libavcodec/avcodec.h	2010-12-05 13:57:43 UTC (rev 16515)
++++ libavcodec/avcodec.h	2010-12-05 15:04:11 UTC (rev 16516)
+@@ -2924,6 +2924,7 @@
+     unsigned num_rects;
+     AVSubtitleRect **rects;
+     int64_t pts;    ///< Same as packet pts, in AV_TIME_BASE
++    unsigned flags;
+ } AVSubtitle;
+ 
+ /* packet functions */
+
+Index: libavcodec/pgssubdec.c
+===================================================================
+--- libavcodec/pgssubdec.c	2010-12-05 13:57:43 UTC (rev 16515)
++++ libavcodec/pgssubdec.c	2010-12-05 15:04:11 UTC (rev 16516)
+@@ -46,6 +46,7 @@
+     int y;
+     int id_number;
+     int object_number;
++    uint8_t composition_flag;
+ } PGSSubPresentation;
+ 
+ typedef struct PGSSubPicture {
+@@ -289,13 +290,14 @@
+         return;
+ 
+     /*
+-     * Skip 4 bytes of unknown:
++     * Skip 3 bytes of unknown:
+      *     object_id_ref (2 bytes),
+-     *     window_id_ref,
+-     *     composition_flag (0x80 - object cropped, 0x40 - object forced)
++     *     window_id_ref
+      */
+-    buf += 4;
++    buf += 3;
+ 
++    ctx->presentation.composition_flag =  bytestream_get_byte(&buf);
++
+     x = bytestream_get_be16(&buf);
+     y = bytestream_get_be16(&buf);
+ 
+@@ -372,6 +374,8 @@
+ 
+     memcpy(sub->rects[0]->pict.data[1], ctx->clut, sub->rects[0]->nb_colors * sizeof(uint32_t));
+ 
++    sub->flags = ctx->presentation.composition_flag;
++
+     return 1;
+ }

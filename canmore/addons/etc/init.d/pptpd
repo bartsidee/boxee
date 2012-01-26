@@ -1,0 +1,35 @@
+#!/bin/sh
+
+SCRIPTNAME=$0
+PATH=/usr/local/bin:/usr/bin:/bin:/sbin
+
+. /etc/init.d/init_utilities
+
+start_function() {
+	if [ ! -f /tmp/vpn.up ]
+	then
+		try_command /opt/local/sbin/pppd call vpn logfd 1 updetach
+	else
+		echo "VPN already up."
+		exit 1
+	fi
+}
+
+stop_function() {
+	pkill pppd
+}
+
+case $1 in
+    "start")
+        start_function
+        ;;
+    "stop")
+        stop_function
+        ;;
+    "restart")
+        stop_function
+        start_function
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart}"
+esac

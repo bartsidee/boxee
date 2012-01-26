@@ -1,0 +1,42 @@
+#!/bin/sh
+
+SCRIPTNAME=$0
+PATH=/usr/local/bin:/usr/bin:/bin:/sbin
+
+. /etc/init.d/init_utilities
+
+PPP_MODULES="slhc ppp_generic ppp_deflate ppp_async ppp_mppe bsd_comp"
+
+start_function() {
+	# install ppp_* and related modules
+	for m in ${PPP_MODULES}
+	do
+		debug_print "Installing $m module.."
+		insmod ${m}.ko >/dev/null 2>&1
+	done
+}
+
+stop_function() {
+	# remove ppp_* and related modules
+	R=`echo $PPP_MODULES | awk '{ for (i = NF; i > 0; --i) print $i }'`
+	for m in ${R}
+	do
+		debug_print "Removing $m module.."
+		rmmod $m >/dev/null 2>&1
+	done
+}
+
+case $1 in
+    "start")
+        start_function
+        ;;
+    "stop")
+        stop_function
+        ;;
+    "restart")
+        stop_function
+        start_function
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart}"
+esac

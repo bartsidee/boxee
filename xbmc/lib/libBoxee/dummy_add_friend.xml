@@ -1,0 +1,23 @@
+<friend>
+	<id>idan</id>
+	<display_name>idan digidan</display_name>
+	<presence>online</presence>
+	<avatar_link>http://www.avatar.com/idan</avatar_link>
+	<actions>
+		<message type="play">
+			<timestamp>1185713024</timestamp>
+			<description>listening to maruan bargutti podcast</description>
+			<object type="music" id="mus1234">
+				<name>maruan bargutti podcast</name>
+			</object>
+		</message>
+		<message type="friend">
+			<timestamp>1185712024</timestamp>
+			<description>idan and tomas are now friends</description>
+			<object type="user" id="tsella">
+				<name>tomas</name>
+				<profile_link>http://srv.boxee.tv/profiles/tsella</profile_link>
+			</object>
+		</message>
+	</actions>
+</friend>

@@ -1,0 +1,94 @@
+0000|Non-VGA unclassified device
+0001|VGA compatible unclassified device
+0100|SCSI storage controller
+0101|IDE interface
+0102|Floppy disk controller
+0103|IPI bus controller
+0104|RAID bus controller
+0105|ATA controller
+0106|SATA controller
+0107|Serial Attached SCSI controller
+0180|Mass storage controller
+0200|Ethernet controller
+0201|Token ring network controller
+0202|FDDI network controller
+0203|ATM network controller
+0204|ISDN controller
+0280|Network controller
+0300|VGA compatible display controller
+0301|XGA compatible display controller
+0302|3D display controller
+0380|Display controller
+0400|Multimedia video controller
+0401|Multimedia audio controller
+0402|Computer telephony device
+0403|Audio device
+0480|Multimedia controller
+0500|RAM memory controller
+0501|FLASH memory controller
+0580|Memory controller
+0600|Host bridge
+0601|ISA bridge
+0602|EISA bridge
+0603|MicroChannel bridge
+0604|PCI bridge
+0605|PCMCIA bridge
+0606|NuBus bridge
+0607|CardBus bridge
+0608|RACEway bridge
+0609|Semi-transparent PCI-to-PCI bridge
+0640|Primary bus towards host CPU
+0680|Secondary bus towards host CPU
+060a|InfiniBand to PCI host bridge
+0680|Bridge
+0700|Serial controller
+0701|Parallel controller
+0702|Multiport serial controller
+0703|Modem
+0780|Communication controller
+0800|PIC
+0801|DMA controller
+0802|EISA DMA
+0802|Timer
+0803|RTC
+0804|PCI Hot-plug controller
+0880|System peripheral
+0900|Keyboard controller
+0901|Digitizer Pen
+0902|Mouse controller
+0903|Scanner controller
+0904|Gameport controller
+0910|Extended
+0980|Input device controller
+0a00|Generic Docking Station
+0a80|Docking Station
+0b00|386
+0b01|486
+0b02|Pentium
+0b10|Alpha
+0b20|Power PC
+0b30|MIPS
+0b40|Co-processor
+0c00|FireWire (IEEE 1394)
+0c01|ACCESS Bus
+0c02|SSA
+0c03|USB Controller
+0c04|Fibre Channel
+0c05|SMBus
+0c06|InfiniBand
+0d00|IRDA controller
+0d01|Consumer IR controller
+0d10|RF controller
+0d80|Wireless controller
+0e00|I2O
+0f00|Satellite TV controller
+0f01|Satellite audio communication controller
+0f03|Satellite voice communication controller
+0f04|Satellite data communication controller
+1000|Network and computing encryption device
+1010|Entertainment encryption device
+1080|Encryption controller
+1100|DPIO module
+1101|Performance counters
+1110|Communication synchronizer
+1180|Signal processing controller

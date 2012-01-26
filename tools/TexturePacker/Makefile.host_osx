@@ -1,0 +1,23 @@
+INCLUDES =-I../../xbmc/utils -I../../guilib -I../../xbmc/linux -I../../xbmc/lib/libsquish -I/opt/local/include
+DEFINES =  -D_LINUX
+
+OBJS = \
+	SDL_anigif.o \
+	XBTFWriter.o \
+	XBMCTex.o \
+	XBTF.o
+
+TARGET = TexturePacker
+CLEAN_FILES=$(TARGET)
+
+$(TARGET) : $(OBJS)
+	g++ -o $(TARGET) $(OBJS) ../../xbmc/lib/libsquish/libsquish-x86-osx.a -llzo2 -lSDL -lSDL_image -L/opt/local/lib
+
+.cpp.o:
+	g++ -c $(DEFINES) $(INCLUDES) $< -o $@ -g
+
+.c.o:
+	gcc -c $(DEFINES) $(INCLUDES) $< -o $@ -g
+
+clean:
+	rm -f $(TARGET) $(OBJS)

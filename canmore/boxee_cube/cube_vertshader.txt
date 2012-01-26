@@ -1,0 +1,25 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2008 Intel Corporation
+//
+// DISTRIBUTABLE AS SAMPLE SOURCE SOFTWARE
+//
+// This Distributable As Sample Source Software is subject to the terms and
+// conditions of the Intel Software License Agreement provided with the
+// Intel(R) Media Processor Software Development Kit.
+//------------------------------------------------------------------------------
+varying mediump vec4 basecolor;  // color passed to fragment shader 
+varying mediump vec2 texcoord;  //texture coordinate passed to fragment shader
+
+attribute vec4 position;  // vertex attribute 
+attribute vec4 inputcolor;
+attribute vec2 inputtexture;    
+
+uniform mat4 mvp;  // modelview and projection matrix from the application
+
+void main(void)
+{   
+    basecolor = inputcolor;
+    texcoord = inputtexture;
+
+    gl_Position = mvp * position;
+}

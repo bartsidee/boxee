@@ -1,0 +1,71 @@
+<boxeefeed>
+	<timestamp>1187718888</timestamp>
+	<message type="recommend">
+		<timestamp>1187710000</timestamp>
+		<description>tomas recommends the movie transformers</description>
+		<object type="user" id="tsella">
+			<name>tomas</name>	
+			<profile>http://srv.boxee.tv/profiles/tsella</profile>
+			<thumb>http://radar.oreilly.com/images/photo_tim_s.jpg</thumb>
+		</object>
+		<object type="movie" id="mov2132324">
+                        <name>transformers</name>
+                        <trailer>http://srv.boxee.tv/trailers/mov2132324</trailer>
+                        <info_link>http://srv.boxee.tv/info/mov2132324</info_link>
+                        <cover_art>http://srv.boxee.tv/cover/mov2132324</cover_art>
+		</object>
+	</message>
+	<message type="friend">
+		<timestamp>1187711111</timestamp>
+		<description>idan and tomas are now friends</description>
+                <object type="user" id="tsella">
+                        <name>tomas</name>
+                        <profile_link>http://srv.boxee.tv/profiles/tsella</profile_link>
+                </object>
+                <object type="user" id="idan">
+                        <name>idan cohen</name>
+                        <profile_link>http://srv.boxee.tv/profiles/idan</profile_link>
+                </object>
+	</message>
+	<message type="promotion">
+		<timestamp>1187712222</timestamp>
+		<description>new episode of lost is available</description>
+		<object type="tv_show" id="tv1234">
+                        <name>lost</name>
+			<episode>12</episode>
+			<season>2</season>
+                        <trailer>http://srv.boxee.tv/trailers/tv1234</trailer>
+                        <info_link>http://srv.boxee.tv/info/tv1234</info_link>
+                        <cover_art>http://srv.boxee.tv/cover/tv1234</cover_art>
+		</object>
+	</message>
+	<message type="watch">
+		<timestamp>1187711224</timestamp>
+		<description>tomas watched bambi</description>
+		<object type="user" id="tsella">
+			<name>tomas</name>	
+			<profile_link>http://srv.boxee.tv/profiles/tsella</profile_link>
+		</object>
+		<object type="movie" id="mov45678">
+                        <name>bambi</name>
+                        <trailer>http://srv.boxee.tv/trailers/mov45678</trailer>
+                        <info_link>http://srv.boxee.tv/info/mov45678</info_link>
+                        <cover_art>http://srv.boxee.tv/cover/mov45678</cover_art>
+		</object>
+	</message>
+	<message type="listen">
+		<timestamp>1188711224</timestamp>
+		<description>tomas listen to the wall</description>
+		<object type="user" id="tsella">
+			<name>tomas</name>	
+			<profile_link>http://srv.boxee.tv/profiles/tsella</profile_link>
+		</object>
+		<object type="audio_track" id="album2131">
+                        <name>in the flash</name>
+			<album>the wall</album>
+			<artist>pink floyd</artist>
+                        <info_link>http://srv.boxee.tv/info/album45678</info_link>
+                        <cover_art>http://srv.boxee.tv/cover/album45678</cover_art>
+		</object>
+	</message>
+</boxeefeed>

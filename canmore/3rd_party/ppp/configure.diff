@@ -1,0 +1,11 @@
+--- configure.orig	2010-07-16 00:31:06.308341507 +0300
++++ configure	2010-07-16 00:31:18.372341331 +0300
+@@ -2,7 +2,7 @@
+ # $Id: configure,v 1.38 2008/06/15 07:08:49 paulus Exp $
+ 
+ # Where to install stuff by default
+-DESTDIR=/usr/local
++DESTDIR=/opt/canmore/local
+ SYSCONF=/etc
+ 
+ #  if [ -d /NextApps ]; then

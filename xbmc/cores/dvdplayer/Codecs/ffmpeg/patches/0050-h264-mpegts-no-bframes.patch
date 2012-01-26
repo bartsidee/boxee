@@ -1,0 +1,17 @@
+diff --git a/xbmc/cores/dvdplayer/Codecs/ffmpeg/libavcodec/h264_parser.c b/xbmc/cores/dvdplayer/Codecs/ffmpeg/libavcodec/h264_parser.c
+index c5728e2..3075b8b 100644
+--- a/xbmc/cores/dvdplayer/Codecs/ffmpeg/libavcodec/h264_parser.c
++++ b/xbmc/cores/dvdplayer/Codecs/ffmpeg/libavcodec/h264_parser.c
+@@ -251,6 +251,12 @@ static int h264_parse(AVCodecParserContext *s,
+         h->got_first = 1;
+         if (avctx->extradata_size) {
+             h->s.avctx = avctx;
++            // must be done like in decoder, otherwise opening the parser,
++            // letting it create extradata and then closing and opening again
++            // will cause has_b_frames to be always set.
++            // Note that estimate_timings_from_pts does exactly this.
++            if (!avctx->has_b_frames)
++                h->s.low_delay = 1;
+             ff_h264_decode_extradata(h);
+         }
+     }

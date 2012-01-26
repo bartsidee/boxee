@@ -1,0 +1,10 @@
+TODO:
+- change int's used as bool into bools
+- Synchronize all dvbpsi_GatherXXXSections() sanity checks
+- Check memleak in dvbpsi_GatherXXXSections() functions with dvbpsi_DeletePSISections(p_section) usages,
+  I think all tables might be leaking memory of p_secion pointers now
+- unify dvbpsi_descriptor_t functions and message callback
+- make dvbpsi_NewXXX() and dvbpsi_DeleteXXX() real functions (maybe)?
+- use dvbpsi_NewXXX() and dvbpsi_DeleteXXX() in dvbpsi_GatherXXXSections() functions
+- write SIS Command Decoders
+- find solution for SIS descriptors decoding, since they use the same tag-id as PMT descriptors do.
