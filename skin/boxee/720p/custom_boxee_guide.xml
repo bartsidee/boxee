@@ -1,0 +1,739 @@
+﻿<?xml version="1.0"?>
+<window type="dialog" id="59">
+	<defaultcontrol always="true">70</defaultcontrol>
+	<allowoverlay>no</allowoverlay>
+	<controls>
+		<include>Dialog_Popup_Background</include>
+		<control type="group">
+			<include>Dialog_Popup_Animation</include>
+			<posx>30</posx>
+			<posy>46</posy>
+			<width>1220</width>
+			<height>660</height>
+			<control type="image">
+				<posx>0</posx>
+				<posy>70</posy>
+				<width>1220</width>
+				<height>510</height>
+				<texture border="64">action_menu_bg.png</texture>
+			</control>
+			<control type="image">
+				<posx>100</posx>
+				<posy>104</posy>
+				<width>1020</width>
+				<height>256</height>
+				<texture border="128">feather_divider.png</texture>
+			</control>
+			<control type="label">
+				<posx>34</posx>
+				<posy>94</posy>
+				<width>1100</width>
+				<height>56</height>
+				<align>left</align>
+				<aligny>center</aligny>
+				<haspath>true</haspath>
+				<font>title56b</font>
+				<textcolor>white</textcolor>
+				<label>[UPPERCASE]$LOCALIZE[53118][/UPPERCASE]</label>
+			</control>
+			<control type="grouplist" id="70">
+				<description>button area</description>
+				<posx>390</posx>
+				<posy>98</posy>
+				<width>1100</width>
+				<height>50</height>
+				<itemgap>10</itemgap>
+				<orientation>horizontal</orientation>
+				<control type="togglebutton" id="71">
+					<width>200</width>
+					<height>50</height>
+					<ondown>SetFocus(81)</ondown>
+					<font>title22b</font>
+					<align>center</align>
+					<aligny>center</aligny>
+					<textcolor>grey</textcolor>
+					<focusedcolor>title</focusedcolor>
+					<texturenofocus border="15">button_option_menu.png</texturenofocus>
+					<texturefocus border="15">button_option_menu_on.png</texturefocus>
+					<textureclick border="15">button_option_menu_click.png</textureclick>
+					<alttexturenofocus border="15">button_option_menu_on.png</alttexturenofocus>
+					<alttexturefocus border="15">button_option_menu_on.png</alttexturefocus>
+					<usealttexture>ControlGroup(80).IsVisble</usealttexture>
+					<label>[UPPERCASE]$LOCALIZE[53101][/UPPERCASE]</label>
+					<onfocus>SetVisible(80)</onfocus>
+					<onfocus>SetHidden(90)</onfocus>
+				</control>
+				<control type="togglebutton" id="72">
+					<width>200</width>
+					<height>50</height>
+					<ondown>SetFocus(91)</ondown>
+					<font>title22b</font>
+					<align>center</align>
+					<aligny>center</aligny>
+					<textcolor>grey</textcolor>
+					<focusedcolor>title</focusedcolor>
+					<texturenofocus border="15">button_option_menu.png</texturenofocus>
+					<texturefocus border="15">button_option_menu_on.png</texturefocus>
+					<textureclick border="15">button_option_menu_click.png</textureclick>
+					<alttexturenofocus border="15">button_option_menu_on.png</alttexturenofocus>
+					<alttexturefocus border="15">button_option_menu_on.png</alttexturefocus>
+					<usealttexture>ControlGroup(90).IsVisble</usealttexture>
+					<label>[UPPERCASE]$LOCALIZE[53102][/UPPERCASE]</label>
+					<onfocus>SetVisible(90)</onfocus>
+					<onfocus>SetHidden(80)</onfocus>
+				</control>
+			</control>
+			<control type="group" id="80">
+				<control type="grouplist" id="81">
+					<posx>30</posx>
+					<posy>224</posy>
+					<width>216</width>
+					<height>480</height>
+					<itemgap>10</itemgap>
+					<orientation>vertical</orientation>
+					<control type="togglebutton" id="811">
+						<description>navigate category button1</description>
+						<width>216</width>
+						<height>30</height>
+						<label>53103</label>
+						<font>font20b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<textcolor2>white</textcolor2>
+						<textoffsetx>14</textoffsetx>
+						<texturenofocus>button_option_menu.png</texturenofocus>
+						<texturefocus>button_option_menu_on.png</texturefocus>
+						<textureclick>button_option_menu_click.png</textureclick>
+						<alttexturenofocus border="15">button_option_menu_on.png</alttexturenofocus>
+						<alttexturefocus border="15">button_option_menu_on.png</alttexturefocus>
+						<usealttexture>ControlGroup(82).IsVisble</usealttexture>
+						<pulseonselect>false</pulseonselect>
+						<onup>SetFocus(70)</onup>
+						<onright>SetFocus(821)</onright>
+						<onclick>SetFocus(821)</onclick>
+						<onfocus>SetVisible(82)</onfocus>
+						<onfocus>SetHidden(83)</onfocus>
+					</control>
+					<control type="togglebutton" id="812">
+						<description>navigate category button2</description>
+						<width>216</width>
+						<height>30</height>
+						<label>53104</label>
+						<font>font20b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<textcolor2>white</textcolor2>
+						<textoffsetx>14</textoffsetx>
+						<texturenofocus>button_option_menu.png</texturenofocus>
+						<texturefocus>button_option_menu_on.png</texturefocus>
+						<textureclick>button_option_menu_click.png</textureclick>
+						<alttexturenofocus border="15">button_option_menu_on.png</alttexturenofocus>
+						<alttexturefocus border="15">button_option_menu_on.png</alttexturefocus>
+						<usealttexture>ControlGroup(83).IsVisble</usealttexture>
+						<pulseonselect>false</pulseonselect>
+						<onup>70</onup>
+						<onright>SetFocus(831)</onright>
+						<onclick>SetFocus(831)</onclick>
+						<onfocus>SetVisible(83)</onfocus>
+						<onfocus>SetHidden(82)</onfocus>
+					</control>
+				</control>
+				<control type="group">
+					<posx>940</posx>
+					<posy>180</posy>
+					<control type="multiimage">
+						<visible>Control.HasFocus(821)</visible>
+						<description>remote image1</description>
+						<posx>10</posx>
+						<posy>0</posy>
+						<width>237</width>
+						<height>396</height>
+						<imagepath>guide/set1</imagepath>
+						<timeperimage>1000</timeperimage>
+						<fadetime>500</fadetime>
+						<pauseatend>100</pauseatend>
+						<randomize>false</randomize>
+						<loop>yes</loop>
+					</control>
+					<control type="multiimage">
+						<visible> Control.HasFocus(822)</visible>
+						<description>remote image2</description>
+						<posx>10</posx>
+						<posy>0</posy>
+						<width>237</width>
+						<height>396</height>
+						<imagepath>guide/set2</imagepath>
+						<timeperimage>1000</timeperimage>
+						<fadetime>500</fadetime>
+						<pauseatend>100</pauseatend>
+						<randomize>false</randomize>
+						<loop>yes</loop>
+					</control>
+					<control type="multiimage">
+						<visible> Control.HasFocus(823)</visible>
+						<description>remote image3</description>
+						<posx>10</posx>
+						<posy>0</posy>
+						<width>237</width>
+						<height>396</height>
+						<imagepath>guide/set3</imagepath>
+						<timeperimage>1000</timeperimage>
+						<fadetime>500</fadetime>
+						<pauseatend>100</pauseatend>
+						<randomize>false</randomize>
+						<loop>yes</loop>
+					</control>
+				</control>
+				<control type="grouplist" id="82">
+					<posx>330</posx>
+					<posy>218</posy>
+					<width>580</width>
+					<height>484</height>
+					<itemgap>0</itemgap>
+					<orientation>vertical</orientation>
+					<onup>70</onup>
+					<onleft>81</onleft>
+					<control type="button" id="821">
+						<width>580</width>
+						<height>40</height>
+						<font>font22</font>
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>53105</label>
+					</control>
+					<control type="button" id="822">
+						<width>580</width>
+						<height>40</height>
+						<font>font22</font>
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>53106</label>
+					</control>
+					<control type="button" id="823">
+						<width>580</width>
+						<height>40</height>
+						<font>font22</font>
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>53107</label>
+					</control>
+				</control>
+				<control type="group">
+					<posx>880</posx>
+					<posy>180</posy>
+					<control type="multiimage">
+						<visible> Control.HasFocus(831)</visible>
+						<description>keyboard image1</description>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>305</width>
+						<height>376</height>
+						<imagepath>guide/set4</imagepath>
+						<timeperimage>1000</timeperimage>
+						<fadetime>500</fadetime>
+						<pauseatend>100</pauseatend>
+						<randomize>false</randomize>
+						<loop>yes</loop>
+					</control>
+					<control type="multiimage">
+						<visible> Control.HasFocus(832)</visible>
+						<description>keyboard image2</description>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>305</width>
+						<height>376</height>
+						<imagepath>guide/set5</imagepath>
+						<timeperimage>1000</timeperimage>
+						<fadetime>500</fadetime>
+						<pauseatend>100</pauseatend>
+						<randomize>false</randomize>
+						<loop>yes</loop>
+					</control>
+					<control type="multiimage">
+						<visible> Control.HasFocus(833)</visible>
+						<description>keyboard image3</description>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>305</width>
+						<height>376</height>
+						<imagepath>guide/set6</imagepath>
+						<timeperimage>1000</timeperimage>
+						<fadetime>500</fadetime>
+						<pauseatend>100</pauseatend>
+						<randomize>false</randomize>
+						<loop>yes</loop>
+					</control>
+					<control type="multiimage">
+						<visible> Control.HasFocus(834)</visible>
+						<description>keyboard image4</description>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>305</width>
+						<height>376</height>
+						<imagepath>guide/set7</imagepath>
+						<timeperimage>1000</timeperimage>
+						<fadetime>500</fadetime>
+						<pauseatend>100</pauseatend>
+						<randomize>false</randomize>
+						<loop>yes</loop>
+					</control>
+					<control type="multiimage">
+						<visible> Control.HasFocus(835)</visible>
+						<description>keyboard image5</description>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>305</width>
+						<height>376</height>
+						<imagepath>guide/set8</imagepath>
+						<timeperimage>1000</timeperimage>
+						<fadetime>500</fadetime>
+						<pauseatend>100</pauseatend>
+						<randomize>false</randomize>
+						<loop>yes</loop>
+					</control>
+					<control type="multiimage">
+						<visible> Control.HasFocus(836)</visible>
+						<description>keyboard image6</description>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>305</width>
+						<height>376</height>
+						<imagepath>guide/set9</imagepath>
+						<timeperimage>1000</timeperimage>
+						<fadetime>500</fadetime>
+						<pauseatend>100</pauseatend>
+						<randomize>false</randomize>
+						<loop>yes</loop>
+					</control>
+				</control>
+				<control type="grouplist" id="83">
+					<visible>false</visible>
+					<posx>330</posx>
+					<posy>218</posy>
+					<width>500</width>
+					<height>484</height>
+					<itemgap>0</itemgap>
+					<orientation>vertical</orientation>
+					<onup>70</onup>
+					<onleft>81</onleft>
+					<control type="button" id="831">
+						<width>500</width>
+						<height>40</height>
+						<font>font22</font>
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>53108</label>
+					</control>
+					<control type="button" id="832">
+						<width>500</width>
+						<height>40</height>
+						<font>font22</font>
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>53109</label>
+					</control>
+					<control type="button" id="833">
+						<width>500</width>
+						<height>40</height>
+						<font>font22</font>
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>53110</label>
+					</control>	
+					<control type="button" id="835">
+						<width>500</width>
+						<height>40</height>
+						<font>font22</font>
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>53112</label>
+					</control>	
+				</control>
+			</control>
+			<control type="group" id="90">
+				<control type="grouplist" id="91">
+					<posx>30</posx>
+					<posy>224</posy>
+					<width>216</width>
+					<height>480</height>
+					<itemgap>10</itemgap>
+					<orientation>vertical</orientation>
+					<control type="togglebutton" id="911">
+						<description>navigate category button1</description>
+						<width>216</width>
+						<height>30</height>
+						<label>53103</label>
+						<font>font20b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<textcolor2>white</textcolor2>
+						<textoffsetx>14</textoffsetx>
+						<texturenofocus>button_option_menu.png</texturenofocus>
+						<texturefocus>button_option_menu_on.png</texturefocus>
+						<textureclick>button_option_menu_click.png</textureclick>
+						<alttexturenofocus border="15">button_option_menu_on.png</alttexturenofocus>
+						<alttexturefocus border="15">button_option_menu_on.png</alttexturefocus>
+						<usealttexture>ControlGroup(92).IsVisble</usealttexture>
+						<pulseonselect>false</pulseonselect>
+						<onup>SetFocus(70)</onup>
+						<onright>SetFocus(92)</onright>
+						<onclick>SetFocus(92)</onclick>
+						<onfocus>SetVisible(92)</onfocus>
+						<onfocus>SetHidden(93)</onfocus>
+					</control>
+					<control type="togglebutton" id="912">
+						<description>navigate category button2</description>
+						<width>216</width>
+						<height>30</height>
+						<label>53104</label>
+						<font>font20b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<textcolor2>white</textcolor2>
+						<textoffsetx>14</textoffsetx>
+						<texturenofocus>button_option_menu.png</texturenofocus>
+						<texturefocus>button_option_menu_on.png</texturefocus>
+						<textureclick>button_option_menu_click.png</textureclick>
+						<alttexturenofocus border="15">button_option_menu_on.png</alttexturenofocus>
+						<alttexturefocus border="15">button_option_menu_on.png</alttexturefocus>
+						<usealttexture>ControlGroup(93).IsVisble</usealttexture>
+						<pulseonselect>false</pulseonselect>
+						<onright>SetFocus(93)</onright>
+						<onclick>SetFocus(93)</onclick>
+						<onfocus>SetVisible(93)</onfocus>
+						<onfocus>SetHidden(92)</onfocus>
+					</control>
+				</control>
+				<control type="group">
+					<posx>940</posx>
+					<posy>180</posy>
+					<control type="multiimage">
+						<visible> Control.HasFocus(921)</visible>
+						<description>remote image1</description>
+						<posx>10</posx>
+						<posy>0</posy>
+						<width>237</width>
+						<height>396</height>
+						<imagepath>guide/set10</imagepath>
+						<timeperimage>1000</timeperimage>
+						<fadetime>500</fadetime>
+						<pauseatend>100</pauseatend>
+						<randomize>false</randomize>
+						<loop>yes</loop>
+					</control>
+					<control type="multiimage">
+						<visible> Control.HasFocus(922)</visible>
+						<description>remote image1</description>
+						<posx>10</posx>
+						<posy>0</posy>
+						<width>237</width>
+						<height>396</height>
+						<imagepath>guide/set11</imagepath>
+						<timeperimage>1000</timeperimage>
+						<fadetime>500</fadetime>
+						<pauseatend>100</pauseatend>
+						<randomize>false</randomize>
+						<loop>yes</loop>
+					</control>
+					<control type="multiimage">
+						<visible> Control.HasFocus(923)</visible>
+						<description>remote image1</description>
+						<posx>10</posx>
+						<posy>0</posy>
+						<width>237</width>
+						<height>396</height>
+						<imagepath>guide/set12</imagepath>
+						<timeperimage>1000</timeperimage>
+						<fadetime>500</fadetime>
+						<pauseatend>100</pauseatend>
+						<randomize>false</randomize>
+						<loop>yes</loop>
+					</control>
+					<control type="multiimage">
+						<visible> Control.HasFocus(924)</visible>
+						<description>remote image1</description>
+						<posx>10</posx>
+						<posy>0</posy>
+						<width>237</width>
+						<height>396</height>
+						<imagepath>guide/set13</imagepath>
+						<timeperimage>1000</timeperimage>
+						<fadetime>500</fadetime>
+						<pauseatend>100</pauseatend>
+						<randomize>false</randomize>
+						<loop>yes</loop>
+					</control>
+				</control>
+				<control type="grouplist" id="92">
+					<posx>330</posx>
+					<posy>218</posy>
+					<width>580</width>
+					<height>484</height>
+					<itemgap>0</itemgap>
+					<orientation>vertical</orientation>
+					<onup>70</onup>
+					<onleft>91</onleft>
+					<control type="button" id="921">
+						<width>580</width>
+						<height>40</height>
+						<font>font22</font>
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>53114</label>
+					</control>
+					<control type="button" id="922">
+						<width>580</width>
+						<height>40</height>
+						<font>font22</font>
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>53115</label>
+					</control>		
+					<control type="button" id="923">
+						<width>580</width>
+						<height>40</height>
+						<font>font22</font>
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>53116</label>
+					</control>
+					<control type="button" id="924">
+						<width>580</width>
+						<height>40</height>
+						<font>font22</font>
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>53117</label>
+					</control>
+				</control>
+				<control type="group">
+					<posx>880</posx>
+					<posy>180</posy>
+					<control type="multiimage">
+						<visible> Control.HasFocus(931)</visible>
+						<description>keyboard image1</description>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>305</width>
+						<height>376</height>
+						<imagepath>guide/set14</imagepath>
+						<timeperimage>1000</timeperimage>
+						<fadetime>500</fadetime>
+						<pauseatend>100</pauseatend>
+						<randomize>false</randomize>
+						<loop>yes</loop>
+					</control>
+					<control type="multiimage">
+						<visible> Control.HasFocus(932)</visible>
+						<description>keyboard image1</description>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>305</width>
+						<height>376</height>
+						<imagepath>guide/set15</imagepath>
+						<timeperimage>1000</timeperimage>
+						<fadetime>500</fadetime>
+						<pauseatend>100</pauseatend>
+						<randomize>false</randomize>
+						<loop>yes</loop>
+					</control>
+					<control type="multiimage">
+						<visible> Control.HasFocus(933)</visible>
+						<description>keyboard image1</description>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>305</width>
+						<height>376</height>
+						<imagepath>guide/set16</imagepath>
+						<timeperimage>1000</timeperimage>
+						<fadetime>500</fadetime>
+						<pauseatend>100</pauseatend>
+						<randomize>false</randomize>
+						<loop>yes</loop>
+					</control>
+					<control type="multiimage">
+						<visible> Control.HasFocus(934)</visible>
+						<description>keyboard image1</description>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>305</width>
+						<height>376</height>
+						<imagepath>guide/set17</imagepath>
+						<timeperimage>1000</timeperimage>
+						<fadetime>500</fadetime>
+						<pauseatend>100</pauseatend>
+						<randomize>false</randomize>
+						<loop>yes</loop>
+					</control>
+					<control type="multiimage">
+						<visible> Control.HasFocus(935)</visible>
+						<description>keyboard image1</description>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>305</width>
+						<height>376</height>
+						<imagepath>guide/set18</imagepath>
+						<timeperimage>1000</timeperimage>
+						<fadetime>500</fadetime>
+						<pauseatend>100</pauseatend>
+						<randomize>false</randomize>
+						<loop>yes</loop>
+					</control>
+					<control type="multiimage">
+						<visible> Control.HasFocus(936)</visible>
+						<description>keyboard image1</description>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>305</width>
+						<height>376</height>
+						<imagepath>guide/set19</imagepath>
+						<timeperimage>1000</timeperimage>
+						<fadetime>500</fadetime>
+						<pauseatend>100</pauseatend>
+						<randomize>false</randomize>
+						<loop>yes</loop>
+					</control>
+				</control>
+				<control type="grouplist" id="93">
+					<visible>false</visible>
+					<posx>330</posx>
+					<posy>218</posy>
+					<width>500</width>
+					<height>484</height>
+					<itemgap>0</itemgap>
+					<orientation>vertical</orientation>
+					<onup>70</onup>
+					<onleft>91</onleft>
+					<control type="button" id="931">
+						<width>500</width>
+						<height>40</height>
+						<font>font22</font>
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>53114</label>
+					</control>
+					<control type="button" id="932">
+						<width>500</width>
+						<height>40</height>
+						<font>font22</font>
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>53119</label>
+					</control>
+					<control type="button" id="934">
+						<width>500</width>
+						<height>40</height>
+						<font>font22</font>
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>53121</label>
+					</control>
+					<control type="button" id="935">
+						<width>500</width>
+						<height>40</height>
+						<font>font22</font>
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>53122</label>
+					</control>
+					<control type="button" id="936">
+						<width>500</width>
+						<height>40</height>
+						<font>font22</font>
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>53123</label>
+					</control>
+				</control>
+			</control>
+		</control>
+	</controls>
+</window>

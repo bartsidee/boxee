@@ -1,0 +1,157 @@
+﻿<?xml version="1.0"?>
+<window id="2005">
+	<defaultcontrol>-</defaultcontrol>
+	<controls>
+		<!-- buffering dialog -->
+		<!--visible>Player.Caching</visible>
+			<animation effect="fade" time="200">VisibleChange</animation-->
+		<control type="group" id="24">
+			<visible>!Window.IsVisible(boxee_video_context.xml)</visible>
+			<posx>128</posx>
+			<posy>616</posy>
+			<control type="image" id="24">
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>1024</width>
+				<height>64</height>
+				<texture border="32">osd_background.png</texture>
+			</control>
+			<control type="group" id="24">
+				<posx>20</posx>
+				<posy>12</posy>
+				<control type="progress" id="24">
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>472</width>
+					<height>12</height>
+					<info>Player.progresscache</info>
+					<texturebg>progress/osd_progress_nobackground.png</texturebg>
+					<lefttexture>progress/osd_progress_loaded_left.png</lefttexture>
+					<midtexture>progress/osd_progress_loaded_center.png</midtexture>
+					<righttexture>progress/osd_progress_loaded_right.png</righttexture>
+					<overlaytexture>-</overlaytexture>
+				</control>
+				<control type="progress" id="24">
+					<visible>Player.Caching</visible>
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>472</width>
+					<height>12</height>
+					<info>Player.CacheLevel</info>
+					<texturebg>progress/osd_progress_nobackground.png</texturebg>
+					<lefttexture>progress/osd_progress_loaded_left.png</lefttexture>
+					<midtexture>progress/osd_progress_loaded_center.png</midtexture>
+					<righttexture>progress/osd_progress_loaded_right.png</righttexture>
+					<overlaytexture>-</overlaytexture>
+				</control>
+				<control type="progress" id="24">
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>472</width>
+					<height>12</height>
+					<info>Player.Progress</info>
+					<texturebg>progress/osd_progress_background.png</texturebg>
+					<lefttexture>progress/osd_progress_position_left.png</lefttexture>
+					<midtexture>progress/osd_progress_position_center.png</midtexture>
+					<righttexture>progress/osd_progress_position_right.png</righttexture>
+					<overlaytexture>-</overlaytexture>
+				</control>
+				<control type="label" id="24">
+					<posx>0</posx>
+					<posy>20</posy>
+					<width>300</width>
+					<height>22</height>
+					<font>title22b</font>
+					<textcolor>title</textcolor>
+					<label>$INFO[Player.Time(H:MM:SS)]</label>
+					<aligny>center</aligny>
+					<align>left</align>
+				</control>
+				<control type="label" id="24">
+					<posx>472</posx>
+					<posy>20</posy>
+					<width>300</width>
+					<height>22</height>
+					<font>title22b</font>
+					<textcolor>grey</textcolor>
+					<label>$INFO[Player.Duration(H:MM:SS)]</label>
+					<aligny>center</aligny>
+					<align>right</align>
+				</control>
+			</control>
+			<control type="group" id="24">
+				<posx>510</posx>
+				<posy>6</posy>
+				<width>300</width>
+				<height>52</height>
+				<control type="multiimage" id="24">
+					<animation effect="fade" time="200">VisibleChange</animation>
+					<posx>10</posx>
+					<posy>1</posy>
+					<width>128</width>
+					<height>50</height>
+					<imagepath>loading_small</imagepath>
+					<timeperimage>12</timeperimage>
+					<fadetime>4</fadetime>
+					<pauseatend>0</pauseatend>
+					<randomize>false</randomize>
+					<loop>yes</loop>
+					<aspectratio>keep</aspectratio>
+				</control>
+				<control type="label" id="24">
+					<description>loading Label</description>
+					<posx>160</posx>
+					<posy>0</posy>
+					<width>150</width>
+					<height>52</height>
+					<align>left</align>
+					<aligny>center</aligny>
+					<font>title20b</font>
+					<textcolor>white</textcolor>
+					<label>[UPPERCASE]$LOCALIZE[51003][/UPPERCASE]</label>
+					<visible>Player.Caching</visible>
+				</control>
+			</control>
+		</control>
+		<!-- codec infos -->
+		<control type="group">
+			<animation effect="fade" time="200">VisibleChange</animation>
+			<posx>128</posx>
+			<posy>10</posy>
+			<control type="image" id="0">
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>1024</width>
+				<height>166</height>
+				<texture border="32">osd_background.png</texture>
+			</control>
+			<control type="label" id="10">
+				<description>row 1 label</description>
+				<posx>25</posx>
+				<posy>10</posy>
+				<width>975</width>
+				<label>-</label>
+				<font>font18b</font>
+				<align>left</align>
+			</control>
+			<control type="label" id="11">
+				<description>row 2 label</description>
+				<posx>25</posx>
+				<posy>50</posy>
+				<width>975</width>
+				<label>-</label>
+				<font>font18b</font>
+				<align>left</align>
+			</control>
+			<control type="label" id="12">
+				<description>row 3 label</description>
+				<posx>25</posx>
+				<posy>90</posy>
+				<width>975</width>
+				<label>-</label>
+				<font>font18b</font>
+				<align>left</align>
+			</control>
+		</control>
+	</controls>
+</window>

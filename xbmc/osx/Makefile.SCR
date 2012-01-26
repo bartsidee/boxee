@@ -1,0 +1,4 @@
+
+SCR:
+	gcc -o install_SCR SmartCrashReportsInstall.o -isysroot /Developer/SDKs/MacOSX10.4u.sdk -mmacosx-version-min=10.4 -framework CoreFoundation -framework AppKit -framework Security -lz install_SCR.c
+

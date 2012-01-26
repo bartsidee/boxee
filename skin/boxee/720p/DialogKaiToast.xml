@@ -1,0 +1,152 @@
+﻿<?xml version="1.0"?>
+<window id="107">
+	<controls>
+		<control type="group">
+			<description>notification</description>
+			<animation effect="fade" time="200" tween="cubic" easing="inout">WindowOpen</animation>
+			<animation effect="fade" time="1000" tween="cubic" easing="inout">WindowClose</animation>
+			<posx>2</posx>
+			<posy>2</posy>
+			<control type="image">
+				<visible>!Control.IsVisible(400) + IsEmpty(control.GetLabel(401))</visible>
+				<description>Small kai - NoPicture &amp; NoCaption</description>
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>800</width>
+				<height>66</height>
+				<texture border="32">action_menu_bg.png</texture>
+			</control>
+			<control type="image">
+				<visible>Control.IsVisible(400) | !IsEmpty(control.GetLabel(401))</visible>
+				<description>Large kai - YesPicture | YesCaption</description>
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>800</width>
+				<height>94</height>
+				<texture border="32">action_menu_bg.png</texture>
+			</control>
+			<control type="image" id="400">
+				<description>avatar</description>
+				<posx>24</posx>
+				<posy>22</posy>
+				<width>50</width>
+				<height>50</height>
+				<texture>-</texture>
+				<aspectratio>scale</aspectratio>
+			</control>
+			<control type="label" id="401">
+				<visible>false</visible>
+				<description>Caption Label - Hidden</description>
+				<posx>94</posx>
+				<posy>22</posy>
+				<width>860</width>
+				<height>22</height>
+				<font>font22b</font>
+				<textcolor>title</textcolor>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>-</label>
+				<scroll>false</scroll>
+			</control>			
+			<control type="label">
+				<visible>!IsEmpty(control.GetLabel(401)) + Control.IsVisible(400)</visible>
+				<description>Caption Label</description>
+				<posx>94</posx>
+				<posy>22</posy>
+				<width>684</width>
+				<height>22</height>
+				<font>font22b</font>
+				<textcolor>title</textcolor>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>$INFO[control.GetLabel(401)]</label>
+				<scroll>false</scroll>
+			</control>
+			<control type="label">
+				<visible>!IsEmpty(control.GetLabel(401)) + !Control.IsVisible(400)</visible>
+				<description>Caption Label</description>
+				<posx>22</posx>
+				<posy>22</posy>
+				<width>756</width>
+				<height>22</height>
+				<font>font22b</font>
+				<textcolor>title</textcolor>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>$INFO[control.GetLabel(401)]</label>
+				<scroll>false</scroll>
+			</control>
+			<control type="label" id="402">
+				<visible>false</visible>
+				<description>Description Button - Hidden</description>
+				<posx>22</posx>
+				<posy>22</posy>
+				<width>860</width>
+				<height>20</height>
+				<font>font20</font>
+				<textcolor>white</textcolor>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>-</label>
+				<scroll>true</scroll>
+			</control>		
+			<control type="label">
+				<visible>!IsEmpty(control.GetLabel(402)) + !Control.IsVisible(400) + IsEmpty(control.GetLabel(401))</visible>
+				<description>Description - NoPicture &amp; NoCaption</description>
+				<posx>22</posx>
+				<posy>22</posy>
+				<width>746</width>
+				<height>22</height>
+				<font>font20</font>
+				<textcolor>white</textcolor>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>$INFO[control.GetLabel(402)]</label>
+				<scroll>true</scroll>
+			</control>
+			<control type="label">
+				<visible>!IsEmpty(control.GetLabel(402)) + !Control.IsVisible(400) + !IsEmpty(control.GetLabel(401))</visible>
+				<description>Description - NoPicture &amp; YesCaption</description>
+				<posx>22</posx>
+				<posy>50</posy>
+				<width>746</width>
+				<height>22</height>
+				<font>font20</font>
+				<textcolor>white</textcolor>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>$INFO[control.GetLabel(402)]</label>
+				<scroll>true</scroll>
+			</control>
+			<control type="label">
+				<visible>!IsEmpty(control.GetLabel(402)) + Control.IsVisible(400) + !IsEmpty(control.GetLabel(401))</visible>
+				<description>Description - YesPicture &amp; YesCaption</description>
+				<posx>94</posx>
+				<posy>50</posy>
+				<width>684</width>
+				<height>22</height>
+				<font>font20</font>
+				<textcolor>white</textcolor>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>$INFO[control.GetLabel(402)]</label>
+				<scroll>true</scroll>
+			</control>   
+			<control type="label">
+				<visible>!IsEmpty(control.GetLabel(402)) + Control.IsVisible(400) + IsEmpty(control.GetLabel(401))</visible>
+				<description>Description - YesPicture &amp; YesCaption</description>
+				<posx>94</posx>
+				<posy>22</posy>
+				<width>684</width>
+				<height>50</height>
+				<font>font20</font>
+				<textcolor>white</textcolor>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>$INFO[control.GetLabel(402)]</label>
+				<scroll>true</scroll>
+				<wrapmultiline>true</wrapmultiline>
+			</control>                   			
+		</control>
+	</controls>
+</window>

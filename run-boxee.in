@@ -1,0 +1,70 @@
+#!/bin/sh
+
+eid=`/usr/bin/id -u`
+
+if [ ${eid} -ne 0 ]
+then
+        echo "must run with root privs to use."
+        exit 1
+fi
+
+BOXEE_HOME=/opt/boxee
+BOXEE_PROC=Boxee
+BOXEE_HOME=${XBMC_HOME=${BOXEE_HOME}}
+export XBMC_HOME=${BOXEE_HOME}
+export BOXEE_HOME
+BOXEE_PID=/tmp/run-boxee.pid
+CURRENT_PATH=`pwd`
+ALREADY_RUN=0
+RESET_HDASNDINTEL=1
+RESET_APPLEIR=1
+GENERATE_CORES=0
+
+if [ -f ${BOXEE_PID} ] ; then
+	CURRENT_PID=`cat ${BOXEE_PID}`
+	COMPARE_PID=`ps -ef | grep run-boxee | grep -v grep | awk '{print $2}' | xargs`
+	for pid in ${COMPARE_PID}
+	do	
+		if [ ${CURRENT_PID} -eq ${pid} ]; then
+			ALREADY_RUN=1
+			BLOCKING_PROC='run-boxee'
+		fi
+	done
+fi
+
+if [ ${ALREADY_RUN} -ne 1 ] && ps -ef | grep "./Boxee" | grep -v grep > /dev/null ; then
+	ALREADY_RUN=1
+	BLOCKING_PROC='boxee'
+fi
+
+if [ ${ALREADY_RUN} -ne 0 ]; then
+	echo "BOXEE is already running... (${BLOCKING_PROC})"
+	exit
+else
+	xsetroot -solid black -cursor_name dot &
+	${BOXEE_HOME}/boxee-set-initial-resolution
+	if [ ${RESET_HDASNDINTEL} -eq 1 ]; then
+		rmmod --force snd_hda_intel
+		modprobe snd_hda_intel
+	fi
+	if [ ${RESET_APPLEIR} -eq 1 ]; then
+		rmmod --force appleir
+		modprobe appleir
+	fi
+	if [ ${GENERATE_CORES} -eq 1 ]; then
+		ulimit -c unlimited
+		echo 1 > /proc/sys/kernel/core_uses_pid
+	fi
+	echo $$ >${BOXEE_PID}
+	while [ 1 ]
+	do
+		${BOXEE_HOME}/${BOXEE_PROC}
+		if [ $? -eq 0 ]; then
+			rm ${BOXEE_PID}
+			pkill -9 run-xinit
+			exit
+		fi
+		echo "*** BOXEE terminated unexpectedly"
+	done
+fi
+rm ${BOXEE_PID}

@@ -1,0 +1,147 @@
+<sources>
+    <programs>
+        <default></default>
+    </programs>
+    <video>
+        <default></default>
+        <source>
+            <name>Boxee Downloads</name>
+            <path>H:/Downloads/Boxee</path>
+        </source>
+        <source>
+            <name>Local Videos</name>
+            <path>H:\My Videos</path>
+        </source>
+        <source>
+            <name>Video Podcasts</name>
+            <path>rss://rss.boxee.tv/video.xml</path>
+            <thumbnail>http://rss.boxee.tv/rssthumb/ch_bxvideo.png</thumbnail>
+        </source>
+        <source>
+            <name>Public Torrents</name>
+            <path>rss://rss.boxee.tv/video_downloads.xml</path>
+	          <thumbnail>http://rss.boxee.tv/rssthumb/ch_bxvideo_dl.png</thumbnail>
+        </source>
+        <source>
+            <name>ON Networks</name>
+            <path>rss://rss.boxee.tv/onnetworks.xml</path>
+            <thumbnail>http://rss.boxee.tv/rssthumb/ch_onnetworks.png</thumbnail>
+        </source>
+        <source>
+            <name>Movie Trailers</name>
+            <path>plugin://video/Movie Trailers/</path>
+            <thumbnail>Q:/plugins/video/Movie Trailers/default.tbn</thumbnail>
+        </source>
+        <source>
+            <name>CNN</name>
+            <path>plugin://video/CNN Video/</path>
+            <thumbnail>Q:/plugins/video/CNN Video/default.tbn</thumbnail>
+        </source>
+        <source>
+            <name>YouTube</name>
+            <path>plugin://video/Youtube/</path>
+            <thumbnail>Q:/plugins/video/Youtube/default.tbn</thumbnail>
+        </source>
+        <source>
+            <name>revision3</name>
+            <path>rss://rss.boxee.tv/revision3.xml/</path>
+            <thumbnail>http://rss.boxee.tv/rssthumb/revision3.png</thumbnail>
+        </source>
+        <source>
+            <name>Hulu</name>
+            <path>rss://dir.boxee.tv/hulu/</path>
+            <thumbnail>http://dir.boxee.tv/hulu.png</thumbnail>
+        </source>
+        <source>
+            <name>Comedy Central</name>
+            <path>rss://dir.boxee.tv/comedycentral/</path>
+            <thumbnail>http://dir.boxee.tv/comedycentral.png</thumbnail>
+        </source>
+        <source>
+            <name>MySpaceTV</name>
+            <path>rss://dir.boxee.tv/myspacetv/</path>
+            <thumbnail>http://dir.boxee.tv/myspacetv.png</thumbnail>
+        </source>
+        <source>
+            <name>CBS</name>
+            <path>rss://dir.boxee.tv/cbs/</path>
+            <thumbnail>http://dir.boxee.tv/cbs.png</thumbnail>
+        </source>
+        <source>
+            <name>Next New Networks</name>
+            <path>rss://rss.boxee.tv/nextnewnetworks.xml</path>
+            <thumbnail>http://rss.boxee.tv/rssthumb/nextnewnetworks.png</thumbnail>
+        </source>
+        <source>
+            <name>My Feeds</name>
+            <path>rss://app.boxee.tv/rss/feed/5/xml</path>
+            <thumbnail>http://rss.boxee.tv/rssthumb/rss_personal.png</thumbnail>
+        </source>
+    </video>
+    <music>
+        <default></default>
+        <source>
+            <name>Last.fm</name>
+            <path>lastfm://</path>
+            <thumbnail>Q:/skin/Boxee Skin NG/media/lastfm.png</thumbnail>
+        </source>
+        <source>
+            <name>SHOUTcast Radio</name>
+            <path>shout://</path>
+            <thumbnail>Q:/skin/Boxee Skin NG/media/winamp_logo.png</thumbnail>
+        </source>
+        <source>
+            <name>Audio Podcasts</name>
+            <path>rss://rss.boxee.tv/audio.xml</path>
+            <thumbnail>http://rss.boxee.tv/rssthumb/ch_bxaudio.png</thumbnail>
+        </source>
+        <source>
+            <name>Local Music</name>
+            <path>H:\My Music</path>
+        </source>
+        <source>
+            <name>Boxee Downloads</name>
+            <path>H:/Downloads/Boxee</path>
+        </source>
+        <source>
+            <name>NPR</name>
+            <path>rss://rss.boxee.tv/npr.xml</path>
+            <thumbnail>http://rss.boxee.tv/rssthumb/npr.png</thumbnail>
+        </source>
+        <source>
+            <name>Jamendo</name>
+            <path>rss://rss.boxee.tv/jamendo/jamendo_genres.xml/</path>
+            <thumbnail>http://rss.boxee.tv/rssthumb/jamendo.png</thumbnail>
+        </source>
+        <source>
+            <name>BBC</name>
+            <path>rss://rss.boxee.tv/bbc.xml/</path>
+            <thumbnail>http://rss.boxee.tv/rssthumb/bbc.png</thumbnail>
+        </source>
+        <source>
+            <name>My Feeds</name>
+            <path>rss://app.boxee.tv/rss/feed/6/xml</path>
+            <thumbnail>http://rss.boxee.tv/rssthumb/rss_personal.png</thumbnail>
+        </source>
+    </music>
+    <pictures>
+        <default></default>
+        <source>
+            <name>Flickr</name>
+            <path>plugin://pictures/flickr/</path>
+            <thumbnail>Q:/plugins/pictures/flickr/default.tbn</thumbnail>
+        </source>
+        <source>
+            <name>Picasa</name>
+            <path>plugin://pictures/PicasaWeb/</path>
+            <thumbnail>Q:/plugins/pictures/PicasaWeb/default.tbn</thumbnail>
+        </source>
+        <source>
+            <name>Local Pictures</name>
+            <path>H:\My Pictures</path>
+        </source>
+    </pictures>
+    <files>
+        <default></default>
+    </files>
+</sources>

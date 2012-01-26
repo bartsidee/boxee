@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<window id="10479">
+	<defaultcontrol always="true">9000</defaultcontrol>
+	<allowoverlay>yes</allowoverlay>
+	<controls>
+		<include>Common_Background</include>
+		<include>Common_Status</include>
+		<control type="group" id="9000">
+			<include>BrowseListsAnimation</include>
+			<control type="label">
+				<include>BrowseMainTitle</include>
+				<label>54023</label>
+			</control>
+			<control type="label">
+				<include>BrowseSubTitle</include>
+				<label>[UPPERCASE]$INFO[Window.Property(displaypath)][COLOR grey]$INFO[Container.NumItems, (, $LOCALIZE[54059])][/COLOR][/UPPERCASE]</label>
+			</control>
+			<control type="group">
+				<include>BrowseLocalLineView</include>
+				<include>BrowseEmptyList</include>
+			</control>
+		</control>
+		<control type="group" id="8000">
+			<include>BrowseLeftMenuAnimation</include>
+			<include>BrowseLeftMenuBackground</include>
+			<control type="grouplist">
+				<include>BrowseLeftMenu</include>
+				<control type="label">
+					<include>BrowseLeftMenuTitle</include>
+					<label>54012</label>
+				</control>
+				<control type="label">
+					<include>BrowseLeftMenuSubtitle</include>
+					<label>54013</label>
+				</control>
+				<control type="button" id="110">
+					<include>BrowseLeftMenuDropDown</include>
+					<label>$INFO[Window.Property(sort-label)]</label>
+				</control>
+				<control type="group" id="401">
+					<width>224</width>
+					<height>16</height>
+				</control>
+				<control type="label" id="112">
+					<include>BrowseLeftMenuTitle</include>
+					<label>54018</label>
+				</control>
+				<control type="button" id="130">
+					<include>BrowseLeftMenuButton</include>
+					<label>54024</label>
+				</control>
+				<control type="button" id="131">
+					<include>BrowseLeftMenuButton</include>
+					<label>54025</label>
+				</control>
+				<control type="button" id="160">
+					<include>BrowseLeftMenuButton</include>
+					<label>$LOCALIZE[53715]</label>
+				</control>
+			</control>
+		</control>
+		<include>BrowseLoadingAnimation</include>
+		<include>Common_Now_Playing</include>
+	</controls>
+</window>

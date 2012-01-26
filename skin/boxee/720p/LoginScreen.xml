@@ -1,0 +1,1012 @@
+﻿<?xml version="1.0"?>
+<window id="29">
+	<defaultcontrol always="true">52</defaultcontrol>
+	<allowoverlay>no</allowoverlay>
+	<controls>
+		<include>Window_OpenClose_Animation</include>
+		<include>Common_Background</include>
+		<control type="image">
+			<posx>40</posx>
+			<posy>24</posy>
+			<width>120</width>
+			<height>25</height>
+			<texture>boxee_logo.png</texture>
+			<colordiffuse>80FFFFFF</colordiffuse>
+		</control>
+		<control type="group">
+			<posx>1150</posx>
+			<posy>22</posy>
+			<control type="group">
+				<visible>true + System.timeisampm</visible>						
+				<control type="image">
+					<posx>-36</posx>
+					<posy>0</posy>
+					<width>28</width>
+					<height>28</height>
+					<texture>icons/icon_clock.png</texture>
+				</control>
+				<control type="label">
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>500</width>
+					<height>28</height>
+					<label>$INFO[System.TimeNoAmPm]</label>
+					<font>title26b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>grey</textcolor>
+				</control>
+			</control>
+			<control type="group">
+				<visible>true + !System.timeisampm</visible>						
+				<control type="image">
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>28</width>
+					<height>28</height>
+					<texture>icons/icon_clock.png</texture>
+				</control>
+				<control type="label">
+					<posx>36</posx>
+					<posy>0</posy>
+					<width>500</width>
+					<height>28</height>
+					<label>$INFO[System.TimeNoAmPm]</label>
+					<font>title26b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>grey</textcolor>
+				</control>
+			</control>
+		</control>
+		<control type="label">
+			<visible>true + !boxee.HasInternetConnection</visible>            
+			<posx>1254</posx>
+			<posy>50</posy>
+			<width>75</width>
+			<height>16</height>
+			<font>title16b</font>
+			<align>right</align>
+			<aligny>center</aligny>
+			<textcolor>title</textcolor>
+			<label>[UPPERCASE]$LOCALIZE[52011][/UPPERCASE]</label>
+		</control>
+		<control type="group">
+			<visible>!Control.IsVisible(8000)</visible>
+			<posy>250</posy>
+			<control type="fixedlist" id="52">
+				<animation type="Conditional" condition="stringcompare(Container(52).NumItems,4)">
+					<effect type="slide" start="0" end="104" time="0" delay="0"/>
+				</animation>
+				<animation type="Conditional" condition="stringcompare(Container(52).NumItems,3)">
+					<effect type="slide" start="0" end="208" time="0" delay="0"/>
+				</animation>
+				<animation type="Conditional" condition="stringcompare(Container(52).NumItems,2)">
+					<effect type="slide" start="0" end="312" time="0" delay="0"/>
+				</animation>
+				<animation type="Conditional" condition="stringcompare(Container(52).NumItems,1)">
+					<effect type="slide" start="0" end="416" time="0" delay="0"/>
+				</animation>
+				<posx>120</posx>
+				<posy>0</posy>
+				<width>1040</width>
+				<height>270</height>
+				<onleft>-</onleft>
+				<onright>-</onright>
+				<onup>8000</onup>
+				<ondown>60</ondown>
+				<pagecontrol>-</pagecontrol>
+				<orientation>horizontal</orientation>
+				<focusposition>0</focusposition>
+				<itemlayout width="208" height="270">
+					<control type="image">
+						<include>BrowseThumbAnimationUnfocus</include>
+						<posx>20</posx>
+						<posy>0</posy>
+						<width>168</width>
+						<height>168</height>
+						<texture>$INFO[ListItem.Thumb]</texture>
+						<bordertexture border="12">masks/thumb_background.png</bordertexture>
+						<bordersize>12</bordersize>
+						<texture blend="false">$INFO[ListItem.Thumb]</texture>
+						<aspectratio scalediffuse="false">scale</aspectratio>
+					</control>
+					<control type="label">
+						<animation effect="zoom" end="90,90" time="0" center="104,104" condition="true">Conditional</animation>
+						<posx>104</posx>
+						<posy>170</posy>
+						<width>208</width>
+						<height>32</height>
+						<font>title24b</font>
+						<align>center</align>
+						<aligny>center</aligny>
+						<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+						<textcolor>grey</textcolor>
+						<selectedcolor>grey</selectedcolor>
+					</control>
+				</itemlayout>
+				<focusedlayout width="208" height="270">
+					<control type="group">
+						<visible>!Control.HasFocus(52) + !Control.HasFocus(60) + !ControlGroup(8000).IsVisible</visible>
+						<control type="image">
+							<include>BrowseThumbAnimationUnfocus</include>
+							<posx>20</posx>
+							<posy>0</posy>
+							<width>168</width>
+							<height>168</height>
+							<bordertexture border="12">masks/thumb_background.png</bordertexture>
+							<bordersize>12</bordersize>
+							<texture blend="false">$INFO[ListItem.Thumb]</texture>
+							<aspectratio scalediffuse="false">scale</aspectratio>
+						</control>
+						<control type="label">
+							<animation effect="zoom" end="90,90" time="0" center="104,104" condition="true">Conditional</animation>
+							<posx>104</posx>
+							<posy>170</posy>
+							<width>208</width>
+							<height>32</height>
+							<font>title24b</font>
+							<align>center</align>
+							<aligny>center</aligny>
+							<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+							<textcolor>grey</textcolor>
+							<selectedcolor>grey</selectedcolor>
+						</control>
+					</control>
+					<control type="group">
+						<visible>Control.HasFocus(52) | Control.HasFocus(60) | ControlGroup(8000).IsVisible</visible>
+						<control type="image">
+							<include>BrowseThumbAnimationFocus</include>
+							<posx>12</posx>
+							<posy>-8</posy>
+							<width>184</width>
+							<height>184</height>
+							<bordertexture border="20">masks/thumb_background_on.png</bordertexture>
+							<bordersize>20</bordersize>
+							<texture blend="false">$INFO[ListItem.Thumb]</texture>
+							<aspectratio scalediffuse="false">scale</aspectratio>
+						</control>
+					</control>
+					<control type="label">
+						<visible>Control.HasFocus(52)</visible>						
+						<animation effect="zoom" start="90,90" end="100,100" time="200" center="104,104" tween="cubic" easing="out">Focus</animation>
+						<posx>104</posx>
+						<posy>170</posy>
+						<width>208</width>
+						<height>32</height>
+						<font>title24b</font>
+						<align>center</align>
+						<aligny>center</aligny>
+						<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+						<textcolor>white</textcolor>
+						<selectedcolor>white</selectedcolor>
+					</control>
+					<control type="label">
+						<visible>Control.HasFocus(60) | ControlGroup(8000).IsVisible</visible>						
+						<animation effect="zoom" end="90,90" time="0" center="104,104" condition="true">Conditional</animation>
+						<posx>104</posx>
+						<posy>170</posy>
+						<width>208</width>
+						<height>32</height>
+						<font>title24b</font>
+						<align>center</align>
+						<aligny>center</aligny>
+						<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+						<textcolor>white</textcolor>
+						<selectedcolor>white</selectedcolor>
+					</control>
+					<control type="image">
+						<visible>!Control.HasFocus(60)</visible>
+						<posx>88</posx>
+						<posy>218</posy>
+						<width>32</width>
+						<height>32</height>
+						<texture>icons/icon_menu_settings_small.png</texture>
+						<colordiffuse>40FFFFFF</colordiffuse>
+					</control>
+					<control type="image">
+						<visible>Control.HasFocus(60)</visible>
+						<posx>88</posx>
+						<posy>218</posy>
+						<width>32</width>
+						<height>32</height>
+						<texture>icons/icon_menu_settings_small.png</texture>
+					</control>
+					<control type="image">
+						<visible>Control.HasFocus(60)</visible>
+						<posx>74</posx>
+						<posy>204</posy>
+						<width>60</width>
+						<height>60</height>
+						<texture border="26">button_option_on.png</texture>
+					</control>
+				</focusedlayout>
+			</control>
+			<control type="button" id="60">
+				<posx>120</posx>
+				<posy>210</posy>
+				<width>1040</width>
+				<height>60</height>
+				<onup>52</onup>
+				<ondown>9000</ondown>
+				<onright>52</onright>
+				<onleft>52</onleft>
+				<texturenofocus>-</texturenofocus>
+				<texturefocus>-</texturefocus>
+				<textureclick>-</textureclick>
+			</control>
+		</control>
+		<control type="group" id="8000">
+			<control type="group">
+				<posx>380</posx>
+				<posy>36</posy>
+				<control type="image">
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>520</width>
+					<height>522</height>
+					<texture border="64">dialog_background.png</texture>
+				</control>
+				<control type="label" id="8011">
+					<description>Username title</description>
+					<posx>31</posx>
+					<posy>39</posy>
+					<width>550</width>
+					<height>28</height>
+					<font>title28b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<label>-</label>
+					<textcolor>FF3B2D06</textcolor>
+					<!--Username Title-->
+				</control>
+				<control type="group" id="8050">
+					<posx>28</posx>
+					<posy>120</posy>
+					<control type="radiobutton" id="8051">
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>210</width>
+						<height>40</height>
+						<onup>-</onup>
+						<ondown>8500</ondown>
+						<onright>8052</onright>
+						<onleft>-</onleft>
+						<font>font20b</font>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>40</textoffsetx>
+						<texturenofocus>-</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<textureradiofocus>icons/icon_checkbox_full.png</textureradiofocus>
+						<textureradionofocus>icons/icon_checkbox_empty.png</textureradionofocus>
+						<pulseonselect>false</pulseonselect>
+						<radioposx>10</radioposx>
+						<radioposy>10</radioposy>
+						<radiowidth>20</radiowidth>
+						<radioheight>20</radioheight>
+						<label>[UPPERCASE]$LOCALIZE[53407][/UPPERCASE]</label>
+					</control>
+					<control type="radiobutton" id="8052">
+						<enable>true + boxee.HasInternetConnection</enable>
+						<posx>250</posx>
+						<posy>0</posy>
+						<width>210</width>
+						<height>40</height>
+						<onup>-</onup>
+						<ondown>8500</ondown>
+						<onright>-</onright>
+						<onleft>8051</onleft>
+						<font>font20b</font>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>40</textoffsetx>
+						<texturenofocus>-</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<textureradiofocus>icons/icon_checkbox_full.png</textureradiofocus>
+						<textureradionofocus>icons/icon_checkbox_empty.png</textureradionofocus>
+						<pulseonselect>false</pulseonselect>
+						<radioposx>10</radioposx>
+						<radioposy>10</radioposy>
+						<radiowidth>20</radiowidth>
+						<radioheight>20</radioheight>
+						<label>[UPPERCASE]$LOCALIZE[53408][/UPPERCASE]</label>
+					</control>
+				</control>
+				<control type="group" id="8500">
+					<control type="group">
+						<control type="group" id="8600">
+							<control type="group">
+								<control type="label">
+									<description>Username label</description>
+									<posx>28</posx>
+									<posy>186</posy>
+									<height>18</height>
+									<width>200</width>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>white</textcolor>
+									<font>font18b</font>
+									<label>[UPPERCASE]$LOCALIZE[51891][/UPPERCASE]</label>
+									<!--Username:-->
+								</control>
+								<control type="label" id="8610">
+									<description>Username</description>
+									<posx>156</posx>
+									<posy>180</posy>
+									<height>24</height>
+									<width>250</width>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>grey</textcolor>
+									<font>font24b</font>
+									<label>-</label>
+								</control>
+									<control type="edit" id="8601">
+									<description>Username</description>
+									<posx>142</posx>
+									<posy>180</posy>
+									<width>270</width>
+									<height>40</height>
+									<font>font24b</font>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>white</textcolor>
+									<focusedcolor>darkgrey</focusedcolor>
+									<textoffsetx>14</textoffsetx>
+									<texturenofocus border="20">search_text_box.png</texturenofocus>
+									<texturefocus border="20">search_text_box_on.png</texturefocus>
+									<textureclick border="20">search_text_box_click.png</textureclick>
+									<onleft>-</onleft>
+									<onright>-</onright>
+									<onup>8050</onup>
+									<ondown>8602</ondown>
+									<onnext>8602</onnext>
+								</control>
+								<control type="label">
+									<description>Password label</description>
+									<posx>28</posx>
+									<posy>250</posy>
+									<height>18</height>
+									<width>200</width>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>white</textcolor>
+									<font>font18b</font>
+									<label>[UPPERCASE]$LOCALIZE[51892][/UPPERCASE]</label>
+									<!--Password:-->
+								</control>
+								<control type="edit" id="8602">
+									<description>Password</description>
+									<posx>142</posx>
+									<posy>244</posy>
+									<width>270</width>
+									<height>40</height>
+									<font>font24b</font>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>white</textcolor>
+									<focusedcolor>darkgrey</focusedcolor>
+									<textoffsetx>14</textoffsetx>
+									<texturenofocus border="20">search_text_box.png</texturenofocus>
+									<texturefocus border="20">search_text_box_on.png</texturefocus>
+									<textureclick border="20">search_text_box_click.png</textureclick>
+									<password>true</password>
+									<onleft>-</onleft>
+									<onright>-</onright>
+									<onup>8601</onup>
+									<onprev>8601</onprev>
+									<ondown>8603</ondown>
+									<onnext>8603</onnext>
+								</control>
+								<control type="radiobutton" id="8603">
+									<posx>134</posx>
+									<posy>288</posy>
+									<width>286</width>
+									<height>52</height>
+									<onleft>-</onleft>
+									<onright>-</onright>
+									<onup>8602</onup>
+									<onprev>8602</onprev>
+									<ondown>8604</ondown>
+									<onnext>8604</onnext>
+									<font>font18b</font>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>grey</textcolor>
+									<focusedcolor>white</focusedcolor>
+									<label>[UPPERCASE]$LOCALIZE[51893][/UPPERCASE]</label>
+									<!--Remember Password-->
+									<textureradiofocus>icons/icon_checkbox_full.png</textureradiofocus>
+									<textureradionofocus>icons/icon_checkbox_empty.png</textureradionofocus>
+									<radioposx>20</radioposx>
+									<radioposy>0</radioposy>
+									<radiowidth>20</radiowidth>
+									<radioheight>20</radioheight>
+									<textoffsetx>50</textoffsetx>
+									<texturenofocus border="20">-</texturenofocus>
+									<texturefocus border="20">button_action_menu_source_on.png</texturefocus>
+									<textureclick border="20">button_action_menu_source_click.png</textureclick>
+								</control>
+								<control type="button" id="8604">
+									<posx>16</posx>
+									<posy>408</posy>
+									<width>120</width>
+									<height>54</height>
+									<align>center</align>
+									<aligny>center</aligny>
+									<textcolor>grey</textcolor>
+									<focusedcolor>white</focusedcolor>
+									<texturenofocus border="27">-</texturenofocus>
+									<texturefocus border="27">button_action_menu_source_on.png</texturefocus>
+									<textureclick border="27">button_action_menu_source_click.png</textureclick>
+									<font>title22b</font>
+									<label>[UPPERCASE]$LOCALIZE[51050][/UPPERCASE]</label>
+									<!--Login-->
+									<onup>8603</onup>
+									<ondown>9000</ondown>
+									<onleft>-</onleft>
+									<onright>8605</onright>
+									<onclick>-</onclick>
+								</control>
+								<control type="button" id="8605">
+									<posx>116</posx>
+									<posy>408</posy>
+									<width>110</width>
+									<height>54</height>
+									<align>center</align>
+									<aligny>center</aligny>
+									<textcolor>grey</textcolor>
+									<focusedcolor>white</focusedcolor>
+									<texturenofocus border="27">-</texturenofocus>
+									<texturefocus border="27">button_action_menu_source_on.png</texturefocus>
+									<textureclick border="27">button_action_menu_source_click.png</textureclick>
+									<font>title22b</font>
+									<label>[UPPERCASE]$LOCALIZE[51070][/UPPERCASE]</label>
+									<!--Cancel-->
+									<onup>8603</onup>
+									<ondown>9000</ondown>
+									<onleft>8604</onleft>
+									<onright>8606</onright>
+									<onclick>-</onclick>
+								</control>
+								<control type="button" id="8606">
+									<posx>360</posx>
+									<posy>408</posy>
+									<width>150</width>
+									<height>44</height>
+									<align>center</align>
+									<aligny>center</aligny>
+									<textcolor>grey</textcolor>
+									<focusedcolor>white</focusedcolor>
+									<texturenofocus border="22">-</texturenofocus>
+									<texturefocus border="22">button_action_menu_source_on.png</texturefocus>
+									<textureclick border="22">button_action_menu_source_click.png</textureclick>
+									<font>font16b</font>
+									<label>[UPPERCASE]$LOCALIZE[53409][/UPPERCASE]</label>
+									<!--Remove User-->
+									<onup>8603</onup>
+									<ondown>-</ondown>
+									<onleft>8605</onleft>					
+									<onright>-</onright>
+									<onclick>-</onclick>
+								</control>
+							</control>
+						</control>
+						<control type="group" id="8700">
+							<control type="group">
+								<control type="label">
+									<description>Email label</description>
+									<posx>28</posx>
+									<posy>186</posy>
+									<height>18</height>
+									<width>200</width>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>white</textcolor>
+									<font>font18b</font>
+									<label>[UPPERCASE]$LOCALIZE[51895][/UPPERCASE]</label>
+									<!--Username:-->
+								</control>
+								<control type="edit" id="8701">
+									<description>Email</description>
+									<posx>142</posx>
+									<posy>180</posy>
+									<width>270</width>
+									<height>40</height>
+									<font>font24b</font>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>white</textcolor>
+									<focusedcolor>darkgrey</focusedcolor>
+									<textoffsetx>14</textoffsetx>
+									<texturenofocus border="20">search_text_box.png</texturenofocus>
+									<texturefocus border="20">search_text_box_on.png</texturefocus>
+									<textureclick border="20">search_text_box_click.png</textureclick>
+									<onleft>-</onleft>
+									<onright>-</onright>
+									<onup>8050</onup>
+									<ondown>8740</ondown>
+									<onnext>8740</onnext>
+								</control>
+								<control type="label">
+									<visible>true + window(10029).property(email-is-valid) + !Control.IsEmpty(8701)</visible>				
+									<description>valid email label</description>
+									<posx>430</posx>
+									<posy>175</posy>
+									<height>48</height>
+									<width>70</width>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>green</textcolor>
+									<font>font18b</font>
+									<label>[UPPERCASE]$LOCALIZE[53450][/UPPERCASE]</label>
+									<!--valid email-->
+								</control>
+								<control type="label">
+									<visible>true + !window(10029).property(email-is-valid) + !Control.IsEmpty(8701)</visible>
+									<description>valid email label</description>
+									<posx>430</posx>
+									<posy>175</posy>
+									<height>48</height>
+									<width>70</width>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>red</textcolor>
+									<font>font18b</font>
+									<label>[UPPERCASE]$LOCALIZE[53451][/UPPERCASE]</label>
+									<!--valid email-->
+								</control>
+								<control type="label">
+									<description>possible username</description>
+									<posx>28</posx>
+									<posy>240</posy>
+									<height>48</height>
+									<width>200</width>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>white</textcolor>
+									<font>font18b</font>
+									<label>[UPPERCASE]$LOCALIZE[51896][/UPPERCASE]</label>
+									<!--username list-->
+								</control>
+								<control type="group">
+									<visible>window(10029).property(loading)</visible>
+									<animation effect="fade" time="100">VisibleChange</animation>
+									<control type="multiimage">
+										<posx>162</posx>
+										<posy>240</posy>
+										<width>200</width>
+										<height>24</height>
+										<imagepath>loading</imagepath>
+										<timeperimage>12</timeperimage>
+										<fadetime>4</fadetime>
+										<pauseatend>0</pauseatend>
+										<randomize>false</randomize>
+										<loop>yes</loop>
+										<aspectratio>keep</aspectratio>
+										<colordiffuse>title</colordiffuse>		
+									</control>
+								</control>
+								<control type="togglebutton" id="8740">
+									<posx>142</posx>
+									<posy>242</posy>
+									<width>270</width>
+									<height>40</height>
+									<include>BrowseLeftMenuDropDown</include>
+									<!-- include>BrowseLeftMenuSearchAnimation</include -->
+									<label>$INFO[Window.Property(choosen-username)]</label>
+									<onup>8701</onup>
+									<ondown>8702</ondown>
+								</control>
+								<control type="label">
+									<visible>true + control.IsEnabled(8702)</visible>
+									<description>Password label</description>
+									<posx>28</posx>
+									<posy>295</posy>
+									<height>48</height>
+									<width>200</width>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>white</textcolor>
+									<font>font18b</font>
+									<label>[UPPERCASE]$LOCALIZE[51897][/UPPERCASE]</label>
+									<!--choose[CR]password-->
+								</control>
+								<control type="label">
+									<visible>true + !control.IsEnabled(8702)</visible>
+									<description>Password label</description>
+									<posx>28</posx>
+									<posy>295</posy>
+									<height>48</height>
+									<width>200</width>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>disabled</textcolor>
+									<font>font18b</font>
+									<label>[UPPERCASE]$LOCALIZE[51897][/UPPERCASE]</label>
+									<!--choose[CR]password-->
+								</control>								
+								<control type="edit" id="8702">
+									<description>Password</description>
+									<posx>142</posx>
+									<posy>300</posy>
+									<width>270</width>
+									<height>40</height>
+									<font>font24b</font>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>white</textcolor>
+									<focusedcolor>darkgrey</focusedcolor>
+									<textoffsetx>14</textoffsetx>
+									<texturenofocus border="20">search_text_box.png</texturenofocus>
+									<texturefocus border="20">search_text_box_on.png</texturefocus>
+									<textureclick border="20">search_text_box_click.png</textureclick>
+									<password>true</password>
+									<onleft>-</onleft>
+									<onright>-</onright>
+									<onup>8740</onup>
+									<onprev>8740</onprev>	
+									<ondown>8703</ondown>
+									<onnext>8703</onnext>
+								</control>
+								<control type="label">
+									<visible>true + window(10029).property(password-is-valid) + !Control.IsEmpty(8702)</visible>
+									<description>valid password label</description>
+									<posx>430</posx>
+									<posy>295</posy>
+									<height>48</height>
+									<width>70</width>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>green</textcolor>
+									<font>font18b</font>
+									<label>[UPPERCASE]$LOCALIZE[53450][/UPPERCASE]</label>
+								</control>
+								<control type="label">
+									<visible>true + !window(10029).property(password-is-valid) + !Control.IsEmpty(8702)</visible>
+									<description>valid password label</description>
+									<posx>430</posx>
+									<posy>295</posy>
+									<height>48</height>
+									<width>70</width>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>red</textcolor>
+									<font>font18b</font>
+									<label>[UPPERCASE]$LOCALIZE[53451][/UPPERCASE]</label>
+								</control>
+								<control type="label">
+									<visible>true + control.isenabled(8703)</visible>
+									<description>Password label</description>
+									<posx>28</posx>
+									<posy>355</posy>
+									<height>48</height>
+									<width>200</width>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>white</textcolor>
+									<font>font18b</font>
+									<label>[UPPERCASE]$LOCALIZE[53457][/UPPERCASE]</label>
+									<!--Re-type[CR]password-->
+								</control>
+								<control type="label">
+									<visible>true + !control.isenabled(8703)</visible>
+									<description>Password label</description>
+									<posx>28</posx>
+									<posy>355</posy>
+									<height>48</height>
+									<width>200</width>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>disabled</textcolor>
+									<font>font18b</font>
+									<label>[UPPERCASE]$LOCALIZE[53457][/UPPERCASE]</label>
+									<!--Re-type[CR]password-->
+								</control>								
+								<control type="edit" id="8703">
+									<description>Password</description>
+									<posx>142</posx>
+									<posy>360</posy>
+									<width>270</width>
+									<height>40</height>
+									<font>font24b</font>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>white</textcolor>
+									<focusedcolor>darkgrey</focusedcolor>
+									<textoffsetx>14</textoffsetx>
+									<texturenofocus border="20">search_text_box.png</texturenofocus>
+									<texturefocus border="20">search_text_box_on.png</texturefocus>
+									<textureclick border="20">search_text_box_click.png</textureclick>
+									<password>true</password>
+									<onleft>-</onleft>
+									<onright>-</onright>
+									<onup>8702</onup>
+									<onprev>8702</onprev>	
+									<ondown>8720</ondown>
+									<onnext>8720</onnext>
+								</control>
+								<control type="label">
+									<visible>true + window(10029).property(retype-password-is-valid) + !Control.IsEmpty(8703)</visible>
+									<description>valid password label</description>
+									<posx>430</posx>
+									<posy>355</posy>
+									<height>48</height>
+									<width>70</width>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>green</textcolor>
+									<font>font18b</font>
+									<label>[UPPERCASE]$LOCALIZE[53458][/UPPERCASE]</label>
+								</control>
+								<control type="label">
+									<visible>true + !window(10029).property(retype-password-is-valid) + !Control.IsEmpty(8703)</visible>
+									<description>valid password label</description>
+									<posx>430</posx>
+									<posy>355</posy>
+									<height>48</height>
+									<width>70</width>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>red</textcolor>
+									<font>font18b</font>
+									<label>[UPPERCASE]$LOCALIZE[53459][/UPPERCASE]</label>
+								</control>														
+								<control type="group" id="8720">
+									<onup>8703</onup>
+									<ondown>8730</ondown>
+									<control type="group">
+										<control type="button" id="8708">
+											<posx>16</posx>
+											<posy>408</posy>
+											<width>110</width>
+											<height>54</height>
+											<align>center</align>
+											<aligny>center</aligny>
+											<textcolor>grey</textcolor>
+											<focusedcolor>white</focusedcolor>
+											<texturenofocus border="27">-</texturenofocus>
+											<texturefocus border="27">button_action_menu_source_on.png</texturefocus>
+											<textureclick border="27">button_action_menu_source_click.png</textureclick>
+											<font>title22b</font>
+											<label>[UPPERCASE]$LOCALIZE[51070][/UPPERCASE]</label>
+											<!--Cancel-->
+											<onup>8703</onup>
+											<ondown>8730</ondown>
+											<onleft>-</onleft>
+											<onright>8707</onright>
+											<onclick>-</onclick>
+										</control>
+										<control type="button" id="8707">
+											<posx>116</posx>
+											<posy>408</posy>
+											<width>120</width>
+											<height>54</height>
+											<align>center</align>
+											<aligny>center</aligny>
+											<textcolor>grey</textcolor>
+											<focusedcolor>white</focusedcolor>
+											<texturenofocus border="27">-</texturenofocus>
+											<texturefocus border="27">button_action_menu_source_on.png</texturefocus>
+											<textureclick border="27">button_action_menu_source_click.png</textureclick>
+											<font>title22b</font>
+											<label>[UPPERCASE]$LOCALIZE[53449][/UPPERCASE]</label>
+											<!--Done-->
+											<onup>8703</onup>
+											<ondown>8730</ondown>
+											<onleft>8708</onleft>
+											<onright>-</onright>
+											<onclick>-</onclick>
+										</control>
+									</control>
+								</control>									
+								<control type="group" id="8730">
+									<control type="group">
+										<control type="label" id="8735">
+											<description>TOU</description>
+											<posx>30</posx>
+											<posy>460</posy>
+											<height>40</height>
+											<width>440</width>
+											<align>left</align>
+											<aligny>left</aligny>
+											<textcolor>grey</textcolor>
+											<font>font14b</font>
+										</control>
+										<control type="button" id="8736">
+											<posx>10</posx>
+											<posy>472</posy>
+											<width>150</width>
+											<height>40</height>
+											<align>center</align>
+											<aligny>center</aligny>
+											<textcolor>white</textcolor>
+											<focusedcolor>white</focusedcolor>
+											<texturenofocus border="17">-</texturenofocus>
+											<texturefocus border="17">button_action_menu_source_on.png</texturefocus>
+											<textureclick border="17">button_action_menu_source_click.png</textureclick>
+											<font>font14b</font>
+											<label>[UPPERCASE]1. $LOCALIZE[53436][/UPPERCASE]</label>
+											<!--TOU-->
+											<onup>8720</onup>
+											<ondown>9000</ondown>
+											<onleft>-</onleft>
+											<onright>8738</onright>
+											<onclick>-</onclick>
+										</control>								  
+										<control type="label" id="8737">
+											<description>TOU</description>
+											<visible>false</visible>
+											<posx>166</posx>
+											<posy>482</posy>
+											<height>40</height>
+											<width>30</width>
+											<align>left</align>
+											<aligny>left</aligny>
+											<textcolor>grey</textcolor>
+											<font>font14b</font>
+											<label>$LOCALIZE[53437]</label>
+										</control>
+										<control type="button" id="8738">
+											<posx>150</posx>
+											<posy>472</posy>
+											<width>166</width>
+											<height>40</height>
+											<align>center</align>
+											<aligny>center</aligny>
+											<textcolor>white</textcolor>
+											<focusedcolor>white</focusedcolor>
+											<texturenofocus border="17">-</texturenofocus>
+											<texturefocus border="17">button_action_menu_source_on.png</texturefocus>
+											<textureclick border="17">button_action_menu_source_click.png</textureclick>
+											<font>font14b</font>
+											<label>[UPPERCASE]2. $LOCALIZE[53438][/UPPERCASE]</label>
+											<!--PRIVACY-->
+											<onup>8720</onup>
+											<ondown>9000</ondown>
+											<onleft>8736</onleft>
+											<onright>-</onright>
+											<onclick>-</onclick>
+										</control>
+										<control type="label" id="8739">
+											<description>TOU</description>
+											<visible>false</visible>
+											<posx>360</posx>
+											<posy>482</posy>
+											<height>40</height>
+											<width>150</width>
+											<align>left</align>
+											<aligny>left</aligny>
+											<textcolor>grey</textcolor>
+											<font>font14b</font>
+											<label>$LOCALIZE[53439]</label>
+										</control>																																																																														
+									</control>
+								</control>
+							</control>
+						</control>
+					</control>
+				</control>
+			</control>
+		</control>
+		<control type="image">
+			<posx>410</posx>
+			<posy>562</posy>
+			<width>460</width>
+			<height>134</height>
+			<texture border="32">osd_background.png</texture>
+		</control>
+		<control type="list" id="9000">
+			<posx>420</posx>
+			<posy>566</posy>
+			<width>440</width>
+			<height>120</height>
+			<onup>60</onup>
+			<onright>-</onright>
+			<onleft>-</onleft>
+			<ondown>-</ondown>
+			<scrolltime>200</scrolltime>
+			<pagecontrol>-</pagecontrol>
+			<orientation>horizontal</orientation>
+			<itemlayout width="110" height="90">
+				<control type="image">
+					<posx>27</posx>
+					<posy>17</posy>
+					<width>56</width>
+					<height>56</height>
+					<colordiffuse>80FFFFFF</colordiffuse>
+					<texture>$INFO[ListItem.Thumb]</texture>
+				</control>
+				<control type="label">
+					<posx>55</posx>
+					<posy>84</posy>
+					<width>200</width>
+					<height>40</height>
+					<font>title16b</font>
+					<align>center</align>
+					<aligny>top</aligny>
+					<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+					<textcolor>grey</textcolor>
+				</control>
+			</itemlayout>
+			<focusedlayout width="110" height="90">
+				<control type="image">
+					<visible>Control.HasFocus(9000)</visible>
+					<posx>10</posx>
+					<posy>0</posy>
+					<width>90</width>
+					<height>90</height>
+					<texture border="30">button_action_menu_source_on.png</texture>
+				</control>
+				<control type="image">
+					<visible>!Control.HasFocus(9000)</visible>
+					<posx>27</posx>
+					<posy>17</posy>
+					<width>56</width>
+					<height>56</height>
+					<colordiffuse>80FFFFFF</colordiffuse>
+					<texture>$INFO[ListItem.Thumb]</texture>
+				</control>
+				<control type="image">
+					<visible>Control.HasFocus(9000)</visible>
+					<posx>27</posx>
+					<posy>17</posy>
+					<width>56</width>
+					<height>56</height>
+					<texture>$INFO[ListItem.Thumb]</texture>
+				</control>
+				<control type="label">
+					<visible>!Control.HasFocus(9000)</visible>
+					<posx>55</posx>
+					<posy>84</posy>
+					<width>200</width>
+					<height>40</height>
+					<font>title16b</font>
+					<align>center</align>
+					<aligny>top</aligny>
+					<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+					<textcolor>grey</textcolor>
+				</control>
+				<control type="label">
+					<visible>Control.HasFocus(9000)</visible>
+					<posx>55</posx>
+					<posy>84</posy>
+					<width>200</width>
+					<height>40</height>
+					<font>title16b</font>
+					<align>center</align>
+					<aligny>top</aligny>
+					<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+					<textcolor>white</textcolor>
+				</control>
+			</focusedlayout>
+			<content>
+				<item id="9004">
+					<label>54060</label>
+					<thumb>icons/icon_dialog_exit.png</thumb>
+					<onclick>XBMC.ShutDown()</onclick>
+				</item>
+				<item id="9003">
+					<label>$LOCALIZE[53412]</label>
+					<thumb>icons/icon_network.png</thumb>
+					<onclick>ActivateWindow(NetworkSettings)</onclick>
+				</item>
+				<item id="9002">
+					<label>$LOCALIZE[53411]</label>
+					<thumb>icons/icon_action_menu_more.png</thumb>
+					<onclick>ActivateWindow(59)</onclick>
+				</item>
+				<item id="9001">
+					<label>$LOCALIZE[53410]</label>
+					<thumb>icons/icon_add_user.png</thumb>
+					<onclick>-</onclick>
+				</item>
+			</content>
+		</control>
+	</controls>
+</window>

@@ -1,0 +1,112 @@
+﻿<?xml version="1.0"?>
+<window id="10479">
+	<defaultcontrol always="true">9000</defaultcontrol>
+	<allowoverlay>yes</allowoverlay>
+	<controls>
+		<include>Common_Background</include>
+		<include>Common_Status</include>
+		<control type="label">
+			<include>BrowseMainTitle</include>
+			<label>[UPPERCASE]$LOCALIZE[54031][/UPPERCASE]</label>
+		</control>
+		<control type="group" id="9000">
+			<control type="label">
+				<posx>400</posx>
+				<posy>138</posy>
+				<width>560</width>
+				<height>70</height>
+				<align>left</align>
+				<aligny>top</aligny>
+				<haspath>true</haspath>
+				<font>font28b</font>
+				<textcolor>title</textcolor>
+				<label>[UPPERCASE][B]$INFO[Window.Property(albumartist)][/B][CR]$INFO[Window.Property(title)][/UPPERCASE]</label>
+			</control>
+			<control type="label">
+				<posx>400</posx>
+				<posy>138</posy>
+				<width>560</width>
+				<height>70</height>
+				<align>left</align>
+				<aligny>top</aligny>
+				<haspath>true</haspath>
+				<font>font28b</font>
+				<textcolor>title</textcolor>
+				<label>[UPPERCASE][B]$INFO[Window.Property(albumartist)][/B][CR]$INFO[Window.Property(title)][/UPPERCASE]</label>
+			</control>
+			<control type="label">
+				<animation effect="fade" start="100" end="0" time="200" condition="Window.IsActive(408)">Conditional</animation>
+				<visible>!Container.IsEmpty</visible>
+				<posx>1130</posx>
+				<posy>178</posy>
+				<width>230</width>
+				<height>22</height>
+				<font>font18b</font>
+				<align>right</align>
+				<aligny>center</aligny>
+				<textcolor>grey</textcolor>
+				<label>$INFO[Container.NumItems,, [UPPERCASE]$LOCALIZE[182][/UPPERCASE]]</label>
+			</control>
+			<include>BrowseMusicTrackLineView</include>
+			<include>BrowseEmptyList</include>
+			<include>Bottom_Feather</include>
+		</control>
+		<control type="grouplist" id="8000">
+			<posx>54</posx>
+			<posy>230</posy>
+			<width>270</width>
+			<height>720</height>
+			<itemgap>8</itemgap>
+			<orientation>vertical</orientation>
+			<usecontrolcoords>false</usecontrolcoords>
+			<onright>9000</onright>
+			<control type="image">
+				<visible>!IsEmpty(Window.Property(albumthumb))</visible>
+				<posx>10</posx>
+				<posy>10</posy>
+				<width>250</width>
+				<height>250</height>
+				<bordertexture border="12">masks/thumb_background.png</bordertexture>
+				<bordersize>12</bordersize>
+				<texture>$INFO[Window.Property(albumthumb)]</texture>
+				<aspectratio>scale</aspectratio>
+				<fadetime>200</fadetime>
+			</control>
+			<control type="label">
+				<visible>!IsEmpty(Window.Property(albumyear)) + !stringcompare(Window.Property(albumyear),0)</visible>
+				<width>240</width>
+				<height>22</height>
+				<font>font18b</font>
+				<align>left</align>
+				<aligny>center</aligny>
+				<textcolor>white</textcolor>
+				<label>[COLOR grey][UPPERCASE]$LOCALIZE[54035][/UPPERCASE][/COLOR]  $INFO[Window.Property(albumyear)]</label>
+			</control>
+			<control type="label">
+				<visible>!IsEmpty(Window.Property(albumgenre))</visible>
+				<width>240</width>
+				<height>50</height>
+				<font>font18b</font>
+				<align>left</align>
+				<aligny>top</aligny>
+				<textcolor>white</textcolor>
+				<label>[COLOR grey][UPPERCASE]$LOCALIZE[515][/UPPERCASE][/COLOR]  $INFO[Window.Property(albumgenre)]</label>
+				<wrapmultiline>true</wrapmultiline>
+			</control>
+			<control type="label" id="403">
+				<include>BrowseLeftMenuTitle</include>
+				<label>54018</label>
+			</control>
+			<control type="button" id="150">
+				<include>BrowseLeftMenuButton</include>
+				<label>54036</label>
+			</control>
+			<control type="button" id="160">
+				<include>BrowseLeftMenuButton</include>
+				<label>[UPPERCASE]$LOCALIZE[53715][/UPPERCASE]</label>
+			</control>
+		</control>
+		<include>BrowseLoadingAnimation</include>
+		<include>Common_Now_Playing</include>
+	</controls>
+</window>

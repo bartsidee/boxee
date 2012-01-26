@@ -1,0 +1,35 @@
+#!/bin/sh
+pkill -9 Boxee
+
+# If running with sudo, fix the home directory
+if [ -n "$SUDO_USER" ]
+then
+  export HOME=`cat /etc/passwd | grep "^${SUDO_USER}:" | cut -d':' -f6`
+fi
+
+if [ -d "$HOME/.boxee" ]
+then
+   ( /usr/bin/find "$HOME/.boxee" -name ViewModes.db -exec /bin/rm -f {} \; ) 2>&1 > /dev/null
+   ( /usr/bin/find "$HOME/.boxee" -name BoxeeViewModes.db -exec /bin/rm -f {} \; ) 2>&1 > /dev/null
+
+   /opt/boxee/Boxee -usf 2>&1 > /dev/null
+
+   # if there's a n empy apps dir, delete it. it will be created 
+   # automaticatly later
+   rm -rf $HOME/.boxee/UserData/apps 2>&1 > /dev/null
+   rm -rf $HOME/.boxee/UserData/subtitles 2>&1 > /dev/null
+   rm -f $HOME/.boxee/UserData/rtorrent.rc 2>&1 > /dev/null
+   
+   if [ -n "$SUDO_USER" ]
+   then
+     chown -R $SUDO_USER $HOME/.boxee
+   fi
+fi
+#add repository 
+OS_CODENAME=`lsb_release -c | awk '{ print $2 }'`
+echo "deb http://apt.boxee.tv/ $OS_CODENAME main" > /tmp/__boxee.list
+cp /tmp/__boxee.list /etc/apt/sources.list.d/boxee.list
+rm /tmp/__boxee.list
+
+
+/bin/rm -rf /tmp/boxee 2>&1 > /dev/null

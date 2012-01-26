@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<keyboard lang="ru" desc="russian" qwerty_equiv="a">
+  <char order="0" qwerty_equiv="f">А</char>
+  <char order="1" qwerty_equiv=",">Б</char>
+  <char order="2" qwerty_equiv="d">В</char>
+  <char order="3" qwerty_equiv="u">Г</char>
+  <char order="4" qwerty_equiv="l">Д</char>
+  <char order="5" qwerty_equiv="t">Е</char>
+  <char order="6" qwerty_equiv="`">Ё</char>
+  <char order="7" qwerty_equiv=";">Ж</char>
+  <char order="8" qwerty_equiv="p">З</char>
+  <char order="9" qwerty_equiv="b">И</char>
+  <char order="10" qwerty_equiv="q">Й</char>
+  <char order="11" qwerty_equiv="r">К</char>
+  <char order="12" qwerty_equiv="k">Л</char>
+  <char order="13" qwerty_equiv="v">М</char>
+  <char order="14" qwerty_equiv="y">Н</char>
+  <char order="15" qwerty_equiv="j">О</char>
+  <char order="16" qwerty_equiv="g">П</char>
+  <char order="17" qwerty_equiv="h">Р</char>
+  <char order="18" qwerty_equiv="c">С</char>
+  <char order="19" qwerty_equiv="n">Т</char>
+  <char order="20" qwerty_equiv="e">У</char>
+  <char order="21" qwerty_equiv="a">Ф</char>
+  <char order="22" qwerty_equiv="[">Х</char>
+  <char order="23" qwerty_equiv="w">Ц</char>
+  <char order="24" qwerty_equiv="x">Ч</char>
+  <char order="25" qwerty_equiv="i">Ш</char>
+  <char order="26" qwerty_equiv="o">Щ</char>
+  <char order="27" qwerty_equiv="]">Ъ</char>
+  <char order="28" qwerty_equiv="s">Ы</char>
+  <char order="29" qwerty_equiv="m">Ь</char>
+  <char order="30" qwerty_equiv="'">Э</char>
+  <char order="31" qwerty_equiv=".">Ю</char>
+  <char order="32" qwerty_equiv="z">Я</char>
+</keyboard>
+

@@ -1,0 +1,145 @@
+<?xml version="1.0"?>
+<window id="10482">
+	<defaultcontrol always="true">160</defaultcontrol>
+	<allowoverlay>yes</allowoverlay>
+	<controls>
+		<include>Common_Background</include>
+		<include>Common_Status</include>
+		<control type="group" id="9000">
+			<include>BrowseListsAnimation</include>
+			<control type="label" id="9001">
+				<avisible>Window.Property(my-set) + !Window.Property(search-set) + !Window.Property(searching) + !Window.IsActive(408)</avisible>
+				<include>BrowseMainTitle</include>
+			</control>
+			<control type="label">
+				<visible>Window.Property(my-set) + !Window.Property(all-set) + !Window.Property(search-set) + !Window.Property(searching) + !Window.IsActive(408) + !Window.Property(repository-set)</visible>
+				<include>BrowseSubTitle</include>
+				<label>[UPPERCASE]$INFO[Window.Property(sort-label),,  ][COLOR grey]$INFO[Container.NumItems, (, $LOCALIZE[54059])][/COLOR][/UPPERCASE]</label>
+			</control>
+			<control type="label">
+				<visible>!Window.Property(my-set) + Window.Property(all-set) + !Window.Property(search-set) + !Window.Property(searching) + !Window.IsActive(408) + !Window.Property(repository-set)</visible>
+				<include>BrowseSubTitle</include>
+				<label>[UPPERCASE]$INFO[Window.Property(sort-label),,  ][COLOR grey]$INFO[Container.NumItems, (, $LOCALIZE[54059])][/COLOR][/UPPERCASE]</label>
+			</control>
+			<control type="label">
+				<visible>Window.Property(search-set)</visible>
+				<include>BrowseSubTitle</include>
+				<label>[UPPERCASE]$INFO[Window.Property(search-label)][/UPPERCASE]</label>
+			</control>
+			<control type="group">
+				<animation effect="fade" start="100" end="0" time="200" condition="Window.IsActive(boxee_search.xml)">Conditional</animation>
+				<include>BrowseApplicationThumbView</include>
+				<include>BrowseApplicationLineView</include>
+				<include>BrowseEmptyList</include>
+			</control>
+			<include>Bottom_Feather</include>
+		</control>
+		<control type="group" id="8000">
+			<include>BrowseLeftMenuAnimation</include>
+			<include>BrowseLeftMenuBackground</include>
+			<control type="grouplist">
+				<include>BrowseLeftMenu</include>
+				<control type="button" id="160">
+					<animation effect="fade" start="100" end="0" time="0" condition="Window.IsActive(boxee_search.xml)">Conditional</animation>			
+					<include>BrowseLeftMenuSearchButton</include>
+					<label>137</label>
+				</control>
+				<control type="label" id="402">
+					<include>BrowseLeftMenuTitle</include>
+					<include>BrowseLeftMenuSearchAnimation</include>
+					<label>54012</label>
+				</control>
+				<control type="group" id="403">
+					<include>BrowseLeftMenuSearchAnimation</include>
+					<enable>true + !Window.Property(search-set) + !Window.Property(repository-set)</enable>
+					<width>224</width>
+					<height>86</height>
+					<control type="togglebutton" id="120">
+						<include>BrowseLeftMenuFilterUp</include>
+						<onright>9000</onright>
+						<onup>402</onup>
+						<ondown>130</ondown>
+						<label>54033</label>
+						<usealttexture>Window.Property(my-set)  + !Window.Property(search-set)</usealttexture>
+					</control>
+					<control type="togglebutton" id="130">
+						<include>BrowseLeftMenuFilterDown</include>
+						<onright>9000</onright>
+						<onup>120</onup>
+						<ondown>404</ondown>
+						<label>54034</label>
+						<usealttexture>Window.Property(all-set)  + !Window.Property(search-set)</usealttexture>
+					</control>
+				</control>
+				<control type="label" id="404">
+					<include>BrowseLeftMenuSubtitle</include>
+					<include>BrowseLeftMenuSearchAnimation</include>
+					<label>54013</label>
+				</control>
+				<control type="button" id="110">
+					<enable>true + !Window.Property(search-set) + !Window.Property(repository-set)</enable>
+					<include>BrowseLeftMenuDropDown</include>
+					<include>BrowseLeftMenuSearchAnimation</include>
+					<label>$INFO[Window.Property(sort-label)]</label>
+				</control>
+				<control type="label" id="405">
+					<include>BrowseLeftMenuSubtitle</include>
+					<include>BrowseLeftMenuSearchAnimation</include>
+					<label>54014</label>
+				</control>
+				<control type="togglebutton" id="170">
+					<enable>true + !Window.Property(search-set)</enable>
+					<include>BrowseLeftMenuDropDown</include>
+					<include>BrowseLeftMenuSearchAnimation</include>
+					<label>Type$INFO[Window.Property(type-label), : ]</label>
+					<usealttexture>Window.Property(type-set)</usealttexture>
+				</control>
+				<control type="label" id="406">
+					<include>BrowseLeftMenuSubtitle</include>
+					<include>BrowseLeftMenuSearchAnimation</include>
+					<label>54015</label>
+				</control>
+				<control type="group" id="407">
+					<include>BrowseLeftMenuSearchAnimation</include>
+					<width>216</width>
+					<height>64</height>
+					<control type="togglebutton" id="191">
+						<include>BrowseLeftMenuViewUp</include>
+						<onright>9000</onright>
+						<onup>406</onup>
+						<ondown>192</ondown>
+						<label>54016</label>
+						<usealttexture>Control.IsVisible(55)</usealttexture>
+						<onclick>Container.SetViewMode(55)</onclick>
+					</control>
+					<control type="togglebutton" id="192">
+						<include>BrowseLeftMenuViewDown</include>
+						<onright>9000</onright>
+						<onup>191</onup>
+						<ondown>408</ondown>
+						<label>54017</label>
+						<usealttexture>Control.IsVisible(56)</usealttexture>
+						<onclick>Container.SetViewMode(56)</onclick>
+					</control>
+				</control>
+				<control type="group" id="408">
+					<width>224</width>
+					<height>16</height>
+				</control>
+				<control type="label" id="409">
+					<include>BrowseLeftMenuTitle</include>
+					<include>BrowseLeftMenuSearchAnimation</include>
+					<label>54018</label>
+				</control>
+				<control type="button" id="200">
+					<enable>true + !Window.Property(search-set)</enable>
+					<include>BrowseLeftMenuButton</include>
+					<include>BrowseLeftMenuSearchAnimation</include>
+					<label>54019</label>
+				</control>
+			</control>
+		</control>
+		<include>BrowseLoadingAnimation</include>
+		<include>Common_Now_Playing</include>
+	</controls>
+</window>

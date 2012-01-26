@@ -1,0 +1,73 @@
+#!/bin/bash
+
+SKIN=boxee
+cd ../../skin/$SKIN/
+
+##########################
+## Images
+##########################
+
+U=`egrep -ir "(\.jpg|\.gif|\.png)" 720p | grep -v .svn | cut  -d '>' -f 2 | cut -d '<' -f 1 | sort | uniq | sed 's/$INFO\[.*\]/*/g' | grep -v -w \*`
+
+echo '1. missing images:'
+echo '=================='
+echo ''
+for image in ${U}
+do
+	/bin/ls media/$image > /dev/null 2>&1
+	[ $? -eq 1 ] && echo $image
+done
+
+echo ''
+echo '2. unused images:'
+echo '================='
+echo ''
+cd media
+# list all the media files
+media_files=`find . | sed 's/^\.\///g' | grep -v .svn | egrep -i "(\.jpg|\.gif|\.png)"`
+for file in $media_files
+do
+	inuse=0
+	for match in ${U}
+	do
+	  # change the file name into a regular expression
+	  match=`echo $match | sed 's/\./\\\./g' | sed 's/\*/\.*/g'`
+	  # check if they match
+	  [[ $file =~ $match ]] && inuse=1
+	done
+	[ $inuse -eq 0 ] && echo $file
+done
+
+##########################
+## Includes
+##########################
+
+U=`grep -ir '<include>' 720p | grep -v .svn | cut  -d '>' -f 2 | cut -d '<' -f 1 | sort | uniq`
+D=`grep -ir '<include' 720p | grep -v .svn | grep name= | cut  -d '"' -f 2 | sort | uniq`
+
+echo '3. missing includes:'
+echo '===================='
+echo ''
+for used in ${U}
+do
+  inuse=0
+  for defined in ${D}
+  do
+    [[ $used == $defined ]] && inuse=1
+  done
+	[ $inuse -eq 0 ] && echo $used
+done 
+
+echo '4. unused includes:'
+echo '==================='
+echo ''
+for defined in ${D}
+do
+  inuse=0
+  for used in ${U}
+  do
+    [[ $used == $defined ]] && inuse=1
+  done
+	[ $inuse -eq 0 ] && echo $defined
+done  
+exit

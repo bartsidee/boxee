@@ -1,0 +1,748 @@
+<?xml version="1.0"?>
+<window id="10467">
+	<defaultcontrol always="true">3010</defaultcontrol>
+	<allowoverlay>no</allowoverlay>
+	<controls>
+		<include>Dialog_Background</include>
+		<control type="group">
+			<include>Dialog_Popup_Animation</include>			
+			<posx>30</posx>
+			<posy>152</posy>
+			<width>1220</width>
+			<height>460</height>
+			<control type="image">
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>1220</width>
+				<height>460</height>
+				<texture border="64">action_menu_bg.png</texture>
+			</control>
+			<control type="group" platformClass="pc">
+				<control type="image">
+					<animation effect="fade" start="100" end="0" time="200" delay="0" condition="!ControlGroup(3100).HasFocus">Conditional</animation>
+					<posx>0</posx>
+					<posy>124</posy>
+					<width>1220</width>
+					<height>7</height>
+					<texture>main_menu_separator.png</texture>
+				</control>
+				<control type="image">
+					<animation effect="fade" start="100" end="0" time="200" delay="0" condition="!ControlGroup(3200).HasFocus">Conditional</animation>
+					<posx>0</posx>
+					<posy>324</posy>
+					<width>1220</width>
+					<height>7</height>
+					<texture>main_menu_separator.png</texture>
+				</control>
+				<control type="image">
+					<animation effect="fade" start="100" end="0" time="200" delay="0" condition="!ControlGroup(3200).HasFocus">Conditional</animation>
+					<animation effect="slide" start="0,0" end="0,120" time="200" delay="0" condition="!ControlGroup(3200).HasFocus">Conditional</animation>
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>1220</width>
+					<height>220</height>
+					<texture>main_menu_top.png</texture>
+				</control>
+				<control type="image">
+					<animation effect="fade" start="100" end="0" time="200" delay="0" condition="!ControlGroup(3000).HasFocus">Conditional</animation>
+					<animation effect="slide" start="0,0" end="0,120" time="200" delay="0" condition="!ControlGroup(3200).HasFocus">Conditional</animation>
+					<animation effect="slide" start="0,0" end="0,-120" time="200" delay="0" condition="!ControlGroup(3100).HasFocus">Conditional</animation>
+					<posx>0</posx>
+					<posy>120</posy>
+					<width>1220</width>
+					<height>220</height>
+					<texture>main_menu_center.png</texture>
+				</control>
+				<control type="image">
+					<animation effect="fade" start="100" end="0" time="200" delay="0" condition="!ControlGroup(3100).HasFocus">Conditional</animation>
+					<animation effect="slide" start="0,0" end="0,-120" time="200" delay="0" condition="!ControlGroup(3100).HasFocus">Conditional</animation>
+					<posx>0</posx>
+					<posy>240</posy>
+					<width>1220</width>
+					<height>220</height>
+					<texture>main_menu_bottom.png</texture>
+				</control>
+			</control>
+			<control type="group" id="3200">
+				<control type="list" id="3210">
+					<animation type="Conditional" condition="!ControlGroup(3200).HasFocus">
+						<effect type="fade" start="100" end="100" time="80" delay="200"/>
+						<effect type="zoom" start="100,100" end="66,66" time="200" delay="0" center="610,20"/>
+					</animation>
+					<animation type="Conditional" condition="Player.HasMedia">
+						<effect type="slide" start="0" end="-77" time="100" delay="0"/>
+					</animation>
+					<animation type="Conditional" condition="System.HasMediadvd">
+						<effect type="slide" start="0" end="-77" time="100" delay="0"/>
+					</animation>
+					<posx>213</posx>
+					<posy>-4</posy>
+					<width>1076</width>
+					<height>202</height>
+					<onleft>-</onleft>
+					<onright>-</onright>
+					<onup>-</onup>
+					<ondown>3010</ondown>
+					<scrolltime>400</scrolltime>
+					<pagecontrol>60</pagecontrol>
+					<orientation>horizontal</orientation>
+					<focusposition>3</focusposition>
+					<offsetx>26</offsetx>
+					<offsety>24</offsety>
+					<itemlayout width="150">
+						<control type="group">
+							<posx>11</posx>
+							<posy>0</posy>
+							<control type="image">
+								<posx>0</posx>
+								<posy>4</posy>
+								<width>128</width>
+								<height>128</height>
+								<colordiffuse>80FFFFFF</colordiffuse>
+								<texture>$INFO[ListItem.Thumb]</texture>
+							</control>
+							<control type="label">
+								<visible>Control.HasFocus(3210)</visible>
+								<animation effect="fade" time="0" delay="0">VisibleChange</animation>
+								<posx>64</posx>
+								<posy>124</posy>
+								<width>128</width>
+								<height>24</height>
+								<font>title22b</font>
+								<align>center</align>
+								<aligny>center</aligny>
+								<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+								<textcolor>grey</textcolor>
+							</control>
+							<control type="label">
+								<visible>Control.HasFocus(3210)</visible>
+								<animation effect="fade" time="0" delay="0">VisibleChange</animation>
+								<posx>64</posx>
+								<posy>102</posy>
+								<width>128</width>
+								<height>48</height>
+								<font>title18b</font>
+								<align>center</align>
+								<aligny>center</aligny>
+								<label>[UPPERCASE]$INFO[ListItem.Label2][/UPPERCASE]</label>
+								<textcolor>grey</textcolor>
+							</control>
+						</control>
+					</itemlayout>
+					<focusedlayout width="150">
+						<control type="group">
+							<posx>11</posx>
+							<posy>0</posy>
+							<visible>!Control.HasFocus(3210)</visible>
+							<control type="image">
+								<posx>0</posx>
+								<posy>4</posy>
+								<width>128</width>
+								<height>128</height>
+								<colordiffuse>80FFFFFF</colordiffuse>
+								<texture>$INFO[ListItem.Thumb]</texture>
+							</control>
+						</control>
+						<control type="group">
+							<visible>Control.HasFocus(3210)</visible>
+							<posx>11</posx>
+							<posy>0</posy>
+							<control type="image">
+								<posx>-18</posx>
+								<posy>0</posy>
+								<width>164</width>
+								<height>164</height>
+								<texture border="39">button_menu_on.png</texture>
+							</control>
+							<control type="image">
+								<posx>0</posx>
+								<posy>4</posy>
+								<width>128</width>
+								<height>128</height>
+								<texture>$INFO[ListItem.Thumb]</texture>
+								<!--colordiffuse>FFF6BB1C</colordiffuse-->
+							</control>
+							<control type="label">
+								<animation effect="fade" time="0" delay="0">VisibleChange</animation>
+								<posx>64</posx>
+								<posy>124</posy>
+								<width>128</width>
+								<height>24</height>
+								<font>title22b</font>
+								<align>center</align>
+								<aligny>center</aligny>
+								<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+								<textcolor>white</textcolor>
+							</control>
+							<control type="label">
+								<animation effect="fade" time="0" delay="0">VisibleChange</animation>
+								<posx>64</posx>
+								<posy>102</posy>
+								<width>128</width>
+								<height>48</height>
+								<font>title18b</font>
+								<align>center</align>
+								<aligny>center</aligny>
+								<label>[UPPERCASE]$INFO[ListItem.Label2][/UPPERCASE]</label>
+								<textcolor>white</textcolor>
+							</control>
+						</control>
+					</focusedlayout>
+					<content>
+						<item>
+							<controlid>121</controlid>
+							<label>51965</label>
+							<thumb>icons/icon_menu_logout.png</thumb>
+							<onclick>-</onclick>
+						</item>
+						<item>
+							<controlid>122</controlid>
+							<label>5</label>
+							<thumb>icons/icon_menu_settings.png</thumb>
+							<onclick>-</onclick>
+						</item>
+						<item>
+							<visible>false</visible>
+							<controlid>123</controlid>
+							<label>137</label>
+							<thumb>icons/icon_menu_search.png</thumb>
+							<onclick>-</onclick>
+						</item>
+						<item>
+							<controlid>127</controlid>
+							<visible>Player.HasVideo</visible>
+							<label2>54047</label2>
+							<thumb>icons/icon_menu_now_playing.png</thumb>
+							<onclick>-</onclick>
+						</item>
+						<item>
+							<controlid>128</controlid>
+							<visible>Player.HasAudio</visible>
+							<label2>54047</label2>
+							<thumb>icons/icon_menu_now_playing.png</thumb>
+							<onclick>-</onclick>
+						</item>
+						<item>
+							<visible>System.HasMediadvd</visible>
+							<controlid>129</controlid>
+							<thumb>icons/icon_menu_disc.png</thumb>
+							<label>DVD / CD</label>
+							<onclick>-</onclick>
+						</item>
+						<item>
+							<controlid>124</controlid>
+							<label>54038</label>
+							<thumb>icons/icon_menu_queue.png</thumb>
+							<onclick>-</onclick>
+						</item>
+						<item>
+							<controlid>125</controlid>
+							<label>54021</label>
+							<thumb>icons/icon_menu_share.png</thumb>
+							<onclick>-</onclick>
+						</item>
+						<item>
+							<controlid>126</controlid>
+							<label>54022</label>
+							<thumb>icons/icon_menu_history.png</thumb>
+							<onclick>-</onclick>
+						</item>
+					</content>
+				</control>
+			</control>
+			<control type="group" id="3000">
+				<control type="list" id="3010">
+					<animation type="Conditional" condition="ControlGroup(3200).HasFocus">
+						<effect type="fade" start="100" end="100" time="80" delay="200"/>
+						<effect type="zoom" start="100,100" end="66,66" time="200" delay="0" center="610,350"/>
+					</animation>
+					<animation type="Conditional" condition="ControlGroup(3100).HasFocus">
+						<effect type="fade" start="100" end="100" time="80" delay="200"/>
+						<effect type="zoom" start="100,100" end="66,66" time="200" delay="0" center="610,150"/>
+					</animation>
+					<posx>59</posx>
+					<posy>124</posy>
+					<width>1102</width>
+					<height>202</height>
+					<onleft>-</onleft>
+					<onright>-</onright>
+					<onup>3210</onup>
+					<ondown>3110</ondown>
+					<scrolltime>400</scrolltime>
+					<pagecontrol>60</pagecontrol>
+					<orientation>horizontal</orientation>
+					<focusposition>3</focusposition>
+					<offsetx>26</offsetx>
+					<offsety>24</offsety>
+					<itemlayout width="150">
+						<control type="group">
+							<posx>11</posx>
+							<posy>0</posy>
+							<control type="image">
+								<posx>0</posx>
+								<posy>4</posy>
+								<width>128</width>
+								<height>128</height>
+								<colordiffuse>80FFFFFF</colordiffuse>
+								<texture>$INFO[ListItem.Thumb]</texture>
+							</control>
+							<control type="label">
+								<visible>Control.HasFocus(3010)</visible>
+								<animation effect="fade" time="0" delay="0">VisibleChange</animation>
+								<posx>64</posx>
+								<posy>124</posy>
+								<width>128</width>
+								<height>24</height>
+								<font>title22b</font>
+								<align>center</align>
+								<aligny>center</aligny>
+								<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+								<textcolor>grey</textcolor>
+							</control>
+						</control>
+					</itemlayout>
+					<focusedlayout width="150">
+						<control type="group">
+							<posx>11</posx>
+							<posy>0</posy>
+							<visible>!Control.HasFocus(3010)</visible>
+							<control type="image">
+								<posx>0</posx>
+								<posy>4</posy>
+								<width>128</width>
+								<height>128</height>
+								<colordiffuse>80FFFFFF</colordiffuse>
+								<texture>$INFO[ListItem.Thumb]</texture>
+							</control>
+						</control>
+						<control type="group">
+							<visible>Control.HasFocus(3010)</visible>
+							<posx>11</posx>
+							<posy>0</posy>
+							<control type="image">
+								<posx>-18</posx>
+								<posy>0</posy>
+								<width>164</width>
+								<height>164</height>
+								<texture border="39">button_menu_on.png</texture>
+							</control>
+							<control type="image">
+								<posx>0</posx>
+								<posy>4</posy>
+								<width>128</width>
+								<height>128</height>
+								<texture>$INFO[ListItem.Thumb]</texture>
+								<!--colordiffuse>FFF6BB1C</colordiffuse-->
+							</control>
+							<control type="label">
+								<animation effect="fade" time="0" delay="0">VisibleChange</animation>
+								<posx>64</posx>
+								<posy>124</posy>
+								<width>128</width>
+								<height>24</height>
+								<font>title22b</font>
+								<align>center</align>
+								<aligny>center</aligny>
+								<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+								<textcolor>white</textcolor>
+							</control>
+						</control>
+					</focusedlayout>
+					<content>
+						<item>
+							<controlid>111</controlid>
+							<label>1</label>
+							<thumb>icons/icon_menu_photos.png</thumb>
+							<onclick>-</onclick>
+						</item>
+						<item>
+							<controlid>112</controlid>
+							<label>2</label>
+							<thumb>icons/icon_menu_music.png</thumb>
+							<onclick>-</onclick>
+						</item>
+						<item>
+							<controlid>113</controlid>
+							<label>342</label>
+							<thumb>icons/icon_menu_video.png</thumb>
+							<onclick>-</onclick>
+						</item>
+						<item>
+							<controlid>114</controlid>
+							<label>10000</label>
+							<thumb>icons/icon_menu_home.png</thumb>
+							<onclick>-</onclick>
+						</item>
+						<item>
+							<controlid>115</controlid>
+							<thumb>icons/icon_menu_tvshows.png</thumb>
+							<label>20343</label>
+							<onclick>-</onclick>
+						</item>
+						<item>
+							<controlid>116</controlid>
+							<thumb>icons/icon_menu_apps.png</thumb>
+							<label>54048</label>
+							<onclick>-</onclick>
+						</item>
+						<item>
+							<controlid>117</controlid>
+							<thumb>icons/icon_menu_files.png</thumb>
+							<label>744</label>
+							<onclick>-</onclick>
+						</item>
+					</content>
+				</control>
+			</control>
+			<control type="group" id="3100">
+				<control type="list" id="3110">
+					<animation type="Conditional" condition="!ControlGroup(3100).HasFocus">
+						<effect type="fade" start="100" end="100" time="80" delay="200"/>
+						<effect type="zoom" start="100,100" end="66,66" time="200" delay="0" center="610,468"/>
+					</animation>
+					<posx>85</posx>
+					<posy>272</posy>
+					<width>1050</width>
+					<height>202</height>
+					<onleft>3120</onleft>
+					<onright>-</onright>
+					<onup>3010</onup>
+					<ondown>3120</ondown>
+					<scrolltime>200</scrolltime>
+					<pagecontrol>60</pagecontrol>
+					<orientation>horizontal</orientation>
+					<itemlayout width="150" height="150">
+						<control type="group">
+							<include>BrowseThumbAnimationUnfocus</include>
+							<control type="image">
+								<posx>4</posx>
+								<posy>4</posy>
+								<width>142</width>
+								<height>142</height>
+								<bordertexture border="12">masks/thumb_background.png</bordertexture>
+								<bordersize>12</bordersize>
+								<colordiffuse>80FFFFFF</colordiffuse>
+								<texture blend="false">$INFO[ListItem.Thumb]</texture>
+							</control>
+							<control type="label">
+								<visible>Control.HasFocus(3110) | Control.HasFocus(3120)</visible>
+								<animation effect="fade" time="0" delay="0">VisibleChange</animation>
+								<posx>75</posx>
+								<posy>140</posy>
+								<width>130</width>
+								<height>22</height>
+								<font>title16b</font>
+								<align>center</align>
+								<aligny>center</aligny>
+								<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+								<textcolor>grey</textcolor>
+							</control>
+						</control>
+					</itemlayout>
+					<focusedlayout width="150" height="150">
+						<control type="group">
+							<include>BrowseThumbAnimationUnfocus</include>
+							<control type="image">
+								<visible>!Control.HasFocus(3110)</visible>
+								<posx>4</posx>
+								<posy>4</posy>
+								<width>142</width>
+								<height>142</height>
+								<bordertexture border="12">masks/thumb_background.png</bordertexture>
+								<bordersize>12</bordersize>
+								<colordiffuse>80FFFFFF</colordiffuse>
+								<texture blend="false">$INFO[ListItem.Thumb]</texture>
+							</control>
+							<control type="label">
+								<visible>!Control.HasFocus(3110) + Control.HasFocus(3120)</visible>
+								<posx>75</posx>
+								<posy>140</posy>
+								<width>130</width>
+								<height>22</height>
+								<font>title16b</font>
+								<align>center</align>
+								<aligny>center</aligny>
+								<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+								<textcolor>grey</textcolor>
+							</control>
+						</control>
+ 						<control type="group">
+							<visible>Control.HasFocus(3110) + window.CheckIntProperty(manage-set,0)</visible>
+							<include>BrowseThumbAnimationFocus</include>
+							<control type="image">
+								<posx>-4</posx>
+								<posy>-4</posy>
+								<width>158</width>
+								<height>158</height>
+								<bordertexture border="20">masks/thumb_background_on.png</bordertexture>
+								<bordersize>20</bordersize>
+								<texture blend="false">$INFO[ListItem.Thumb]</texture>
+							</control>
+							<control type="label">
+								<animation effect="fade" time="200" delay="0">VisibleChange</animation>
+								<posx>75</posx>
+								<posy>140</posy>
+								<width>150</width>
+								<height>22</height>
+								<font>title16b</font>
+								<align>center</align>
+								<aligny>center</aligny>
+								<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+								<textcolor>white</textcolor>
+								<scroll>true</scroll>
+							</control>
+						</control>
+						<control type="group">
+							<visible>window.CheckIntProperty(manage-set,1) | Window.IsActive(boxee_shortcut_dialog.xml)</visible>
+							<animation type="Focus">
+								<effect type="fade" start="100" end="100" time="100" delay="0"/>
+								<effect type="zoom" start="100,100" end="108,108" time="200" delay="0" center="auto"/>
+							</animation>
+							<control type="image">
+								<posx>4</posx>
+								<posy>4</posy>
+								<width>144</width>
+								<height>144</height>
+								<texture border="30">masks/thumb_square_manage.png</texture>
+							</control>
+							<control type="image">
+								<posx>8</posx>
+								<posy>8</posy>
+								<width>136</width>
+								<height>136</height>
+								<texture blend="false">$INFO[ListItem.Thumb]</texture>
+							</control>
+							<control type="label">
+								<animation effect="fade" time="0" delay="0">VisibleChange</animation>
+								<posx>75</posx>
+								<posy>148</posy>
+								<width>160</width>
+								<height>22</height>
+								<font>title16b</font>
+								<align>center</align>
+								<aligny>center</aligny>
+								<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+								<textcolor>white</textcolor>
+								<scroll>true</scroll>
+							</control>
+						</control>
+						<control type="group">
+							<visible>window.CheckIntProperty(manage-set,2)</visible>
+							<animation type="Focus">
+								<effect type="fade" start="100" end="100" time="100" delay="0"/>
+								<effect type="zoom" start="100,100" end="108,108" time="200" delay="0" center="auto"/>
+							</animation>
+							<control type="multiimage">
+								<description>loading control</description>
+								<animation effect="fade" time="200">VisibleChange</animation>
+								<posx>4</posx>
+								<posy>4</posy>
+								<width>144</width>
+								<height>144</height>
+								<imagepath>masks/thumb_manage_animation</imagepath>
+								<timeperimage>80</timeperimage>
+								<fadetime>10</fadetime>
+								<pauseatend>0</pauseatend>
+								<randomize>false</randomize>
+								<loop>yes</loop>
+								<aspectratio>keep</aspectratio>
+							</control>
+							<control type="image">
+								<posx>8</posx>
+								<posy>8</posy>
+								<width>136</width>
+								<height>136</height>
+								<texture blend="false">$INFO[ListItem.Thumb]</texture>
+							</control>
+							<control type="label">
+								<animation effect="fade" time="0" delay="0">VisibleChange</animation>
+								<posx>75</posx>
+								<posy>148</posy>
+								<width>160</width>
+								<height>22</height>
+								<font>title16b</font>
+								<align>center</align>
+								<aligny>center</aligny>
+								<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+								<textcolor>white</textcolor>
+								<scroll>true</scroll>
+							</control>
+						</control>
+					</focusedlayout>
+					<content type="directory">
+			         shortcuts://
+			       </content>
+				</control>
+				<control type="group">
+					<animation type="Conditional" condition="!ControlGroup(3100).HasFocus">
+						<effect type="fade" start="100" end="100" time="80" delay="200"/>
+						<effect type="zoom" start="100,100" end="66,66" time="200" delay="0" center="610,468"/>
+					</animation>
+					<posx>85</posx>
+					<posy>272</posy>
+					<width>1050</width>
+					<height>142</height>
+					<control type="image">
+						<visible>stringcompare(Container(3110).NumItems,0)</visible>
+						<posx>4</posx>
+						<posy>4</posy>
+						<width>142</width>
+						<height>142</height>
+						<bordertexture border="12">masks/thumb_background.png</bordertexture>
+						<bordersize>12</bordersize>
+						<colordiffuse>60FFFFFF</colordiffuse>
+						<texture>grey2.png</texture>
+					</control>
+					<control type="image">
+						<visible>stringcompare(Container(3110).NumItems,0) | stringcompare(Container(3110).NumItems,1)</visible>
+						<posx>154</posx>
+						<posy>4</posy>
+						<width>142</width>
+						<height>142</height>
+						<bordertexture border="12">masks/thumb_background.png</bordertexture>
+						<bordersize>12</bordersize>
+						<colordiffuse>60FFFFFF</colordiffuse>
+						<texture>grey2.png</texture>
+					</control>
+					<control type="image">
+						<visible>stringcompare(Container(3110).NumItems,0) | stringcompare(Container(3110).NumItems,1) | stringcompare(Container(3110).NumItems,2)</visible>
+						<posx>304</posx>
+						<posy>4</posy>
+						<width>142</width>
+						<height>142</height>
+						<bordertexture border="12">masks/thumb_background.png</bordertexture>
+						<bordersize>12</bordersize>
+						<colordiffuse>60FFFFFF</colordiffuse>
+						<texture>grey2.png</texture>
+					</control>
+					<control type="image">
+						<visible>stringcompare(Container(3110).NumItems,0) | stringcompare(Container(3110).NumItems,1) | stringcompare(Container(3110).NumItems,2) | stringcompare(Container(3110).NumItems,3)</visible>
+						<posx>454</posx>
+						<posy>4</posy>
+						<width>142</width>
+						<height>142</height>
+						<bordertexture border="12">masks/thumb_background.png</bordertexture>
+						<bordersize>12</bordersize>
+						<colordiffuse>60FFFFFF</colordiffuse>
+						<texture>grey2.png</texture>
+					</control>
+					<control type="image">
+						<visible>stringcompare(Container(3110).NumItems,0) | stringcompare(Container(3110).NumItems,1) | stringcompare(Container(3110).NumItems,2) | stringcompare(Container(3110).NumItems,3) | stringcompare(Container(3110).NumItems,4)</visible>
+						<posx>604</posx>
+						<posy>4</posy>
+						<width>142</width>
+						<height>142</height>
+						<bordertexture border="12">masks/thumb_background.png</bordertexture>
+						<bordersize>12</bordersize>
+						<colordiffuse>60FFFFFF</colordiffuse>
+						<texture>grey2.png</texture>
+					</control>
+					<control type="image">
+						<visible>stringcompare(Container(3110).NumItems,0) | stringcompare(Container(3110).NumItems,1) | stringcompare(Container(3110).NumItems,2) | stringcompare(Container(3110).NumItems,3) | stringcompare(Container(3110).NumItems,4) | stringcompare(Container(3110).NumItems,5)</visible>
+						<posx>754</posx>
+						<posy>4</posy>
+						<width>142</width>
+						<height>142</height>
+						<bordertexture border="12">masks/thumb_background.png</bordertexture>
+						<bordersize>12</bordersize>
+						<colordiffuse>60FFFFFF</colordiffuse>
+						<texture>grey2.png</texture>
+					</control>
+					<control type="image">
+						<visible>stringcompare(Container(3110).NumItems,0) | stringcompare(Container(3110).NumItems,1) | stringcompare(Container(3110).NumItems,2) | stringcompare(Container(3110).NumItems,3) | stringcompare(Container(3110).NumItems,4) | stringcompare(Container(3110).NumItems,5) | stringcompare(Container(3110).NumItems,6)</visible>
+						<posx>904</posx>
+						<posy>4</posy>
+						<width>142</width>
+						<height>142</height>
+						<bordertexture border="12">masks/thumb_background.png</bordertexture>
+						<bordersize>12</bordersize>
+						<colordiffuse>60FFFFFF</colordiffuse>
+						<texture>grey2.png</texture>
+					</control>
+				</control>
+				<control type="image">
+					<visible>Container(3110).HasPrevious + Control.HasFocus(3110)</visible>
+					<animation effect="fade" time="100" delay="0">VisibleChange</animation>
+					<posx>32</posx>
+					<posy>330</posy>
+					<width>32</width>
+					<height>32</height>
+					<colordiffuse>80FFFFFF</colordiffuse>
+					<texture>icons/icon_arrow_left_large.png</texture>
+				</control>
+				<control type="image">
+					<visible>Container(3110).HasNext + Control.HasFocus(3110)</visible>
+					<animation effect="fade" time="100" delay="0">VisibleChange</animation>
+					<posx>1154</posx>
+					<posy>330</posy>
+					<width>32</width>
+					<height>32</height>
+					<colordiffuse>80FFFFFF</colordiffuse>
+					<texture>icons/icon_arrow_right_large.png</texture>
+				</control>
+				<control type="group">
+					<visible>ControlGroup(3100).HasFocus + !Container(3110).IsEmpty</visible>
+					<animation effect="fade" start="0" end="100" time="200" delay="200">Visible</animation>
+					<animation effect="fade" start="100" end="0" time="80" delay="0">Hidden</animation>
+					<posx>18</posx>
+					<posy>390</posy>
+					<control type="image">
+						<visible>!Control.HasFocus(3120) + window.CheckIntProperty(manage-set,0)</visible>
+						<posx>10</posx>
+						<posy>10</posy>
+						<width>32</width>
+						<height>32</height>
+						<colordiffuse>80FFFFFF</colordiffuse>
+						<texture>icons/icon_menu_settings_small.png</texture>
+					</control>
+					<control type="image">
+						<visible>Control.HasFocus(3120) + window.CheckIntProperty(manage-set,0)</visible>
+						<posx>10</posx>
+						<posy>10</posy>
+						<width>32</width>
+						<height>32</height>
+						<texture>icons/icon_menu_settings_small.png</texture>
+					</control>
+					<control type="image">
+						<visible>!Control.HasFocus(3120) + window.CheckIntProperty(manage-set,1)</visible>
+						<posx>10</posx>
+						<posy>10</posy>
+						<width>32</width>
+						<height>32</height>
+						<colordiffuse>80FFFFFF</colordiffuse>
+						<texture>icons/icon_cancel.png</texture>
+					</control>
+					<control type="image">
+						<visible>Control.HasFocus(3120) + window.CheckIntProperty(manage-set,1)</visible>
+						<posx>10</posx>
+						<posy>10</posy>
+						<width>32</width>
+						<height>32</height>
+						<texture>icons/icon_cancel.png</texture>
+					</control>
+					<control type="button" id="3120">
+						<posx>-4</posx>
+						<posy>-4</posy>
+						<width>60</width>
+						<height>60</height>
+						<onleft>-</onleft>
+						<onright>3110</onright>
+						<onup>3110</onup>
+						<ondown>-</ondown>
+						<font>title18b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<!--label>[UPPERCASE]Manage[/UPPERCASE]</label>
+						<altlabel>[UPPERCASE]Cancel[/UPPERCASE]</altlabel-->
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<textoffsetx>50</textoffsetx>
+						<texturenofocus>-</texturenofocus>
+						<texturefocus border="26">button_option_on.png</texturefocus>
+						<textureclick border="26">button_option_click.png</textureclick>
+					</control>
+				</control>
+			</control>
+		</control>
+	</controls>
+</window>

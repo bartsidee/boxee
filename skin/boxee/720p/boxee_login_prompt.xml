@@ -1,0 +1,141 @@
+<?xml version="1.0"?>
+<window id="10498">
+	<coordinates>
+		<system>1</system>
+		<posx>0</posx>
+		<posy>0</posy>
+	</coordinates>
+	<controls>
+		<control type="group">
+			<!-- animation effect="fade" time="1000">WindowOpen</animation -->		
+			<include>Common_Background</include>
+		</control>
+		<control type="label">
+			<posx>548</posx>
+			<posy>570</posy>
+			<width>400</width>
+			<height>32</height>
+			<label>[UPPERCASE]$LOCALIZE[53430][/UPPERCASE]</label>
+			<font>title24b</font>
+			<align>left</align>
+			<aligny>center</aligny>
+			<textcolor>white</textcolor>
+		</control>
+		<control type="group">
+			<!-- animation effect="fade" time="200">WindowOpen</animation -->		
+			<control type="image">
+				<posx>40</posx>
+				<posy>24</posy>
+				<width>120</width>
+				<height>25</height>
+				<texture>boxee_logo.png</texture>
+				<colordiffuse>80FFFFFF</colordiffuse>
+				<!--visible>boxee.mouseenabled</visible-->
+			</control>
+			<control type="group">
+				<posx>1150</posx>
+				<posy>22</posy>
+			<control type="group">
+				<visible>true + System.timeisampm</visible>						
+				<control type="image">
+					<posx>-36</posx>
+					<posy>0</posy>
+					<width>28</width>
+					<height>28</height>
+					<texture>icons/icon_clock.png</texture>
+				</control>
+				<control type="label">
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>500</width>
+					<height>28</height>
+					<label>$INFO[System.TimeNoAmPm]</label>
+					<font>title26b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>grey</textcolor>
+				</control>
+			</control>
+			<control type="group">
+				<visible>true + !System.timeisampm</visible>						
+				<control type="image">
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>28</width>
+					<height>28</height>
+					<texture>icons/icon_clock.png</texture>
+				</control>
+				<control type="label">
+					<posx>36</posx>
+					<posy>0</posy>
+					<width>500</width>
+					<height>28</height>
+					<label>$INFO[System.TimeNoAmPm]</label>
+					<font>title26b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>grey</textcolor>
+				</control>
+			</control>
+			</control>
+			<!--control type="multiimage">
+				<posx>390</posx>
+				<posy>50</posy>
+				<width>500</width>
+				<height>320</height>
+				<imagepath>login_animation</imagepath>
+				<timeperimage>0</timeperimage>
+				<fadetime>1</fadetime>
+				<loop>yes</loop>
+				<randomize>false</randomize>
+			</control-->
+			<control type="label" id="1222">
+				<description>name label</description>
+				<posx>500</posx>
+				<posy>490</posy>
+				<width>280</width>
+				<height>20</height>
+				<align>center</align>
+				<font>font18</font>
+				<textcolor>white</textcolor>
+				<visible>false</visible>
+			</control>
+			<control type="image">
+				<posx>806</posx>
+				<posy>610</posy>
+				<width>174</width>
+				<height>120</height>
+				<texture>XBMC_logo_small.png</texture>
+			</control>
+			<control type="image">
+				<posx>970</posx>
+				<posy>630</posy>
+				<width>150</width>
+				<height>85</height>
+				<texture>mozilla_logo.png</texture>
+			</control>
+			<control type="group">
+				<posx>1140</posx>
+				<posy>628</posy>
+				<control type="label">
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>120</width>
+					<height>10</height>
+					<font>title12b</font>
+					<align>center</align>
+					<aligny>top</aligny>
+					<textcolor>white</textcolor>
+					<label>54046</label>
+				</control>
+				<control type="image">
+					<posx>0</posx>
+					<posy>12</posy>
+					<width>120</width>
+					<height>60</height>
+					<texture>imdb_logo.png</texture>
+				</control>
+			</control>
+		</control>
+	</controls>
+</window>

@@ -1,0 +1,7 @@
+Package: boxee-artwork-usplash
+Version: 0.1
+Architecture: i386
+Depends: initramfs-tools (>= 0.40ubuntu30), usplash (>= 0.4-21)
+Maintainer: Tom Sella <tsella@boxee.tv>
+Description: boxee artwork for usplash
+ The usplash startup screen for boxee.

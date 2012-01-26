@@ -1,0 +1,391 @@
+<?xml version="1.0"?>
+<window type="dialog" id="56">
+	<defaultcontrol always="true">61</defaultcontrol>
+	<allowoverlay>no</allowoverlay>
+	<controls>
+		<include>Common_Background</include>
+		<include>Common_Status</include>
+		<include>Common_Now_Playing</include>
+		<control type="image">
+			<!--animation type="WindowOpen" condition="!Window.Previous(Settings.xml) + !Window.Previous(SettingsCategory.xml)">
+				<effect type="fade" start="0" end="100" time="200" delay="0"/>
+			</animation>
+			<animation type="WindowClose" condition="!Window.Next(Settings.xml) + !Window.Next(SettingsCategory.xml)">
+				<effect type="fade" start="100" end="0" time="200" delay="0"/>
+			</animation-->
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>1280</width>
+			<height>720</height>
+			<texture>black.png</texture>
+			<colordiffuse>80FFFFFF</colordiffuse>
+		</control>
+		<control type="group">
+			<!--animation type="Conditional" condition="Window.IsVisible(boxee_media_source_list.xml) | Window.IsVisible(boxee_media_source_add_share.xml) | Window.IsVisible(boxee_media_source_add_folder.xml) | Window.IsVisible(boxee_media_source_info.xml)">
+				<effect type="fade" start="100" end="0" time="200"/>
+			</animation-->
+			<posx>30</posx>
+			<posy>46</posy>
+			<width>1220</width>
+			<height>660</height>
+			<control type="image">
+				<posx>0</posx>
+				<posy>70</posy>
+				<width>1220</width>
+				<height>510</height>
+				<texture border="64">action_menu_bg.png</texture>
+			</control>
+			<control type="image">
+				<posx>100</posx>
+				<posy>104</posy>
+				<width>1020</width>
+				<height>256</height>
+				<texture border="128">feather_divider.png</texture>
+			</control>
+			<control type="label">
+				<posx>34</posx>
+				<posy>94</posy>
+				<width>1100</width>
+				<height>56</height>
+				<align>left</align>
+				<aligny>center</aligny>
+				<haspath>true</haspath>
+				<font>title56b</font>
+				<textcolor>white</textcolor>
+				<label>[UPPERCASE]$LOCALIZE[5][/UPPERCASE]</label>
+			</control>
+			<control type="label">
+				<posx>330</posx>
+				<posy>119</posy>
+				<width>1000</width>
+				<height>28</height>
+				<align>left</align>
+				<aligny>top</aligny>
+				<haspath>true</haspath>
+				<font>font24b</font>
+				<textcolor>title</textcolor>
+				<label>[UPPERCASE]$LOCALIZE[10008][/UPPERCASE]</label>
+			</control>
+			<control type="group" id="50">
+				<control type="grouplist" id="60">
+					<posx>30</posx>
+					<posy>224</posy>
+					<width>216</width>
+					<height>480</height>
+					<itemgap>10</itemgap>
+					<orientation>vertical</orientation>
+					<onleft>60</onleft>
+					<onright>-</onright>
+					<onup>-</onup>
+					<ondown>-</ondown>
+					<control type="button" id="61">
+						<width>216</width>
+						<height>30</height>
+						<onup>-</onup>
+						<ondown>SetFocus(62)</ondown>
+						<onleft>-</onleft>
+						<onright>SetFocus(1400)</onright>
+						<label>16000</label>
+						<font>font20b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<textcolor2>white</textcolor2>
+						<textoffsetx>14</textoffsetx>
+						<texturenofocus>button_option_menu.png</texturenofocus>
+						<texturefocus>button_option_menu_on.png</texturefocus>
+						<textureclick>button_option_menu_click.png</textureclick>
+						<pulseonselect>false</pulseonselect>
+						<onclick>SetFocus(1400)</onclick>
+						<onfocus>SetVisible(1400)</onfocus>
+						<onfocus>SetHidden(1500)</onfocus>
+					</control>
+					<control type="button" id="62">
+						<width>216</width>
+						<height>30</height>
+						<onup>61</onup>
+						<ondown>-</ondown>
+						<onleft>-</onleft>
+						<onright>SetFocus(1500)</onright>
+						<label>53130</label>
+						<font>font20b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<textcolor2>white</textcolor2>
+						<textoffsetx>14</textoffsetx>
+						<texturenofocus>button_option_menu.png</texturenofocus>
+						<texturefocus>button_option_menu_on.png</texturefocus>
+						<textureclick>button_option_menu_click.png</textureclick>
+						<pulseonselect>false</pulseonselect>
+						<onclick>SetFocus(1500)</onclick>
+						<onfocus>SetVisible(1500)</onfocus>
+						<onfocus>SetHidden(1400)</onfocus>
+					</control>
+				</control>
+				<control type="grouplist" id="1400">
+					<posx>330</posx>
+					<posy>218</posy>
+					<width>856</width>
+					<height>484</height>
+					<itemgap>0</itemgap>
+					<pagecontrol>90</pagecontrol>
+					<onleft>60</onleft>
+					<onright>-</onright>
+					<onup>-</onup>
+					<ondown>-</ondown>
+					<control type="button">
+						<enable>false</enable>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>856</width>
+						<height>40</height>
+						<onleft>60</onleft>
+						<onright>-</onright>
+						<font>font22</font>
+						<textcolor>white</textcolor>
+						<textcolor2>white</textcolor2>
+						<focusedcolor>white</focusedcolor>
+						<focusedcolor2>white</focusedcolor2>
+						<disabledcolor>grey</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>51950</label>
+						<label2>$INFO[system.BuildVersion]</label2>
+					</control>
+					<control type="button">
+						<enable>false</enable>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>856</width>
+						<height>40</height>
+						<onleft>60</onleft>
+						<onright>-</onright>
+						<font>font22</font>
+						<textcolor>white</textcolor>
+						<textcolor2>white</textcolor2>
+						<focusedcolor>white</focusedcolor>
+						<focusedcolor2>white</focusedcolor2>
+						<disabledcolor>grey</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>51949</label>
+						<label2>$INFO[system.BuildDate]</label2>
+					</control>
+					<control type="button">
+						<enable>false</enable>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>856</width>
+						<height>40</height>
+						<onleft>60</onleft>
+						<onright>-</onright>
+						<font>font22</font>
+						<textcolor>white</textcolor>
+						<textcolor2>white</textcolor2>
+						<focusedcolor>white</focusedcolor>
+						<focusedcolor2>white</focusedcolor2>
+						<disabledcolor>grey</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>150</label>
+						<label2>$INFO[Network.IPAddress]</label2>
+					</control>
+					<control type="button">
+						<enable>false</enable>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>856</width>
+						<height>40</height>
+						<onleft>60</onleft>
+						<onright>-</onright>
+						<font>font22</font>
+						<textcolor>white</textcolor>
+						<textcolor2>white</textcolor2>
+						<focusedcolor>white</focusedcolor>
+						<focusedcolor2>white</focusedcolor2>
+						<disabledcolor>grey</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>51952</label>
+						<label2>$INFO[system.memory(total)]</label2>
+					</control>
+					<control type="button">
+						<enable>false</enable>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>856</width>
+						<height>40</height>
+						<onleft>60</onleft>
+						<onright>-</onright>
+						<font>font22</font>
+						<textcolor>white</textcolor>
+						<textcolor2>white</textcolor2>
+						<focusedcolor>white</focusedcolor>
+						<focusedcolor2>white</focusedcolor2>
+						<disabledcolor>grey</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>13287</label>
+						<label2>$INFO[system.screenresolution]</label2>
+					</control>
+					<control type="button" id="13">
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>856</width>
+						<height>40</height>
+						<onup>-</onup>
+						<ondown>14</ondown>
+						<onleft>60</onleft>
+						<onright>-</onright>
+						<font>font22</font>
+						<textcolor>white</textcolor>
+						<textcolor2>white</textcolor2>
+						<focusedcolor>white</focusedcolor>
+						<focusedcolor2>white</focusedcolor2>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>51944</label>
+						<!--Erase Library-->
+						<onclick>ResetDatabase</onclick>
+						<visible>!system.isloggedon</visible>
+					</control>
+					<control type="button" id="14">
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>856</width>
+						<height>40</height>
+						<onup>13</onup>
+						<ondown>-</ondown>
+						<onleft>60</onleft>
+						<onright>-</onright>
+						<font>font22</font>
+						<textcolor>white</textcolor>
+						<textcolor2>white</textcolor2>
+						<focusedcolor>white</focusedcolor>
+						<focusedcolor2>white</focusedcolor2>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>51956</label>
+						<!--Clean Old Thumbnails-->
+						<onclick>CleanOldThumbnails</onclick>
+						<visible>!system.isloggedon</visible>
+					</control>
+				</control>
+				<control type="grouplist" id="1500">
+					<posx>330</posx>
+					<posy>218</posy>
+					<width>856</width>
+					<height>484</height>
+					<itemgap>0</itemgap>
+					<pagecontrol>90</pagecontrol>
+					<onleft>60</onleft>
+					<onright>-</onright>
+					<onup>-</onup>
+					<ondown>-</ondown>
+					<control type="togglebutton" id="170">
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>856</width>
+						<height>40</height>
+						<onleft>60</onleft>
+						<onright>-</onright>
+						<font>font22</font>
+						<textcolor>white</textcolor>
+						<textcolor2>white</textcolor2>
+						<focusedcolor>white</focusedcolor>
+						<focusedcolor2>white</focusedcolor2>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<alttexturenofocus border="15">button_settings_line_divider.png</alttexturenofocus>
+						<alttexturefocus border="15">button_option_menu_on.png</alttexturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>51946</label>
+						<altlabel>Reset Image ($INFO[Skin.String(CustomBG)])</altlabel>
+						<!--onclick>Skin.Reset(CustomBGFolder)</onclick>
+						<onclick>Skin.Reset(CustomBG)</onclick>
+						<onclick>Skin.SetImage(CustomBG)</onclick>
+						<altclick>Skin.Reset(CustomBG)</altclick>
+						<usealttexture>Skin.String(CustomBG)</usealttexture>
+						<onclick>Skin.SetBool(EnableCustomBG)</onclick-->
+						<onclick>Skin.Reset(CustomBGFolder)</onclick>
+						<onclick>Skin.SetImage(CustomBG)</onclick>
+						<onclick>Skin.Reset(EnableCustomBGFolder)</onclick>
+						<altclick>Skin.Reset(CustomBG)</altclick>
+						<altclick>Skin.Reset(EnableCustomBG)</altclick>
+						<usealttexture>Skin.HasSetting(EnableCustomBG)</usealttexture>
+					</control>
+					<control type="togglebutton" id="180">
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>856</width>
+						<height>40</height>
+						<onleft>60</onleft>
+						<onright>-</onright>
+						<font>font22</font>
+						<textcolor>white</textcolor>
+						<textcolor2>white</textcolor2>
+						<focusedcolor>white</focusedcolor>
+						<focusedcolor2>white</focusedcolor2>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<alttexturenofocus border="15">button_settings_line_divider.png</alttexturenofocus>
+						<alttexturefocus border="15">button_option_menu_on.png</alttexturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>51947</label>
+						<altlabel>Reset Images Folder ($INFO[Skin.String(CustomBGFolder)])</altlabel>
+						<onclick>Skin.SetPath(CustomBGFolder)</onclick>
+						<onclick>Skin.SetBool(EnableCustomBGFolder)</onclick>
+						<onclick>Skin.Reset(CustomBG)</onclick>
+						<onclick>Skin.Reset(EnableCustomBG)</onclick>
+						<altclick>Skin.Reset(CustomBGFolder)</altclick>
+						<altclick>Skin.Reset(EnableCustomBGFolder)</altclick>
+						<usealttexture>Skin.HasSetting(EnableCustomBGFolder)</usealttexture>
+					</control>
+					<control type="button">
+						<enable>false</enable>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>856</width>
+						<height>40</height>
+						<onleft>60</onleft>
+						<onright>-</onright>
+						<font>font22</font>
+						<textcolor>white</textcolor>
+						<textcolor2>white</textcolor2>
+						<focusedcolor>white</focusedcolor>
+						<focusedcolor2>white</focusedcolor2>
+						<disabledcolor>grey</disabledcolor>
+						<textoffsetx>20</textoffsetx>
+						<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<pulseonselect>false</pulseonselect>
+						<label>53131</label>
+					</control>
+				</control>
+			</control>
+		</control>
+	</controls>
+</window>

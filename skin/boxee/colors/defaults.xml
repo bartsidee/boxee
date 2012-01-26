@@ -1,0 +1,16 @@
+﻿<colors>
+	<color name="black">F3000000</color>
+	<color name="grey">80FFFFFF</color>
+	<color name="lightgrey">40FFFFFF</color>
+	<color name="white">F3FFFFFF</color>
+	<color name="green">F38EC641</color>
+	<color name="yellow">F3ECDB12</color>
+	<color name="blue">F39CD4F5</color>
+    <color name="red">F3F05322</color>
+	<color name="disabled">30FFFFFF</color>
+	<color name="title">F3F6BB1C</color>
+	<color name="listitem">E6FFFFFF</color>
+	<color name="wizard">DD4D4D4D</color>
+	<color name="darkgrey">DD171717</color>
+	<color name="medgrey">DD999999</color>
+</colors>

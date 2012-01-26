@@ -1,0 +1,44 @@
+#!/usr/bin/php
+#
+# boxee-set-initial-resolution - for each xrandr detected output device, set a resolution of 640x480
+#
+# requires: php5-cli, xbmc-xrandr
+
+<?php
+
+$xbmc_xrandr_bin="./xbmc-xrandr";
+
+if (!file_exists($xbmc_xrandr_bin))
+	_error("$xbmc_xrandr_bin is missing!");
+
+$xrandr = array();
+
+$rc = exec($xbmc_xrandr_bin, &$xrandr);
+
+$xrandr_xml = new SimpleXMLElement(implode($xrandr));
+
+foreach ($xrandr_xml->output as $output)
+{
+	$output_name = $output['name'];
+	$mode_id     = null;
+
+	foreach ($output->mode as $mode)
+	{
+		if (($mode['name'] == "640x480" || $mode['name'] == "720x480") && is_null($mode_id))
+		{
+			$mode_id = $mode['id'];
+		}
+	}
+
+	if (!empty($mode_id))
+	{
+		$cmd = sprintf("%s --output %s --mode %s", $xbmc_xrandr_bin, $output_name, $mode_id);
+		$rc = exec($cmd);
+	}
+}
+
+function _error($msg)
+{
+	printf("%s\n", $msg);
+	exit(1);
+}

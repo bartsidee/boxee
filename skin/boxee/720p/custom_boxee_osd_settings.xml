@@ -1,0 +1,89 @@
+﻿<?xml version="1.0"?>
+<window type="dialog" id="57">
+	<defaultcontrol always="true">9201</defaultcontrol>
+	<allowoverlay>no</allowoverlay>
+	<controls>
+		<control type="group">
+			<include>Window_Fade_Animation</include>
+			<posx>20</posx>
+			<posy>20</posy>
+			<control type="image">
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>580</width>
+				<height>160</height>
+				<texture border="32">osd_background.png</texture>
+			</control>
+			<control type="image">
+				<posx>40</posx>
+				<posy>98</posy>
+				<width>500</width>
+				<height>256</height>
+				<texture border="128">feather_divider.png</texture>
+			</control>
+			<control type="label">
+				<posx>30</posx>
+				<posy>30</posy>
+				<width>500</width>
+				<height>56</height>
+				<align>left</align>
+				<aligny>center</aligny>
+				<haspath>true</haspath>
+				<font>title56b</font>
+				<textcolor>white</textcolor>
+				<label>[UPPERCASE]$LOCALIZE[5][/UPPERCASE]</label>
+			</control>
+			<control type="grouplist">
+				<description>button area</description>
+				<posx>22</posx>
+				<posy>104</posy>
+				<width>500</width>
+				<height>30</height>
+				<itemgap>4</itemgap>
+				<orientation>horizontal</orientation>
+				<control type="button" id="9201">
+					<width>135</width>
+					<height>30</height>
+					<font>title22b</font>
+					<align>center</align>
+					<aligny>center</aligny>
+					<textcolor>grey</textcolor>
+					<focusedcolor>white</focusedcolor>
+					<texturenofocus border="15">button_option_menu.png</texturenofocus>
+					<texturefocus border="15">button_option_menu_on.png</texturefocus>
+					<textureclick border="15">button_option_menu_click.png</textureclick>
+					<label>[UPPERCASE]$LOCALIZE[157][/UPPERCASE]</label>
+					<onclick>ActivateWindow(123)</onclick>
+				</control>
+				<control type="button" id="9202">
+					<width>135</width>
+					<height>30</height>
+					<font>title22b</font>
+					<align>center</align>
+					<aligny>center</aligny>
+					<textcolor>grey</textcolor>
+					<focusedcolor>white</focusedcolor>
+					<texturenofocus border="15">button_option_menu.png</texturenofocus>
+					<texturefocus border="15">button_option_menu_on.png</texturefocus>
+					<textureclick border="15">button_option_menu_click.png</textureclick>
+					<label>[UPPERCASE]$LOCALIZE[292][/UPPERCASE]</label>
+					<onclick>ActivateWindow(124)</onclick>
+				</control>
+				<control type="button" id="9203">
+					<width>135</width>
+					<height>30</height>
+					<font>title22b</font>
+					<align>center</align>
+					<aligny>center</aligny>
+					<textcolor>grey</textcolor>
+					<focusedcolor>white</focusedcolor>
+					<texturenofocus border="15">button_option_menu.png</texturenofocus>
+					<texturefocus border="15">button_option_menu_on.png</texturefocus>
+					<textureclick border="15">button_option_menu_click.png</textureclick>
+					<label>[UPPERCASE]$LOCALIZE[574][/UPPERCASE]</label>
+					<onclick>ActivateWindow(146)</onclick>
+				</control>
+			</control>
+		</control>
+	</controls>
+</window>

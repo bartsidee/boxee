@@ -1,0 +1,13 @@
+HEADERS = XAPP_App.h XAPP_Button.h XAPP_Control.h XAPP_Image.h XAPP_Label.h XAPP_List.h XAPP_ListItem.h XAPP_LocalConfig.h XAPP_ToggleButton.h XAPP_Window.h XAPP_MC.h XAPP_Player.h XAPP_PlayList.h AppException.h
+
+App_Python_Wrapper.cpp: $(HEADERS) mc.i mc_doc.i fix_wrapper.sh
+	swig -Wall -c++ -python mc.i
+	./fix_wrapper.sh
+	-rm mc_wrap.cxx
+	mv mc.py ../../system/python/lib
+
+mc_doc.i : $(HEADERS) doxygen.conf doxygen2boxeedoc.php
+	doxygen doxygen.conf
+	python ../../../trunk/tools/doxygen/doxy2swig.py xml/index.xml mc_doc.i
+	xsltproc xml/combine.xslt xml/index.xml > all.xml
+	php doxygen2boxeedoc.php > reference_doc.html

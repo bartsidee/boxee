@@ -1,0 +1,47 @@
+﻿<window id="106">
+	<defaultcontrol>1000</defaultcontrol>
+	<include>Window_OpenClose_Animation</include>
+	<coordinates>
+		<system>1</system>
+		<posx>0</posx>
+		<posy>0</posy>
+	</coordinates>
+	<controls>
+		<control type="image" id="997">
+			<description>background top image</description>
+			<posx>0</posx>
+			<posy>-32</posy>
+			<width>360</width>
+			<height>32</height>
+			<texture border="32">action_menu_bg_top.png</texture>
+		</control>
+		<control type="image" id="999">
+			<description>background image</description>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>360</width>
+			<texture border="32">action_menu_bg_center.png</texture>
+		</control>
+		<control type="image" id="998">
+			<description>background bottom image</description>
+			<posx>0</posx>
+			<width>360</width>
+			<height>32</height>
+			<texture border="32">action_menu_bg_bottom.png</texture>
+		</control>
+		<control type="button" id="1000">
+			<description>button template</description>
+			<posx>10</posx>
+			<posy>0</posy>
+			<width>340</width>
+			<height>72</height>
+			<align>center</align>
+			<aligny>center</aligny>
+			<font>font24b</font>
+			<textcolor>grey</textcolor>
+			<focusedcolor>white</focusedcolor>
+			<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+			<texturenofocus>-</texturenofocus>
+		</control>
+	</controls>
+</window>

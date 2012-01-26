@@ -1,0 +1,1022 @@
+<?xml version="1.0"?>
+<window type="dialog" id="401">
+	<defaultcontrol always="true">6010</defaultcontrol>
+	<allowoverlay>no</allowoverlay>
+	<controls>
+		<!-- Dummy container for Item Info -->
+		<control type="list" id="5000">
+			<description>info</description>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>0</width>
+			<height>0</height>
+			<visible>false</visible>
+			<itemlayout height="0">
+		  </itemlayout>
+			<focusedlayout height="0">
+		  </focusedlayout>
+		</control>
+		<include>Dialog_Background</include>
+		<control type="group">
+			<include>Dialog_Popup_Animation</include>
+			<visible>!Window.IsVisible(boxee_manual_resolve.xml)</visible>
+			<animation effect="fade" start="100" end="25" time="200" condition="Window.IsActive(DialogProgress.xml)">Conditional</animation>
+			<posx>30</posx>
+			<posy>152</posy>
+			<control type="image">
+				<visible>IsEmpty(container(5000).ListItem.Property(app-localpath))</visible>
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>1220</width>
+				<height>460</height>
+				<texture border="64">action_menu_bg.png</texture>
+			</control>
+			<control type="image">
+				<visible>!IsEmpty(container(5000).ListItem.Property(app-localpath))</visible>
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>1220</width>
+				<height>354</height>
+				<texture border="64">action_menu_bg.png</texture>
+			</control>
+			<control type="image">
+				<posx>26</posx>
+				<posy>26</posy>
+				<width>302</width>
+				<height>406</height>
+				<texture>$INFO[container(5000).ListItem.Thumb]</texture>
+				<aspectratio aligny="top">keep</aspectratio>
+				<bordertexture border="12">masks/thumb_background.png</bordertexture>
+				<bordersize>12</bordersize>
+			</control>
+			<control type="group">
+				<animation type="Visible">
+					<effect type="fade" time="100" delay="400"/>
+				</animation>
+				<visible>!IsEmpty(container(5000).ListItem.Property(user_id)) + container(5000).ListItem.Property(isfeed) + !IsEmpty(container(5000).ListItem.Property(user_message))</visible>
+				<posx>340</posx>
+				<posy>-74</posy>
+				<width>840</width>
+				<height>112</height>
+				<control type="image">
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>830</width>
+					<height>112</height>
+					<texture border="56">message_background.png</texture>
+				</control>
+				<control type="largeimage">
+					<posx>2</posx>
+					<posy>2</posy>
+					<width>86</width>
+					<height>86</height>
+					<bordertexture border="12">masks/thumb_background.png</bordertexture>
+					<bordersize>12</bordersize>
+					<info>container(5000).ListItem.Property(user_thumb)</info>
+					<aspectratio>scale</aspectratio>
+				</control>
+				<control type="label">
+					<posx>90</posx>
+					<posy>0</posy>
+					<width>740</width>
+					<height>90</height>
+					<font>font22b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<label>[B]$INFO[container(5000).ListItem.Property(user_name),,  ][/B]$INFO[container(5000).ListItem.Property(user_message),","]</label>
+					<wrapmultiline>true</wrapmultiline>
+				</control>							
+			</control>
+			<control type="grouplist">
+				<posx>344</posx>
+				<posy>36</posy>
+				<width>840</width>
+				<height>430</height>
+				<itemgap>10</itemgap>
+				<orientation>vertical</orientation>
+				<usecontrolcoords>false</usecontrolcoords>
+				<control type="label">
+					<visible>!Container(5000).ListItem.property(IsMovie) + !Container(5000).ListItem.property(IsTVShow) + !Container(5000).ListItem.property(IsMusic)</visible>
+					<width>840</width>
+					<height>32</height>
+					<font>title32b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<label>[UPPERCASE]$INFO[container(5000).ListItem.Label][/UPPERCASE]</label>
+					<textcolor>title</textcolor>
+				</control>
+				<control type="label">
+					<visible>Container(5000).ListItem.property(IsMusic)</visible>
+					<width>840</width>
+					<height>32</height>
+					<font>title32</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<label>[UPPERCASE][B]$INFO[container(5000).ListItem.Artist][/B]$INFO[container(5000).ListItem.Album,    ][/UPPERCASE]</label>
+					<textcolor>title</textcolor>
+				</control>
+				<control type="label">
+					<visible>Container(5000).ListItem.property(IsMovie)</visible>
+					<width>840</width>
+					<height>32</height>
+					<font>title32b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<!--label>[UPPERCASE]$INFO[container(5000).ListItem.Label]$INFO[container(5000).ListItem.Year, (,)][/UPPERCASE]</label-->
+					<label>[UPPERCASE]$INFO[container(5000).ListItem.Label][/UPPERCASE]</label>
+					<textcolor>title</textcolor>
+				</control>
+				<control type="label">
+					<visible>Container(5000).ListItem.property(IsTVShow)</visible>
+					<width>840</width>
+					<height>32</height>
+					<font>title32b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<label>[UPPERCASE]$INFO[container(5000).ListItem.TVShowTitle][/UPPERCASE]</label>
+					<textcolor>title</textcolor>
+				</control>
+				<control type="label">
+					<visible>Container(5000).ListItem.property(IsTVShow)</visible>
+					<width>840</width>
+					<height>24</height>
+					<font>title24b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<label>[UPPERCASE]$INFO[container(5000).ListItem.Season,$LOCALIZE[20373] ,   ]$INFO[container(5000).ListItem.Episode,$LOCALIZE[20359] ,   ]$INFO[container(5000).ListItem.Title,","][/UPPERCASE]</label>
+					<textcolor>white</textcolor>
+				</control>
+				<control type="image">
+					<visible>Container(5000).ListItem.property(IsMovie) + !IsEmpty(container(5000).ListItem.Property(videorating)) + !stringcompare(container(5000).ListItem.Property(videorating),0)</visible>
+					<width>204</width>
+					<height>30</height>
+					<texture>icons/icon_rating_star_$INFO[container(5000).ListItem.Property(videorating)].png</texture>
+					<aspectratio align="right">keep</aspectratio>
+				</control>
+				<control type="label">
+					<visible>[!IsEmpty(container(5000).ListItem.MPAA) | !IsEmpty(container(5000).ListItem.Duration) | !IsEmpty(container(5000).ListItem.Year)] + !container(5000).ListItem.Property(IsMusic) + !container(5000).ListItem.Property(IsTVShow)</visible>
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>840</width>
+					<height>22</height>
+					<font>font20b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<label>$INFO[container(5000).ListItem.Year,[COLOR grey][UPPERCASE]$LOCALIZE[54043][/UPPERCASE][/COLOR] ,        ]$INFO[container(5000).ListItem.MPAA,[COLOR grey][UPPERCASE]$LOCALIZE[563][/UPPERCASE][/COLOR] ,        ]$INFO[formattime(container(5000).ListItem.Duration min),[COLOR grey][UPPERCASE]$LOCALIZE[2050][/UPPERCASE][/COLOR] ,min]</label>
+				</control>
+				<control type="label">
+					<visible>[!IsEmpty(container(5000).ListItem.MPAA) | !IsEmpty(container(5000).ListItem.Duration) | !IsEmpty(container(5000).ListItem.Year)] + container(5000).ListItem.Property(IsMusic)</visible>
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>840</width>
+					<height>22</height>
+					<font>font20b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<label>$INFO[container(5000).ListItem.Year,[COLOR grey][UPPERCASE]$LOCALIZE[54043][/UPPERCASE][/COLOR] ,        ]$INFO[container(5000).ListItem.MPAA,[COLOR grey][UPPERCASE]$LOCALIZE[563][/UPPERCASE][/COLOR] ,]</label>
+				</control>
+				<control type="label">
+					<visible>[!IsEmpty(container(5000).ListItem.MPAA) | !IsEmpty(container(5000).ListItem.Duration) | !IsEmpty(container(5000).ListItem.Date)] + container(5000).ListItem.Property(IsTVShow)</visible>
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>840</width>
+					<height>22</height>
+					<font>font20b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<label>$INFO[container(5000).ListItem.Property(releasedate),[COLOR grey][UPPERCASE]$LOCALIZE[54044][/UPPERCASE][/COLOR] ,        ]$INFO[container(5000).ListItem.MPAA,[COLOR grey][UPPERCASE]$LOCALIZE[563][/UPPERCASE][/COLOR] ,        ]$INFO[formattime(container(5000).ListItem.Duration min),[COLOR grey][UPPERCASE]$LOCALIZE[2050][/UPPERCASE][/COLOR] ,min]</label>
+				</control>
+				<control type="label">
+					<visible>!IsEmpty(container(5000).ListItem.Property(app-localpath)) + !IsEmpty(container(5000).ListItem.property(description))</visible>
+					<width>840</width>
+					<height>138</height>
+					<font>font22</font>
+					<align>left</align>
+					<aligny>top</aligny>
+					<textcolor>white</textcolor>
+					<label>$INFO[container(5000).ListItem.Property(description)]</label>
+					<wrapmultiline>true</wrapmultiline>
+				</control>
+				<control type="group" id="6200">
+					<visible>false</visible>
+					<posx>840</posx>
+					<posy>340</posy>
+					<control type="group">
+						<posx>-16</posx>
+						<posy>180</posy>
+						<control type="image">
+							<visible>!Control.HasFocus(6210)</visible>
+							<posx>30</posx>
+							<posy>35</posy>
+							<width>30</width>
+							<height>40</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture flipx="true">icons/icon_action_menu_play.png</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(6210)</visible>
+							<posx>30</posx>
+							<posy>35</posy>
+							<width>30</width>
+							<height>40</height>
+							<texture flipx="true">icons/icon_action_menu_play.png</texture>
+						</control>
+						<control type="button" id="6210">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>190</width>
+							<height>110</height>
+							<onleft>-</onleft>
+							<onright>6000</onright>
+							<onup>6900</onup>
+							<ondown>6600</ondown>
+							<font>title32b</font>
+							<align>left</align>
+							<aligny>center</aligny>
+							<label>BACK</label>
+							<textcolor>grey</textcolor>
+							<focusedcolor>white</focusedcolor>
+							<textoffsetx>70</textoffsetx>
+							<texturenofocus>-</texturenofocus>
+							<texturefocus border="39">line_view_on.png</texturefocus>
+							<textureclick border="39">line_view_click.png</textureclick>
+						</control>
+					</control>
+					<control type="group">
+						<visible>Container(5000).ListItem.property(IsMovie) | Container(5000).ListItem.property(IsTVShow)</visible>
+						<visible>!IsEmpty(container(5000).ListItem.Property(metaprovider))</visible>
+						<posx>740</posx>
+						<posy>206</posy>
+						<control type="label">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>100</width>
+							<height>14</height>
+							<font>title14b</font>
+							<align>center</align>
+							<aligny>top</aligny>
+							<textcolor>white</textcolor>
+							<label>54046</label>
+						</control>
+						<control type="largeimage">
+							<posx>0</posx>
+							<posy>20</posy>
+							<width>100</width>
+							<height>50</height>
+							<texture>$INFO[container(5000).ListItem.Property(metaprovider)]</texture>
+						</control>
+					</control>
+					<control type="group" id="6800">
+						<control type="textbox" id="6801">
+							<visible>!IsEmpty(container(5000).ListItem.PlotOutline) + !container(5000).ListItem.property(IsMusic)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>820</width>
+							<height>135</height>
+							<font>font22</font>
+							<align>left</align>
+							<aligny>top</aligny>
+							<textcolor>white</textcolor>
+							<label>$INFO[container(5000).ListItem.PlotOutline]</label>
+							<wrapmultiline>true</wrapmultiline>
+							<pagecontrol>6901</pagecontrol>
+						</control>
+						<control type="textbox" id="6802">
+							<visible>!IsEmpty(container(5000).ListItem.Plot) + IsEmpty(container(5000).ListItem.PlotOutline) + !container(5000).ListItem.property(IsMusic)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>840</width>
+							<height>135</height>
+							<font>font22</font>
+							<align>left</align>
+							<aligny>top</aligny>
+							<textcolor>white</textcolor>
+							<label>$INFO[container(5000).ListItem.Plot]</label>
+							<wrapmultiline>true</wrapmultiline>
+							<pagecontrol>6902</pagecontrol>						
+						</control>
+						<control type="textbox" id="6803">
+							<visible>!IsEmpty(container(5000).ListItem.property(description)) + IsEmpty(container(5000).ListItem.Plot) + IsEmpty(container(5000).ListItem.PlotOutline) + !container(5000).ListItem.property(IsMusic)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>840</width>
+							<height>135</height>
+							<font>font22</font>
+							<align>left</align>
+							<aligny>top</aligny>
+							<textcolor>white</textcolor>
+							<label>$INFO[container(5000).ListItem.property(description)]</label>
+							<wrapmultiline>true</wrapmultiline>
+							<pagecontrol>6903</pagecontrol>						
+						</control>
+						<control type="textbox" id="6804">
+							<visible>!IsEmpty(container(5000).ListItem.property(description)) + container(5000).ListItem.property(IsMusic)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>840</width>
+							<height>180</height>
+							<font>font22</font>
+							<align>left</align>
+							<aligny>top</aligny>
+							<textcolor>white</textcolor>
+							<label>$INFO[container(5000).ListItem.property(description)]</label>
+							<wrapmultiline>true</wrapmultiline>
+							<pagecontrol>6904</pagecontrol>
+						</control>
+					</control>
+					<control type="group" id="6900">
+						<control type="scrollbar" id="6901">
+							<visible>Control.IsVisible(6801)</visible>
+							<posx>820</posx>
+							<posy>0</posy>
+							<width>28</width>
+							<height>140</height>
+							<texturesliderbackground border="14">scrollbar_bg.png</texturesliderbackground>
+							<textureslidernib>scrollbar_vertical_nib.png</textureslidernib>
+							<textureslidernibfocus>scrollbar_vertical_nib_on.png</textureslidernibfocus>
+							<texturesliderbar>-</texturesliderbar>
+							<texturesliderbarfocus>-</texturesliderbarfocus>
+							<orientation>vertical</orientation>
+							<showonepage>false</showonepage>
+							<ondown>6210</ondown>
+						</control>
+						<control type="scrollbar" id="6902">
+							<visible>Control.IsVisible(6802)</visible>
+							<posx>820</posx>
+							<posy>0</posy>
+							<width>28</width>
+							<height>140</height>
+							<texturesliderbackground border="14">scrollbar_bg.png</texturesliderbackground>
+							<textureslidernib>scrollbar_vertical_nib.png</textureslidernib>
+							<textureslidernibfocus>scrollbar_vertical_nib_on.png</textureslidernibfocus>
+							<texturesliderbar>-</texturesliderbar>
+							<texturesliderbarfocus>-</texturesliderbarfocus>
+							<orientation>vertical</orientation>
+							<showonepage>false</showonepage>
+							<ondown>6210</ondown>                       
+						</control>
+						<control type="scrollbar" id="6903">
+							<visible>Control.IsVisible(6803)</visible>
+							<posx>820</posx>
+							<posy>0</posy>
+							<width>28</width>
+							<height>140</height>
+							<texturesliderbackground border="14">scrollbar_bg.png</texturesliderbackground>
+							<textureslidernib>scrollbar_vertical_nib.png</textureslidernib>
+							<textureslidernibfocus>scrollbar_vertical_nib_on.png</textureslidernibfocus>
+							<texturesliderbar>-</texturesliderbar>
+							<texturesliderbarfocus>-</texturesliderbarfocus>
+							<orientation>vertical</orientation>
+							<showonepage>false</showonepage>
+							<ondown>6210</ondown>                       
+						</control>
+						<control type="scrollbar" id="6904">
+							<visible>Control.IsVisible(6804)</visible>
+							<posx>820</posx>
+							<posy>0</posy>
+							<width>28</width>
+							<height>140</height>
+							<texturesliderbackground border="14">scrollbar_bg.png</texturesliderbackground>
+							<textureslidernib>scrollbar_vertical_nib.png</textureslidernib>
+							<textureslidernibfocus>scrollbar_vertical_nib_on.png</textureslidernibfocus>
+							<texturesliderbar>-</texturesliderbar>
+							<texturesliderbarfocus>-</texturesliderbarfocus>
+							<orientation>vertical</orientation>
+							<showonepage>false</showonepage>
+							<ondown>6210</ondown>                       
+						</control>                                       				
+					</control>                  					
+					<control type="label">
+						<visible>container(5000).ListItem.property(IsVideo)</visible>
+						<posx>0</posx>
+						<posy>140</posy>
+						<width>840</width>
+						<height>48</height>
+						<font>font20b</font>
+						<align>left</align>
+						<aligny>top</aligny>
+						<textcolor>white</textcolor>
+						<label>$INFO[container(5000).ListItem.Director,[COLOR title][UPPERCASE]$LOCALIZE[20339][/UPPERCASE][/COLOR]  ]    $INFO[container(5000).ListItem.property(cast),[CR][COLOR title][UPPERCASE]$LOCALIZE[54042][/UPPERCASE][/COLOR]  ]</label>
+					</control>
+				</control>
+				<control type="group">
+					<width>840</width>
+					<height>20</height>
+					<visible>Control.IsVisible(6021)</visible>
+					<visible>Control.IsVisible(6000)</visible>
+					<visible>!Control.IsVisible(6200)</visible>
+					<control type="label">
+						<visible>Control.IsVisible(6021)</visible>
+						<posx>2</posx>
+						<posy>0</posy>
+						<width>300</width>
+						<height>36</height>
+						<font>title14b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>grey</textcolor>
+						<label>54050</label>
+					</control>
+					<control type="label" id="6021">
+						<posx>452</posx>
+						<posy>0</posy>
+						<width>400</width>
+						<height>36</height>
+						<font>title14b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>grey</textcolor>
+						<label>[UPPERCASE]$LOCALIZE[54051]$INFO[Container(6020).NumItems, (,)][/UPPERCASE]</label>
+					</control>
+				</control>
+				<control type="group" id="6000">
+					<description>media panel</description>
+					<visible>!Control.IsVisible(6200)</visible>
+					<width>840</width>
+					<height>90</height>
+					<control type="group">
+						<posx>-10</posx>
+						<visible>Control.IsVisible(6010)</visible>
+						<control type="button" id="6010">
+							<posx>2</posx>
+							<posy>0</posy>
+							<width>450</width>
+							<height>98</height>
+							<onleft>-</onleft>
+							<onright>6020</onright>
+							<onup>-</onup>
+							<ondown>6100</ondown>
+							<font>title18b</font>
+							<align>left</align>
+							<aligny>top</aligny>
+							<label>-</label>
+							<textcolor>grey</textcolor>
+							<focusedcolor>white</focusedcolor>
+							<textoffsetx>80</textoffsetx>
+							<textoffsety>56</textoffsety>
+							<texturenofocus border="30">button_action_menu_source.png</texturenofocus>
+							<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+							<textureclick border="30">button_action_menu_source_click.png</textureclick>
+						</control>
+						<control type="image">
+							<visible>!Control.HasFocus(6010)</visible>
+							<posx>22</posx>
+							<posy>19</posy>
+							<width>45</width>
+							<height>60</height>
+							<texture diffuse="grey.png">icons/icon_action_menu_play.png</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(6010)</visible>
+							<posx>22</posx>
+							<posy>19</posy>
+							<width>45</width>
+							<height>60</height>
+							<texture>icons/icon_action_menu_play.png</texture>
+						</control>
+						<control type="group">
+							<visible>IsEmpty(container(5000).ListItem.Property(pb_provider_thumb))</visible>
+							<control type="label" id="6011">
+								<visible>!Control.HasFocus(6010)</visible>
+								<posx>80</posx>
+								<posy>18</posy>
+								<width>380</width>
+								<height>36</height>
+								<font>title32b</font>
+								<align>left</align>
+								<aligny>center</aligny>
+								<textcolor>grey</textcolor>
+								<label>[UPPERCASE]$LOCALIZE[53750][/UPPERCASE]</label>
+							</control>
+							<control type="image">
+								<visible>!Control.HasFocus(6010) + Window.CheckIntProperty(is-hd,1))</visible>
+								<posx>350</posx>
+								<posy>17</posy>
+								<width>64</width>
+								<height>64</height>
+							    <texture diffuse="grey.png">icons/boxee-icon-HD.png</texture>
+							</control>																				
+							<control type="label" id="6012">
+								<visible>Control.HasFocus(6010)</visible>
+								<posx>80</posx>
+								<posy>18</posy>
+								<width>380</width>
+								<height>36</height>
+								<font>title32b</font>
+								<align>left</align>
+								<aligny>center</aligny>
+								<textcolor>white</textcolor>
+								<label>[UPPERCASE]$LOCALIZE[53750][/UPPERCASE]</label>
+							</control>
+							<control type="image">
+								<visible>Control.HasFocus(6010) +  Window.CheckIntProperty(is-hd,1))</visible>
+								<posx>350</posx>
+								<posy>17</posy>
+								<width>64</width>
+								<height>64</height>
+							    <texture>icons/boxee-icon-HD.png</texture>
+							</control>																										
+							<control type="label" id="6013">
+								<visible>!Control.HasFocus(6010)</visible>
+								<posx>80</posx>
+								<posy>57</posy>
+								<width>380</width>
+								<height>18</height>
+								<font>title18b</font>
+								<align>left</align>
+								<aligny>center</aligny>
+								<textcolor>grey</textcolor>
+								<label>-</label>
+							</control>
+							<control type="label" id="6014">
+								<visible>Control.HasFocus(6010)</visible>
+								<posx>80</posx>
+								<posy>57</posy>
+								<width>380</width>
+								<height>18</height>
+								<font>title18b</font>
+								<align>left</align>
+								<aligny>center</aligny>
+								<textcolor>white</textcolor>
+								<label>-</label>
+							</control>
+						</control>				
+						<control type="group">
+							<visible>!IsEmpty(container(5000).ListItem.Property(pb_provider_thumb))</visible>
+							<control type="largeimage">
+								<visible>Control.HasFocus(6010)</visible>
+								<posx>80</posx>
+								<posy>-5</posy>
+								<width>161</width>
+								<height>109</height>
+								<texture>$INFO[container(5000).ListItem.Property(pb_provider_thumb)]</texture>
+							</control>
+							<control type="largeimage">
+								<visible>!Control.HasFocus(6010)</visible>
+								<posx>80</posx>
+								<posy>-5</posy>
+								<width>161</width>
+								<height>109</height>
+								<texture diffuse="grey.png">$INFO[container(5000).ListItem.Property(pb_provider_thumb)]</texture>
+							</control>
+							<control type="image">
+								<visible>!Control.HasFocus(6010) + Window.CheckIntProperty(is-hd,1))</visible>
+								<posx>374</posx>
+								<posy>17</posy>
+								<width>40</width>
+								<height>40</height>
+							    <texture diffuse="grey.png">icons/boxee-icon-HD.png</texture>
+							</control>																				
+							<control type="image">
+								<visible>Control.HasFocus(6010) +  Window.CheckIntProperty(is-hd,1))</visible>
+								<posx>374</posx>
+								<posy>17</posy>
+								<width>40</width>
+								<height>40</height>
+							    <texture>icons/boxee-icon-HD.png</texture>
+							</control>
+							<control type="label" id="6015">
+								<visible>!Control.HasFocus(6010)</visible>
+								<posx>414</posx>
+								<posy>57</posy>
+								<width>380</width>
+								<height>18</height>
+								<font>title18b</font>
+								<align>right</align>
+								<aligny>center</aligny>
+								<textcolor>grey</textcolor>
+								<label>-</label>
+							</control>
+							<control type="label" id="6016">
+								<visible>Control.HasFocus(6010)</visible>
+								<posx>414</posx>
+								<posy>57</posy>
+								<width>380</width>
+								<height>18</height>
+								<font>title18b</font>
+								<align>right</align>
+								<aligny>center</aligny>
+								<textcolor>white</textcolor>
+								<label>-</label>
+							</control>
+						</control>				
+					</control>				
+					<control type="panel" id="6020">
+						<posx>440</posx>
+						<posy>6</posy>
+						<width>376</width>
+						<height>86</height>
+						<onleft>6010</onleft>
+						<onright>-</onright>
+						<onup>-</onup>
+						<ondown>6100</ondown>
+						<scrolltime>400</scrolltime>
+						<pagecontrol>60</pagecontrol>
+						<orientation>horizontal</orientation>
+						<itemlayout width="376" height="43">
+							<control type="image">
+								<posx>0</posx>
+								<posy>-6</posy>
+								<width>380</width>
+								<height>54</height>
+								<texture border="20">button_action_menu_source.png</texture>
+							</control>
+							<control type="label">
+								<visible>IsEmpty(ListItem.Property(link-providerthumb))</visible>
+								<posx>26</posx>
+								<posy>0</posy>
+								<width>328</width>
+								<height>42</height>
+								<font>font20b</font>
+								<align>left</align>
+								<aligny>center</aligny>
+								<label>[B][UPPERCASE]$INFO[ListItem.Label2][/UPPERCASE][/B]  $INFO[ListItem.Label]</label>
+								<textcolor>grey</textcolor>
+							</control>
+							<control type="label">
+								<visible>!IsEmpty(ListItem.Property(link-providerthumb))</visible>
+								<posx>116</posx>
+								<posy>0</posy>
+								<width>328</width>
+								<height>42</height>
+								<font>font20b</font>
+								<align>left</align>
+								<aligny>center</aligny>
+								<label>$INFO[ListItem.Label]</label>
+								<textcolor>grey</textcolor>
+							</control>
+							<control type="largeimage">
+								<visible>!IsEmpty(ListItem.Property(link-providerthumb))</visible>
+								<posx>26</posx>
+								<posy>-5</posy>
+								<width>76</width>
+								<height>52</height>
+						        <texture diffuse="grey.png">$INFO[ListItem.Property(link-providerthumb)]</texture>
+							</control>														
+							<control type="image">
+							    <visible>!IsEmpty(ListItem.Property(is-hd))</visible>
+								<posx>325</posx>
+								<posy>5</posy>
+								<width>32</width>
+								<height>32</height>
+						        <texture diffuse="grey.png">icons/boxee-icon-HD.png</texture>
+							</control>														
+						</itemlayout>
+						<focusedlayout width="376" height="43">
+							<control type="image">
+								<visible>!Control.HasFocus(6020)</visible>
+								<posx>0</posx>
+								<posy>-6</posy>
+								<width>380</width>
+								<height>54</height>
+								<texture border="20">button_action_menu_source.png</texture>
+							</control>
+							<control type="image">
+								<visible>Control.HasFocus(6020)</visible>
+								<posx>0</posx>
+								<posy>-6</posy>
+								<width>380</width>
+								<height>54</height>
+								<texture border="20">button_action_menu_source_on.png</texture>
+							</control>
+							<control type="label">
+								<visible>IsEmpty(ListItem.Property(link-providerthumb)) + !Control.HasFocus(6020)</visible>
+								<posx>26</posx>
+								<posy>0</posy>
+								<width>328</width>
+								<height>42</height>
+								<font>font20b</font>
+								<align>left</align>
+								<aligny>center</aligny>
+								<label>[B][UPPERCASE]$INFO[ListItem.Label2][/UPPERCASE][/B]  $INFO[ListItem.Label]</label>
+								<textcolor>grey</textcolor>
+							</control>
+							<control type="label">
+								<visible>IsEmpty(ListItem.Property(link-providerthumb)) + Control.HasFocus(6020)</visible>
+								<posx>26</posx>
+								<posy>0</posy>
+								<width>328</width>
+								<height>42</height>
+								<font>font20b</font>
+								<align>left</align>
+								<aligny>center</aligny>
+								<label>[B][UPPERCASE]$INFO[ListItem.Label2][/UPPERCASE][/B]  $INFO[ListItem.Label]</label>
+								<textcolor>white</textcolor>
+							</control>
+							<control type="label">
+								<visible>!IsEmpty(ListItem.Property(link-providerthumb)) + !Control.HasFocus(6020)</visible>
+								<posx>116</posx>
+								<posy>0</posy>
+								<width>328</width>
+								<height>42</height>
+								<font>font20b</font>
+								<align>left</align>
+								<aligny>center</aligny>
+								<label>$INFO[ListItem.Label]</label>
+								<textcolor>grey</textcolor>
+							</control>
+							<control type="label">
+								<visible>!IsEmpty(ListItem.Property(link-providerthumb)) + Control.HasFocus(6020)</visible>
+								<posx>116</posx>
+								<posy>0</posy>
+								<width>328</width>
+								<height>42</height>
+								<font>font20b</font>
+								<align>left</align>
+								<aligny>center</aligny>
+								<label>$INFO[ListItem.Label]</label>
+								<textcolor>white</textcolor>
+							</control>
+							<control type="largeimage">
+								<visible>!IsEmpty(ListItem.Property(link-providerthumb)) + !Control.HasFocus(6020)</visible>
+								<posx>26</posx>
+								<posy>-5</posy>
+								<width>76</width>
+								<height>52</height>
+						        <texture diffuse="grey.png">$INFO[ListItem.Property(link-providerthumb)]</texture>
+							</control>														
+							<control type="largeimage">
+								<visible>!IsEmpty(ListItem.Property(link-providerthumb)) + Control.HasFocus(6020)</visible>
+								<posx>26</posx>
+								<posy>-5</posy>
+								<width>76</width>
+								<height>52</height>
+						        <texture>$INFO[ListItem.Property(link-providerthumb)]</texture>
+							</control>														
+							<control type="image">
+							    <visible>!IsEmpty(ListItem.Property(is-hd)) + !Control.HasFocus(6020)</visible>
+								<posx>325</posx>
+								<posy>5</posy>
+								<width>32</width>
+								<height>32</height>
+						        <texture diffuse="grey.png">icons/boxee-icon-HD.png</texture>
+							</control>
+							<control type="image">
+							    <visible>!IsEmpty(ListItem.Property(is-hd)) + Control.HasFocus(6020)</visible>
+								<posx>325</posx>
+								<posy>5</posy>
+								<width>32</width>
+								<height>32</height>
+						        <texture>icons/boxee-icon-HD.png</texture>
+							</control>														
+						</focusedlayout>
+					</control>
+					<control type="image">
+						<visible>Container(6020).HasNext</visible>
+						<animation effect="fade" time="100" delay="0">VisibleChange</animation>
+						<posx>820</posx>
+						<posy>37</posy>
+						<width>24</width>
+						<height>24</height>
+						<colordiffuse>80FFFFFF</colordiffuse>
+						<texture>icons/icon_arrow_right_large.png</texture>
+					</control>
+				</control>
+				<control type="group" id="6100">
+					<description>actions panel</description>
+					<visible>!Control.IsVisible(6200)</visible>
+					<visible>!Container(6110).IsEmpty | !Container(6120).IsEmpty</visible>
+					<width>840</width>
+					<height>100</height>
+                    <control type="list" id="6110">
+                        <posx>-18</posx>
+                        <posy>0</posy>
+                        <width>600</width>
+                        <height>100</height>
+                        <onup>6000</onup>
+                        <onright>6120</onright>
+                        <onleft>-</onleft>
+                        <ondown>-</ondown>
+                        <scrolltime>200</scrolltime>
+                        <pagecontrol>-</pagecontrol>
+                        <orientation>horizontal</orientation>
+                        <offsetx>20</offsetx>
+                        <offsety>5</offsety>
+                        <itemlayout width="70" height="90">
+                            <control type="image">
+                                <posx>10</posx>
+                                <posy>10</posy>
+                                <width>50</width>
+                                <height>50</height>
+                                <colordiffuse>80FFFFFF</colordiffuse>
+                                <texture>$INFO[ListItem.Thumb]</texture>
+                            </control>
+                        </itemlayout>
+                        <focusedlayout width="70" height="90">
+                            <control type="image">
+                                <visible>Control.HasFocus(6110)</visible>
+                                <posx>-10</posx>
+                                <posy>-10</posy>
+                                <width>90</width>
+                                <height>90</height>
+                                <texture border="30">button_action_menu_source_on.png</texture>
+                            </control>
+                            <control type="image">
+                                <visible>!Control.HasFocus(6110)</visible>
+                                <posx>10</posx>
+                                <posy>10</posy>
+                                <width>50</width>
+                                <height>50</height>
+                                <colordiffuse>80FFFFFF</colordiffuse>
+                                <texture>$INFO[ListItem.Thumb]</texture>
+                            </control>
+                            <control type="image">
+                                <visible>Control.HasFocus(6110)</visible>
+                                <posx>10</posx>
+                                <posy>10</posy>
+                                <width>50</width>
+                                <height>50</height>
+                                <texture>$INFO[ListItem.Thumb]</texture>
+                            </control>
+                            <control type="label">
+                                <visible>Control.HasFocus(6110)</visible>
+                                <posx>35</posx>
+                                <posy>74</posy>
+                                <width>200</width>
+                                <height>20</height>
+                                <font>title16b</font>
+                                <align>center</align>
+                                <aligny>center</aligny>
+                                <label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+                                <textcolor>white</textcolor>
+                            </control>
+                        </focusedlayout>
+                    </control>
+					<control type="image">
+						<visible>!Container(6110).IsEmpty</visible>
+						<posx>78</posx>
+						<posy>15</posy>
+						<width>1</width>
+						<height>50</height>
+						<texture>grey.png</texture>
+					</control>
+					<control type="list" id="6120">
+						<animation type="Conditional" condition="Container(6110).IsEmpty">
+							<effect type="slide" start="0,0" end="-82,0" time="0" delay="0"/>
+						</animation>
+						<posx>60</posx>
+						<posy>0</posy>
+						<width>600</width>
+						<height>120</height>
+						<onup>6000</onup>
+						<onright>-</onright>
+						<onleft>6110</onleft>
+						<ondown>-</ondown>
+						<scrolltime>200</scrolltime>
+						<pagecontrol>-</pagecontrol>
+						<orientation>horizontal</orientation>
+						<offsetx>31</offsetx>
+						<offsety>5</offsety>
+						<itemlayout width="70" height="120">
+							<control type="image">
+								<posx>10</posx>
+								<posy>10</posy>
+								<width>50</width>
+								<height>50</height>
+								<colordiffuse>80FFFFFF</colordiffuse>
+								<texture>$INFO[ListItem.Thumb]</texture>
+							</control>
+						</itemlayout>
+						<focusedlayout width="70" height="120">
+							<control type="image">
+								<visible>Control.HasFocus(6120)</visible>
+								<posx>-10</posx>
+								<posy>-10</posy>
+								<width>90</width>
+								<height>90</height>
+								<texture border="30">button_action_menu_source_on.png</texture>
+							</control>
+							<control type="image">
+								<visible>!Control.HasFocus(6120)</visible>
+								<posx>10</posx>
+								<posy>10</posy>
+								<width>50</width>
+								<height>50</height>
+								<colordiffuse>80FFFFFF</colordiffuse>
+								<texture>$INFO[ListItem.Thumb]</texture>
+							</control>
+							<control type="image">
+								<visible>Control.HasFocus(6120)</visible>
+								<posx>10</posx>
+								<posy>10</posy>
+								<width>50</width>
+								<height>50</height>
+								<texture>$INFO[ListItem.Thumb]</texture>
+							</control>
+							<control type="label">
+								<visible>Control.HasFocus(6120)</visible>
+								<posx>35</posx>
+								<posy>74</posy>
+								<width>200</width>
+								<height>40</height>
+								<font>title16b</font>
+								<align>center</align>
+								<aligny>top</aligny>
+								<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+								<textcolor>white</textcolor>
+								<wrapmultiline>true</wrapmultiline>
+							</control>
+						</focusedlayout>
+					</control>
+				</control>
+				<control type="group" id="6300">
+					<description>application panel</description>
+					<visible>!Control.IsVisible(6200)</visible>
+					<width>840</width>
+					<height>98</height>
+					<control type="button" id="6310">
+						<posx>-8</posx>
+						<posy>0</posy>
+						<width>200</width>
+						<height>98</height>
+						<onleft>-</onleft>
+						<onright>6320</onright>
+						<onup>6000</onup>
+						<ondown>6100</ondown>
+						<font>title32b</font>
+						<align>center</align>
+						<aligny>center</aligny>
+						<label>[UPPERCASE]$LOCALIZE[53760][/UPPERCASE]</label>
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<texturenofocus border="30">button_action_menu_source.png</texturenofocus>
+						<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+						<textureclick border="30">button_action_menu_source_click.png</textureclick>
+					</control>
+					<control type="button" id="6320">
+						<posx>200</posx>
+						<posy>0</posy>
+						<width>300</width>
+						<height>54</height>
+						<onleft>6310</onleft>
+						<onright>6330</onright>
+						<onup>-</onup>
+						<ondown>6340</ondown>
+						<font>font20b</font>
+						<align>center</align>
+						<aligny>center</aligny>
+						<label>[UPPERCASE]$LOCALIZE[53761][/UPPERCASE]</label>
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<texturenofocus border="20">button_action_menu_source.png</texturenofocus>
+						<texturefocus border="20">button_action_menu_source_on.png</texturefocus>
+						<textureclick border="20">button_action_menu_source_click.png</textureclick>
+					</control>
+					<control type="button" id="6330">
+						<posx>200</posx>
+						<posy>0</posy>
+						<width>300</width>
+						<height>54</height>
+						<onleft>6320</onleft>
+						<onright>-</onright>
+						<onup>6320</onup>
+						<ondown>6340</ondown>
+						<font>font20b</font>
+						<align>center</align>
+						<aligny>center</aligny>
+						<label>[UPPERCASE]$LOCALIZE[53762][/UPPERCASE]</label>
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<texturenofocus border="20">button_action_menu_source.png</texturenofocus>
+						<texturefocus border="20">button_action_menu_source_on.png</texturefocus>
+						<textureclick border="20">button_action_menu_source_click.png</textureclick>
+					</control>
+					<control type="button" id="6340">
+						<posx>200</posx>
+						<posy>43</posy>
+						<width>300</width>
+						<height>54</height>
+						<onleft>6310</onleft>
+						<onright>-</onright>
+						<onup>6330</onup>
+						<ondown>-</ondown>
+						<font>font20b</font>
+						<align>center</align>
+						<aligny>center</aligny>
+						<textcolor>grey</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<texturenofocus border="20">button_action_menu_source.png</texturenofocus>
+						<texturefocus border="20">button_action_menu_source_on.png</texturefocus>
+						<textureclick border="20">button_action_menu_source_click.png</textureclick>
+					</control>                   					
+				</control>
+			</control>
+			<control type="label" id="6742">
+				<!-- path of focused link -->
+				<posx>48</posx>
+				<posy>428</posy>
+				<width>1100</width>
+				<height>18</height>
+				<font>font18b</font>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>-</label>
+				<textcolor>disabled</textcolor>
+			</control>
+		</control>
+	</controls>
+</window>

@@ -1,0 +1,10 @@
+<upnpserver>
+    <UUID>31c52d7c-294f-c57b-a8cb-55ecf6ffcf8f</UUID>
+    <FriendlyName></FriendlyName>
+    <music>
+        <bookmark>
+            <name>movies</name>
+            <path>/home/vulkan/movies</path>
+        </bookmark>
+    </music>
+</upnpserver>

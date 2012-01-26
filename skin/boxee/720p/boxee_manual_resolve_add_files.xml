@@ -1,0 +1,230 @@
+<?xml version="1.0"?>
+<window id="10469">
+	<defaultcontrol always="true">5020</defaultcontrol>
+	<allowoverlay>no</allowoverlay>
+	<controls>
+		<include>Window_Fade_Animation</include>
+		<control type="group">
+			<posx>30</posx>
+			<posy>152</posy>
+			<animation effect="fade" start="100" end="25" time="200" condition="Window.IsActive(DialogProgress.xml)">Conditional</animation>
+			<control type="label">
+				<posx>36</posx>
+				<posy>36</posy>
+				<width>840</width>
+				<height>32</height>
+				<font>title32b</font>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>[UPPERCASE]$LOCALIZE[54201][/UPPERCASE]</label>
+				<textcolor>title</textcolor>
+			</control>
+			<control type="group">
+				<animation effect="fade" start="100" end="25" time="200" condition="window.CheckIntProperty(manage-set,1)">Conditional</animation>
+				<control type="label">
+					<posx>72</posx>
+					<posy>100</posy>
+					<width>300</width>
+					<height>22</height>
+					<label>[UPPERCASE]$LOCALIZE[54202][/UPPERCASE]</label>
+					<font>font20b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+				</control>
+				<control type="list" id="5020">
+					<enable>!window.CheckIntProperty(manage-set,1)</enable>				
+					<description>parts list</description>
+					<posx>36</posx>
+					<posy>130</posy>
+					<width>540</width>
+					<height>235</height>
+					<onleft>-</onleft>
+					<onright>5010</onright>
+					<onup>1000</onup>
+					<ondown>9010</ondown>
+					<scrolltime>200</scrolltime>
+					<pagecontrol>60</pagecontrol>
+					<orientation>vertical</orientation>
+					<focusposition>6</focusposition>
+					<offsety>5</offsety>
+					<itemlayout height="40">
+						<control type="label">
+							<posx>36</posx>
+							<posy>0</posy>
+							<width>470</width>
+							<height>40</height>
+							<font>font22</font>
+							<align>left</align>
+							<aligny>center</aligny>
+							<info>ListItem.Label</info>
+							<textcolor>grey</textcolor>
+						</control>
+					</itemlayout>
+					<focusedlayout height="40">
+						<control type="image">
+							<visible>Control.HasFocus(5020)</visible>
+							<posx>0</posx>
+							<posy>-19</posy>
+							<width>540</width>
+							<height>78</height>
+							<texture border="39">line_view_on.png</texture>
+						</control>
+						<control type="label">
+							<visible>!Control.HasFocus(5020)</visible>
+							<posx>36</posx>
+							<posy>0</posy>
+							<width>470</width>
+							<height>40</height>
+							<font>font22</font>
+							<align>left</align>
+							<aligny>center</aligny>
+							<label>$INFO[ListItem.Label]</label>
+							<textcolor>grey</textcolor>
+						</control>
+						<control type="label">
+							<visible>Control.HasFocus(5020)</visible>
+							<posx>36</posx>
+							<posy>0</posy>
+							<width>470</width>
+							<height>40</height>
+							<font>font22b</font>
+							<align>left</align>
+							<aligny>center</aligny>
+							<label>$INFO[ListItem.Label]</label>
+							<textcolor>white</textcolor>
+							<scroll>true</scroll>
+						</control>
+					</focusedlayout>
+				</control>
+			</control>
+			<control type="group">
+				<control type="label">
+					<posx>611</posx>
+					<posy>100</posy>
+					<width>200</width>
+					<height>22</height>
+					<label>[UPPERCASE]$LOCALIZE[54203][/UPPERCASE]</label>
+					<font>font20b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+				</control>
+				<control type="list" id="5010">
+					<description>file list</description>
+					<posx>575</posx>
+					<posy>130</posy>
+					<width>540</width>
+					<height>235</height>
+					<onleft>5020</onleft>
+					<onright>-</onright>
+					<onup>1000</onup>
+					<ondown>9010</ondown>
+					<scrolltime>200</scrolltime>
+					<pagecontrol>60</pagecontrol>
+					<orientation>vertical</orientation>
+					<focusposition>6</focusposition>
+					<offsety>5</offsety>
+					<itemlayout height="40">
+						<control type="label">
+							<posx>36</posx>
+							<posy>0</posy>
+							<width>470</width>
+							<height>40</height>
+							<font>font22</font>
+							<align>left</align>
+							<aligny>center</aligny>
+							<info>ListItem.Label</info>
+							<textcolor>grey</textcolor>
+						</control>
+					</itemlayout>
+					<focusedlayout height="40">
+						<control type="image">
+							<visible>Control.HasFocus(5010) + !window.CheckIntProperty(manage-set,1)</visible>
+							<posx>0</posx>
+							<posy>-19</posy>
+							<width>540</width>
+							<height>78</height>
+							<texture border="39">line_view_on.png</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(5010) + window.CheckIntProperty(manage-set,1)</visible>
+							<posx>0</posx>
+							<posy>-19</posy>
+							<width>540</width>
+							<height>78</height>
+							<texture border="39">line_view_manage_on.png</texture>
+						</control>
+						<control type="label">
+							<visible>!Control.HasFocus(5010)</visible>
+							<posx>36</posx>
+							<posy>0</posy>
+							<width>470</width>
+							<height>40</height>
+							<font>font22</font>
+							<align>left</align>
+							<aligny>center</aligny>
+							<label>$INFO[ListItem.Label]</label>
+							<textcolor>grey</textcolor>
+						</control>
+						<control type="label">
+							<visible>Control.HasFocus(5010)</visible>
+							<posx>36</posx>
+							<posy>0</posy>
+							<width>470</width>
+							<height>40</height>
+							<font>font22b</font>
+							<align>left</align>
+							<aligny>center</aligny>
+							<label>$INFO[ListItem.Label]</label>
+							<textcolor>white</textcolor>
+							<scroll>true</scroll>
+						</control>
+					</focusedlayout>
+				</control>
+			</control>
+			<control type="button" id="9010">
+				<enable>!window.CheckIntProperty(manage-set,1)</enable>				
+				<posx>36</posx>
+				<posy>378</posy>
+				<width>140</width>
+				<height>56</height>
+				<align>center</align>
+				<aligny>center</aligny>
+				<textcolor>grey</textcolor>
+				<focusedcolor>white</focusedcolor>
+				<texturenofocus border="30">-</texturenofocus>
+				<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+				<textureclick border="30">button_action_menu_source_click.png</textureclick>
+				<font>title22b</font>
+				<label>[UPPERCASE]$LOCALIZE[20177][/UPPERCASE]</label>
+				<onup>5020</onup>
+				<ondown>-</ondown>
+				<onleft>-</onleft>
+				<onright>9020</onright>
+				<onclick>-</onclick>
+			</control>
+			<control type="button" id="9020">
+				<enable>!window.CheckIntProperty(manage-set,1)</enable>				
+				<posx>176</posx>
+				<posy>378</posy>
+				<width>140</width>
+				<height>56</height>
+				<align>center</align>
+				<aligny>center</aligny>
+				<textcolor>grey</textcolor>
+				<focusedcolor>white</focusedcolor>
+				<texturenofocus border="30">-</texturenofocus>
+				<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+				<textureclick border="30">button_action_menu_source_click.png</textureclick>
+				<font>title22b</font>
+				<label>[UPPERCASE]$LOCALIZE[54049][/UPPERCASE]</label>
+				<onup>5020</onup>
+				<ondown>-</ondown>
+				<onleft>9010</onleft>
+				<onright>-</onright>
+				<onclick>-</onclick>
+			</control>
+		</control>
+	</controls>
+</window>

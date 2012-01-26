@@ -1,0 +1,98 @@
+﻿<?xml version="1.0"?>
+<window id="2000">
+	<defaultcontrol>3</defaultcontrol>
+	<allowoverlay>no</allowoverlay>
+	<controls>
+		<include>Dialog_Popup_Background</include>
+		<control type="group">
+			<include>Dialog_Popup_Animation</include>
+			<posx>240</posx>
+			<posy>122</posy>
+			<control type="image">
+				<description>dialog background</description>
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>800</width>
+				<height>372</height>
+				<texture border="64">dialog_background.png</texture>
+			</control>
+			<control type="label" id="1">
+				<description>heading label</description>
+				<posx>26</posx>
+				<posy>34</posy>
+				<width>750</width>
+				<height>28</height>
+				<font>title28b</font>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>-</label>
+				<textcolor>FF3B2D06</textcolor>
+			</control>
+			<control type="list" id="3">
+				<posx>40</posx>
+				<posy>110</posy>
+				<width>720</width>
+				<height>240</height>
+				<onleft>-</onleft>
+				<onright>-</onright>
+				<onup>-</onup>
+				<ondown>-</ondown>
+				<pagecontrol>60</pagecontrol>
+				<scrolltime>200</scrolltime>
+				<itemlayout width="720" height="40">
+					<control type="label">
+						<posx>20</posx>
+						<posy>0</posy>
+						<width>680</width>
+						<height>40</height>
+						<font>font22</font>
+						<aligny>center</aligny>
+						<textcolor>grey</textcolor>
+						<selectedcolor>grey</selectedcolor>
+						<align>left</align>
+						<info>ListItem.Label</info>
+					</control>
+				</itemlayout>
+				<focusedlayout width="720" height="40">
+					<control type="image">
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>720</width>
+						<height>40</height>
+						<texture border="15">button_option_menu_on.png</texture>
+					</control>
+					<control type="label">
+						<posx>20</posx>
+						<posy>0</posy>
+						<width>680</width>
+						<height>40</height>
+						<font>font22b</font>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<selectedcolor>white</selectedcolor>
+						<align>left</align>
+						<info>ListItem.Label</info>
+						<scroll>true</scroll>
+						<scrollout>false</scrollout>
+						<scrollspeed>40</scrollspeed>
+						<pauseatend>4000</pauseatend>						
+					</control>
+				</focusedlayout>
+			</control>
+			<control type="scrollbar" id="60">
+				<description>scroll bar indicator for lists</description>
+				<posx>762</posx>
+				<posy>104</posy>
+				<width>28</width>
+				<height>252</height>
+				<texturesliderbackground border="14">scrollbar_bg.png</texturesliderbackground>
+				<textureslidernib>scrollbar_slider.png</textureslidernib>
+				<textureslidernibfocus>scrollbar_slider.png</textureslidernibfocus>
+				<texturesliderbar>-</texturesliderbar>
+				<texturesliderbarfocus>-</texturesliderbarfocus>
+				<orientation>vertical</orientation>
+				<showonepage>false</showonepage>
+			</control>
+		</control>
+	</controls>
+</window>

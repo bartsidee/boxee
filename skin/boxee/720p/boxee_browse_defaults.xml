@@ -1,0 +1,520 @@
+<?xml version="1.0"?>
+<includes>
+	<include name="BrowseListsAnimation">
+		<animation effect="fade" start="100" end="25" time="200" condition="Window.IsActive(boxee_dropdown.xml)">Conditional</animation>
+		<animation effect="fade" start="100" end="25" time="200" condition="Window.IsActive(DialogProgress.xml)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="270,0" time="400" condition="ControlGroup(8000).HasFocus" tween="cubic" easing="inout">Conditional</animation>
+	</include>
+	<include name="BrowseMainTitle">
+		<posx>54</posx>
+		<posy>40</posy>
+		<width>1000</width>
+		<height>56</height>
+		<align>left</align>
+		<aligny>center</aligny>
+		<haspath>true</haspath>
+		<font>title56b</font>
+		<textcolor>white</textcolor>
+	</include>
+	<include name="BrowseSubTitle">
+		<posx>54</posx>
+		<posy>100</posy>
+		<width>1000</width>
+		<height>56</height>
+		<align>left</align>
+		<aligny>top</aligny>
+		<haspath>true</haspath>
+		<font>title22b</font>
+		<textcolor>white</textcolor>
+	</include>
+	<include name="EpisodeCounterTitle">
+		<animation effect="fade" start="100" end="0" time="200" condition="Window.IsActive(408)">Conditional</animation>
+		<visible>!Container.IsEmpty</visible>
+		<visible>!IsEmpty(Window.Property(episode-count))</visible>
+		<posx>54</posx>
+		<posy>100</posy>
+		<width>1000</width>
+		<height>56</height>
+		<align>left</align>
+		<aligny>top</aligny>
+		<haspath>true</haspath>
+		<font>title22b</font>
+		<label>$INFO[Window.Property(episode-count),(, [UPPERCASE]Items[/UPPERCASE])]</label>
+	</include>
+	<include name="BrowseLoadingAnimation">
+		<control type="group">
+			<visible>Window.Property(loading) + !Window.IsActive(boxee_search.xml)</visible>
+			<animation effect="fade" time="100">VisibleChange</animation>
+			<control type="multiimage">
+				<include>Loading_Animation</include>
+			</control>
+			<control type="label">
+				<visible>false</visible>
+				<posx>540</posx>
+				<posy>320</posy>
+				<width>200</width>
+				<height>20</height>
+				<align>center</align>
+				<aligny>center</aligny>
+				<font>title16b</font>
+				<textcolor>title</textcolor>
+				<label>54020</label>
+			</control>
+		</control>
+	</include>
+	<include name="BrowseEmptyList">
+		<control type="label">
+			<visible>Window.Property(empty) + !Window.IsActive(boxee_search.xml)</visible>
+			<visible>!boxee.OfflineMode</visible>
+			<posx>54</posx>
+			<posy>160</posy>
+			<width>1102</width>
+			<height>80</height>
+			<align>left</align>
+			<aligny>top</aligny>
+			<font>font20b</font>
+			<label>[UPPERCASE]$LOCALIZE[51929][/UPPERCASE]</label>
+			<wrapmultiline>true</wrapmultiline>
+		</control>
+		<control type="label">
+			<visible>Window.Property(empty) + !Window.IsActive(boxee_search.xml)</visible>
+			<visible>boxee.OfflineMode</visible>
+			<posx>54</posx>
+			<posy>160</posy>
+			<width>1102</width>
+			<height>80</height>
+			<align>left</align>
+			<aligny>top</aligny>
+			<font>font22b</font>
+			<label>[UPPERCASE]$LOCALIZE[51927][/UPPERCASE]</label>
+			<wrapmultiline>true</wrapmultiline>
+		</control>
+	</include>
+	<include name="BrowseScrollBar">
+	</include>
+	<include name="BrowseListAnimation">
+		<animation type="ListLoad">
+			<effect type="fade" start="50" end="100" time="200" deltax="0" deltay="0"/>
+			<!--effect type="slide" start="20,0" end="0,0" time="300" deltax="30" deltay="20"/-->
+		</animation>
+	</include>
+	<include name="BrowseLineAnimationUnfocus">
+		<animation effect="fade" end="50" time="0" condition="true">Conditional</animation>
+	</include>
+	<include name="BrowseThumbAnimationUnfocus">
+		<animation effect="fade" end="80" time="0" condition="true">Conditional</animation>
+	</include>
+	<include name="BrowseThumbAnimationFocus">
+		<animation type="Focus">
+			<effect type="fade" start="80" end="100" time="100" delay="0"/>
+			<effect type="zoom" start="100,100" end="110,110" time="200" delay="0" center="auto" tween="cubic" easing="out"/>
+		</animation>
+	</include>
+	<include name="BrowseThumbPortraitThumbUnfocus">
+		<control type="image">
+			<visible>!IsEmpty(ListItem.Thumb)</visible>
+			<include>BrowseThumbAnimationUnfocus</include>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>144</width>
+			<height>192</height>
+			<bordertexture border="12">masks/thumb_background.png</bordertexture>
+			<bordersize>12</bordersize>
+			<texture blend="false">$INFO[ListItem.Thumb]</texture>
+			<aspectratio scalediffuse="false">scale</aspectratio>
+			<fadetime>200</fadetime>
+		</control>
+		<control type="image">
+			<visible>IsEmpty(ListItem.Thumb)</visible>
+			<include>BrowseThumbAnimationUnfocus</include>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>144</width>
+			<height>192</height>
+			<bordertexture border="12">masks/thumb_background.png</bordertexture>
+			<bordersize>12</bordersize>
+			<texture>black.png</texture>
+			<fadetime>200</fadetime>
+		</control>
+	</include>
+	<include name="BrowseThumbPortraitThumb">
+		<control type="image">
+			<visible>!IsEmpty(ListItem.Thumb)</visible>
+			<include>BrowseThumbAnimationFocus</include>
+			<posx>-8</posx>
+			<posy>-8</posy>
+			<width>160</width>
+			<height>208</height>
+			<bordertexture border="20">masks/thumb_background_on.png</bordertexture>
+			<bordersize>20</bordersize>
+			<texture blend="false">$INFO[ListItem.Thumb]</texture>
+			<aspectratio scalediffuse="false">scale</aspectratio>
+			<fadetime>200</fadetime>
+		</control>
+		<control type="image">
+			<visible>IsEmpty(ListItem.Thumb)</visible>
+			<include>BrowseThumbAnimationFocus</include>
+			<posx>-8</posx>
+			<posy>-8</posy>
+			<width>160</width>
+			<height>208</height>
+			<bordertexture border="20">masks/thumb_background_on.png</bordertexture>
+			<bordersize>20</bordersize>
+			<texture>black.png</texture>
+			<fadetime>200</fadetime>
+		</control>
+	</include>
+	<include name="BrowseThumbSquareSmallThumbUnfocus">
+		<control type="image">
+			<visible>!IsEmpty(ListItem.Thumb)</visible>
+			<include>BrowseThumbAnimationUnfocus</include>
+			<posx>14</posx>
+			<posy>-4</posy>
+			<width>104</width>
+			<height>104</height>
+			<bordertexture border="12">masks/thumb_background.png</bordertexture>
+			<bordersize>12</bordersize>
+			<texture blend="false">$INFO[ListItem.Thumb]</texture>
+			<aspectratio>scale</aspectratio>
+		</control>
+		<control type="image">
+			<visible>IsEmpty(ListItem.Thumb)</visible>
+			<include>BrowseThumbAnimationUnfocus</include>
+			<posx>14</posx>
+			<posy>-4</posy>
+			<width>104</width>
+			<height>104</height>
+			<bordertexture border="12">masks/thumb_background.png</bordertexture>
+			<bordersize>12</bordersize>
+			<texture>black.png</texture>
+		</control>
+	</include>
+	<include name="BrowseThumbSquareSmallThumbUnfocusDefaultMusic">
+		<control type="image">
+			<visible>IsEmpty(ListItem.Thumb)</visible>
+			<include>BrowseThumbAnimationUnfocus</include>
+			<posx>26</posx>
+			<posy>8</posy>
+			<width>80</width>
+			<height>80</height>
+			<texture>default_music.png</texture>
+		</control>
+	</include>
+	<include name="BrowseThumbSquareThumbUnfocus">
+		<control type="image">
+			<visible>!IsEmpty(ListItem.Thumb)</visible>
+			<include>BrowseThumbAnimationUnfocus</include>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>192</width>
+			<height>192</height>
+			<bordertexture border="12">masks/thumb_background.png</bordertexture>
+			<bordersize>12</bordersize>
+			<texture blend="false">$INFO[ListItem.Thumb]</texture>
+			<aspectratio scalediffuse="false">scale</aspectratio>
+			<fadetime>200</fadetime>
+		</control>
+		<control type="image">
+			<visible>IsEmpty(ListItem.Thumb)</visible>
+			<include>BrowseThumbAnimationUnfocus</include>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>192</width>
+			<height>192</height>
+			<bordertexture border="12">masks/thumb_background.png</bordertexture>
+			<bordersize>12</bordersize>
+			<texture>black.png</texture>
+		</control>
+	</include>
+	<include name="BrowseThumbSquareThumbUnfocusOverlay">
+		<control type="label">
+			<visible>!IsEmpty(ListItem.Thumb)</visible>
+			<include>BrowseThumbAnimationUnfocus</include>
+			<posx>96</posx>
+			<posy>184</posy>
+			<width>168</width>
+			<height>18</height>
+			<label>[UPPERCASE]$INFO[ListItem.label][/UPPERCASE]</label>
+			<font>font18b</font>
+			<align>center</align>
+			<aligny>center</aligny>
+			<textcolor>white</textcolor>
+		</control>
+	</include>
+	<include name="BrowseThumbSquareThumbUnfocusOverlayMusic">
+		<control type="label">
+			<visible>!IsEmpty(ListItem.Thumb)</visible>
+			<include>BrowseThumbAnimationUnfocus</include>
+			<posx>96</posx>
+			<posy>184</posy>
+			<width>178</width>
+			<height>50</height>
+			<label>[UPPERCASE]$INFO[ListItem.Artist,[B],[/B][CR]]$INFO[ListItem.Album][/UPPERCASE]</label>
+			<font>font18</font>
+			<align>center</align>
+			<aligny>top</aligny>
+			<textcolor>white</textcolor>
+		</control>
+	</include>
+	<include name="BrowseThumbSquareThumbUnfocusOverlayPhotos">
+		<control type="label">
+			<visible>!IsEmpty(ListItem.Thumb)</visible>
+			<visible>ListItem.Property(isfolder)</visible>
+			<include>BrowseThumbAnimationUnfocus</include>
+			<posx>96</posx>
+			<posy>184</posy>
+			<width>168</width>
+			<height>18</height>
+			<label>[UPPERCASE]$INFO[ListItem.label][/UPPERCASE]</label>
+			<font>font18b</font>
+			<align>center</align>
+			<aligny>center</aligny>
+			<textcolor>white</textcolor>
+		</control>
+	</include>
+	<include name="BrowseThumbSquareThumb">
+		<control type="image">
+			<visible>!IsEmpty(ListItem.Thumb)</visible>
+			<include>BrowseThumbAnimationFocus</include>
+			<posx>-10</posx>
+			<posy>-10</posy>
+			<width>212</width>
+			<height>212</height>
+			<bordertexture border="20">masks/thumb_background_on.png</bordertexture>
+			<bordersize>20</bordersize>
+			<texture blend="false">$INFO[ListItem.Thumb]</texture>
+			<aspectratio scalediffuse="false">scale</aspectratio>
+			<fadetime>200</fadetime>
+		</control>
+		<control type="image">
+			<visible>IsEmpty(ListItem.Thumb)</visible>
+			<include>BrowseThumbAnimationFocus</include>
+			<posx>-10</posx>
+			<posy>-10</posy>
+			<width>212</width>
+			<height>212</height>
+			<bordertexture border="20">masks/thumb_background_on.png</bordertexture>
+			<bordersize>20</bordersize>
+			<texture>black.png</texture>
+		</control>
+	</include>
+	<include name="BrowseThumbSquareThumbFocusOverlay">
+		<control type="label">
+			<animation type="Focus">
+				<effect type="fade" start="80" end="100" time="100" delay="0"/>
+				<effect type="slide" start="0,4" end="0,14" time="200" delay="0" tween="cubic" easing="out"/>
+			</animation>
+			<visible>!IsEmpty(ListItem.Thumb)</visible>
+			<posx>96</posx>
+			<posy>184</posy>
+			<width>192</width>
+			<height>18</height>
+			<label>[UPPERCASE]$INFO[ListItem.label][/UPPERCASE]</label>
+			<font>font18b</font>
+			<align>center</align>
+			<aligny>center</aligny>
+			<textcolor>white</textcolor>
+			<scroll>true</scroll>
+		</control>
+	</include>
+	<include name="BrowseThumbSquareThumbFocusOverlayMusic">
+		<control type="label">
+			<visible>!IsEmpty(ListItem.Thumb)</visible>
+			<animation type="Focus">
+				<effect type="fade" start="80" end="100" time="100" delay="0"/>
+				<effect type="slide" start="0,4" end="0,14" time="200" delay="0" tween="cubic" easing="out"/>
+			</animation>
+			<posx>96</posx>
+			<posy>184</posy>
+			<width>178</width>
+			<height>50</height>
+			<label>[UPPERCASE]$INFO[ListItem.Artist,[B],[/B][CR]]$INFO[ListItem.Album][/UPPERCASE]</label>
+			<font>font18</font>
+			<align>center</align>
+			<aligny>top</aligny>
+			<textcolor>white</textcolor>
+		</control>
+	</include>
+	<include name="BrowseThumbSquareThumbUnfocusDefaultMusic">
+		<control type="label">
+			<include>BrowseThumbAnimationUnfocus</include>
+			<visible>IsEmpty(ListItem.Thumb)</visible>
+			<posx>96</posx>
+			<posy>28</posy>
+			<width>156</width>
+			<height>136</height>
+			<label>[UPPERCASE][B]$INFO[ListItem.Artist,,[CR]][/B]$INFO[ListItem.Album][/UPPERCASE]</label>
+			<font>font16b</font>
+			<align>center</align>
+			<aligny>center</aligny>
+			<textcolor>blue</textcolor>
+			<wrapmultiline>true</wrapmultiline>
+		</control>
+	</include>
+	<include name="BrowseThumbSquareThumbFocusDefaultMusic">
+		<control type="label">
+			<visible>IsEmpty(ListItem.Thumb)</visible>
+			<animation type="Focus">
+				<effect type="fade" start="80" end="100" time="100" delay="0"/>
+				<effect type="zoom" start="100,100" end="110,110" time="200" delay="0" center="96,96" tween="cubic" easing="out"/>
+			</animation>
+			<posx>96</posx>
+			<posy>28</posy>
+			<width>156</width>
+			<height>136</height>
+			<label>[UPPERCASE][B]$INFO[ListItem.Artist,,[CR]][/B]$INFO[ListItem.Album][/UPPERCASE]</label>
+			<font>font16b</font>
+			<align>center</align>
+			<aligny>center</aligny>
+			<textcolor>white</textcolor>
+			<wrapmultiline>true</wrapmultiline>
+		</control>
+	</include>
+	<include name="BrowseThumbSquareThumbUnfocusDefaultPhotos">
+		<control type="image">
+			<visible>IsEmpty(ListItem.Thumb)</visible>
+			<include>BrowseThumbAnimationUnfocus</include>
+			<posx>20</posx>
+			<posy>20</posy>
+			<width>56</width>
+			<height>56</height>
+			<texture>masks/default_photo.png</texture>
+			<colordiffuse>grey</colordiffuse>
+		</control>
+		<control type="label">
+			<visible>IsEmpty(ListItem.Thumb)</visible>
+			<include>BrowseThumbAnimationUnfocus</include>
+			<posx>96</posx>
+			<posy>88</posy>
+			<width>156</width>
+			<height>96</height>
+			<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+			<font>font18b</font>
+			<align>center</align>
+			<aligny>top</aligny>
+			<textcolor>blue</textcolor>
+			<wrapmultiline>true</wrapmultiline>
+		</control>
+	</include>
+	<include name="BrowseThumbSquareThumbFocusDefaultPhotos">
+		<control type="image">
+			<visible>IsEmpty(ListItem.Thumb)</visible>
+			<animation type="Focus">
+				<effect type="fade" start="80" end="100" time="100" delay="0"/>
+				<effect type="zoom" start="100,100" end="110,110" time="200" delay="0" center="72,96" tween="cubic" easing="out"/>
+			</animation>
+			<posx>20</posx>
+			<posy>20</posy>
+			<width>56</width>
+			<height>56</height>
+			<texture>masks/default_photo.png</texture>
+			<colordiffuse>white</colordiffuse>
+		</control>
+		<control type="label">
+			<visible>IsEmpty(ListItem.Thumb)</visible>
+			<animation type="Focus">
+				<effect type="fade" start="80" end="100" time="100" delay="0"/>
+				<effect type="zoom" start="100,100" end="110,110" time="200" delay="0" center="72,96" tween="cubic" easing="out"/>
+			</animation>
+			<posx>96</posx>
+			<posy>88</posy>
+			<width>156</width>
+			<height>96</height>
+			<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+			<font>font18b</font>
+			<align>center</align>
+			<aligny>top</aligny>
+			<textcolor>white</textcolor>
+			<wrapmultiline>true</wrapmultiline>
+		</control>
+	</include>
+	<include name="BrowseThumbSquareThumbUnfocusDefaultVideo">
+		<control type="label">
+			<visible>IsEmpty(ListItem.Thumb)</visible>
+			<include>BrowseThumbAnimationUnfocus</include>
+			<posx>72</posx>
+			<posy>28</posy>
+			<width>108</width>
+			<height>136</height>
+			<label>[UPPERCASE]$INFO[ListItem.label][/UPPERCASE]</label>
+			<font>font18b</font>
+			<align>center</align>
+			<aligny>top</aligny>
+			<textcolor>blue</textcolor>
+			<wrapmultiline>true</wrapmultiline>
+		</control>
+	</include>
+	<include name="BrowseThumbSquareThumbFocusDefaultVideo">
+		<control type="label">
+			<animation type="Focus">
+				<effect type="fade" start="80" end="100" time="100" delay="0"/>
+				<effect type="zoom" start="100,100" end="110,110" time="200" delay="0" center="72,96" tween="cubic" easing="out"/>
+			</animation>
+			<visible>IsEmpty(ListItem.Thumb)</visible>
+			<posx>72</posx>
+			<posy>28</posy>
+			<width>108</width>
+			<height>136</height>
+			<label>[UPPERCASE]$INFO[ListItem.label][/UPPERCASE]</label>
+			<font>font18b</font>
+			<align>center</align>
+			<aligny>top</aligny>
+			<textcolor>white</textcolor>
+			<wrapmultiline>true</wrapmultiline>
+		</control>
+	</include>
+	<include name="BrowseFeedLabelLineTop">
+		<posx>106</posx>
+		<posy>13</posy>
+		<width>416</width>
+		<height>24</height>
+		<align>left</align>
+		<aligny>center</aligny>
+	</include>
+	<include name="BrowseFeedLabelLineCenter">
+		<posx>106</posx>
+		<posy>42</posy>
+		<width>416</width>
+		<height>18</height>
+		<font>font18</font>
+		<align>left</align>
+		<aligny>center</aligny>
+	</include>
+	<include name="BrowseFeedLabelLineBottom">
+		<posx>106</posx>
+		<posy>70</posy>
+		<width>416</width>
+		<height>18</height>
+		<font>font18</font>
+		<align>left</align>
+		<aligny>center</aligny>
+	</include>
+	<include name="BrowseQueueLabelLineTop">
+		<posx>142</posx>
+		<posy>13</posy>
+		<width>390</width>
+		<height>24</height>
+		<align>left</align>
+		<aligny>center</aligny>
+	</include>
+	<include name="BrowseQueueLabelLineCenter">
+		<posx>142</posx>
+		<posy>40</posy>
+		<width>390</width>
+		<height>58</height>
+		<font>font20</font>
+		<align>left</align>
+		<aligny>top</aligny>
+		<wrapmultiline>true</wrapmultiline>
+	</include>
+	<include name="BrowseFeedSourceImageLineBottom">
+		<control type="largeimage">
+			<visible>!IsEmpty(ListItem.Property(feedsource))</visible>
+			<posx>510</posx>
+			<posy>70</posy>
+			<width>24</width>
+			<height>24</height>
+			<texture>http://s3.boxee.tv/feedsrc/$INFO[ListItem.Property(feedsource-lower)].png</texture>
+		</control>              
+	</include>
+</includes>

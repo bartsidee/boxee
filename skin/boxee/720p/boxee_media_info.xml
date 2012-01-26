@@ -1,0 +1,256 @@
+<?xml version="1.0"?>
+<window id="10469">
+	<defaultcontrol always="true">200</defaultcontrol>
+	<allowoverlay>no</allowoverlay>
+	<controls>
+<!-- Dummy container for Music Info -->
+		<control type="list" id="5000">
+			<description>info</description>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>0</width>
+			<height>0</height>
+			<visible>false</visible>
+			<itemlayout height="0">
+		  </itemlayout>
+			<focusedlayout height="0">
+		  </focusedlayout>
+		</control>
+		<control type="videowindow">
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>1280</width>
+			<height>720</height>
+			<visible>Player.HasVideo</visible>
+		</control>
+		<include>Dialog_Background</include>
+		<control type="group">
+			<include>Dialog_Popup_Animation</include>
+			<posx>30</posx>
+			<posy>152</posy>
+			<control type="image">
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>1220</width>
+				<height>460</height>
+				<texture border="64">action_menu_bg.png</texture>
+			</control>
+			<control type="image">
+				<posx>26</posx>
+				<posy>26</posy>
+				<width>302</width>
+				<height>406</height>				
+				<texture>$INFO[container(5000).ListItem.Thumb]</texture>
+				<aspectratio aligny="top">keep</aspectratio>
+				<bordertexture border="12">masks/thumb_background.png</bordertexture>
+				<bordersize>12</bordersize>
+			</control>
+			<control type="grouplist">
+				<posx>344</posx>
+				<posy>36</posy>
+				<width>840</width>
+				<height>430</height>
+				<itemgap>10</itemgap>
+				<orientation>vertical</orientation>
+				<usecontrolcoords>false</usecontrolcoords>
+				<control type="label">
+					<visible>!Container(5000).ListItem.property(IsMovie) + !Container(5000).ListItem.property(IsTVShow) + !Container(5000).ListItem.property(IsMusic)</visible>
+					<width>840</width>
+					<height>32</height>
+					<font>title32b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<label>[UPPERCASE]$INFO[container(5000).ListItem.Label][/UPPERCASE]</label>
+					<textcolor>title</textcolor>
+				</control>
+				<control type="label">
+					<visible>Container(5000).ListItem.property(IsMusic)</visible>
+					<width>840</width>
+					<height>32</height>
+					<font>font32b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<label>[UPPERCASE][B]$INFO[container(5000).ListItem.Artist][/B]$INFO[container(5000).ListItem.Album,    ][/UPPERCASE]</label>
+					<textcolor>title</textcolor>
+				</control>
+				<control type="label">
+					<visible>Container(5000).ListItem.property(IsMovie)</visible>
+					<width>840</width>
+					<height>32</height>
+					<font>title32b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<!--label>[UPPERCASE]$INFO[container(5000).ListItem.Label]$INFO[container(5000).ListItem.Year, (,)][/UPPERCASE]</label-->
+					<label>[UPPERCASE]$INFO[container(5000).ListItem.Label][/UPPERCASE]</label>
+					<textcolor>title</textcolor>
+				</control>
+				<control type="label">
+					<visible>Container(5000).ListItem.property(IsTVShow)</visible>
+					<width>840</width>
+					<height>32</height>
+					<font>title32b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<label>[UPPERCASE]$INFO[container(5000).ListItem.TVShowTitle][/UPPERCASE]</label>
+					<textcolor>title</textcolor>
+				</control>
+				<control type="label">
+					<visible>Container(5000).ListItem.property(IsTVShow)</visible>
+					<width>840</width>
+					<height>24</height>
+					<font>title24b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<label>[UPPERCASE]$INFO[container(5000).ListItem.Season,$LOCALIZE[20373] ,   ]$INFO[container(5000).ListItem.Episode,$LOCALIZE[20359] ,   ]$INFO[container(5000).ListItem.Title,","][/UPPERCASE]</label>
+					<textcolor>white</textcolor>
+				</control>
+				<control type="image">
+					<visible>Container(5000).ListItem.property(IsMovie) + !IsEmpty(container(5000).ListItem.Property(videorating)) + !stringcompare(container(5000).ListItem.Property(videorating),0)</visible>
+					<width>204</width>
+					<height>30</height>
+					<texture>icons/icon_rating_star_$INFO[container(5000).ListItem.Property(videorating)].png</texture>
+					<aspectratio align="right">keep</aspectratio>
+				</control>
+				<control type="label">
+					<visible>[!IsEmpty(container(5000).ListItem.MPAA) | !IsEmpty(container(5000).ListItem.Duration) | !IsEmpty(container(5000).ListItem.Year)] + !container(5000).ListItem.Property(IsMusic) + !container(5000).ListItem.Property(IsTVShow)</visible>
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>840</width>
+					<height>22</height>
+					<font>font20b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<label>$INFO[container(5000).ListItem.Year,[COLOR grey][UPPERCASE]$LOCALIZE[54043][/UPPERCASE][/COLOR] ,        ]$INFO[container(5000).ListItem.MPAA,[COLOR grey][UPPERCASE]$LOCALIZE[563][/UPPERCASE][/COLOR] ,        ]$INFO[formattime(container(5000).ListItem.Duration min),[COLOR grey][UPPERCASE]$LOCALIZE[2050][/UPPERCASE][/COLOR] ,min]</label>
+				</control>
+				<control type="label">
+					<visible>[!IsEmpty(container(5000).ListItem.MPAA) | !IsEmpty(container(5000).ListItem.Duration) | !IsEmpty(container(5000).ListItem.Year)] + container(5000).ListItem.Property(IsMusic)</visible>
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>840</width>
+					<height>22</height>
+					<font>font20b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<label>$INFO[container(5000).ListItem.Year,[COLOR grey][UPPERCASE]$LOCALIZE[54043][/UPPERCASE][/COLOR] ,        ]$INFO[container(5000).ListItem.MPAA,[COLOR grey][UPPERCASE]$LOCALIZE[563][/UPPERCASE][/COLOR] ,]</label>
+				</control>
+				<control type="label">
+					<visible>[!IsEmpty(container(5000).ListItem.MPAA) | !IsEmpty(container(5000).ListItem.Duration) | !IsEmpty(container(5000).ListItem.Property(releasedate)] + container(5000).ListItem.Property(IsTVShow)</visible>
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>840</width>
+					<height>22</height>
+					<font>font20b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<label>$INFO[container(5000).ListItem.Property(releasedate),[COLOR grey][UPPERCASE]$LOCALIZE[54044][/UPPERCASE][/COLOR] ,        ]$INFO[container(5000).ListItem.MPAA,[COLOR grey][UPPERCASE]$LOCALIZE[563][/UPPERCASE][/COLOR] ,        ]$INFO[formattime(container(5000).ListItem.Duration min),[COLOR grey][UPPERCASE]$LOCALIZE[2050][/UPPERCASE][/COLOR] ,min]</label>
+				</control>
+				<control type="label">
+					<visible>!IsEmpty(container(5000).ListItem.Property(app-localpath)) + !IsEmpty(container(5000).ListItem.property(description))</visible>
+					<width>840</width>
+					<height>138</height>
+					<font>font22</font>
+					<align>left</align>
+					<aligny>top</aligny>
+					<textcolor>white</textcolor>
+					<label>$INFO[container(5000).ListItem.Property(description)]</label>
+					<wrapmultiline>true</wrapmultiline>
+				</control>
+				<control type="group" id="6200">
+					<posx>840</posx>
+					<posy>340</posy>
+					<control type="group">
+						<visible>Container(5000).ListItem.property(IsMovie) | Container(5000).ListItem.property(IsTVShow)</visible>
+						<visible>!IsEmpty(Container(5000).ListItem.Property(metaprovider))</visible>
+						<posx>740</posx>
+						<posy>206</posy>
+						<control type="label">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>100</width>
+							<height>14</height>
+							<font>title14b</font>
+							<align>center</align>
+							<aligny>top</aligny>
+							<textcolor>white</textcolor>
+							<label>54046</label>
+						</control>
+						<control type="largeimage">
+							<posx>0</posx>
+							<posy>20</posy>
+							<width>100</width>
+							<height>50</height>
+							<texture>$INFO[container(5000).ListItem.Property(metaprovider)]</texture>
+						</control>
+					</control>
+					<control type="label">
+						<visible>!IsEmpty(container(5000).ListItem.PlotOutline) + !container(5000).ListItem.property(IsMusic)</visible>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>840</width>
+						<height>130</height>
+						<font>font22</font>
+						<align>left</align>
+						<aligny>top</aligny>
+						<textcolor>white</textcolor>
+						<label>$INFO[container(5000).ListItem.PlotOutline]</label>
+						<wrapmultiline>true</wrapmultiline>
+					</control>
+					<control type="label">
+						<visible>!IsEmpty(container(5000).ListItem.Plot) + IsEmpty(container(5000).ListItem.PlotOutline) + !container(5000).ListItem.property(IsMusic)</visible>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>840</width>
+						<height>130</height>
+						<font>font22</font>
+						<align>left</align>
+						<aligny>top</aligny>
+						<textcolor>white</textcolor>
+						<label>$INFO[container(5000).ListItem.Plot]</label>
+						<wrapmultiline>true</wrapmultiline>
+					</control>
+					<control type="label">
+						<visible>!IsEmpty(container(5000).ListItem.property(description)) + IsEmpty(container(5000).ListItem.Plot) + IsEmpty(container(5000).ListItem.PlotOutline) + !container(5000).ListItem.property(IsMusic)</visible>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>840</width>
+						<height>130</height>
+						<font>font22</font>
+						<align>left</align>
+						<aligny>top</aligny>
+						<textcolor>white</textcolor>
+						<label>$INFO[container(5000).ListItem.property(description)]</label>
+						<wrapmultiline>true</wrapmultiline>
+					</control>
+					<control type="label">
+						<visible>!IsEmpty(container(5000).ListItem.property(description)) + container(5000).ListItem.property(IsMusic)</visible>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>840</width>
+						<height>180</height>
+						<font>font22</font>
+						<align>left</align>
+						<aligny>top</aligny>
+						<textcolor>white</textcolor>
+						<label>$INFO[container(5000).ListItem.property(description)]</label>
+						<wrapmultiline>true</wrapmultiline>
+					</control>
+					<control type="label">
+						<visible>container(5000).ListItem.property(IsVideo)</visible>
+						<posx>0</posx>
+						<posy>140</posy>
+						<width>840</width>
+						<height>48</height>
+						<font>font20b</font>
+						<align>left</align>
+						<aligny>top</aligny>
+						<textcolor>white</textcolor>
+						<label>$INFO[container(5000).ListItem.Director,[COLOR title][UPPERCASE]$LOCALIZE[20339][/UPPERCASE][/COLOR]  ]    $INFO[container(5000).ListItem.property(cast),[CR][COLOR title][UPPERCASE]$LOCALIZE[54042][/UPPERCASE][/COLOR]  ]</label>
+					</control>
+				</control>
+			</control>
+		</control>
+	</controls>
+</window>

@@ -1,0 +1,71 @@
+﻿<?xml version="1.0"?>
+<window id="101">
+	<defaultcontrol>10</defaultcontrol>
+	<include>Window_OpenClose_Animation</include>
+	<controls>
+		<control type="group">
+			<visible>!Player.Caching</visible>
+			<control type="multiimage">
+				<animation effect="fade" time="100">VisibleChange</animation>
+				<include>Loading_Animation</include>
+			</control>
+			<control type="label">
+				<animation effect="fade" time="100">VisibleChange</animation>
+				<visible>false</visible>
+				<posx>540</posx>
+				<posy>320</posy>
+				<width>200</width>
+				<height>20</height>
+				<align>center</align>
+				<aligny>center</aligny>
+				<font>title18b</font>
+				<textcolor>title</textcolor>
+				<label>54020</label>
+			</control>
+		</control>
+		<control type="group">
+			<visible>Player.Caching</visible>
+			<animation effect="fade" time="200">VisibleChange</animation>
+			<control type="image">
+				<description>Main Menu Feed Translucent Overlay</description>
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>1280</width>
+				<height>720</height>
+				<texture>black.png</texture>
+				<colordiffuse>FFFFFFFF</colordiffuse>
+			</control>
+			<control type="group">
+				<posx>128</posx>
+				<posy>616</posy>
+				<control type="image">
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>1024</width>
+					<height>64</height>
+					<texture border="32">osd_background.png</texture>
+				</control>
+				<include>OSD_Progress</include>
+				<control type="group">
+					<posx>510</posx>
+					<posy>6</posy>
+					<width>300</width>
+					<height>52</height>
+					<control type="label">
+						<description>loading Label</description>
+						<visible>false</visible>
+						<posx>160</posx>
+						<posy>0</posy>
+						<width>150</width>
+						<height>52</height>
+						<align>left</align>
+						<aligny>center</aligny>
+						<font>title20b</font>
+						<textcolor>white</textcolor>
+						<label>[UPPERCASE]$LOCALIZE[51003][/UPPERCASE]</label>
+					</control>
+				</control>
+			</control>
+		</control>
+	</controls>
+</window>

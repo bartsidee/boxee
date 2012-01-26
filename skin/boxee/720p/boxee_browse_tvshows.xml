@@ -1,0 +1,307 @@
+<?xml version="1.0"?>
+<window id="10480">
+	<defaultcontrol always="true">160</defaultcontrol>
+	<allowoverlay>yes</allowoverlay>
+	<controls>
+		<include>Common_Background</include>
+		<include>Common_Status</include>
+		<control type="group" id="9000">
+			<include>BrowseListsAnimation</include>
+			<control type="label">
+				<visible>Window.Property(my-set) + !Window.Property(search-set) + !Window.IsActive(408)</visible>
+				<include>BrowseMainTitle</include>
+				<label>[UPPERCASE]$LOCALIZE[54039][/UPPERCASE]</label>
+			</control>
+			<control type="label">
+				<visible>Window.Property(all-set) | Window.Property(search-set) | Window.IsActive(408)</visible>
+				<include>BrowseMainTitle</include>
+				<label>[UPPERCASE]$LOCALIZE[54040][/UPPERCASE]</label>
+			</control>
+			<control type="label">
+				<visible>Window.Property(all-set) + !Window.Property(search-set) + !Window.IsActive(408)</visible>
+				<include>BrowseSubTitle</include>
+				<label>[UPPERCASE]$INFO[Window.Property(free-label),, ]$INFO[Window.Property(sort-label)]$INFO[Window.Property(genre-label), ][COLOR grey]$INFO[Container.NumItems, (, $LOCALIZE[54059])][/COLOR][/UPPERCASE]</label>
+			</control>
+			<control type="label">
+				<visible>Window.Property(my-set) + !Window.Property(search-set) + !Window.IsActive(408)</visible>
+				<include>BrowseSubTitle</include>
+				<label>[UPPERCASE]$INFO[Window.Property(free-label),, ]$INFO[Window.Property(sort-label)]$INFO[Window.Property(genre-label), ][COLOR grey]$INFO[Container.NumItems, (, $LOCALIZE[54059])][/COLOR][/UPPERCASE]</label>
+			</control>
+			<control type="label">
+				<visible>Window.Property(search-set)</visible>
+				<include>BrowseSubTitle</include>
+				<label>[UPPERCASE]$INFO[Window.Property(search-label),, ][/UPPERCASE]</label>
+			</control>
+			<control type="group">
+				<animation effect="fade" start="100" end="0" time="200" condition="Window.IsActive(boxee_search.xml)">Conditional</animation>
+				<include>BrowseThumbView</include>
+				<include>BrowseLineView</include>
+				<control type="label">
+					<visible>[Window.Property(empty) + !Window.IsActive(boxee_search.xml) + !Window.Property(my-set) + !Window.Property(loading)] | [Window.Property(empty) + !Window.IsActive(boxee_search.xml) + Window.Property(search-set) + !Window.Property(loading)]</visible>
+					<visible>!boxee.OfflineMode</visible>
+					<posx>54</posx>
+					<posy>160</posy>
+					<width>1102</width>
+					<height>80</height>
+					<align>left</align>
+					<aligny>top</aligny>
+					<font>font22b</font>
+					<label>[UPPERCASE]$LOCALIZE[51926][/UPPERCASE]</label>
+					<wrapmultiline>true</wrapmultiline>
+				</control>
+				<control type="label">
+					<visible>[Window.Property(empty) + !Window.IsActive(boxee_search.xml) + !Window.Property(my-set) + !Window.Property(loading)] | [Window.Property(empty) + !Window.IsActive(boxee_search.xml) + Window.Property(search-set) + !Window.Property(loading)]</visible>
+					<visible>boxee.OfflineMode</visible>
+					<posx>54</posx>
+					<posy>160</posy>
+					<width>1102</width>
+					<height>80</height>
+					<align>left</align>
+					<aligny>top</aligny>
+					<font>font22b</font>
+					<label>[UPPERCASE]$LOCALIZE[51927][/UPPERCASE]</label>
+					<wrapmultiline>true</wrapmultiline>
+				</control>
+				<control type="group">
+					<visible>Window.Property(empty) + !Window.IsActive(boxee_search.xml) + Window.Property(my-set) + !Window.Property(loading) + !Window.Property(search-set)</visible>
+					<posx>55</posx>
+					<posy>160</posy>
+					<control type="image">
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>900</width>
+						<height>440</height>
+						<texture border="64">nomedia_background.png</texture>
+					</control>
+					<control type="image">
+						<posx>40</posx>
+						<posy>40</posy>
+						<width>240</width>
+						<height>240</height>
+						<texture>icons/icon_nomedia_tvshow.png</texture>
+					</control>
+					<control type="label">
+						<posx>330</posx>
+						<posy>30</posy>
+						<width>520</width>
+						<height>150</height>
+						<align>left</align>
+						<aligny>top</aligny>
+						<font>font28b</font>
+						<label>54105</label>
+						<wrapmultiline>true</wrapmultiline>
+						<textcolor>title</textcolor>
+					</control>
+					<control type="grouplist" id="7000">
+						<posx>330</posx>
+						<posy>190</posy>
+						<width>520</width>
+						<height>300</height>
+						<itemgap>15</itemgap>
+						<orientation>vertical</orientation>
+						<usecontrolcoords>false</usecontrolcoords>
+						<onup>-</onup>
+						<ondown>-</ondown>
+						<onleft>8000</onleft>
+						<onright>6000</onright>
+						<control type="label" id="7001">
+							<posx>330</posx>
+							<posy>180</posy>
+							<width>520</width>
+							<height>24</height>
+							<align>left</align>
+							<aligny>top</aligny>
+							<font>font24b</font>
+							<label>54106</label>
+							<textcolor>white</textcolor>
+						</control>
+						<control type="button" id="131">
+							<posx>350</posx>
+							<posy>220</posy>
+							<width>216</width>
+							<height>40</height>
+							<font>font22b</font>
+							<align>left</align>
+							<aligny>center</aligny>
+							<textcolor>white</textcolor>
+							<focusedcolor>white</focusedcolor>
+							<textoffsetx>14</textoffsetx>
+							<texturenofocus border="15">button_option_menu.png</texturenofocus>
+							<texturefocus border="15">button_option_menu_on.png</texturefocus>
+							<textureclick border="15">button_option_menu_click.png</textureclick>
+							<label>54040</label>
+						</control>
+						<control type="label" id="7002">
+							<posx>330</posx>
+							<posy>280</posy>
+							<width>520</width>
+							<height>60</height>
+							<align>left</align>
+							<aligny>top</aligny>
+							<font>font24b</font>
+							<label>54102</label>
+							<textcolor>white</textcolor>
+							<wrapmultiline>true</wrapmultiline>
+						</control>
+						<control type="button" id="7003">
+							<posx>350</posx>
+							<posy>320</posy>
+							<width>216</width>
+							<height>40</height>
+							<font>font22b</font>
+							<align>left</align>
+							<aligny>center</aligny>
+							<textcolor>white</textcolor>
+							<focusedcolor>white</focusedcolor>
+							<textoffsetx>14</textoffsetx>
+							<texturenofocus border="15">button_option_menu.png</texturenofocus>
+							<texturefocus border="15">button_option_menu_on.png</texturefocus>
+							<textureclick border="15">button_option_menu_click.png</textureclick>
+							<label>54028</label>
+							<onclick>ActivateWindow(10460)</onclick>
+						</control>
+					</control>
+				</control>
+			</control>
+			<include>Bottom_Feather</include>
+		</control>
+		<control type="group" id="8000">
+			<include>BrowseLeftMenuAnimation</include>
+			<include>BrowseLeftMenuBackground</include>
+			<control type="grouplist">
+				<include>BrowseLeftMenu</include>
+				<control type="label">
+					<animation effect="fade" start="100" end="0" time="0" condition="Window.IsActive(boxee_search.xml)">Conditional</animation>			
+					<include>BrowseLeftMenuTitle</include>
+					<label>54010</label>
+				</control>
+				<control type="button" id="160">
+					<animation effect="fade" start="100" end="0" time="0" condition="Window.IsActive(boxee_search.xml)">Conditional</animation>			
+					<include>BrowseLeftMenuSearchButton</include>
+					<label>54011</label>
+				</control>
+				<control type="group" id="401">
+					<width>224</width>
+					<height>16</height>
+				</control>					
+				<control type="label" id="402">
+					<include>BrowseLeftMenuTitle</include>
+					<include>BrowseLeftMenuSearchAnimation</include>
+					<label>54012</label>
+				</control>
+				<control type="group" id="403">
+					<include>BrowseLeftMenuSearchAnimation</include>
+					<width>224</width>
+					<height>86</height>
+					<control type="togglebutton" id="120">
+						<include>BrowseLeftMenuFilterUp</include>
+						<onup>402</onup>
+						<ondown>130</ondown>
+						<onright>9000</onright>
+						<label>54039</label>
+						<usealttexture>Window.Property(my-set)  + !Window.Property(search-set)</usealttexture>
+					</control>
+					<control type="togglebutton" id="130">
+						<include>BrowseLeftMenuFilterDown</include>
+						<enable>!boxee.OfflineMode</enable>
+						<onup>120</onup>
+						<ondown>404</ondown>
+						<onright>9000</onright>
+						<label>54040</label>
+						<usealttexture>Window.Property(all-set) + !Window.Property(search-set)</usealttexture>
+					</control>
+				</control>
+				<control type="label" id="404">
+					<include>BrowseLeftMenuSubtitle</include>
+					<include>BrowseLeftMenuSearchAnimation</include>
+					<label>54013</label>
+				</control>
+				<control type="button" id="110">
+					<enable>true + !Window.Property(search-set)</enable>
+					<include>BrowseLeftMenuDropDown</include>
+					<include>BrowseLeftMenuSearchAnimation</include>
+					<label>$INFO[Window.Property(sort-label)]</label>
+				</control>
+				<control type="label" id="405">
+					<include>BrowseLeftMenuSubtitle</include>
+					<include>BrowseLeftMenuSearchAnimation</include>
+					<label>54014</label>
+				</control>
+				<control type="togglebutton" id="150">
+					<enable>true + !Window.Property(search-set)</enable>
+					<include>BrowseLeftMenuDropDown</include>
+					<include>BrowseLeftMenuSearchAnimation</include>
+					<label>$LOCALIZE[135]$INFO[Window.Property(genre-label), : ]</label>
+					<usealttexture>Window.Property(genre-set)</usealttexture>
+				</control>
+				<control type="togglebutton" id="151">
+					<visible>false</visible>
+					<enable>true + !Window.Property(search-set)</enable>
+					<include>BrowseLeftMenuToggle</include>
+					<include>BrowseLeftMenuSearchAnimation</include>
+					<label>54029</label>
+					<usealttexture>Window.Property(free-set)</usealttexture>
+				</control>
+				<control type="label" id="406">
+					<include>BrowseLeftMenuSubtitle</include>
+					<include>BrowseLeftMenuSearchAnimation</include>
+					<label>54015</label>
+				</control>
+				<control type="group" id="407">
+					<include>BrowseLeftMenuSearchAnimation</include>
+					<width>216</width>
+					<height>86</height>
+					<control type="togglebutton" id="191">
+						<include>BrowseLeftMenuViewUp</include>
+						<onup>406</onup>
+						<ondown>192</ondown>
+						<onright>9000</onright>
+						<label>54016</label>
+						<usealttexture>Control.IsVisible(50)</usealttexture>
+						<onclick>Container.SetViewMode(50)</onclick>
+					</control>
+					<control type="togglebutton" id="192">
+						<include>BrowseLeftMenuViewDown</include>
+						<onup>191</onup>
+						<ondown>411</ondown>
+						<onright>9000</onright>
+						<label>54017</label>
+						<usealttexture>Control.IsVisible(51)</usealttexture>
+						<onclick>Container.SetViewMode(51)</onclick>
+					</control>
+				</control>
+				<control type="label" id="409">
+					<include>BrowseLeftMenuTitle</include>
+					<include>BrowseLeftMenuSearchAnimation</include>
+					<label>54066</label>
+				</control>
+				<control type="group" id="410">
+				  <include>BrowseLeftMenuSearchAnimation</include>
+				  <width>224</width>
+				  <height>86</height>
+				  <control type="button" id="411">
+					<include>BrowseLeftMenuButton</include>
+					<onclick>ActivateWindow(10460)</onclick>
+					<onright>9000</onright>						
+					<onup>192</onup>
+					<label>54064</label>
+			      </control>					
+				  <control type="label" id="501">
+					<posx>0</posx>
+					<posy>50</posy>					
+					<include>BrowseLeftMenuText</include>
+					<label>-</label>
+				  </control>
+				  <control type="label"  id="502">
+					<posx>0</posx>
+					<posy>80</posy>					
+					<include>BrowseLeftMenuInfo</include>
+  					<label>54065</label>
+				  </control>
+				</control>								
+			</control>
+		</control>
+		<include>BrowseLoadingAnimation</include>
+		<include>Common_Now_Playing</include>
+	</controls>
+</window>

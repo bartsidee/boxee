@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Boxee
+Comment=Boxee is the best way to enjoy entertainment from the Internet and computer on your TV
+Exec=/opt/boxee/run-boxee-desktop
+Icon=boxee.png
+Terminal=false
+Type=Application
+Categories=Application;AudioVideo;Player;
+StartupNotify=true

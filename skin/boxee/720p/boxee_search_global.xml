@@ -1,0 +1,521 @@
+<?xml version="1.0"?>
+<window type="dialog" id="407">
+	<defaultcontrol always="true">310</defaultcontrol>
+	<allowoverlay>no</allowoverlay>
+	<controls>
+		<include>Dialog_Background</include>
+		<control type="group">
+			<include>Dialog_Popup_Animation</include>
+			<posx>30</posx>
+			<posy>150</posy>
+			<control type="image">
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>1220</width>
+				<height>550</height>
+				<texture border="64">action_menu_bg.png</texture>
+			</control>
+			<control type="image">
+				<posx>426</posx>
+				<posy>15</posy>
+				<width>18</width>
+				<height>520</height>
+				<texture>feather_line.png</texture>
+			</control>			
+			<control type="label">
+				<posx>114</posx>
+				<posy>48</posy>
+				<width>200</width>
+				<height>44</height>
+				<font>title44b</font>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>54010</label>
+				<textcolor>title</textcolor>
+			</control>
+			<control type="image">
+				<posx>33</posx>
+				<posy>26</posy>
+				<width>80</width>
+				<height>80</height>
+				<texture>icons/icon_menu_search.png</texture>
+				<colordiffuse>title</colordiffuse>
+			</control>
+			<control type="multiimage">
+				<description>loading control</description>
+				<visible>window(10408).property(loading)</visible>
+				<animation effect="fade" time="100">VisibleChange</animation>
+				<include>Loading_Animation</include>
+			</control>
+			<control type="group" id="4000">
+				<renderfocusedlast>true</renderfocusedlast>
+				<control type="edit" id="310">
+					<posx>50</posx>
+					<posy>112</posy>
+					<width>336</width>
+					<height>60</height>
+					<onleft>-</onleft>
+					<onright>300</onright>
+					<onup>-</onup>
+					<ondown>399</ondown>
+					<label>-</label>
+					<textoffsetx>20</textoffsetx>
+					<align>left</align>
+					<aligny>center</aligny>
+					<texturenofocus border="24">search_text_box.png</texturenofocus>
+					<texturefocus border="24">search_text_box_on.png</texturefocus>
+					<textureclick border="24">search_text_box_click.png</textureclick>
+					<font>title32b</font>
+					<textcolor>black</textcolor>
+					<focusedcolor>black</focusedcolor>
+					<ontextchange/>
+				</control>
+				<control type="button" id="300">
+					<visible>false</visible>
+					<include>Search_Keyboard_Big_Button</include>
+					<description>Done button</description>
+					<onleft>310</onleft>
+					<onright>4100</onright>
+					<onup>-</onup>
+					<ondown>70</ondown>
+					<posx>220</posx>
+					<posy>0</posy>
+					<label>54058</label>
+				</control>
+				<control type="group">
+					<posx>48</posx>
+					<posy>178</posy>
+					<control type="group" id="399">
+						<posx>0</posx>
+						<posy>0</posy>
+						<control type="button" id="65">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'A' button</description>
+							<onleft>-</onleft>
+							<onright>66</onright>
+							<onup>310</onup>
+							<ondown>71</ondown>
+							<posx>0</posx>
+							<posy>0</posy>
+							<label>ABC</label>
+						</control>
+						<control type="button" id="66">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'B' button</description>
+							<onleft>65</onleft>
+							<onright>67</onright>
+							<onup>310</onup>
+							<ondown>72</ondown>
+							<posx>52</posx>
+							<posy>0</posy>
+							<label>B</label>
+						</control>
+						<control type="button" id="67">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'C' button</description>
+							<onleft>66</onleft>
+							<onright>68</onright>
+							<onup>310</onup>
+							<ondown>73</ondown>
+							<posx>104</posx>
+							<posy>0</posy>
+							<label>C</label>
+						</control>
+						<control type="button" id="68">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'D' button</description>
+							<onleft>67</onleft>
+							<onright>69</onright>
+							<onup>310</onup>
+							<ondown>74</ondown>
+							<posx>156</posx>
+							<posy>0</posy>
+							<label>D</label>
+						</control>
+						<control type="button" id="69">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'E' button</description>
+							<onleft>68</onleft>
+							<onright>70</onright>
+							<onup>310</onup>
+							<ondown>75</ondown>
+							<posx>208</posx>
+							<posy>0</posy>
+							<label>E</label>
+						</control>
+						<control type="button" id="70">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'F' button</description>
+							<onleft>69</onleft>
+							<onright>4100</onright>
+							<onup>310</onup>
+							<ondown>76</ondown>
+							<posx>260</posx>
+							<posy>0</posy>
+							<label>F</label>
+						</control>
+					</control>
+					<control type="group">
+						<posx>0</posx>
+						<posy>52</posy>
+						<control type="button" id="71">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'G' button</description>
+							<onleft>-</onleft>
+							<onright>72</onright>
+							<onup>65</onup>
+							<ondown>77</ondown>
+							<posx>0</posx>
+							<posy>0</posy>
+							<label>G</label>
+						</control>
+						<control type="button" id="72">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'H' button</description>
+							<onleft>71</onleft>
+							<onright>73</onright>
+							<onup>66</onup>
+							<ondown>78</ondown>
+							<posx>52</posx>
+							<posy>0</posy>
+							<label>H</label>
+						</control>
+						<control type="button" id="73">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'I' button</description>
+							<onleft>72</onleft>
+							<onright>74</onright>
+							<onup>67</onup>
+							<ondown>79</ondown>
+							<posx>104</posx>
+							<posy>0</posy>
+							<label>I</label>
+						</control>
+						<control type="button" id="74">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'J' button</description>
+							<onleft>73</onleft>
+							<onright>75</onright>
+							<onup>68</onup>
+							<ondown>80</ondown>
+							<posx>156</posx>
+							<posy>0</posy>
+							<label>J</label>
+						</control>
+						<control type="button" id="75">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'K' button</description>
+							<onleft>74</onleft>
+							<onright>76</onright>
+							<onup>69</onup>
+							<ondown>81</ondown>
+							<posx>208</posx>
+							<posy>0</posy>
+							<label>K</label>
+						</control>
+						<control type="button" id="76">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'L' button</description>
+							<onleft>75</onleft>
+							<onright>4100</onright>
+							<onup>70</onup>
+							<ondown>82</ondown>
+							<posx>260</posx>
+							<posy>0</posy>
+							<label>L</label>
+						</control>
+					</control>
+					<control type="group">
+						<posx>0</posx>
+						<posy>104</posy>
+						<control type="button" id="77">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'M' button</description>
+							<onleft>76</onleft>
+							<onright>78</onright>
+							<onup>71</onup>
+							<ondown>83</ondown>
+							<posx>0</posx>
+							<posy>0</posy>
+							<label>M</label>
+						</control>
+						<control type="button" id="78">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'N' button</description>
+							<onleft>77</onleft>
+							<onright>79</onright>
+							<onup>72</onup>
+							<ondown>84</ondown>
+							<posx>52</posx>
+							<posy>0</posy>
+							<label>N</label>
+						</control>
+						<control type="button" id="79">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'O' button</description>
+							<onleft>78</onleft>
+							<onright>80</onright>
+							<onup>73</onup>
+							<ondown>85</ondown>
+							<posx>104</posx>
+							<posy>0</posy>
+							<label>O</label>
+						</control>
+						<control type="button" id="80">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'P' button</description>
+							<onleft>79</onleft>
+							<onright>81</onright>
+							<onup>74</onup>
+							<ondown>86</ondown>
+							<posx>156</posx>
+							<posy>0</posy>
+							<label>P</label>
+						</control>
+						<control type="button" id="81">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'Q' button</description>
+							<onleft>80</onleft>
+							<onright>82</onright>
+							<onup>75</onup>
+							<ondown>87</ondown>
+							<posx>208</posx>
+							<posy>0</posy>
+							<label>Q</label>
+						</control>
+						<control type="button" id="82">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'R' button</description>
+							<onleft>81</onleft>
+							<onright>4100</onright>
+							<onup>76</onup>
+							<ondown>88</ondown>
+							<posx>260</posx>
+							<posy>0</posy>
+							<label>R</label>
+						</control>
+					</control>
+					<control type="group">
+						<posx>0</posx>
+						<posy>156</posy>
+						<control type="button" id="83">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'S' button</description>
+							<onleft>82</onleft>
+							<onright>84</onright>
+							<onup>77</onup>
+							<ondown>89</ondown>
+							<posx>0</posx>
+							<posy>0</posy>
+							<label>S</label>
+						</control>
+						<control type="button" id="84">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'T' button</description>
+							<onleft>83</onleft>
+							<onright>85</onright>
+							<onup>78</onup>
+							<ondown>90</ondown>
+							<posx>52</posx>
+							<posy>0</posy>
+							<label>T</label>
+						</control>
+						<control type="button" id="85">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'U' button</description>
+							<onleft>84</onleft>
+							<onright>86</onright>
+							<onup>79</onup>
+							<ondown>4200</ondown>
+							<posx>104</posx>
+							<posy>0</posy>
+							<label>U</label>
+						</control>
+						<control type="button" id="86">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'V' button</description>
+							<onleft>85</onleft>
+							<onright>87</onright>
+							<onup>80</onup>
+							<ondown>8</ondown>
+							<posx>156</posx>
+							<posy>0</posy>
+							<label>V</label>
+						</control>
+						<control type="button" id="87">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'W' button</description>
+							<onleft>86</onleft>
+							<onright>88</onright>
+							<onup>81</onup>
+							<ondown>8</ondown>
+							<posx>208</posx>
+							<posy>0</posy>
+							<label>W</label>
+						</control>
+						<control type="button" id="88">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'X' button</description>
+							<onleft>87</onleft>
+							<onright>4100</onright>
+							<onup>82</onup>
+							<ondown>8</ondown>
+							<posx>260</posx>
+							<posy>0</posy>
+							<label>X</label>
+						</control>
+					</control>
+					<control type="group">
+						<posx>0</posx>
+						<posy>208</posy>
+						<control type="button" id="89">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'Y' button</description>
+							<onleft>88</onleft>
+							<onright>90</onright>
+							<onup>83</onup>
+							<ondown>32</ondown>
+							<posx>0</posx>
+							<posy>0</posy>
+							<label>Y</label>
+						</control>
+						<control type="button" id="90">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'Z' button</description>
+							<onleft>89</onleft>
+							<onright>4200</onright>
+							<onup>84</onup>
+							<ondown>32</ondown>
+							<posx>52</posx>
+							<posy>0</posy>
+							<label>Z</label>
+						</control>
+						<control type="button" id="4200">
+							<include>Search_Keyboard_Big_Button</include>
+							<description>'Y' button</description>
+							<onleft>90</onleft>
+							<onright>8</onright>
+							<onup>85</onup>
+							<ondown>32</ondown>
+							<posx>104</posx>
+							<posy>0</posy>
+							<label>#</label>
+						</control>
+						<control type="group">
+							<posx>156</posx>
+							<posy>0</posy>
+							<width>60</width>
+							<height>60</height>
+							<control type="button" id="8">
+								<description>Backspace button</description>
+								<width>80</width>
+								<height>80</height>
+								<texturenofocus>button_kb.png</texturenofocus>
+								<texturefocus>button_kb_on.png</texturefocus>
+								<textureclick>button_kb_click.png</textureclick>
+								<onleft>4200</onleft>
+								<onright>4100</onright>
+								<onup>86</onup>
+								<ondown>32</ondown>
+								<posx>0</posx>
+								<posy>0</posy>
+								<label>-</label>
+							</control>
+							<control type="image">
+								<posx>24</posx>
+								<posy>28</posy>
+								<width>32</width>
+								<height>23</height>
+								<texture>keyboard_backspace_icon_off.png</texture>
+							</control>
+						</control>
+					</control>
+					<control type="button" id="32">
+						<posx>56</posx>
+						<posy>264</posy>
+						<width>228</width>
+						<height>72</height>
+						<onleft>-</onleft>
+						<onright>4100</onright>
+						<onup>90</onup>
+						<ondown>-</ondown>
+						<texturenofocus border="30">button_kb.png</texturenofocus>
+						<texturefocus border="30">button_kb_on.png</texturefocus>
+						<textureclick border="30">button_kb_click.png</textureclick>
+						<label>[UPPERCASE]$LOCALIZE[20182][/UPPERCASE]</label>
+						<align>center</align>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<font>title28b</font>
+						<onclick>-</onclick>
+					</control>
+				</control>
+			</control>
+			<control type="list" id="4100">
+				<include>BrowseListAnimation</include>
+				<posx>500</posx>
+				<posy>100</posy>
+				<width>757</width>
+				<height>390</height>
+				<onleft>310</onleft>
+				<onright>-</onright>
+				<onup>1000</onup>
+				<ondown>1000</ondown>
+				<scrolltime>200</scrolltime>
+				<pagecontrol>60</pagecontrol>
+				<orientation>vertical</orientation>
+				<focusposition>6</focusposition>
+				<offsety>19</offsety>
+				<itemlayout height="40">
+					<control type="label">
+						<posx>36</posx>
+						<posy>0</posy>
+						<width>685</width>
+						<height>40</height>
+						<font>font22</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<info>ListItem.Label</info>
+						<textcolor>grey</textcolor>
+					</control>
+				</itemlayout>
+				<focusedlayout height="40">
+					<control type="image">
+						<visible>Control.HasFocus(4100)</visible>
+						<posx>0</posx>
+						<posy>-19</posy>
+						<width>757</width>
+						<height>78</height>
+						<texture border="39">line_view_on.png</texture>
+					</control>
+					<control type="label">
+						<visible>!Control.HasFocus(4100)</visible>
+						<posx>36</posx>
+						<posy>0</posy>
+						<width>685</width>
+						<height>40</height>
+						<font>font22</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<label>$INFO[ListItem.Label]</label>
+						<textcolor>grey</textcolor>
+					</control>
+					<control type="label">
+						<visible>Control.HasFocus(4100)</visible>
+						<posx>36</posx>
+						<posy>0</posy>
+						<width>685</width>
+						<height>40</height>
+						<font>font22b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<label>$INFO[ListItem.Label]</label>
+						<textcolor>white</textcolor>
+						<scroll>true</scroll>
+					</control>
+				</focusedlayout>
+			</control>
+		</control>
+	</controls>
+</window>

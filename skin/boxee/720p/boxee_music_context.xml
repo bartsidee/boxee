@@ -1,0 +1,549 @@
+<?xml version="1.0"?>
+<window id="355">
+	<defaultcontrol always="true">9103</defaultcontrol>
+	<controls>
+<!-- Dummy container for Music Info -->
+		<control type="list" id="5000">
+			<description>info</description>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>0</width>
+			<height>0</height>
+			<visible>false</visible>
+			<itemlayout height="0">
+				</itemlayout>
+			<focusedlayout height="0">
+				</focusedlayout>
+		</control>	
+		<control type="group">
+			<visible>Window.IsActive(Visualisation) + Player.HasAudio</visible>
+			<animation type="WindowOpen" condition="!Window.IsVisible(DialogSeekBar.xml)">
+				<effect type="fade" time="200" delay="0"/>
+			</animation>
+			<animation type="WindowClose" condition="!Window.IsVisible(DialogSeekBar.xml)">
+				<effect type="fade" time="200" delay="0"/>
+			</animation>
+			<animation type="WindowOpen" condition="Window.IsVisible(DialogSeekBar.xml)">
+				<effect type="fade" time="200" delay="0"/>
+			</animation>
+			<animation type="WindowClose" condition="Window.IsVisible(DialogSeekBar.xml)">
+				<effect type="fade" time="200" delay="0"/>
+			</animation>
+			<control type="group">
+				<posx>128</posx>
+				<posy>42</posy>
+				<control type="image">
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>1024</width>
+					<height>100</height>
+					<texture border="32">osd_background.png</texture>
+				</control>
+				<control type="image">
+					<posx>14</posx>
+					<posy>10</posy>
+					<width>80</width>
+					<height>80</height>
+					<texture>$INFO[MusicPlayer.Cover]</texture>
+					<aspectratio>scale</aspectratio>
+				</control>
+				<control type="group">
+					<visible>!IsEmpty(MusicPlayer.Cover)</visible>
+					<control type="label">
+						<posx>120</posx>
+						<posy>10</posy>
+						<width>740</width>
+						<height>24</height>
+						<font>title24b</font>
+						<textcolor>title</textcolor>
+						<label>[UPPERCASE]$INFO[MusicPlayer.Title][/UPPERCASE]</label>
+						<aligny>center</aligny>
+						<align>left</align>
+						<scroll>false</scroll>
+					</control>
+					<control type="label">
+						<posx>120</posx>
+						<posy>38</posy>
+						<width>740</width>
+						<height>24</height>
+						<font>font24b</font>
+						<textcolor>white</textcolor>
+						<label>[UPPERCASE][B]$INFO[MusicPlayer.Artist][/B]$INFO[MusicPlayer.Album,     ][/UPPERCASE]</label>
+						<aligny>center</aligny>
+						<align>left</align>
+						<scroll>false</scroll>
+					</control>
+					<control type="label">
+						<visible>!IsEmpty(nextitem.title)</visible>
+						<posx>120</posx>
+						<posy>66</posy>
+						<width>740</width>
+						<height>24</height>
+						<font>font18b</font>
+						<textcolor>white</textcolor>
+						<label>[UPPERCASE][B][COLOR grey]$LOCALIZE[209][/COLOR][/B]$INFO[nextitem.title,  ]$INFO[nextitem.artist,  /  ][/UPPERCASE]</label>
+						<aligny>center</aligny>
+						<align>left</align>
+						<scroll>false</scroll>
+					</control>
+				</control>
+				<control type="group">
+					<visible>IsEmpty(MusicPlayer.Cover)</visible>
+					<control type="label">
+						<posx>20</posx>
+						<posy>10</posy>
+						<width>820</width>
+						<height>24</height>
+						<font>title24b</font>
+						<textcolor>title</textcolor>
+						<label>[UPPERCASE]$INFO[MusicPlayer.Title][/UPPERCASE]</label>
+						<aligny>center</aligny>
+						<align>left</align>
+						<scroll>false</scroll>
+					</control>
+					<control type="label">
+						<posx>20</posx>
+						<posy>38</posy>
+						<width>820</width>
+						<height>24</height>
+						<font>font24b</font>
+						<textcolor>white</textcolor>
+						<label>[UPPERCASE][B]$INFO[MusicPlayer.Artist][/B]$INFO[MusicPlayer.Album,     ][/UPPERCASE]</label>
+						<aligny>center</aligny>
+						<align>left</align>
+						<scroll>false</scroll>
+					</control>
+					<control type="label">
+						<visible>!IsEmpty(nextitem.title)</visible>
+						<posx>20</posx>
+						<posy>66</posy>
+						<width>820</width>
+						<height>24</height>
+						<font>font18b</font>
+						<textcolor>white</textcolor>
+						<label>[UPPERCASE][B][COLOR grey]$LOCALIZE[209][/COLOR][/B]$INFO[nextitem.title,  ]$INFO[nextitem.artist,  /  ][/UPPERCASE]</label>
+						<aligny>center</aligny>
+						<align>left</align>
+						<scroll>false</scroll>
+					</control>
+				</control>
+				<control type="list" id="9000">
+					<animation type="Conditional" condition="stringcompare(Container(9000).NumItems,1)">
+						<effect type="slide" start="0" end="56" time="0" delay="0"/>
+					</animation>
+					<posx>880</posx>
+					<posy>12</posy>
+					<width>600</width>
+					<height>100</height>
+					<onup>-</onup>
+					<onright>-</onright>
+					<onleft>-</onleft>
+					<ondown>9100</ondown>
+					<scrolltime>200</scrolltime>
+					<pagecontrol>-</pagecontrol>
+					<orientation>horizontal</orientation>
+					<offsetx>4</offsetx>
+					<offsety>4</offsety>
+					<itemlayout width="56" height="56">
+						<control type="image">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>56</width>
+							<height>56</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture>$INFO[ListItem.Thumb]</texture>
+						</control>
+					</itemlayout>
+					<focusedlayout width="56" height="56">
+						<control type="image">
+							<visible>Control.HasFocus(9000)</visible>
+							<posx>-9</posx>
+							<posy>-9</posy>
+							<width>74</width>
+							<height>74</height>
+							<texture border="30">button_action_menu_source_on.png</texture>
+						</control>
+						<control type="image">
+							<visible>!Control.HasFocus(9000)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>56</width>
+							<height>56</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture>$INFO[ListItem.Thumb]</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(9000)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>56</width>
+							<height>56</height>
+							<texture>$INFO[ListItem.Thumb]</texture>
+						</control>
+						<control type="label">
+							<visible>Control.HasFocus(9000)</visible>
+							<posx>28</posx>
+							<posy>60</posy>
+							<width>100</width>
+							<height>16</height>
+							<font>title16b</font>
+							<align>center</align>
+							<aligny>center</aligny>
+							<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+							<textcolor>white</textcolor>
+						</control>
+					</focusedlayout>
+					<content>
+						<item>
+							<visible>!Container(5000).ListItem.Property(disable-recommend)</visible>
+							<visible>!boxee.OfflineMode</visible>
+							<controlid>9007</controlid>
+							<onclick>-</onclick>
+							<thumb>icons/icon_osd_share.png</thumb>
+							<label>54052</label>
+						</item>
+						<item>
+							<visible>Container(5000).ListItem.property(showtracksbutton)</visible>
+							<controlid>9001</controlid>
+							<onclick>-</onclick>
+							<thumb>icons/icon_osd_tracks.png</thumb>
+							<label>54053</label>
+						</item>
+					</content>
+				</control>
+			</control>
+			<control type="group">
+				<posx>128</posx>
+				<posy>616</posy>
+				<control type="image">
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>1024</width>
+					<height>64</height>
+					<texture border="32">osd_background.png</texture>
+				</control>
+				<include>OSD_Progress</include>
+				<control type="grouplist" id="9100">
+					<posx>560</posx>
+					<posy>6</posy>
+					<width>320</width>
+					<height>52</height>
+					<itemgap>0</itemgap>
+					<onup>9000</onup>
+					<onleft>-</onleft>
+					<onright>-</onright>
+					<orientation>horizontal</orientation>
+					<usecontrolcoords>false</usecontrolcoords>
+					<control type="group" id="9111">
+						<visible>Control.IsVisible(9101)</visible>
+						<width>52</width>
+						<height>52</height>
+						<control type="image">
+							<visible>!Control.HasFocus(9101)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture>icons/icon_osd_track_bwd.png</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(9101)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_track_bwd.png</texture>
+						</control>
+						<control type="button" id="9101">
+							<visible>!Player.IsRadio</visible>
+							<posx>-8</posx>
+							<posy>-8</posy>
+							<width>68</width>
+							<height>68</height>
+							<texture border="30">button_action_menu_source_on.png</texture>
+							<label>-</label>
+							<enable>Player.canskip</enable>
+							<texturenofocus>-</texturenofocus>
+							<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+							<onclick>PlayerControl(Previous)</onclick>
+							<onup>9000</onup>
+							<ondown>-</ondown>
+							<onleft>-</onleft>
+							<onright>9112</onright>
+						</control>
+					</control>
+					<control type="group" id="9112">
+						<visible>Control.IsVisible(9102)</visible>
+						<width>52</width>
+						<height>52</height>
+						<control type="image">
+							<visible>!Control.HasFocus(9102)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture>icons/icon_osd_stop.png</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(9102)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_stop.png</texture>
+						</control>						
+						<control type="button" id="9102">
+							<posx>-8</posx>
+							<posy>-8</posy>
+							<width>68</width>
+							<height>68</height>
+							<label>-</label>
+							<texturenofocus>-</texturenofocus>
+							<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+							<onclick>PlayerControl(stop)</onclick>
+							<onclick>Dialog.Close(354)</onclick>
+							<onup>9000</onup>
+							<ondown>-</ondown>
+							<onleft>9111</onleft>
+							<onright>9113</onright>
+						</control>
+					</control>
+					<control type="group" id="9113">
+						<visible>Control.IsVisible(9103)</visible>
+						<width>52</width>
+						<height>52</height>
+						<control type="image">
+							<visible>!Control.HasFocus(9103) + Player.Playing</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture>icons/icon_osd_pause.png</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(9103) + Player.Playing</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_pause.png</texture>
+						</control>
+						<control type="image">
+							<visible>!Control.HasFocus(9103) + Player.Paused</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture>icons/icon_osd_play.png</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(9103) + Player.Paused</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_play.png</texture>
+						</control>
+						<control type="togglebutton" id="9103">
+							<posx>-8</posx>
+							<posy>-8</posy>
+							<width>68</width>
+							<height>68</height>
+							<label>-</label>
+							<enable>Player.canpause</enable>
+							<texturenofocus>-</texturenofocus>
+							<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+							<alttexturenofocus>-</alttexturenofocus>
+							<alttexturefocus border="30">button_action_menu_source_on.png</alttexturefocus>
+							<onclick>PlayerControl(play)</onclick>
+							<onup>9000</onup>
+							<ondown>-</ondown>
+							<onleft>9112</onleft>
+							<onright>9114</onright>
+						</control>
+					</control>
+					<control type="group" id="9114">
+						<visible>Control.IsVisible(9104)</visible>
+						<width>52</width>
+						<height>52</height>
+						<control type="image">
+							<visible>!Control.HasFocus(9104)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture>icons/icon_osd_track_fwd.png</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(9104)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_track_fwd.png</texture>
+						</control>
+						<control type="button" id="9104">
+							<posx>-8</posx>
+							<posy>-8</posy>
+							<width>68</width>
+							<height>68</height>
+							<label>-</label>
+							<enable>Player.canskip</enable>
+							<texturenofocus>-</texturenofocus>
+							<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+							<onclick>PlayerControl(Next)</onclick>
+							<onup>9000</onup>
+							<ondown>-</ondown>
+							<onleft>9113</onleft>
+							<onright>9115</onright>
+						</control>
+					</control>
+					<control type="group" id="9115">
+						<visible>Control.IsVisible(9105)</visible>
+						<width>52</width>
+						<height>52</height>
+						<control type="image">
+							<visible>!Control.HasFocus(9105) + !Playlist.IsRandom</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture>icons/icon_osd_shuffle.png</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(9105) + !Playlist.IsRandom</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_shuffle.png</texture>
+						</control>
+						<control type="image">
+							<visible>!Control.HasFocus(9105) + Playlist.IsRandom</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_shuffle.png</texture>
+							<colordiffuse>green</colordiffuse>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(9105) + Playlist.IsRandom</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_shuffle.png</texture>
+							<colordiffuse>green</colordiffuse>
+						</control>
+						<control type="button" id="9105">
+							<visible>!Player.IsRadio</visible>
+							<posx>-8</posx>
+							<posy>-8</posy>
+							<width>68</width>
+							<height>68</height>
+							<label>-</label>
+							<texturenofocus>-</texturenofocus>
+							<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+							<onclick>PlayerControl(Random)</onclick>
+							<onup>9000</onup>
+							<ondown>-</ondown>
+							<onleft>9114</onleft>
+							<onright>9116</onright>
+						</control>
+					</control>
+					<control type="group" id="9116">
+						<visible>Control.IsVisible(9106)</visible>
+						<width>52</width>
+						<height>52</height>
+						<control type="image">
+							<visible>!Playlist.IsRepeat + !Playlist.IsRepeatOne + !Control.HasFocus(9106)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture>icons/icon_osd_repeat.png</texture>
+						</control>
+						<control type="image">
+							<visible>!Playlist.IsRepeat + !Playlist.IsRepeatOne + Control.HasFocus(9106)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_repeat.png</texture>
+						</control>
+						<control type="image">
+							<visible>Playlist.IsRepeat + !Control.HasFocus(9106)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_repeat.png</texture>
+							<colordiffuse>green</colordiffuse>
+						</control>
+						<control type="image">
+							<visible>Playlist.IsRepeat + Control.HasFocus(9106)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_repeat.png</texture>
+							<colordiffuse>green</colordiffuse>
+						</control>
+						<control type="image">
+							<visible>Playlist.IsRepeatOne + !Control.HasFocus(9106)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_repeat_one.png</texture>
+							<colordiffuse>green</colordiffuse>
+						</control>
+						<control type="image">
+							<visible>Playlist.IsRepeatOne + Control.HasFocus(9106)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_repeat_one.png</texture>
+							<colordiffuse>green</colordiffuse>
+						</control>
+						<control type="button" id="9106">
+							<visible>!Player.IsRadio</visible>
+							<posx>-8</posx>
+							<posy>-8</posy>
+							<width>68</width>
+							<height>68</height>
+							<label>-</label>
+							<texturenofocus>-</texturenofocus>
+							<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+							<onclick>PlayerControl(Repeat)</onclick>
+							<onup>9000</onup>
+							<ondown>-</ondown>
+							<onleft>9115</onleft>
+							<onright>-</onright>
+						</control>
+					</control>
+				</control>
+				<control type="label">
+					<posx>1004</posx>
+					<posy>20</posy>
+					<width>100</width>
+					<height>24</height>
+					<align>right</align>
+					<aligny>center</aligny>
+					<font>font24b</font>
+					<textcolor>white</textcolor>
+					<label>[B]$INFO[MusicPlayer.PlaylistPosition]$INFO[MusicPlayer.PlaylistLength, / ][/B]</label>
+				</control>
+			</control>
+		</control>
+	</controls>
+</window>

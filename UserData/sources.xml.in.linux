@@ -1,0 +1,29 @@
+<sources>
+    <programs>
+        <default></default>
+    </programs>
+    <video>
+        <default></default>
+        <source>
+            <name>Local Videos</name>
+            <path>special://userhome/Videos</path>
+        </source>
+    </video>
+    <music>
+        <default></default>
+        <source>
+            <name>Local Music</name>
+            <path>special://userhome/Music</path>
+        </source>
+    </music>
+    <pictures>
+        <default></default>
+        <source>
+            <name>Local Pictures</name>
+            <path>special://userhome/Pictures</path>
+        </source>
+    </pictures>
+    <files>
+        <default></default>
+    </files>
+</sources>

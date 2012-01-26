@@ -1,0 +1,208 @@
+<?xml version="1.0"?>
+<window type="dialog" id="350">
+	<defaultcontrol always="true">700</defaultcontrol>
+	<controls>
+		<!-- Dummy container for Music Info -->
+		<control type="list" id="5000">
+			<description>info</description>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>0</width>
+			<height>0</height>
+			<visible>false</visible>
+			<itemlayout height="0">
+		  </itemlayout>
+			<focusedlayout height="0">
+		  </focusedlayout>
+		</control>
+		<include>Dialog_Background</include>
+		<control type="group">
+			<include>Dialog_Popup_Animation</include>
+			<posx>340</posx>
+			<posy>182</posy>
+			<control type="image">
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>600</width>
+				<height>302</height>
+				<texture border="82">dialog2_background.png</texture>
+			</control>
+			<control type="label">
+				<posx>31</posx>
+				<posy>26</posy>
+				<width>550</width>
+				<height>24</height>
+				<font>title24b</font>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>53462</label>
+				<textcolor>FF3B2D06</textcolor>
+			</control>
+			<control type="label">
+				<visible>!Container(5000).ListItem.Property(IsMusic) + !Container(5000).ListItem.Property(IsTVShow)</visible>
+				<posx>31</posx>
+				<posy>55</posy>
+				<width>550</width>
+				<height>18</height>
+				<font>title18b</font>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>[UPPERCASE]$INFO[Container(5000).ListItem.Label][/UPPERCASE]</label>
+				<textcolor>FF3B2D06</textcolor>
+			</control>
+			<control type="label">
+				<visible>Container(5000).ListItem.Property(IsMusic)</visible>
+				<posx>31</posx>
+				<posy>55</posy>
+				<width>550</width>
+				<height>18</height>
+				<font>title18b</font>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>[UPPERCASE]$INFO[Container(5000).ListItem.Album,, $LOCALIZE[52160] ]$INFO[Container(5000).ListItem.Artist][/UPPERCASE]</label>
+				<textcolor>FF3B2D06</textcolor>
+			</control>
+			<control type="label">
+				<visible>Container(5000).ListItem.Property(IsTVShow)</visible>
+				<posx>31</posx>
+				<posy>55</posy>
+				<width>550</width>
+				<height>18</height>
+				<font>title18b</font>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>[UPPERCASE]$INFO[Container(5000).ListItem.TVShowTitle][COLOR FF7F5D02]$INFO[Container(5000).ListItem.Season, $LOCALIZE[20373] ]$INFO[Container(5000).ListItem.Episode, $LOCALIZE[20359] ][/COLOR][/UPPERCASE]</label>
+				<textcolor>FF3B2D06</textcolor>
+			</control>
+			<control type="list" id="700">
+				<posx>180</posx>
+				<posy>95</posy>
+				<width>600</width>
+				<height>250</height>
+				<onleft>-</onleft>
+				<onright>-</onright>
+				<onup>-</onup>
+				<ondown>-</ondown>
+				<scrolltime>200</scrolltime>
+				<pagecontrol>60</pagecontrol>
+				<orientation>horizontal</orientation>
+				<itemlayout width="120" height="90">
+					<control type="image">
+						<posx>32</posx>
+						<posy>20</posy>
+						<width>56</width>
+						<height>56</height>
+						<colordiffuse>80FFFFFF</colordiffuse>
+						<texture>$INFO[ListItem.Thumb]</texture>
+					</control>
+					<control type="label">
+						<posx>60</posx>
+						<posy>82</posy>
+						<width>150</width>
+						<height>18</height>
+						<font>title18b</font>
+						<align>center</align>
+						<aligny>center</aligny>
+						<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+						<textcolor>grey</textcolor>
+					</control>
+				</itemlayout>
+				<focusedlayout width="120" height="90">
+					<control type="image">
+						<posx>20</posx>
+						<posy>8</posy>
+						<width>80</width>
+						<height>80</height>
+						<texture border="30">button_action_menu_source_on.png</texture>
+					</control>
+					<control type="image">
+						<posx>32</posx>
+						<posy>20</posy>
+						<width>56</width>
+						<height>56</height>
+						<texture>$INFO[ListItem.Thumb]</texture>
+					</control>
+					<control type="label">
+						<posx>60</posx>
+						<posy>82</posy>
+						<width>150</width>
+						<height>18</height>
+						<font>title18b</font>
+						<align>center</align>
+						<aligny>center</aligny>
+						<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+						<textcolor>white</textcolor>
+					</control>
+				</focusedlayout>
+				<content>
+					<item>
+						<label>$LOCALIZE[53463]</label>
+						<controlid>700</controlid>
+						<onclick>-</onclick>
+						<thumb>icons/icon_osd_share.png</thumb>
+					</item>
+					<item>
+						<label>$LOCALIZE[53464]</label>
+						<controlid>720</controlid>
+						<onclick>-</onclick>
+						<thumb>icons/icon_custom_text.png</thumb>
+					</item>
+				</content>
+			</control>
+			<control type="label" id="800">
+				<visible>!Container(5000).ListItem.Property(IsMusic) + !Container(5000).ListItem.Property(IsTVShow)</visible>
+				<posx>31</posx>
+				<posy>235</posy>
+				<width>550</width>
+				<height>50</height>
+				<font>font18b</font>
+				<align>left</align>
+				<aligny>top</aligny>
+				<label>[COLOR grey][UPPERCASE]$LOCALIZE[53461][/UPPERCASE][/COLOR] "$LOCALIZE[53463] [COLOR title][B]$INFO[Container(5000).ListItem.Label][/B][/COLOR] on boxee"</label>
+				<textcolor>white</textcolor>
+				<wrapmultiline>true</wrapmultiline>
+			</control>
+			<control type="label" id="800">
+				<visible>Container(5000).ListItem.Property(IsMusic)</visible>
+				<posx>31</posx>
+				<posy>235</posy>
+				<width>550</width>
+				<height>50</height>
+				<font>font18b</font>
+				<align>left</align>
+				<aligny>top</aligny>
+				<label>[COLOR grey][UPPERCASE]$LOCALIZE[53461][/UPPERCASE][/COLOR] "$LOCALIZE[53463] [COLOR title][B]$INFO[Container(5000).ListItem.Album,, by ]$INFO[Container(5000).ListItem.Artist][/B][/COLOR] on boxee"</label>
+				<textcolor>white</textcolor>
+				<wrapmultiline>true</wrapmultiline>
+			</control>
+			<control type="label" id="800">
+				<visible>Container(5000).ListItem.Property(IsTVShow)</visible>
+				<visible>!IsEmpty(container(5000).ListItem.TVShowTitle)</visible>
+				<posx>31</posx>
+				<posy>235</posy>
+				<width>550</width>
+				<height>50</height>
+				<font>font18b</font>
+				<align>left</align>
+				<aligny>top</aligny>
+				<label>[COLOR grey][UPPERCASE]$LOCALIZE[53461][/UPPERCASE][/COLOR] "[COLOR white]$LOCALIZE[53463] [COLOR title]$INFO[Container(5000).ListItem.TVShowTitle] $INFO[Container(5000).ListItem.Season,( S]$INFO[Container(5000).ListItem.Episode,|E, )][/COLOR] on boxee[/COLOR]"</label>
+				<textcolor>white</textcolor>
+				<wrapmultiline>true</wrapmultiline>
+			</control>
+			<control type="label" id="800">
+				<visible>Container(5000).ListItem.Property(IsTVShow)</visible>
+				<visible>IsEmpty(container(5000).ListItem.TVShowTitle)</visible>
+				<posx>31</posx>
+				<posy>235</posy>
+				<width>550</width>
+				<height>50</height>
+				<font>font18b</font>
+				<align>left</align>
+				<aligny>top</aligny>
+				<label>[COLOR grey][UPPERCASE]$LOCALIZE[53461][/UPPERCASE][/COLOR] "[COLOR white]$LOCALIZE[53463] [COLOR title]$INFO[Container(5000).ListItem.label] $INFO[Container(5000).ListItem.Season,( S]$INFO[Container(5000).ListItem.Episode,|E, )][/COLOR] on boxee[/COLOR]"</label>
+				<textcolor>white</textcolor>
+				<wrapmultiline>true</wrapmultiline>
+			</control>			
+		</control>
+	</controls>
+</window>

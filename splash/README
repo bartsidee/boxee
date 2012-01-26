@@ -1,0 +1,7 @@
+Notes:
+1. sudo apt-get install libusplash-dev
+2. The PNG files must be indexed and not RGB.
+3. To build do:
+	# make
+	# sudo make install
+	# sudo make kernel

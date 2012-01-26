@@ -1,0 +1,92 @@
+﻿<?xml version="1.0"?>
+<window id="2002">
+	<defaultcontrol>10</defaultcontrol>
+	<controls>
+		<control type="list" id="5000">
+			<description>info</description>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>0</width>
+			<height>0</height>
+			<visible>false</visible>
+			<itemlayout height="0">
+			</itemlayout>
+			<focusedlayout height="0">
+			</focusedlayout>
+		</control>	
+		<include>Dialog_Popup_Background</include>
+		<control type="group">
+			<include>Dialog_Popup_Animation</include>
+			<posx>340</posx>
+			<posy>82</posy>
+			<control type="image">
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>600</width>
+				<height>500</height>
+				<texture border="64">dialog_background.png</texture>
+			</control>
+			<control type="label" id="1">
+				<description>heading label</description>
+				<posx>26</posx>
+				<posy>34</posy>
+				<width>550</width>
+				<height>28</height>
+				<font>title28b</font>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>-</label>
+				<textcolor>FF3B2D06</textcolor>
+			</control>
+			<control type="textbox" id="20">
+				<posx>30</posx>
+				<posy>120</posy>
+				<width>500</width>
+				<height>280</height>
+				<font>font22</font>
+				<align>left</align>
+				<aligny>top</aligny>
+				<textcolor>white</textcolor>
+				<label>$INFO[container(5000).ListItem.Label]</label>
+				<wrapmultiline>true</wrapmultiline>
+				<pagecontrol>21</pagecontrol>
+		   </control>
+		   <control type="scrollbar" id="21">
+				<posx>570</posx>
+				<posy>130</posy>
+				<width>28</width>
+				<height>300</height>
+				<texturesliderbackground border="14">scrollbar_bg.png</texturesliderbackground>
+				<textureslidernib>scrollbar_vertical_nib.png</textureslidernib>
+				<textureslidernibfocus>scrollbar_vertical_nib_on.png</textureslidernibfocus>
+				<texturesliderbar>-</texturesliderbar>
+				<texturesliderbarfocus>-</texturesliderbarfocus>
+				<orientation>vertical</orientation>
+				<showonepage>false</showonepage>
+				<ondown>10</ondown>
+				<onleft>10</onleft>
+			</control>
+			<control type="button" id="10">
+				<posx>16</posx>
+				<posy>415</posy>
+				<width>160</width>
+				<height>54</height>
+				<align>center</align>
+				<aligny>center</aligny>
+				<textcolor>grey</textcolor>
+				<focusedcolor>white</focusedcolor>
+				<texturenofocus border="30">-</texturenofocus>
+				<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+				<textureclick border="30">button_action_menu_source_click.png</textureclick>
+				<font>title22b</font>
+				<label>[UPPERCASE]$LOCALIZE[186][/UPPERCASE]</label>
+				<!--OK-->
+				<onup>21</onup>
+				<ondown>-</ondown>
+				<onleft>10</onleft>
+				<onright>10</onright>
+				<onclick>-</onclick>
+			</control>
+		</control>
+	</controls>
+</window>

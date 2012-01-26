@@ -1,0 +1,38 @@
+#!/bin/sh
+
+BOXEE_HOME=/opt/boxee
+BOXEE_PROC=Boxee
+BOXEE_HOME=${XBMC_HOME=${BOXEE_HOME}}
+export XBMC_HOME=${BOXEE_HOME}
+export BOXEE_HOME
+BOXEE_PID=/tmp/run-boxee.pid
+CURRENT_PATH=`pwd`
+ALREADY_RUN=0
+LC_ALL="en.gb"
+
+if [ -f ${BOXEE_PID} ] ; then
+	CURRENT_PID=`cat ${BOXEE_PID}`
+	COMPARE_PID=`ps -ef | grep run-boxee | grep -v grep | awk '{print $2}' | xargs`
+	for pid in ${COMPARE_PID}
+	do	
+		if [ ${CURRENT_PID} -eq ${pid} ]; then
+			ALREADY_RUN=1
+			BLOCKING_PROC='run-boxee'
+		fi
+	done
+fi
+
+if [ ${ALREADY_RUN} -ne 1 ] && `pgrep Boxee  > /dev/null` ; then
+	ALREADY_RUN=1
+	BLOCKING_PROC='boxee'
+fi
+
+if [ ${ALREADY_RUN} -ne 0 ]; then
+	echo "BOXEE is already running... (${BLOCKING_PROC})"
+	exit
+else
+	echo $$ >${BOXEE_PID}
+	${BOXEE_HOME}/${BOXEE_PROC}
+fi
+pkill -9 Boxee
+rm ${BOXEE_PID}

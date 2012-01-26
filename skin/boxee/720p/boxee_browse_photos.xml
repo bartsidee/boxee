@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<window id="10491">
+	<defaultcontrol always="true">9000</defaultcontrol>
+	<allowoverlay>yes</allowoverlay>
+	<controls>
+		<include>Common_Background</include>
+		<include>Common_Status</include>
+		<control type="group" id="9000">
+			<include>BrowseListsAnimation</include>
+			<control type="label">
+				<include>BrowseMainTitle</include>
+				<label>[UPPERCASE]$LOCALIZE[54037][/UPPERCASE]</label>
+			</control>
+			<control type="label">
+				<include>BrowseSubTitle</include>
+				<label>[UPPERCASE]$INFO[Window.Property(displaypath)][COLOR grey]$INFO[Container.NumItems, (, $LOCALIZE[54059])][/COLOR][/UPPERCASE]</label>
+			</control>
+			<control type="group">
+				<include>BrowsePhotosThumbView</include>
+				<include>BrowsePhotosLineView</include>
+				<include>BrowseEmptyList</include>
+			</control>
+			<include>Bottom_Feather</include>
+		</control>
+		<control type="group" id="8000">
+			<include>BrowseLeftMenuAnimation</include>
+			<include>BrowseLeftMenuBackground</include>
+			<control type="grouplist">
+				<include>BrowseLeftMenu</include>
+				<control type="label">
+					<include>BrowseLeftMenuTitle</include>
+					<label>54012</label>
+				</control>
+				<control type="label">
+					<include>BrowseLeftMenuSubtitle</include>
+					<label>54013</label>
+				</control>
+				<control type="button" id="110">
+					<include>BrowseLeftMenuDropDown</include>
+					<label>$INFO[Window.Property(sort-label)]</label>
+				</control>
+				<control type="label" id="401">
+					<include>BrowseLeftMenuSubtitle</include>
+					<label>54015</label>
+				</control>
+				<control type="group" id="402">
+					<width>216</width>
+					<height>64</height>
+					<control type="togglebutton" id="191">
+						<include>BrowseLeftMenuViewUp</include>
+						<onup>401</onup>
+						<ondown>192</ondown>
+						<onright>9000</onright>
+						<label>54016</label>
+						<usealttexture>Control.IsVisible(53)</usealttexture>
+						<onclick>Container.SetViewMode(53)</onclick>
+					</control>
+					<control type="togglebutton" id="192">
+						<include>BrowseLeftMenuViewDown</include>
+						<onup>191</onup>
+						<ondown>403</ondown>
+						<onright>9000</onright>
+						<label>54017</label>
+						<usealttexture>Control.IsVisible(54)</usealttexture>
+						<onclick>Container.SetViewMode(54)</onclick>
+					</control>
+				</control>
+				<control type="group" id="403">
+					<width>224</width>
+					<height>16</height>
+				</control>
+				<control type="label" id="404">
+					<include>BrowseLeftMenuTitle</include>
+					<label>54018</label>
+				</control>
+				<control type="button" id="160">
+					<include>BrowseLeftMenuButton</include>
+					<label>$LOCALIZE[53715]</label>
+				</control>
+			</control>
+		</control>
+		<include>BrowseLoadingAnimation</include>
+		<include>Common_Now_Playing</include>
+	</controls>
+</window>

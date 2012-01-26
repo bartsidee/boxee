@@ -1,0 +1,231 @@
+<?xml version="1.0"?>
+<window type="dialog" id="350">
+	<defaultcontrol always="true">700</defaultcontrol>
+	<controls>
+		<control type="list" id="5000">
+			<description>current item in list</description>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>0</width>
+			<height>0</height>
+			<visible>false</visible>
+			<itemlayout height="0">
+                  </itemlayout>
+			<focusedlayout height="0">
+                  </focusedlayout>
+		</control>
+		<control type="list" id="5001">
+			<description>prev item in list</description>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>0</width>
+			<height>0</height>
+			<visible>false</visible>
+			<itemlayout height="0">
+                  </itemlayout>
+			<focusedlayout height="0">
+                  </focusedlayout>
+		</control>
+		<control type="list" id="5002">
+			<description>next item in list</description>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>0</width>
+			<height>0</height>
+			<visible>false</visible>
+			<itemlayout height="0">
+                  </itemlayout>
+			<focusedlayout height="0">
+                  </focusedlayout>
+		</control>
+		<include>Dialog_Background</include>
+		<control type="group">
+			<animation effect="fade" start="100" end="0" time="200" delay="0" condition="Window.IsVisible(boxee_share.xml)">Conditional</animation>
+			<include>Dialog_Popup_Animation</include>
+			<posx>340</posx>
+			<posy>182</posy>
+			<control type="image">
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>600</width>
+				<height>302</height>
+				<texture border="82">dialog2_background.png</texture>
+			</control>
+			<control type="label">
+				<visible>IsEmpty(Container(5000).ListItem.TVShowTitle) + IsEmpty(Container(5000).ListItem.Title)</visible>
+				<posx>31</posx>
+				<posy>26</posy>
+				<width>550</width>
+				<height>18</height>
+				<font>title18b</font>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>[UPPERCASE]$LOCALIZE[54054] [COLOR FF3B2D06]$INFO[Container(5000).ListItem.Label][/COLOR][/UPPERCASE]</label>
+				<textcolor>FF7F5D02</textcolor>
+			</control>
+			<control type="label">
+				<visible>IsEmpty(Container(5000).ListItem.TVShowTitle) + !IsEmpty(Container(5000).ListItem.Title)</visible>
+				<posx>31</posx>
+				<posy>26</posy>
+				<width>550</width>
+				<height>18</height>
+				<font>title18b</font>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>[UPPERCASE]$LOCALIZE[54054] [COLOR FF3B2D06]$INFO[Container(5000).ListItem.Title][/COLOR][/UPPERCASE]</label>
+				<textcolor>FF7F5D02</textcolor>
+			</control>
+			<control type="label">
+				<visible>!IsEmpty(Container(5000).ListItem.TVShowTitle)</visible>
+				<posx>31</posx>
+				<posy>26</posy>
+				<width>550</width>
+				<height>18</height>
+				<font>title18b</font>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>[UPPERCASE]$LOCALIZE[54054] [COLOR FF3B2D06]$INFO[Container(5000).ListItem.TVShowTitle]$INFO[Container(5000).ListItem.Season, $LOCALIZE[20373] ]$INFO[Container(5000).ListItem.Episode, $LOCALIZE[20359] ][/COLOR][/UPPERCASE]</label>
+				<textcolor>FF7F5D02</textcolor>
+			</control>
+			<control type="label">
+				<posx>31</posx>
+				<posy>50</posy>
+				<width>550</width>
+				<height>24</height>
+				<font>title24b</font>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>54055</label>
+				<textcolor>FF3B2D06</textcolor>
+			</control>
+			<control type="list" id="700">
+				<animation type="Conditional" condition="stringcompare(Container(700).NumItems,2)">
+					<effect type="slide" start="0" end="60" time="0" delay="0"/>
+				</animation>
+				<animation type="Conditional" condition="stringcompare(Container(700).NumItems,1)">
+					<effect type="slide" start="0" end="120" time="0" delay="0"/>
+				</animation>
+				<posx>120</posx>
+				<posy>90</posy>
+				<width>600</width>
+				<height>250</height>
+				<onleft>-</onleft>
+				<onright>-</onright>
+				<onup>-</onup>
+				<ondown>-</ondown>
+				<scrolltime>200</scrolltime>
+				<pagecontrol>60</pagecontrol>
+				<orientation>horizontal</orientation>
+				<itemlayout width="120" height="90">
+					<control type="image">
+						<posx>32</posx>
+						<posy>20</posy>
+						<width>56</width>
+						<height>56</height>
+						<colordiffuse>80FFFFFF</colordiffuse>
+						<texture>$INFO[ListItem.Thumb]</texture>
+					</control>
+					<control type="label">
+						<posx>60</posx>
+						<posy>82</posy>
+						<width>150</width>
+						<height>90</height>
+						<font>title18b</font>
+						<align>center</align>
+						<aligny>top</aligny>
+						<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+						<textcolor>grey</textcolor>
+					</control>
+				</itemlayout>
+				<focusedlayout width="120" height="90">
+					<control type="image">
+						<posx>20</posx>
+						<posy>8</posy>
+						<width>80</width>
+						<height>80</height>
+						<texture border="30">button_action_menu_source_on.png</texture>
+					</control>
+					<control type="image">
+						<posx>32</posx>
+						<posy>20</posy>
+						<width>56</width>
+						<height>56</height>
+						<texture>$INFO[ListItem.Thumb]</texture>
+					</control>
+					<control type="label">
+						<posx>60</posx>
+						<posy>82</posy>
+						<width>150</width>
+						<height>90</height>
+						<font>title18b</font>
+						<align>center</align>
+						<aligny>top</aligny>
+						<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
+						<textcolor>white</textcolor>
+					</control>
+				</focusedlayout>
+				<content>
+					<item>
+						<controlid>701</controlid>
+						<label>54052</label>
+						<visible>Container(5000).ListItem.property(canshare)</visible>
+						<onclick>-</onclick>
+						<thumb>icons/icon_osd_share.png</thumb>
+					</item>
+					<item>
+						<controlid>702</controlid>
+						<label>54056</label>
+						<onclick>-</onclick>
+						<thumb>icons/icon_play.png</thumb>
+					</item>
+					<item>
+						<visible>window.CheckIntProperty(in-queue,1)</visible>
+						<controlid>703</controlid>
+						<label>54057</label>
+						<onclick>-</onclick>
+						<thumb>icons/icon_action_menu_queue_remove.png</thumb>
+					</item>
+				</content>
+			</control>
+			<control type="label">
+				<visible>IsEmpty(Container(5002).ListItem.TVShowTitle) + IsEmpty(Container(5002).ListItem.Title)</visible>
+				<posx>31</posx>
+				<posy>235</posy>
+				<width>550</width>
+				<height>50</height>
+				<font>font18b</font>
+				<align>left</align>
+				<aligny>top</aligny>
+				<label>[UPPERCASE]$LOCALIZE[209]: [COLOR white]$INFO[Container(5002).ListItem.Label][/COLOR][/UPPERCASE]</label>
+				<textcolor>grey</textcolor>
+				<wrapmultiline>true</wrapmultiline>
+			</control>
+			<control type="label">
+				<visible>IsEmpty(Container(5002).ListItem.TVShowTitle) + !IsEmpty(Container(5002).ListItem.Title)</visible>
+				<posx>41</posx>
+				<posy>235</posy>
+				<width>550</width>
+				<height>50</height>
+				<font>font18b</font>
+				<align>left</align>
+				<aligny>top</aligny>
+				<label>[UPPERCASE]$LOCALIZE[209]: [COLOR white]$INFO[Container(5002).ListItem.Title][/COLOR][/UPPERCASE]</label>
+				<textcolor>grey</textcolor>
+				<wrapmultiline>true</wrapmultiline>
+			</control>
+			<control type="label">
+				<visible>!IsEmpty(Container(5002).ListItem.TVShowTitle)</visible>
+				<posx>31</posx>
+				<posy>235</posy>
+				<width>550</width>
+				<height>50</height>
+				<font>font18b</font>
+				<align>left</align>
+				<aligny>top</aligny>
+				<label>[UPPERCASE]$LOCALIZE[209]: [COLOR white]$INFO[Container(5002).ListItem.TVShowTitle]$INFO[Container(5002).ListItem.Season, $LOCALIZE[20373] ]$INFO[Container(5002).ListItem.Episode, $LOCALIZE[20359] ][/COLOR][/UPPERCASE]</label>
+				<textcolor>grey</textcolor>
+				<wrapmultiline>true</wrapmultiline>
+			</control>
+		</control>
+	</controls>
+</window>

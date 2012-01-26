@@ -1,0 +1,167 @@
+<?xml version="1.0"?>
+<window type="dialog" id="406">
+	<defaultcontrol always="true">500</defaultcontrol>
+	<allowoverlay>no</allowoverlay>
+	<controls>
+		<!-- Dummy container for Music Info -->
+		<control type="list" id="5000">
+			<description>info</description>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>0</width>
+			<height>0</height>
+			<visible>false</visible>
+			<itemlayout height="0">
+		  </itemlayout>
+			<focusedlayout height="0">
+		  </focusedlayout>
+		</control>
+		<control type="group">
+			<animation type="WindowOpen">
+				<effect type="fade" end="100" time="200"/>
+			</animation>
+			<animation type="WindowClose">
+				<effect type="fade" end="0" time="200"/>
+			</animation>
+			<control type="group">
+				<posx>12</posx>
+				<posy>148</posy>
+				<control type="image">
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>280</width>
+					<height>472</height>
+					<texture border="64">action_menu_bg.png</texture>
+				</control>
+				<control type="label" id="610">
+					<posx>26</posx>
+					<posy>20</posy>
+					<width>200</width>
+					<height>24</height>
+					<font>title24b</font>
+					<align>left</align>
+					<aligny>top</aligny>
+					<textcolor>title</textcolor>
+				</control>                          
+				<control type="list" id="500">
+					<posx>6</posx>
+					<posy>54</posy>
+					<width>300</width>
+					<height>380</height>
+					<onleft>Dialog.Close(406)</onleft>
+					<onright>Dialog.Close(406)</onright>
+					<onup>100</onup>
+					<ondown>100</ondown>
+					<scrolltime>200</scrolltime>
+					<pagecontrol>-</pagecontrol>
+					<orientation>vertical</orientation>
+					<offsety>18</offsety>
+					<itemlayout height="40">
+						<control type="label">
+							<posx>36</posx>
+							<posy>0</posy>
+							<width>195</width>
+							<height>40</height>
+							<font>font20b</font>
+							<align>left</align>
+							<aligny>center</aligny>
+							<label>$INFO[ListItem.Label]</label>
+							<textcolor>white</textcolor>
+						</control>
+					</itemlayout>
+					<focusedlayout height="40">
+						<control type="image">
+							<posx>0</posx>
+							<posy>-18</posy>
+							<width>266</width>
+							<height>76</height>
+							<texture border="38">line_view_on.png</texture>
+						</control>
+						<control type="label">
+							<posx>36</posx>
+							<posy>0</posy>
+							<width>195</width>
+							<height>40</height>
+							<font>font20b</font>
+							<align>left</align>
+							<aligny>center</aligny>
+							<label>$INFO[ListItem.Label]</label>
+							<textcolor>white</textcolor>
+							<scroll>true</scroll>
+							<scrollout>true</scrollout>
+							<scrollspeed>40</scrollspeed>
+							<pauseatend>4000</pauseatend>	
+						</control>
+					</focusedlayout>
+				</control>
+				<control type="image">
+					<visible>Container(500).HasPrevious</visible>
+					<posx>128</posx>
+					<posy>46</posy>
+					<width>24</width>
+					<height>24</height>
+					<texture>icons/icon_arrow_up.png</texture>
+				</control>
+				<control type="image">
+					<visible>Container(500).HasNext</visible>
+					<posx>128</posx>
+					<posy>436</posy>
+					<width>24</width>
+					<height>24</height>
+					<texture>icons/icon_arrow_down.png</texture>
+				</control>
+				<control type="fixedlist" id="600">
+					<posx>6</posx>
+					<posy>30</posy>
+					<width>300</width>
+					<height>420</height>
+					<onleft>Dialog.Close(406)</onleft>
+					<onright>Dialog.Close(406)</onright>
+					<onup>100</onup>
+					<ondown>100</ondown>
+					<scrolltime>200</scrolltime>
+					<pagecontrol>-</pagecontrol>
+					<orientation>vertical</orientation>
+					<offsety>18</offsety>
+					<itemlayout height="40">
+						<control type="label">
+							<posx>36</posx>
+							<posy>0</posy>
+							<width>240</width>
+							<height>40</height>
+							<font>font20b</font>
+							<align>left</align>
+							<aligny>center</aligny>
+							<label>$INFO[ListItem.Label]</label>
+							<textcolor>white</textcolor>
+						</control>
+					</itemlayout>
+					<focusedlayout height="40">
+						<control type="image">
+							<posx>0</posx>
+							<posy>-18</posy>
+							<width>266</width>
+							<height>76</height>
+							<texture border="38">line_view_on.png</texture>
+						</control>
+						<control type="label">
+							<posx>36</posx>
+							<posy>0</posy>
+							<width>240</width>
+							<height>40</height>
+							<font>font20b</font>
+							<align>left</align>
+							<aligny>center</aligny>
+							<label>$INFO[ListItem.Label]</label>
+							<textcolor>white</textcolor>
+							<scroll>true</scroll>
+							<scrollout>true</scrollout>
+							<scrollspeed>40</scrollspeed>
+							<pauseatend>4000</pauseatend>
+						</control>
+					</focusedlayout>
+				</control>
+			</control>
+		</control>
+	</controls>
+</window>

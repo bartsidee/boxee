@@ -1,0 +1,447 @@
+﻿<?xml version="1.0"?>
+<window id="11">
+	<defaultcontrol>201</defaultcontrol>
+	<controls>
+		<include>Common_Background</include>
+		<include>Common_Status</include>
+		<include>Common_Now_Playing</include>
+		<control type="image">
+			<!--animation type="WindowOpen" condition="!Window.Previous(Settings.xml) + !Window.Previous(SettingsCategory.xml)">
+				<effect type="fade" start="0" end="100" time="200" delay="0"/>
+			</animation>
+			<animation type="WindowClose" condition="!Window.Next(Settings.xml) + !Window.Next(SettingsCategory.xml)">
+				<effect type="fade" start="100" end="0" time="200" delay="0"/>
+			</animation-->
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>1280</width>
+			<height>720</height>
+			<texture>black.png</texture>
+			<colordiffuse>80FFFFFF</colordiffuse>
+		</control>
+		<control type="image">
+			<animation effect="slide" start="25,14" end="0,0" time="600" delay="200" tween="cubic" easing="inout">WindowOpen</animation>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>128</width>
+			<height>128</height>
+			<texture>calibrate-topleft.png</texture>
+		</control>
+		<control type="image">
+			<animation effect="slide" start="-25,-14" end="0,0" time="600" delay="200" tween="cubic" easing="inout">WindowOpen</animation>
+			<posx>1152</posx>
+			<posy>592</posy>
+			<width>128</width>
+			<height>128</height>
+			<texture>calibrate-bottomright.png</texture>
+		</control>
+		<control type="group">
+			<!--animation type="Conditional" condition="Window.IsVisible(boxee_media_source_list.xml) | Window.IsVisible(boxee_media_source_add_share.xml) | Window.IsVisible(boxee_media_source_add_folder.xml) | Window.IsVisible(boxee_media_source_info.xml)">
+				<effect type="fade" start="100" end="0" time="200"/>
+			</animation-->
+			<posx>30</posx>
+			<posy>46</posy>
+			<width>1220</width>
+			<height>660</height>
+			<control type="image">
+				<posx>0</posx>
+				<posy>70</posy>
+				<width>1220</width>
+				<height>510</height>
+				<texture border="64">action_menu_bg.png</texture>
+			</control>
+			<control type="image">
+				<posx>100</posx>
+				<posy>104</posy>
+				<width>1020</width>
+				<height>256</height>
+				<texture border="128">feather_divider.png</texture>
+			</control>
+			<control type="label">
+				<posx>34</posx>
+				<posy>94</posy>
+				<width>1100</width>
+				<height>56</height>
+				<align>left</align>
+				<aligny>center</aligny>
+				<haspath>true</haspath>
+				<font>title56b</font>
+				<textcolor>white</textcolor>
+				<label>[UPPERCASE]$LOCALIZE[5][/UPPERCASE]</label>
+			</control>
+			<control type="label">
+				<posx>330</posx>
+				<posy>119</posy>
+				<width>1000</width>
+				<height>28</height>
+				<align>left</align>
+				<aligny>top</aligny>
+				<haspath>true</haspath>
+				<font>font24b</font>
+				<textcolor>title</textcolor>
+				<label>[UPPERCASE]$LOCALIZE[50008][/UPPERCASE]</label>
+			</control>
+			<control type="group" id="9000">
+				<control type="button" id="302">
+					<posx>30</posx>
+					<posy>514</posy>
+					<width>170</width>
+					<height>30</height>
+					<onup>200</onup>
+					<onleft>-</onleft>
+					<onright>10</onright>
+					<label>50009</label>
+					<font>font20b</font>
+					<align>center</align>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<focusedcolor>white</focusedcolor>
+					<textcolor2>white</textcolor2>
+					<textoffsetx>14</textoffsetx>
+					<texturenofocus>button_option_menu.png</texturenofocus>
+					<texturefocus>button_option_menu_on.png</texturefocus>
+					<textureclick>button_option_menu_click.png</textureclick>
+					<pulseonselect>false</pulseonselect>
+				</control>
+				<control type="group" id="200">
+					<posx>30</posx>
+					<posy>218</posy>
+					<control type="label">
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>200</width>
+						<height>20</height>
+						<font>font20b</font>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<align>left</align>
+						<label>[UPPERCASE]$LOCALIZE[50010][/UPPERCASE]</label>
+					</control>
+					<control type="togglebutton" id="201">
+						<posx>150</posx>
+						<posy>0</posy>
+						<width>216</width>
+						<height>30</height>
+						<onup>8000</onup>
+						<ondown>202</ondown>
+						<onleft>-</onleft>
+						<onright>100</onright>
+						<label>231</label>
+						<font>font18b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<textoffsetx>14</textoffsetx>
+						<texturenofocus>button_option_menu_unchecked.png</texturenofocus>
+						<texturefocus>button_option_menu_unchecked_on.png</texturefocus>
+						<textureclick>button_option_menu_unchecked_click.png</textureclick>
+						<alttexturenofocus>button_option_menu_checked.png</alttexturenofocus>
+						<alttexturefocus>button_option_menu_checked_on.png</alttexturefocus>
+					</control>
+					<control type="togglebutton" id="202">
+						<posx>150</posx>
+						<posy>40</posy>
+						<width>216</width>
+						<height>30</height>
+						<onup>201</onup>
+						<ondown>203</ondown>
+						<onleft>-</onleft>
+						<onright>100</onright>
+						<label>3%</label>
+						<font>font18b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<textoffsetx>14</textoffsetx>
+						<texturenofocus>button_option_menu_unchecked.png</texturenofocus>
+						<texturefocus>button_option_menu_unchecked_on.png</texturefocus>
+						<textureclick>button_option_menu_unchecked_click.png</textureclick>
+						<alttexturenofocus>button_option_menu_checked.png</alttexturenofocus>
+						<alttexturefocus>button_option_menu_checked_on.png</alttexturefocus>
+					</control>
+					<control type="togglebutton" id="203">
+						<posx>150</posx>
+						<posy>80</posy>
+						<width>216</width>
+						<height>30</height>
+						<onup>202</onup>
+						<ondown>204</ondown>
+						<onleft>-</onleft>
+						<onright>100</onright>
+						<label>4%</label>
+						<font>font18b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<textoffsetx>14</textoffsetx>
+						<texturenofocus>button_option_menu_unchecked.png</texturenofocus>
+						<texturefocus>button_option_menu_unchecked_on.png</texturefocus>
+						<textureclick>button_option_menu_unchecked_click.png</textureclick>
+						<alttexturenofocus>button_option_menu_checked.png</alttexturenofocus>
+						<alttexturefocus>button_option_menu_checked_on.png</alttexturefocus>
+					</control>
+					<control type="togglebutton" id="204">
+						<posx>150</posx>
+						<posy>120</posy>
+						<width>216</width>
+						<height>30</height>
+						<onup>203</onup>
+						<ondown>205</ondown>
+						<onleft>-</onleft>
+						<onright>100</onright>
+						<label>5%</label>
+						<font>font18b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<textoffsetx>14</textoffsetx>
+						<texturenofocus>button_option_menu_unchecked.png</texturenofocus>
+						<texturefocus>button_option_menu_unchecked_on.png</texturefocus>
+						<textureclick>button_option_menu_unchecked_click.png</textureclick>
+						<alttexturenofocus>button_option_menu_checked.png</alttexturenofocus>
+						<alttexturefocus>button_option_menu_checked_on.png</alttexturefocus>
+					</control>
+					<control type="togglebutton" id="205">
+						<posx>150</posx>
+						<posy>160</posy>
+						<width>216</width>
+						<height>30</height>
+						<onup>204</onup>
+						<ondown>206</ondown>
+						<onleft>-</onleft>
+						<onright>100</onright>
+						<label>6%</label>
+						<font>font18b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<textoffsetx>14</textoffsetx>
+						<texturenofocus>button_option_menu_unchecked.png</texturenofocus>
+						<texturefocus>button_option_menu_unchecked_on.png</texturefocus>
+						<textureclick>button_option_menu_unchecked_click.png</textureclick>
+						<alttexturenofocus>button_option_menu_checked.png</alttexturenofocus>
+						<alttexturefocus>button_option_menu_checked_on.png</alttexturefocus>
+					</control>
+					<control type="togglebutton" id="206">
+						<posx>150</posx>
+						<posy>200</posy>
+						<width>216</width>
+						<height>30</height>
+						<onup>205</onup>
+						<ondown>10</ondown>
+						<onleft>-</onleft>
+						<onright>100</onright>
+						<label>636</label>
+						<font>font18b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<textoffsetx>14</textoffsetx>
+						<texturenofocus>button_option_menu_unchecked.png</texturenofocus>
+						<texturefocus>button_option_menu_unchecked_on.png</texturefocus>
+						<textureclick>button_option_menu_unchecked_click.png</textureclick>
+						<alttexturenofocus>button_option_menu_checked.png</alttexturenofocus>
+						<alttexturefocus>button_option_menu_checked_on.png</alttexturefocus>
+					</control>
+				</control>
+				<control type="image">
+					<posx>430</posx>
+					<posy>218</posy>
+					<width>1</width>
+					<height>194</height>
+					<texture>white.png</texture>
+					<colordiffuse>40FFFFFF</colordiffuse>
+				</control>
+				<control type="group" id="100">
+					<posx>460</posx>
+					<posy>218</posy>
+					<control type="label">
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>200</width>
+						<height>20</height>
+						<font>font20b</font>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<align>left</align>
+						<label>[UPPERCASE]$LOCALIZE[50011][/UPPERCASE]</label>
+					</control>
+					<control type="togglebutton" id="101">
+						<posx>180</posx>
+						<posy>0</posy>
+						<width>216</width>
+						<height>30</height>
+						<onup>8000</onup>
+						<ondown>102</ondown>
+						<onleft>200</onleft>
+						<onright>301</onright>
+						<label>4:3 (1.33)</label>
+						<font>font18b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<textoffsetx>14</textoffsetx>
+						<texturenofocus>button_option_menu_unchecked.png</texturenofocus>
+						<texturefocus>button_option_menu_unchecked_on.png</texturefocus>
+						<textureclick>button_option_menu_unchecked_click.png</textureclick>
+						<alttexturenofocus>button_option_menu_checked.png</alttexturenofocus>
+						<alttexturefocus>button_option_menu_checked_on.png</alttexturefocus>
+					</control>
+					<control type="togglebutton" id="102">
+						<posx>180</posx>
+						<posy>40</posy>
+						<width>216</width>
+						<height>30</height>
+						<onup>101</onup>
+						<ondown>103</ondown>
+						<onleft>200</onleft>
+						<onright>301</onright>
+						<label>16:9 (1.78)</label>
+						<font>font18b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<textoffsetx>14</textoffsetx>
+						<texturenofocus>button_option_menu_unchecked.png</texturenofocus>
+						<texturefocus>button_option_menu_unchecked_on.png</texturefocus>
+						<textureclick>button_option_menu_unchecked_click.png</textureclick>
+						<alttexturenofocus>button_option_menu_checked.png</alttexturenofocus>
+						<alttexturefocus>button_option_menu_checked_on.png</alttexturefocus>
+					</control>
+					<control type="togglebutton" id="103">
+						<posx>180</posx>
+						<posy>80</posy>
+						<width>216</width>
+						<height>30</height>
+						<onup>102</onup>
+						<ondown>104</ondown>
+						<onleft>200</onleft>
+						<onright>301</onright>
+						<label>16:10 (1.6)</label>
+						<font>font18b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<textoffsetx>14</textoffsetx>
+						<texturenofocus>button_option_menu_unchecked.png</texturenofocus>
+						<texturefocus>button_option_menu_unchecked_on.png</texturefocus>
+						<textureclick>button_option_menu_unchecked_click.png</textureclick>
+						<alttexturenofocus>button_option_menu_checked.png</alttexturenofocus>
+						<alttexturefocus>button_option_menu_checked_on.png</alttexturefocus>
+					</control>
+					<control type="togglebutton" id="104">
+						<posx>180</posx>
+						<posy>120</posy>
+						<width>216</width>
+						<height>30</height>
+						<onup>103</onup>
+						<ondown>105</ondown>
+						<onleft>200</onleft>
+						<onright>301</onright>
+						<label>21:9 (2.35)</label>
+						<font>font18b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<textoffsetx>14</textoffsetx>
+						<texturenofocus>button_option_menu_unchecked.png</texturenofocus>
+						<texturefocus>button_option_menu_unchecked_on.png</texturefocus>
+						<textureclick>button_option_menu_unchecked_click.png</textureclick>
+						<alttexturenofocus>button_option_menu_checked.png</alttexturenofocus>
+						<alttexturefocus>button_option_menu_checked_on.png</alttexturefocus>
+					</control>
+					<control type="togglebutton" id="105">
+						<posx>180</posx>
+						<posy>160</posy>
+						<width>216</width>
+						<height>30</height>
+						<onup>104</onup>
+						<ondown>10</ondown>
+						<onleft>200</onleft>
+						<onright>301</onright>
+						<label>[UPPERCASE]$LOCALIZE[636][/UPPERCASE]</label>
+						<font>font18b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<textoffsetx>14</textoffsetx>
+						<texturenofocus>button_option_menu_unchecked.png</texturenofocus>
+						<texturefocus>button_option_menu_unchecked_on.png</texturefocus>
+						<textureclick>button_option_menu_unchecked_click.png</textureclick>
+						<alttexturenofocus>button_option_menu_checked.png</alttexturenofocus>
+						<alttexturefocus>button_option_menu_checked_on.png</alttexturefocus>
+					</control>
+				</control>
+				<control type="image">
+					<posx>895</posx>
+					<posy>218</posy>
+					<width>1</width>
+					<height>194</height>
+					<texture>white.png</texture>
+					<colordiffuse>40FFFFFF</colordiffuse>
+				</control>
+				<control type="button" id="301">
+					<posx>930</posx>
+					<posy>224</posy>
+					<width>216</width>
+					<height>30</height>
+					<onup>8000</onup>
+					<onleft>100</onleft>
+					<onright>-</onright>
+					<ondown>10</ondown>
+					<label>50012</label>
+					<font>font20b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<focusedcolor>white</focusedcolor>
+					<textcolor2>white</textcolor2>
+					<textoffsetx>14</textoffsetx>
+					<texturenofocus>button_option_menu.png</texturenofocus>
+					<texturefocus>button_option_menu_on.png</texturefocus>
+					<textureclick>button_option_menu_click.png</textureclick>
+					<pulseonselect>false</pulseonselect>
+				</control>
+			</control>
+		</control>
+		<control type="label" id="3">
+			<description>help information</description>
+			<posx>20</posx>
+			<posy>85</posy>
+			<width>1240</width>
+			<label>-</label>
+			<align>center</align>
+			<sans>font23b</sans>
+		</control>
+		<control type="button" id="10">
+			<posx>1040</posx>
+			<posy>550</posy>
+			<width>160</width>
+			<height>54</height>
+			<align>center</align>
+			<aligny>center</aligny>
+			<textcolor>grey</textcolor>
+			<focusedcolor>white</focusedcolor>
+			<texturenofocus border="15">button_option_menu.png</texturenofocus>
+			<texturefocus border="15">button_option_menu_on.png</texturefocus>
+			<textureclick border="15">button_option_menu_click.png</textureclick>
+			<font>title22b</font>
+			<label>[UPPERCASE]$LOCALIZE[209][/UPPERCASE]</label>
+			<!-- NEXT -->
+			<onup>9000</onup>
+			<ondown>302</ondown>
+			<onleft>302</onleft>
+		</control>
+	</controls>
+</window>

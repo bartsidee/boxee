@@ -1,0 +1,146 @@
+<settingsmap>
+  <group id="7" window="480">  <!-- Appearence  -->
+    <category id="location" label="20026">
+      <setting id="weather.areacode1"/>
+      <setting id="locale.timeformat"/>
+      <setting id="locale.tempscale"/>
+      <setting id="subtitles.sep1"/>
+      <setting id="filelists.filtergeoip"/>
+    </category>        
+    <category id="videoscreen" label="51525">
+      <setting id="videoscreen.resolution"/>
+      <setting id="videoscreen.testresolution"/>
+      <separator/>
+      <setting id="videoscreen.guicalibration"/>
+      <setting id="videoscreen.testpattern" platform="mac,atv,linux"/>
+    </category>
+    <category id="screensaver" label="360">
+      <setting id="screensaver.mode"/>
+      <setting id="screensaver.preview"/>
+      <setting id="screensaver.time"/>
+      <setting id="screensaver.powersavingtime"/>
+      <separator/>
+      <setting id="screensaver.dimlevel"/>
+      <setting id="screensaver.slideshowpath" platform="win,atv,mac,linux"/>
+      <setting id="slideshow.shuffle" platform="win,atv,mac,linux"/>
+    </category>
+    <category id="language" label="248">
+      <setting id="locale.language"/>
+      <setting id="locale.charset"/>
+      <setting id="locale.keyboard1"/>
+      <setting id="locale.keyboard2"/>
+      <setting id="locale.keyboard3"/>
+    </category>
+    <category id="sounds" label="51526">
+      <setting id="lookandfeel.soundskin"/>
+    </category>
+    <category id="background" label="53130" platform="win,atv,mac,linux">
+      <setting id="background.imagefile"/>
+      <setting id="background.imagefolder"/>
+	  <setting id="background.reset"/>
+      <setting id="background.remark"/>
+    </category>      
+    <category id="advanced" label="16005">
+      <setting id="videoscreen.vsync" platform="atv,mac,linux"/>
+      <setting id="videoscreen.displayblanking" platform="win,mac"/>
+      <setting id="filelists.showhidden"/>
+    </category>            
+  </group>
+  <group id="2" window="51527">
+    <category id="feed" label="800"  runtime="true">
+    </category>            
+  </group>
+  <group id="5" window="51527">
+    <category id="video" label="157">
+      <setting id="subtitles.font"/>
+      <setting id="subtitles.height"/>
+      <setting id="subtitles.style"/>
+      <setting id="subtitles.color"/>
+      <setting id="subtitles.charset"/>
+      <setting id="myvideos.pausewhenexit"/>
+    </category>
+    <category id="music" label="2">
+      <setting id="mymusic.visualisation" platform="linux,mac,win,atv"/>
+      <setting id="mymusic.autoplaynextitem"/>
+    </category>
+    <category id="photos" label="1">
+      <setting id="slideshow.staytime"/>
+      <setting id="slideshow.transistiontime"/>
+      <setting id="slideshow.displayeffects"/>
+    </category>
+    <category id="autorun" label="447" platform="linux,mac,win">
+      <setting id="autorun.dvd"/>    
+      <setting id="autorun.vcd"/>    
+      <setting id="autorun.cdda"/>    
+    </category>    
+    <category id="advanced" label="16005">
+      <setting id="videoplayer.hwaccel"/>
+      <setting id="videoplayer.rendermethod" platform="linux,mac,atv"/>
+      <setting id="myvideos.autothumb"/>
+      <setting id="myvideos.videosize"/>
+    </category>                
+  </group>      
+  <group id="6" window="249">
+    <category id="network" label="705">
+      <setting id="network.usehttpproxy"/>
+      <setting id="network.httpproxyserver"/>
+      <setting id="network.httpproxyport"/>
+      <setting id="network.httpproxyusername"/>
+      <setting id="network.httpproxypassword"/>
+    </category>
+    <category id="server" label="14036">
+      <setting id="servers.webserver"/>
+      <setting id="servers.webserverport"/>
+      <setting id="servers.webserverpassword"/>
+    </category>
+    <category id="smb" label="1200">
+      <setting id="smb.username"/>
+      <setting id="smb.password"/>
+      <setting id="smb.winsserver"/>
+      <setting id="smb.workgroup"/>
+    </category>
+  </group>      
+  <group id="4" window="51530">
+    <category id="version" label="51950">
+      <setting id="version.version"/>
+      <setting id="version.builddate"/>    
+      <setting id="version.ipaddress"/>    
+      <setting id="version.macaddress"/>    
+      <setting id="version.totalmemory"/>    
+      <setting id="version.screenresolution"/>    
+    </category>
+    <category id="audiooutput" label="772">
+      <setting id="audiooutput.mode"/>
+      <setting id="audiooutput.ac3passthrough"/>
+      <setting id="audiooutput.dtspassthrough"/>
+      <setting id="audiooutput.eac3passthrough" platform="win"/>
+      <setting id="audiooutput.truehdpassthrough" platform="win"/>
+      <setting id="audiooutput.dtshdpassthrough" platform="win"/>
+      <setting id="audiooutput.audiodevice"/>
+      <setting id="audiooutput.customdevice"/>
+      <setting id="audiooutput.passthroughdevice"/>
+      <setting id="audiooutput.custompassthrough"/>
+      <setting id="audiooutput.downmixmultichannel"/>
+    </category>
+    <category id="navigation" label="53101">
+      <setting id="lookandfeel.enablemouse"/>
+      <setting id="appleremote.mode" platform="mac,atv"/>
+      <setting id="appleremote.alwayson" platform="mac,atv"/>
+      <setting id="appleremote.sequencetime " platform="mac,atv"/>
+    </category>                    
+    <category id="advanced" label="16005">
+      <setting id="erase.db"/>
+      <setting id="erase.thumb"/>
+      <setting id="debug.loglevel"/>
+      <setting id="debug.showinfoline"/>
+      <setting id="boxee.runatlogin" platform="win,mac"/>
+    </category>                
+  </group>
+  <group id="1" window="10013">
+    <category id="parent.control" label="801">
+      <setting id="filelists.filteradult"/>
+      <setting id="filelists.setadultcode"/>
+    </category>
+  </group>      
+</settingsmap>
+

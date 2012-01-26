@@ -1,0 +1,116 @@
+<sources>
+<add>
+    <video>
+    </video>
+    <music>
+    </music>
+    <pictures>
+    </pictures>
+</add>
+<delete>
+    <video>
+        <source>
+            <name>Boxee Downloads</name>
+            <path>special://userhome/Downloads/Boxee</path>
+        </source>
+        <source>
+            <name>Video Downloads</name>
+            <path>rss://rss.boxee.tv/video_downloads.xml</path>
+            <thumbnail>Q:/media/downloadrss.png</thumbnail>
+        </source>
+        <source>
+           <name>CNET</name>
+           <path>rss://rss.boxee.tv/cnet.xml</path>
+           <thumbnail>http://rss.boxee.tv/rssthumb/cnet.png</thumbnail>
+        </source>
+        <source>
+            <name>Video Channels</name>
+            <path>rss://rss.boxee.tv/video.xml</path>
+            <thumbnail>Q:/media/defaultrss.png</thumbnail>
+        </source>
+        <source>
+           <name>BlipTV</name>
+           <path>plugin://video/BlipTV/</path>
+           <thumbnail>Q:/plugins/video/BlipTV/default.tbn</thumbnail>
+        </source>
+        <source>
+            <name>Movie Trailers</name>
+            <path>plugin://video/Movie Trailers/</path>
+            <thumbnail>Q:/plugins/video/Movie Trailers/default.tbn</thumbnail>
+        </source>       
+        <source>
+            <name>Public Torrents</name>
+            <path>app://public-torrents/</path>
+            <thumbnail>http://dir.boxee.tv/apps/public-torrents/thumb.png</thumbnail>
+        </source>
+        <source>
+            <name>Hulu</name>
+            <path>app://hulu/</path>
+            <thumbnail>http://dir.boxee.tv/apps/hulu/thumb.png</thumbnail>
+        </source>
+        <source>
+            <name>Boxee Downloads</name>
+            <path>H:/Downloads/Boxee</path>
+        </source>
+        <source>
+            <name>Local Videos</name>
+            <path>H:/Movies</path>
+        </source>   
+        <source>
+            <name>MLB</name>
+            <path>app://mlb-osx/</path>
+            <thumbnail>http://dir.boxee.tv/apps/mlb/thumb.png</thumbnail>
+        </source>        
+    </video>
+    <music>
+        <source>
+            <name>Boxee Downloads</name>
+            <path>special://userhome/Downloads/Boxee</path>
+        </source>
+        <source>
+            <name>Muxtape</name>
+            <path>script://muxtape</path>
+            <thumbnail>special://xbmc/scripts/muxtape/default.tbn</thumbnail>
+        </source>
+        <source>
+            <name>Audio Channels</name>
+            <path>rss://rss.boxee.tv/audio.xml</path>
+            <thumbnail>special://xbmc/media/defaultrss.png</thumbnail>
+        </source>
+        <source>
+            <name>BBC</name>
+            <path>app://bbc-podcasts/</path>
+            <thumbnail>http://dir.boxee.tv/apps/bbc-podcasts/thumb.png</thumbnail>
+        </source>
+        <source>
+            <name>Local Music</name>
+            <path>H:/Music</path>
+        </source>
+        <source>
+            <name>Boxee Downloads</name>
+            <path>H:/Downloads/Boxee</path>
+        </source>
+        <source>
+            <name>Last.fm</name>
+            <path>lastfm://</path>
+            <thumbnail>Q:/skin/Boxee Skin NG/media/lastfm.png</thumbnail>
+        </source>
+        <source>
+            <name>SHOUTcast Radio</name>
+            <path>shout://</path>
+            <thumbnail>Q:/skin/Boxee Skin NG/media/winamp_logo.png</thumbnail>
+        </source>    
+    </music>
+    <pictures>
+        <source>
+            <name>Boxee Downloads</name>
+            <path>special://userhome/Downloads/Boxee</path>
+        </source>
+        <source>
+            <name>Local Pictures</name>
+            <path>H:/Pictures</path>
+        </source>
+    </pictures>    
+</delete>
+</sources>
+

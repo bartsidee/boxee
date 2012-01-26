@@ -1,0 +1,490 @@
+<?xml version="1.0"?>
+<window id="356">
+	<controls>
+		<!-- Dummy container for Picture Info -->
+		<control type="list" id="5000">
+			<description>info</description>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>0</width>
+			<height>0</height>
+			<visible>false</visible>
+			<itemlayout height="0">
+			</itemlayout>
+			<focusedlayout height="0">
+			</focusedlayout>
+		</control>
+		<control type="group">
+			<animation type="WindowOpen">
+				<effect type="fade" time="200" delay="0"/>
+			</animation>
+			<animation type="WindowClose">
+				<effect type="fade" time="200" delay="0"/>
+			</animation>
+			<animation effect="fade" time="200" start="100" end="0" condition="Control.IsVisible(9200)">Conditional</animation>
+			<posx>20</posx>
+			<posy>640</posy>
+			<control type="image">
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>500</width>
+				<height>60</height>
+				<texture border="30">osd_background.png</texture>
+			</control>
+			<control type="label">
+				<posx>20</posx>
+				<posy>18</posy>
+				<width>100</width>
+				<height>24</height>
+				<align>left</align>
+				<aligny>center</aligny>
+				<font>title24b</font>
+				<textcolor>white</textcolor>
+				<label>$INFO[slideshow.slideindex]</label>
+			</control>
+			<control type="grouplist" id="9100">
+				<posx>140</posx>
+				<posy>6</posy>
+				<width>400</width>
+				<height>52</height>
+				<itemgap>0</itemgap>
+				<onup>9000</onup>
+				<onleft>-</onleft>
+				<onright>-</onright>
+				<orientation>horizontal</orientation>
+				<usecontrolcoords>false</usecontrolcoords>
+				<control type="group" id="9121">
+					<visible>Control.IsVisible(9007)</visible>
+					<width>48</width>
+					<height>48</height>
+					<control type="image">
+						<visible>!Control.HasFocus(9007)</visible>
+						<posx>4</posx>
+						<posy>4</posy>
+						<width>40</width>
+						<height>40</height>
+						<colordiffuse>80FFFFFF</colordiffuse>
+						<texture>icons/icon_osd_share.png</texture>
+					</control>
+					<control type="image">
+						<visible>Control.HasFocus(9007)</visible>
+						<posx>4</posx>
+						<posy>4</posy>
+						<width>40</width>
+						<height>40</height>
+						<texture>icons/icon_osd_share.png</texture>
+					</control>
+					<control type="button" id="9007">
+						<visible>!Container(5000).ListItem.Property(disable-recommend)</visible>
+						<visible>!boxee.OfflineMode</visible>
+						<posx>-8</posx>
+						<posy>-8</posy>
+						<width>64</width>
+						<height>64</height>
+						<label>-</label>
+						<texturenofocus>-</texturenofocus>
+						<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+						<onclick>-</onclick>
+						<onup>9000</onup>
+						<ondown>-</ondown>
+						<onleft>-</onleft>
+						<onright>9122</onright>
+					</control>
+				</control>
+				<control type="group" id="9122">
+					<!-- info -->
+					<visible>Control.IsVisible(9107)</visible>
+					<width>48</width>
+					<height>48</height>
+					<control type="image">
+						<visible>!Control.HasFocus(9107) + !Slideshow.ShowInfo</visible>
+						<posx>4</posx>
+						<posy>4</posy>
+						<width>40</width>
+						<height>40</height>
+						<colordiffuse>80FFFFFF</colordiffuse>
+						<texture>icons/icon_osd_read_more.png</texture>
+					</control>
+					<control type="image">
+						<visible>Control.HasFocus(9107) + !Slideshow.ShowInfo</visible>
+						<posx>4</posx>
+						<posy>4</posy>
+						<width>40</width>
+						<height>40</height>
+						<texture>icons/icon_osd_read_more.png</texture>
+					</control>
+					<control type="image">
+						<visible>!Control.HasFocus(9107) + Slideshow.ShowInfo</visible>
+						<posx>4</posx>
+						<posy>4</posy>
+						<width>40</width>
+						<height>40</height>
+						<texture>icons/icon_osd_read_more.png</texture>
+						<colordiffuse>green</colordiffuse>
+					</control>
+					<control type="image">
+						<visible>Control.HasFocus(9107) + Slideshow.ShowInfo</visible>
+						<posx>4</posx>
+						<posy>4</posy>
+						<width>40</width>
+						<height>40</height>
+						<texture>icons/icon_osd_read_more.png</texture>
+						<colordiffuse>green</colordiffuse>
+					</control>
+					<control type="button" id="9107">
+						<posx>-8</posx>
+						<posy>-8</posy>
+						<width>64</width>
+						<height>64</height>
+						<label>-</label>
+						<texturenofocus>-</texturenofocus>
+						<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+						<onclick>-</onclick>
+						<onup>9000</onup>
+						<ondown>-</ondown>
+						<onleft>9121</onleft>
+						<onright>9123</onright>
+					</control>
+				</control>
+				<control type="group" id="9123">
+					<!-- previous -->
+					<width>48</width>
+					<height>48</height>
+					<control type="image">
+						<visible>!Control.HasFocus(9101)</visible>
+						<posx>4</posx>
+						<posy>4</posy>
+						<width>40</width>
+						<height>40</height>
+						<colordiffuse>80FFFFFF</colordiffuse>
+						<texture>icons/icon_osd_previous_image.png</texture>
+					</control>
+					<control type="image">
+						<visible>Control.HasFocus(9101)</visible>
+						<posx>4</posx>
+						<posy>4</posy>
+						<width>40</width>
+						<height>40</height>
+						<texture>icons/icon_osd_previous_image.png</texture>
+					</control>
+					<control type="button" id="9101">
+						<posx>-8</posx>
+						<posy>-8</posy>
+						<width>64</width>
+						<height>64</height>
+						<texture border="30">button_action_menu_source_on.png</texture>
+						<label>-</label>
+						<texturenofocus>-</texturenofocus>
+						<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+						<onclick>-</onclick>
+						<onup>9000</onup>
+						<ondown>-</ondown>
+						<onleft>9122</onleft>
+						<onright>9124</onright>
+					</control>
+				</control>
+				<control type="group" id="9124">
+					<!-- play / pause -->
+					<width>48</width>
+					<height>48</height>
+					<control type="button" id="9102">
+						<posx>-8</posx>
+						<posy>-8</posy>
+						<width>64</width>
+						<height>64</height>
+						<label>-</label>
+						<texturenofocus>-</texturenofocus>
+						<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+						<onclick>-</onclick>
+						<onup>9000</onup>
+						<ondown>-</ondown>
+						<onleft>9123</onleft>
+						<onright>9125</onright>
+					</control>
+					<control type="button" id="9111">
+						<description>dummy play</description>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>1</width>
+						<height>1</height>
+						<label>-</label>
+						<texturenofocus>-</texturenofocus>
+						<texturefocus>-</texturefocus>
+						<onclick>-</onclick>
+						<onup>-</onup>
+						<ondown>-</ondown>
+						<onleft>9123</onleft>
+						<onright>-</onright>
+					</control>
+					<control type="button" id="9112">
+						<description>dummy pause</description>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>1</width>
+						<height>1</height>
+						<label>-</label>
+						<texturenofocus>-</texturenofocus>
+						<texturefocus>-</texturefocus>
+						<onclick>-</onclick>
+						<onup>-</onup>
+						<ondown>-</ondown>
+						<onleft>9123</onleft>
+						<onright>-</onright>
+					</control>
+					<control type="image">
+						<posx>4</posx>
+						<posy>4</posy>
+						<width>40</width>
+						<height>40</height>
+						<colordiffuse>80FFFFFF</colordiffuse>
+						<texture>icons/icon_osd_play.png</texture>
+						<visible>!Control.HasFocus(9102) + Control.IsVisible(9112)</visible>
+					</control>
+					<control type="image">
+						<posx>4</posx>
+						<posy>4</posy>
+						<width>40</width>
+						<height>40</height>
+						<texture>icons/icon_osd_play.png</texture>
+						<visible>Control.HasFocus(9102) + Control.IsVisible(9112)</visible>
+					</control>
+					<control type="image">
+						<posx>4</posx>
+						<posy>4</posy>
+						<width>40</width>
+						<height>40</height>
+						<colordiffuse>80FFFFFF</colordiffuse>
+						<texture>icons/icon_osd_pause.png</texture>
+						<visible>!Control.HasFocus(9102) + Control.IsVisible(9111)</visible>
+					</control>
+					<control type="image">
+						<posx>4</posx>
+						<posy>4</posy>
+						<width>40</width>
+						<height>40</height>
+						<texture>icons/icon_osd_pause.png</texture>
+						<visible>Control.HasFocus(9102) + Control.IsVisible(9111)</visible>
+					</control>
+				</control>
+				<control type="group" id="9125">
+					<width>48</width>
+					<height>48</height>
+					<control type="image">
+						<visible>!Control.HasFocus(9104)</visible>
+						<posx>4</posx>
+						<posy>4</posy>
+						<width>40</width>
+						<height>40</height>
+						<colordiffuse>80FFFFFF</colordiffuse>
+						<texture>icons/icon_osd_next_image.png</texture>
+					</control>
+					<control type="image">
+						<visible>Control.HasFocus(9104)</visible>
+						<posx>4</posx>
+						<posy>4</posy>
+						<width>40</width>
+						<height>40</height>
+						<texture>icons/icon_osd_next_image.png</texture>
+					</control>
+					<control type="button" id="9104">
+						<posx>-8</posx>
+						<posy>-8</posy>
+						<width>64</width>
+						<height>64</height>
+						<label>-</label>
+						<texturenofocus>-</texturenofocus>
+						<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+						<onclick>-</onclick>
+						<onup>9000</onup>
+						<ondown>-</ondown>
+						<onleft>9124</onleft>
+						<onright>9126</onright>
+					</control>
+				</control>
+				<control type="group" id="9126">
+					<visible>Control.IsVisible(9105)</visible>
+					<width>48</width>
+					<height>48</height>
+					<control type="image">
+						<visible>!Control.HasFocus(9105)</visible>
+						<posx>4</posx>
+						<posy>4</posy>
+						<width>40</width>
+						<height>40</height>
+						<colordiffuse>80FFFFFF</colordiffuse>
+						<texture>icons/icon_osd_zoom_image.png</texture>
+					</control>
+					<control type="image">
+						<visible>Control.HasFocus(9105)</visible>
+						<posx>4</posx>
+						<posy>4</posy>
+						<width>40</width>
+						<height>40</height>
+						<texture>icons/icon_osd_zoom_image.png</texture>
+					</control>
+					<control type="button" id="9105">
+						<posx>-8</posx>
+						<posy>-8</posy>
+						<width>64</width>
+						<height>64</height>
+						<label>-</label>
+						<texturenofocus>-</texturenofocus>
+						<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+						<onclick>SetVisible(9200)</onclick>
+						<onclick>SetFocus(9212)</onclick>
+						<onup>9000</onup>
+						<ondown>-</ondown>
+						<onleft>9125</onleft>
+						<onright>9127</onright>
+					</control>
+				</control>
+				<control type="group" id="9127">
+					<visible>Control.IsVisible(9106)</visible>
+					<width>48</width>
+					<height>48</height>
+					<control type="image">
+						<visible>!Control.HasFocus(9106)</visible>
+						<posx>4</posx>
+						<posy>4</posy>
+						<width>40</width>
+						<height>40</height>
+						<colordiffuse>80FFFFFF</colordiffuse>
+						<texture>icons/icon_osd_rotate_image.png</texture>
+					</control>
+					<control type="image">
+						<visible>Control.HasFocus(9106)</visible>
+						<posx>4</posx>
+						<posy>4</posy>
+						<width>40</width>
+						<height>40</height>
+						<texture>icons/icon_osd_rotate_image.png</texture>
+					</control>
+					<control type="button" id="9106">
+						<posx>-8</posx>
+						<posy>-8</posy>
+						<width>64</width>
+						<height>64</height>
+						<label>-</label>
+						<texturenofocus>-</texturenofocus>
+						<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+						<onclick>-</onclick>
+						<onup>9000</onup>
+						<ondown>-</ondown>
+						<onleft>9126</onleft>
+						<onright>-</onright>
+					</control>
+				</control>
+			</control>
+		</control>
+		<control type="group" id="9200">
+			<description>zoom control</description>
+			<animation effect="fade" time="200" start="0" end="100" condition="Control.IsVisible(9200)">Conditional</animation>
+			<visible>false</visible>
+			<posx>20</posx>
+			<posy>578</posy>
+			<control type="image">
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>150</width>
+				<height>122</height>
+				<texture border="30">osd_background.png</texture>
+			</control>
+			<control type="group">
+				<control type="button" id="9201">
+					<posx>54</posx>
+					<posy>7</posy>
+					<width>34</width>
+					<height>34</height>
+					<label>-</label>
+					<texturenofocus>osd_zoom/button_zoom_arrow_up.png</texturenofocus>
+					<texturefocus>osd_zoom/button_zoom_arrow_up_on.png</texturefocus>
+					<textureclick>osd_zoom/button_zoom_arrow_up_click.png</textureclick>
+					<onclick>-</onclick>
+					<onup>-</onup>
+					<ondown>9210</ondown>
+					<onleft>9203</onleft>
+					<onright>9204</onright>
+				</control>
+				<control type="button" id="9202">
+					<posx>54</posx>
+					<posy>81</posy>
+					<width>34</width>
+					<height>34</height>
+					<label>-</label>
+					<texturenofocus>osd_zoom/button_zoom_arrow_down.png</texturenofocus>
+					<texturefocus>osd_zoom/button_zoom_arrow_down_on.png</texturefocus>
+					<textureclick>osd_zoom/button_zoom_arrow_down_click.png</textureclick>
+					<onclick>-</onclick>
+					<onup>9210</onup>
+					<ondown>-</ondown>
+					<onleft>9203</onleft>
+					<onright>9204</onright>
+				</control>
+				<control type="button" id="9203">
+					<posx>7</posx>
+					<posy>41</posy>
+					<width>34</width>
+					<height>34</height>
+					<label>-</label>
+					<texturenofocus>osd_zoom/button_zoom_arrow_left.png</texturenofocus>
+					<texturefocus>osd_zoom/button_zoom_arrow_left_on.png</texturefocus>
+					<textureclick>osd_zoom/button_zoom_arrow_left_click.png</textureclick>
+					<onclick>-</onclick>
+					<onup>9201</onup>
+					<ondown>9202</ondown>
+					<onleft>-</onleft>
+					<onright>9210</onright>
+				</control>
+				<control type="button" id="9204">
+					<posx>109</posx>
+					<posy>41</posy>
+					<width>34</width>
+					<height>34</height>
+					<label>-</label>
+					<texturenofocus>osd_zoom/button_zoom_arrow_right.png</texturenofocus>
+					<texturefocus>osd_zoom/button_zoom_arrow_right_on.png</texturefocus>
+					<textureclick>osd_zoom/button_zoom_arrow_right_click.png</textureclick>
+					<onclick>-</onclick>
+					<onup>9201</onup>
+					<ondown>9202</ondown>
+					<onleft>9210</onleft>
+					<onright>-</onright>
+				</control>
+				<control type="group" id="9210">
+					<posx>41</posx>
+					<posy>41</posy>
+					<control type="button" id="9211">
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>34</width>
+						<height>34</height>
+						<label>-</label>
+						<texturenofocus>osd_zoom/button_zoom_minus.png</texturenofocus>
+						<texturefocus>osd_zoom/button_zoom_minus_on.png</texturefocus>
+						<textureclick>osd_zoom/button_zoom_minus_click.png</textureclick>
+						<onclick>-</onclick>
+						<onup>9201</onup>
+						<ondown>9202</ondown>
+						<onleft>9203</onleft>
+						<onright>9212</onright>
+					</control>
+					<control type="button" id="9212">
+						<posx>34</posx>
+						<posy>0</posy>
+						<width>34</width>
+						<height>34</height>
+						<label>-</label>
+						<texturenofocus>osd_zoom/button_zoom_plus.png</texturenofocus>
+						<texturefocus>osd_zoom/button_zoom_plus_on.png</texturefocus>
+						<textureclick>osd_zoom/button_zoom_plus_click.png</textureclick>
+						<onclick>-</onclick>
+						<onup>9201</onup>
+						<ondown>9202</ondown>
+						<onleft>9211</onleft>
+						<onright>9204</onright>
+					</control>
+				</control>
+			</control>
+		</control>
+	</controls>
+</window>

@@ -1,0 +1,647 @@
+﻿<?xml version="1.0"?>
+<includes>
+	<include file="defaults.xml"/>
+	<include file="CommonViewTypes.xml"/>
+	<include file="boxee_browse_defaults.xml"/>
+	<include file="boxee_browse_views.xml"/>
+	<include file="boxee_browse_menus.xml"/>
+	<include name="Dialog_Popup_Open_Animation">
+		<animation type="WindowOpen">
+			<effect type="fade" start="0" end="100" time="200" tween="cubic" easing="inout"/>
+			<effect type="zoom" start="150,150" end="100,100" center="640,360" time="200" tween="cubic" easing="inout"/>
+		</animation>			
+	</include>
+	<include name="Dialog_Popup_Close_Animation">
+		<animation type="WindowClose">
+			<effect type="fade" start="100" end="0" time="200" tween="cubic" easing="inout"/>
+			<effect type="zoom" start="100,100" end="150,150" center="640,360" time="200" tween="cubic" easing="inout"/>
+		</animation>
+	</include>
+	<include name="Dialog_Popup_Animation">
+		<include>Dialog_Popup_Open_Animation</include>
+		<include>Dialog_Popup_Close_Animation</include>
+	</include>
+	<include name="Window_Fade_Animation">
+		<animation effect="fade" time="200">WindowOpen</animation>
+		<animation effect="fade" time="200">WindowClose</animation>
+	</include>
+	<include name="Window_OpenClose_Animation">
+		<animation effect="fade" time="200">WindowOpen</animation>
+		<animation effect="fade" time="200">WindowClose</animation>
+	</include>
+	<include name="dialogeffect">
+		<include>Window_OpenClose_Animation</include>
+	</include>
+	<include name="Dialog_Popup_Background">
+		<control type="image" platformClass="pc">
+			<description>background image overlay</description>
+			<animation type="WindowOpen">
+				<effect type="fade" start="0" end="100" time="200" delay="0"/>
+			</animation>
+			<animation type="WindowClose">
+				<effect type="fade" start="100" end="0" time="200" delay="0"/>
+			</animation>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>1280</width>
+			<height>720</height>
+			<texture>black.png</texture>
+			<colordiffuse>80FFFFFF</colordiffuse>
+		</control>
+	</include>
+	<include name="Common_Background">
+		<control type="group">
+			<control type="videowindow">
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>1280</width>
+				<height>720</height>
+				<visible>Player.HasVideo</visible>
+			</control>
+			<control type="visualisation">
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>1280</width>
+				<height>720</height>
+				<visible>Player.HasAudio</visible>
+			</control>
+			<control type="image">
+				<visible>Player.HasMedia + Player.Caching + !Window.IsVisible(DialogProgress.xml)</visible>
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>1280</width>
+				<height>720</height>
+				<texture>black.png</texture>
+			</control>
+		</control>
+		<control type="group">
+			<!--animation effect="slide" start="0" end="-48" time="200" tween="cubic" easing="inout" condition="Player.HasMedia + !Window.IsVisible(DialogProgress.xml) + !Window.IsVisible(Home.xml)">Condtional</animation-->
+			<animation effect="slide" start="0" end="-30" time="200" tween="cubic" easing="inout" condition="Player.HasMedia + !Window.IsVisible(DialogProgress.xml) + !Window.IsVisible(Home.xml)">Condtional</animation>
+			<animation effect="slide" start="0" end="-20" time="200" tween="cubic" easing="inout" condition="Player.HasMedia + !Window.IsVisible(DialogProgress.xml) + Window.IsVisible(Home.xml)">Condtional</animation>
+			<control type="image">
+				<visible>Player.HasMedia</visible>
+				<posx>1280</posx>
+				<posy>0</posy>
+				<width>10</width>
+				<height>720</height>
+				<texture>now_playing_video_feather.png</texture>
+			</control>
+			<control type="group">
+				<visible>!Skin.HasSetting(EnableCustomBG) + !Skin.HasSetting(EnableCustomBGFolder)</visible>
+				<!--visible>IsEmpty(Window.Property(background))</visible-->
+				<control type="image">
+					<animation effect="fade" start="0" end="100" time="10000">VisibleChange</animation>
+					<visible>HourBetween(3,8)</visible>
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>1280</width>
+					<height>720</height>
+					<texture flipx="true" blend="false">background/dawn.png</texture>
+					<colordiffuse>FFCDCDFCD</colordiffuse>
+				</control>
+				<control type="image">
+					<animation effect="fade" start="0" end="100" time="10000">VisibleChange</animation>
+					<visible>HourBetween(9,19)</visible>
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>1280</width>
+					<height>720</height>
+					<texture flipx="true" blend="false">background/day.png</texture>
+				</control>
+				<control type="image">
+					<animation effect="fade" start="0" end="100" time="10000">VisibleChange</animation>
+					<visible>HourBetween(20,23) | HourBetween(0,2)</visible>
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>1280</width>
+					<height>720</height>
+					<texture flipx="true" blend="false">background/dusk.png</texture>
+					<colordiffuse>FFCDCDFCD</colordiffuse>
+				</control>
+			</control>
+			<!--control type="largeimage">
+			<description>Fanart background</description>
+			<visible>Window.IsVisible(boxee_browse_tvepisodes.xml)</visible>
+				<visible>!IsEmpty(Window.Property(background))</visible>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>1280</width>
+			<height>720</height>
+			<texture>background_starfield.png</texture>
+			<info>Window.Property(background)</info>
+			<colordiffuse>28FFFFFF</colordiffuse>
+			</control-->
+		<control type="image">
+			<description>background image</description>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>1280</width>
+			<height>720</height>
+			<texture>$INFO[Skin.String(CustomBG)]</texture>
+			<aspectratio>scale</aspectratio>
+			<visible>!Player.HasMedia | [Player.HasAudio + !Visualisation.Enabled]</visible>
+			<visible>Skin.HasSetting(EnableCustomBG)</visible>
+		</control>
+		<control type="multiimage">
+			<info>Skin.String(CustomBGFolder)</info>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>1280</width>
+			<height>720</height>
+			<timeperimage>10000</timeperimage>
+			<fadetime>1000</fadetime>
+			<randomize>true</randomize>
+			<aspectratio>scale</aspectratio>
+			<visible>!Player.HasMedia | [Player.HasAudio + !Visualisation.Enabled]</visible>
+			<visible>Skin.HasSetting(EnableCustomBGFolder)</visible>
+		</control>
+		</control>
+		<!--control type="list" id="9999">
+			<posx>0</posx>
+			<posy>0</posy>
+				<width>1280</width>
+				<height>720</height>
+			<onleft>-</onleft>
+			<onright>-</onright>
+			<onup>-</onup>
+			<ondown>-</ondown>
+			<scrolltime>200</scrolltime>
+			<pagecontrol>-</pagecontrol>
+			<orientation>horizontal</orientation>
+			<autoscroll>20000</autoscroll>
+			<itemlayout width="1280" height="720">
+				<control type="image">
+					<posx>0</posx>
+				<posy>0</posy>
+				<width>1280</width>
+				<height>720</height>
+					<texture>$INFO[ListItem.Thumb]</texture>
+					<aspectratio>scale</aspectratio>
+					<colordiffuse>00FFFFFF</colordiffuse>
+			</control>
+			</itemlayout>
+			<focusedlayout width="1280" height="720">
+			<control type="image">
+					<posx>0</posx>
+				<posy>0</posy>
+					<width>1280</width>
+				<height>720</height>
+					<texture>$INFO[ListItem.Thumb]</texture>
+					<aspectratio>scale</aspectratio>
+					<colordiffuse>00FFFFFF</colordiffuse>
+			</control>
+			</focusedlayout>
+			<content type="directory"> rss://api.flickr.com/services/feeds/photoset.gne?set=72157622089748119&amp;nsid=50714143@N00&amp;lang=en-us&amp;format=rss_200
+			</content>
+		</control>
+		<control type="largeimage">
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>1280</width>
+			<height>720</height>
+			<fadetime>3000</fadetime>
+			<colordiffuse>50FFFFFF</colordiffuse>
+			<info>Container(9999).ListItem.FileNameandPath</info>
+			<aspectratio>scale</aspectratio>
+		</control-->
+	</include>
+	<include name="Common_Now_Playing">
+		<control type="group">
+			<visible>Player.HasMedia + !Window.IsVisible(DialogProgress.xml)</visible>
+			<animation effect="fade" time="200">VisibleChange</animation>
+			<posx>968</posx>
+			<posy>4</posy>
+			<control type="button" id="6000">
+				<visible>Player.HasVideo</visible>
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>308</width>
+				<height>76</height>
+				<onleft>9000</onleft>
+				<onright>-</onright>
+				<onup>9200</onup>
+				<ondown>9000</ondown>
+				<font>title16b</font>
+				<align>left</align>
+				<aligny>top</aligny>
+				<label>[UPPERCASE]$LOCALIZE[52110][/UPPERCASE]</label>
+				<textcolor>80000000</textcolor>
+				<focusedcolor>black</focusedcolor>
+				<textoffsetx>70</textoffsetx>
+				<textoffsety>16</textoffsety>
+				<texturenofocus>button_now_playing.png</texturenofocus>
+				<texturefocus>button_now_playing_on.png</texturefocus>
+				<textureclick>button_now_playing_on.png</textureclick>
+				<onclick>ActivateWindow(FullscreenVideo)</onclick>
+				<pulseonselect>no</pulseonselect>
+			</control>
+			<control type="button" id="6000">
+				<visible>Player.HasAudio</visible>
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>308</width>
+				<height>76</height>
+				<onleft>SetFocus(9000)</onleft>
+				<onright>-</onright>
+				<onup>9200</onup>
+				<ondown>SetFocus(9000)</ondown>
+				<font>title16b</font>
+				<align>left</align>
+				<aligny>top</aligny>
+				<label>[UPPERCASE]$LOCALIZE[52110][/UPPERCASE]</label>
+				<textcolor>80000000</textcolor>
+				<focusedcolor>black</focusedcolor>
+				<textoffsetx>70</textoffsetx>
+				<textoffsety>16</textoffsety>
+				<texturenofocus>button_now_playing.png</texturenofocus>
+				<texturefocus>button_now_playing_on.png</texturefocus>
+				<textureclick>button_now_playing_on.png</textureclick>
+				<onclick>ActivateWindow(Visualisation)</onclick>
+				<pulseonselect>no</pulseonselect>
+			</control>
+			<control type="fadelabel">
+				<visible>!IsEmpty(VideoPlayer.TVShowTitle)</visible>
+				<posx>70</posx>
+				<posy>42</posy>
+				<width>185</width>
+				<height>20</height>
+				<font>title20b</font>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>[UPPERCASE]$INFO[VideoPlayer.TVShowTitle][/UPPERCASE]</label>
+				<label>[UPPERCASE]$INFO[VideoPlayer.Title][/UPPERCASE]</label>
+				<textcolor>black</textcolor>
+				<scroll>true</scroll>
+				<scrollout>false</scrollout>
+				<scrollspeed>40</scrollspeed>
+				<pauseatend>4000</pauseatend>
+			</control>
+			<control type="fadelabel">
+				<visible>IsEmpty(VideoPlayer.TVShowTitle)</visible>
+				<posx>70</posx>
+				<posy>42</posy>
+				<width>185</width>
+				<height>20</height>
+				<font>title20b</font>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>[UPPERCASE]$INFO[VideoPlayer.Title][/UPPERCASE]</label>
+				<textcolor>black</textcolor>
+				<scroll>true</scroll>
+				<scrollout>false</scrollout>
+				<scrollspeed>40</scrollspeed>
+				<pauseatend>4000</pauseatend>
+			</control>
+			<control type="fadelabel">
+				<visible>!IsEmpty(MusicPlayer.Artist)</visible>
+				<posx>70</posx>
+				<posy>42</posy>
+				<width>185</width>
+				<height>20</height>
+				<font>title20b</font>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>[UPPERCASE]$INFO[MusicPlayer.Artist][/UPPERCASE]</label>
+				<label>[UPPERCASE]$INFO[MusicPlayer.Title][/UPPERCASE]</label>
+				<textcolor>black</textcolor>
+				<scroll>true</scroll>
+				<scrollout>false</scrollout>
+				<scrollspeed>40</scrollspeed>
+				<pauseatend>4000</pauseatend>
+			</control>
+			<control type="fadelabel">
+				<visible>IsEmpty(MusicPlayer.Artist)</visible>
+				<posx>70</posx>
+				<posy>42</posy>
+				<width>185</width>
+				<height>20</height>
+				<font>title20b</font>
+				<align>left</align>
+				<aligny>center</aligny>
+				<label>[UPPERCASE]$INFO[MusicPlayer.Title][/UPPERCASE]</label>
+				<textcolor>black</textcolor>
+				<scroll>true</scroll>
+				<scrollout>false</scrollout>
+				<scrollspeed>40</scrollspeed>
+				<pauseatend>4000</pauseatend>
+			</control>
+			<control type="label">
+				<posx>200</posx>
+				<posy>16</posy>
+				<width>100</width>
+				<height>20</height>
+				<font>title16b</font>
+				<align>left</align>
+				<aligny>right</aligny>
+				<label>[UPPERCASE]$INFO[Player.Time][/UPPERCASE]</label>
+				<textcolor>black</textcolor>
+		</control>
+		</control>
+	</include>
+	<include name="Common_Status">
+		<control type="group">
+			<animation effect="slide" start="0" end="-48" time="200" tween="cubic" easing="inout" condition="Player.HasMedia + !Window.IsVisible(DialogProgress.xml) + !Window.IsVisible(Home.xml)">Condtional</animation>
+			<animation effect="slide" start="0" end="-20" time="200" tween="cubic" easing="inout" condition="Player.HasMedia + !Window.IsVisible(DialogProgress.xml) + Window.IsVisible(Home.xml)">Condtional</animation>
+			<animation effect="fade" start="100" end="25" time="200" condition="Window.IsActive(DialogProgress.xml)">Conditional</animation>
+			<posx>1150</posx>
+			<posy>22</posy>
+			<control type="group">
+				<animation effect="slide" start="0,0" end="120,0" time="200" delay="0">-</animation>				
+				<control type="group">				
+					<visible>true + System.timeisampm</visible>				
+			    	<control type="image">
+						<posx>-36</posx>
+						<posy>0</posy>
+						<width>28</width>
+						<height>28</height>
+						<texture>icons/icon_clock.png</texture>
+					</control>
+					<control type="label">
+						<posx>0</posx>
+						<posy>0</posy>
+			    		<width>500</width>
+						<height>28</height>
+						<label>$INFO[System.TimeNoAmPm]</label>
+						<font>title26b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>grey</textcolor>
+					</control>				
+				</control>				
+				<control type="group">				
+					<visible>true + !System.timeisampm</visible>						
+					<control type="image">
+						<posx>-3</posx>
+						<posy>0</posy>
+						<width>28</width>
+						<height>28</height>
+						<texture>icons/icon_clock.png</texture>
+					</control>
+  					<control type="label">
+						<posx>33</posx>
+						<posy>0</posy>
+			    		<width>500</width>
+						<height>28</height>
+						<label>$INFO[System.TimeNoAmPm]</label>
+						<font>title26b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>grey</textcolor>
+					</control>
+				</control>
+			</control>
+			<control type="group">
+				<animation effect="fade" time="200" delay="200">VisibleChange</animation>
+				<visible>Weather.IsFetched</visible>
+				<control type="group">
+					<visible>true + System.timeisampm</visible>						
+					<control type="image">
+						<description>Weather image</description>
+						<posx>-180</posx>
+						<posy>-18</posy>
+						<width>64</width>
+						<height>64</height>
+						<aspectratio>keep</aspectratio>
+						<info>Weather.Conditions</info>
+						<colordiffuse>grey</colordiffuse>
+					</control>
+					<control type="label">
+						<posx>-120</posx>
+						<posy>0</posy>
+						<width>500</width>
+						<height>28</height>
+						<label>$INFO[Weather.Temperature]</label>
+						<font>title26b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>grey</textcolor>
+					</control>
+				</control>
+				<control type="group">
+					<visible>true + !System.timeisampm</visible>						
+					<control type="image">
+						<description>Weather image</description>
+						<posx>-133</posx>
+						<posy>-18</posy>
+						<width>64</width>
+						<height>64</height>
+						<aspectratio>keep</aspectratio>
+						<info>Weather.Conditions</info>
+						<colordiffuse>grey</colordiffuse>
+					</control>
+					<control type="label">
+						<posx>-83</posx>
+						<posy>0</posy>
+						<width>500</width>
+						<height>28</height>
+						<label>$INFO[Weather.Temperature]</label>
+						<font>title26b</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>grey</textcolor>
+					</control>
+				</control>
+			</control>
+			<control type="label">
+				<visible>true + !boxee.HasInternetConnection</visible>            
+				<posx>104</posx>
+				<posy>28</posy>
+				<width>75</width>
+				<height>16</height>
+				<font>title16b</font>
+				<align>right</align>
+				<aligny>center</aligny>
+				<textcolor>title</textcolor>
+				<label>[UPPERCASE]$LOCALIZE[52011][/UPPERCASE]</label>
+			</control>
+			<control type="label">
+				<visible>true + boxee.IsDuringLogin</visible>            
+				<posx>104</posx>
+				<posy>28</posy>
+				<width>130</width>
+				<height>16</height>
+				<font>title16b</font>
+				<align>right</align>
+				<aligny>center</aligny>
+				<textcolor>green</textcolor>
+				<label>[UPPERCASE]$LOCALIZE[51740][/UPPERCASE]</label>
+			</control>
+			<control type="label">
+				<animation effect="fade" start="100" end="0" time="3000">Hidden</animation>
+				<visible>true + !boxee.IsDuringLogin + boxee.IsLoginAfterOffline</visible>         
+				<posx>104</posx>
+				<posy>28</posy>
+				<width>75</width>
+				<height>16</height>
+				<font>title16b</font>
+				<align>right</align>
+				<aligny>center</aligny>
+				<textcolor>green</textcolor>
+				<label>[UPPERCASE]$LOCALIZE[52013][/UPPERCASE]</label>
+			</control>
+		</control>
+	</include>
+	<include name="Common_Keyboard_Button">
+		<width>72</width>
+		<height>72</height>
+		<textcolor>white</textcolor>
+		<focusedcolor>white</focusedcolor>
+		<align>center</align>
+		<aligny>center</aligny>
+		<font>title26b</font>
+		<texturenofocus border="30">button_kb.png</texturenofocus>
+		<texturefocus border="30">button_kb_on.png</texturefocus>
+		<textureclick border="30">button_kb_click.png</textureclick>
+	</include>
+	<include name="Search_Keyboard_Button">
+		<width>60</width>
+		<height>60</height>
+		<textcolor>white</textcolor>
+		<focusedcolor>white</focusedcolor>
+		<align>center</align>
+		<aligny>center</aligny>
+		<font>title22b</font>
+		<texturenofocus border="30">button_kb.png</texturenofocus>
+		<texturefocus border="30">button_kb_on.png</texturefocus>
+		<textureclick border="30">button_kb_click.png</textureclick>
+	</include>
+  <include name="Search_Keyboard_ToggleButton">
+    <width>60</width>
+    <height>60</height>
+    <textcolor>white</textcolor>
+    <focusedcolor>white</focusedcolor>
+    <align>center</align>
+    <aligny>center</aligny>
+    <font>title22b</font>
+    <texturenofocus border="30">button_kb_off.png</texturenofocus>
+    <texturefocus border="30">button_kb_off_on.png</texturefocus>
+    <textureclick border="30">button_kb_click.png</textureclick>
+  </include>
+	<include name="Search_Keyboard_Big_Button">
+		<width>80</width>
+		<height>80</height>
+		<textcolor>white</textcolor>
+		<focusedcolor>white</focusedcolor>
+		<align>center</align>
+		<aligny>center</aligny>
+		<font>title26b</font>
+		<texturenofocus>button_kb.png</texturenofocus>
+		<texturefocus>button_kb_on.png</texturefocus>
+		<textureclick>button_kb_click.png</textureclick>
+	</include>
+	<include name="Dialog_Background">
+		<control type="image" platformClass="pc">
+			<animation effect="fade" start="0" end="100" time="100">WindowOpen</animation>
+			<animation effect="fade" start="100" end="0" time="100">WindowClose</animation>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>1280</width>
+			<height>720</height>
+			<texture>black.png</texture>
+			<colordiffuse>80FFFFFF</colordiffuse>
+		</control>
+	</include>
+	<include name="Loading_Animation">
+		<posx>540</posx>
+		<posy>348</posy>
+		<width>200</width>
+		<height>24</height>
+		<imagepath>loading</imagepath>
+		<timeperimage>12</timeperimage>
+		<fadetime>4</fadetime>
+		<pauseatend>0</pauseatend>
+		<randomize>false</randomize>
+		<loop>yes</loop>
+		<aspectratio>keep</aspectratio>
+		<colordiffuse>title</colordiffuse>		
+	</include>
+	<include name="Bottom_Feather">
+		<control type="image">
+			<posx>0</posx>
+			<posy>578</posy>
+			<width>1280</width>
+			<height>152</height>
+			<texture>home_bottom_feather.png</texture>
+		</control>
+	</include>
+	<include name="OSD_Progress">
+		<control type="group">
+			<posx>20</posx>
+			<posy>12</posy>
+			<control type="progress">
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>402</width>
+				<height>12</height>
+				<info>Player.progresscache</info>
+				<texturebg>progress/osd_progress_nobackground.png</texturebg>
+				<lefttexture>progress/osd_progress_loaded_left.png</lefttexture>
+				<midtexture>progress/osd_progress_loaded_center.png</midtexture>
+				<righttexture>progress/osd_progress_loaded_right.png</righttexture>
+				<overlaytexture>-</overlaytexture>
+			</control>
+			<control type="progress">
+				<visible>Player.Caching</visible>
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>402</width>
+				<height>12</height>
+				<info>Player.CacheLevel</info>
+				<texturebg>progress/osd_progress_nobackground.png</texturebg>
+				<lefttexture>progress/osd_progress_loaded_left.png</lefttexture>
+				<midtexture>progress/osd_progress_loaded_center.png</midtexture>
+				<righttexture>progress/osd_progress_loaded_right.png</righttexture>
+				<overlaytexture>-</overlaytexture>
+			</control>
+			<control type="progress">
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>402</width>
+				<height>12</height>
+				<info>Player.Progress</info>
+				<texturebg>progress/osd_progress_background.png</texturebg>
+				<lefttexture>progress/osd_progress_position_left.png</lefttexture>
+				<midtexture>progress/osd_progress_position_center.png</midtexture>
+				<righttexture>progress/osd_progress_position_right.png</righttexture>
+				<overlaytexture>-</overlaytexture>
+			</control>
+			<control type="label">
+				<posx>0</posx>
+				<posy>20</posy>
+				<width>402</width>
+				<height>22</height>
+				<font>title22b</font>
+				<textcolor>title</textcolor>
+				<label>$INFO[Player.Time(H:MM:SS)]</label>
+				<aligny>center</aligny>
+				<align>left</align>
+			</control>
+			<control type="label">
+				<posx>402</posx>
+				<posy>20</posy>
+				<width>472</width>
+				<height>22</height>
+				<font>title22b</font>
+				<textcolor>grey</textcolor>
+				<label>$INFO[Player.Duration(H:MM:SS)]</label>
+				<aligny>center</aligny>
+				<align>right</align>
+			</control>
+		</control>
+	</include>
+	<include name="Common_Mouse_Back">
+		<control type="button">
+			<posx>4</posx>
+			<posy>4</posy>
+			<height>24</height>
+			<width>24</width>
+			<onup>9000</onup>
+			<ondown>9000</ondown>
+			<onleft>9000</onleft>
+			<onright>9000</onright>
+			<texturenofocus diffuse="nofocus.png">icons/icon_mouse_back.png</texturenofocus>
+			<texturefocus diffuse="green.png">icons/icon_mouse_back.png</texturefocus>
+			<onclick>PreviousMenu</onclick>
+		</control>
+	</include>
+</includes>

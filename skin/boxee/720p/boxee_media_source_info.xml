@@ -1,0 +1,458 @@
+<?xml version="1.0"?>
+<window id="10463">
+	<defaultcontrol>50</defaultcontrol>
+	<allowoverlay>no</allowoverlay>
+	<controls>
+		<include>Common_Background</include>
+		<include>Common_Status</include>
+		<include>Common_Now_Playing</include>
+		<control type="image">
+			<!--animation type="WindowOpen" condition="!Window.Previous(Settings.xml) + !Window.Previous(SettingsCategory.xml)">
+				<effect type="fade" start="0" end="100" time="200" delay="0"/>
+			</animation>
+			<animation type="WindowClose" condition="!Window.Next(Settings.xml) + !Window.Next(SettingsCategory.xml)">
+				<effect type="fade" start="100" end="0" time="200" delay="0"/>
+			</animation-->
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>1280</width>
+			<height>720</height>
+			<texture>black.png</texture>
+			<colordiffuse>80FFFFFF</colordiffuse>
+		</control>
+		<control type="group">
+			<!--animation type="Conditional" condition="Window.IsVisible(boxee_media_source_list.xml) | Window.IsVisible(boxee_media_source_add_share.xml) | Window.IsVisible(boxee_media_source_add_folder.xml) | Window.IsVisible(boxee_media_source_info.xml)">
+				<effect type="fade" start="100" end="0" time="200"/>
+			</animation-->
+			<posx>30</posx>
+			<posy>46</posy>
+			<width>1220</width>
+			<height>660</height>
+			<control type="image">
+				<posx>0</posx>
+				<posy>70</posy>
+				<width>1220</width>
+				<height>510</height>
+				<texture border="64">action_menu_bg.png</texture>
+			</control>
+			<control type="image">
+				<posx>100</posx>
+				<posy>104</posy>
+				<width>1020</width>
+				<height>256</height>
+				<texture border="128">feather_divider.png</texture>
+			</control>
+			<control type="label">
+				<posx>34</posx>
+				<posy>94</posy>
+				<width>1100</width>
+				<height>56</height>
+				<align>left</align>
+				<aligny>center</aligny>
+				<haspath>true</haspath>
+				<font>title56b</font>
+				<textcolor>white</textcolor>
+				<label>[UPPERCASE]$LOCALIZE[5][/UPPERCASE]</label>
+			</control>
+			<control type="label">
+				<posx>330</posx>
+				<posy>119</posy>
+				<width>1000</width>
+				<height>28</height>
+				<align>left</align>
+				<aligny>top</aligny>
+				<haspath>true</haspath>
+				<font>font24b</font>
+				<textcolor>title</textcolor>
+				<label>[UPPERCASE]$LOCALIZE[52100][/UPPERCASE]</label>
+			</control>
+			<control type="group" id="70">
+				<posx>960</posx>
+				<posy>224</posy>
+				<control type="button" id="57">
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>216</width>
+					<height>30</height>
+					<onup>-</onup>
+					<ondown>56</ondown>
+					<onleft>9000</onleft>
+					<onright>-</onright>
+					<!--label>Add/Update</label-->
+					<label>51850</label>
+					<font>font20b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<focusedcolor>white</focusedcolor>
+					<textcolor2>white</textcolor2>
+					<textoffsetx>14</textoffsetx>
+					<texturenofocus>button_option_menu.png</texturenofocus>
+					<texturefocus>button_option_menu_on.png</texturefocus>
+					<textureclick>button_option_menu_click.png</textureclick>
+					<pulseonselect>false</pulseonselect>
+				</control>
+				<control type="button" id="56">
+					<posx>0</posx>
+					<posy>40</posy>
+					<width>216</width>
+					<height>30</height>
+					<onup>57</onup>
+					<ondown>61</ondown>
+					<onleft>9000</onleft>
+					<onright>-</onright>
+					<!--label>Remove Source</label-->
+					<label>522</label>
+					<font>font20b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<focusedcolor>white</focusedcolor>
+					<textcolor2>white</textcolor2>
+					<textoffsetx>14</textoffsetx>
+					<texturenofocus>button_option_menu.png</texturenofocus>
+					<texturefocus>button_option_menu_on.png</texturefocus>
+					<textureclick>button_option_menu_click.png</textureclick>
+					<pulseonselect>false</pulseonselect>
+				</control>
+				<control type="button" id="61">
+                    <posx>0</posx>
+                    <posy>80</posy>
+                    <width>216</width>
+                    <height>30</height>
+                    <onup>56</onup>
+                    <ondown>-</ondown>
+                    <onleft>9000</onleft>
+                    <onright>-</onright>
+                    <label>53741</label>
+                    <font>font20b</font>
+                    <align>left</align>
+                    <aligny>center</aligny>
+                    <textcolor>white</textcolor>
+                    <focusedcolor>white</focusedcolor>
+                    <textcolor2>white</textcolor2>
+                    <textoffsetx>14</textoffsetx>
+                    <texturenofocus>button_option_menu.png</texturenofocus>
+                    <texturefocus>button_option_menu_on.png</texturefocus>
+                    <textureclick>button_option_menu_click.png</textureclick>
+                    <pulseonselect>false</pulseonselect>
+                </control>
+			</control>
+			<control type="group" id="9000">
+				<posx>0</posx>
+				<posy>218</posy>
+				<control type="label">
+					<posx>30</posx>
+					<posy>0</posy>
+					<width>200</width>
+					<height>40</height>
+					<font>font20b</font>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<align>left</align>
+					<!--label>Source Name</label-->
+					<label>[UPPERCASE]$LOCALIZE[51846][/UPPERCASE]</label>
+				</control>
+				<control type="edit" id="51">
+					<posx>220</posx>
+					<posy>0</posy>
+					<width>644</width>
+					<height>40</height>
+					<textoffsetx>14</textoffsetx>
+					<font>font22b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<focusedcolor>darkgrey</focusedcolor>
+					<textoffsetx>14</textoffsetx>
+					<texturenofocus border="20">text_box.png</texturenofocus>
+					<texturefocus border="20">text_box_on.png</texturefocus>
+					<textureclick border="20">text_box_click.png</textureclick>
+					<label/>
+					<onup>-</onup>
+					<ondown>59</ondown>
+					<onright>70</onright>
+				</control>
+				<control type="label">
+					<posx>30</posx>
+					<posy>50</posy>
+					<width>200</width>
+					<height>40</height>
+					<font>font20b</font>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<align>left</align>
+					<!--label>Source Location</label-->
+					<label>[UPPERCASE]$LOCALIZE[51847][/UPPERCASE]</label>
+				</control>
+				<control type="edit" id="59">
+					<visible>false</visible>
+					<posx>220</posx>
+					<posy>50</posy>
+					<width>644</width>
+					<height>40</height>
+					<font>font22b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<focusedcolor>darkgrey</focusedcolor>
+					<textoffsetx>14</textoffsetx>
+					<texturenofocus border="20">text_box.png</texturenofocus>
+					<texturefocus border="20">text_box_on.png</texturefocus>
+					<textureclick border="20">text_box_click.png</textureclick>
+					<textoffsetx>14</textoffsetx>
+					<label/>
+					<onup>51</onup>
+					<ondown>52</ondown>
+					<onright>70</onright>
+				</control>				
+				<control type="label" id="58">
+					<posx>220</posx>
+					<posy>50</posy>
+					<width>644</width>
+					<height>40</height>
+					<font>font22b</font>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<align>left</align>
+					<label>-</label>
+					<haspath>true</haspath>
+				</control>
+				<control type="image">
+					<posx>30</posx>
+					<posy>110</posy>
+					<width>834</width>
+					<height>1</height>
+					<texture>white.png</texture>
+					<colordiffuse>40FFFFFF</colordiffuse>
+				</control>
+				<control type="image">
+					<posx>350</posx>
+					<posy>130</posy>
+					<width>1</width>
+					<height>160</height>
+					<texture>white.png</texture>
+					<colordiffuse>40FFFFFF</colordiffuse>
+				</control>	
+				<control type="label">
+					<posx>30</posx>
+					<posy>130</posy>
+					<width>200</width>
+					<height>40</height>
+					<font>font20b</font>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<align>left</align>
+					<!--label>Source Type</label-->
+					<label>[UPPERCASE]$LOCALIZE[51848][/UPPERCASE]</label>
+				</control>	
+				<control type="group" id="60">
+					<posx>180</posx>
+					<posy>130</posy>
+					<control type="radiobutton" id="52">
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>140</width>
+						<height>40</height>
+						<onup>59</onup>
+						<ondown>53</ondown>
+						<onright>81</onright>
+						<onleft>-</onleft>
+						<font>font20b</font>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>40</textoffsetx>
+						<texturenofocus>-</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<textureradiofocus>icons/icon_checkbox_full.png</textureradiofocus>
+						<textureradionofocus>icons/icon_checkbox_empty.png</textureradionofocus>
+						<pulseonselect>false</pulseonselect>
+						<radioposx>10</radioposx>
+						<radioposy>10</radioposy>
+						<radiowidth>20</radiowidth>
+						<radioheight>20</radioheight>
+	<!--label>Video</label-->
+						<label>[UPPERCASE]$LOCALIZE[157][/UPPERCASE]</label>
+					</control>
+					<control type="radiobutton" id="53">
+						<posx>0</posx>
+						<posy>50</posy>
+						<width>140</width>
+						<height>40</height>
+						<onup>52</onup>
+						<ondown>54</ondown>
+						<onright>82</onright>
+						<onleft>-</onleft>
+						<font>font20b</font>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>40</textoffsetx>
+						<texturenofocus>-</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<textureradiofocus>icons/icon_checkbox_full.png</textureradiofocus>
+						<textureradionofocus>icons/icon_checkbox_empty.png</textureradionofocus>
+						<pulseonselect>false</pulseonselect>
+						<radioposx>10</radioposx>
+						<radioposy>10</radioposy>
+						<radiowidth>20</radiowidth>
+						<radioheight>20</radioheight>
+						<!--label>Music</label-->
+						<label>[UPPERCASE]$LOCALIZE[2][/UPPERCASE]</label>
+					</control>
+					<control type="radiobutton" id="54">
+						<posx>0</posx>
+						<posy>100</posy>
+						<width>140</width>
+						<height>40</height>
+						<onup>53</onup>
+						<ondown>-</ondown>
+						<onright>83</onright>
+						<onleft>-</onleft>
+						<font>font20b</font>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>40</textoffsetx>
+						<texturenofocus>-</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<textureradiofocus>icons/icon_checkbox_full.png</textureradiofocus>
+						<textureradionofocus>icons/icon_checkbox_empty.png</textureradionofocus>
+						<pulseonselect>false</pulseonselect>
+						<radioposx>10</radioposx>
+						<radioposy>10</radioposy>
+						<radiowidth>20</radiowidth>
+						<radioheight>20</radioheight>
+						<!--label>Photos</label-->
+						<label>[UPPERCASE]$LOCALIZE[1][/UPPERCASE]</label>
+					</control>
+				</control>
+				<control type="label">
+					<posx>380</posx>
+					<posy>130</posy>
+					<width>200</width>
+					<height>40</height>
+					<font>font20b</font>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<align>left</align>
+					<!--label>Scanning Options</label-->
+					<label>[UPPERCASE]$LOCALIZE[51852][/UPPERCASE]</label>
+				</control>
+				<control type="group" id="80">
+					<posx>580</posx>
+					<posy>130</posy>
+					<control type="radiobutton" id="81">
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>350</width>
+						<height>40</height>
+						<onup>59</onup>
+						<ondown>82</ondown>
+						<onright>70</onright>
+						<onleft>52</onleft>
+						<font>font20b</font>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>40</textoffsetx>
+						<texturenofocus>-</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<textureradiofocus>icons/icon_checkbox_full.png</textureradiofocus>
+						<textureradionofocus>icons/icon_checkbox_empty.png</textureradionofocus>
+						<pulseonselect>false</pulseonselect>
+						<radioposx>10</radioposx>
+						<radioposy>10</radioposy>
+						<radiowidth>20</radiowidth>
+						<radioheight>20</radioheight>
+						<!--label>Private[CR](source will not be scanned)</label-->
+						<label>[UPPERCASE]$LOCALIZE[51849][/UPPERCASE]</label>
+					</control>
+					<control type="radiobutton" id="82">
+						<posx>0</posx>
+						<posy>50</posy>
+						<width>350</width>
+						<height>40</height>
+						<onup>81</onup>
+						<ondown>83</ondown>
+						<onright>70</onright>
+						<onleft>53</onleft>
+						<font>font20b</font>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>40</textoffsetx>
+						<texturenofocus>-</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<textureradiofocus>icons/icon_checkbox_full.png</textureradiofocus>
+						<textureradionofocus>icons/icon_checkbox_empty.png</textureradionofocus>
+						<pulseonselect>false</pulseonselect>
+						<radioposx>10</radioposx>
+						<radioposy>10</radioposy>
+						<radiowidth>20</radiowidth>
+						<radioheight>20</radioheight>
+						<label>[UPPERCASE]$LOCALIZE[51853][/UPPERCASE]</label>
+					</control>
+					<control type="radiobutton" id="83">
+						<posx>0</posx>
+						<posy>100</posy>
+						<width>350</width>
+						<height>40</height>
+						<onup>82</onup>
+						<ondown>84</ondown>
+						<onright>70</onright>
+						<onleft>54</onleft>
+						<font>font20b</font>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>40</textoffsetx>
+						<texturenofocus>-</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<textureradiofocus>icons/icon_checkbox_full.png</textureradiofocus>
+						<textureradionofocus>icons/icon_checkbox_empty.png</textureradionofocus>
+						<pulseonselect>false</pulseonselect>
+						<radioposx>10</radioposx>
+						<radioposy>10</radioposy>
+						<radiowidth>20</radiowidth>
+						<radioheight>20</radioheight>
+						<label>[UPPERCASE]$LOCALIZE[51854][/UPPERCASE]</label>
+					</control>
+					<control type="radiobutton" id="84">
+						<posx>0</posx>
+						<posy>150</posy>
+						<width>350</width>
+						<height>40</height>
+						<onup>83</onup>
+						<ondown>-</ondown>
+						<onright>70</onright>
+						<onleft>54</onleft>
+						<font>font20b</font>
+						<aligny>center</aligny>
+						<textcolor>white</textcolor>
+						<focusedcolor>white</focusedcolor>
+						<disabledcolor>disabled</disabledcolor>
+						<textoffsetx>40</textoffsetx>
+						<texturenofocus>-</texturenofocus>
+						<texturefocus border="15">button_option_menu_on.png</texturefocus>
+						<textureradiofocus>icons/icon_checkbox_full.png</textureradiofocus>
+						<textureradionofocus>icons/icon_checkbox_empty.png</textureradionofocus>
+						<pulseonselect>false</pulseonselect>
+						<radioposx>10</radioposx>
+						<radioposy>10</radioposy>
+						<radiowidth>20</radiowidth>
+						<radioheight>20</radioheight>
+						<label>[UPPERCASE]$LOCALIZE[51855][/UPPERCASE]</label>
+					</control>
+				</control>
+			</control>
+		</control>
+	</controls>
+</window>

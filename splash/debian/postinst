@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -e
+
+#DEBHELPER#
+
+case "$1" in
+    configure)
+	update-alternatives --remove usplash-artwork.so /usr/lib/usplash/usplash-theme-boxee.so 
+	#set one higher than kubuntu so kubuntu can still have standalone myth boxen too
+	update-alternatives --install /usr/lib/usplash/usplash-artwork.so usplash-artwork.so /usr/lib/usplash/usplash-theme-boxee.so 56
+        update-alternatives --set usplash-artwork.so /usr/lib/usplash/usplash-theme-boxee.so
+	update-initramfs -u
+        ;;
+esac

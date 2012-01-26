@@ -1,0 +1,72 @@
+<settingsmap>
+  <group id="7" window="480">
+    <category id="videoscreen" label="51525">
+      <setting id="videoscreen.resolution"/>
+      <setting id="videoscreen.testresolution"/>
+      <separator/>
+      <setting id="videoscreen.displayblanking"/>
+      <separator/>
+      <setting id="videoscreen.guicalibration"/>
+      <setting id="videoscreen.testpattern"/>
+      <setting id="videoscreen.vsync"/>
+    </category>
+    <category id="sounds" label="51526">
+      <setting id="lookandfeel.soundskin"/>
+    </category>
+    <category id="control" label="13165">
+      <setting id="lookandfeel.enablemouse"/>
+    </category>
+    <category id="myvideos" label="51528">
+      <setting id="myvideos.pausewhenexit"/>
+    </category>
+    <!--category id="mymusic" label="51529">
+      <setting id="mymusic.visualisation"/>
+    </category-->
+    <category id="slideshow" label="108">
+      <setting id="slideshow.staytime"/>
+      <setting id="slideshow.transistiontime"/>
+      <setting id="slideshow.displayeffects"/>
+      <setting id="slideshow.shuffle"/>
+    </category>
+    <category id="screensaver" label="360">
+      <setting id="screensaver.mode"/>
+      <setting id="screensaver.preview"/>
+      <setting id="screensaver.time"/>
+      <separator/>
+      <setting id="screensaver.dimlevel"/>
+      <setting id="screensaver.slideshowpath"/>
+      <setting id="screensaver.slideshowshuffle"/>
+    </category>
+  </group>
+  <group id="5" window="51527">
+    <category id="locale" label="20026">
+      <setting id="locale.country"/>
+      <setting id="weather.areacode1"/>
+      <setting id="locale.language"/>
+      <setting id="locale.charset"/>
+    </category>
+    <category id="subtitles" label="287">
+      <setting id="subtitles.charset"/>
+	  <separator/>
+      <setting id="subtitles.font"/>
+      <setting id="subtitles.height"/>
+      <setting id="subtitles.style"/>
+      <setting id="subtitles.color"/>
+    </category>
+  <group id="4" window="51530">
+    <category id="locale" label="20026">
+      <setting id="filelists.filtergeoip"/>
+	  <separator/>
+      <setting id="filelists.filteradult"/>
+      <setting id="filelists.setadultcode"/>
+    </category>
+  </group>
+  <group id="4" window="13000">
+    <category id="locale" label="20026">
+      <setting id="filelists.filtergeoip"/>
+	  <separator/>
+      <setting id="filelists.filteradult"/>
+      <setting id="filelists.setadultcode"/>
+    </category>
+  </group>
+</settingsmap>

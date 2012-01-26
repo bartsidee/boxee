@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+        <key>CFBundleInfoDictionaryVersion</key>
+        <string>6.0</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>Boxee</string>
+	<key>CFBundleIconFile</key>
+	<string>Boxee.icns</string>
+	<key>CFBundleIdentifier</key>
+	<string>tv.boxee.boxee</string>
+	<key>CFBundleName</key>
+	<string>boxee</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleVersion</key>
+	<string>${VERSION}</string>
+        <key>CFBundleSignature</key>
+        <string>BXEE</string>
+	<key>SmartCrashReports_CompanyName</key>
+	<string>boxee.tv</string>
+	<key>SmartCrashReports_EmailTicket</key>
+	<string>SCR-81DBD4DEC5</string>
+        <key>CFBundleDocumentTypes</key>
+        <array>
+                <dict>
+                        <key>CFBundleTypeExtensions</key>
+                        <array>
+                                <string>avi</string>
+                                <string>flv</string>
+                                <string>vob</string>
+                                <string>m2ts</string>
+                                <string>ts</string>
+                                <string>3gp</string>
+                                <string>3gpp</string>
+                                <string>mp4</string>
+                                <string>mp4v</string>
+                                <string>mp4a</string>
+                                <string>mkv</string>
+                                <string>wmv</string>
+                                <string>iso</string>
+                                <string>nrg</string>
+                                <string>wma</string>
+                                <string>m3u</string>
+                                <string>pls</string>
+                                <string>mp3</string>
+                                <string>flac</string>
+                                <string>aac</string>
+                        </array>
+	                <key>CFBundleTypeIconFile</key>
+	                <string>Boxee.icns</string>
+                        <key>CFBundleTypeName</key>
+                        <string>Media</string>
+                        <key>CFBundleTypeRole</key>
+                        <string>Viewer</string>
+                </dict>
+        </array>
+</dict>
+</plist>

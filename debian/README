@@ -1,0 +1,31 @@
+How to build packages
+---------------------
+For boxee: 
+# ./make_debian.sh
+
+For boxee-usplash:
+# cd ../splash
+# ./make_debian
+
+For boxee-admin-tool:
+# cd ../admin-tool
+# ./make_debian
+
+How to upload packages
+----------------------
+# cd ~/build/boxee/client/trunk
+# ./upload_debian.sh <path of local .deb package>
+
+It will do everything that needs to be done. It will prompt twice for the 
+password of distro@apt.boxee.tv. It will not upload a package which already
+exists there.
+
+How to use
+----------
+To use the repository add the following line to /etc/apt/sources.list:
+
+deb http://apt.boxee.tv gutsy main
+
+Then:
+# sudo apt-get update
+# sudo apt-get install boxee boxee-artwork-usplash boxee-admin-tool

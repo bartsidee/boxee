@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+	<head>
+
+		<script type="text/javascript">
+function isNullOrEmpty( varString )
+{
+	if ((varString == "") || (varString == 'null') || (varString == 'undefined'))
+		return true;
+	else
+		return false;
+}
+
+function queryString( key )
+		{
+		var re = new RegExp( "[?&]" + key + "=([^&$]*)", "i" );
+		var offset = location.search.search( re );
+		if ( offset == -1 ) return null;
+		return RegExp.$1;
+		}
+		path=document.location.pathname.substr(0,document.location.pathname.indexOf("/preloader"));
+		var title = unescape(queryString("title"));
+		var show = unescape(queryString("show"));
+		var season = unescape(queryString("season"));
+		var episode = unescape(queryString("episode"));
+
+//		if (isNullOrEmpty(title) == true) title = "";
+//		if (isNullOrEmpty(show) == true) show = "";
+//		if (isNullOrEmpty(season) == true) season = "";
+//		if (isNullOrEmpty(episode) == true) episode = "";
+
+		var strText;
+		strText = '<div style="text-align:center;margin-left:auto;margin-right:auto;margin-top:165px">';
+
+		//disabled the text information
+/*		
+		strText += '<font face="Arial" color="#D3A018" size="4pt"><b>';
+
+		if (isNullOrEmpty(show) == false)
+		{
+			if (isNullOrEmpty(season) == false) 
+			{
+				strText += '<br/>LOADING ' + show + ' Season ' + season + ' Episode ' + episode + ' "' + title + '"<br/>';
+			}
+			else
+			{
+				strText += '<br/>LOADING ' + show + ' "' + title + '"<br/>';
+			}
+		}
+		else
+		{
+			strText += '<br/>LOADING ' + title + '<br/>';
+		}
+
+//		strText += '<img src="'+unescape(queryString("thumb"))+'" />';
+//		strText += '<br>plot: '+unescape(queryString("plot"))+'<br>';
+//		strText += '<br>plot2: '+unescape(queryString("plot2"))+'<br>';
+//		strText += '<br>studio: '+unescape(queryString("studio"))+'<br>';
+
+*/
+
+//strText += '<br/><img src="loading.png" width="72" height="24"/>';
+strText += '<img src="loading_animation.gif" width="150" height="20"/>';
+
+
+		strText += '</b></font><br/>';		
+		strText += '</div>';
+
+		document.write(strText);
+
+		</script>
+		<title></title>
+	</head>
+	<body bgcolor="black">
+</body>
+</html>

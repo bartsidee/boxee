@@ -1,0 +1,3274 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<!--$Revision: 10303 $-->
+<strings>
+  <string id="0">Parental</string>
+  <string id="1">Photos</string>
+  <string id="2">Music</string>
+  <string id="3">Videos</string>
+  <string id="4">TV-Guide</string>
+  <string id="5">Settings</string>
+  <string id="6">XBMC SVN</string>
+  <string id="7">Filemanager</string>
+  <string id="8">Weather</string>
+  <string id="9">xbmc media center</string>
+
+  <string id="11">Monday</string>
+  <string id="12">Tuesday</string>
+  <string id="13">Wednesday</string>
+  <string id="14">Thursday</string>
+  <string id="15">Friday</string>
+  <string id="16">Saturday</string>
+  <string id="17">Sunday</string>
+
+  <string id="21">January</string>
+  <string id="22">February</string>
+  <string id="23">March</string>
+  <string id="24">April</string>
+  <string id="25">May</string>
+  <string id="26">June</string>
+  <string id="27">July</string>
+  <string id="28">August</string>
+  <string id="29">September</string>
+  <string id="30">October</string>
+  <string id="31">November</string>
+  <string id="32">December</string>
+
+  <string id="41">Mon</string>
+  <string id="42">Tue</string>
+  <string id="43">Wed</string>
+  <string id="44">Thu</string>
+  <string id="45">Fri</string>
+  <string id="46">Sat</string>
+  <string id="47">Sun</string>
+
+  <string id="98">View: Auto</string>
+  <string id="99">View: Auto big</string>
+  <string id="100">View: Icons</string>
+  <string id="101">View: List</string>
+  <string id="102">Scan</string>
+  <string id="103">Sort by: Name</string>
+  <string id="104">Sort by: Date</string>
+  <string id="105">Sort by: Size</string>
+  <string id="106">No</string>
+  <string id="107">Yes</string>
+  <string id="108">Slideshow</string>
+  <string id="109">Create thumbs</string>
+  <string id="110">Create thumbnails</string>
+  <string id="111">Shortcuts</string>
+  <string id="112">Paused</string>
+  <string id="113"></string>
+  <string id="114"></string>
+  <string id="115">Copy</string>
+  <string id="116">Move</string>
+  <string id="117">Delete</string>
+  <string id="118">Rename</string>
+  <string id="119">New folder</string>
+  <string id="120">Confirm file copy</string>
+  <string id="121">Confirm file move</string>
+  <string id="122">Confirm file delete?</string>
+  <string id="123">Copy these files?</string>
+  <string id="124">Move these files?</string>
+  <string id="125">Delete these files? - Deleting files cannot be undone!</string>
+  <string id="126">Status</string>
+  <string id="127">Objects</string>
+  <string id="128">General</string>
+  <string id="129">Slideshow</string>
+  <string id="130">System info</string>
+  <string id="131">Screen</string>
+  <string id="132">Albums</string>
+  <string id="133">Artists</string>
+  <string id="134">Songs</string>
+  <string id="135">Genres</string>
+  <string id="136">Playlists</string>
+  <string id="137">Search</string>
+  <string id="138">System Information</string>
+  <string id="139">Temperatures:</string>
+  <string id="140">CPU:</string>
+  <string id="141">GPU:</string>
+  <string id="142">Time:</string>
+  <string id="143">Current:</string>
+  <string id="144">Build:</string>
+  <string id="145">Network:</string>
+  <string id="146">Type:</string>
+  <string id="147">Static</string>
+  <string id="148">DHCP</string>
+  <string id="149">MAC address</string>
+  <string id="150">IP address</string>
+  <string id="151">Link: </string>
+  <string id="152">Half duplex</string>
+  <string id="153">Full duplex</string>
+  <string id="154">Storage</string>
+  <string id="155">Drive</string>
+  <string id="156">Free</string>
+  <string id="157">Video</string>
+  <string id="158">Free memory</string>
+  <string id="159">No link</string>
+  <string id="160">Free</string>
+  <string id="161">Unavailable</string>
+  <string id="162">Tray open</string>
+  <string id="163">Reading</string>
+  <string id="164">No disc</string>
+  <string id="165">Disc present</string>
+  <string id="166">Skin</string>
+  <string id="167">Enable FTP server</string>
+  <string id="168">Enable Internet time synchronization</string>
+  <string id="169">Resolution</string>
+  <string id="170">Adjust refresh rate</string>
+  <string id="171"></string>
+  <string id="172">Release date</string>
+  <string id="173"></string>
+  <string id="174"></string>
+  <string id="175">Moods</string>
+  <string id="176">Styles</string>
+  <string id="177"></string>
+  <string id="178"></string>
+  <string id="179">Song</string>
+  <string id="180">Duration</string>
+  <string id="181">Select album</string>
+  <string id="182">Tracks</string>
+  <string id="183">Review</string>
+  <string id="184">Refresh</string>
+  <string id="185">Searching album</string>
+  <string id="186">OK</string>
+  <string id="187">No albums found!</string>
+  <string id="188">Select all</string>
+  <string id="189">Scanning media info</string>
+  <string id="190">Save</string>
+  <string id="191">Shuffle</string>
+  <string id="192">Clear</string>
+  <string id="193">Scan</string>
+  <string id="194">Searching...</string>
+  <string id="195">No info found!</string>
+  <string id="196">Select movie:</string>
+  <string id="197">Querying %s info</string>
+  <string id="198">Loading movie details</string>
+  <string id="199"></string>
+  <string id="200"></string>
+  <string id="201"></string>
+  <string id="202">Tagline</string>
+  <string id="203">Plot outline</string>
+  <string id="204"></string>
+  <string id="205">Votes:</string>
+  <string id="206">Cast</string>
+  <string id="207">Plot</string>
+  <string id="208">Play</string>
+  <string id="209">Next</string>
+  <string id="210">Previous</string>
+  <string id="213">Calibrate user interface...</string>
+  <string id="214">Screen format &amp; overscan...</string>
+  <string id="215">Soften</string>
+  <string id="216">Zoom amount</string>
+  <string id="217">Pixel ratio</string>
+  <string id="218">DVD drive</string>
+  <string id="219">Please insert disc</string>
+  <string id="220">Remote share</string>
+  <string id="221">Network is not connected</string>
+  <string id="222">Cancel</string>
+  <string id="224">Speed</string>
+  <string id="225">Transition time</string>
+  <string id="226">Test patterns...</string>
+  <string id="227">Lookup audio CDs on the Internet</string>
+  <string id="228">Shuffle playlist on load</string>
+  <string id="229">HDD spindown time</string>
+  <string id="230">Video filters</string>
+  <string id="231">None</string>
+  <string id="232">Point</string>
+  <string id="233">Linear</string>
+  <string id="234">Anisotropic</string>
+  <string id="235">Quincunx</string>
+  <string id="236">Gaussian cubic</string>
+  <string id="237">Minification</string>
+  <string id="238">Magnification</string>
+  <string id="239">Clear playlist on finish</string>
+  <string id="240">Autoplay DVD-Video</string>
+  <string id="241">Autoplay VCD/SVCD</string>
+  <string id="242">Autoplay Audio-CD</string>
+  <string id="243">Autoplay Xbox games</string>
+  <string id="244">Autoplay videos</string>
+  <string id="245">Autoplay music</string>
+  <string id="246">Autoplay photos</string>
+  <string id="247">Scripts</string>
+  <string id="248">Language</string>
+  <string id="249">Music</string>
+  <string id="250">Visualization</string>
+  <string id="251">Select destination directory</string>
+  <string id="252">Output stereo to all speakers</string>
+  <string id="253">Number of channels</string>
+  <string id="254">- DTS capable receiver</string>
+  <string id="255">CDDB</string>
+  <string id="256">Fetching CD information</string>
+  <string id="257">Error</string>
+  <string id="258">Enable tag reading</string>
+  <string id="259">Opening</string>
+  <string id="260">Shoutcast</string>
+  <string id="261">Waiting for start...</string>
+  <string id="262">Scripts output</string>
+  <string id="263">Enable webserver</string>
+  <string id="264">Record</string>
+  <string id="265">Stop Rec.</string>
+  <string id="266">Sort by: Track</string>
+  <string id="267">Sort by: Time</string>
+  <string id="268">Sort by: Title</string>
+  <string id="269">Sort by: Artist</string>
+  <string id="270">Sort by: Album</string>
+  <string id="271">Top 100</string>
+  <string id="272">Top-Left overscan compensation</string>
+  <string id="273">Bottom-Right overscan compensation</string>
+  <string id="274">Subtitle positioning</string>
+  <string id="275">Pixel ratio adjustment</string>
+  <string id="276">Adjust the arrow to change the amount of overscan</string>
+  <string id="277">Adjust the bar to change the subtitles position</string>
+  <string id="278">Adjust the rectangle so it is perfectly square</string>
+  <string id="279">Unable to load settings</string>
+  <string id="280">Using default settings</string>
+  <string id="281">Please check the XML files</string>
+  <string id="282">Found %i items</string>
+  <string id="283">Search results</string>
+  <string id="284">No results found</string>
+  <string id="286">Post-processing filter</string>
+  <string id="287">Load Subtitles</string>
+  <string id="288">Subtitles font</string>
+  <string id="289">- Size</string>
+  <string id="290">Dynamic range compression</string>
+  <string id="291">Video</string>
+  <string id="292">Audio</string>
+  <string id="293">Browse for subtitles</string>
+  <string id="294">Create bookmark</string>
+  <string id="296">Clear bookmarks</string>
+  <string id="297">Audio offset</string>
+  <string id="298">Bookmarks</string>
+  <string id="303">Delay</string>
+  <string id="304">Language</string>
+  <string id="305">Enabled</string>
+  <string id="306">Non-interleaved</string>
+  <string id="307">- Automatic post-processing</string>
+  <string id="308">- Vertical deblocking filter</string>
+  <string id="309">- Horizontal deblocking filter</string>
+  <string id="310">- Auto brightness/contrast</string>
+  <string id="311">- Dering</string>
+  <string id="312">(0=auto)</string>
+  <string id="313">Cleaning database</string>
+  <string id="314">Preparing...</string>
+  <string id="315">Database error</string>
+  <string id="316">Searching songs...</string>
+  <string id="317">Cleaned database successfully</string>
+  <string id="318">Cleaning songs...</string>
+  <string id="319">Error cleaning songs</string>
+  <string id="320">Cleaning artists...</string>
+  <string id="321">Error cleaning artists</string>
+  <string id="322">Cleaning genres...</string>
+  <string id="323">Error cleaning genres</string>
+  <string id="324">Cleaning paths...</string>
+  <string id="325">Error cleaning paths</string>
+  <string id="326">Cleaning albums...</string>
+  <string id="327">Error cleaning albums</string>
+  <string id="328">Writing changes...</string>
+  <string id="329">Error writing changes</string>
+  <string id="330">This may take some time...</string>
+  <string id="331">Compressing database...</string>
+  <string id="332">Error compressing database</string>
+  <string id="333">Do you want to clean the library?</string>
+  <string id="334">Clean library...</string>
+  <string id="335">Start</string>
+  <string id="336">Framerate conversion</string>
+  <string id="337">Audio output</string>
+  <string id="338">Analog</string>
+  <string id="339">Digital</string>
+  <string id="340">Various artists</string>
+  <string id="341">Play disc</string>
+  <string id="342">Movies</string>
+  <string id="343">Adjust framerate</string>
+  <string id="344">Actors</string>
+  <string id="345">Year</string>
+  <string id="350">Programs</string>
+  <string id="351">Off</string>
+  <string id="352">Dim</string>
+  <string id="353">Black</string>
+  <string id="354">Matrix trails</string>
+  <string id="355">Screensaver idle timeout</string>
+  <string id="356">Screensaver mode</string>
+  <string id="357">Shutdown function timer</string>
+  <string id="358">All albums</string>
+  <string id="359">Recently added albums</string>
+  <string id="360">Screensaver</string>
+  <string id="361">R. Slideshow</string>
+  <string id="362">Screensaver fade level</string>
+  <string id="363">Sort by: File</string>
+  <string id="364">- Dolby Digital (AC3) capable receiver</string>
+  <string id="365">Sort by: Name</string>
+  <string id="366">Sort by: Year</string>
+  <string id="367">Sort by: Rating</string>
+  <string id="368">IMDb</string>
+  <string id="369">Title</string>
+  <string id="370">Thunderstorms</string>
+  <string id="371">Partly</string>
+  <string id="372">Mostly</string>
+  <string id="373">Sunny</string>
+  <string id="374">Cloudy</string>
+  <string id="375">Snow</string>
+  <string id="376">Rain</string>
+  <string id="377">Light</string>
+  <string id="378">AM</string>
+  <string id="379">PM</string>
+  <string id="380">Showers</string>
+  <string id="381">Few</string>
+  <string id="382">Scattered</string>
+  <string id="383">Wind</string>
+  <string id="384">Strong</string>
+  <string id="385">Fair</string>
+  <string id="386">Clear</string>
+  <string id="387">Clouds</string>
+  <string id="388">Early</string>
+  <string id="389">Shower</string>
+  <string id="390">Flurries</string>
+  <string id="391">Low</string>
+  <string id="392">Medium</string>
+  <string id="393">High</string>
+  <string id="394">Fog</string>
+  <string id="395">Haze</string>
+  <string id="396">Select location</string>
+  <string id="397">Refresh time</string>
+  <string id="398">Temperature units</string>
+  <string id="399">Speed units</string>
+  <string id="400">Weather</string>
+  <string id="401">Temp</string>
+  <string id="402">Feels like</string>
+  <string id="403">UV index</string>
+  <string id="404">Wind</string>
+  <string id="405">Dew point</string>
+  <string id="406">Humidity</string>
+  <string id="407">From</string>
+  <string id="408">at</string>
+  <string id="409">Defaults</string>
+
+  <string id="410">Accessing weather service</string>
+  <string id="411">Getting weather for:</string>
+  <string id="412">Unable to get weather data</string>
+  <string id="413">Manual</string>
+  <string id="414">No review for this album</string>
+  <string id="415">Downloading thumbnail...</string>
+  <string id="416">Not available</string>
+  <string id="417">View: Big icons</string>
+  <string id="418"></string>
+  <string id="419"></string>
+  <string id="420"></string>
+  <string id="421"></string>
+  <string id="422">Delete album info</string>
+  <string id="423">Delete CD information</string>
+  <string id="424">Select</string>
+  <string id="425">No album information found</string>
+  <string id="426">No CD information found</string>
+  <string id="427">Disc</string>
+  <string id="428">Insert correct CD/DVD</string>
+  <string id="429">Please insert the following CD/DVD</string>
+  <string id="430">Sort by: DVD#</string>
+  <string id="431">No cache</string>
+  <string id="432">Remove movie from library</string>
+  <string id="433">Really remove '%s'?</string>
+  <string id="434"></string>
+  <string id="435"></string>
+  <string id="436"></string>
+  <string id="437">Removable disk</string>
+  <string id="438">Opening file</string>
+  <string id="439">Cache</string>
+  <string id="440">Harddisk</string>
+  <string id="441">UDF</string>
+  <string id="442">Local network</string>
+  <string id="443">Internet</string>
+  <string id="444">Video</string>
+  <string id="445">Audio</string>
+  <string id="446">DVD</string>
+  <string id="447">Autoplay</string>
+  <string id="448">LCD</string>
+  <string id="449">Enabled</string>
+  <string id="450">Columns</string>
+  <string id="451">Row 1 address</string>
+  <string id="452">Row 2 address</string>
+  <string id="453">Row 3 address</string>
+  <string id="454">Row 4 address</string>
+  <string id="455">Rows</string>
+  <string id="456">Mode</string>
+  <string id="457">Switch view</string>
+  <string id="459">Subs</string>
+  <string id="460">Audio stream</string>
+  <string id="461">[active]</string>
+  <string id="462">Subtitle</string>
+  <string id="463">Backlight</string>
+  <string id="464">Brightness</string>
+  <string id="465">Contrast</string>
+  <string id="466">Gamma</string>
+  <string id="467">Type</string>
+  <string id="468">Move the bar to change the OSD position</string>
+  <string id="469">OSD position</string>
+  <string id="470">Credits</string>
+  <string id="471">Modchip</string>
+  <string id="474">Off</string>
+  <string id="475">Music only</string>
+  <string id="476">Music &amp; video</string>
+  <string id="477">Unable to load playlist</string>
+  <string id="478">OSD</string>
+  <string id="479">Skin &amp; language</string>
+  <string id="480">Appearance</string>
+  <string id="481">Audio options</string>
+  <string id="482">About XBMC</string>
+  <string id="483"></string>
+  <string id="484"></string>
+  <string id="485">Delete album</string>
+  <string id="486">Repeat</string>
+  <string id="487">Repeat one</string>
+  <string id="488">Repeat folder</string>
+  <string id="489">Auto play next item</string>
+  <string id="491">- Use big icons</string>
+  <string id="492">Resize VobSubs</string>
+  <string id="493">Advanced options (Experts Only!)</string>
+  <string id="494">Overall audio headroom</string>
+  <string id="495">Upsample videos to GUI resolution</string>
+  <string id="496">Calibration</string>
+  <string id="497">Hide media extensions</string>
+  <string id="498">Sort by: Type</string>
+  <string id="499">Unable to connect to online lookup service</string>529
+  <string id="500">Downloading album information failed</string>
+  <string id="501">Looking for album names...</string>
+  <string id="502">Open</string>
+  <string id="503">Busy</string>
+  <string id="504">Empty</string>
+  <string id="505">Loading media info from files...</string>
+  <string id="507">Sort by: Usage</string>
+  <string id="510">Enable visualizations</string>
+  <string id="511">Enable video mode switching</string>
+  <string id="512">Startup window</string>
+  <string id="513">Home window</string>
+  <string id="514">Manual settings</string>
+  <string id="515">Genre</string>
+  <string id="516">Make stored archives with one file transparent</string>
+  <string id="517">Recently played albums</string>
+  <string id="518">Launch</string>
+  <string id="519">Launch in...</string>
+  <string id="520">Edit XBE title</string>
+  <string id="521">Compilations</string>
+  <string id="522">Remove source</string>
+  <string id="523">Switch media</string>
+  <string id="524">Select playlist</string>
+  <string id="525">New playlist...</string>
+  <string id="526">Add to playlist</string>
+  <string id="527">Manually add to library</string>
+  <string id="528">Enter title</string>
+  <string id="529">Error: Duplicate title</string>
+  <string id="530">Select genre</string>
+  <string id="531">New genre</string>
+  <string id="532">Manual addition</string>
+  <string id="533">Enter genre</string>
+  <string id="534">View: %s</string>
+  <string id="535">List</string>
+  <string id="536">Icons</string>
+  <string id="537">Big list</string>
+  <string id="538">Big icons</string>
+  <string id="539">Wide</string>
+  <string id="540">Big wide</string>
+  <string id="541">Album icons</string>
+  <string id="542">DVD icons</string>
+  <string id="543">DVD</string>
+  <string id="544">Media info</string>
+  <string id="545">Audio output device</string>
+  <string id="546">Passthrough output device</string>
+  <string id="547">No biography for this artist</string>
+  <string id="548">Downmix multichannel audio to stereo</string>
+
+  <string id="550">Sort by: %s</string>
+  <string id="551">Name</string>
+  <string id="552">Date</string>
+  <string id="553">Size</string>
+  <string id="554">Track</string>
+  <string id="555">Time</string>
+  <string id="556">Title</string>
+  <string id="557">Artist</string>
+  <string id="558">Album</string>
+  <string id="559">Playlist</string>
+  <string id="560">ID</string>
+  <string id="561">File</string>
+  <string id="562">Year</string>
+  <string id="563">Rating</string>
+  <string id="564">Type</string>
+  <string id="565">Usage</string>
+  <string id="566">Album artist</string>
+  <string id="567">Play count</string>
+  <string id="568">Last played</string>
+  <string id="569">Comment</string>
+  <string id="570">Date added</string>
+  <string id="571">Default</string>
+  <string id="572">Studio</string>
+  <string id="573">Path</string>
+  <string id="574">Subtitles</string>
+  <string id="575">Show Advanced</string>
+  <string id="576">Hide Advanced</string>
+
+  <string id="580">Sort direction</string>
+  <string id="581">Sort method</string>
+  <string id="582">View mode</string>
+  <string id="583">Remember views for different folders</string>
+  <string id="584">Ascending</string>
+  <string id="585">Descending</string>
+  <string id="586">Edit playlist</string>
+  <string id="587">Filter</string>
+  <string id="588">Cancel party mode</string>
+  <string id="589">Party mode</string>
+  <string id="590">Random</string>
+  <string id="591">Off</string>
+  <string id="592">One</string>
+  <string id="593">All</string>
+  <string id="594">Off</string>
+  <string id="595">Repeat: Off</string>
+  <string id="596">Repeat: One</string>
+  <string id="597">Repeat: All</string>
+
+  <string id="600">Rip audio CD</string>
+  <string id="601">Medium</string>
+  <string id="602">Standard</string>
+  <string id="603">Extreme</string>
+  <string id="604">Constant bitrate</string>
+  <string id="605">Ripping...</string>
+  <string id="606"></string>
+  <string id="607">To:</string>
+  <string id="608">Could not rip CD or track</string>
+  <string id="609">CDDARipPath is not set.</string>
+  <string id="610">Rip audio track</string>
+  <string id="611">Enter number</string>
+
+  <string id="620">CD Ripping</string>
+  <string id="621">Encoder</string>
+  <string id="622">Quality</string>
+  <string id="623">Bitrate</string>
+  <string id="624">Include track number</string>
+  <string id="625">All songs of</string>
+  <string id="629">View mode</string>
+  <string id="630">Normal</string>
+  <string id="631">Zoom</string>
+  <string id="632">Stretch 4:3</string>
+  <string id="633">Stretch 14:9</string>
+  <string id="634">Stretch 16:9</string>
+  <string id="635">Original Size</string>
+  <string id="636">Custom</string>
+  <string id="637">Replay gain</string>
+  <string id="638">Replay gain mode</string>
+  <string id="639">Use track levels</string>
+  <string id="640">Use album levels</string>
+  <string id="641">PreAmp Level - Replay gained files</string>
+  <string id="642">PreAmp Level - Non replay gained files</string>
+  <string id="643">Avoid clipping on replay gained files</string>
+  <string id="644">Crop black bars</string>
+  <string id="645">Need to unpack a big file. Continue?</string>
+  <string id="646">Remove from library</string>
+  <string id="647">Export video library</string>
+  <string id="648">Import video library</string>
+  <string id="649">Importing</string>
+  <string id="650">Exporting</string>
+  <string id="651">Browse for library</string>
+  <string id="652">Years</string>
+  <string id="653">Update library</string>
+  <string id="654">Show debug info</string>
+  <string id="655">Browse for executable</string>
+  <string id="656">Browse for playlist</string>
+  <string id="657">Browse for folder</string>
+  <string id="658">Song information</string>
+  <string id="659"></string>
+  <string id="660">Volume amplification</string>
+  <string id="661">Choose export folder</string>
+  <string id="662">This file is no longer available.</string>
+  <string id="663">Would you like to remove it from the library?</string>
+  <string id="664">Browse for Script</string>
+
+  <string id="700">Cleaning up library</string>
+  <string id="701">Removing old songs from the library</string>
+  <string id="702">This path has been scanned before</string>
+  <string id="705">Network</string>
+  <string id="706">HTTP proxy host</string>
+  <string id="707">HTTP proxy port</string>
+  <string id="708">Enable HTTP proxy</string>
+  <string id="709">HTTP proxy username</string>
+  <string id="710">HTTP proxy password</string>
+  <string id="711">Internet Protocol (IP)</string>
+  <string id="712">Invalid port specified. Value must be between 1 and 65535.</string>
+  <string id="713">HTTP proxy</string>
+  <string id="714">HTTP proxy host is empty[CR]Proxy will be disabled</string>
+  <string id="715">- Assignment</string>
+  <string id="716">Automatic (DHCP)</string>
+  <string id="717">Manual (Static)</string>
+  <string id="718">Default (Dashboard)</string>
+  <string id="719">- IP address</string>
+  <string id="720">- Netmask</string>
+  <string id="721">- Default gateway</string>
+  <string id="722">- DNS server</string>
+  <string id="723">Save &amp; restart</string>
+  <string id="724">Invalid address specified. Value must be AAA.BBB.CCC.DDD</string>
+  <string id="725">with numbers between 0 and 255.</string>
+  <string id="726">Changes not saved. Continue without saving?</string>
+  <string id="727">Web server</string>
+  <string id="728">FTP server</string>
+  <string id="729">Internet time</string>
+  <string id="730">Web server port</string>
+  <string id="731">Time server host</string>
+  <string id="732">Save &amp; apply</string>
+  <string id="733">Web server password</string>
+  <string id="734">No pass</string>
+  <string id="735">Subtitles charset</string>
+  <string id="736">- Style</string>
+  <string id="737">- Colour</string>
+  <string id="738">Normal</string>
+  <string id="739">Bold</string>
+  <string id="740">Italics</string>
+  <string id="741">Bold italics</string>
+  <string id="742">White</string>
+  <string id="743">Yellow</string>
+  <string id="744">Files</string>
+  <string id="745">No scanned information for this view</string>
+  <string id="746">Please turn off library mode</string>
+  <string id="747">Error loading image</string>
+  <string id="748">Edit path</string>
+  <string id="749">Mirror image</string>
+  <string id="750">Are you sure?</string>
+  <string id="751">Removing source</string>
+  <string id="752"></string>
+  <string id="753"></string>
+  <string id="754">Add program link</string>
+  <string id="755">Edit program path</string>
+  <string id="756">Edit program name</string>
+  <string id="757">Edit path depth</string>
+  <string id="758"></string>
+  <string id="759">View: Big list</string>
+  <string id="760">Yellow</string>
+  <string id="761">White</string>
+  <string id="762">Blue</string>
+  <string id="763">Bright green</string>
+  <string id="764">Yellow green</string>
+  <string id="765">Cyan</string>
+  <string id="766">Reserved</string>
+  <string id="767">Reserved</string>
+  <string id="768">Reserved</string>
+  <string id="769">Reserved</string>
+  <string id="770">Error %i: share not available</string>
+  <string id="771">- Auto FATX limiter</string>
+  <string id="772">Audio hardware</string>
+  <string id="773">Seeking</string>
+  <string id="774">Slideshow folder</string>
+  <string id="775">Network interface</string>
+  <string id="776">- Wireless network name (ESSID)</string>
+  <string id="777">- Wireless password</string>
+  <string id="778">- Wireless security</string>
+  <string id="779">Save and apply network interface settings</string>
+  <string id="780">No encryption</string>
+  <string id="781">WEP</string>
+  <string id="782">WPA</string>
+  <string id="783">WPA2</string>
+  <string id="784">Applying network interface settings. Please wait.</string>
+  <string id="785">Network interface restarted successfully.</string>
+  <string id="786">Network interface did not start successfully.</string>
+  <string id="787">Interface disabled</string>
+  <string id="788">Network interface disabled successfully.</string>
+  <string id="789">Wireless network name (ESSID)</string>
+
+  <string id="790">Event server</string>
+  <string id="791">Enable event server</string>
+  <string id="792">Port</string>
+  <string id="793">Port range</string>
+  <string id="794">Allow other computers to connect</string>
+  <string id="795">Initial repeat delay (ms)</string>
+  <string id="796">Continuous repeat delay (ms)</string>
+  <string id="797">Maximum number of clients</string>
+  <string id="800">Feeds</string>
+  <string id="801">Adults</string>
+  <string id="802">Charset</string>
+
+  <string id="998"></string>
+  <string id="999"></string>
+  <string id="1000">Screensaver preview</string>
+  <string id="1001">Unable to connect</string>
+  <string id="1002">XBMC was unable to connect to the network location.</string>
+  <string id="1003">This could be due to the network not being connected.</string>
+  <string id="1004">Would you like to add it anyway?</string>
+  <string id="1005"></string>
+  <string id="1006">IP address</string>
+  <string id="1007">Add network location</string>
+  <string id="1008">Protocol</string>
+  <string id="1009">Server address</string>
+  <string id="1010">Server name</string>
+  <string id="1011">Remote path</string>
+  <string id="1012">Shared folder</string>
+  <string id="1013">Port</string>
+  <string id="1014">Username</string>
+  <string id="1015">Browse for network server</string>
+  <string id="1016">Enter the network address of the server</string>
+  <string id="1017">Enter the path on the server</string>
+  <string id="1018">Enter the port number</string>
+  <string id="1019">Enter the username</string>
+  <string id="1020">Add %s source</string>
+  <string id="1021">Enter the paths or browse for the media locations.</string>
+  <string id="1022">Enter a name for this media Source.</string>
+  <string id="1023">Browse for new share</string>
+  <string id="1024">Browse</string>
+  <string id="1025">Could not retrieve directory information.</string>
+  <string id="1026">Add source</string>
+  <string id="1027">Edit source</string>
+  <string id="1028">Edit %s source</string>
+  <string id="1029">Enter the new label</string>
+  <string id="1030">Browse for image</string>
+  <string id="1031">Browse for image folder</string>
+  <string id="1032">Add network location...</string>
+  <string id="1033">Browse for file</string>
+  <string id="1034">Submenu</string>
+  <string id="1035">Enable submenu buttons</string>
+  <string id="1036">Favourites</string>
+  <string id="1037">Video plugins</string>
+  <string id="1038">Music plugins</string>
+  <string id="1039">Picture plugins</string>
+  <string id="1040">Loading directory</string>
+  <string id="1041">Retrieved %i items</string>
+  <string id="1042">Retrieved %i of %i items</string>
+  <string id="1043">Program plugins</string>
+  <string id="1044">Set plugin thumb</string>1
+  <string id="1045">Plugin settings</string>
+  <string id="1046">Access points</string>
+  <string id="1047">Other...</string>
+  <string id="1048">Web server username</string>
+  <string id="1049">Script settings</string>
+  <string id="1050">Singles</string>
+
+  <string id="1200">SMB client</string>
+  <string id="1202">Workgroup</string>
+  <string id="1203">Default username</string>
+  <string id="1204">Default password</string>
+
+  <string id="1207">WINS server</string>
+  <string id="1208">Mount SMB shares</string>
+  <string id="1209">Use one connection per server</string>
+
+  <string id="1210">Remove</string>
+  <string id="1211">Music</string>
+  <string id="1212">Video</string>
+  <string id="1213">Photos</string>
+  <string id="1214">Files</string>
+  <string id="1215">Music &amp; video </string>
+  <string id="1216">Music &amp; pictures</string>
+  <string id="1217">Music &amp; files</string>
+  <string id="1218">Video &amp; pictures</string>
+  <string id="1219">Video &amp; files</string>
+  <string id="1220">Pictures &amp; files</string>
+  <string id="1221">Music &amp; video &amp; pictures</string>
+  <string id="1222">Music &amp; video &amp; pictures &amp; files</string>
+  <string id="1223">Disabled</string>
+  <string id="1226">Files &amp; music &amp; video</string>
+  <string id="1227">Files &amp; pictures &amp; music</string>
+  <string id="1228">Files &amp; pictures &amp; video</string>
+  <string id="1229">Music &amp; programs</string>
+  <string id="1230">Video &amp; programs</string>
+  <string id="1231">Pictures &amp; programs</string>
+  <string id="1232">Music &amp; video &amp; pictures &amp; programs</string>
+  <string id="1233">Programs &amp; video &amp; music</string>
+  <string id="1234">Programs &amp; pictures &amp; music</string>
+  <string id="1235">Programs &amp; pictures &amp; video</string>
+
+  <string id="1245">FTP username</string>
+  <string id="1246">FTP password</string>
+  <string id="1247">Password has been set successfully</string>
+
+  <string id="1250">Auto-detection</string>
+  <string id="1251">Auto-detect system</string>
+  <string id="1252">Nickname</string>
+  <string id="1253"></string>
+  <string id="1254">Ask to connect</string>
+  <string id="1255">Send FTP user and password</string>
+  <string id="1256">Ping interval</string>
+  <string id="1257">Would you like to connect to the auto-detected system?</string>
+
+  <string id="1260">Zeroconf publishing</string>
+
+  <string id="1300">Custom audio device</string>
+  <string id="1301">Custom passthrough device</string>
+  
+  <string id="1396">Drifting</string>
+  <string id="1397">and</string>
+  <string id="1398">Freezing</string>
+  <string id="1399">Late</string>
+  <string id="1400">Isolated</string>
+  <string id="1401">Thundershowers</string>
+  <string id="1402">Thunder</string>
+  <string id="1403">Sun</string>
+  <string id="1404">Heavy</string>
+  <string id="1405">in</string>
+  <string id="1406">the</string>
+  <string id="1407">Vicinity</string>
+  <string id="1408">Ice</string>
+  <string id="1409">Crystals</string>
+  <string id="1410">Calm</string>
+  <string id="1411">with</string>
+  <string id="1412">windy</string>
+  <string id="1413">drizzle</string>
+  <string id="1414">Thunderstorm</string>
+  <string id="1415">Drizzle</string>
+  <string id="1416">Foggy</string>
+  <string id="1417">Grains</string>
+  <string id="1418">T-Storms</string>
+  <string id="1419">T-Showers</string>
+
+  <!-- strings through to 1450 reserved for weather translation -->
+
+  <string id="1450">Enable power saving when idle</string>
+  <!-- strings through to 1470 reserved for power-saving -->
+
+  <string id="2050">Runtime</string>
+
+  <string id="2100">Script failed! : %s</string>
+
+  <string id="4501">LCD type</string>
+
+  <string id="10000">Home</string>
+  <string id="10001">Programs</string>
+  <string id="10002">Photos</string>
+  <string id="10003">Filemanager</string>
+  <string id="10004">Settings</string>
+  <string id="10005">Music</string>
+  <string id="10006">Videos</string>
+  <string id="10007">System information</string>
+  <string id="10008">General</string>
+  <string id="10009">Screen</string>
+  <string id="10010">Settings / Appearance - GUI Calibration</string>
+  <string id="10011">Settings / Videos - Screen Calibration</string>
+  <string id="10012">Photos</string>
+  <string id="10013">Parental Control</string>
+  <string id="10014">Personal</string>
+  <string id="10015">Music</string>
+  <string id="10016">System</string>
+  <string id="10017">Media</string>
+  <string id="10018">Network</string>
+  <string id="10019">Look & Feel</string>
+  <string id="10020">Scripts</string>
+  <string id="10021"></string>
+  <string id="10022"></string>
+  <string id="10023"></string>
+  <string id="10025"></string>
+  <string id="10028">Videos/Playlist</string>
+  <string id="10034">Profiles</string>
+
+  <string id="10100">Yes/No dialog</string>
+  <string id="10101">Progress dialog</string>
+
+  <string id="10210">Looking for subtitles...</string>
+  <string id="10211">Looking for or caching subtitles...</string>
+  <string id="10212">terminating</string>
+  <string id="10213">buffering</string>
+  <string id="10214">Opening stream</string>
+
+  <string id="10500">Music/Playlist</string>
+  <string id="10501">Music/Files</string>
+  <string id="10502">Music/Library</string>
+  <string id="10503">Playlist editor</string>
+  <string id="10504">Top 100 songs</string>
+  <string id="10505">Top 100 albums</string>
+  <string id="10506">Programs</string>
+  <string id="10507">Configuration</string>
+  <string id="10508">Weather forecast</string>
+  <string id="10509">Network gaming</string>
+  <string id="10510">Extensions</string>
+  <string id="10511">System info</string>
+  <string id="10512"></string>
+  <string id="10513"></string>
+  <string id="10514"></string>
+  <string id="10515"></string>
+  <string id="10516">Music - Library</string>
+  <string id="10517">Now Playing - Music</string>
+  <string id="10518"></string>
+  <string id="10519"></string>
+  <string id="10520"></string>
+  <string id="10521"></string>
+  <string id="10522">Now Playing - Videos</string>
+  <string id="10523">Album info</string>
+  <string id="10524">Movie info</string>
+
+  <string id="12000">Select dialog</string>
+  <string id="12001">Music/Info</string>
+  <string id="12002">Dialog OK</string>
+  <string id="12003">Videos/Info</string>
+  <string id="12004">Scripts/Info</string>
+  <string id="12005">Fullscreen video</string>
+  <string id="12006">Audio visualization</string>
+  <string id="12007"></string>
+  <string id="12008">Filestacking dialog</string>
+  <string id="12009">Rebuild index...</string>
+  <string id="12010">Return to music window</string>
+  <string id="12011">Return to videos window</string>
+  <string id="12012">Update trainer list</string>
+  <string id="12013">Trainer</string>
+  <string id="12014">No trainers found</string>
+  <string id="12015">Trainer settings</string>
+  <string id="12016">All registered trainers are missing. Update your list</string>
+  <string id="12017">Auto resume from last position</string>
+  <string id="12018">No</string>
+  <string id="12019">Yes</string>
+  <string id="12020">Ask</string>
+  <string id="12021">Start from beginning</string>
+  <string id="12022">Resume from %s</string>
+  <string id="12023">Validating existing trainers...</string>
+  <string id="12024">Automatically generate thumbs for videos with no cover art</string>
+  <string id="12025">Do not resolve videos under this size (MB)</string>
+  <string id="12026">Pause video when exiting playback screen</string>
+  <string id="12027">Select Video Quality</string>  
+  <string id="12028">The episode is available in [CR]different level of quality</string>  
+  <string id="12029">Save my preference for</string>  
+  <string id="12030">Save</string>  
+
+  <string id="12310">0</string>
+  <string id="12311">1</string>
+  <string id="12312">2</string>
+  <string id="12313">3</string>
+  <string id="12314">4</string>
+  <string id="12315">5</string>
+  <string id="12316">6</string>
+  <string id="12317">7</string>
+  <string id="12318">8</string>
+  <string id="12319">9</string>
+  <string id="12320">c</string>
+  <string id="12321">Ok</string>
+  <string id="12322">*</string>
+  <string id="12325">Locked! Enter code...</string>
+  <string id="12326">Enter password</string>
+  <string id="12327">Enter master code</string>
+  <string id="12328">Enter unlock code</string>
+  <string id="12329">or press C to cancel</string>
+  <string id="12330">Enter gamepad button combo and</string>
+  <string id="12331">press Start, or Back to cancel</string>
+  <string id="12332">Set lock</string>
+  <string id="12333">Unlock</string>
+  <string id="12334">Reset lock</string>
+  <string id="12335">Remove lock</string>
+  <string id="12337">Numeric password</string>
+  <string id="12338">Gamepad button combo</string>
+  <string id="12339">Full-text password</string>
+  <string id="12340">Enter new password</string>
+  <string id="12341">Re-Enter new password</string>
+  <string id="12342">Incorrect password,</string>
+  <string id="12343">retries left </string>
+  <string id="12344">Passwords entered did not match.</string>
+  <string id="12345">Access denied</string>
+  <string id="12346">Password retry limit exceeded.</string>
+  <string id="12347">The system will now shut off.</string>
+  <string id="12348">Item locked</string>
+  <string id="12353">Reactivate lock</string>
+  <string id="12356">Change lock</string>
+  <string id="12357">Source lock</string>
+  <string id="12358">Password entry was blank. Try again.</string>
+  <string id="12360">Master lock</string>
+  <string id="12362">Shutdown system if Master Lock retries exceeded</string>
+  <string id="12367">Master code is not valid!</string>
+  <string id="12368">Please enter a valid master code!</string>
+  <string id="12373">Settings &amp; file manager</string>
+  <string id="12376">Set as default for all movies</string>
+  <string id="12377">This will reset any previously saved values</string>
+  <string id="12378">Show each image for</string>
+  <string id="12379">Use pan and zoom effects</string>
+  <string id="12380">Play NTSC videos at PAL rates</string>
+  <string id="12381">Play PAL videos at NTSC rates</string>
+  <string id="12382">Play NTSC videos in PAL60</string>
+  <string id="12383">12 hour clock</string>
+  <string id="12384">24 hour clock</string>
+  <string id="12385">Day/Month</string>
+  <string id="12386">Month/Day</string>
+  <string id="12387"></string>
+  <string id="12390">System uptime</string>
+  <string id="12391">Minutes</string>
+  <string id="12392">Hours</string>
+  <string id="12393">Days</string>
+  <string id="12394">Total uptime</string>
+
+  <string id="12600">Weather</string>
+
+  <string id="12900">Screensaver</string>
+  <string id="12901">Fullscreen OSD</string>
+
+  <string id="13000">System</string>
+  <string id="13001">Immediate HD spindown</string>
+  <string id="13002">Video only</string>
+  <string id="13003">- Delay</string>
+  <string id="13004">- Minimum file duration</string>
+  <string id="13005">Shutdown</string>
+  <string id="13006">Dashboard</string>
+  <string id="13007">Use custom dashboard path</string>
+  <string id="13008">Shutdown function</string> 
+  <string id="13009">Quit</string> 
+  <string id="13010">Hibernate</string>
+  <string id="13011">Suspend</string>
+  <string id="13012">Exit</string>
+  <string id="13013">Reboot</string>
+  <string id="13014">Minimize</string>
+  <string id="13015">Power button action</string>
+
+  <string id="13020">Is another session active, perhaps over ssh?</string>
+  <string id="13021">Mounted removable harddrive</string>
+  <string id="13022">Unsafe device removal</string>
+  <string id="13023">Successfully removed device</string>
+  <string id="13024">Joystick plugged</string>
+  <string id="13025">Joystick unplugged</string>
+
+  <string id="13100">Flicker filter</string>
+  <string id="13101">Let driver choose (requires restart)</string>
+  <string id="13105">Vertical blank sync</string>
+  <string id="13106">Disabled</string>
+  <string id="13107">Enabled during video playback</string>
+  <string id="13108">Always enabled</string>
+  <string id="13109">Test &amp; apply resolution</string>
+  <string id="13110">Save resolution?</string>
+  <string id="13111">Would you like to keep this resolution?</string>
+  
+  <string id="13112">High quality upscaling</string>
+  <string id="13113">Disabled</string>
+  <string id="13114">Enabled for SD content</string>
+  <string id="13115">Always enabled</string>
+  
+  <string id="13116">Upscaling method</string>
+  <string id="13117">Bicubic</string>
+  <string id="13118">Lanczos</string>
+  <string id="13119">Sinc</string>
+  <string id="13120">VDPAU</string>
+  <string id="13121">VDPAU HQ Upscaling level</string>
+  <string id="13122">VDPAU Studio level color conversion</string>
+
+  <string id="13130">Display blanking</string>
+  <string id="13131">Disabled</string>
+  <string id="13132">Blank displays</string>
+
+  <string id="13140">Active connections detected!</string>
+  <string id="13141">If you proceed, you might not be able to control BOXEE</string>
+  <string id="13142">any longer. Are you sure you want to stop the Event server?</string>
+
+  <string id="13144">Change Apple Remote mode?</string>
+  <string id="13145">If you are currently using the Apple Remote to control Changing this setting might affect your ability to continue controlling it.[CR]Do you want to proceed?</string>
+  <string id="13146"></string>
+  <string id="13147"></string>
+
+  <string id="13148">Change remote control mode?</string>
+  <string id="13149">Please restart BOXEE to activate</string>
+  <string id="13150">HDD key:</string>
+  <string id="13151">HDD temp:</string>
+  <string id="13152">DVD model:</string>
+  <string id="13153">DVD firmware:</string>
+  <string id="13154">HDD model:</string>
+  <string id="13155">HDD serial:</string>
+  <string id="13156">HDD firmware:</string>
+  <string id="13157">HDD password:</string>
+  <string id="13158">HDD lock state:</string>
+  <string id="13159">Subnet mask</string>
+  <string id="13160">Gateway</string>
+  <string id="13161">Primary DNS</string>
+  <string id="13162">Initialize failed</string>
+  
+  <string id="13163">Gamepad</string>
+  <string id="13164">Keyboard</string>
+  <string id="13165">Mouse</string>
+  <string id="13166">Head/Microphone</string>
+  <string id="13167">Memory unit</string>
+  <string id="13168">IR-Remote</string>
+  <string id="13169">Controller port</string>
+  
+  
+  <string id="13170">Never</string>
+  <string id="13171">Immediately</string>
+  <string id="13172">After %i secs</string>
+  <string id="13173">HDD install date:</string>
+  <string id="13174">HDD power cycle count:</string>
+
+  <string id="13200">Profiles</string>
+  <string id="13201">Delete profile '%s'?</string>
+  <string id="13204">Last loaded profile:</string>
+  <string id="13205">Unknown</string>
+  <string id="13206">Overwrite</string>
+  <string id="13208">Alarm clock</string>
+  <string id="13209">Alarm clock interval (in minutes)</string>
+  <string id="13210">Started, alarm in %im</string>
+  <string id="13211">Alarm!</string>
+  <string id="13212">Canceled with %im%is left</string>
+
+  <string id="13249">Search for subtitles in RARs</string>
+  <string id="13250">Browse for subtitle...</string>
+  <string id="13251">Move item</string>
+  <string id="13252">Move item here</string>
+  <string id="13253">Cancel move</string>
+
+  <string id="13270">Hardware:</string>
+  <string id="13271">CPU Usage:</string>
+  
+  <string id="13274">Connected, but no DNS is available.</string>
+  <string id="13275">Hard Disk</string>
+  <string id="13276">DVD-ROM</string>
+  <string id="13277">Storage</string>
+  <string id="13278">Default</string>
+  <string id="13279">Network</string>
+  <string id="13280">Video</string>
+  <string id="13281">Hardware</string>
+  <string id="13282">_</string>
+  <string id="13283">Operating system:</string>
+  <string id="13284">CPU speed:</string>
+  <string id="13285">Detected BIOS:</string>
+  <string id="13286">Video encoder:</string>
+  <string id="13287">Screen resolution</string>
+  <string id="13288">Xbox version:</string>
+  <string id="13289">Xbox serial number:</string>
+  <string id="13290">Xbox manufacturer:</string>
+  <string id="13291">Modchip:</string>
+  <string id="13292">A/V cable:</string>
+  <string id="13293">Video &amp; XBE region:</string>
+  <string id="13294">DVD region:</string>
+  <string id="13295">Internet:</string>
+  <string id="13296">Connected</string>
+  <string id="13297">Not connected. Check network settings.</string>
+  <string id="13298">Xbox Live key:</string>
+  <string id="13299">Target temperature</string>
+  <string id="13300">Fan speed</string>
+  <string id="13301">Auto temperature control</string>
+  <string id="13302">Fan speed override</string>
+  <string id="13303">- Fonts</string>
+  <string id="13304">Enable flipping bi-directional strings</string>
+  <string id="13305">Enable RSS feeds</string>
+  <string id="13306">Hide parent folder items</string>
+  <string id="13307">Track naming template</string>
+  <string id="13308">Do you wish to reboot your system</string>
+  <string id="13309">instead of just XBMC?</string>
+  <string id="13310">Zoom effect</string>
+  <string id="13311">Float effect</string>
+  <string id="13312">Black bar reduction</string>
+  <string id="13313">Restart</string>
+  <string id="13314">Crossfade</string>
+  <string id="13315">Regenerate thumbnails</string>
+  <string id="13316">Recursive thumbnails</string>
+  <string id="13317">View slideshow</string>
+  <string id="13318">Recursive slideshow</string>
+  <string id="13319">Randomize</string>
+  <string id="13320">Stereo</string>
+  <string id="13321">Left only</string>
+  <string id="13322">Right only</string>
+  <string id="13323">Enable karaoke support</string>
+  <string id="13324">Background transparency</string>
+  <string id="13325">Foreground transparency</string>
+  <string id="13326">A/V delay</string>
+  <string id="13327">Karaoke</string>
+  <string id="13328">%s not found</string>
+  <string id="13329">Error opening %s</string>
+  <string id="13330">Unable to load %s</string>
+  <string id="13331">Error: Out of memory</string>
+  <string id="13332">Move up</string>
+  <string id="13333">Move down</string>
+  <string id="13334">Edit label</string>
+  <string id="13335">Make default</string>
+  <string id="13336">Remove button</string>
+  <string id="13338">Front LED</string>
+  <string id="13339">Front LED colour</string>
+  <string id="13340">Leave as is</string>
+  <string id="13341">Green</string>
+  <string id="13342">Orange</string>
+  <string id="13343">Red</string>
+  <string id="13344">Cycle</string>
+  <string id="13345">Switch LED off on playback</string>
+  <string id="13346">Movie information</string>
+  <string id="13347">Queue item</string>
+  <string id="13348">Search IMDb...</string>
+  <string id="13349">Scan for new content</string>
+  <string id="13350">Now playing...</string>
+  <string id="13351">Album information</string>
+  <string id="13352">Scan item to library</string>
+  <string id="13353">Stop scanning</string>
+  <string id="13354">Render method</string>
+  <string id="13355">Low quality pixel shader</string>
+  <string id="13356">Hardware overlays</string>
+  <string id="13357">High quality pixel shader</string>
+  <string id="13358">Play item</string>
+  <string id="13359">Set artist thumb</string>
+  <string id="13360">Generate thumbs</string>
+  <string id="13361">Enable voice</string>
+  <string id="13375">Enable device</string>
+  <string id="13376">Volume</string>
+  <string id="13377">Default view mode</string>
+  <string id="13378">Default brightness</string>
+  <string id="13379">Default contrast</string>
+  <string id="13380">Default gamma</string>
+  <string id="13381">Resume video</string>
+  <string id="13382">Voice mask - Port 1</string>
+  <string id="13383">Voice mask - Port 2</string>
+  <string id="13384">Voice mask - Port 3</string>
+  <string id="13385">Voice mask - Port 4</string>
+  <string id="13386">Use time based seeking</string>
+  <string id="13387">Track naming template right</string>
+  <string id="13388">Preset</string>
+  <string id="13389">There are no presets available&#10;for this visualization</string>
+  <string id="13390">There are no settings available&#10;for this visualization</string>
+  <string id="13391">Eject/Load</string>
+  <string id="13392">Use visualization if playing audio</string>
+  <string id="13393">Calculate size</string>
+  <string id="13394">Calculating folder size</string>
+  <string id="13395">Video settings</string>
+  <string id="13396">Audio and subtitle settings</string>
+  <string id="13397">Enable subtitles</string>
+  <string id="13398">Shortcuts</string>
+  <string id="13399">Ignore tokens when sorting</string>
+  <string id="13400">Crossfade albumtracks</string>
+  <string id="13401">Browse for %s</string>
+  <string id="13402">Show track position</string>
+  <string id="13403">Clear default</string>
+  <string id="13404">Resume</string>
+  <string id="13405">Get thumb</string>
+  <string id="13406">Picture information</string>
+  <string id="13407">%s presets</string>
+  <string id="13408">(IMDb user rating)</string>
+  <string id="13409">Top 250</string>
+  <string id="13410">Tune in on Last.fm</string>
+  <string id="13411">Minimum fanspeed</string>
+  <string id="13412"></string>
+  <string id="13413">Downloading</string>
+  <string id="13414">Hide artists who appear only on compilations</string>
+  <string id="13415">Render method</string>
+  <string id="13416">Auto detect</string>
+  <string id="13417">Basic shaders (ARB)</string>
+  <string id="13418">Advanced shaders (GLSL)</string>
+  <string id="13419">Software</string>
+  <string id="13420">Remove safely</string>
+  <string id="13421">VDPAU</string>
+  <string id="13422">Start slideshow here</string>
+  <string id="13423">Apply new charset</string>
+
+  <string id="13500">A/V sync method</string>
+  <string id="13501">Audio clock</string>
+  <string id="13502">Video clock (Drop/Dupe audio)</string>
+  <string id="13503">Video clock (Resample audio)</string>
+  <string id="13504">Maximum resample amount (%)</string>
+  <string id="13505">Resample quality</string>
+  <string id="13506">Low(fast)</string>
+  <string id="13507">Medium</string>
+  <string id="13508">High</string>
+  <string id="13509">Really high(slow!)</string>
+  <string id="13510">Sync playback to display</string>
+
+  <string id="13600">Apple Remote</string>
+  <string id="13601">Remote mode</string>
+  <string id="13602">Always running</string>
+  <string id="13603">Sequence delay time</string>
+  
+  <string id="13610">Disabled</string>
+  <string id="13611">Standard</string>
+  <string id="13612">Universal Remote</string>
+  <string id="13613">Multi Remote (Harmony)</string>
+  
+  <string id="13620">Apple Remote Error</string>
+  <string id="13621">Apple Remote support could be enabled.</string>
+
+  <string id="14000">Stack</string>
+  <string id="14001">Unstack</string>
+  <string id="14003">Downloading playlist file...</string>
+  <string id="14004">Downloading streams list...</string>
+  <string id="14005">Parsing streams list...</string>
+  <string id="14006">Downloading streams list failed</string>
+  <string id="14007">Downloading playlist file failed</string>
+  <string id="14008"></string>
+  <string id="14009">Games directory</string>
+  <string id="14010">Auto switch to thumbs based on</string>
+  <string id="14011">Enable auto switching to thumbs view</string>
+  <string id="14012">- Use large icons</string>
+  <string id="14013">- Switch based on</string>
+  <string id="14014">- Percentage</string>
+  <string id="14015">No files and at least one thumb</string>
+  <string id="14016">At least one file and thumb</string>
+  <string id="14017">Percentage of thumbs</string>
+  <string id="14018">View options</string>
+  <string id="14019">Your location</string>
+  <string id="14020">Change area code 2</string>
+  <string id="14021">Change area code 3</string>
+  <string id="14022">Library</string>
+  <string id="14023">No TV</string>
+  <string id="14024">Enter the name of the nearest city</string>
+  <string id="14025">Video/Audio/DVD cache - Harddisk</string>
+  <string id="14026">Video cache - DVD-ROM</string>
+  <string id="14027">- Local Network</string>
+  <string id="14028">- Internet</string>
+  <string id="14030">Audio cache - DVD-ROM</string>
+  <string id="14031">- Local Network</string>
+  <string id="14032">- Internet</string>
+  <string id="14034">DVD cache - DVD-ROM</string>
+  <string id="14035">- Local Network</string>
+  <string id="14036">Servers</string>
+  <string id="14037">Look &amp; feel</string>
+  <string id="14038">Network settings changed</string>
+  <string id="14039">A restart is required for the settings to take effect.</string>
+  <string id="14040">Would you like to restart now?</string>
+  <string id="14041">Post processing</string>
+  <string id="14042"></string>
+  <string id="14043">- Shutdown while playing</string>
+  <string id="14044">%i mins</string>
+  <string id="14045">%i secs</string>
+  <string id="14046">%i ms</string>
+  <string id="14047">%i %%</string>
+  <string id="14048">%i kbps</string>
+  <string id="14049">%i kb</string>
+  <string id="14050">%i.0 dB</string>
+  <string id="14051">Time format</string>
+  <string id="14052">Date format</string>
+  <string id="14053">GUI filters</string>
+  <string id="14054">Enable internet lookups</string>
+  <string id="14055">Use background scanning</string>
+  <string id="14056">Stop scan</string>
+  <string id="14057">Not possible while scanning for media info</string>
+  <string id="14058">Film grain effect</string>
+  <string id="14059">Look for thumbs on remote shares</string>
+  <string id="14060">Unknown type cache - Internet</string>
+  <string id="14061">Auto</string>
+  <string id="14062">Enter username for</string>
+  <string id="14063">Date &amp; time</string>
+  <string id="14064">Set date</string>
+  <string id="14065">Set time</string>
+  <string id="14066">Enter the time in 24 hour HH:MM format</string>
+  <string id="14067">Enter the date in DD/MM/YYYY format</string>
+  <string id="14068">Enter the IP address</string>
+  <string id="14069">Apply these settings now?</string>
+  <string id="14070">Apply changes now</string>
+  <string id="14071">Allow file renaming and deletion</string>
+  <string id="14072"></string>
+  <string id="14073"></string>
+  <string id="14074">Set timezone</string>
+  <string id="14075">Use daylight saving time</string>
+  <string id="14076">Add to favourites</string>
+  <string id="14077">Remove from favourites</string>
+  <string id="14078">- Colours</string>
+  <string id="14079">Timezone country</string>
+  <string id="14080">Timezone</string>
+  <string id="14081">File lists</string>
+  <string id="14082">Show EXIF picture information</string>
+  <string id="14083">Use a fullscreen window rather than true fullscreen</string>
+  <string id="14084">Queue songs on selection</string>
+  <string id="14085">Play audio CDs automatically</string>
+  <string id="14086">Playback</string>
+  <string id="14087">DVDs</string>
+  <string id="14088">Play DVDs automatically</string>
+  <string id="14089">Font to use for text subtitles</string>
+  <string id="14090">International</string>
+  <string id="14091">Character set</string>
+  <string id="14092">Debugging</string>
+  <string id="14093">Security</string>
+  <string id="14094">Input devices</string>
+  <string id="14095">Power saving</string>
+  <string id="14096">Time Format</string>
+  <string id="14097">Temperature Scale</string>
+
+  <string id="15000"></string>
+  <string id="15001"></string>
+  <string id="15002"></string>
+  <string id="15003"></string>
+  <string id="15004"></string>
+  <string id="15005"></string>
+  <string id="15006"></string>
+  <string id="15007"></string>
+  <string id="15008"></string>
+  <string id="15009"></string>
+  <string id="15010"></string>
+  <string id="15011"></string>
+  <string id="15012"></string>
+  <string id="15013"></string>
+  <string id="15014"></string>
+  <string id="15015">Remove</string>
+  <string id="15016">Games</string>
+  <string id="15017"></string>
+  <string id="15018"></string>
+  <string id="15019">Add</string>
+  <string id="15020"></string>
+  <string id="15021"></string>
+  <string id="15022"></string>
+  <string id="15023"></string>
+  <string id="15024"></string>
+  <string id="15025"></string>
+  <string id="15026"></string>
+  <string id="15027"></string>
+  <string id="15028"></string>
+  <string id="15029"></string>
+  <string id="15030"></string>
+  <string id="15031"></string>
+  <string id="15032"></string>
+  <string id="15033"></string>
+  <string id="15034"></string>
+  <string id="15035"></string>
+  <string id="15036"></string>
+  <string id="15037"></string>
+  <string id="15038"></string>
+  <string id="15039"></string>
+  <string id="15040"></string>
+  <string id="15041"></string>
+  <string id="15042"></string>
+  <string id="15043"></string>
+  <string id="15044"></string>
+  <string id="15045"></string>
+  <string id="15046"></string>
+  <string id="15047"></string>
+  <string id="15048"></string>
+  <string id="15049"></string>
+  <string id="15050"></string>
+  <string id="15051"></string>
+  <string id="15052">Password</string>
+  <string id="15053"></string>
+  <string id="15054"></string>
+  <string id="15055"></string>
+  <string id="15056"></string>
+  <string id="15057"></string>
+  <string id="15058"></string>
+  <string id="15059"></string>
+  <string id="15060"></string>
+  <string id="15061"></string>
+  <string id="15100">Library</string>
+  <string id="15101">Database</string>
+  <string id="15102">* All albums</string>
+  <string id="15103">* All artists</string>
+  <string id="15104">* All songs</string>
+  <string id="15105">* All genres</string>
+  <string id="15106"></string>
+  <string id="15107">Buffering...</string>
+  <string id="15108">Navigation sounds</string>
+  <string id="15109">default</string>
+  <string id="15111">- Theme</string>
+  <string id="15112">Default theme</string>
+
+  <string id="15200">Last.fm</string>
+  <string id="15201">Submit songs to Last.fm</string>
+  <string id="15202">Last.fm username</string>
+  <string id="15203">Last.fm password</string>
+  <string id="15204">Unable to handshake: sleeping...</string>
+  <string id="15205">Please update XBMC</string>
+  <string id="15206">Bad authorization: Check username and password</string>
+  <string id="15207">Connected</string>
+  <string id="15208">Not connected</string>
+  <string id="15209">Submit interval %i</string>
+  <string id="15210">Cached %i songs</string>
+  <string id="15211">Submitting...</string>
+  <string id="15212">Submitting in %i secs</string>
+  <string id="15213">Play using...</string>
+  <string id="15214">Use smoothed A/V synchronization</string>
+  <string id="15215">Hide file names in thumbs view</string>
+  <string id="15216">Play in party mode</string>
+  <string id="15217">Submit songs to Libre.fm</string>
+  <string id="15218">Libre.fm username</string>
+  <string id="15219">Libre.fm password</string>
+  <string id="15220">Libre.fm</string>
+  <string id="15221">Scrobbler</string>
+
+  <string id="15250">Submit Last.fm Radio to Last.fm</string>
+  <string id="15251">Connecting to Last.fm...</string>
+  <string id="15252">Selecting station...</string>
+  <string id="15253">Search similar artists...</string>
+  <string id="15254">Search similar tags...</string>
+  <string id="15255">Your profile (%name%)</string>
+  <string id="15256">Overall top tags</string>
+  <string id="15257">Top artists for tag %name%</string>
+  <string id="15258">Top albums for tag %name%</string>
+  <string id="15259">Top tracks for tag %name%</string>
+  <string id="15260">Listen to tag %name% Last.fm radio</string>
+  <string id="15261">Similar artists as %name%</string>
+  <string id="15262">Top %name% albums</string>
+  <string id="15263">Top %name% tracks</string>
+  <string id="15264">Top %name% tags</string>
+  <string id="15265">Biggest fans of %name%</string>
+  <string id="15266">Listen to %name% fans Last.fm radio</string>
+  <string id="15267">Listen to %name% similar artists Last.fm radio</string>
+  <string id="15268">Top artists for user %name%</string>
+  <string id="15269">Top albums for user %name%</string>
+  <string id="15270">Top tracks for user %name%</string>
+  <string id="15271">Friends of user %name%</string>
+  <string id="15272">Neighbours of user %name%</string>
+  <string id="15273">Weekly artist chart for %name%</string>
+  <string id="15274">Weekly album chart for %name%</string>
+  <string id="15275">Weekly track chart for %name%</string>
+  <string id="15276">Listen to %name%'s neighbours Last.fm radio</string>
+  <string id="15277">Listen to %name%'s personal Last.fm radio</string>
+  <string id="15278">Listen to %name%'s loved tracks Last.fm radio</string>
+  <string id="15279">Retrieving list from Last.fm...</string>
+  <string id="15280">Can't retrieve list from Last.fm...</string>
+  <string id="15281">Enter an artist name to find related ones</string>
+  <string id="15282">Enter a tag name to find similar ones</string>
+  <string id="15283">Tracks recently listened by %name%</string>
+  <string id="15284">Listen to %name%'s recommendations Last.fm radio</string>
+  <string id="15285">Top tags for user %name%</string>
+  <string id="15286">Listen to %name%'s playlist Last.fm radio</string>
+  <string id="15287">Do you want to add the current track to your loved tracks?</string>
+  <string id="15288">Do you want to ban the current track?</string>
+  <string id="15289">Added to your loved tracks: '%s'.</string>
+  <string id="15290">Could not add '%s' to your loved tracks.</string>
+  <string id="15291">Banned: '%s'.</string>
+  <string id="15292">Could not ban '%s'.</string>
+  <string id="15293">Tracks recently loved by %name%</string>
+  <string id="15294">Tracks recently banned by %name%</string>
+  <string id="15295">Remove from loved tracks</string>
+  <string id="15296">Un-ban</string>
+  <string id="15297">Do you want to remove this track from your loved tracks?</string>
+  <string id="15298">Do you want to un-ban this track?</string>
+
+  <string id="15300">Path not found or invalid</string>
+  <string id="15301">Could not connect to network server</string>
+  <string id="15302">No servers found</string>
+  <string id="15303">Workgroup not found</string>
+
+  <string id="15310">Opening multi-path source</string>
+  <string id="15311">Path:</string>
+
+  <string id="16000">General</string>
+  <string id="16001">Configure audio hardware...</string>
+  <string id="16002">Internet lookup</string>
+  <string id="16003">Player</string>
+  <string id="16004">Play media from disc</string>
+  <string id="16005">Advanced</string>
+
+  <string id="16008">Enter new title</string>
+  <string id="16009">Enter the movie name</string>
+  <string id="16010">Enter the profile name</string>
+  <string id="16011">Enter the album name</string>
+  <string id="16012">Enter the playlist name</string>
+  <string id="16013">Enter new filename</string>
+  <string id="16014">Enter folder name</string>
+  <string id="16015">Enter directory</string>
+  <string id="16016">Available options: %A, %T, %N, %B, %D, %G, %Y, %F, %S</string>
+  <string id="16017">Enter search string</string>
+  <string id="16018">None</string>
+  <string id="16019">Auto select</string>
+  <string id="16020">De-interlace</string>
+  <string id="16021">Bob</string>
+  <string id="16022">Bob (inverted)</string>
+  <string id="16023">Interlaced handling</string>
+  <string id="16024">Canceling...</string>
+  <string id="16025">Enter the artist name</string>
+  <string id="16026">Playlist playback aborted</string>
+  <string id="16027">Too many consecutive failed items</string>
+  <string id="16028">Enter value</string>
+
+  <string id="16030">Party mode aborted.</string>
+  <string id="16031">No matching songs in the library.</string>
+  <string id="16032">Could not initialize database.</string>
+  <string id="16033">Could not open database.</string>
+  <string id="16034">Could not get songs from database.</string>
+  <string id="16035">Party mode playlist</string>
+
+  <string id="16100">All Videos</string>
+  <string id="16101">Unwatched</string>
+  <string id="16102">Watched</string>
+  <string id="16103">Mark as watched</string>
+  <string id="16104">Mark as unwatched</string>
+  <string id="16105">Edit title</string>
+  <string id="16106">Use NTSC-M &amp; NTSC-J</string>
+  <string id="16107">Use only NTSC-M</string>
+  <string id="16108">Use only NTSC-J</string>
+  <string id="16109">Use only PAL-60</string>
+  <string id="16110">For 60hz games</string>
+
+  <string id="16200">Operation was aborted</string>
+  <string id="16201">Copy failed</string>
+  <string id="16202">Failed to copy atleast one file</string>
+  <string id="16203">Move failed</string>
+  <string id="16204">Failed to move atleast one file</string>  
+  <string id="16205">Delete failed</string>
+  <string id="16206">Failed to delete atleast one file</string>
+
+  <string id="16300">Video scaling method</string>
+  <string id="16301">Nearest neighbour</string>
+  <string id="16302">Bilinear</string>
+  <string id="16303">Bicubic</string>
+  <string id="16304">Lanczos2</string>
+  <string id="16305">Lanczos3</string>
+  <string id="16306">Sinc8</string>
+  
+  <string id="16307">Bicubic (software)</string>
+  <string id="16308">Lanczos (software)</string>  
+  <string id="16309">Sinc (software)</string>
+
+  <string id="16310">(VDPAU)Temporal</string>
+  <string id="16311">(VDPAU)Temporal/Spatial</string>
+  <string id="16312">(VDPAU)Noise Reduction</string>
+  <string id="16313">(VDPAU)Sharpness</string>
+  <string id="16314">Inverse Telecine</string>
+  <string id="17500">Display sleep timeout</string> 
+
+  <string id="19000">Switch to channel</string>
+
+  <string id="20000">CDDA rip folder</string>
+  <string id="20001">Use external DVD player</string>
+  <string id="20002">External DVD player</string>
+  <string id="20003">Trainers folder</string>
+  <string id="20004">Screenshot folder</string>
+  <string id="20005">Recordings folder</string>
+  <string id="20006">Playlists folder</string>
+  <string id="20007">Recordings</string>
+  <string id="20008">Screenshots</string>
+  <string id="20009">Use XBMC</string>
+  <string id="20010"></string>
+  <string id="20011">Music playlists</string>
+  <string id="20012">Video playlists</string>
+  <string id="20013">Do you wish to launch the game?</string>
+  <string id="20014">Sort by: Playlist</string>
+  <string id="20015">Remote thumb</string>
+  <string id="20016">Current thumb</string>
+  <string id="20017">Local thumb</string>
+  <string id="20018">No thumb</string>
+  <string id="20019">Choose thumbnail</string>
+  <string id="20020"></string>
+  <string id="20021"></string>
+  <!-- string id 20022 will always be set to an empty string (LocalizeStrings.cpp)-->
+  <string id="20022"></string>
+  <string id="20023">Conflict</string>
+  <string id="20024">Scan new</string>
+  <string id="20025">Scan all</string>
+  <string id="20026">Region</string>
+
+  <!-- string id's 20027 thru 20034 are reserved for temperaturestrings  (LocalizeStrings.cpp)-->
+
+  <string id="20038">Lock music window</string>
+  <string id="20039">Lock videos window</string>
+  <string id="20040">Lock photos window</string>
+  <string id="20041">Lock programs, saves &amp; scripts windows</string>
+  <string id="20042">Lock filemanager</string>
+  <string id="20043">Lock settings</string>
+  <string id="20044">Start fresh</string>
+  <string id="20045">Enter master mode</string>
+  <string id="20046">Leave master mode</string>
+  <string id="20047">Create profile '%s' ?</string>
+  <string id="20048">Start with fresh settings</string>
+  <string id="20049">Best available</string>
+  <string id="20050">Auto-switch between 16x9 and 4x3</string>
+  <string id="20051">Treat stacked files as single file</string>
+  <string id="20052">Caution</string>
+  <string id="20053">Left master mode</string>
+  <string id="20054">Entered master mode</string>
+  <string id="20055">Allmusic.com thumb</string>
+  <string id="20056"></string>
+  <string id="20057">Remove thumbnail</string>
+  <string id="20058">Add profile...</string>
+  <string id="20059">Query info for all albums</string>
+  <string id="20060">Media info</string>
+  <string id="20061">Separate</string>
+  <string id="20062">Shares with default</string>
+  <string id="20063">Shares with default (read only)</string>
+  <string id="20064">Copy default</string>
+  <string id="20065">Profile picture</string>
+  <string id="20066">Lock preferences</string>
+  <string id="20067">Edit profile</string>
+  <string id="20068">Login</string>
+  <string id="20069">Could not create folder</string>
+  <string id="20070">Profile directory</string>
+  <string id="20071">Start with fresh media sources</string>
+  <string id="20072">Make sure the selected folder is writable</string>
+  <string id="20073">and that the new folder name is valid</string>
+  <string id="20074">Content Rating</string>
+  <string id="20075">Enter master lock code</string>
+  <string id="20076">Ask for master lock code on startup</string>
+  <string id="20077">Skin settings</string>
+  <string id="20078">- no link set -</string>
+  <string id="20079">Enable animations</string>
+  <string id="20080">Disable RSS during music</string>
+  <string id="20081">Enable shortcut buttons</string>
+  <string id="20082">Show programs in main menu</string>
+  <string id="20083">Show music info</string>
+  <string id="20084">Show weather info</string>
+  <string id="20085">Show system info</string>
+  <string id="20086">Show available disc space C: E: F:</string>
+  <string id="20087">Show available disc space E: F: G:</string>
+  <string id="20088">Weather info</string>
+  <string id="20089">Drive space free</string>
+  <string id="20090">Enter the name of an existing share</string>
+  <string id="20091">Lock code</string>
+  <string id="20092">Load profile</string>
+  <string id="20093">Profile name</string>
+  <string id="20094">Media sources</string>
+  <string id="20095">Enter profile lock code</string>
+  <string id="20096">Login screen</string>
+  <string id="20097">Fetching album info</string>
+  <string id="20098">Fetching info for album</string>
+  <string id="20099">Can't rip CD or track while playing from CD</string>
+  <string id="20100">Master lock code and settings</string> 
+  <string id="20101">Entering master lock code always enables master mode</string>
+  <string id="20102">or copy from default?</string>
+  <string id="20103">Save changes to profile?</string>
+  <string id="20104">Old settings found.</string>
+  <string id="20105">Do you want to use them?</string>
+  <string id="20106">Old media sources found.</string>
+  <string id="20107">Separate (locked)</string>
+  <string id="20108">Root</string>
+  <string id="20109">- Zoom</string>
+  <string id="20110">UPnP settings</string>
+  <string id="20111">Autostart UPnP client</string>
+  <string id="20112">Last login: %s</string>
+  <string id="20113">Never logged on</string>
+  <string id="20114">Profile %i / %i</string>
+  <string id="20115">User login / Select a profile</string>
+  <string id="20116">Use lock on login screen</string>
+  <string id="20117">Incorrect username or password, please try again.</string>
+  <string id="20118">This requires the master lock to be set.</string>
+  <string id="20119">Would you like to set it now?</string>
+  <string id="20120">Loading program information</string>
+  <string id="20121">Party on!</string>
+  <string id="20122">True</string>
+  <string id="20123">Mixing drinks</string>
+  <string id="20124">Filling glasses</string>
+  <string id="20125">Logged on as</string>
+  <string id="20126">Log off</string>
+  <string id="20128">Go to root</string>
+  <string id="20129">Weave</string>
+  <string id="20130">Weave (inverted)</string>
+  <string id="20131">Blend</string>
+  <string id="20132">Restart video</string>
+  <string id="20133">Edit network location</string>
+  <string id="20134">Remove network location</string>
+  <string id="20135">Do you want to scan the folder?</string>
+  <string id="20136">Memory unit</string>
+  <string id="20137">Memory unit mounted</string>
+  <string id="20138">Unable to mount memory unit</string>
+  <string id="20139">In port %i, slot %i</string>
+  <string id="20140">Lock screensaver</string>
+  <string id="20141">Set</string>
+  <string id="20142">Username</string>
+  <string id="20143">Enter password for</string>
+  <string id="20144">Shutdown timer</string>
+  <string id="20145">Shutdown interval (in minutes)</string>
+  <string id="20146">Started, shutdown in %im</string>
+  <string id="20147">Shutdown in 30 minutes</string>
+  <string id="20148">Shutdown in 60 minutes</string>
+  <string id="20149">Shutdown in 120 minutes</string>
+  <string id="20150">Custom shutdown timer</string>
+  <string id="20151">Cancel shutdown timer</string>
+  <string id="20152">Username and Password for %s</string>
+  <string id="20153">Browse...</string>
+  <string id="20154">Basic information</string>
+  <string id="20155">Storage information</string>
+  <string id="20156">Hard disk information</string>
+  <string id="20157">DVD-ROM information</string>
+  <string id="20158">Network information</string>
+  <string id="20159">Video information</string>
+  <string id="20160">Hardware information</string>
+  <string id="20161">Total</string>
+  <string id="20162">Used</string>
+  <string id="20163">of</string>
+  <string id="20164">Locking not supported</string>
+  <string id="20165">Not locked</string>
+  <string id="20166">Locked</string>
+  <string id="20167">Frozen</string>
+  <string id="20168">Requires reset</string>
+  <string id="20169">Week</string>
+  <string id="20170">Line</string>
+  <string id="20171">Windows network (SMB)</string>
+  <string id="20172">XBMSP server</string>
+  <string id="20173">FTP server</string>
+  <string id="20174">iTunes music share (DAAP)</string>
+  <string id="20175">UPnP server</string>
+  <string id="20176">Show video info</string>
+  <string id="20177">Done</string>
+  <string id="20178">Shift</string>
+  <string id="20179">Caps Lock</string>
+  <string id="20180">Symbols</string>
+  <string id="20181">Backspace</string>
+  <string id="20182">Space</string>
+  <string id="20183">Reload skin</string>
+  <string id="20184">Rotate using EXIF information</string>
+  <string id="20185">Use poster view styles for TV shows</string>
+  <string id="20186">Please wait</string>
+  <string id="20187">Backing up EEPROM</string>
+  <string id="20188">Backing up BIOS</string>
+  <string id="20189">Enable auto scrolling for plot &amp; review</string>
+  <string id="20190">Custom</string>
+  <string id="20191">Enable debug logging</string>
+  <string id="20192">Download additional info on library updates</string>
+  <string id="20193"></string>
+  <string id="20194">Default scraper</string>
+  <string id="20195">Change scraper</string>
+  <string id="20196">Export music library</string>
+  <string id="20197">Import music library</string>
+  <string id="20198">No artist found!</string>
+  <string id="20199">Downloading artist info failed</string>
+
+  <!-- string id's 20200 thru 20211 are reserved for speedstrings (LocalizeStrings.cpp)-->
+  
+  <string id="20250">Party on! (videos)</string>
+  <string id="20251">Mixing drinks (videos)</string>
+  <string id="20252">Filling glasses (videos)</string>
+  <string id="20253">Restart album</string>
+
+  <string id="20300">Web server directory (HTTP)</string>
+  <string id="20301">Web server directory (HTTPS)</string>
+  <string id="20302">Unable to write to folder:</string>
+  <string id="20303">Do you want to skip and proceed?</string>
+  <string id="20304">RSS Feed</string>
+  <string id="20305"></string>
+
+  <string id="20306">Unknown. Please add MD5 from xbmc.log to BiosIDs.ini.</string>
+  <string id="20307">Secondary DNS</string>
+  <string id="20308">DHCP server:</string>
+  <string id="20309">Make new folder</string>
+  <string id="20310">Dim LCD on playback</string>
+  <string id="20311">Unknown or onboard (protected)</string>
+  <string id="20312">Dim LCD on paused</string>
+  <string id="20313">Switch LED back on if paused</string>
+  <string id="20314">Videos - Library</string>
+  <string id="20315">Game saves</string>
+  <string id="20316">Sort by: ID</string>
+  <string id="20317">Download saves</string>
+  <string id="20318">Save game installed On HDD</string>
+  <string id="20319">Failed to download game save</string>
+  <string id="20320">Select game save to download and install</string>
+  <string id="20321">No online save found for specified game</string>
+  <string id="20322">Go to game save</string>
+  <string id="20323">Game saves</string>
+  <string id="20324">Play part...</string>
+  <string id="20325">Calibration reset</string>
+  <string id="20326">This will reset the calibration values for %s</string>
+  <string id="20327">to it's default values.</string>
+  <string id="20328">Browse for destination</string>
+  <string id="20329"></string>
+  <string id="20330">Use folder names for lookups</string>
+  <string id="20331">File</string>
+  <string id="20332">Use file or folder names in lookups?</string>
+  <string id="20333">Set content</string>
+  <string id="20334">Folder</string>
+  <string id="20335">Look for content recursively?</string>
+  <string id="20336">Unlock sources</string>
+  <string id="20337">Actor</string>
+  <string id="20338">Movie</string>
+  <string id="20339">Director</string>
+  <string id="20340">Do you want to remove all items within</string>
+  <string id="20341">this path from the library?</string>
+  <string id="20342">Movies</string>
+  <string id="20343">TV shows</string>
+  <string id="20344">This directory contains</string>
+  <string id="20345">Run automated scan</string>
+  <string id="20346">Scan recursively</string>
+  <string id="20347">as</string>
+  <string id="20348">Directors</string>
+  <string id="20349">No video files found in this path!</string>
+  <string id="20350">votes</string>
+  <string id="20351">TV show information</string>
+  <string id="20352">Episode information</string>
+  <string id="20353">Loading TV show details</string>
+  <string id="20354">Fetching episode guide</string>
+  <string id="20355">Loading info for episodes in directory</string>
+  <string id="20356">Select TV show:</string>
+  <string id="20357">Enter the TV show name</string>
+  <string id="20358">Season %i</string>
+  <string id="20359">Episode</string>
+  <string id="20360">Episodes</string>
+  <string id="20361">Loading episode details</string>
+  <string id="20362">Remove episode from library</string>
+  <string id="20363">Remove TV show from library</string>
+  <string id="20364">TV show</string>
+  <string id="20365">Episode plot</string>
+  <string id="20366">* All seasons</string>
+  <string id="20367">Hide watched</string>
+  <string id="20368">Prod code</string>
+  <string id="20369">Hide plot for unwatched items</string>
+  <string id="20370">* Hidden to prevent spoilers *</string>
+  <string id="20371">Set season thumb</string>
+  <string id="20372">Season image</string>
+  <string id="20373">Season</string>
+  <string id="20374">Downloading movie information</string>
+  <string id="20375">Unassign content</string>
+  <string id="20376"></string>
+  <string id="20377">Refresh TV show information</string>
+  <string id="20378">Refresh info for all episodes?</string>
+  <string id="20379">Selected folder contains a single TV show</string>
+  <string id="20380">Exclude selected folder from scans</string>
+  <string id="20381">Specials</string>
+  <string id="20382"></string>
+  <string id="20383">Selected folder contains a single video</string>
+  <string id="20384">Link to TV show</string>
+  <string id="20385">Remove link to TV show</string>
+  <string id="20386">Recently added movies</string>
+  <string id="20387">Recently added episodes</string>
+  <string id="20388">Studios</string>
+  <string id="20389">Music videos</string>
+  <string id="20390">Recently added music videos</string>
+  <string id="20391">Music video</string>
+  <string id="20392">Remove music video from library</string>
+  <string id="20393">Music video information</string>
+  <string id="20394">Loading music video information</string>
+  <string id="20395">Mixed</string>
+  <string id="20396">Go to albums by artist</string>
+  <string id="20397">Go to album</string>
+  <string id="20398">Play song</string>
+  <string id="20399">Go to music videos from album</string>
+  <string id="20400">Go to music videos by artist</string>
+  <string id="20401">Play music video</string>
+  <string id="20402"></string>
+  <string id="20403">Set actor thumb</string>
+  <string id="20404"></string>
+  <string id="20405">Remove episode bookmark</string>
+  <string id="20406">Set episode bookmark</string>
+  <string id="20407">Scraper settings</string>
+  <string id="20408">Downloading music video information</string>
+  <string id="20409">Downloading TV show information</string>
+  <string id="20410">Trailer</string>
+  <string id="20411">Flatten</string>
+  <string id="20412">Flatten TV shows</string>
+  <string id="20413">Get Fanart</string>
+  <string id="20414">Show Fanart in video and music libraries</string>
+  <string id="20415">Scanning for new content</string>
+  <string id="20416">First aired</string>
+  <string id="20417">Writer</string>
+  <string id="20418">Clean file and folder names</string>
+  <string id="20419"></string>
+  <string id="20420">Never</string>
+  <string id="20421">If only one season</string>
+  <string id="20422">Always</string>
+  <string id="20423">Has trailer</string>
+  <string id="20424">False</string>
+  <string id="20425">Fanart slideshow</string>
+  <string id="20426">Export to a single file or separate</string>
+  <string id="20427">files per entry?</string>
+  <string id="20428">Single file</string>
+  <string id="20429">Separate</string>
+  <string id="20430">Export thumbs and fanart?</string>
+  <string id="20431">Overwrite old files?</string>
+  <string id="20432">Exclude path from library updates</string> 
+  <string id="20433">Extract media metadata information</string>
+  <string id="20434">Sets</string>
+  <!-- up to 21329 is reserved for the video db !! !-->
+
+  <string id="21330">Show hidden files and directories</string>
+  
+  <string id="21331">TuxBox client</string>
+  <string id="21332">WARNING: Target TuxBox device is in recording-mode!</string>
+  <string id="21333">The stream will be stopped!</string>
+  <string id="21334">Zap to channel: %s failed!</string>
+  <string id="21335">Are you sure to start the stream?</string>
+  <string id="21336">Connecting to: %s</string>
+  <string id="21337">TuxBox device</string>
+  <!-- up to 21355 is reserved for the TuxBox Client!! !-->
+  
+  <string id="21356">UPnP music</string>
+  <string id="21357">UPnP video</string>
+  <string id="21358">UPnP photos</string>
+  <string id="21359">Add media share...</string>
+  <string id="21360">Enable UPnP server</string>
+  <string id="21361">Manage UPnP music shares</string>
+  <string id="21362">Manage UPnP video shares</string>
+  <string id="21363">Manage UPnP picture shares</string>
+  <string id="21364">Edit media share</string>
+  <string id="21365">Remove media share</string>
+  <string id="21366">Custom subtitle directory</string>
+  <string id="21367">Movie &amp; alternate subtitle directory</string>
+  
+  <string id="21369">Enable mouse</string>
+  <string id="21370">Play navigation sounds during media playback</string>
+  <string id="21371">Thumbnail</string>
+  <string id="21372">Forced DVD player region</string>
+  <string id="21373">Video hardware</string>
+  <string id="21374">Video aspect</string>
+  <string id="21375">Normal</string>
+  <string id="21376">Letterbox</string>
+  <string id="21377">Widescreen</string>
+  <string id="21378">Enable 480p</string>
+  <string id="21379">Enable 720p</string>
+  <string id="21380">Enable 1080i</string>
+  <string id="21381">Enter name of new playlist</string>
+  <string id="21382">Disable add source buttons in file lists</string>
+  <string id="21383">Enable scrollbars</string>
+  <string id="21384">Make watched filtering a toggle in video library</string>
+  <string id="21385">Open</string>
+  <string id="21386">Acoustic management level</string>
+  <string id="21387">Fast</string>
+  <string id="21388">Quiet</string>
+  <string id="21389">Enable custom background</string>  
+  <string id="21390">Power management level</string>
+  <string id="21391">High power</string>
+  <string id="21392">Low power</string>
+  <string id="21393">High standby</string>
+  <string id="21394">Low standby</string>
+  <string id="21395">Unable to cache files bigger than 4GB</string>
+  <string id="21396">Chapter</string>
+  <string id="21397">High quality pixel shader v2</string>
+  <string id="21398">Enable playlist at startup</string>
+  <string id="21399">Use tween animations</string>
+  <string id="21400">contains</string>
+  <string id="21401">does not contain</string>
+  <string id="21402">is</string>
+  <string id="21403">is not</string>
+  <string id="21404">starts with</string>
+  <string id="21405">ends with</string>
+  <string id="21406">greater than</string>
+  <string id="21407">less than</string>
+  <string id="21408">after</string>
+  <string id="21409">before</string>
+  <string id="21410">in the last</string>
+  <string id="21411">not in the last</string>
+  <string id="21412">Scrapers</string>
+  <string id="21413">Default movie scraper</string>
+  <string id="21414">Default tvshow scraper</string>
+  <string id="21415">Default musicvideo scraper</string>
+  <string id="21416">Enable fallback based on scraper language</string>
+  <string id="21417">- Scraper settings</string>
+  <string id="21418">Multilingual</string>
+
+  <string id="21420">Value to match</string>
+  <string id="21421">Smart playlist rule</string>
+  <string id="21422">Match items where</string>
+  <string id="21423">New rule...</string>
+  <string id="21424">Items must match</string>
+  <string id="21425">all of the rules</string>
+  <string id="21426">one or more of the rules</string>
+  <string id="21427">Limit to</string>
+  <string id="21428">No limit</string>
+  <string id="21429">Order by</string>
+  <string id="21430">ascending</string>
+  <string id="21431">descending</string>
+  <string id="21432">Edit smart playlist</string>
+  <string id="21433">Name of the playlist</string>
+  <string id="21434">Find items where</string>
+  <string id="21435">Edit</string>
+  <string id="21436">%i items</string>
+  <string id="21437">New smart playlist...</string>
+  <string id="21438">%c Drive</string>
+  <string id="21439">Edit party mode rules</string>
+  <string id="21440">Home folder</string>
+  <string id="21441">Watched count</string>
+  <string id="21442">Episode title</string>
+  <string id="21443">Video resolution</string>
+  <string id="21444">Audio channels</string>
+  <string id="21445">Video codec</string>
+  <string id="21446">Audio codec</string>
+  <string id="21447">Audio language</string>
+  <string id="21448">Subtitle language</string>
+  <string id="21449">Remote control sends keyboard presses</string>
+
+  <string id="21800">File name</string>
+  <string id="21801">File path</string>
+  <string id="21802">File size</string>
+  <string id="21803">File date/time</string>
+  <string id="21804">Slide index</string>
+  <string id="21805">Resolution</string>
+  <string id="21806">Comment</string>
+  <string id="21807">Colour/B&amp;W</string>
+  <string id="21808">JPEG process</string>
+
+  <string id="21820">Date/Time</string>
+  <string id="21821">Description</string>
+  <string id="21822">Camera make</string>
+  <string id="21823">Camera model</string>
+  <string id="21824">EXIF comment</string>
+  <string id="21825">Firmware</string>
+  <string id="21826">Aperture</string>
+  <string id="21827">Focal length</string>
+  <string id="21828">Focus distance</string>
+  <string id="21829">Exposure</string>
+  <string id="21830">Exposure time</string>
+  <string id="21831">Exposure bias</string>
+  <string id="21832">Exposure mode</string>
+  <string id="21833">Flash used</string>
+  <string id="21834">White-balance</string>
+  <string id="21835">Light source</string>
+  <string id="21836">Metering mode</string>
+  <string id="21837">ISO</string>
+  <string id="21838">Digital zoom</string>
+  <string id="21839">CCD width</string>
+  <string id="21840">GPS latitude</string>
+  <string id="21841">GPS longitude</string>
+  <string id="21842">GPS altitude</string>
+  <string id="21843">Orientation</string>
+
+  <string id="21860">Supplemental categories</string>
+  <string id="21861">Keywords</string>
+  <string id="21862">Caption</string>
+  <string id="21863">Author</string>
+  <string id="21864">Headline</string>
+  <string id="21865">Special instructions</string>
+  <string id="21866">Category</string>
+  <string id="21867">Byline</string>
+  <string id="21868">Byline title</string>
+  <string id="21869">Credit</string>
+  <string id="21870">Source</string>
+  <string id="21871">Copyright notice</string>
+  <string id="21872">Object name</string>
+  <string id="21873">City</string>
+  <string id="21874">State</string>
+  <string id="21875">Country</string>
+  <string id="21876">Original Tx Reference</string>
+  <string id="21877">Date created</string>
+  <string id="21878">Copyright flag</string>
+  <string id="21879">Country code</string>
+  <string id="21880">Reference service</string>
+  <string id="21881">Enable UPnP renderer</string>
+  <string id="21882">Attempt to skip introduction before DVD menu</string>
+  <string id="21883">Ripped audio CDs</string>
+  <string id="21884">Query info for all artists</string>
+  <string id="21885">Downloading album information</string>
+  <string id="21886">Downloading artist information</string>
+  <string id="21887">Biography</string>
+  <string id="21888">Discography</string>
+  <string id="21889">Searching artist</string>
+  <string id="21890">Select artist</string>
+  <string id="21891">Artist information</string>
+  <string id="21892">Instruments</string>
+  <string id="21893">Born</string>
+  <string id="21894">Formed</string>
+  <string id="21895">Themes</string>
+  <string id="21896">Disbanded</string>
+  <string id="21897">Died</string>
+  <string id="21898">Years active</string>
+  <string id="21899">Label</string>
+  <string id="21900">Born/Formed</string>
+ 
+  <!-- strings 21900 thru 21999 reserved for slideshow info -->
+
+  <string id="22000">Update library on startup</string>
+  <string id="22001">Always update library in background</string>
+  <string id="22002">- DNS suffix</string>
+  <string id="22003">Enable edit and decision lists</string>
+  <string id="22004">Delayed by: %2.3fs</string>
+  <string id="22005">Ahead by: %2.3fs</string>
+  <string id="22006">Subtitle offset</string>
+  <string id="22007">OpenGL vendor:</string>
+  <string id="22008">OpenGL renderer:</string>
+  <string id="22009">OpenGL version:</string>
+  <string id="22010">GPU temperature:</string>
+  <string id="22011">CPU temperature:</string>
+  <string id="22012">Total memory</string>
+  <string id="22013">Profile data</string>
+  <string id="22014">Use dim if paused during video playback</string>
+  <string id="22015">All recordings</string>
+  <string id="22016">By title</string>
+  <string id="22017">By group</string>
+  <string id="22018">Live channels</string>
+  <string id="22019">Recordings by title</string>
+  <string id="22020">Guide</string>
+  <string id="22021">Allowed error in aspect ratio (%)</string>
+  <string id="22022">Include video files in listings</string>
+
+  <!-- strings 22030 thru 22060 reserved for karaoke -->
+  <string id="22030">Font</string>
+  <string id="22031">- Size</string>
+  <string id="22032">- Colours</string>
+  <string id="22033">- Charset</string>
+  <string id="22034">Export karaoke titles as HTML</string>
+  <string id="22035">Export karaoke titles as CSV</string>
+  <string id="22036">Import karaoke titles...</string>
+  <string id="22037">Auto popup song selector</string>
+  <string id="22038">Export karaoke titles...</string>
+  <string id="22039">Enter song number</string>
+  <string id="22040">white/green</string>
+  <string id="22041">white/red</string>
+  <string id="22042">white/blue</string>
+  <string id="22043">black/white</string>
+
+  <string id="23000">Weather plugin</string>
+  <string id="23001">- Plugin settings</string>
+
+  <string id="23050">Activate Teletext</string>
+
+  <!-- strings 23100 thru 23150 reserved for external player -->
+  <string id="23100">External Player Active</string>
+  <string id="23101">Click OK to terminate the player</string>
+  <string id="23102"></string>
+  <string id="23103"></string>
+  <string id="23104">Click OK when playback has ended</string>
+  <string id="23105"></string>
+  <string id="23106"></string>
+
+  <!-- strings 29800 thru 29998 reserved strings used only in the default Project Mayhem III skin and not c++ code -->
+  <string id="29800">Library Mode</string>
+  <string id="29801">QWERTY keyboard</string>
+  <string id="29802">Passthrough Audio in use</string>
+  
+  <string id="29999">Apply flicker filter setting to games</string>
+
+  <!-- strings 30000 thru 30999 reserved for plugins and plugin settings -->
+  <!-- strings 31000 thru 31999 reserved for skins -->
+  <!-- strings 32000 thru 32999 reserved for scripts -->
+  
+  <!-- strings 33000 thru 33999 reserved for common strings used in addons -->
+  <string id="33001">Trailer quality</string>
+  <string id="33002">Stream</string>
+  <string id="33003">Download</string>
+  <string id="33004">Download &amp; play</string>
+  <string id="33005">Download &amp; save</string>
+  <string id="33006">Today</string>
+  <string id="33007">Tomorrow</string>
+  <string id="33008">Saving</string>
+  <string id="33009">Copying</string>
+  <string id="33010">Set download directory</string>
+  <string id="30011">Search duration</string>
+  <string id="33012">Short</string>
+  <string id="33013">Long</string>
+  <string id="33014">Use DVD player instead of regular player</string>
+  <string id="33015">Ask for download before playing video</string>
+  <string id="33016">Clips</string>
+  <string id="33017">Restart plugin to enable</string>
+  <string id="33018">Tonight</string>
+  <string id="33019">Tomorrow Night</string>
+  <string id="33020">Condition</string>
+  <string id="33021">Precipitation</string>
+  <string id="33022">Precip</string>
+  <string id="33023">Humid</string>
+  <string id="33024">Feels</string>
+  <string id="33025">Observed</string>
+  <string id="33026">Departure from normal</string>
+  <string id="33027">Sunrise</string>
+  <string id="33028">Sunset</string>
+  <string id="33029">Details</string>
+  <string id="33030">Outlook</string>
+  <string id="33031">Coverflow</string>
+  <string id="33032">Translate text</string>
+  <string id="33033">Map list %s category</string>
+  <string id="33034">36 Hour</string>
+  <string id="33035">Maps</string>
+  <string id="33036">Hourly</string>
+  <string id="33037">Weekend</string>
+  <string id="33038">%s day</string>
+  <string id="33049">Alert</string>
+  <string id="33050">Alerts</string>
+  <string id="33051">Choose Your</string>
+  <string id="33052">Check</string>
+  <string id="33053">Configure the</string>
+  <string id="33054">Seasons</string>
+  <string id="33055">Use your</string>
+  <string id="33056">Watch your</string>
+  <string id="33057">Listen to</string>
+  <string id="33058">View your</string>
+  <string id="33059">Configure the</string>
+  <string id="33060">Power</string>
+  <string id="33061">Menu</string>
+  <string id="33062">Play the</string>
+  <string id="33063">Options</string>
+  <string id="33065">Editor</string>
+  <string id="33066">About your</string>
+  <string id="33067">Star rating</string>
+  <string id="33068">Background</string>
+  <string id="33069">Backgrounds</string>
+  <string id="33070">Custom background</string>
+  <string id="33071">Custom backgrounds</string>
+  <string id="33072">View Readme</string>
+  <string id="33073">View Changelog</string>
+  <string id="33074">This version of %s requires an</string>
+  <string id="33075">XBMC revision of %s or greater to run.</string>
+  <string id="33076">Please update XBMC.</string>
+  <string id="33077">No data found!</string>
+  <string id="33078">Next page</string>
+
+  <!-- strings 50000+ are reserved for Boxee -->
+  <string id="50000">Add New...</string>
+  <string id="50001">Network configuration failed.</string>
+  <string id="50002">Make sure your settings are correct and try again.</string>
+  <string id="50003">Network configuration successful.</string>
+  <string id="50004">However, the Internet is not reachable.</string>
+  <string id="50005">Local Content</string>
+  <string id="50006">No files found at source</string>
+  <string id="50007">No devices found</string>
+  <string id="50008">Display Aspect Ratio and Overscan</string>
+  <string id="50009">Restore Defaults</string>
+  <string id="50010">Overscan</string>
+  <string id="50011">Aspect Ratio</string>
+  <string id="50012">Advanced Calibration</string>
+
+  <string id="51000">Name</string>
+  <string id="51001">Date</string>
+  <string id="51002">Internet Media</string><!--RSS Feed-->
+  <string id="51003">Loading...</string><!--Loading feed-->
+  <string id="51004">Missing Sources</string>
+  <string id="51005">No Sources are defined for your media.</string>
+  <string id="51006">Would you like to define them now?</string>
+  <string id="51007">Eject</string>
+  <string id="51008">Stop</string>
+  <string id="51009">Play</string>
+  <string id="51010">Browse</string>
+  <!--string id="51010">Can't get boxee feed</string-->
+  <string id="51011">DVD Drive</string>
+
+  <string id="51012">Friends (loading)</string>
+  <string id="51013">Friends (%d)</string>
+  <string id="51014">Failed to read RSS feed</string>
+  <string id="51015">Please check your cable connections and make sure the receiver/TV is not muted.</string>
+  <string id="51016">If you still can't hear any sound please check the Troubleshooting page on boxee.tv/troubleshooting.</string>
+  <string id="51018">Network Key must contain only</string>
+  <string id="51019">hexadecimal characters</string>
+  <string id="51020">Media Source</string>
+  <string id="51021">Are you sure you want to delete:</string>
+  <string id="51022">Video Source</string>
+  <string id="51023">Music Source</string>
+  <string id="51024">Photos Source</string>
+  <string id="51025">Are you sure you want to delete this[CR]source?</string>
+  <string id="51026">Starting Download...</string>
+  <string id="51027">Download</string>
+  <string id="51028">Add download to queue?</string>
+  <string id="51029">Download Exists</string>
+  <string id="51030">That download is already queued</string>
+  <string id="51031">Overwrite existing download?</string>
+  <string id="51032">Select All</string>
+  <string id="51033">Sharing...</string>
+  <string id="51034">Rating...</string>
+  <string id="51035">A source with the same name already exists</string>
+  <string id="51036">Source name must not be empty</string>
+  <string id="51037">Media source successfully added</string>
+  <string id="51038">Media source successfully updated</string>
+  <string id="51039">Media source successfully deleted</string>
+  <string id="51040">At least one Media Type must be selected</string>
+  <string id="51041">Source path must not be empty</string>
+  <string id="51042">At least one scan type must be[CR]selected</string>
+  <string id="51043">Media source will be rescanned</string>
+  <string id="51044">Manually Enter IP / Name...</string>
+  
+  <string id="51050">Login</string>
+  <string id="51051">Boxee can't connect to the internet.</string>
+  <string id="51052">You can still use Boxee but some of its features</string>
+  <string id="51053">will not be available</string>
+  <string id="51054">Internet connection is unavailable.</string>
+  <string id="51055">Login could not add a new user...</string>
+  <string id="51056">Please check your Internet connection.</string>
+  <string id="51057">--------------------------------------</string>
+  <string id="51058">Username field is empty</string>
+  <string id="51059">Password field is empty</string>
+  <string id="51070">Back</string>
+  <string id="51075">Login action failed.</string>
+  
+  <!--  Genres -->
+  <string id="51100">Action</string>
+  <string id="51101">Adventure</string>
+  <string id="51102">Animation</string>
+  <string id="51103">Biography</string>
+  <string id="51104">Comedy</string>
+  <string id="51105">Crime</string>
+  <string id="51106">Documentary</string>
+  <string id="51107">Drama</string>
+  <string id="51108">Family</string>
+  <string id="51109">Fantasy</string>
+  <string id="51110">Film-Noir</string>
+  <string id="51111">Game Show</string>
+  <string id="51112">History</string>
+  <string id="51113">Horror</string>
+  <string id="51114">Music</string>
+  <string id="51115">Musical</string>
+  <string id="51116">Mystery</string>
+  <string id="51117">News</string>
+  <string id="51118">Reality-TV</string>
+  <string id="51119">Romance</string>
+  <string id="51120">Sci-Fi</string>
+  <string id="51121">Short</string>
+  <string id="51122">Sport</string>
+  <string id="51123">Talk-Show</string>
+  <string id="51124">Thriller</string>
+  <string id="51125">War</string>
+  <string id="51126">Western</string>
+  <!--  Views -->
+  <string id="51200">2 Rows</string>
+  <string id="51201">3 Rows</string>
+  <string id="51202">Detailed</string>
+  <string id="51203">Line</string>
+
+  <!-- sources -->
+<!--  <string id="51300">Settings / Media Sources / Local / Add New Source</string> -->
+  <string id="51300">Settings / Media Sources / Add New Source</string> 
+  <string id="51301">Settings / Media Sources / Network / Add New Source</string>
+  <string id="51302">Network</string>
+  <string id="51303">Settings / Media Sources / Network Applications / Add New Source</string>
+  <string id="51304">Settings / Media Sources / Manually Add Sources / Add New Source</string>
+  <string id="51350">Removable</string>
+  <!-- browse screen labels -->
+  <string id="51400">Recommendations</string>
+  <string id="51401">Friends Activity</string>
+  <string id="51402">Recently Added</string>
+  <string id="51403">Recently Used</string>
+  <string id="51404">Friends</string>
+  <string id="51405">Activity</string>
+  <string id="51406">My Sources</string>
+  <string id="51407">Albums</string>
+  <string id="51408">Artists</string>
+  <string id="51409">Applications / Music</string>
+  <string id="51410">My Videos</string>
+  <string id="51411">Applications / Video</string>
+  <string id="51412">My Photos</string>
+  <string id="51413">Applications / Photos</string>
+  <string id="51414">Unresolved</string>
+  <string id="51415">Applications</string>
+  <string id="51416">Queue</string>
+
+  <!-- settings screen labels -->
+  <string id="51500">BOXEE</string>
+  <string id="51501">Startup</string>
+  <string id="51502">Start BOXEE on login</string>
+  <string id="51503">Run RTorrent client when BOXEE starts</string>
+  <string id="51504">Disable Remote</string>
+  <string id="51505">Are you sure you want to disable the apple remote?[CR]If you choose OK, the remote will stop working.</string>
+  <string id="51506"></string>
+  <!--string id="51507">Fullscreen</string-->
+  <string id="51507"></string>
+  <string id="51508">Press %s to return to fullscreen mode</string>
+  <string id="51509">Enter movie name...</string>
+  <string id="51510">Resolving...</string>
+  <string id="51511">Enter album title and artist name separated by comma...</string>
+  <string id="51512">Enter series title, season and episode numbers separated by comma...</string>
+  <string id="51513">Media Shares</string>
+  <string id="51514">This folder is not under any media share</string>
+  <string id="51515">Album added</string>
+  <string id="51516">Video added</string>
+  <string id="51517">Movie title</string>
+  <string id="51518">TV Show title, Season, Episode</string>
+  <string id="51519">Album, Artist</string>
+  <string id="51520">Error</string>
+  <string id="51521">Could not add movie.</string>
+  <string id="51522">Could not get movie details</string>
+  <string id="51523">Enable IR Remote Server Suite remote support</string>
+  <string id="51524">Show options popup at end of playback</string>
+  <string id="51525">Screen</string>
+  <string id="51526">Sounds</string>
+  <string id="51527">Regional &amp; Language</string> 
+  <string id="51528">Playback</string> 
+  <string id="51529">Music Visualisation</string> 
+  <string id="51530">Content Filtering</string> 
+  <string id="51531">Waiting to be scanned</string> 
+  <string id="51532">Scanning</string> 
+  <string id="51533">Last Scanned %s</string> 
+  <string id="51534">[COLOR red]Disconnected[/COLOR]</string> 
+  <string id="51535">Identifying</string>
+  <string id="51536">%d file found</string>
+  <string id="51537">%d file found. %d missing identity</string>
+  <string id="51538">%d files found</string>
+  <string id="51539">%d files found. %d missing identity</string>
+  
+  <string id="51550">Local Sources</string> 
+  <string id="51551">Media</string> 
+
+  <string id="51560">Erase DB</string>
+  <string id="51561">Media database will be erased</string>
+  <string id="51562">Clean Old Thumbnails</string>
+  <string id="51563">Do you want to clean old thumbnails?</string>
+
+  <!-- Error messages -->
+  <string id="51600">Loading Error</string>
+  <string id="51601">Failed to retrieve data</string>
+  <string id="51602">Resource is unavailable</string>
+  <string id="51603">User already exists</string>
+  <string id="51604">Are you sure this is not the correct movie?</string>
+  <string id="51605">Path is not available</string>
+  <string id="51606">No friends were chosen</string>
+  <string id="51607">Could not connect to last.fm</string>
+  <string id="51608">Please make sure username and password</string>
+  <string id="51609">are set correctly </string>
+
+  <!-- Player Error messages -->
+  <string id="51670">Action is not supported in this video</string>
+  <string id="51671">Pausing this video is not supported</string>
+  <string id="51672">Seeking in this video is not supported</string>
+  <string id="51673">Changing volume in this video is not supported</string>
+
+  <!-- boxee_add_source_main -->
+  <string id="51700">Settings-&gt;Media Sources</string>
+  <string id="51701">Please specify the locations in which your videos, music and photos are stored.[CR]BOXEE will automatically scan the specified folders for media.</string>
+  <string id="51702">Local Videos</string>
+  <string id="51703">Local Music</string>
+  <string id="51704">Local Photos</string>
+
+  <!-- boxee_browse menu -->
+  <string id="51710">Sort</string>
+  <string id="51711">View</string>
+  <string id="51712">Browse</string>
+  <string id="51713">Local Media</string>
+  <string id="51714">Add[CR]Source</string>  
+
+
+  <!-- boxee_friends_list -->
+  <string id="51720">Add / Manage</string>
+  
+
+  <!-- boxee_loading_media_dialog -->
+  <string id="51735">Loading media.  Please wait.</string>
+    
+  <!-- boxee_logging_in -->
+  <string id="51740">Connecting...</string>
+  
+  <!-- boxee_main_menu -->
+  <string id="51750">What's New</string>
+  <string id="51751">My Videos</string>
+  <string id="51752">Internet Videos</string>
+  <string id="51753">My Music</string>
+  <string id="51754">Internet Music</string>
+  <string id="51755">My Photos</string>
+  <string id="51756">Internet Photos</string>
+  <string id="51757">Profile</string>
+  <string id="51758">Downloads</string>
+  <string id="51759">CD/DVD</string>
+  <string id="51760">Exit</string>
+  
+  <!-- boxee_media_source_list -->
+  <string id="51780">Settings / Media Sources</string>
+  <string id="51781">Menu</string>
+  <string id="51782">Add New Source</string>
+  
+  <!-- boxee_media_action -->
+  <string id="51792">More</string>
+  <string id="51793">Recognize</string>
+  <string id="51794">Music Videos</string>
+  <string id="51795">MTV Music Videos</string>
+  <string id="51796">Recognize (path not on source)</string>
+    
+  <!-- boxee_media_info -->
+  <string id="51801">Recommend</string>
+  <string id="51816">Read More</string>
+  <string id="51817">Rate</string>
+  <string id="51818">min</string>
+  
+  <!-- boxee_media_source_add_folder -->
+  <string id="51840">Select specific folder to monitor.</string>
+  
+  <!--boxee_media_source_add_share -->
+  <string id="51841">Available network shares or available local devices.</string>
+  <string id="51842">Rescan Sources</string>
+  
+  <!-- boxee_media_source_info -->
+  <string id="51845">Please choose a network location or a locally attached storage device.</string>
+  <string id="51846">Share Name</string>
+  <string id="51847">Share Location</string>
+  <string id="51848">Media Type</string>
+  <string id="51849">Never</string>
+  <string id="51850">Add/Update</string>
+  <string id="51851">BOXEE MAY NEED TO BE RESTARTED FOR THE CHANGES TO APPLY.</string>
+  <string id="51852">Type Of Scanning</string>
+  <string id="51853">Once</string>
+  <string id="51854">Daily</string>
+  <string id="51855">Monitored (Very Frequent)</string>
+  
+  <!-- boxee_video_context -->
+  <string id="51860">Playing</string>
+  <string id="51861">Paused</string>
+  <string id="51862">x2</string>
+  <string id="51863">x4</string>  
+  <string id="51864">x8</string> 
+  <string id="51865">x16</string>  
+  <string id="51866">x32</string>
+  <string id="51867">FFW</string>
+  <string id="51868">RWD</string>
+  <string id="51869">Information</string>
+
+  <!-- boxee_media_sources -->
+  <string id="51870">Add Sources</string>
+  <string id="51871">Add Network Sources</string>
+  <string id="51872">Network[CR]Applications</string>
+  <string id="51873">Manually[CR]Add Source</string>
+  <string id="51874">Unidentified Files</string>
+  
+  <!-- boxee_music_context -->
+  <string id="51880">Lyrics</string>
+  
+  <!-- boxee_rate -->
+  <string id="51886">Love it!</string>
+  <string id="51887">Naah...</string>
+  <string id="51888">Don't like it</string>
+  <string id="51889">It's OK</string>
+  <string id="51890">Like it</string>
+
+  <!-- boxee_user_logon -->
+  <string id="51891">Username</string>
+  <string id="51892">Password</string>
+  <string id="51893">Remember password</string>
+  <string id="51894">Host Name / IP</string>  <!-- boxee_wizard_add_source_manual -->
+  <string id="51895">email</string>
+  <string id="51896">choose[CR]username</string>
+  <string id="51897">choose[CR]password</string>
+
+  <!-- boxee_wizard_network_manual -->
+  <string id="51898">Step 03</string>
+  <string id="51899">Manual Configuration</string>
+  <string id="51900">Please fill the IP addresses in the fields below</string>
+  <string id="51901">IP Address</string>
+  <string id="51902">Router Address</string>
+  <string id="51903">DNS Address</string>
+  <string id="51904">Back</string>
+  <string id="51905">Next Step</string>
+
+
+  <!-- boxee_wizard_add_source -->
+  <string id="51906">Settings-&gt;Media Sources-&gt;Add Source-&gt;</string>
+  <string id="51907">Please choose a network location or a locally attached storage device.[CR]Once you choose the device please select the specific folder you would like to access and name it.</string>
+  <string id="51908">Local</string>
+  
+  <!-- boxee_wizard_add_source_manual -->
+  <string id="51909">IP Address / Host Name:</string>
+  
+  <!-- boxee_wizard_audio -->
+  <string id="51910">Wizard Audio</string>
+  <string id="51911">Step 02</string>
+  <string id="51912">Checking</string>
+  <string id="51913">Testing audio connections.[CR]Please wait till you hear several musical notes from your speakers.</string>
+  <string id="51914">No sound? Click here.</string>
+  
+  <!-- boxee_wizard_network -->
+  <string id="51915">Wizard Network</string>
+  <string id="51916">Please choose one of the network settings for your Internet and network connections.</string>
+  <string id="51917">Authentication type:</string>
+  <string id="51918">Finish</string>
+  
+  <!-- boxee_wizard_resolution -->  
+  <string id="51919">Wizard Resolution</string>
+  <string id="51920">Step 01</string>
+  <string id="51921">With some TV displays you can adjust the resolution of your screen to show images larger or smaller.</string>
+  <string id="51922">Standard Definition (SD)</string>
+  <string id="51923">High Definition (HD)</string>
+  <string id="51924">Calibrate</string>
+
+  <!-- boxee_wizard_set_source_name -->
+  <string id="51925">Confirm</string>
+  
+  <!-- boxee_browse_window -->
+  <string id="51926">[B]No results found.[/B][CR]Please note that some content may not be available in your area.[CR]Geographic settings can be changed under [COLOR yellow]Settings / Appearance / View Options[/COLOR]</string>
+  <string id="51927">No results found.[CR]Some content is not available in offline mode.</string>
+  
+  <!-- boxee_dialog_confirm -->
+  <string id="51928">Reverting back to original resolution in 6 seconds</string>
+  <string id="51929">No results found.</string>
+  
+  <!-- custom_boxee_credits -->
+  <string id="51937">Credits</string>
+  <string id="51938">BOXEE is based upon the inspiring work of the following individuals and groups making the XBMC Media Center over the past few years.</string>
+  <string id="51939">[B]Project Founders[/B][CR]Frodo, RUNTiME, d7o3g4q (a.k.a. Duo Egaq)[CR][B]Project Managers[/B][CR]Pike, Gamester17[CR][B]Developers[/B][CR]Jmarshall, Darkie, elupus, Bobbin007, GeminiServer, nad, MrC, c0diq, Chadoe, Ysbox, Kreet, Yuvalt, Vulkanr, D4rk, elan, LiquidIce629, Kraqh3d, Forza, Tslayer, Butcher, Guybrush, monkeyhapp, Spiff, Topfs2, WiSo, agathorn, davilla, DonJ, l.capriotti, malloc, monkeyman, Alcoheca, Rudd, VDRfan, wattazoum, c0diq, puh-puh, [XC]D-Ice[CR][B]Skinners / Graphic-artists[/B][CR]Jezz_X, SmokeHead, CHI3f, ChokeManiac[CR][B]Web Services[/B][CR]Granqvist, blittan [CR][B]Testers[/B][CR]DDay, TeknoJuce, Modhack, Donno, C-Quel, sCAPe, Nuka1195[CR][B]Visualisations[/B][CR]Dinomight, MrC, mynci, nmrs, questor[CR][B]Support[/B][CR]AlTheKiller, Bizzeh, Cocoliso, DOS4GW, Jedi79, MattAAron, No1CaNTeL, xLoial, DDay</string>
+  <string id="51940">[B]Wiki[/B][CR]Sho, Dankula, Loto_Bak, nimbles, No Good[CR][B]Great Patch Submitters[/B][CR]Lossol93, markeen, soepy, stgcolin, WiSO[CR][B]Translators[/B][CR]gamepc, omenpica, nightspirit, console-ombouw, tijmengozer, mrnice, Modhack, Bobbin007, sCAPe, Deezle, ceomr, vgs, oketz, ookladek, Team XboxKlub, djoens, napek, smuto, mvbm, que_, xsiluro, jose_t, blittan, moshe lugasi[CR][B]Code Credits[/B][CR]Adplug, ALSA, CxImage, FFmpeg, FileZilla (FTP-Server), FreeType (freetype.org), FriBiDi, GensAPU, GoAhead (Web-Server), liba52, libCDIO, libcurl, libdaap, libdca/libdts (VideoLan.org), libdvdcss, libdvdnav/dvdread, libfaad2 (AudioCoding.com), libid3tag, libLame, libmad, libmms, libmpcdec, libmpeg2, libOggVorbis, libSpeex, libvorbis, LZO, Matroska, MikMod, MXM, NoseFart, Platinum (UPnP-client), Python, Samba/libsmb (SMB/CIFS-client), SDL, Sidplay2, SNESAPU, SQLite, St-Sound Library, UnRAR (rarlab.com), xiph, XviD[CR][B]Team-Boxee &amp; Friends[/B][CR]andrew,amibd,amit,avneron,casey,eli,erez,gkamin,gadgetguy,gidonc,[CR]guy,idan,kadosh,kevin,oferlaor,omer,ori,marcel,MistralZ,rafim,riegersn,[CR]tsella,vulkanr,yes,yuvalt,zach,zvisha</string>
+  
+  <!-- custom_boxee_settings -->
+  <string id="51941">Update</string>
+  <string id="51942">Soft Reset</string>
+  
+  <string id="51943">Hard Reset</string>
+  <string id="51944">Clear media information from library (media files will remain intact)</string>
+  <string id="51945">Renetwork</string>
+  <string id="51946">Set background image</string>
+  <string id="51947">Set background images folder</string>
+  <string id="51948">UI screen names</string>
+  <string id="51949">Build Date</string>
+  <string id="51950">Version</string>
+  <string id="51952">Total Memory</string>
+  <string id="51954">Storage</string>
+  <string id="51955">of</string>
+  <string id="51956">Clear thumbnails library (media files will remain intact)</string>
+  <string id="51957">Reset background image</string>	
+  
+  <!-- dialog_button_menu -->
+  <string id="51964">Media is currently playing.[CR][CR]Would you like to restart playback?</string>
+  <string id="51965">Logout</string>
+
+  <!-- dialog_keyboard -->
+  <string id="51966">Virtual Keyboard</string>
+  <string id="51967">@</string>
+  
+  <!-- dialog_message -->
+  <string id="51968">Please check your cable connections and make sure the receiver/TV is not muted.[CR][CR]If you still can't hear any sound please check the Troubleshooting page on boxee.tv/troubleshooting</string>
+  
+  <!-- dialog_mute_bug -->
+  <string id="51969">Mute</string>
+  
+  <!-- dialog_numeric -->
+  <string id="51970">C</string>
+  <string id="51971">E</string>
+
+  <!-- dialog_plugin_settings -->
+  <string id="51972">Application Settings</string>
+  <string id="51973">Apply</string>
+
+  <!-- dialog_progress -->
+  <string id="51974">Loading... Please Wait.</string>
+  
+  <!-- includes -->
+  <string id="51998">loading your feed... just a sec :)</string>
+  <string id="51999">feed empty... add some friends :|</string>
+  <string id="52000">network disconnected...</string>
+  <string id="52001">Network is disconnected...</string>
+  <string id="52002">BOXEE server is unavailable...</string>
+  <string id="52003">Setup Wizard</string>
+  
+  <!-- home -->
+  <string id="52004">Welcome</string>
+  <string id="52005">What's New?</string>
+  <string id="52006">Recommendations</string>
+  <string id="52007">Friends Activity</string>
+  <string id="52008">Recently Added</string>
+  <string id="52009">Recently Used</string>
+  <string id="52010">Loading</string>
+  <string id="52011">Offline</string>
+  <string id="52012">View All</string>
+  <string id="52013">Online!</string>
+    
+  <!-- music_osd -->
+  <string id="52015">Music OSD</string>
+  
+  <!-- settings -->
+  <string id="52016">Application added successfully.[CR][CR]You can find it in the Applications section.</string>
+  <string id="52017">Could not add [CR][COLOR green]%s[/COLOR].</string>
+  <string id="52018">Could not upgrade application.</string>
+  <string id="52019">Would you like to remove the selected feed?</string>
+  <string id="52020">Feed loading failed.</string>
+  <string id="52021">Display and video playback settings</string>
+  <string id="52022">Music playback and internet radio settings</string>
+  <string id="52023">Slideshow settings</string>
+  <string id="52024">Network related settings</string>
+  <string id="52025">Look and feel and regional settings</string>
+  <string id="52026">Hardware and system settings</string>
+  <string id="52027">Detect and connect with local and network storage devices</string>
+  <string id="52028">Start initial setup wizard</string>
+  <string id="52029">All kinds...</string>
+  <string id="52030">Who's behind this sweet sweet stuff :)</string>
+  <string id="52031">Select an application from the list to set or change its settings.</string>
+  <string id="52032">Media Sources</string>
+  <string id="52033">Applications</string>
+  <string id="52034">Manage your applications and add new ones</string>
+  <string id="52035">Enter repository URL</string>
+  <string id="52036">Could not get repository information. Make sure the URL is correct and try again.</string>
+  <string id="52037">Would you like to remove [CR][COLOR green]%s[/COLOR] repository?</string>
+  <string id="52038">Would you like to add[CR][COLOR green]%s[/COLOR] application?</string>
+  <string id="52039">App Box</string>
+
+  <!-- Media Sources and Applications -->  
+
+  <!-- source types -->
+  <string id="52040">Music Sources</string>
+  <string id="52041">Video Sources</string>
+  <string id="52042">Picture Sources</string>
+  <string id="52043">Devices</string>
+  <string id="52044">Sources</string>
+  
+  <string id="52050"></string>
+  <string id="52051">Player action is currently not supported</string>
+
+  <string id="52090">Application [CR][COLOR green]%s[/COLOR] is already installed</string>
+
+  <string id="52100">Local Files</string>
+  <string id="52101">Available network shares or available local devices.</string>
+  <string id="52102">Rescan Sources</string>
+
+  <string id="52110">Now Playing</string>
+  <string id="52111">Favorites</string>
+
+  <string id="52112">Podcasts</string> <!-- boxee_main_menu -->
+  <string id="52115">Add parts</string>
+  <string id="52116">No results found</string>
+  <string id="52117">Enter movie or tv show title</string>
+  <string id="52118">Try to apply season details to all files in folder</string>
+  <string id="52119">Remove</string> <!-- boxee_manual_resolve -->
+  <string id="52120">Movie?</string> <!-- boxee_manual_resolve -->
+  <string id="52121">TV Show?</string> <!-- boxee_manual_resolve -->
+  <string id="52122">Album?</string> <!-- boxee_manual_resolve -->
+  <string id="52123">Remove?</string> <!-- boxee_manual_resolve -->
+  <string id="52124">Apply series</string> <!-- boxee_manual_resolve -->
+  <string id="52125">to entire folder</string> <!-- boxee_manual_resolve -->
+  <string id="52126">Identify Video</string> <!-- boxee_manual_resolve -->
+  <string id="52127">None of the above, leave unresolved</string> <!-- boxee_manual_resolve -->
+  <string id="52128">None of the above, just remove from library</string> <!-- boxee_manual_resolve -->
+  <string id="52129">Remove video from library</string> <!-- boxee_manual_resolve -->
+
+  <string id="52130">Wrong Video?</string> <!-- boxee_media_info -->
+  <string id="52131">Release</string> <!-- boxee_media_info -->
+  <string id="52132">Tags</string> <!-- boxee_media_info -->
+  <string id="52133">Taken By</string> <!-- boxee_media_info -->
+  <string id="52134">Date Taken</string> <!-- boxee_media_info -->
+  <string id="52135">Camera</string> <!-- boxee_media_info -->
+  <string id="52136">Model</string> <!-- boxee_media_info -->
+  <string id="52137">Aperture</string> <!-- boxee_media_info -->
+
+  <string id="52140">Feed added successfully.[CR][CR]You can find it in the Applications section.</string>
+
+  <string id="52150">Please choose from the following options to add new content sources to BOXEE.</string> <!-- boxee_media_source -->
+  <string id="52151">Applications</string> <!-- boxee_media_sources -->
+  <string id="52152">Manually</string> <!-- boxee_media_sources -->
+
+  <string id="52155">Add New Source</string> <!-- boxee_media_source_list -->
+
+  <string id="52160">by</string> <!-- boxee_music_context -->
+  <string id="52161">Channel</string> <!-- boxee_music_context -->
+  
+  <string id="52175">Wrong Album?</string> <!-- DialogAlbumInfo -->
+  <!-- slideshow -->
+  <string id="53001">by</string>
+
+  <!-- music visuallisation -->
+  <string id="53011">Channel</string>
+
+  <!-- tooltips -->
+  <string id="53021">you can go left to[CR]open the main menu</string>
+  <string id="53022">you can go right to[CR]open the browse menu</string>
+  <string id="53023">click here to switch to[CR]currently playing media</string>
+
+  <!-- keyboard -->
+  <string id="53031">QWERT</string>
+  <string id="53032">ABCD</string>
+
+  <!-- user guide -->
+  <string id="53118">User Guide</string>
+
+  <string id="53101">Navigation</string>
+  <string id="53102">Playback</string>
+  <string id="53103">Remote</string>
+  <string id="53104">Keyboard</string>
+  <string id="53105">Navigate using up, down, right and left.</string>
+  <string id="53106">Make a selection using Play/Pause.</string>
+  <string id="53107">Go back to the previous screen using MENU.</string>
+  <string id="53108">Navigate using the arrow keys.</string>
+  <string id="53109">Make a selection using the Enter key.</string>
+  <string id="53110">Use "\" to toggle between full screen and window.</string>
+  <string id="53111">Exit or Suspend by clicking S.</string>
+  <string id="53112">Click Esc to go back to the previous screen.</string>
+  <string id="53113">Go to the home screen by clicking H.</string>
+  <string id="53114">Control volume level using +/-</string>
+  <string id="53115">Show the OSD and make selections using Play/Pause.</string>
+  <string id="53116">Skip using the back and forwards buttons.</string>
+  <string id="53117">Hide the OSD using MENU.</string>
+  <string id="53119">Show the OSD and make selections using Enter.</string>
+  <string id="53120">Click X to stop playback.</string>
+  <string id="53121">Play / Pause using the Space bar.</string>
+  <string id="53122">Skip using the right/left arrow keys.</string>
+  <string id="53123">Hide the OSD by clicking Esc.</string>
+  <string id="53124">This is just a basic list of keyboard shortcuts. For the complete list, check out our FAQ on http://www.boxee.tv</string>
+
+  <string id="53130">Background Image</string>
+  <string id="53131">Please note that landscape images are recommended.</string>
+
+  <string id="53135">User Guide / Navigate</string>
+  <string id="53136">User Guide / Play</string>
+
+  <string id="53140">Library Status</string>
+  <string id="53141">Now scanning:</string>
+  <string id="53142">Idle</string>
+  <string id="53143">Folder summary:</string>
+  <string id="53144">No changes</string>
+  <string id="53145">Resolving:</string>
+  <string id="53146">Share Summary</string>
+  <string id="53147">Total:</string>
+  <string id="53148">Resolved:</string>
+  <string id="53149">Unresolved:</string>
+  <string id="53150">New:</string>
+  <string id="53151">Pending:</string>
+  <string id="53152">Aborted:</string>
+  <string id="53153">Unavailable:</string>
+
+  <string id="53155">My Favourites</string>
+
+  <!-- Update Manager -->
+  <string id="53200">Please enter your OS password</string>
+  <string id="53205">Updating...</string>
+  <string id="53206">Action...</string>
+  <string id="53207">Unknown error.</string>
+
+  <string id="53210">Validating password...</string>
+  <string id="53211">Password is valid.</string>
+  <string id="53212">Password is invalid.</string>
+  <string id="53213">Restarting BOXEE...</string>
+  <string id="53214">There is already a BOXEE installation attached under /Volumes.</string>
+  <string id="53215">Could not find the installation file.</string>
+  <string id="53216">Failed to attach the installation file.</string>
+  <string id="53217">Failed to find attached installation file under /Volumes.</string>
+  <string id="53218">Failed to find attached installation file MPKG under /Volumes.</string>
+  <string id="53240">BOXEE Update</string>
+  <string id="53241">Update failed.</string>
+  <string id="53242">Error:</string>
+  <string id="53243">[CR]A new version of BOXEE is available.[CR]Would you like to install it now?</string>    <!-- GUIDialogBoxeeUpdateMessage label for logged in user on OSX and WIN (force=no) -->
+  <string id="53244">[COLOR red]* If you choose cancel you will have to install on your next login.[/COLOR]</string> <!-- force update notofocation -->
+  <string id="53245">[CR]A new version of BOXEE is available.[CR]Please exit BOXEE and update from the Ubuntu Update Manager.</string>    <!-- GUIDialogBoxeeUpdateMessage label for login user in LINUX -->
+  <string id="53246">[CR]A new version of BOXEE is available.[CR]Please exit BOXEE and update from the AppleTV menu.</string>    <!-- GUIDialogBoxeeUpdateMessage label for login user in ATV -->
+  <string id="53247">A new version of BOXEE is available.</string>    <!-- GUIDialogBoxeeUpdateMessage label after login screen for user in OSX and WIN (force=yes) -->
+  <string id="53250">0.9.8.4881</string>
+  <string id="53260">Install & Relaunch</string>
+  <string id="53261">New version available. Click here</string>
+  <string id="53262">More info</string>
+
+  <!-- add_media_source -->
+  <string id="53265">Add RSS Feed</string>>
+
+  <!-- sound for linux -->
+  <string id="53266">Audio library</string>
+  <string id="53267">PulseAudio</string>
+  <string id="53268">ALSA</string>
+
+  <!-- video for linux -->
+  <string id="53269">Enable hardware assisted decoding when possible</string>
+
+  <!-- app box labels -->
+  <string id="53270">App Box / New Applications</string>
+  <string id="53271">New Applications</string>
+  <string id="53272">My Applications</string>
+  <string id="53273">My Feeds</string>
+  <string id="53274">Repositories</string>
+  <string id="53275">No new applications currently available.</string>
+  <string id="53276">No applications available.</string>
+  <string id="53277">Application upgrade available</string>
+  <string id="53278">Application has settings</string>
+  <string id="53279">Add Repository</string>
+  <string id="53280">Add New Feed</string>
+  <string id="53281">No Feeds available</string>
+
+  <string id="53282">Upgrade Application</string>
+  <string id="53283">Change Settings</string>
+  <string id="53284">Remove Application</string>
+
+  <string id="53285">Feed URL:</string>
+  <string id="53286">Feed Type:</string>
+
+  <string id="53287">BOXEE is Updating...</string>
+  <string id="53288">BOXEE is installing updates. This may take a few minutes.</string>
+  <string id="53289">updating:</string>
+
+  <string id="53290">Hide adult feeds and applications</string>
+  <string id="53291">You may only watch adult content if you are at least 18 of age, or at least the age of majority in the jurisdiction where you access the content.</string>
+  <string id="53292">Set adult content lock...</string>
+  <string id="53293">Hide feeds and applications that cannot be played in your location</string>
+  <string id="53294">The password you entered is incorrect.</string>
+  <string id="53295">Warning</string>
+  
+  <string id="53300">Screen format</string>
+  <string id="53301">Normal (4:3)</string>
+  <string id="53302">LCD TV / Plasma Widescreen (16:9)</string>
+  <string id="53303">Computer LCD Widescreen (16:10)</string>
+  <string id="53304">Ultra Widescreen (21:9)</string>
+  <string id="53305">Overscan amount</string>
+  <string id="53306">3%</string>
+  <string id="53307">4%</string>
+  <string id="53308">5%</string>
+  <string id="53309">6%</string>
+  <string id="53310">Remove the selected shortcut?</string>
+  <string id="53311">This shortcut already exist</string>
+  
+  <!-- login / logoff -->
+  <string id="53400">Screen Calibration</string>
+  <string id="53401">Would you like to Set Screen Calibration first?[CR][COLOR green]Note:[/COLOR] you can always set it later under Settings->Appearance->Screen</string>
+  <string id="53402">Delete</string>
+  <string id="53403">Welcome to Boxee</string>  <!-- title of Login Dialog for adding newd user (first user on machine case) -->
+  <string id="53404">Add User</string>  <!-- title of Login Dialog for adding newd user -->
+  
+  <string id="53405">Remove</string>
+  <string id="53406">Remove user [COLOR green]'%s'[/COLOR]?</string>
+
+  <string id="53407">Existing User</string>
+  <string id="53408">New User</string>
+  
+  <string id="53409">Remove User</string>
+  <string id="53410">Add User</string>
+  <string id="53411">Guide</string>
+  <string id="53412">Network</string>
+  <string id="53413">Shutdown</string>
+  <string id="53420">SKIP</string>
+
+  <string id="53425">Done</string>
+
+  <string id="53430">Connecting...</string>
+
+  <string id="53432">Failed to get Terms of Use</string>
+  <string id="53433">Failed to get Privacy Policy</string>
+
+  <string id="53435">By clicking on %s, you accept the following:</string>
+  <string id="53436">Terms of Use</string>
+  <string id="53437">and</string>
+  <string id="53438">Privacy Policy</string>  
+  <string id="53439">for using Boxee.</string>  
+  
+  <string id="53440">What do you want to do?</string>
+  
+  <string id="53443">Create new Boxee user</string>
+  <string id="53444">Your own...</string>
+  <string id="53445">Username [COLOR green]%s[/COLOR] is not valid</string>
+  <string id="53446">Username [COLOR green]%s[/COLOR] is not available</string>
+  <string id="53447">Failed to check username [COLOR green]%s[/COLOR] availability</string>
+  <string id="53449">Done</string>
+     
+  <string id="53450">valid</string>
+  <string id="53451">not[CR]valid</string>
+  <string id="53452">Choose username</string>
+  <string id="53453">Account Created</string>
+  <string id="53454">Good to go! We just sent you an email with a link to confirm your address and add more account details like your name and avatar.</string>  
+  <string id="53455">Failed to create new user</string>
+  <string id="53456">Failed to create profile for new user</string>
+  <string id="53457">Re-type[CR]password</string>
+  <string id="53458">match</string>
+  <string id="53459">not[CR]match</string>
+  
+  <string id="53480">Failed to login after internet connection[CR]was restored</string>
+  
+  <!-- share screen -->
+  <string id="53460">%s %s on Boxee</string>
+  <string id="53461">Your Message:</string>
+  <string id="53462">SHARE</string>
+  <string id="53463">Loved</string>
+  <string id="53464">Custom Text</string>
+   
+  <!-- boxee browse screen panel -->
+  <string id="53501">INTERNET &amp; LOCAL</string>
+  <string id="53502">INTERNET MEDIA</string>
+  <string id="53503">LOCAL MEDIA</string>
+  
+  <string id="53504">MOST POPULAR</string>
+  <string id="53505">A TO Z</string>
+  <string id="53506">RECENTLY ADDED</string>
+  <string id="53507">MOST USED</string>
+  
+  <string id="53508">All Seasons</string>
+  
+  <string id="53509">All</string>
+
+  <string id="53510">Seasons</string>
+
+  <string id="53511">All Genres</string>
+  <string id="53512">All Providers</string>
+  <string id="53513">All Media</string>
+  <string id="53514">VIDEO</string>
+  <string id="53515">MUSIC</string>
+  <string id="53516">PHOTOS</string>
+  <string id="53517">QUEUE</string>
+  <string id="53518">DISCOVER</string>
+  <string id="53519">PHOTOS</string>
+  <string id="53520">HISTORY</string>
+  <string id="53521">Add To My Shows[CR][LOWERCASE](Queue New Episodes)[/LOWERCASE]</string>
+  <string id="53522">Remove from[CR]my shows</string>
+  <string id="53523">Added to my shows...</string>
+  <string id="53524">Removed from my shows...</string>
+  <string id="53525">Free</string>
+  <string id="53526">Unwatched</string>
+  <string id="53527">New Releases</string>
+  <string id="53528">Oldest First</string>
+  <string id="53529">Newest First</string>
+  <string id="53530">Date</string>
+
+  <!-- dropdown dialog titles -->
+  <string id="53560">SORT</string>
+  <string id="53561">GENRES</string>
+  <string id="53562">SEASONS</string>
+  <string id="53563">TYPES</string>
+  <string id="53564">USER NAME</string>
+  <string id="53565">PROVIDERS</string>
+  
+  <!-- Repository Browse Window -->
+  <string id="53600">NOTICE</string>
+  <string id="53610">[COLOR green]Boxee[/COLOR] repository cannot be removed</string>
+  <string id="53620">My Repositories</string>
+  <string id="53621">Remove Repositories</string>
+  <string id="53622">Extras</string>
+  <string id="53623">Add Repository</string>
+  <string id="53624">Remove Repository</string>
+  <string id="53625">Cancel Remove</string>
+ 
+  <!-- network notification -->
+  <string id="53695">Edit Network Settings</string>
+  
+  <!-- Media Action Dialog -->
+  <string id="53700">NOTICE</string>
+  <string id="53701">ERROR</string>
+  <string id="53710">MORE INFO</string>
+  <string id="53711">ADD TO QUEUE</string> <!-- QUEUE label-->
+  <string id="53712">REMOVE FROM[CR]QUEUE</string> <!-- DEQUEUE label-->
+  <string id="53713">MARK WATCHED</string>  <!-- MARK_AS_SEEN label-->
+  <string id="53714">MARK UNWATCHED</string>  <!-- MARK_AS_UNSEEN label-->
+  <string id="53715">Add Shortcut</string>  <!-- ADD_TO_SHORTCUT label-->
+  <string id="53716">Remove Shortcut</string>  <!-- REMOVE_FROM_SHORTCUT label-->
+  <string id="53717">GO TO SHOW</string>
+  <string id="53718">TRAILER</string>
+  <string id="53719">SHARE</string>
+  <string id="53720">REMOVE FROM[CR]HISTORY</string>
+  <string id="53721">EJECT</string>
+  <string id="53722">BROWSE</string>
+
+  <string id="53731">Item was added to queue</string>
+  <string id="53732">Item was removed from queue</string>
+  <string id="53733">Item marked as watched</string>
+  <string id="53734">Item marked as unwatched</string>
+  <string id="53735">Failed adding item to queue...</string>
+  <string id="53736">Failed removing item from queue...</string>
+  <string id="53737">Item shortcut was added to Popup Menu</string>
+  <string id="53738">Failed adding item shortcut...</string>
+  <string id="53739">Item shortcut removed</string>
+  <string id="53740">Failed removing from history...</string>
+  <string id="53741">Scan source</string>
+  <string id="53742">No local devices found</string>
+  
+  <string id="53743">Boxee is in offline mode</string>  
+  <string id="53744">Boxee can't make this happen[CR]because you're not connected to the internet.</string>
+  <string id="53745">Boxee needs an internet connection to play[CR]this for you.</string>                      <!-- play -->
+  <string id="53746">Boxee needs an internet connection to play[CR]this for you.</string>                      <!-- trailer -->
+  <string id="53747">Share cannot be execute since[CR]internet connection is unavailable</string>              <!-- share -->
+  <string id="53748">Boxee can't add this to your queue[CR]without an internet connection.</string>            <!-- add to queue -->
+  <string id="53749">Boxee can't remove this from your queue[CR]without an internet connection.</string>       <!-- remove to queue -->
+
+  <string id="53750">Play</string>
+  <string id="53751">Local File</string>
+  <string id="53752"></string>     <!-- prefix to provider source in PLAY button (can be "on " or "from ")-->
+  <string id="53755">Browse</string>
+
+  <string id="53756">Boxee can't manage your feeds because you're not connected to the internet.</string>
+  
+  <string id="53760">Start</string>
+  <string id="53761">Add to My Apps</string>
+  <string id="53762">Remove from My Apps</string>
+  <string id="53765">Failed to launch [COLOR green]%s[/COLOR] application</string>
+  <string id="53766">[COLOR green]%s[/COLOR][CR]needs an internet connection to open up.</string>
+
+  <string id="53770">Ad Supported</string>
+  <string id="53771">Clip</string>
+  <string id="53772">Trailer</string>
+  <string id="53773">Subscription</string>
+  
+  <string id="53779">icons/boxee_icon_manual.png</string>
+  <string id="53780">icons/icon_action_menu_queue_add_kai.png</string>
+  <string id="53781">icons/icon_action_menu_queue_remove_kai.png</string>
+  <string id="53782">icons/icon_action_menu_shortcut_add_kai.png</string>
+  <string id="53783">icons/icon_action_menu_shortcut_remove_kai.png</string>
+
+  <string id="53786">icons/boxee-icon-eject.png</string>
+  <string id="53787">icons/boxee-icon-browsedvd.png</string>   
+  <string id="53788">icons/boxee_icon_unresolved.png</string>   
+  <!-- string id="53789">icons/icon_action_menu_history_remove.png</string -->
+  <string id="53789">icons/icon_action_menu_mark_remove.png</string>
+  <string id="53790">icons/icon_action_menu_more.png</string>
+  <string id="53791">icons/icon_action_menu_queue_add.png</string>
+  <string id="53792">icons/icon_action_menu_mark.png</string>
+  <string id="53793">icons/icon_action_menu_shortcut_add.png</string>
+  <string id="53794">icons/icon_action_menu_trailer.png</string>
+  <string id="53795">icons/icon_action_menu_shortcut_remove.png</string>
+  <string id="53796">icons/icon_action_menu_queue_remove.png</string>
+  <string id="53797">icons/icon_action_menu_tvshow.png</string>
+  <string id="53798">icons/icon_action_menu_share.png</string>
+  <string id="53799">icons/icon_action_menu_mark_remove.png</string>
+ 
+  <!-- Apps/AppBox Browse Window -->
+  <string id="53800">All</string>
+  <string id="53801">Video</string>
+  <string id="53802">Music</string>
+  <string id="53803">Photos</string>
+  <string id="53804">General</string>
+  <string id="53805">Manage</string>
+  <string id="53820">DEBUG</string>
+  <string id="53821">Test app [COLOR green]%s[/COLOR] can only be removed manually</string>
+  <string id="53822">Remove [COLOR green]%s[/COLOR] from My Apps ?</string>
+  <string id="53823">Failed to remove [COLOR green]%s[/COLOR]</string>
+  <string id="53824">Application was added</string>
+
+  <string id="53830">MY APPS</string>
+  <string id="53831">APP LIBRARY</string>
+
+  <string id="53840">Downloading the latest %s application. Please wait...</string>
+  <string id="53841">Error downloading application</string>
+  <string id="53842">Installing application...</string>
+  <string id="53843">Error installing application</string>
+  <string id="53844">Application installed successfully</string>
+
+  
+
+  <!-- Home Window-->
+  <string id="53900">View All</string>             <!-- All Queue label -->
+  <string id="53905">View All</string>             <!-- All Recommend label -->
+
+  <!-- search -->
+  <string id="53950">3</string>                    <!-- search result highlight color [0-none 1-green, 2-red, 3-yellow] -->
+
+  <!-- share -->
+  <string id="54000">SHARE</string>
+  <string id="54001">Sharing is caring.[CR]Please enter a message.</string>   
+    
+  <!-- browse menu -->
+  <string id="54010">SEARCH</string>
+  <string id="54011">Title or Keyword</string>
+  <string id="54012">SHOW ME</string>
+  <string id="54013">SORT</string>
+  <string id="54014">FILTERS</string>
+  <string id="54015">VIEW</string>
+  <string id="54016">Thumbs</string>
+  <string id="54017">List</string>
+  <string id="54018">EXTRAS</string>
+  <string id="54019">Repositories</string>
+  <string id="54020">LOADING</string>
+  <string id="54021">FEED</string>
+  <string id="54022">HISTORY</string>
+  <string id="54023">FILE BROWSER</string>
+  <string id="54024">Add Media Share</string>
+  <string id="54025">Scan For Media</string>
+  <string id="54026">My Movies</string>
+  <string id="54027">Movie Library</string>
+  <string id="54028">Scan Media Folders</string>
+  <string id="54029">Free Only</string>
+  <string id="54030">Unwatched Only</string>
+  <string id="54031">My Music</string>
+  <string id="54032">Unwatched Only</string>
+  <string id="54033">My Apps</string>
+  <string id="54034">App Library</string>
+  <string id="54035">Released</string>
+  <string id="54036">SHARE</string>
+  <string id="54037">My Photos</string>
+  <string id="54038">QUEUE</string>
+  <string id="54039">My TV Shows</string>
+  <string id="54040">TV Show Library</string>
+  <string id="54041">Producer</string>
+  <string id="54042">Starring</string>
+  <string id="54043">Release Year</string>
+  <string id="54044">Air Date</string>
+  <string id="54045">Directed by</string>
+  <string id="54046">POWERED BY</string>
+  <string id="54047">Now[CR]Playing</string>
+  <string id="54048">Apps</string>
+  <string id="54049">BACK</string>
+  <string id="54050">RECOMMENDED SOURCE</string>
+  <string id="54051">OTHER SOURCES</string>
+  <string id="54052">Share</string>
+  <string id="54053">Track List</string>
+  <string id="54054">Just Finished</string>
+  <string id="54055">WHATS NEXT?</string>
+  <string id="54056">Play Next</string>
+  <string id="54057">Remove[CR]From Queue</string>
+  <string id="54058">Go</string>
+  <string id="54059">Items</string>
+  <string id="54060">Exit[CR]BOXEE</string>
+  <string id="54061">Change[CR]User</string>
+  <string id="54062">Suspend[CR]Machine</string>
+  <string id="54063">FEATURED</string>
+  <string id="54064">Manage Sources</string>
+  <string id="54065">Currently scanning</string>
+  <string id="54066">LOCAL FILES</string>
+  <string id="54067">Found %d files</string>
+  <string id="54068">Identifying them now</string>
+  <string id="54069">%d files found[CR] and identified</string>
+
+  <string id="54070">None</string>
+  <string id="54071">Additional Keyboard 1</string>
+  <string id="54072">Additional Keyboard 2</string>
+  <string id="54073">Additional Keyboard 3</string>
+	
+  <string id="54075">Provider</string>
+
+  <string id="54080">Debug</string>
+  <string id="54081">Debug Level</string>
+  <string id="54082">Show Debug Info Line</string>
+  <string id="54083">Enable Curl Logging</string>
+
+  <string id="54090">DEBUG</string>
+  <string id="54091">INFO</string>
+  <string id="54092">NOTICE</string>
+  <string id="54093">WARNING</string>
+  <string id="54094">ERROR</string>
+  <string id="54095">SEVERE</string>
+  <string id="54096">FATAL</string>
+  <string id="54097">NONE</string>
+
+  <string id="54100">Boxee is scanning the Movies folder on your computer. It may take a while for Movies to appear.[CR]In the meantime you can:</string>
+  <string id="54101">1. Browse the Movie Library</string>
+  <string id="54102">2. Scan other folders on your computer or network</string>
+  <string id="54103">Boxee is scanning the Music folder on your computer. It may take a while for Music to appear.[CR]In the meantime you can:</string>
+  <string id="54104">2. Tune in to Boxee Apps of internet music channels</string>
+  <string id="54105">Boxee is scanning the TV Shows folder on your computer. It may take a while for TV Shows to appear.[CR]In the meantime you can:</string>
+  <string id="54106">1. Browse the TV Show library</string>
+  <string id="54107">Scan other folders on your computer or network</string>
+  <string id="54108">Heads up! Flash plugin not found.</string>
+  <string id="54109">Please note that in order to play most[CR]online content, a Flash plugin is required.[CR]To fix this, please visit [COLOR yellow][B]http://www.boxee.tv/flash[/B][/COLOR] </string>
+  <string id="54110">Boxee detected that you have less than 128MB of video memory.[CR]You might experience problems running Boxee.</string>
+
+  <string id="54120">- Dolby Digital Plus capable receiver</string>
+  <string id="54121">- Dolby TrueHD capable receiver</string>
+  <string id="54122">- DTS-HD capable receiver</string>
+  <string id="54123">Digital (HDMI)</string>
+
+  <!-- media source info -->
+  <string id="54200">Ok</string>
+  <string id="54201">Add</string>
+  <string id="54202">Add this directory</string>
+
+  <!-- boxee browse screen panel part II -->
+  <string id="54250">RECENTLY USED</string>
+  
+  <!-- time formats -->
+  <string id="54500">12h</string>
+  <string id="54501">24h</string>
+  <string id="54502">h:mm:ss xx</string>
+  <string id="54503">H:mm:ss</string>
+
+  <!--strings through from 80000 reserved for server definitions -->
+  <string id="80000">Import From </string>
+  <string id="80001">You must activate:</string>
+  <string id="80002">Toggle which services you'd like to include in your video feeds</string>
+  <string id="80003">Your feed can display videos from your Facebook and Twitter streams. [CR]To turn this feature on, you must visit our website to activate your accounts: [CR]</string>
+  
+</strings>

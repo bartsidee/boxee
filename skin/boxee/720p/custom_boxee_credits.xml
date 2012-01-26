@@ -1,0 +1,116 @@
+﻿<?xml version="1.0"?>
+<window type="dialog" id="58">
+	<defaultcontrol always="true">-</defaultcontrol>
+	<allowoverlay>no</allowoverlay>
+	<controls>
+		<include>Common_Background</include>
+		<include>Common_Status</include>
+		<include>Common_Now_Playing</include>
+		<control type="image">
+			<!--animation type="WindowOpen" condition="!Window.Previous(Settings.xml) + !Window.Previous(SettingsCategory.xml)">
+				<effect type="fade" start="0" end="100" time="200" delay="0"/>
+			</animation>
+			<animation type="WindowClose" condition="!Window.Next(Settings.xml) + !Window.Next(SettingsCategory.xml)">
+				<effect type="fade" start="100" end="0" time="200" delay="0"/>
+			</animation-->
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>1280</width>
+			<height>720</height>
+			<texture>black.png</texture>
+			<colordiffuse>80FFFFFF</colordiffuse>
+		</control>
+		<control type="group">
+			<!--animation type="Conditional" condition="Window.IsVisible(boxee_media_source_list.xml) | Window.IsVisible(boxee_media_source_add_share.xml) | Window.IsVisible(boxee_media_source_add_folder.xml) | Window.IsVisible(boxee_media_source_info.xml)">
+				<effect type="fade" start="100" end="0" time="200"/>
+			</animation-->
+			<posx>30</posx>
+			<posy>46</posy>
+			<width>1220</width>
+			<height>660</height>
+			<control type="image">
+				<posx>0</posx>
+				<posy>70</posy>
+				<width>1220</width>
+				<height>510</height>
+				<texture border="64">action_menu_bg.png</texture>
+			</control>
+			<control type="image">
+				<posx>100</posx>
+				<posy>104</posy>
+				<width>1020</width>
+				<height>256</height>
+				<texture border="128">feather_divider.png</texture>
+			</control>
+			<control type="label">
+				<posx>34</posx>
+				<posy>94</posy>
+				<width>1100</width>
+				<height>56</height>
+				<align>left</align>
+				<aligny>center</aligny>
+				<haspath>true</haspath>
+				<font>title56b</font>
+				<textcolor>white</textcolor>
+				<label>[UPPERCASE]$LOCALIZE[5][/UPPERCASE]</label>
+			</control>
+			<control type="label">
+				<posx>330</posx>
+				<posy>119</posy>
+				<width>1000</width>
+				<height>28</height>
+				<align>left</align>
+				<aligny>top</aligny>
+				<haspath>true</haspath>
+				<font>font24b</font>
+				<textcolor>title</textcolor>
+				<label>[UPPERCASE]$LOCALIZE[51937][/UPPERCASE]</label>
+			</control>
+			<control type="group">
+				<posx>30</posx>
+				<posy>224</posy>
+				<control type="image">
+					<posx>0</posx>
+					<posy>-50</posy>
+					<width>170</width>
+					<height>90</height>
+					<texture>XBMC_logo.png</texture>
+				</control>
+				<control type="label">
+					<posx>200</posx>
+					<posy>-20</posy>
+					<width>900</width>
+					<height>100</height>
+					<label>51938</label>
+					<font>font20b</font>
+					<wrapmultiline>true</wrapmultiline>
+					<textcolor>title</textcolor>
+				</control>
+				<control type="textbox">
+					<posx>0</posx>
+					<posy>60</posy>
+					<width>590</width>
+					<height>260</height>
+					<font>font18</font>
+					<textcolor>white</textcolor>
+					<align>left</align>
+					<aligny>top</aligny>
+					<label>51939</label>
+					<autoscroll delay="1000" time="3000" repeat="10000">!Control.HasFocus(13)</autoscroll>
+				</control>
+				<control type="textbox">
+					<posx>600</posx>
+					<posy>60</posy>
+					<width>570</width>
+					<height>260</height>
+					<font>font18</font>
+					<textcolor>white</textcolor>
+					<align>left</align>
+					<aligny>top</aligny>
+					<label>51940</label>
+					<autoscroll delay="1000" time="3000" repeat="10000">!Control.HasFocus(13)</autoscroll>
+				</control>
+			</control>
+		</control>
+	</controls>
+</window>

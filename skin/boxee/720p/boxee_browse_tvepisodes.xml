@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+<window id="10483">
+	<defaultcontrol always="true">9000</defaultcontrol>
+	<allowoverlay>yes</allowoverlay>
+	<controls>
+		<include>Common_Background</include>
+		<include>Common_Status</include>
+		<control type="group" id="9000">
+			<include>BrowseListsAnimation</include>
+			<control type="label">
+				<include>BrowseMainTitle</include>
+				<label>[UPPERCASE]$INFO[Window.Property(title)][/UPPERCASE]</label>
+			</control>
+			<control type="label">
+				<include>EpisodeCounterTitle</include>
+			</control>
+			<include>BrowseEpisodesView</include>
+			<include>Bottom_Feather</include>
+			<control type="label">
+				<visible>[Window.Property(empty) + !Window.IsActive(boxee_search.xml) + !Window.Property(loading)] | [Window.Property(empty) + !Window.IsActive(boxee_search.xml) + Window.Property(search-set) + !Window.Property(loading)]</visible>
+                <visible>!boxee.OfflineMode</visible>
+                <posx>54</posx>
+                <posy>160</posy>
+                <width>1102</width>
+                <height>80</height>
+                <align>left</align>
+                <aligny>top</aligny>
+                <font>font22b</font>
+                <label>[UPPERCASE]$LOCALIZE[51926][/UPPERCASE]</label>
+				<wrapmultiline>true</wrapmultiline>
+            </control>
+		</control>
+		<control type="group" id="8000">
+			<include>BrowseLeftMenuAnimation</include>
+			<include>BrowseLeftMenuBackground</include>
+			<control type="grouplist">
+				<include>BrowseLeftMenu</include>
+				<control type="label">
+					<include>BrowseLeftMenuTitle</include>
+					<label>54012</label>
+				</control>
+				<control type="label">
+					<include>BrowseLeftMenuSubtitle</include>
+					<label>54013</label>
+				</control>
+				<control type="button" id="110">
+                    <include>BrowseLeftMenuDropDown</include>
+                    <label>$INFO[Window.Property(sort-label)]</label>
+                </control>
+				<control type="label" id="401">
+					<include>BrowseLeftMenuSubtitle</include>
+					<label>54014</label>
+				</control>
+				<control type="togglebutton" id="140">
+					<include>BrowseLeftMenuDropDown</include>
+					<label>$INFO[Window.Property(seasons-label)]</label>
+				</control>
+				<control type="togglebutton" id="151">
+					<visible>false</visible>
+					<include>BrowseLeftMenuToggle</include>
+					<label>54029</label>
+					<usealttexture>Window.Property(free-set)</usealttexture>
+				</control>
+				<control type="group" id="402">
+					<width>224</width>
+					<height>16</height>
+				</control>
+				<control type="label" id="403">
+					<include>BrowseLeftMenuTitle</include>
+					<label>54018</label>
+				</control>
+				<control type="button" id="150">
+					<width>216</width>
+					<height>60</height>
+					<font>font18b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<focusedcolor>white</focusedcolor>
+					<textoffsetx>14</textoffsetx>
+					<texturenofocus border="15">button_option_menu.png</texturenofocus>
+					<texturefocus border="15">button_option_menu_on.png</texturefocus>
+					<textureclick border="15">button_option_menu_click.png</textureclick>
+					<label>$INFO[Window.Property(subscribe)]</label>
+				</control>
+				<control type="button" id="160">
+					<include>BrowseLeftMenuButton</include>
+					<label>$LOCALIZE[53715]</label>
+				</control>
+			</control>
+		</control>
+		<include>BrowseLoadingAnimation</include>
+		<include>Common_Now_Playing</include>
+	</controls>
+</window>

@@ -1,0 +1,8 @@
+Package: boxee
+Version: VER.REV
+Section: graphics
+Architecture: i386
+Depends: libasound2 (>> 1.0.14), libc6 (>= 2.6-1), libcurl3, libfreetype6 (>= 2.3.5), libfribidi0 (>= 0.10.7), libgcc1 (>= 1:4.2.1), libglew1.5, libglu1-mesa | libglu1, liblzo2-2, libsdl-image1.2 (>= 1.2.5), libsdl1.2debian (>= 1.2.10-1), libsmbclient (>= 3.0.2a-1), libsqlite3-0 (>= 3.4.2), libstdc++6 (>= 4.2.1), libx11-6, libxinerama1, zlib1g (>= 1:1.2.3.3.dfsg-1), libsdl-gfx1.2-4, libogg0, libvorbis0a, libvorbisenc2, libvorbisfile3, libmad0, libtre4 | libtre5, libdbus-1-3, libhal1, libhal-storage1, libjasper1, libfontconfig1, libbz2-1.0, screen, libmysqlclient16, libxmlrpc-c3, libatk1.0-0, libcairo2, libcomerr2, libcurl3, libdirectfb-1.2, libexpat1, libfontconfig1, libfreetype6, libgcrypt11, libglib2.0-0, libgpg-error0, libgtk2.0-0, libice6, libidl0, libidn11, libkeyutils1, libkrb53 | libkrb5-3, libldap-2.4-2, libnspr4-0d, libnss3-1d, libpango1.0-0, libpcre3, libpixman-1-0, libpng12-0, libsasl2-2, libselinux1, libsm6, libssl0.9.8, libtasn1-3, libuuid1, libxau6, libxcb1, libxcb-render0, libxcomposite1, libxcursor1, libxdamage1, libxdmcp6, libxext6, libxfixes3, libxft2, libxi6, libxrandr2, libxrender1, libxt6, xsel, libsamplerate0, libenca0, libavahi-client3, libpulse0, libmms0, flashplugin-nonfree
+Maintainer: team boxee <support@boxee.tv>
+Bugs: mailto:support@boxee.tv
+Description: Boxee is the best way to enjoy entertainment from the Internet and computer on your TV

@@ -1,0 +1,204 @@
+Copyright Statement & General Terms of Service
+----------------------------------------------
+
+Copyright © 2008 BOXEE. All rights reserved.
+
+Terms of Service
+
+TERMS OF SERVICE FOR BOXEE SOFTWARE, SITE AND SERVICES
+
+Thanks for using Boxee! For the sake of simplicity and consistency, these Terms
+of Service apply to all of our members, including those who download our
+software in binary form, and those who sign up for a Boxee Online Web account.
+Accordingly, there are some provisions below relating to the use of our software
+which necessarily apply only to those of our members who have downloaded the
+software in binary form. All other terms and provisions apply to all of our
+members.
+
+Important—Read carefully: These Terms of Service for Boxee Software (including,
+but not limited to, binary code, graphic assets and/or their placement (i.e. "
+Skin"), sounds) Site and Services (these "Terms of Service") together constitute
+ a legal agreement between you (an individual, not an entity) and Boxee, Inc., a
+Delaware corporation, and its suppliers and its licensors (collectively "Boxee")
+with respect to Boxee software (together with all prior and subsequent versions,
+and all patches and updates thereto, the "Software"), the boxee.tv Web site,
+including all subpages under the Web site (collectively, the "Site" or "Sites")
+and all other services provided to you by Boxee either through the Software or
+through Web access to the Site (collectively, the "Services"). These Terms of
+Service apply to all versions of the Software. By clicking on the "Accept"
+button or otherwise using or accepting the Software, Site and/or Services, you
+agree to be bound by the terms of these Terms of Service. If you do not agree to
+these terms of service, do not click on the "Accept" button and do not use the
+Software, Site or Services. You agree that your use of the Software, Site and/or
+Services acknowledges that you have read these Terms of Service, understand
+them, and agree to be bound by these Terms of Service.
+
+The Software, Site and Services provided to you under these Terms of Service is
+for your personal and non-commercial use only.
+
+1. Description of Services. Boxee provides you with the capability of playing
+media from your local network or from the Internet, and share experiences with
+your friends and the world. Additional features may be added to the Software,
+Site and Services and made available to you from time to time. You understand
+and agree that Boxee may provide updates, patches and/or new versions of the
+Software from time to time, with or without notice. You also understand and
+agree that the Site and the Services may include advertisements and that these
+advertisements are necessary for Boxee to provide the Services.
+
+2. Personal License. Boxee grants you a non-exclusive, non-transferable license
+for the Software to access the Services. Under this license you may only: (i)
+use the Boxee for your personal and non-commercial use; (ii) make one copy of
+the Software in machine readable form solely for back-up purposes, provided that
+you reproduce all proprietary notices on the copy.
+
+3. Restrictions. a) You may not: (i) prepare derivative works based on the
+Software; (ii) reproduce the Software except as specifically provided in this
+Agreement; (iii) sell, assign, transfer, license, sublicense, publish, disclose,
+display, or otherwise make available the Software or copies thereof in any form
+whatsoever to any third parties or use the Software for any third party's data
+processing, computing, or other needs; (iv) modify, translate, reverse engineer,
+decompile, or disassemble the Software, subject to applicable law to the
+contrary; or (v) remove any proprietary notices, labels, or other identifying
+marks on the Software. These Terms of Service shall not be interpreted as
+granting to you any license or right not expressly granted herein. This license
+is not a sale. All rights to the software not expressly granted herein are
+reserved by Boxee or its suppliers.
+
+b) You agree that you shall only use the Software, Site and Services in a manner
+that complies with all applicable laws and court orders in the jurisdictions in
+which you use the Software, Site and Services, including, but not limited to,
+applicable restrictions concerning privacy, copyright and other intellectual
+property rights.
+
+c) You may not use the Software, Site or Services to send unsolicited,
+promotional mass electronic email messages or notifications to one or more
+recipients or systems (known as "spamming"). Any promotional electronic
+messages, which are sent in an unsolicited manner to 10 or more recipients, or
+any series of unsolicited promotional electronic messages to a single user, will
+be considered as spamming. Spamming also includes (i) sending messages to
+distribution lists, newsgroup aliases, or group aliases, and (ii) sending
+messages to recipients who do not know you or who are unlikely to recognize you
+as a known contact.
+
+d) You may not use the Software, Site or Services to upload, post, e-mail,
+otherwise transmit, or post links to: (i) any unsolicited or unauthorized
+advertising or promotional materials; or (ii) content which is harmful,
+threatening, abusive, harassing, tortious, defamatory, vulgar, obscene,
+pornographic, libelous, invasive of privacy or publicity rights, hateful, or
+racially, sexually, ethnically or otherwise objectionable.
+
+e) You may not use the Software, Site or Services if you are under the age of 13
+or to solicit or collect any information from children under the age of 13.
+
+4. Limited Warranty. Boxee makes and you receive no warranties, express,
+implied, statutory, or otherwise, and Boxee specifically disclaims any implied
+warranties of merchantability, noninfringement and fitness for a particular
+purpose with respect to the software or services. Boxee does not warrant that
+the Software or Services will meet your requirements or that the Software or
+Services will be error free. This limitation or exclusion of warranties may be
+subject to exceptions in local jurisdictions.
+
+5. Boxee's Right to Terminate or Modify Terms of Service and Services. Boxee may
+modify these Terms of Service upon notice to you at any time. These
+modifications may include, without limitation, charging for the Software, Site
+and/or Services. Boxee may provide notice to you of any such modification by e-
+mail or by publishing the changes on its Web site. In the event Boxee modifies
+these Terms of Service, you may terminate your use of the Software, Site and the
+Services. Boxee may also terminate your right to use the Software, Site and/or
+Services at any time for any reason. Without limiting the prior sentence, your
+right to use the Software, Site and Services will automatically terminate if you
+fail to comply with any term or provision of these Terms of Service. No notice
+shall be required from Boxee to effect such an automatic termination. Upon any
+termination of your right to use the Software, Site and Services, you shall
+immediately discontinue use of the Software, Site and the Services.
+
+6. Personal Information and Privacy. You are required to have a Boxee account to
+use the Services. Personal information you provide to Boxee is governed by
+Boxee's privacy policy (the "Boxee Privacy Policy"). Click here to view the
+Boxee Privacy Policy. Your election to use the Services, indicates your
+acceptance of the terms of the Boxee Privacy Policy, so please review it
+carefully if you have any questions about Boxee's treatment of personal
+information you provide to us. You are responsible for maintaining the
+confidentiality of your password and Your Account Information (name and e-mail
+address). You are responsible for all activities that occur in your account and
+you agree to notify Boxee immediately of any unauthorized account use. Boxee is
+in no way responsible for any loss or damages that you may incur as a result of
+any unauthorized use of your user account and password.
+
+7. Title. Title, ownership, rights, and intellectual property rights in and to
+the Software, Site and Services shall remain in Boxee and/or its suppliers. The
+Software, Site and Services are protected by the copyright laws of the United
+States and other countries, and by international copyright treaties. Title,
+ownership rights and intellectual property rights in and to the content accessed
+through the Services shall be retained by the applicable content owner and may
+be protected by applicable privacy, copyright or other laws.
+
+8. Limitation of Liability. to the maximum extent permitted by applicable law,
+in no event shall Boxee or its suppliers be liable for any consequential,
+incidental, indirect, special, punitive, or other damages whatsoever or for
+damages for loss of business profits, business interruption, computer failure,
+loss of business information, or other pecuniary loss arising out of these Terms
+of Service or the use of or inability to use the Software, Site or Services,
+even if Boxee has been advised of the possibility of such damages. Your sole and
+exclusive remedy for any dispute with Boxee related to these Terms of Service or
+the Software, Site or Services shall be cancellation of the Software License and
+Services. In the event a court awards direct damages despite the foregoing, such
+damages shall not exceed $10.00. Because some states/jurisdictions do not allow
+the exclusion or limitation of liability for consequential or incidental
+damages, the above limitation may not apply to you.
+
+9. Indemnification. You agree to hold harmless, indemnify and defend Boxee, its
+officers, directors and employees, from and against any losses, damages, fines
+and expenses (including attorneys' fees and costs) arising out of or relating to
+any claims that you have (i) used the Software, Site or Services in violation of
+another party's rights or in violation of any law, or (ii) violated any terms of
+these Terms of Service.
+
+10. Export Restrictions. You cannot export or re-export the Software in any form
+without the appropriate United States and foreign government licenses. You will
+not, directly or indirectly, export or transfer the Software to any country to
+which transmission is prohibited by applicable statute. Your failure to comply
+with this provision is a material breach of these Terms of Service.
+
+11. U.S. Government Restricted Rights. The Software and accompanying
+documentation are provided with restricted rights. Use, duplication or
+disclosure by the U.S. Government is subject to the restrictions as set forth in
+subparagraph(c)(1)(ii) of DFARS 252.227-7013 (The Rights in Technical Data and
+Computer Software) or subparagraphs(c)(1) and (2) of 48 CFR 52.227-19 (the
+Commercial Computer Software--Restricted Rights), as applicable. Developer is
+Boxee, Inc., 18 Stuyvesant Rd. Montvale, NJ 07645.
+
+12. User Age Restriction. The Services, Software and Site are not intended for
+and may not be used by children under the age of 13. You may not use the
+Software or Services or access the Site unless you are at least such age.
+
+13. Miscellaneous.
+a) No Assignment. The Software and Services are personal to you, and may not be
+assigned without Boxee's express written consent.
+
+b) Governing Law; Jurisdiction. These Terms of Service are governed by the laws
+of New York, excluding its choice of law provisions. You agree to bring and
+defend any actions related to these Terms of Service exclusively in the state of
+federal courts located in Manhattan County, New York. These Terms of Service
+will not be governed by the United Nations Convention of Contracts for the
+International Sale of Goods, the application of which is hereby expressly
+excluded.
+
+c) Injunctive Relief. To the extent that you have breached or have indicated
+your intention to breach these Terms of Service in any manner which violates or
+may violate Boxee's intellectual property rights, or may cause continuing or
+irreparable harm to Boxee (including, but not limited to, any breach that may
+impact Boxee's intellectual property rights, or a breach by reverse engineering)
+, Boxee may seek injunctive relief, or any other appropriate relief, in any
+court of competent jurisdiction.
+
+d) Complete Agreement. These Terms of Service shall constitute the complete and
+exclusive agreement between us, notwithstanding any other written instrument
+submitted by you, whether formally rejected by Boxee or not. The terms and
+conditions contained in these Terms of Service may not be modified by you except
+in a writing duly signed by you and an authorized representative of Boxee. If
+any provision of these Terms of Service is held to be unenforceable for any
+reason, such provision shall be reformed only to the extent necessary to make it
+enforceable, and such decision shall not affect the enforceability of such
+provision under other circumstances, or of the remaining provisions hereof under
+all circumstances.

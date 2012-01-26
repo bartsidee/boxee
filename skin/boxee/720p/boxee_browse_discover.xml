@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<window id="10490">
+	<defaultcontrol>9000</defaultcontrol>
+	<allowoverlay>yes</allowoverlay>
+	<controls>
+		<include>Common_Background</include>
+		<include>Common_Status</include>
+		<control type="label">
+			<include>BrowseMainTitle</include>
+			<label>54021</label>
+		</control>
+		<control type="label">
+			<include>BrowseSubTitle</include>
+			<label>[UPPERCASE][COLOR grey]$INFO[Container.NumItems, (, $LOCALIZE[54059])][/COLOR][/UPPERCASE]</label>
+		</control>
+		<control type="group" id="9000">
+			<include>BrowseFeedView</include>
+			<control type="image" platformClass="pc">
+				<posx>605</posx>
+				<posy>100</posy>
+				<width>67</width>
+				<height>680</height>
+				<texture>home_line_vertical.png</texture>
+				<colordiffuse>80FFFFFF</colordiffuse>
+			</control>
+			<include>BrowseEmptyList</include>
+		</control>
+		<include>Bottom_Feather</include>
+		<include>BrowseLoadingAnimation</include>
+		<include>Common_Now_Playing</include>
+	</controls>
+</window>

@@ -1,0 +1,122 @@
+﻿<?xml version="1.0"?>
+<window id="2007">
+	<controls>
+		<control type="group">
+			<posx>128</posx>
+			<posy>20</posy>
+			<visible>Slideshow.ShowInfo</visible>
+			<control type="image">
+				<visible>IsEmpty(slideshow.description)</visible>
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>1024</width>
+				<height>64</height>
+				<texture border="32">osd_background.png</texture>
+			</control>
+			<control type="image">
+				<visible>!IsEmpty(slideshow.description)</visible>
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>1024</width>
+				<height>190</height>
+				<texture border="32">osd_background.png</texture>
+			</control>
+			<control type="label">
+				<posx>20</posx>
+				<posy>18</posy>
+				<width>975</width>
+				<height>24</height>
+				<font>title24b</font>
+				<textcolor>title</textcolor>
+				<label>$INFO[slideshow.label]</label>
+				<aligny>center</aligny>
+				<align>left</align>
+				<scroll>false</scroll>
+			</control>
+			<control type="label">
+				<posx>20</posx>
+				<posy>40</posy>
+				<width>975</width>
+				<height>150</height>
+				<align>left</align>
+				<aligny>top</aligny>
+				<font>font22</font>
+				<textcolor>white</textcolor>
+				<label>$INFO[slideshow.description]</label>
+				<wrapmultiline>true</wrapmultiline>
+			</control>
+		</control>
+		<!--
+		<control type="group" id="1">
+			<posx>0</posx>
+			<posy>0</posy>
+			<visible>false</visible>
+			<visible>Player.ShowInfo + Player.HasMedia</visible>
+			<control type="group">
+				<posx>0</posx>
+				<posy>0</posy>
+				<control type="label" id="1">
+					<posx>20</posx>
+					<posy>15</posy>
+					<font>font18</font>
+					<align>left</align>
+					<info>MusicPlayer.Artist</info>
+					<width>900</width>
+					<height>20</height>
+					<aligny>center</aligny>
+				</control>
+				<control type="label" id="1">
+					<posx>20</posx>
+					<posy>50</posy>
+					<font>font18</font>
+					<align>left</align>
+					<info>MusicPlayer.Album</info>
+					<width>900</width>
+					<height>20</height>
+					<aligny>center</aligny>
+					<wrapmultiline>true</wrapmultiline>
+				</control>
+				<control type="label" id="1">
+					<posx>20</posx>
+					<posy>70</posy>
+					<font>font18</font>
+					<align>left</align>
+					<label>$INFO[MusicPlayer.Title]</label>
+					<width>400</width>
+					<height>50</height>
+					<textcolor>grey</textcolor>
+					<aligny>center</aligny>
+				</control>
+				<control type="label">
+					<description>next track</description>
+					<posx>600</posx>
+					<posy>70</posy>
+					<width>355</width>
+					<height>50</height>
+					<font>font18</font>
+					<align>center</align>
+					<aligny>center</aligny>
+					<textcolor>grey</textcolor>
+					<label>$LOCALIZE[209]: $INFO[nextitem.title]</label>
+					<visible>!LastFM.RadioPlaying</visible>
+					<visible>false</visible>
+				</control>
+				<control type="label">
+					<description>next track</description>
+					<posx>600</posx>
+					<posy>70</posy>
+					<width>355</width>
+					<height>50</height>
+					<font>font18</font>
+					<align>center</align>
+					<aligny>center</aligny>
+					<textcolor>grey</textcolor>
+					<label>$LOCALIZE[209]: $INFO[nextitem.title] $LOCALIZE[53001] $INFO[nextitem.artist]</label>
+					<visible>LastFM.RadioPlaying</visible>
+					<visible>false</visible>
+				</control>
+			</control>
+		</control>
+		-->
+	</controls>
+</window>

@@ -1,0 +1,839 @@
+﻿<?xml version="1.0"?>
+<window>
+	<defaultcontrol always="true">110</defaultcontrol>
+	<allowoverlay>no</allowoverlay>
+	<controls>
+		<include>Common_Background</include>
+		<control type="group">
+			<include>Common_Info_Background_Top</include>
+			<include>Main_Menu_Slide_Animation</include>
+			<control type="group">
+				<include>Main_Menu_Fade_Animation</include>
+				<description>First Page Video/Music/Photos/Applications</description>
+				<posx>32</posx>
+				<posy>54</posy>
+				<width>1216</width>
+				<height>32</height>
+				<control type="image">
+					<description>page header tab icon</description>
+					<include>Common_Title_Image</include>
+					<texture>icon_downloads.png</texture>
+				</control>
+				<control type="label">
+					<description>header label</description>
+					<include>Common_Title_Label</include>
+					<label>Downloads</label>
+				</control>
+			</control>
+			<control type="group">
+				<animation type="Conditional" condition="Control.IsVisible(112) | Control.IsVisible(130)">
+					<effect type="fade" start="100" end="90" time="180"/>
+					<effect type="slide" start="0,0" end="-222,0" time="120"/>
+				</animation>
+				<include>Common_Info_Background_Bottom</include>
+				<control type="group">
+					<include>Window_Fade_Animation</include>
+					<animation type="Conditional" condition="Control.IsVisible(112) | Control.IsVisible(130) | Window.IsVisible(boxee_main_menu.xml)">
+						<effect type="fade" start="100" end="50" time="180"/>
+					</animation>
+					<control type="group">
+						<posx>970</posx>
+						<posy>120</posy>
+						<width>700</width>
+						<height>33</height>
+						<control type="group">
+							<posx>0</posx>
+							<posy>0</posy>
+							<control type="image" id="103">
+								<description>status icon</description>
+								<posx>0</posx>
+								<posy>0</posy>
+								<width>20</width>
+								<height>20</height>
+								<texture>scroll_down_white.png</texture>
+							</control>
+							<control type="label" id="102">
+								<description>download rate label</description>
+								<posx>25</posx>
+								<posy>0</posy>
+								<width>100</width>
+								<height>20</height>
+								<font>font18</font>
+								<textcolor>white</textcolor>
+								<aligny>center</aligny>
+								<wrapmultiline>false</wrapmultiline>
+								<label>0.0 Kb/s</label>
+							</control>
+						</control>
+						<control type="group">
+							<posx>140</posx>
+							<posy>0</posy>
+							<control type="image" id="105">
+								<description>status icon</description>
+								<posx>0</posx>
+								<posy>0</posy>
+								<width>20</width>
+								<height>20</height>
+								<texture>scroll_up_white.png</texture>
+							</control>
+							<control type="label" id="104">
+								<description>upload rate label</description>
+								<posx>25</posx>
+								<posy>0</posy>
+								<width>100</width>
+								<height>20</height>
+								<font>font18</font>
+								<textcolor>white</textcolor>
+								<aligny>center</aligny>
+								<wrapmultiline>false</wrapmultiline>
+								<label>0.0 Kb/s</label>
+							</control>
+						</control>
+					</control>
+					<control type="group">
+						<control type="label" id="101">
+							<description>status label</description>
+							<posx>50</posx>
+							<posy>158</posy>
+							<width>1176</width>
+							<height>50</height>
+							<font>font21sq</font>
+							<textcolor>white</textcolor>
+							<aligny>center</aligny>
+							<wrapmultiline>true</wrapmultiline>
+						</control>
+						<control type="group" id="140">
+							<control type="panel" id="150">
+								<posx>50</posx>
+								<posy>230</posy>
+								<width>1176</width>
+								<height>441</height>
+								<onleft>ActivateWindow(467)</onleft>
+								<onright>-</onright>
+								<onup>110</onup>
+								<ondown>-</ondown>
+								<scrolltime>200</scrolltime>
+								<pagecontrol>60</pagecontrol>
+								<orientation>vertical</orientation>
+								<itemlayout width="588" height="147">
+									<control type="image">
+										<posx>2</posx>
+										<posy>2</posy>
+										<width>584</width>
+										<height>143</height>
+										<texture>list_frame_device.png</texture>
+									</control>
+									<control type="image">
+										<posx>20</posx>
+										<posy>96</posy>
+										<width>350</width>
+										<height>26</height>
+										<texture>downloads_progress_$INFO[ListItem.property(progressbar)].png</texture>
+									</control>
+									<control type="image">
+										<posx>0</posx>
+										<posy>0</posy>
+										<width>16</width>
+										<height>16</height>
+										<texture>$INFO[ListItem.Icon]</texture>
+									</control>
+									<control type="label">
+										<posx>20</posx>
+										<posy>10</posy>
+										<width>550</width>
+										<height>20</height>
+										<font>font21</font>
+										<align>left</align>
+										<info>ListItem.Label</info>
+										<wrapmultiline>false</wrapmultiline>
+										<textcolor>white</textcolor>
+										<selectedcolor>green</selectedcolor>
+									</control>
+									<control type="label">
+										<posx>20</posx>
+										<posy>40</posy>
+										<width>550</width>
+										<height>20</height>
+										<font>font18</font>
+										<align>left</align>
+										<label>$INFO[ListItem.property(progress)]</label>
+										<wrapmultiline>false</wrapmultiline>
+										<textcolor>white</textcolor>
+										<selectedcolor>green</selectedcolor>
+									</control>
+									<control type="label">
+										<posx>20</posx>
+										<posy>66</posy>
+										<width>550</width>
+										<height>20</height>
+										<font>font17</font>
+										<align>left</align>
+										<label>$INFO[ListItem.property(error)]</label>
+										<wrapmultiline>false</wrapmultiline>
+										<textcolor>white</textcolor>
+										<selectedcolor>green</selectedcolor>
+									</control>
+									<control type="label">
+										<posx>390</posx>
+										<posy>96</posy>
+										<width>180</width>
+										<height>22</height>
+										<font>font18</font>
+										<align>left</align>
+										<aligny>center</aligny>
+										<info>ListItem.Label2</info>
+										<wrapmultiline>true</wrapmultiline>
+										<selectedcolor>green</selectedcolor>
+									</control>
+								</itemlayout>
+								<focusedlayout width="588" height="147">
+									<control type="image">
+										<posx>2</posx>
+										<posy>2</posy>
+										<width>584</width>
+										<height>143</height>
+										<texture>list_frame_device.png</texture>
+									</control>
+									<control type="image">
+										<posx>0</posx>
+										<posy>0</posy>
+										<width>588</width>
+										<height>147</height>
+										<texture>list_frame_device_white.png</texture>
+										<animation type="Focus">
+											<effect type="fade" start="60" time="120"/>
+											<effect type="zoom" start="99,97" center="auto" time="120" delay="60"/>
+										</animation>
+									</control>
+									<control type="image">
+										<description>selected background</description>
+										<posx>20</posx>
+										<posy>96</posy>
+										<width>350</width>
+										<height>26</height>
+										<texture>downloads_progress_$INFO[ListItem.property(progressbar)].png</texture>
+										<colordiffuse>FF999999</colordiffuse>
+									</control>
+									<control type="image">
+										<description>status icon</description>
+										<posx>0</posx>
+										<posy>0</posy>
+										<width>16</width>
+										<height>16</height>
+										<texture>$INFO[ListItem.Icon]</texture>
+									</control>
+									<control type="label">
+										<posx>20</posx>
+										<posy>10</posy>
+										<width>550</width>
+										<height>20</height>
+										<font>font21</font>
+										<align>left</align>
+										<info>ListItem.Label</info>
+										<wrapmultiline>false</wrapmultiline>
+										<textcolor>black</textcolor>
+										<selectedcolor>green</selectedcolor>
+									</control>
+									<control type="label">
+										<posx>20</posx>
+										<posy>40</posy>
+										<width>550</width>
+										<height>20</height>
+										<font>font18</font>
+										<align>left</align>
+										<label>$INFO[ListItem.property(progress)]</label>
+										<wrapmultiline>false</wrapmultiline>
+										<textcolor>black</textcolor>
+										<selectedcolor>green</selectedcolor>
+									</control>
+									<control type="label">
+										<posx>20</posx>
+										<posy>66</posy>
+										<width>550</width>
+										<height>20</height>
+										<font>font17</font>
+										<align>left</align>
+										<label>$INFO[ListItem.property(error)]</label>
+										<wrapmultiline>false</wrapmultiline>
+										<textcolor>black</textcolor>
+										<selectedcolor>green</selectedcolor>
+									</control>
+									<control type="label">
+										<posx>390</posx>
+										<posy>96</posy>
+										<width>180</width>
+										<height>22</height>
+										<font>font18</font>
+										<align>left</align>
+										<aligny>center</aligny>
+										<info>ListItem.Label2</info>
+										<wrapmultiline>true</wrapmultiline>
+										<selectedcolor>green</selectedcolor>
+										<textcolor>black</textcolor>
+									</control>
+								</focusedlayout>
+							</control>
+							<control type="scrollbar" id="60">
+								<description>scroll bar indicator for lists</description>
+								<visible>Control.IsVisible(150)</visible>
+								<posx>1228</posx>
+								<posy>230</posy>
+								<width>8</width>
+								<height>441</height>
+								<texturesliderbackground border="4">scrollbar_vertical_bg.png</texturesliderbackground>
+								<texturesliderbar border="4">scrollbar_vertical_nib.png</texturesliderbar>
+								<texturesliderbarfocus border="4">scrollbar_vertical_nib.png</texturesliderbarfocus>
+					<!--textureslidernib>scrollbar_vertical_nib.png</textureslidernib>
+					      <textureslidernibfocus>scrollbar_vertical_nib.png</textureslidernibfocus-->
+								<orientation>vertical</orientation>
+								<showonepage>false</showonepage>
+							</control>
+						</control>
+						<control type="group" id="110">
+							<posx>32</posx>
+							<posy>113</posy>
+							<width>1200</width>
+							<height>33</height>
+							<ondown>150</ondown>
+							<defaultcontrol always="true">111</defaultcontrol>
+							<control type="group">
+								<posx>15</posx>
+								<posy>0</posy>
+								<control type="button" id="111">
+									<description>Sort by button</description>
+									<posx>0</posx>
+									<posy>0</posy>
+									<height>33</height>
+									<width>200</width>
+									<align>left</align>
+									<aligny>center</aligny>
+									<textcolor>grey</textcolor>
+									<focusedcolor>green</focusedcolor>
+									<disabledcolor>grey</disabledcolor>
+									<texturefocus>-</texturefocus>
+									<texturenofocus>-</texturenofocus>
+									<font>font21</font>
+									<label>View</label>
+									<onleft>ActivateWindow(467)</onleft>
+									<onright>116</onright>
+									<ondown>150</ondown>
+								</control>
+								<control type="label" id="115">
+									<posx>95</posx>
+									<posy>0</posy>
+									<width>110</width>
+									<height>33</height>
+									<textcolor>white</textcolor>
+									<font>font21</font>
+									<label>All</label>
+									<visible>true</visible>
+									<align>left</align>
+									<aligny>center</aligny>
+								</control>
+								<control type="image">
+									<description>dropdown icon</description>
+									<posx>70</posx>
+									<posy>10</posy>
+									<height>18</height>
+									<width>18</width>
+									<texture>arrow_button_down.png</texture>
+									<colordiffuse>FFBBBBBB</colordiffuse>
+									<visible>!Control.HasFocus(111)</visible>
+								</control>
+								<control type="image">
+									<description>dropdown icon</description>
+									<posx>70</posx>
+									<posy>10</posy>
+									<height>18</height>
+									<width>18</width>
+									<texture>arrow_button_green_down.png</texture>
+									<visible>Control.HasFocus(111) | Control.IsVisible(112)</visible>
+								</control>
+							</control>
+							<control type="group">
+								<posx>210</posx>
+								<posy>0</posy>
+								<width>190</width>
+								<height>33</height>
+								<control type="image">
+									<description>left dotted line</description>
+									<posx>19</posx>
+									<posy>6</posy>
+									<width>3</width>
+									<height>20</height>
+									<texture>dotted_line_divider.png</texture>
+								</control>
+								<control type="image" id="117">
+									<description>left dotted line</description>
+									<posx>30</posx>
+									<posy>0</posy>
+									<width>33</width>
+									<height>33</height>
+									<texture>button_pause.png</texture>
+									<visible>!Control.HasFocus(116)</visible>
+								</control>
+								<control type="image" id="118">
+									<description>left dotted line</description>
+									<posx>30</posx>
+									<posy>0</posy>
+									<width>33</width>
+									<height>33</height>
+									<texture>button_pause_on.png</texture>
+									<visible>Control.HasFocus(116)</visible>
+								</control>
+								<control type="button" id="116">
+									<description>pause-resume all button</description>
+									<enable>true</enable>
+									<posx>70</posx>
+									<posy>0</posy>
+									<width>33</width>
+									<height>33</height>
+									<texturenofocus>-</texturenofocus>
+									<texturefocus>-</texturefocus>
+									<label>Pause All</label>
+									<font>font21</font>
+									<textcolor>grey</textcolor>
+									<focusedcolor>green</focusedcolor>
+									<disabledcolor>grey</disabledcolor>
+									<textoffsetx>0</textoffsetx>
+									<ondown>150</ondown>
+									<onleft>111</onleft>
+									<onright>119</onright>
+								</control>
+							</control>
+							<control type="group">
+								<posx>390</posx>
+								<posy>0</posy>
+								<width>190</width>
+								<height>33</height>
+								<control type="image">
+									<description>left dotted line</description>
+									<posx>19</posx>
+									<posy>6</posy>
+									<width>3</width>
+									<height>20</height>
+									<texture>dotted_line_divider.png</texture>
+								</control>
+								<control type="button" id="119">
+									<description>settings button</description>
+									<posx>40</posx>
+									<posy>0</posy>
+									<width>33</width>
+									<height>33</height>
+									<texturenofocus>button_settings.png</texturenofocus>
+									<texturefocus>button_settings_on.png</texturefocus>
+									<label>Settings</label>
+									<font>font21</font>
+									<textcolor>grey</textcolor>
+									<focusedcolor>green</focusedcolor>
+									<disabledcolor>grey</disabledcolor>
+									<textoffsetx>40</textoffsetx>
+									<ondown>150</ondown>
+									<onleft>116</onleft>
+									<onright>-</onright>
+								</control>
+							</control>
+						</control>
+					</control>
+				</control>
+			</control>
+			<control type="group">
+				<visible>Control.IsVisible(112) | Control.IsVisible(130)</visible>
+				<posx>1050</posx>
+				<posy>102</posy>
+				<width>220</width>
+				<height>608</height>
+				<animation type="Visible">
+					<effect type="fade" start="20" end="100" time="180" delay="180"/>
+					<effect type="slide" start="220,0" time="120" delay="180"/>
+				</animation>
+				<animation type="Hidden">
+					<effect type="fade" start="100" end="20" time="180"/>
+					<effect type="slide" end="220,0" time="120"/>
+				</animation>
+				<control type="group">
+					<description>main browse options menu sort</description>
+					<visible>Control.IsVisible(112)</visible>
+					<control type="group">
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>220</width>
+						<height>608</height>
+						<control type="group">
+							<visible>Container(112).Position(0)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>220</width>
+							<height>8</height>
+							<crop>true</crop>
+							<control type="image">
+								<posx>0</posx>
+								<posy>0</posy>
+								<width>220</width>
+								<height>74</height>
+								<texture>menu_top_on.png</texture>
+							</control>
+						</control>
+						<control type="group">
+							<visible>!Container(112).Position(0)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>220</width>
+							<height>6</height>
+							<crop>true</crop>
+							<control type="image">
+								<posx>0</posx>
+								<posy>0</posy>
+								<width>220</width>
+								<height>74</height>
+								<texture>menu_top.png</texture>
+							</control>
+						</control>
+						<control type="list" id="112">
+							<description>list of sort options</description>
+							<posx>0</posx>
+							<posy>6</posy>
+							<height>596</height>
+							<width>220</width>
+							<onleft>-</onleft>
+							<onright>-</onright>		
+							<onup>-</onup>
+							<ondown>-</ondown>
+							<scrolltime>200</scrolltime>
+							<itemlayout height="74">
+								<control type="image">
+									<posx>0</posx>
+									<posy>0</posy>
+									<width>220</width>
+									<height>74</height>
+									<texture>menu_center.png</texture>
+								</control>
+								<control type="label">
+									<posx>15</posx>
+									<posy>0</posy>
+									<width>190</width>
+									<height>74</height>
+									<font>font23</font>
+									<aligny>center</aligny>
+									<align>left</align>
+									<info>ListItem.Label</info>
+									<textcolor>FFBBBBBB</textcolor>
+								</control>
+							</itemlayout>
+							<focusedlayout height="74">
+								<control type="image">
+									<posx>0</posx>
+									<posy>0</posy>
+									<width>220</width>
+									<height>74</height>
+									<texture>menu_center_on.png</texture>
+								</control>
+								<control type="label">
+									<posx>15</posx>
+									<posy>0</posy>
+									<width>190</width>
+									<height>74</height>
+									<font>font23</font>
+									<aligny>center</aligny>
+									<align>left</align>
+									<info>ListItem.Label</info>
+									<textcolor>FF8CC641</textcolor>
+								</control>
+							</focusedlayout>
+						</control>
+						<control type="image">
+							<visible>IsEmpty(Container(112).ListItemPosition(0).Label)</visible>
+							<posx>0</posx>
+							<posy>6</posy>
+							<width>220</width>
+							<height>74</height>
+							<texture>menu_center.png</texture>
+						</control>
+						<control type="image">
+							<visible>IsEmpty(Container(112).ListItemPosition(1).Label)</visible>
+							<posx>0</posx>
+							<posy>80</posy>
+							<width>220</width>
+							<height>74</height>
+							<texture>menu_center.png</texture>
+						</control>
+						<control type="image">
+							<visible>IsEmpty(Container(112).ListItemPosition(2).Label)</visible>
+							<posx>0</posx>
+							<posy>154</posy>
+							<width>220</width>
+							<height>74</height>
+							<texture>menu_center.png</texture>
+						</control>
+						<control type="image">
+							<visible>IsEmpty(Container(112).ListItemPosition(3).Label)</visible>
+							<posx>0</posx>
+							<posy>228</posy>
+							<width>220</width>
+							<height>74</height>
+							<texture>menu_center.png</texture>
+						</control>
+						<control type="image">
+							<visible>IsEmpty(Container(112).ListItemPosition(4).Label)</visible>
+							<posx>0</posx>
+							<posy>302</posy>
+							<width>220</width>
+							<height>74</height>
+							<texture>menu_center.png</texture>
+						</control>
+						<control type="image">
+							<visible>IsEmpty(Container(112).ListItemPosition(5).Label)</visible>
+							<posx>0</posx>
+							<posy>376</posy>
+							<width>220</width>
+							<height>74</height>
+							<texture>menu_center.png</texture>
+						</control>
+						<control type="image">
+							<visible>IsEmpty(Container(112).ListItemPosition(6).Label)</visible>
+							<posx>0</posx>
+							<posy>450</posy>
+							<width>220</width>
+							<height>74</height>
+							<texture>menu_center.png</texture>
+						</control>
+						<control type="image">
+							<visible>IsEmpty(Container(112).ListItemPosition(7).Label)</visible>
+							<posx>0</posx>
+							<posy>524</posy>
+							<width>220</width>
+							<height>74</height>
+							<texture>menu_center.png</texture>
+						</control>
+						<control type="group">
+							<posx>0</posx>
+							<posy>598</posy>
+							<width>220</width>
+							<height>10</height>
+							<crop>true</crop>
+							<control type="image">
+								<posx>0</posx>
+								<posy>-82</posy>
+								<width>220</width>
+								<height>92</height>
+								<texture>menu_bottom.png</texture>
+							</control>
+						</control>
+					</control>
+				</control>
+				<control type="group" id="130">
+					<description>torrent item options menu</description>
+					<control type="grouplist">
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>220</width>
+						<height>608</height>
+						<itemgap>0</itemgap>
+						<pagecontrol>-</pagecontrol>
+						<orientation>vertical</orientation>
+						<usecontrolcoords>false</usecontrolcoords>
+						<onup>-</onup>
+						<ondown>-</ondown>
+						<onleft>-</onleft>
+						<onright>-</onright>
+						<control type="group">
+							<description>view button</description>
+							<width>220</width>
+							<height>74</height>
+							<control type="button" id="131">
+								<posx>0</posx>
+								<posy>0</posy>
+								<width>220</width>
+								<height>74</height>
+								<texturenofocus>menu_top.png</texturenofocus>
+								<texturefocus>menu_top_on.png</texturefocus>
+								<label>Pause</label>
+								<font>font23</font>
+								<align>left</align>
+								<textoffsetx>72</textoffsetx>
+								<textcolor>FFBBBBBB</textcolor>
+								<focusedcolor>FF8CC641</focusedcolor>
+								<onclick>-</onclick>
+								<onright>-</onright>
+								<onup>132</onup>
+								<ondown>132</ondown>
+								<onleft>-</onleft>
+							</control>
+							<control type="image">
+								<visible>!Control.HasFocus(131)</visible>
+								<posx>20</posx>
+								<posy>26</posy>
+								<width>22</width>
+								<height>22</height>
+								<texture>pause.png</texture>
+								<colordiffuse>grey</colordiffuse>
+							</control>
+							<control type="image">
+								<visible>!Control.HasFocus(131)</visible>
+								<posx>40</posx>
+								<posy>27</posy>
+								<width>20</width>
+								<height>20</height>
+								<texture>play.png</texture>
+								<colordiffuse>grey</colordiffuse>
+							</control>
+							<control type="image">
+								<visible>Control.HasFocus(131)</visible>
+								<posx>20</posx>
+								<posy>26</posy>
+								<width>22</width>
+								<height>22</height>
+								<texture>pause.png</texture>
+								<colordiffuse>green</colordiffuse>
+							</control>
+							<control type="image">
+								<visible>Control.HasFocus(131)</visible>
+								<posx>40</posx>
+								<posy>27</posy>
+								<width>20</width>
+								<height>20</height>
+								<texture>play.png</texture>
+								<colordiffuse>green</colordiffuse>
+							</control>
+						</control>
+						<control type="group">
+							<description>sort button</description>
+							<width>220</width>
+							<height>74</height>
+							<control type="button" id="132">
+								<posx>0</posx>
+								<posy>0</posy>
+								<width>220</width>
+								<height>74</height>
+								<texturenofocus>menu_center.png</texturenofocus>
+								<texturefocus>menu_center_on.png</texturefocus>
+								<label>Remove</label>
+								<font>font23</font>
+								<textoffsetx>72</textoffsetx>
+								<align>left</align>
+								<textcolor>FFBBBBBB</textcolor>
+								<focusedcolor>FF8CC641</focusedcolor>
+								<onclick>-</onclick>
+								<onright>-</onright>
+								<onup>131</onup>
+								<ondown>131</ondown>
+								<onleft>-</onleft>
+							</control>
+							<control type="image">
+								<visible>!Control.HasFocus(132)</visible>
+								<posx>10</posx>
+								<posy>10</posy>
+								<width>54</width>
+								<height>54</height>
+								<texture>media_action_icon_remove.png</texture>
+								<colordiffuse>grey</colordiffuse>
+							</control>
+							<control type="image">
+								<visible>Control.HasFocus(132)</visible>
+								<posx>10</posx>
+								<posy>10</posy>
+								<width>54</width>
+								<height>54</height>
+								<texture>media_action_icon_remove_on.png</texture>
+							</control>
+						</control>
+						<control type="group">
+							<width>220</width>
+							<height>74</height>
+							<control type="button">
+								<enable>false</enable>
+								<posx>0</posx>
+								<posy>0</posy>
+								<width>220</width>
+								<height>74</height>
+								<texturenofocus>menu_center.png</texturenofocus>
+								<texturefocus>menu_center_on.png</texturefocus>
+								<label>-</label>
+								<onclick>-</onclick>
+							</control>
+						</control>
+						<control type="group">
+							<width>220</width>
+							<height>74</height>
+							<control type="button">
+								<enable>false</enable>
+								<posx>0</posx>
+								<posy>0</posy>
+								<width>220</width>
+								<height>74</height>
+								<texturenofocus>menu_center.png</texturenofocus>
+								<texturefocus>menu_center_on.png</texturefocus>
+								<label>-</label>
+								<onclick>-</onclick>
+							</control>
+						</control>
+						<control type="group">
+							<width>220</width>
+							<height>74</height>
+							<control type="button">
+								<enable>false</enable>
+								<posx>0</posx>
+								<posy>0</posy>
+								<width>220</width>
+								<height>74</height>
+								<texturenofocus>menu_center.png</texturenofocus>
+								<texturefocus>menu_center_on.png</texturefocus>
+								<label>-</label>
+								<onclick>-</onclick>
+							</control>
+						</control>
+						<control type="group">
+							<width>220</width>
+							<height>74</height>
+							<control type="button">
+								<enable>false</enable>
+								<posx>0</posx>
+								<posy>0</posy>
+								<width>220</width>
+								<height>74</height>
+								<texturenofocus>menu_center.png</texturenofocus>
+								<texturefocus>menu_center_on.png</texturefocus>
+								<label>-</label>
+								<onclick>-</onclick>
+							</control>
+						</control>
+						<control type="group">
+							<width>220</width>
+							<height>74</height>
+							<control type="button">
+								<enable>false</enable>
+								<posx>0</posx>
+								<posy>0</posy>
+								<width>220</width>
+								<height>74</height>
+								<texturenofocus>menu_center.png</texturenofocus>
+								<texturefocus>menu_center_on.png</texturefocus>
+								<label>-</label>
+								<onclick>-</onclick>
+							</control>
+						</control>
+						<control type="group">
+							<width>220</width>
+							<height>90</height>
+							<crop>true</crop>
+							<control type="image">
+								<posx>0</posx>
+								<posy>-2</posy>
+								<width>220</width>
+								<height>92</height>
+								<texture>menu_bottom.png</texture>
+							</control>
+						</control>
+					</control>
+				</control>
+			</control>
+			<control type="group">
+				<animation type="Conditional" condition="Control.IsVisible(112) | Control.IsVisible(130)">
+					<effect type="fade" start="100" end="0" time="180"/>
+					<effect type="slide" start="0,0" end="-222,0" time="120"/>
+				</animation>
+				<include>Common_Main_Menu_Button</include>
+			</control>
+		</control>
+	</controls>
+</window>

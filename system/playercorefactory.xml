@@ -1,0 +1,57 @@
+<playercorefactory>
+  <players>
+    <!-- These are compiled-in as re-ordering them would break scripts
+    The following aliases may also be used:
+      audiodefaultplayer, videodefaultplayer, videodefaultdvdplayer
+    <player name="DVDPlayer" audio="true" video="true" />
+    <player name="DVDPlayer" /> placeholder for MPlayer
+    <player name="PAPlayer" audio="true" />
+    <player name="FLASHPlayer" audio="true" video="true" />
+    -->
+  </players>
+
+  <rules name="system rules">
+    <!-- Internet streams -->
+    <rule name="streams" internetstream="true">
+      <rule mimetypes="text/html" player="FLASHPlayer" /> <!-- boxee -->
+      <rule mimetypes="application/x-shockwave-flash" player="FLASHPlayer" /> <!-- boxee -->
+      <rule mimetypes="application/x-silverlight" player="FLASHPlayer" /> <!-- boxee -->
+      <rule mimetypes="application/x-silverlight-2" player="FLASHPlayer" /> <!-- boxee -->
+      <rule mimetypes="application/x-vnd.movenetworks.qm" player="FLASHPlayer" /> <!-- boxee -->
+      <rule name="flv/aacp/sdp" mimetypes="video/x-flv|video-flv|audio/aacp|application/sdp" player="DVDPlayer" />
+      <rule name="mp2" mimetypes="application/octet-stream" filetypes="mp2" player="PAPlayer" />
+      <rule name="ts" filetypes="ts" player="DVDPlayer" />
+    </rule>
+
+    <!-- web -->
+    <rule filetypes="swf" player="FLASHPlayer" />  <!-- boxee -->
+    <rule filetypes="xap" player="FLASHPlayer" />  <!-- boxee -->
+    <rule filetypes="html" player="FLASHPlayer" />  <!-- boxee -->
+    <rule filetypes="htm" player="FLASHPlayer" />  <!-- boxee -->
+    <rule filetypes="asp" player="FLASHPlayer" />  <!-- boxee -->
+    <rule filetypes="aspx" player="FLASHPlayer" />  <!-- boxee -->
+
+    <rule name="rtv" protocols="rtv" player="DVDPlayer" />
+    <rule name="hdhomerun/myth/rtmp/mms/udp" protocols="hdhomerun|myth|cmyth|rtmp|mms|mmsh|udp" player="DVDPlayer" />
+    <rule name="lastfm/shout" protocols="lastfm|shout" player="PAPlayer" />
+
+    <rule protocols="flash" player="FLASHPlayer" /> <!-- boxee -->
+    <rule protocols="!(app)" mimetypes="text/html" player="FLASHPlayer" /> <!-- boxee -->
+
+    <!-- dvdplayer can play standard rtsp streams -->
+    <rule name="rtsp" protocols="rtsp" player="DVDPlayer" />
+
+    <!-- DVDs -->
+    <rule name="dvd" dvd="true" player="videodefaultdvdplayer" />
+    <rule name="dvdfile" dvdfile="true" player="videodefaultdvdplayer" />
+    <rule name="dvdimage" dvdimage="true" player="videodefaultdvdplayer" />
+
+    <!-- Only dvdplayer can handle these normally -->
+    <rule name="sdp/asf" filetypes="sdp|asf" player="DVDPlayer" />
+    <rule filetypes="mp4|flv|m4v" player="DVDPlayer" />  <!-- boxee -->
+
+    <!-- Pass these to dvdplayer as we do not know if they are audio or video -->
+    <rule name="nsv" filetypes="nsv" player="DVDPlayer" />
+
+  </rules>
+</playercorefactory>

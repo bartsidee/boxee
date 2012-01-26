@@ -1,0 +1,706 @@
+<?xml version="1.0"?>
+<window id="354">
+	<defaultcontrol always="true">9105</defaultcontrol>
+	<controls>
+		<!-- Dummy container for Video Info -->
+		<control type="list" id="5000">
+			<description>info</description>
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>0</width>
+			<height>0</height>
+			<visible>false</visible>
+			<itemlayout height="0">
+		  </itemlayout>
+			<focusedlayout height="0">
+		  </focusedlayout>
+		</control>
+		<control type="group">
+			<visible>Window.IsActive(FullscreenVideo) + Player.HasVideo</visible>
+			<animation type="WindowOpen" condition="!Window.IsVisible(DialogSeekBar.xml)">
+				<effect type="fade" time="200" delay="0"/>
+			</animation>
+			<animation type="WindowClose" condition="!Window.IsVisible(DialogSeekBar.xml)">
+				<effect type="fade" time="200" delay="0"/>
+			</animation>
+			<animation type="Conditional" condition="Window.IsVisible(boxee_media_info.xml)">
+				<effect type="fade" start="100" end="0" time="200"/>
+			</animation>
+			<control type="group">
+				<posx>128</posx>
+				<posy>42</posy>
+				<control type="image">
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>1024</width>
+					<height>64</height>
+					<texture border="32">osd_background.png</texture>
+				</control>
+				<control type="label">
+					<visible>IsEmpty(Container(5000).ListItem.TVshowtitle) + IsEmpty(Container(5000).ListItem.Title)</visible>
+					<posx>20</posx>
+					<posy>18</posy>
+					<width>760</width>
+					<height>24</height>
+					<font>title24b</font>
+					<textcolor>title</textcolor>
+					<label>$INFO[Container(5000).ListItem.Label]</label>
+					<aligny>center</aligny>
+					<align>left</align>
+					<scroll>false</scroll>
+				</control>
+				<control type="label">
+					<visible>IsEmpty(Container(5000).ListItem.TVshowtitle) + !IsEmpty(Container(5000).ListItem.Title)</visible>
+					<posx>20</posx>
+					<posy>18</posy>
+					<width>760</width>
+					<height>24</height>
+					<font>title24b</font>
+					<textcolor>title</textcolor>
+					<label>[UPPERCASE]$INFO[Container(5000).ListItem.Label][/UPPERCASE]</label>
+					<aligny>center</aligny>
+					<align>left</align>
+					<scroll>false</scroll>
+				</control>
+				<control type="label">
+					<visible>!IsEmpty(Container(5000).ListItem.TVShowTitle)</visible>
+					<posx>20</posx>
+					<posy>4</posy>
+					<width>760</width>
+					<height>24</height>
+					<font>title24b</font>
+					<textcolor>white</textcolor>
+					<label>[UPPERCASE][COLOR title]$INFO[Container(5000).ListItem.TVShowTitle][/COLOR][/UPPERCASE]</label>
+					<aligny>top</aligny>
+					<align>left</align>
+					<scroll>false</scroll>
+				</control>
+				<control type="label">
+					<visible>!IsEmpty(Container(5000).ListItem.TVShowTitle)</visible>
+					<posx>20</posx>
+					<posy>32</posy>
+					<width>760</width>
+					<height>20</height>
+					<font>font20b</font>
+					<textcolor>white</textcolor>
+					<label>[UPPERCASE]$INFO[Container(5000).ListItem.Season,$LOCALIZE[20373] ,    ]$INFO[Container(5000).ListItem.Episode,$LOCALIZE[20359] ,    ]$INFO[Container(5000).ListItem.Title,","][/UPPERCASE]</label>
+					<aligny>bottom</aligny>
+					<align>left</align>
+					<scroll>false</scroll>
+				</control>
+				<control type="image">
+					<visible>Control.HasFocus(9000)</visible>
+					<posx>790</posx>
+					<posy>64</posy>
+					<width>224</width>
+					<height>32</height>
+					<texture border="16" flipy="true">osd_icon_tooltip.png</texture>
+				</control>
+				<control type="label">
+					<visible>Control.HasFocus(9000)</visible>
+					<posx>800</posx>
+					<posy>70</posy>
+					<width>204</width>
+					<height>16</height>
+					<font>title16b</font>
+					<align>center</align>
+					<aligny>center</aligny>
+					<label>[UPPERCASE]$INFO[Container(9000).ListItem.Label][/UPPERCASE]</label>
+					<textcolor>white</textcolor>
+				</control>
+				<control type="list" id="9000">
+					<animation type="Conditional" condition="stringcompare(Container(9000).NumItems,3)">
+						<effect type="slide" start="0" end="56" time="0" delay="0"/>
+					</animation>
+					<animation type="Conditional" condition="stringcompare(Container(9000).NumItems,2)">
+						<effect type="slide" start="0" end="112" time="0" delay="0"/>
+					</animation>
+					<animation type="Conditional" condition="stringcompare(Container(9000).NumItems,1)">
+						<effect type="slide" start="0" end="168" time="0" delay="0"/>
+					</animation>
+					<posx>786</posx>
+					<posy>0</posy>
+					<width>600</width>
+					<height>100</height>
+					<onup>-</onup>
+					<onright>-</onright>
+					<onleft>-</onleft>
+					<ondown>9100</ondown>
+					<scrolltime>200</scrolltime>
+					<pagecontrol>-</pagecontrol>
+					<orientation>horizontal</orientation>
+					<offsetx>4</offsetx>
+					<offsety>4</offsety>
+					<itemlayout width="56" height="56">
+						<control type="image">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>56</width>
+							<height>56</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture>$INFO[ListItem.Thumb]</texture>
+						</control>
+					</itemlayout>
+					<focusedlayout width="56" height="56">
+						<control type="image">
+							<visible>Control.HasFocus(9000)</visible>
+							<posx>-9</posx>
+							<posy>-9</posy>
+							<width>74</width>
+							<height>74</height>
+							<texture border="30">button_action_menu_source_on.png</texture>
+						</control>
+						<control type="image">
+							<visible>!Control.HasFocus(9000)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>56</width>
+							<height>56</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture>$INFO[ListItem.Thumb]</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(9000)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>56</width>
+							<height>56</height>
+							<texture>$INFO[ListItem.Thumb]</texture>
+						</control>
+					</focusedlayout>
+					<content>
+						<item>
+							<controlid>9007</controlid>
+							<visible>!Container(5000).ListItem.Property(disable-recommend)</visible>
+							<visible>!boxee.OfflineMode</visible>
+							<onclick>-</onclick>
+							<thumb>icons/icon_osd_share.png</thumb>
+							<label>54052</label>
+						</item>
+						<item>
+							<controlid>9003</controlid>
+							<visible>Container(5000).ListItem.Property(has-more-info)</visible>
+							<onclick>-</onclick>
+							<thumb>icons/icon_osd_read_more.png</thumb>
+							<label>53710</label>
+						</item>
+						<item>
+							<controlid>9008</controlid>
+							<visible>!IsEmpty(container(5000).ListItem.TVShowTitle) + !IsEmpty(container(5000).ListItem.FileNameAndPath) + !container(5000).ListItem.property(IsInternetStream)</visible>
+							<onclick>RunScript(special://xbmc/scripts/OpenSubtitles/default.py, [TV]$INFO[container(5000).ListItem.Season] $INFO[container(5000).ListItem.Episode] $INFO[container(5000).ListItem.TVshowtitle][/TV][PATH]$INFO[container(5000).ListItem.filenameandpath][/PATH])</onclick>
+							<onclick>Dialog.Close(354)</onclick>
+							<thumb>icons/icon_osd_subtitles.png</thumb>
+							<label>287</label>
+						</item>
+						<item>
+							<controlid>9009</controlid>
+							<visible>!IsEmpty(container(5000).ListItem.Title) + IsEmpty(container(5000).ListItem.TVShowTitle) + !IsEmpty(container(5000).ListItem.FileNameAndPath) + !container(5000).ListItem.property(IsInternetStream) + !container(5000).ListItem.property(IsTrailer)</visible>
+							<onclick>RunScript(special://xbmc/scripts/OpenSubtitles/default.py, [MOVIE]$INFO[container(5000).ListItem.title][/MOVIE][PATH]$INFO[container(5000).ListItem.filenameandpath][/PATH])</onclick>
+							<onclick>Dialog.Close(354)</onclick>
+							<thumb>icons/icon_osd_subtitles.png</thumb>
+							<label>287</label>
+						</item>
+						<item>
+							<controlid>9010</controlid>
+							<visible>IsEmpty(container(5000).ListItem.Title) + IsEmpty(container(5000).ListItem.TVShowTitle) + !IsEmpty(container(5000).ListItem.FileNameAndPath) + !container(5000).ListItem.property(IsInternetStream) + !container(5000).ListItem.property(IsTrailer)</visible>
+							<onclick>RunScript(special://xbmc/scripts/OpenSubtitles/default.py, [PATH]$INFO[container(5000).ListItem.filenameandpath][/PATH])</onclick>
+							<onclick>Dialog.Close(354)</onclick>
+							<thumb>icons/icon_osd_subtitles.png</thumb>
+							<label>287</label>
+						</item>
+						<item>
+							<controlid>9011</controlid>
+							<onclick>Dialog.Close(354)</onclick>
+							<onclick>ActivateWindow(10057)</onclick>
+							<thumb>icons/icon_osd_settings.png</thumb>
+							<label>5</label>
+						</item>
+					</content>
+				</control>
+			</control>
+			<control type="group">
+				<posx>128</posx>
+				<posy>616</posy>
+				<control type="image">
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>1024</width>
+					<height>64</height>
+					<texture border="32">osd_background.png</texture>
+				</control>
+				<include>OSD_Progress</include>
+				<control type="image">
+					<visible>[Control.HasFocus(9101) | Control.HasFocus(9108) | Control.HasFocus(9109)] + [!IsEmpty(container(5000).ListItem.property(PrevItemLabel)) | !IsEmpty(container(5000).ListItem.property(NextItemLabel)) | !IsEmpty(container(5000).ListItem.property(osd-ext-0-text))]</visible>
+					<posx>546</posx>
+					<posy>-32</posy>
+					<width>416</width>
+					<height>32</height>
+					<texture border="16">osd_icon_tooltip.png</texture>
+				</control>
+				<control type="label">
+					<visible>Control.HasFocus(9101) + !IsEmpty(container(5000).ListItem.property(PrevItemLabel))</visible>
+					<posx>556</posx>
+					<posy>-32</posy>
+					<width>396</width>
+					<height>32</height>
+					<font>title16b</font>
+					<align>center</align>
+					<aligny>center</aligny>
+					<label>[UPPERCASE]$INFO[container(5000).ListItem.property(PrevItemLabel)][/UPPERCASE]</label>
+					<textcolor>white</textcolor>
+				</control>
+				<control type="label">
+					<visible>Control.HasFocus(9108) + !IsEmpty(container(5000).ListItem.property(NextItemLabel))</visible>
+					<posx>556</posx>
+					<posy>-32</posy>
+					<width>396</width>
+					<height>32</height>
+					<font>title16b</font>
+					<align>center</align>
+					<aligny>center</aligny>
+					<label>[UPPERCASE]$INFO[container(5000).ListItem.property(NextItemLabel)][/UPPERCASE]</label>
+					<textcolor>white</textcolor>
+				</control>
+				<control type="label">
+					<visible>Control.HasFocus(9109) + !IsEmpty(container(5000).ListItem.property(osd-ext-0-on))</visible>
+					<posx>556</posx>
+					<posy>-32</posy>
+					<width>396</width>
+					<height>32</height>
+					<font>title16b</font>
+					<align>center</align>
+					<aligny>center</aligny>
+					<label>[UPPERCASE]$INFO[container(5000).ListItem.property(osd-ext-0-text)][/UPPERCASE]</label>
+					<textcolor>white</textcolor>
+				</control>
+				<control type="grouplist" id="9100">
+					<defaultcontrol always="true">9105</defaultcontrol>
+					<posx>456</posx>
+					<posy>6</posy>
+					<width>700</width>
+					<height>52</height>
+					<itemgap>0</itemgap>
+					<onup>9000</onup>
+					<onleft>-</onleft>
+					<onright>-</onright>
+					<orientation>horizontal</orientation>
+					<usecontrolcoords>false</usecontrolcoords>
+					<control type="group">
+						<visible>Control.IsVisible(9101)</visible>
+						<width>52</width>
+						<height>52</height>
+						<control type="image">
+							<visible>!Control.HasFocus(9101)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture>icons/icon_osd_track_bwd.png</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(9101)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_track_bwd.png</texture>
+						</control>
+						<control type="button" id="9101">
+							<visible>container(5000).ListItem.property(HasPrevItem)</visible>
+							<posx>-8</posx>
+							<posy>-8</posy>
+							<width>68</width>
+							<height>68</height>
+							<texture border="30">button_action_menu_source_on.png</texture>
+							<label>-</label>
+							<texturenofocus>-</texturenofocus>
+							<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+							<onclick>-</onclick>
+							<onup>9000</onup>
+							<ondown>-</ondown>
+							<onleft>-</onleft>
+							<onright>9102</onright>
+						</control>
+					</control>
+					<control type="group">
+						<visible>Control.IsVisible(9102)</visible>
+						<width>52</width>
+						<height>52</height>
+						<control type="image">
+							<visible>!Control.HasFocus(9102)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture>icons/icon_osd_big_skip_bwd.png</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(9102)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_big_skip_bwd.png</texture>
+						</control>
+						<control type="button" id="9102">
+							<visible>Player.canskip</visible>
+							<posx>-8</posx>
+							<posy>-8</posy>
+							<width>68</width>
+							<height>68</height>
+							<texture border="30">button_action_menu_source_on.png</texture>
+							<label>-</label>
+							<texturenofocus>-</texturenofocus>
+							<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+							<onclick>PlayerControl(BigSkipBackward)</onclick>
+							<onup>9000</onup>
+							<ondown>-</ondown>
+							<onleft>9101</onleft>
+							<onright>9103</onright>
+						</control>
+					</control>
+					<control type="group">
+						<visible>Control.IsVisible(9103)</visible>
+						<width>52</width>
+						<height>52</height>
+						<control type="image">
+							<visible>!Control.HasFocus(9103)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture>icons/icon_osd_small_skip_bwd.png</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(9103)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_small_skip_bwd.png</texture>
+						</control>
+						<control type="button" id="9103">
+							<visible>Player.canskip</visible>
+							<posx>-8</posx>
+							<posy>-8</posy>
+							<width>68</width>
+							<height>68</height>
+							<texture border="30">button_action_menu_source_on.png</texture>
+							<label>-</label>
+							<texturenofocus>-</texturenofocus>
+							<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+							<onclick>PlayerControl(SmallSkipBackward)</onclick>
+							<onup>9000</onup>
+							<ondown>-</ondown>
+							<onleft>9102</onleft>
+							<onright>9104</onright>
+						</control>
+					</control>
+					<control type="group">
+						<visible>Control.IsVisible(9104)</visible>
+						<width>52</width>
+						<height>52</height>
+						<control type="image">
+							<visible>!Control.HasFocus(9104)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture>icons/icon_osd_stop.png</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(9104)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_stop.png</texture>
+						</control>
+						<control type="button" id="9104">
+							<posx>-8</posx>
+							<posy>-8</posy>
+							<width>68</width>
+							<height>68</height>
+							<label>-</label>
+							<texturenofocus>-</texturenofocus>
+							<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+							<onclick>PlayerControl(stop)</onclick>
+							<onclick>Dialog.Close(354)</onclick>
+							<onup>9000</onup>
+							<ondown>-</ondown>
+							<onleft>9103</onleft>
+							<onright>9105</onright>
+						</control>
+					</control>
+					<control type="group">
+						<visible>Control.IsVisible(9105)</visible>
+						<width>52</width>
+						<height>52</height>
+						<control type="image">
+							<visible>!Control.HasFocus(9105) + Player.Playing</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture>icons/icon_osd_pause.png</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(9105) + Player.Playing</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_pause.png</texture>
+						</control>
+						<control type="image">
+							<visible>!Control.HasFocus(9105) + Player.Paused</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture>icons/icon_osd_play.png</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(9105) + Player.Paused</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_play.png</texture>
+						</control>
+						<control type="togglebutton" id="9105">
+							<visible>Player.canpause</visible>
+							<posx>-8</posx>
+							<posy>-8</posy>
+							<width>68</width>
+							<height>68</height>
+							<label>-</label>
+							<texturenofocus>-</texturenofocus>
+							<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+							<alttexturenofocus>-</alttexturenofocus>
+							<alttexturefocus border="30">button_action_menu_source_on.png</alttexturefocus>
+							<onclick>PlayerControl(play)</onclick>
+							<onup>9000</onup>
+							<ondown>-</ondown>
+							<onleft>9104</onleft>
+							<onright>9106</onright>
+						</control>
+					</control>
+					<control type="group">
+						<visible>Control.IsVisible(9106)</visible>
+						<width>52</width>
+						<height>52</height>
+						<control type="image">
+							<visible>!Control.HasFocus(9106)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture>icons/icon_osd_small_skip_fwd.png</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(9106)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_small_skip_fwd.png</texture>
+						</control>
+						<control type="button" id="9106">
+							<visible>Player.canskip</visible>
+							<posx>-8</posx>
+							<posy>-8</posy>
+							<width>68</width>
+							<height>68</height>
+							<label>-</label>
+							<texturenofocus>-</texturenofocus>
+							<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+							<onclick>PlayerControl(SmallSkipForward)</onclick>
+							<onup>9000</onup>
+							<ondown>-</ondown>
+							<onleft>9105</onleft>
+							<onright>9107</onright>
+						</control>
+					</control>
+					<control type="group">
+						<visible>Control.IsVisible(9107)</visible>
+						<width>52</width>
+						<height>52</height>
+						<control type="image">
+							<visible>!Control.HasFocus(9107)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture>icons/icon_osd_big_skip_fwd.png</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(9107)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_big_skip_fwd.png</texture>
+						</control>
+						<control type="button" id="9107">
+							<visible>Player.canskip</visible>
+							<posx>-8</posx>
+							<posy>-8</posy>
+							<width>68</width>
+							<height>68</height>
+							<label>-</label>
+							<texturenofocus>-</texturenofocus>
+							<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+							<onclick>PlayerControl(BigSkipForward)</onclick>
+							<onup>9000</onup>
+							<ondown>-</ondown>
+							<onleft>9106</onleft>
+							<onright>9108</onright>
+						</control>
+					</control>
+					<control type="group">
+						<visible>Control.IsVisible(9108)</visible>
+						<width>52</width>
+						<height>52</height>
+						<control type="image">
+							<visible>!Control.HasFocus(9108)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<texture>icons/icon_osd_track_fwd.png</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(9108)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<texture>icons/icon_osd_track_fwd.png</texture>
+						</control>
+						<control type="button" id="9108">
+							<visible>container(5000).ListItem.property(HasNextItem)</visible>
+							<posx>-8</posx>
+							<posy>-8</posy>
+							<width>68</width>
+							<height>68</height>
+							<label>-</label>
+							<texturenofocus>-</texturenofocus>
+							<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+							<onclick>-</onclick>
+							<onup>9000</onup>
+							<ondown>-</ondown>
+							<onleft>9107</onleft>
+							<onright>9109</onright>
+						</control>
+					</control>
+					<control type="group">
+						<visible>Control.IsVisible(9109)</visible>
+						<width>52</width>
+						<height>52</height>
+						<control type="largeimage">
+							<visible>!Control.HasFocus(9109)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<colordiffuse>80FFFFFF</colordiffuse>
+							<info>container(5000).ListItem.Property(osd-ext-0-thumb)</info>
+						</control>
+						<control type="largeimage">
+							<visible>Control.HasFocus(9109)</visible>
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>52</width>
+							<height>52</height>
+							<info>container(5000).ListItem.Property(osd-ext-0-thumb)</info>
+						</control>
+						<control type="button" id="9109">
+							<visible>container(5000).ListItem.property(osd-ext-0-on)</visible>
+							<posx>-8</posx>
+							<posy>-8</posy>
+							<width>68</width>
+							<height>68</height>
+							<label>-</label>
+							<texturenofocus>-</texturenofocus>
+							<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+							<onclick>-</onclick>
+							<onup>9000</onup>
+							<ondown>-</ondown>
+							<onleft>9108</onleft>
+							<onright>9110</onright>
+						</control>
+					</control>
+					<control type="group">
+                        <visible>Control.IsVisible(9110)</visible>
+                        <width>52</width>
+                        <height>52</height>
+                        <control type="image">
+                            <visible>!Control.HasFocus(9110)</visible>
+                            <posx>0</posx>
+                            <posy>0</posy>
+                            <width>52</width>
+                            <height>52</height>
+                            <colordiffuse>80FFFFFF</colordiffuse>
+							<texture>icons/icon_osd_tracks.png</texture>
+                        </control>
+                        <control type="image">
+                            <visible>Control.HasFocus(9110)</visible>
+                            <posx>0</posx>
+                            <posy>0</posy>
+                            <width>52</width>
+                            <height>52</height>
+                            <texture>icons/icon_osd_tracks.png</texture>
+                        </control>
+                        <control type="button" id="9110">
+                            <visible>VideoPlayer.HasMenu</visible>
+                            <posx>-8</posx>
+                            <posy>-8</posy>
+                            <width>68</width>
+                            <height>68</height>
+                            <label>-</label>
+                            <texturenofocus>-</texturenofocus>
+                            <texturefocus border="30">button_action_menu_source_on.png</texturefocus>
+                            <onclick>XBMC.PlayerControl(ShowVideoMenu)</onclick>
+                            <onup>9000</onup>
+                            <ondown>-</ondown>
+                            <onleft>9109</onleft>
+                            <onright>9111</onright>
+                        </control>
+                    </control>
+                    <control type="group">
+                      <visible>true</visible>
+                      <width>110</width>
+                      <height>42</height>                      
+                      <control type="togglebutton" id="9111">
+				    	  <visible>!IsEmpty(Container(5000).ListItem.property(quality-lbl))</visible>
+					      <texturenofocus>button_option_menu_dropdown2.png</texturenofocus>
+		                  <texturefocus>button_option_menu_dropdown_on2.png</texturefocus>
+		                  <textureclick>button_option_menu_dropdown_click2.png</textureclick>
+		                  <alttexturenofocus>button_option_menu_dropdown2.png</alttexturenofocus>
+		                  <alttexturefocus>button_option_menu_dropdown_on2.png</alttexturefocus>
+                          <posx>30</posx>
+                          <posy>5</posy>
+                          <width>110</width>
+                          <height>42</height>
+                          <onclick>-</onclick>
+         			      <label>$INFO[container(5000).ListItem.property(quality-lbl)]</label>
+                          <font>title22b</font>
+					      <textcolor>gray</textcolor>
+                          <onleft>9110</onleft>
+                      </control>                                          
+ 				    </control>
+				</control>
+			</control>
+		</control>
+	</controls>
+</window>

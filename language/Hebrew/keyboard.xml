@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<keyboard lang="he" desc="hebrew" native_desc="עברית" rtl="true" has_caps="false" qwerty_equiv="a">
+  <char order="0" qwerty_equiv="t">א</char>
+  <char order="1" qwerty_equiv="c">ב</char>
+  <char order="2" qwerty_equiv="d">ג</char>
+  <char order="3" qwerty_equiv="s">ד</char>
+  <char order="4" qwerty_equiv="v">ה</char>
+  <char order="5" qwerty_equiv="u">ו</char>
+  <char order="6" qwerty_equiv="z">ז</char>
+  <char order="7" qwerty_equiv="j">ח</char>
+  <char order="8" qwerty_equiv="y">ט</char>
+  <char order="9" qwerty_equiv="h">י</char>
+  <char order="10" qwerty_equiv="f">כ</char>
+  <char order="11" qwerty_equiv="l">ך</char>
+  <char order="12" qwerty_equiv="k">ל</char>
+  <char order="13" qwerty_equiv="n">מ</char>
+  <char order="14" qwerty_equiv="o">ם</char>
+  <char order="15" qwerty_equiv="b">נ</char>
+  <char order="16" qwerty_equiv="i">ן</char>
+  <char order="17" qwerty_equiv="x">ס</char>
+  <char order="18" qwerty_equiv="g">ע</char>
+  <char order="19" qwerty_equiv="p">פ</char>
+  <char order="20" qwerty_equiv=";">ף</char>
+  <char order="21" qwerty_equiv="m">צ</char>
+  <char order="22" qwerty_equiv=".">ץ</char>
+  <char order="23" qwerty_equiv="e">ק</char>
+  <char order="24" qwerty_equiv="r">ר</char>
+  <char order="25" qwerty_equiv="a">ש</char>
+  <char order="26" qwerty_equiv=",">ת</char>
+</keyboard>
+

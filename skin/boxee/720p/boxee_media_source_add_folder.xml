@@ -1,0 +1,209 @@
+<?xml version="1.0"?>
+<window id="10464">
+	<defaultcontrol always="true">52</defaultcontrol>
+	<allowoverlay>no</allowoverlay>
+	<controls>
+		<include>Common_Background</include>
+		<include>Common_Status</include>
+		<include>Common_Now_Playing</include>
+		<control type="image">
+			<!--animation type="WindowOpen" condition="!Window.Previous(Settings.xml) + !Window.Previous(SettingsCategory.xml)">
+				<effect type="fade" start="0" end="100" time="200" delay="0"/>
+			</animation>
+			<animation type="WindowClose" condition="!Window.Next(Settings.xml) + !Window.Next(SettingsCategory.xml)">
+				<effect type="fade" start="100" end="0" time="200" delay="0"/>
+			</animation-->
+			<posx>0</posx>
+			<posy>0</posy>
+			<width>1280</width>
+			<height>720</height>
+			<texture>black.png</texture>
+			<colordiffuse>80FFFFFF</colordiffuse>
+		</control>
+		<control type="group">
+			<!--animation type="Conditional" condition="Window.IsVisible(boxee_media_source_list.xml) | Window.IsVisible(boxee_media_source_add_share.xml) | Window.IsVisible(boxee_media_source_add_folder.xml) | Window.IsVisible(boxee_media_source_info.xml)">
+				<effect type="fade" start="100" end="0" time="200"/>
+			</animation-->
+			<posx>30</posx>
+			<posy>46</posy>
+			<width>1220</width>
+			<height>660</height>
+			<control type="image">
+				<posx>0</posx>
+				<posy>70</posy>
+				<width>1220</width>
+				<height>510</height>
+				<texture border="64">action_menu_bg.png</texture>
+			</control>
+			<control type="image">
+				<posx>100</posx>
+				<posy>104</posy>
+				<width>1020</width>
+				<height>256</height>
+				<texture border="128">feather_divider.png</texture>
+			</control>
+			<control type="label">
+				<posx>34</posx>
+				<posy>94</posy>
+				<width>1100</width>
+				<height>56</height>
+				<align>left</align>
+				<aligny>center</aligny>
+				<haspath>true</haspath>
+				<font>title56b</font>
+				<textcolor>white</textcolor>
+				<label>[UPPERCASE]$LOCALIZE[5][/UPPERCASE]</label>
+			</control>
+			<control type="label">
+				<posx>330</posx>
+				<posy>119</posy>
+				<width>1000</width>
+				<height>28</height>
+				<align>left</align>
+				<aligny>top</aligny>
+				<haspath>true</haspath>
+				<font>font24b</font>
+				<textcolor>title</textcolor>
+				<label>[UPPERCASE]$LOCALIZE[52100][/UPPERCASE]</label>
+			</control>
+			<control type="group" id="50">
+				<posx>30</posx>
+				<posy>224</posy>
+				<control type="label" id="10">
+					<posx>930</posx>
+					<posy>0</posy>
+					<width>1174</width>
+					<height>20</height>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<font>font23b</font>
+				</control>
+				<control type="label" id="51">
+					<description>path</description>
+					<posx>30</posx>
+					<posy>-16</posy>
+					<width>856</width>
+					<height>40</height>
+					<font>font24b</font>
+					<aligny>center</aligny>
+					<align>left</align>
+					<textcolor>title</textcolor>
+					<haspath>true</haspath>
+				</control>
+				<control type="button" id="53">
+					<posx>930</posx>
+					<posy>0</posy>
+					<width>216</width>
+					<height>30</height>
+					<onup>-</onup>
+					<ondown>-</ondown>
+					<onleft>52</onleft>
+					<onright>-</onright>
+					<label>54202</label>
+					<font>font20b</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>white</textcolor>
+					<focusedcolor>white</focusedcolor>
+					<textcolor2>white</textcolor2>
+					<textoffsetx>14</textoffsetx>
+					<texturenofocus>button_option_menu.png</texturenofocus>
+					<texturefocus>button_option_menu_on.png</texturefocus>
+					<textureclick>button_option_menu_click.png</textureclick>
+					<pulseonselect>false</pulseonselect>
+					<onclick>ActivateWindow(10462)</onclick>
+				</control>
+				<control type="list" id="52">
+					<posx>0</posx>
+					<posy>24</posy>
+					<width>876</width>
+					<height>304</height>
+					<onleft>-</onleft>
+					<onright>53</onright>
+					<onup>-</onup>
+					<ondown>-</ondown>
+					<pagecontrol>60</pagecontrol>
+					<scrolltime>200</scrolltime>
+					<orientation>vertical</orientation>
+					<offsety>8</offsety>
+					<itemlayout height="42">
+						<control type="image">
+							<posx>10</posx>
+							<posy>0</posy>
+							<width>856</width>
+							<height>46</height>
+							<texture border="15">button_settings_line_divider.png</texture>
+						</control>
+						<control type="label">
+							<posx>28</posx>
+							<posy>0</posy>
+							<width>804</width>
+							<height>42</height>
+							<font>font22</font>
+							<align>left</align>
+							<aligny>center</aligny>
+							<label>$INFO[ListItem.Label]</label>
+							<textcolor>grey</textcolor>
+						</control>
+					</itemlayout>
+					<focusedlayout height="42">
+						<control type="image">
+							<posx>10</posx>
+							<posy>0</posy>
+							<width>856</width>
+							<height>46</height>
+							<texture border="15">button_settings_line_divider.png</texture>
+						</control>
+						<control type="image">
+							<visible>Control.HasFocus(52)</visible>
+							<posx>0</posx>
+							<posy>-8</posy>
+							<width>876</width>
+							<height>58</height>
+							<texture border="20">button_action_menu_source_on.png</texture>
+						</control>
+						<control type="label">
+							<visible>!Control.HasFocus(52)</visible>
+							<posx>28</posx>
+							<posy>0</posy>
+							<width>804</width>
+							<height>42</height>
+							<font>font22</font>
+							<align>left</align>
+							<aligny>center</aligny>
+							<label>$INFO[ListItem.Label]</label>
+							<textcolor>grey</textcolor>
+						</control>
+						<control type="label">
+							<visible>Control.HasFocus(52)</visible>
+							<posx>28</posx>
+							<posy>0</posy>
+							<width>804</width>
+							<height>42</height>
+							<font>font22</font>
+							<align>left</align>
+							<aligny>center</aligny>
+							<label>$INFO[ListItem.Label]</label>
+							<textcolor>white</textcolor>
+						</control>
+					</focusedlayout>
+				</control>
+				<control type="scrollbar" id="60">
+					<visible>Control.IsVisible(52)</visible>
+					<posx>870</posx>
+					<posy>24</posy>
+					<width>28</width>
+					<height>312</height>
+					<texturesliderbackground border="14">scrollbar_bg.png</texturesliderbackground>
+					<textureslidernib>scrollbar_slider.png</textureslidernib>
+					<textureslidernibfocus>scrollbar_slider.png</textureslidernibfocus>
+					<texturesliderbar>-</texturesliderbar>
+					<texturesliderbarfocus>-</texturesliderbarfocus>
+					<orientation>vertical</orientation>
+					<showonepage>false</showonepage>
+				</control>
+			</control>
+		</control>
+	</controls>
+</window>

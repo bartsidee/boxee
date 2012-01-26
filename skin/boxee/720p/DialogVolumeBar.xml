@@ -1,0 +1,46 @@
+﻿<?xml version="1.0"?>
+<window id="104">
+	<defaultcontrol>1</defaultcontrol>
+	<controls>
+		<control type="group">
+			<animation type="WindowOpen">
+				<effect type="fade" start="0" end="100" time="200" delay="0"/>
+			</animation>
+			<animation type="VisibleChange">
+				<effect type="fade" start="0" end="100" time="200" delay="0"/>
+			</animation>
+			<animation type="WindowClose">
+				<effect type="fade" start="100" end="0" time="600" delay="600"/>
+			</animation>
+			<posx>1018</posx>
+			<posy>14</posy>
+			<control type="image">
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>248</width>
+				<height>40</height>
+				<texture>volume_background_on.png</texture>
+			</control>
+			<control type="progress" id="1">
+				<posx>13</posx>
+				<posy>14</posy>
+				<width>176</width>
+				<height>12</height>
+				<info>Player.Volume</info>
+				<texturebg border="6">progress/osd_progress_background.png</texturebg>
+				<lefttexture>progress/osd_progress_position_left.png</lefttexture>
+				<midtexture>progress/osd_progress_position_center.png</midtexture>
+				<righttexture>progress/osd_progress_position_right.png</righttexture>
+				<overlaytexture>-</overlaytexture>
+			</control>
+			<control type="image">
+				<description>speaker image</description>
+				<posx>204</posx>
+				<posy>0</posy>
+				<width>40</width>
+				<height>40</height>
+				<texture flipx="true">icons/icon_volume_on.png</texture>
+			</control>
+		</control>
+	</controls>
+</window>
