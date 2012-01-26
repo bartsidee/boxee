@@ -20,6 +20,10 @@
  *
  */
 
+#include "system.h"
+
+#ifdef HAS_FILESYSTEM_VTP
+
 #include "IDirectory.h"
 
 class CVTPSession;
@@ -43,3 +47,5 @@ private:
 };
 
 }
+
+#endif

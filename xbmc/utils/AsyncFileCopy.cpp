@@ -50,10 +50,10 @@ bool CAsyncFileCopy::Copy(const CStdString &from, const CStdString &to, const CS
   m_speed = 0;
   m_running = true;
   CStdString fromStripped, toStripped;
-  CURL url1(from);
-  url1.GetURLWithoutUserDetails(fromStripped);
-  CURL url2(to);
-  url2.GetURLWithoutUserDetails(toStripped);
+  CURI url1(from);
+  fromStripped = url1.GetWithoutUserDetails();
+  CURI url2(to);
+  toStripped = url2.GetWithoutUserDetails();
 
   // create our thread, which starts the file copy operation
   Create();

@@ -35,11 +35,12 @@ typedef CStdString (*FORMATFUNCTION) (float value, float min);
 class SettingInfo
 {
 public:
-  enum SETTING_TYPE { NONE=0, BUTTON, CHECK, CHECK_UCHAR, SPIN, SLIDER, SEPARATOR };
+  enum SETTING_TYPE { NONE=0, BUTTON, CHECK, CHECK_UCHAR, SPIN, SLIDER, SEPARATOR, SPIN_FLOAT };
   SettingInfo()
   {
     id = 0;
     data = NULL;
+    label2 = "";
     type = NONE;
     enabled = true;
     min = 0;
@@ -49,6 +50,7 @@ public:
   };
   SETTING_TYPE type;
   CStdString name;
+  CStdString label2;
   unsigned int id;
   void *data;
   float min;
@@ -75,6 +77,7 @@ protected:
   virtual void OnInitWindow();
   virtual void SetupPage();
   virtual void CreateSettings() {};
+  void UpdateSettingInfoLabel2(SettingInfo &setting);
   void UpdateSetting(unsigned int setting);
   void EnableSettings(unsigned int setting, bool enabled);
   virtual void OnSettingChanged(SettingInfo &setting) {};
@@ -87,8 +90,10 @@ protected:
 
   void AddSetting(SettingInfo &setting, float width, int iControlID);
 
-  void AddButton(unsigned int id, int label, float *current = NULL, float min = 0, float interval = 0, float max = 0, FORMATFUNCTION function = NULL);
+  void AddButton(unsigned int id, int label, float *current = NULL, float min = 0, float interval = 0, float max = 0, FORMATFUNCTION function = NULL, CStdString label2 = "");
+  void AddButton(unsigned int id, int label, int *current, CStdString label2);
   void AddBool(unsigned int id, int label, bool *on, bool enabled = true);
+  void AddSpin(unsigned int id, int label, float *current,float min,float max,float interval, FORMATFUNCTION function = NULL ,const char* minLabel = NULL,const char* maxLabel = NULL);
   void AddSpin(unsigned int id, int label, int *current, unsigned int max, const int *entries);
   void AddSpin(unsigned int id, int label, int *current, unsigned int min, unsigned int max, const char* minLabel = NULL);
   void AddSpin(unsigned int id, int label, std::vector<CStdString>  labels, int *current);

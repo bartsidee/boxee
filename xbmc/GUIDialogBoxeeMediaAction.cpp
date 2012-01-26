@@ -2,7 +2,6 @@
  *
  */
 
-
 #include "GUIWindowManager.h"
 #include "GUIDialogBoxeeMediaAction.h"
 #include "Util.h"
@@ -11,6 +10,7 @@
 #include "lib/libBoxee/bxmetadata.h"
 #include "lib/libBoxee/boxee.h"
 #include "lib/libBoxee/bxuserprofiledatabase.h"
+#include "lib/libBoxee/bxvideodatabase.h"
 #include "BoxeeUtils.h"
 #include "URL.h"
 #include "FileSystem/Directory.h"
@@ -19,9 +19,12 @@
 #include "FileSystem/PluginDirectory.h"
 #include "FileSystem/Directory.h"
 #include "FileSystem/BoxeeDatabaseDirectory.h"
+#include "FileSystem/DirectoryCache.h"
 #include "GUIImage.h"
 #include "VideoInfoTag.h"
+#ifdef HAS_LASTFM
 #include "LastFmManager.h"
+#endif
 #include "GUIWindowBoxeeMediaInfo.h"
 #include "GUIWindowMusicInfo.h"
 #include "GUIWindowBoxeeBrowse.h"
@@ -32,7 +35,6 @@
 #include "AppManager.h"
 #include "GUIWindowBoxeeAlbumInfo.h"
 #include "FileSystem/FileCurl.h"
-#include "GUIDialogContextMenu.h"
 #include "xbox/IoSupport.h"
 #include "FileSystem/cdioSupport.h"
 #include "DetectDVDType.h"
@@ -54,7 +56,23 @@
 #include "MediaManager.h"
 #include "GUIDialogSelect.h"
 #include "GUIDialogBoxeeVideoQuality.h"
+#include "GUIDialogBoxeeSelectionList.h"
+#include "GUIDialogBoxeeVideoResume.h"
 #include "GUIDialogBoxeeNetworkNotification.h"
+#include "GUIDialogBoxeePaymentProducts.h"
+#include "GUIDialogBoxeePaymentOkPlay.h"
+#include "ItemLoader.h"
+#include "GUIWindowBoxeeBrowseTvEpisodes.h"
+
+#include "GUIFixedListContainer.h"
+#include "GUIPanelContainer.h"
+
+#ifdef HAVE_LIBBLURAY
+// Fugly but needed so we can look up dvd title info
+#include "cores/dvdplayer/DVDDemuxers/DVDDemux.h"
+#include "cores/dvdplayer/DVDInputStreams/DVDInputStreamBluray.h"
+#include "GUIDialogBoxeeChapters.h"
+#endif
 
 #ifdef _WIN32
 #include "WIN32Util.h"
@@ -64,25 +82,23 @@ using namespace DIRECTORY;
 using namespace BOXEE;
 using namespace XFILE;
 
+#define TRAILER_BUTTON                         4
 #define LINKS_GROUP                            6000
 
-#define PLAY_BUTTON                            6010
-#define PLAY_BUTTON_LABEL_FOCUS                6011
-#define PLAY_BUTTON_LABEL_NOT_FOCUS            6012
-#define PLAY_BUTTON_ADDITION_LABEL_FOCUS       6013
-#define PLAY_BUTTON_ADDITION_LABEL_NOT_FOCUS   6014
-#define PLAY_BUTTON_ADDITION_LABEL_FOCUS_1     6015
-#define PLAY_BUTTON_ADDITION_LABEL_NOT_FOCUS_1 6016
-
 #define ADDITIONAL_LINKS_LIST                  6020
-#define ADDITIONAL_LINKS_LIST_LABEL            6021
 
 #define BUTTONS_GROUP                          6100
 #define TRAILER_LIST                           6110
-#define BUTTONS_LIST                           6120
+#define BUTTONS_LIST_GROUP                     6120
+#define BUTTONS_LIST_MOVIE                     6121
+#define BUTTONS_LIST_NOT_MOVIE                 6122
+
+#define ADDITIONAL_MOVIE_BUTTONS_LIST          4000
 
 #define INFO_GROUP                             6200
 #define BACK_GROUP                             6210
+
+#define MORE_INFO_SCROLLBAR                    6900
 
 #define APP_GROUP                              6300
 #define APP_LUANCH_BUTTON                      6310
@@ -92,53 +108,40 @@ using namespace XFILE;
 
 #define ITEM_PATH_LABEL                        6742
 
+#define CAST_PANEL_ID                          6800
 
-//#define LINK_LIST                       6000
-//#define LINK_LIST_LABEL                 6001
+#define HIDDEN_CONTAINER                       5000
+#define NOTIFICATION_APPEARANCE_IN_SEC         5000
 
-//#define TRAILER_LIST                    6500
-//#define BUTTONS_LIST                    6600
+#define RESUME_DIALOG_POS_X                    710
+#define RESUME_DIALOG_POS_Y                    334
 
-//#define PLAY_BUTTON                     6010
-//#define PLAY_LABEL_FOCUS                6011
-//#define PLAY_LABEL_NOT_FOCUS            6012
-//#define PLAY_ADDITION_LABEL_FOCUS       6013
-//#define PLAY_ADDITION_LABEL_NOT_FOCUS   6014
-//#define SOURCES_BUTTON                  6210
+#define BUTTON_ACTION_PROPERTY_NAME            "button-action"
+#define ACTION_MORE_INFO                       "more-info"
+#define ACTION_ADD_TO_QUEUE                    "add-to-queue"
+#define ACTION_REMOVE_FROM_QUEUE               "remove-from-queue"
+#define ACTION_MARK_AS_SEEN                    "mark-as-seen"
+#define ACTION_MARK_AS_UNSEEN                  "mark-as-unseen"
+#define ACTION_ADD_AS_SHORTCUT                 "add-as-shortcut"
+#define ACTION_REMOVE_FROM_SHORTCUT            "remove-from-shortcut"
+#define ACTION_GOTO_SHOW                       "goto-show"
+#define ACTION_PLAY_TRAILER                    "play-trailer"
+#define ACTION_SAHRE_ITEM                      "share-item"
+#define ACTION_REMOVE_FROM_HISTORY             "remove-from-history"
+#define ACTION_EJECT                           "eject"
+#define ACTION_BROWSE                          "browse"
+#define ACTION_RESOLVE                         "resolve"
+#define ACTION_ADD_TO_FAVORITE                 "add-to-favorite"
+#define ACTION_REMOVE_FROM_FAVORITE            "remove-from-favorite"
 
-//#define SOURCES_GROUP                   6100
-//#define INFO_GROUP                      6200
+#define PLAY_BUTTON_ISHD                       "is-hd"
+#define PLAY_BUTTON_THUMB                      "pb_provider_thumb"
 
-//#define ITEM_PATH_LABEL                 6500
-
-#define HIDDEN_CONTAINER                5000
-#define NOTIFICATION_APPEARANCE_IN_SEC  5000
-
-#define BUTTON_ACTION_PROPERTY_NAME      "button-action"
-#define ACTION_MORE_INFO                 "more-info"
-#define ACTION_ADD_TO_QUEUE              "add-to-queue"
-#define ACTION_REMOVE_FROM_QUEUE         "remove-from-queue"
-#define ACTION_MARK_AS_SEEN              "mark-as-seen"
-#define ACTION_MARK_AS_UNSEEN            "mark-as-unseen"
-#define ACTION_ADD_AS_SHORTCUT           "add-as-shortcut"
-#define ACTION_REMOVE_FROM_SHORTCUT      "remove-from-shortcut"
-#define ACTION_GOTO_SHOW                 "goto-show"
-#define ACTION_PLAY_TRAILER              "play-trailer"
-#define ACTION_SAHRE_ITEM                "share-item"
-#define ACTION_REMOVE_FROM_HISTORY       "remove-from-history"
-#define ACTION_EJECT                     "eject"
-#define ACTION_BROWSE                    "browse"
-#define ACTION_RESOLVE                   "resolve"
-
-#define PLAY_BUTTON_NOT_INIT_INDEX       -2
-#define PLAY_BUTTON_INIT_WITH_TAILER     -1
-#define PLAY_BUTTON_ISHD                 "is-hd"
-#define PLAY_BUTTON_THUMB                "pb_provider_thumb"
+#define MAX_NUM_OF_CAST_MEMBER_TO_SHOW         10
 
 CGUIDialogBoxeeMediaAction::CGUIDialogBoxeeMediaAction(void) : CGUIDialog(WINDOW_DIALOG_BOXEE_MEDIA_ACTION, "boxee_media_action.xml")
 {
   m_bConfirmed = true;
-  m_listContainServerLinks = false;
   m_numOfButtons = 0;
 }
 
@@ -153,7 +156,7 @@ void CGUIDialogBoxeeMediaAction::OnInitWindow()
 
   int activeWindow = g_windowManager.GetActiveWindow();
 
-  if (m_item.IsApp() && !m_item.GetProperty("appid").IsEmpty() && (activeWindow == WINDOW_BOXEE_BROWSE_APPS || activeWindow == WINDOW_BOXEE_BROWSE_REPOSITORIES))
+  if (m_item.IsApp() && !m_item.GetProperty("appid").IsEmpty() && (activeWindow == WINDOW_BOXEE_BROWSE_APPS || activeWindow == WINDOW_BOXEE_BROWSE_REPOSITORIES || m_item.GetPropertyBOOL("IsSearchItem")))
   {
     InitAppItem();
     return;
@@ -165,19 +168,25 @@ void CGUIDialogBoxeeMediaAction::OnInitWindow()
   }
 
   InitNotAppItem();
+
+  m_refreshActiveWindow = false;
 }
 
 void CGUIDialogBoxeeMediaAction::InitAppItem()
 {
+  CGUIMessage winmsg1(GUI_MSG_LABEL_RESET, GetID(), HIDDEN_CONTAINER);
+  g_windowManager.SendMessage(winmsg1);
+
+  m_item.SetProperty("isAppLauncher",true);
+
   // Send the item to the special container to allow skin access
   CFileItemPtr itemPtr(new CFileItem(m_item));
   CGUIMessage winmsg(GUI_MSG_LABEL_ADD, GetID(), HIDDEN_CONTAINER, 0, 0, itemPtr);
   g_windowManager.SendThreadMessage(winmsg);
 
   SET_CONTROL_HIDDEN(LINKS_GROUP);
-  SET_CONTROL_HIDDEN(PLAY_BUTTON);
   SET_CONTROL_HIDDEN(ADDITIONAL_LINKS_LIST);
-  SET_CONTROL_HIDDEN(BUTTONS_LIST);
+  SET_CONTROL_HIDDEN(BUTTONS_LIST_GROUP);
 
   SET_CONTROL_HIDDEN(INFO_GROUP);
 
@@ -259,7 +268,7 @@ void CGUIDialogBoxeeMediaAction::InitAppItem()
   }
   else
   {
-    CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::InitAppItem - Enter function with [NUmOfLinks=%d] < 3 (bma)",(int)m_linksFileItemList.size());
+    CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::InitAppItem - Enter function with [NUmOfLinks=%zu] < 3 (bma)",m_linksFileItemList.size());
   }
 }
 
@@ -277,7 +286,7 @@ bool CGUIDialogBoxeeMediaAction::BuildAppFileItemLinksList()
   launchAppFileItem->m_strPath = m_item.m_strPath;
   m_linksFileItemList.push_back(launchAppFileItem);
 
-  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildAppFileItemLinksList - After add LAUNCH [label=%s][path=%s] for item [label=%s][appId=%s]. [linksFileItemList=%d] (bbma)",launchAppFileItem->GetLabel().c_str(),launchAppFileItem->m_strPath.c_str(),m_item.GetLabel().c_str(),m_item.GetProperty("appid").c_str(),(int)m_linksFileItemList.size());
+  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildAppFileItemLinksList - After add LAUNCH [label=%s][path=%s] for item [label=%s][appId=%s]. [linksFileItemList=%zu] (bbma)",launchAppFileItem->GetLabel().c_str(),launchAppFileItem->m_strPath.c_str(),m_item.GetLabel().c_str(),m_item.GetProperty("appid").c_str(),m_linksFileItemList.size());
 
   /////////////////////////////////////
   // add link for install/remove app //
@@ -296,14 +305,14 @@ bool CGUIDialogBoxeeMediaAction::BuildAppFileItemLinksList()
     CFileItemPtr installAppFileItem(new CFileItem(g_localizeStrings.Get(53761)));
     m_linksFileItemList.push_back(installAppFileItem);
 
-    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildAppFileItemLinksList - After add INSTALL [label=%s] for item [label=%s][appId=%s]. [linksFileItemList=%d] (bbma)",installAppFileItem->GetLabel().c_str(),m_item.GetLabel().c_str(),m_item.GetProperty("appid").c_str(),(int)m_linksFileItemList.size());
+    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildAppFileItemLinksList - After add INSTALL [label=%s] for item [label=%s][appId=%s]. [linksFileItemList=%zu] (bbma)",installAppFileItem->GetLabel().c_str(),m_item.GetLabel().c_str(),m_item.GetProperty("appid").c_str(),m_linksFileItemList.size());
   }
   else
   {
     CFileItemPtr uninstallAppFileItem(new CFileItem(g_localizeStrings.Get(53762)));
     m_linksFileItemList.push_back(uninstallAppFileItem);
 
-    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildAppFileItemLinksList - After add REMOVE [label=%s] for item [label=%s][appId=%s]. [linksFileItemList=%d] (bbma)",uninstallAppFileItem->GetLabel().c_str(),m_item.GetLabel().c_str(),m_item.GetProperty("appid").c_str(),(int)m_linksFileItemList.size());
+    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildAppFileItemLinksList - After add REMOVE [label=%s] for item [label=%s][appId=%s]. [linksFileItemList=%zu] (bbma)",uninstallAppFileItem->GetLabel().c_str(),m_item.GetLabel().c_str(),m_item.GetProperty("appid").c_str(),m_linksFileItemList.size());
   }
 
   ////////////////////////////////////
@@ -326,7 +335,7 @@ bool CGUIDialogBoxeeMediaAction::BuildAppFileItemLinksList()
 
   m_linksFileItemList.push_back(shortcutButton);
 
-  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildAppFileItemLinksList - After add SORTCUT [label=%s][type=%s] for item [label=%s][appId=%s]. [linksFileItemList=%d] (bma)",shortcutButton->GetLabel().c_str(),buttonType.c_str(),m_item.GetLabel().c_str(),m_item.GetProperty("appid").c_str(),(int)m_linksFileItemList.size());
+  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildAppFileItemLinksList - After add SORTCUT [label=%s][type=%s] for item [label=%s][appId=%s]. [linksFileItemList=%zu] (bma)",shortcutButton->GetLabel().c_str(),buttonType.c_str(),m_item.GetLabel().c_str(),m_item.GetProperty("appid").c_str(),m_linksFileItemList.size());
 
   return true;
 }
@@ -345,18 +354,28 @@ void CGUIDialogBoxeeMediaAction::InitNotAppItem()
   m_bConfirmed = true;
 
   m_linksFileItemList.clear();
-  m_listContainServerLinks = false;
 
-  m_playButtonItemIndex = PLAY_BUTTON_NOT_INIT_INDEX;
+  m_tarilerWasAddedToLinkList = false;
+
+  m_visibleButtonsListId = 0;
 
   m_numOfButtons = 0;
 
-  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnInitWindow - Main item has properties [free-play=%s][clip-play=%s][trailer-play=%s][rent-play=%s][buy-play=%s][sub-play=%s] (bma)",m_item.GetProperty("free-play").c_str(),m_item.GetProperty("clip-play").c_str(),m_item.GetProperty("trailer-play").c_str(),m_item.GetProperty("rent-play").c_str(),m_item.GetProperty("buy-play").c_str(),m_item.GetProperty("sub-play").c_str());
+  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::InitNotAppItem - Main item has properties [haslink-free=%s][haslink-clip=%s][haslink-trailer=%s][haslink-rent=%s][haslink-buy=%s][haslink-sub=%s][haslink-exsub=%s] (bma)",m_item.GetProperty("haslink-free").c_str(),m_item.GetProperty("haslink-clip").c_str(),m_item.GetProperty("haslink-trailer").c_str(),m_item.GetProperty("haslink-rent").c_str(),m_item.GetProperty("haslink-buy").c_str(),m_item.GetProperty("haslink-sub").c_str(),m_item.GetProperty("haslink-exsub").c_str());
+
+  CGUIMessage winmsg1(GUI_MSG_LABEL_RESET, GetID(), HIDDEN_CONTAINER);
+  g_windowManager.SendMessage(winmsg1);
 
   // Send the item to the special container to allow skin access
   CFileItemPtr itemPtr(new CFileItem(m_item));
   CGUIMessage winmsg(GUI_MSG_LABEL_ADD, GetID(), HIDDEN_CONTAINER, 0, 0, itemPtr);
   g_windowManager.SendThreadMessage(winmsg);
+
+  CGUIMessage winmsg2(GUI_MSG_LABEL_RESET, GetID(), ADDITIONAL_LINKS_LIST);
+  OnMessage(winmsg2);
+
+  CGUIMessage winmsg3(GUI_MSG_LABEL_RESET, GetID(), ADDITIONAL_MOVIE_BUTTONS_LIST);
+  OnMessage(winmsg3);
 
   int linksAddedCounter = 0;
 
@@ -368,11 +387,28 @@ void CGUIDialogBoxeeMediaAction::InitNotAppItem()
       // in case there are links in the FileItem -> build a list and add them to the dialog list //
       /////////////////////////////////////////////////////////////////////////////////////////////
 
+      if (m_item.GetPropertyBOOL("ismovie") && !m_item.GetProperty("boxeeId").IsEmpty())
+      {
+        //load the first trailer from the database
+        BXVideoDatabase vdb;
+        std::vector<BXVideoLink> videoLinks;
+        vdb.GetVideoLinks(videoLinks, m_item.GetProperty("boxeeId"), "trailer" , 1);
+
+        if (!videoLinks.empty())
+        {
+          BXVideoLink trailer = videoLinks.front();
+
+          m_item.AddLink(trailer.m_strTitle.c_str(), trailer.m_strURL.c_str(), trailer.m_strType.c_str(), CFileItemList::GetLinkBoxeeTypeAsEnum(trailer.m_strBoxeeType.c_str()),
+               trailer.m_strProvider.c_str(), trailer.m_strProviderName.c_str(), trailer.m_strProviderThumb.c_str(), trailer.m_strCountryCodes.c_str(), BXUtils::StringToInt(trailer.m_strCountryRel),
+               trailer.m_strQualityLabel.c_str(), BXUtils::StringToInt(trailer.m_strQuality.c_str()), CFileItemList::GetLinkBoxeeOfferAsEnum(trailer.m_strOffer.c_str()), "");
+        }
+      }
+
       bool succeeded = BuildLinksFileItemList();
 
       if (!succeeded)
       {
-        CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::OnInitWindow - FAILED to initialize item links. [ItemLabel=%s][ItemPath=%s] (bma)",m_item.GetLabel().c_str(),m_item.m_strPath.c_str());
+        CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::InitNotAppItem - FAILED to initialize item links. [ItemLabel=%s][ItemPath=%s] (bma)",m_item.GetLabel().c_str(),m_item.m_strPath.c_str());
         return;
       }
 
@@ -380,121 +416,45 @@ void CGUIDialogBoxeeMediaAction::InitNotAppItem()
       m_item.m_strPath = "";
       m_item.SetContentType("");
 
-      // Put first link labels in play button
       if (m_linksFileItemList.size() > 0)
       {
-        m_playButtonItemIndex = 0;
-        bool playButtonWasSet = false;
-
-        while (!playButtonWasSet && (m_playButtonItemIndex < (int)m_linksFileItemList.size()))
-        {
-          CFileItemPtr linkFileItem = m_linksFileItemList[m_playButtonItemIndex];
-
-          if (linkFileItem->HasProperty("is-hd"))
-          {
-            SetProperty("is-hd", 1);
-          }
-          else
-          {
-            SetProperty("is-hd", 0);
-          }
-
-          itemPtr->SetProperty(PLAY_BUTTON_THUMB, linkFileItem->GetProperty("link-providerthumb"));
-
-          CStdString label = linkFileItem->GetLabel();
-          CStdString label2 = linkFileItem->GetLabel2();
-
-          if (CFileItem::GetLinkBoxeeTypeAsEnum(linkFileItem->GetProperty("link-boxeetype")) == CLinkBoxeeType::LOCAL)
-          {
-            SET_CONTROL_LABEL(PLAY_BUTTON_LABEL_FOCUS, g_localizeStrings.Get(53751));
-            SET_CONTROL_LABEL(PLAY_BUTTON_LABEL_NOT_FOCUS, g_localizeStrings.Get(53751));
-            SET_CONTROL_LABEL(PLAY_BUTTON_ADDITION_LABEL_FOCUS, "");
-            SET_CONTROL_LABEL(PLAY_BUTTON_ADDITION_LABEL_NOT_FOCUS, "");
-			SET_CONTROL_LABEL(PLAY_BUTTON_ADDITION_LABEL_FOCUS_1, "");
-            SET_CONTROL_LABEL(PLAY_BUTTON_ADDITION_LABEL_NOT_FOCUS_1, "");
-          }
-          else
-          {
-            CStdString playButtonLabel = label2;
-            playButtonLabel.ToUpper();
-
-            SET_CONTROL_LABEL(PLAY_BUTTON_LABEL_FOCUS, playButtonLabel);
-            SET_CONTROL_LABEL(PLAY_BUTTON_LABEL_NOT_FOCUS, playButtonLabel);
-            SET_CONTROL_LABEL(PLAY_BUTTON_ADDITION_LABEL_FOCUS, label);
-            SET_CONTROL_LABEL(PLAY_BUTTON_ADDITION_LABEL_NOT_FOCUS, label);
-			SET_CONTROL_LABEL(PLAY_BUTTON_ADDITION_LABEL_FOCUS_1, label);
-            SET_CONTROL_LABEL(PLAY_BUTTON_ADDITION_LABEL_NOT_FOCUS_1, label);
-          }
-
-          focusedLinkPathToShow = linkFileItem->m_strPath;
-
-          linksAddedCounter++;
-
-          playButtonWasSet = true;
-
-          CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnInitWindow - [%d/%d] - Adding item [label=%s][label2=%s][path=%s][thumb=%s] to PLAY_BUTTON. [link-title=%s][link-url=%s][link-boxeetype=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d] (bma)",m_playButtonItemIndex+1,(int)m_linksFileItemList.size(),linkFileItem->GetLabel().c_str(),linkFileItem->GetLabel2().c_str(),linkFileItem->m_strPath.c_str(),linkFileItem->GetThumbnailImage().c_str(),linkFileItem->GetProperty("link-title").c_str(),linkFileItem->GetProperty("link-url").c_str(),linkFileItem->GetProperty("link-boxeetype").c_str(),linkFileItem->GetProperty("link-type").c_str(),linkFileItem->GetProperty("link-provider").c_str(),linkFileItem->GetProperty("link-providername").c_str(),linkFileItem->GetProperty("link-providerthumb").c_str(),linkFileItem->GetProperty("link-countrycodes").c_str(),linkFileItem->GetPropertyBOOL("link-countryrel"));
-        }
-
-        // add the rest of the links
-        for (int i=(m_playButtonItemIndex+1);i<(int)m_linksFileItemList.size();i++)
+        // add links to the button list
+        for (size_t i=0; i<m_linksFileItemList.size(); i++)
         {
           CFileItemPtr linkFileItem = m_linksFileItemList[i];
 
+          if (CFileItem::GetLinkBoxeeTypeAsEnum(linkFileItem->GetProperty("link-boxeetype")) == CLinkBoxeeType::LOCAL)
+          {
+            linkFileItem->SetLabel(g_localizeStrings.Get(53751));
+
+            if (i == 0)
+            {
+              focusedLinkPathToShow = linkFileItem->m_strPath;
+            }
+          }
+
           CFileItemPtr linkFileItemToAdd(new CFileItem(*(linkFileItem.get())));
-          CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnInitWindow - [%d/%d] - Going to add item [label=%s][label2=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d] (bma)",i+1,(int)m_linksFileItemList.size(),linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->GetLabel2().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItem->GetPropertyBOOL("link-countryrel"));
+          CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::InitNotAppItem - [%zu/%zu] - Going to add item [label=%s][label2=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d] (bma)",i+1,m_linksFileItemList.size(),linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->GetLabel2().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItem->GetPropertyBOOL("link-countryrel"));
 
           CGUIMessage winmsg(GUI_MSG_LABEL_ADD, GetID(), ADDITIONAL_LINKS_LIST, 0, 0, linkFileItemToAdd);
           OnMessage(winmsg);
 
           linksAddedCounter++;
-          m_listContainServerLinks = true;
         }
       }
 
-      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnInitWindow - After adding [%d] items to the dialog list (bma)",linksAddedCounter);
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::InitNotAppItem - After adding [%d] items to the dialog list (bma)",linksAddedCounter);
 
-      if (linksAddedCounter == 0)
-      {
-        m_playButtonItemIndex = PLAY_BUTTON_NOT_INIT_INDEX;
-
-        if (m_trailerItem.get())
-        {
-          // in case no link was added and there is a trailer item (can happen in feed) -> add the trailer to the PLAY BUTTON
-
-          CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnInitWindow - No links was added and there is a TRAILER item -> add the trailer to the PLAY_BUTTON (bma)");
-
-          CFileItemPtr trailerItem = m_trailerItem;
-          SET_CONTROL_LABEL(PLAY_BUTTON_LABEL_FOCUS, trailerItem->GetProperty("link-providername"));
-          SET_CONTROL_LABEL(PLAY_BUTTON_LABEL_NOT_FOCUS, trailerItem->GetProperty("link-providername"));
-          SET_CONTROL_LABEL(PLAY_BUTTON_ADDITION_LABEL_FOCUS, trailerItem->GetProperty("link-boxeetype"));
-          SET_CONTROL_LABEL(PLAY_BUTTON_ADDITION_LABEL_NOT_FOCUS, trailerItem->GetProperty("link-boxeetype"));
-		  SET_CONTROL_LABEL(PLAY_BUTTON_ADDITION_LABEL_FOCUS_1, trailerItem->GetProperty("link-boxeetype"));
-          SET_CONTROL_LABEL(PLAY_BUTTON_ADDITION_LABEL_NOT_FOCUS_1, trailerItem->GetProperty("link-boxeetype"));
-
-          m_playButtonItemIndex = PLAY_BUTTON_INIT_WITH_TAILER;
-
-          linksAddedCounter++;
-        }
-      }
+      SetupTrailer(linksAddedCounter);
     }
     else if (!m_item.m_strPath.IsEmpty())
     {
       CFileItemPtr fileItemToAdd(new CFileItem(m_item));
+      fileItemToAdd->SetLabel("");
 
-      //fileItemToAdd->SetLabel2(g_localizeStrings.Get(53750));
-      focusedLinkPathToShow = GetLinkPathToShowInDialog(m_item);
-
-      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnInitWindow - There are no LinksFileItem -> Going to add the original item [label=%s][label2=%s]][path=%s][thumb=%s] (bma)",fileItemToAdd->GetLabel().c_str(),fileItemToAdd->GetLabel2().c_str(),fileItemToAdd->m_strPath.c_str(),fileItemToAdd->GetThumbnailImage().c_str());
-
-      CGUIMessage winmsg(GUI_MSG_LABEL_ADD, GetID(), ADDITIONAL_LINKS_LIST, 0, 0, fileItemToAdd);
-      OnMessage(winmsg);
-
-      linksAddedCounter++;
-
-      if (fileItemToAdd->GetPropertyBOOL("IsFolder") && !fileItemToAdd->IsPlayList())
+      if (!fileItemToAdd->IsPlayableFolder() && (fileItemToAdd->GetPropertyBOOL("IsFolder") && !fileItemToAdd->IsPlayList()))
       {
-        SET_CONTROL_LABEL(PLAY_BUTTON_LABEL_FOCUS, g_localizeStrings.Get(53755));
-        SET_CONTROL_LABEL(PLAY_BUTTON_LABEL_NOT_FOCUS, g_localizeStrings.Get(53755));
+        fileItemToAdd->SetLabel2(g_localizeStrings.Get(53755));
       }
       else
       {
@@ -511,27 +471,40 @@ void CGUIDialogBoxeeMediaAction::InitNotAppItem()
         {
           provider = fileItemToAdd->GetProperty("provider_source");
         }
-        else if (fileItemToAdd->m_strPath.Left(6) == "http:/" || fileItemToAdd->m_strPath.Left(7) == "flash:/")
+        else if (fileItemToAdd->m_strPath.Left(6) == "http:/" || fileItemToAdd->m_strPath.Left(7) == "flash:/" || fileItemToAdd->m_strPath.Left(5) == "app:/")
         {
-          CURL url(fileItemToAdd->m_strPath);
+          CURI url(fileItemToAdd->m_strPath);
           provider = url.GetHostName();
         }
 
         if (!provider.IsEmpty())
         {
           CStdString providerLabel = g_localizeStrings.Get(53752) + provider;
-          SET_CONTROL_LABEL(PLAY_BUTTON_ADDITION_LABEL_FOCUS, providerLabel);
-          SET_CONTROL_LABEL(PLAY_BUTTON_ADDITION_LABEL_NOT_FOCUS, providerLabel);
-		  SET_CONTROL_LABEL(PLAY_BUTTON_ADDITION_LABEL_FOCUS_1, providerLabel);
-          SET_CONTROL_LABEL(PLAY_BUTTON_ADDITION_LABEL_NOT_FOCUS_1, providerLabel);
+          fileItemToAdd->SetLabel(providerLabel);
         }
       }
+
+      if (fileItemToAdd->GetLabel2().IsEmpty())
+      {
+        fileItemToAdd->SetLabel2(g_localizeStrings.Get(53750));
+      }
+
+      m_linksFileItemList.push_back(fileItemToAdd);
+
+      focusedLinkPathToShow = GetLinkPathToShowInDialog(m_item);
+
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::InitNotAppItem - There are no LinksFileItem -> Going to add the original item [label=%s][label2=%s][path=%s][thumb=%s] (bma)",fileItemToAdd->GetLabel().c_str(),fileItemToAdd->GetLabel2().c_str(),fileItemToAdd->m_strPath.c_str(),fileItemToAdd->GetThumbnailImage().c_str());
+
+      CGUIMessage winmsg(GUI_MSG_LABEL_ADD, GetID(), ADDITIONAL_LINKS_LIST, 0, 0, fileItemToAdd);
+      OnMessage(winmsg);
+
+      linksAddedCounter++;
     }
   }
 
-  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnInitWindow - After adding links [linksAddedCounter=%d]. [PlayButtonItemIndex=%d][HasTrailer=%d] (bma)",linksAddedCounter,m_playButtonItemIndex,m_trailerItem.get()?true:false);
+  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::InitNotAppItem - After adding links [linksAddedCounter=%d]. [HasTrailerLink=%d] (bma)",linksAddedCounter,m_trailerLinkItem.get()?true:false);
 
-  m_numOfButtons = FillDialogButtons((linksAddedCounter>0)?true:false);
+  m_numOfButtons = FillDialogButtons((linksAddedCounter > 0) ? true : false);
 
   if (linksAddedCounter > 0)
   {
@@ -541,30 +514,11 @@ void CGUIDialogBoxeeMediaAction::InitNotAppItem()
 
     SET_CONTROL_HIDDEN(INFO_GROUP);
     SET_CONTROL_VISIBLE(LINKS_GROUP);
-    SET_CONTROL_VISIBLE(PLAY_BUTTON);
-    SET_CONTROL_FOCUS(PLAY_BUTTON, 0);
+    SET_CONTROL_FOCUS(ADDITIONAL_LINKS_LIST, 0);
 
     SetLinkPathAsWindowProperty(focusedLinkPathToShow);
 
-    if (linksAddedCounter < 2)
-    {
-      /////////////////////////////
-      // only one link was added //
-      /////////////////////////////
-
-      //CONTROL_DISABLE(ADDITIONAL_LINKS_LIST);
-      SET_CONTROL_HIDDEN(ADDITIONAL_LINKS_LIST);
-      SET_CONTROL_HIDDEN(ADDITIONAL_LINKS_LIST_LABEL);
-    }
-    else
-    {
-      //////////////////////////////////
-      // more then one link was added //
-      //////////////////////////////////
-
-      SET_CONTROL_VISIBLE(ADDITIONAL_LINKS_LIST);
-      SET_CONTROL_VISIBLE(ADDITIONAL_LINKS_LIST_LABEL);
-    }
+    SET_CONTROL_VISIBLE(ADDITIONAL_LINKS_LIST);
   }
   else
   {
@@ -574,28 +528,37 @@ void CGUIDialogBoxeeMediaAction::InitNotAppItem()
 
     SET_CONTROL_HIDDEN(INFO_GROUP);
     SET_CONTROL_HIDDEN(LINKS_GROUP);
-    SET_CONTROL_HIDDEN(PLAY_BUTTON);
     SET_CONTROL_HIDDEN(ADDITIONAL_LINKS_LIST);
 
     if (m_numOfButtons > 0)
     {
-      SET_CONTROL_VISIBLE(BUTTONS_LIST);
-      SET_CONTROL_FOCUS(BUTTONS_LIST,0);
+      SET_CONTROL_VISIBLE(BUTTONS_LIST_GROUP);
     }
     else
     {
-      SET_CONTROL_HIDDEN(BUTTONS_LIST);
+      SET_CONTROL_HIDDEN(BUTTONS_LIST_GROUP);
     }
   }
 
-  if (m_trailerItem.get() && (m_playButtonItemIndex != PLAY_BUTTON_INIT_WITH_TAILER))
+  CGUIWindow* activeWindow = g_windowManager.GetWindow(g_windowManager.GetActiveWindow());
+  if (activeWindow)
+  {
+    activeWindow->SetProperty("has-playable-links",linksAddedCounter > 0 ? true : false);
+    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::InitNotAppItem - After set window [id=%d] property [has-playable-links=%d]. [NumOfPlayableLinks=%d] (bma)",activeWindow->GetID(),activeWindow->GetPropertyBOOL("has-playable-links"),linksAddedCounter);
+  }
+
+  if (m_tarilerWasAddedToLinkList)
   {
     SET_CONTROL_VISIBLE(TRAILER_LIST);
-  }
+}
   else
   {
     SET_CONTROL_HIDDEN(TRAILER_LIST);
   }
+
+  FillMovieAdditionalDialogButtons();
+
+  InitCastPanel();
 }
 
 bool CGUIDialogBoxeeMediaAction::AddFileItemToList(std::map<CStdString, CFileItemPtr>& addedLinksMap,  std::list<CFileItemPtr>& pathsList)
@@ -607,28 +570,63 @@ bool CGUIDialogBoxeeMediaAction::AddFileItemToList(std::map<CStdString, CFileIte
   while (itFreelist != pathsList.end())
   {
     CFileItemPtr linkFileItemToAdd = *(itFreelist);
+    CStdString strIdentifier;
+    bool isTrailer = (CFileItem::GetLinkBoxeeTypeAsEnum(linkFileItemToAdd->GetProperty("link-boxeetype")) == CLinkBoxeeType::TRAILER);
+    if (isTrailer)
+    {
+      strIdentifier = linkFileItemToAdd->GetProperty("link-title") + linkFileItemToAdd->GetProperty("link-provider");
+    }
+    else
+    {
+      strIdentifier = linkFileItemToAdd->GetProperty("link-provider");
+    }
 
-    mapIt = addedLinksMap.find(linkFileItemToAdd->GetProperty("link-providername"));
+    mapIt = addedLinksMap.find(strIdentifier);
     if (mapIt == addedLinksMap.end())
     {
       CFileItemPtr newItem(new CFileItem(m_item));
       newItem->ClearLinksList();
       // save some of the properties.
       newItem->m_strPath = linkFileItemToAdd->m_strPath;
-      newItem->SetLabel(linkFileItemToAdd->GetLabel());
-      newItem->SetLabel2(linkFileItemToAdd->GetProperty("link-providername"));
+
+      if (isTrailer)
+      {
+        newItem->SetLabel2(linkFileItemToAdd->GetProperty("link-title"));
+        newItem->SetLabel("");
+      }
+      else
+      {
+        newItem->SetLabel2(linkFileItemToAdd->GetProperty("link-providername"));
+        newItem->SetLabel(linkFileItemToAdd->GetLabel());
+      }
+
       newItem->SetProperty("link-boxeetype", linkFileItemToAdd->GetProperty("link-boxeetype"));
+      newItem->SetProperty("link-boxeeoffer", linkFileItemToAdd->GetProperty("link-boxeeoffer"));
+      newItem->SetProperty("link-provider", linkFileItemToAdd->GetProperty("link-provider"));
       newItem->SetProperty("link-providername", linkFileItemToAdd->GetProperty("link-providername"));
       newItem->SetProperty("link-providerthumb", linkFileItemToAdd->GetProperty("link-providerthumb"));
-      newItem->AddLink(linkFileItemToAdd->GetLabel(), linkFileItemToAdd->m_strPath,
+      newItem->SetProperty("link-productslist", linkFileItemToAdd->GetProperty("link-productslist"));
+      newItem->AddLink(linkFileItemToAdd->GetProperty("link-title"), linkFileItemToAdd->m_strPath,
                        linkFileItemToAdd->GetContentType(true), CFileItem::GetLinkBoxeeTypeAsEnum(linkFileItemToAdd->GetProperty("link-boxeetype")),
                        linkFileItemToAdd->GetProperty("link-provider"), linkFileItemToAdd->GetProperty("link-providername"), linkFileItemToAdd->GetProperty("link-providerthumb"),
                        linkFileItemToAdd->GetProperty("link-countrycodes"), linkFileItemToAdd->GetPropertyBOOL("link-countryrel"),
-                       linkFileItemToAdd->GetProperty("quality-lbl"), linkFileItemToAdd->GetPropertyInt("quality"));
+                       linkFileItemToAdd->GetProperty("quality-lbl"), linkFileItemToAdd->GetPropertyInt("quality"),
+                       CFileItem::GetLinkBoxeeOfferAsEnum(linkFileItemToAdd->GetProperty("link-boxeeoffer")), linkFileItemToAdd->GetProperty("link-productslist"));
 
       if (linkFileItemToAdd->GetPropertyInt("quality") >= 720)
       {
         newItem->SetProperty("is-hd","true");
+      }
+
+      if (CFileItem::GetLinkBoxeeOfferAsEnum(newItem->GetProperty("link-boxeeoffer")) == CLinkBoxeeOffer::SUBSCRIPTION)
+      {
+        bool isEntitle = BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().IsInEntitlements(newItem->GetProperty("link-productslist"));
+
+        if (!isEntitle)
+        {
+          newItem->SetLabel(g_localizeStrings.Get(53774));
+          newItem->SetProperty("NeedToSubscribe",true);
+        }
       }
 
       // local files are special - we will treat it as different provider
@@ -636,7 +634,7 @@ bool CGUIDialogBoxeeMediaAction::AddFileItemToList(std::map<CStdString, CFileIte
 
       if (linkBoxeeTypeEnum != CLinkBoxeeType::LOCAL)
       {
-        addedLinksMap[linkFileItemToAdd->GetProperty("link-providername")] =  newItem;
+        addedLinksMap[strIdentifier] =  newItem;
       }
       else
       {
@@ -644,23 +642,25 @@ bool CGUIDialogBoxeeMediaAction::AddFileItemToList(std::map<CStdString, CFileIte
         newItem->SetLabel2(g_localizeStrings.Get(53750));
         CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::AddFileItemToList Local file - push it to the linked list");
       }
+
       m_linksFileItemList.push_back(newItem);
 
       addedPathsCounter++;
-      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::AddFileItemToList - [%d] - Add link item [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d] [quality-lbl=%s] [quality=%d] (bbma)",addedPathsCounter,newItem->GetLabel().c_str(),newItem->m_strPath.c_str(),newItem->GetThumbnailImage().c_str(),newItem->GetProperty("link-title").c_str(),newItem->GetProperty("link-url").c_str(),newItem->GetProperty("link-boxeetype").c_str(),newItem->GetProperty("link-type").c_str(),newItem->GetProperty("link-provider").c_str(),newItem->GetProperty("link-providername").c_str(),newItem->GetProperty("link-providerthumb").c_str(),newItem->GetProperty("link-countrycodes").c_str(),newItem->GetPropertyBOOL("link-countryrel"), linkFileItemToAdd->GetProperty("quality-lbl").c_str(), linkFileItemToAdd->GetPropertyInt("quality"));
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::AddFileItemToList - [%d] - Add link item [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-boxeeoffer=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d][quality-lbl=%s][quality=%d][is-hd=%s][productsList=%s] (bbma)",addedPathsCounter,newItem->GetLabel().c_str(),newItem->m_strPath.c_str(),newItem->GetThumbnailImage().c_str(),newItem->GetProperty("link-title").c_str(),newItem->GetProperty("link-url").c_str(),newItem->GetProperty("link-boxeetype").c_str(),newItem->GetProperty("link-boxeeoffer").c_str(),newItem->GetProperty("link-type").c_str(),newItem->GetProperty("link-provider").c_str(),newItem->GetProperty("link-providername").c_str(),newItem->GetProperty("link-providerthumb").c_str(),newItem->GetProperty("link-countrycodes").c_str(),newItem->GetPropertyBOOL("link-countryrel"),newItem->GetProperty("quality-lbl").c_str(),newItem->GetPropertyInt("quality"),newItem->GetProperty("is-hd").c_str(),newItem->GetProperty("link-productslist").c_str());
     }
     else
     {
       CFileItemPtr Item = (mapIt)->second;
 
-      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::AddFileItemToList - Add link to existing item [%d]  [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d] (bbma)",
-                           addedPathsCounter,linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItemToAdd->GetPropertyBOOL("link-countryrel"));
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::AddFileItemToList - Add link to existing item [%d]  [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-boxeeoffer=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d][quality-lbl=%s][quality=%d][is-hd=%s][productsList=%s] (bbma)",
+                           addedPathsCounter,linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-boxeeoffer").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItemToAdd->GetPropertyBOOL("link-countryrel"),linkFileItemToAdd->GetProperty("quality-lbl").c_str(),linkFileItemToAdd->GetPropertyInt("quality"),linkFileItemToAdd->GetProperty("is-hd").c_str(),linkFileItemToAdd->GetProperty("link-productslist").c_str());
 
-      Item->AddLink(linkFileItemToAdd->GetLabel(), linkFileItemToAdd->m_strPath,
+      Item->AddLink(linkFileItemToAdd->GetProperty("link-title"), linkFileItemToAdd->m_strPath,
           linkFileItemToAdd->GetContentType(true), CFileItem::GetLinkBoxeeTypeAsEnum(linkFileItemToAdd->GetProperty("link-boxeetype")),
           linkFileItemToAdd->GetProperty("link-provider"), linkFileItemToAdd->GetProperty("link-providername"), linkFileItemToAdd->GetProperty("link-providerthumb"),
           linkFileItemToAdd->GetProperty("link-countrycodes"), linkFileItemToAdd->GetPropertyBOOL("link-countryrel"),
-          linkFileItemToAdd->GetProperty("quality-lbl"), linkFileItemToAdd->GetPropertyInt("quality"));
+          linkFileItemToAdd->GetProperty("quality-lbl"), linkFileItemToAdd->GetPropertyInt("quality"),
+          CFileItem::GetLinkBoxeeOfferAsEnum(linkFileItemToAdd->GetProperty("link-boxeeoffer")), linkFileItemToAdd->GetProperty("link-productslist"));
 
       if (linkFileItemToAdd->GetPropertyInt("quality") >= 720)
       {
@@ -684,32 +684,46 @@ bool CGUIDialogBoxeeMediaAction::BuildLinksFileItemList()
     return false;
   }
 
-  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildLinksFileItemList - Item [label=%s] has [%d] links (bma)", m_item.GetLabel().c_str(), linksFileItemList->Size());
+  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildLinksFileItemList - Enter function. Item [label=%s] has [%d] links (bma)(bbma)", m_item.GetLabel().c_str(), linksFileItemList->Size());
 
   std::list<CFileItemPtr> localPathsList;
+  std::list<CFileItemPtr> trailersPathsList;
   std::list<CFileItemPtr> freeWebPathsList;
   std::list<CFileItemPtr> subscribeServicePathsList;
   //CFileItemPtr subscribeServicePath;
   std::list<CFileItemPtr> otherPathsVec;
 
+/*
+  bool bIdentifyAsTrailerItem = true;
+
   for (int i=0; i<linksFileItemList->Size(); i++)
   {
     CFileItemPtr linkFileItemToAdd = linksFileItemList->Get(i);
 
-    /*
+    CLinkBoxeeType::LinkBoxeeTypeEnums linkBoxeeTypeEnum = CFileItem::GetLinkBoxeeTypeAsEnum(linkFileItemToAdd->GetProperty("link-boxeetype"));
+
+    if (linkBoxeeTypeEnum != CLinkBoxeeType::TRAILER)
+    {
+      bIdentifyAsTrailerItem = false;
+    }
+  }
+
+  m_item.SetProperty("IsTrailer",bIdentifyAsTrailerItem);
+*/
+  for (int i=0; i<linksFileItemList->Size(); i++)
+  {
+    CFileItemPtr linkFileItemToAdd = linksFileItemList->Get(i);
+
     bool isAllowed = linkFileItemToAdd->IsAllowed();
     if (!isAllowed)
     {
-      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildLinksFileItemList - [%d/%d] - Skipping link item [label=%s][path=%s][thumb=%s] because [MyCountryCode=%s][LinkCountryCodes=%s]->[isAllowed=%d]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][country-codes=%s][link-countrycodes=%s][country-rel=%d][link-countryrel=%d] (bbma)",i+1,linksFileItemList->Size(),linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),g_application.GetCountryCode().c_str(),linkFileItemToAdd->GetProperty("country-codes").c_str(),isAllowed,linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("country-codes").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItemToAdd->GetPropertyBOOL("country-rel"),linkFileItemToAdd->GetPropertyBOOL("link-countryrel"));
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildLinksFileItemList - [%d/%d] - Skipping link item [label=%s][path=%s][thumb=%s] because [MyCountryCode=%s][LinkCountryCodes=%s]->[isAllowed=%d]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][country-codes=%s][link-countrycodes=%s][country-rel=%d][link-countryrel=%d][quality-lbl=%s][quality=%d][is-hd=%s][productsList=%s] (bbma)",i+1,linksFileItemList->Size(),linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),g_application.GetCountryCode().c_str(),linkFileItemToAdd->GetProperty("country-codes").c_str(),isAllowed,linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("country-codes").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItemToAdd->GetPropertyBOOL("country-rel"),linkFileItemToAdd->GetPropertyBOOL("link-countryrel"),linkFileItemToAdd->GetProperty("quality-lbl").c_str(),linkFileItemToAdd->GetPropertyInt("quality"),linkFileItemToAdd->GetProperty("is-hd").c_str(),linkFileItemToAdd->GetProperty("link-productslist").c_str());
       continue;
     }
-    */
-
-    //linkFileItemToAdd->Dump();
 
     CLinkBoxeeType::LinkBoxeeTypeEnums linkBoxeeTypeEnum = CFileItem::GetLinkBoxeeTypeAsEnum(linkFileItemToAdd->GetProperty("link-boxeetype"));
 
-    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildLinksFileItemList - [%d/%d] - Handling link item [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d] (bbma)",i+1,linksFileItemList->Size(),linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItemToAdd->GetPropertyBOOL("link-countryrel"));
+    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildLinksFileItemList - [%d/%d] - Handling link item [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-boxeeoffer=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d][quality-lbl=%s][quality=%d][is-hd=%s][productsList=%s] (bbma)",i+1,linksFileItemList->Size(),linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-boxeeoffer").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItemToAdd->GetPropertyBOOL("link-countryrel"),linkFileItemToAdd->GetProperty("quality-lbl").c_str(),linkFileItemToAdd->GetPropertyInt("quality"),linkFileItemToAdd->GetProperty("is-hd").c_str(),linkFileItemToAdd->GetProperty("link-productslist").c_str());
 
     switch (linkBoxeeTypeEnum)
     {
@@ -720,7 +734,7 @@ bool CGUIDialogBoxeeMediaAction::BuildLinksFileItemList()
       // there is local path -> push to front of the list in order to show it first
       localPathsList.push_back(linkFileItemToAdd);
 
-      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildLinksFileItemList - LOCAL - Add link item to localPaths [size=%d]. [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d] (bbma)",(int)localPathsList.size(),linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItemToAdd->GetPropertyBOOL("link-countryrel"));
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildLinksFileItemList - LOCAL - Add link item to localPaths [size=%zu]. [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-boxeeoffer=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d][quality-lbl=%s][quality=%d][is-hd=%s][productsList=%s] (bbma)",localPathsList.size(),linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-boxeeoffer").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItemToAdd->GetPropertyBOOL("link-countryrel"),linkFileItemToAdd->GetProperty("quality-lbl").c_str(),linkFileItemToAdd->GetPropertyInt("quality"),linkFileItemToAdd->GetProperty("is-hd").c_str(),linkFileItemToAdd->GetProperty("link-productslist").c_str());
     }
     break;
     case CLinkBoxeeType::FEATURE:
@@ -728,16 +742,29 @@ bool CGUIDialogBoxeeMediaAction::BuildLinksFileItemList()
       // there is "free with adds" path -> push to back of the list in in case there is local path
       freeWebPathsList.push_back(linkFileItemToAdd);
 
-      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildLinksFileItemList - FEATURE - Add link item to freeWebPaths [size=%d]. [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d] (bbma)",(int)freeWebPathsList.size(),linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItemToAdd->GetPropertyBOOL("link-countryrel"));
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildLinksFileItemList - FEATURE - Add link item to freeWebPaths [size=%zu]. [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-boxeeoffer=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d][quality-lbl=%s][quality=%d][is-hd=%s][productsList=%s] (bbma)",freeWebPathsList.size(),linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-boxeeoffer").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItemToAdd->GetPropertyBOOL("link-countryrel"),linkFileItemToAdd->GetProperty("quality-lbl").c_str(),linkFileItemToAdd->GetPropertyInt("quality"),linkFileItemToAdd->GetProperty("is-hd").c_str(),linkFileItemToAdd->GetProperty("link-productslist").c_str());
     }
     break;
     case CLinkBoxeeType::TRAILER:
     {
-      // there is at least 1 trailer link
-      m_trailerItem = linkFileItemToAdd;
-      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildLinksFileItemList - TRAILER - Save link item as first trailerPath [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d] (bbma)",linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItemToAdd->GetPropertyBOOL("link-countryrel"));
+      trailersPathsList.push_back(linkFileItemToAdd);
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildLinksFileItemList - TRAILER - Add link item to trailersPathsList [size=%zu]. [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-boxeeoffer=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d][quality-lbl=%s][quality=%d][is-hd=%s][productsList=%s] (bbma)",trailersPathsList.size(),linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-boxeeoffer").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItemToAdd->GetPropertyBOOL("link-countryrel"),linkFileItemToAdd->GetProperty("quality-lbl").c_str(),linkFileItemToAdd->GetPropertyInt("quality"),linkFileItemToAdd->GetProperty("is-hd").c_str(),linkFileItemToAdd->GetProperty("link-productslist").c_str());
+
+      /*
+      if (m_item.GetPropertyBOOL("IsTrailer"))
+      {
+        trailersPathsList.push_back(linkFileItemToAdd);
+        CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildLinksFileItemList - TRAILER - Add link item to trailersPathsList [size=%zu]. [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-boxeeoffer=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d][quality-lbl=%s][quality=%d][is-hd=%s][productsList=%s] (bbma)",trailersPathsList.size(),linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-boxeeoffer").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItemToAdd->GetPropertyBOOL("link-countryrel"),linkFileItemToAdd->GetProperty("quality-lbl").c_str(),linkFileItemToAdd->GetPropertyInt("quality"),linkFileItemToAdd->GetProperty("is-hd").c_str(),linkFileItemToAdd->GetProperty("link-productslist").c_str());
+      }
+      else if (!m_trailerLinkItem.get())
+      {
+        m_trailerLinkItem = linkFileItemToAdd;
+        CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildLinksFileItemList - TRAILER - Save link item as first trailerPath [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-boxeeoffer=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d][quality-lbl=%s][quality=%d][is-hd=%s][productsList=%s] (bbma)",linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-boxeeoffer").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItemToAdd->GetPropertyBOOL("link-countryrel"),linkFileItemToAdd->GetProperty("quality-lbl").c_str(),linkFileItemToAdd->GetPropertyInt("quality"),linkFileItemToAdd->GetProperty("is-hd").c_str(),linkFileItemToAdd->GetProperty("link-productslist").c_str());
+      }
+      */
     }
     break;
+    /*
     case CLinkBoxeeType::SUBSCRIPTION:
     {
       if (Boxee::GetInstance().GetBoxeeClientServerComManager().IsRegisterToServices(linkFileItemToAdd->GetProperty("link-provider"),CServiceIdentifierType::NAME))
@@ -746,27 +773,36 @@ bool CGUIDialogBoxeeMediaAction::BuildLinksFileItemList()
 
         subscribeServicePathsList.push_back(linkFileItemToAdd);
 
-        CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildLinksFileItemList - SUBSCRIPTION - Add link item to subscribeServicePaths [size=%d]. [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d] (bbma)",(int)subscribeServicePathsList.size(),linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItemToAdd->GetPropertyBOOL("link-countryrel"));
+        CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildLinksFileItemList - SUBSCRIPTION - Add link item to subscribeServicePaths [size=%d]. [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d][quality-lbl=%s][quality=%d][is-hd=%s][productsList=%s] (bbma)",(int)subscribeServicePathsList.size(),linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItemToAdd->GetPropertyBOOL("link-countryrel"),linkFileItemToAdd->GetProperty("quality-lbl").c_str(),linkFileItemToAdd->GetPropertyInt("quality"),linkFileItemToAdd->GetProperty("is-hd").c_str(),linkFileItemToAdd->GetProperty("link-productslist").c_str());
       }
       else
-      {
+        {
         otherPathsVec.push_back(linkFileItemToAdd);
 
-        CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildLinksFileItemList - SUBSCRIPTION - Add link item to otherPaths [size=%d]. [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d] (bbma)",(int)otherPathsVec.size(),linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItemToAdd->GetPropertyBOOL("link-countryrel"));
+        CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildLinksFileItemList - SUBSCRIPTION - Add link item to otherPaths [size=%d]. [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d][quality-lbl=%s][quality=%d][is-hd=%s][productsList=%s] (bbma)",(int)otherPathsVec.size(),linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItemToAdd->GetPropertyBOOL("link-countryrel"),linkFileItemToAdd->GetProperty("quality-lbl").c_str(),linkFileItemToAdd->GetPropertyInt("quality"),linkFileItemToAdd->GetProperty("is-hd").c_str(),linkFileItemToAdd->GetProperty("link-productslist").c_str());
+        }
       }
-    }
     break;
+    */
     default:
     {
       otherPathsVec.push_back(linkFileItemToAdd);
 
-      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildLinksFileItemList - OTHER - Add link item to otherPaths [size=%d]. [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d] (bbma)",(int)otherPathsVec.size(),linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItemToAdd->GetPropertyBOOL("link-countryrel"));
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::BuildLinksFileItemList - OTHER - Add link item to otherPaths [size=%zu]. [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-boxeeoffer=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d][quality-lbl=%s][quality=%d][is-hd=%s][productsList=%s] (bbma)",otherPathsVec.size(),linkFileItemToAdd->GetLabel().c_str(),linkFileItemToAdd->m_strPath.c_str(),linkFileItemToAdd->GetThumbnailImage().c_str(),linkFileItemToAdd->GetProperty("link-title").c_str(),linkFileItemToAdd->GetProperty("link-url").c_str(),linkFileItemToAdd->GetProperty("link-boxeetype").c_str(),linkFileItemToAdd->GetProperty("link-boxeeoffer").c_str(),linkFileItemToAdd->GetProperty("link-type").c_str(),linkFileItemToAdd->GetProperty("link-provider").c_str(),linkFileItemToAdd->GetProperty("link-providername").c_str(),linkFileItemToAdd->GetProperty("link-providerthumb").c_str(),linkFileItemToAdd->GetProperty("link-countrycodes").c_str(),linkFileItemToAdd->GetPropertyBOOL("link-countryrel"),linkFileItemToAdd->GetProperty("quality-lbl").c_str(),linkFileItemToAdd->GetPropertyInt("quality"),linkFileItemToAdd->GetProperty("is-hd").c_str(),linkFileItemToAdd->GetProperty("link-productslist").c_str());
     }
     break;
     }
   }
 
   std::map<CStdString, CFileItemPtr> addedLinksMap;
+
+  //Here we define the sequence of the links showed in the media action dialog
+
+  if (m_item.GetPropertyBOOL("IsTrailer"))
+  {
+    // if trailer item -> trailer link should appear first
+    AddFileItemToList(addedLinksMap, trailersPathsList);
+  }
 
   ///////////////////////////
   // Enter all local paths //
@@ -782,6 +818,15 @@ bool CGUIDialogBoxeeMediaAction::BuildLinksFileItemList()
   // Enter all web free paths //
   //////////////////////////////
   AddFileItemToList(addedLinksMap, freeWebPathsList);
+
+  /////////////////////////////
+  // Enter all trailer paths //
+  /////////////////////////////
+
+  if (!m_item.GetPropertyBOOL("IsTrailer"))
+  {
+    AddFileItemToList(addedLinksMap, trailersPathsList);
+  }
 
   ///////////////////////////
   // Enter all other paths //
@@ -804,7 +849,7 @@ bool CGUIDialogBoxeeMediaAction::OnAction(const CAction& action)
     if (pControl && pControl->IsVisible())
     {
       SET_CONTROL_HIDDEN(INFO_GROUP);
-      SET_CONTROL_FOCUS(BUTTONS_LIST,0);
+      SET_CONTROL_VISIBLE(BUTTONS_LIST_GROUP);
     }
     else
     {
@@ -827,22 +872,7 @@ bool CGUIDialogBoxeeMediaAction::OnAction(const CAction& action)
 
     int focusedControl = GetFocusedControlID();
 
-    if (focusedControl == PLAY_BUTTON)
-    {
-      if (m_playButtonItemIndex >= 0)
-      {
-        linkItem = (CFileItem*)m_linksFileItemList[m_playButtonItemIndex].get();
-      }
-      else if (m_playButtonItemIndex == PLAY_BUTTON_INIT_WITH_TAILER)
-      {
-        linkItem = m_trailerItem.get();
-      }
-      else
-      {
-        linkItem = &m_item;
-      }
-    }
-    else if (focusedControl == ADDITIONAL_LINKS_LIST)
+    if (focusedControl == ADDITIONAL_LINKS_LIST)
     {
       CGUIBaseContainer* pLinkListControl = (CGUIBaseContainer*)GetControl(ADDITIONAL_LINKS_LIST);
 
@@ -887,7 +917,7 @@ bool CGUIDialogBoxeeMediaAction::OnAction(const CAction& action)
 
 bool CGUIDialogBoxeeMediaAction::OnMessage(CGUIMessage& message)
 {
-  switch ( message.GetMessage() )
+  switch (message.GetMessage())
   {
   case GUI_MSG_CLICKED:
   {
@@ -901,18 +931,16 @@ bool CGUIDialogBoxeeMediaAction::OnMessage(CGUIMessage& message)
     if (pItem)
     {
       m_item = *pItem;
-
-      CGUIMessage winmsg1(GUI_MSG_LABEL_RESET, GetID(), 5000);
-      g_windowManager.SendMessage(winmsg1);
-
-      CFileItemPtr itemPtr(new CFileItem(*pItem));
-      CGUIMessage winmsg(GUI_MSG_LABEL_ADD, GetID(), 5000, 0, 0, itemPtr);
-      g_windowManager.SendMessage(winmsg);
-
-      FillDialogButtons(m_linksFileItemList.size() > 0);
-
       delete pItem;
+
+      OnInitWindow();
     }
+  }
+  break;
+  case GUI_MSG_PLAYLIST_CHANGED:
+  {
+    // 171110 - ugly hack - temp fix for box getting hang when try to play playlist
+    return true;
   }
   break;
   default:
@@ -947,9 +975,10 @@ bool CGUIDialogBoxeeMediaAction::OnClick(CGUIMessage& message)
     }
   }
   break;
-  case BUTTONS_LIST:
+  case BUTTONS_LIST_MOVIE:
+  case BUTTONS_LIST_NOT_MOVIE:
   {
-    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnClick - Handling click on [%d=BUTTONS_LIST] (bma)",iControl);
+    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnClick - Handling click on [%d=BUTTONS_LIST]. [visibleButtonsListId=%d] (bma)",iControl,m_visibleButtonsListId);
 
     bool needToCloseDialog = false;
 
@@ -961,9 +990,17 @@ bool CGUIDialogBoxeeMediaAction::OnClick(CGUIMessage& message)
     }
   }
   break;
-  case TRAILER_LIST:
+  case ADDITIONAL_MOVIE_BUTTONS_LIST:
   {
-    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnClick - Handling click on [%d=TRAILER_LIST] (bma)",iControl);
+    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnClick - Handling click on [%d=ADDITIONAL_MOVIE_BUTTONS_LIST] (bma)",iControl);
+
+    return HandleClickOnMovieAdditinalButtonList();
+  }
+  break;
+  case TRAILER_LIST:
+  case TRAILER_BUTTON:
+  {
+    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnClick - Handling click on trailer control [%d] (bma)",iControl);
 
     succeeded = HandleClickOnTrailer();
 
@@ -976,9 +1013,10 @@ bool CGUIDialogBoxeeMediaAction::OnClick(CGUIMessage& message)
   case BACK_GROUP:
   {
     SET_CONTROL_HIDDEN(INFO_GROUP);
-    SET_CONTROL_FOCUS(BUTTONS_LIST,0);
+    SET_CONTROL_VISIBLE(BUTTONS_LIST_GROUP);
   }
   break;
+  /*
   case PLAY_BUTTON:
   {
     bool succeeded = false;
@@ -993,37 +1031,36 @@ bool CGUIDialogBoxeeMediaAction::OnClick(CGUIMessage& message)
     else if (m_item.IsApp())
     {
       CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnClick - Handling click on [%d=PLAY_BUTTON] with [IsApp=%d] item (bma)",iControl,m_item.IsApp());
-
       succeeded = HandleClickOnLuanchApp();
     }
     else
     {
-      CFileItemPtr clickedLinkFileItem;
+    CFileItemPtr clickedLinkFileItem;
 
-      if (m_playButtonItemIndex == PLAY_BUTTON_INIT_WITH_TAILER)
-      {
-        clickedLinkFileItem = m_trailerItem;
-      }
-      else if (m_playButtonItemIndex >= 0)
-      {
-        clickedLinkFileItem = m_linksFileItemList[m_playButtonItemIndex];
-      }
-      else
-      {
-        clickedLinkFileItem = CFileItemPtr(new CFileItem(m_item));
-      }
+    if (m_playButtonItemIndex == PLAY_BUTTON_INIT_WITH_TAILER)
+    {
+      clickedLinkFileItem = m_trailerLinkItem;
+    }
+    else if (m_playButtonItemIndex >= 0)
+    {
+      clickedLinkFileItem = m_linksFileItemList[m_playButtonItemIndex];
+    }
+    else
+    {
+      clickedLinkFileItem = CFileItemPtr(new CFileItem(m_item));
+    }
 
-      // update item for play
-      UpdateItemWithLinkData(clickedLinkFileItem);
+    // update item for play
+    UpdateItemWithLinkData(clickedLinkFileItem);
 
-      if (BoxeeUtils::CanResume(m_item))
-      {
-        succeeded = OnResume(m_item);
-      }
-      else
-      {
-        succeeded = OnPlay(m_item);
-      }
+    if (BoxeeUtils::CanResume(m_item))
+    {
+      succeeded = OnResume(m_item);
+    }
+    else
+    {
+      succeeded = OnPlay(m_item);
+    }
     }
 
     if (succeeded)
@@ -1032,6 +1069,7 @@ bool CGUIDialogBoxeeMediaAction::OnClick(CGUIMessage& message)
     }
   }
   break;
+  */
   case APP_LUANCH_BUTTON:
   {
     CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnClick - Handling click on [%d=APP_LUANCH_BUTTON] (bma)",iControl);
@@ -1143,45 +1181,45 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnAddApp()
 {
   CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnAddApp - Enter function. item is [label=%s][path=%s] (bma)",m_item.GetLabel().c_str(),m_item.m_strPath.c_str());
 
-  bool succeeded = false;
-  CStdString message;
-  CURL url(m_item.m_strPath);
-  if (url.GetProtocol() == "app")
-  {
-    InstallOrUpgradeAppBG* job = new InstallOrUpgradeAppBG(url.GetHostName(), true, false);
-    if (CUtil::RunInBG(job))
+    bool succeeded = false;
+    CStdString message;
+    CURI url(m_item.m_strPath);
+    if (url.GetProtocol() == "app")
     {
-      message = g_localizeStrings.Get(52016);
-      succeeded = true;
+      InstallOrUpgradeAppBG* job = new InstallOrUpgradeAppBG(url.GetHostName(), true, false);
+      if (CUtil::RunInBG(job) == JOB_SUCCEEDED)
+      {
+        message = g_localizeStrings.Get(52016);
+        succeeded = true;
+      }
+      else
+      {
+        CStdString errorStr = g_localizeStrings.Get(52017);
+        message.Format(errorStr.c_str(), m_item.GetLabel());
+      }
     }
     else
     {
+      CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::HandleClickOnItemList - FAILED to install app [label=%s]. Invalid path [path=%s] (bapps)",m_item.GetLabel().c_str(),m_item.m_strPath.c_str());
+
       CStdString errorStr = g_localizeStrings.Get(52017);
       message.Format(errorStr.c_str(), m_item.GetLabel());
     }
-  }
-  else
-  {
-    CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::HandleClickOnItemList - FAILED to install app [label=%s]. Invalid path [path=%s] (bapps)",m_item.GetLabel().c_str(),m_item.m_strPath.c_str());
 
-    CStdString errorStr = g_localizeStrings.Get(52017);
-    message.Format(errorStr.c_str(), m_item.GetLabel());
-  }
+    if (succeeded)
+    {
+      //g_application.m_guiDialogKaiToast.QueueNotification("", "",g_localizeStrings.Get(53824), 5000);
 
-  if (succeeded)
-  {
-    g_application.m_guiDialogKaiToast.QueueNotification("", "",g_localizeStrings.Get(53824), 5000);
+      CGUIMessage refreshAppsWinMsg(GUI_MSG_UPDATE, WINDOW_BOXEE_BROWSE_APPS, 0);
+      g_windowManager.SendThreadMessage(refreshAppsWinMsg);
+    }
+    else
+    {
+      CGUIDialogOK2::ShowAndGetInput(g_localizeStrings.Get(52039), message);
+    }
 
-    CGUIMessage refreshAppsWinMsg(GUI_MSG_UPDATE, WINDOW_BOXEE_BROWSE_APPS, 0);
-    g_windowManager.SendThreadMessage(refreshAppsWinMsg);
+    return succeeded;
   }
-  else
-  {
-    CGUIDialogOK2::ShowAndGetInput(g_localizeStrings.Get(52039), message);
-  }
-
-  return succeeded;
-}
 
 bool CGUIDialogBoxeeMediaAction::HandleClickOnRemoveApp()
 {
@@ -1201,7 +1239,7 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnRemoveApp()
   }
   else
   {
-    CStdString heading = g_localizeStrings.Get(52151);
+    CStdString heading = g_localizeStrings.Get(53914);
     CStdString line;
     CStdString str = g_localizeStrings.Get(53822);
     line.Format(str.c_str(), m_item.GetLabel());
@@ -1265,58 +1303,119 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnItemList()
 {
   bool retVal;
 
-  if (!m_listContainServerLinks)
+  CGUIMessage msg(GUI_MSG_ITEM_SELECTED, GetID(), ADDITIONAL_LINKS_LIST);
+  g_windowManager.SendMessage(msg);
+  int itemIndex = msg.GetParam1();
+
+  if ((itemIndex < 0) || (itemIndex >= (int)m_linksFileItemList.size()))
   {
-    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnItemList - No LinkList. Going to call OnPlay() with item [label=%s][path=%s] (bma)",m_item.GetLabel().c_str(),m_item.m_strPath.c_str());
+    CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::HandleClickOnItemList - Index of item clicked is [%d] while [LinksFileItemListSize=%zu] (bma)",itemIndex,m_linksFileItemList.size());
+    return false;
+  }
+
+  CFileItemPtr clickedLinkFileItem = m_linksFileItemList[itemIndex];
+
+  clickedLinkFileItem->Dump();
+
+  if (clickedLinkFileItem->GetLabel2().CompareNoCase(g_localizeStrings.Get(53755)) == 0)
+  {
+    retVal = OnBrowse(m_item);
   }
   else
   {
-    CGUIMessage msg(GUI_MSG_ITEM_SELECTED, GetID(), ADDITIONAL_LINKS_LIST);
-    g_windowManager.SendMessage(msg);
-    int itemIndex = msg.GetParam1();
-
-    if ((itemIndex < 0) || (itemIndex >= (int)m_linksFileItemList.size()))
-    {
-      CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::HandleClickOnItemList - Index of item clicked is [%d] while [LinksFileItemListSize=%d] (bma)",itemIndex,(int)m_linksFileItemList.size());
-      return false;
-    }
-
-    CFileItemPtr clickedLinkFileItem = m_linksFileItemList[itemIndex + 1];
-
     // update item for play
     UpdateItemWithLinkData(clickedLinkFileItem);
 
     CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnItemList - Click on item [label=%s][path=%s] so MainItem path was set to [%s]. [contenttype=%s][link-boxeetype=%s] (bma)",clickedLinkFileItem->GetLabel().c_str(),clickedLinkFileItem->m_strPath.c_str(),m_item.m_strPath.c_str(),m_item.GetProperty("contenttype").c_str(),m_item.GetProperty("link-boxeetype").c_str());
 
-    //retVal = OnPlay(*(clickedLinkFileItem.get()));
-  }
+    if (NeedToSubscribe())
+    {
+      // in case the user clicked on a link that need Subscription -> go to Subscription dialog
+      if (!OnSubscription())
+      {
+        CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::HandleClickOnItemList - FAILED to subscribe (bma)(pay)");
+        return false;
+      }
 
-  if (BoxeeUtils::CanResume(m_item))
-  {
-    retVal = OnResume(m_item);
-  }
-  else
-  {
-    retVal = OnPlay(m_item);
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnItemList - Succeeded to subscribe. Continue... (bma)(pay)");
+    }
+
+    if (BoxeeUtils::CanResume(m_item))
+    {
+      retVal = OnResume(m_item);
+    }
+    else
+    {
+      retVal = OnPlay(m_item);
+    }
   }
 
   return retVal;
 }
 
-bool CGUIDialogBoxeeMediaAction::HandleClickOnButtonList(bool& needToCloseDialog)
+bool CGUIDialogBoxeeMediaAction::HandleClickOnMovieAdditinalButtonList()
 {
-  CGUIBaseContainer* pContainer = (CGUIBaseContainer*)GetControl(BUTTONS_LIST);
+  CGUIBaseContainer* pContainer = (CGUIBaseContainer*)GetControl(ADDITIONAL_MOVIE_BUTTONS_LIST);
 
   if (!pContainer)
   {
-    CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::HandleClickOnButtonList - FAILED to get container [%d=BUTTONS_LIST] container (bma)",BUTTONS_LIST);
+    CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::HandleClickOnMovieAdditinalButtonList - FAILED to get container [%d=ADDITIONAL_MOVIE_BUTTONS_LIST] container (bma)",ADDITIONAL_MOVIE_BUTTONS_LIST);
     return false;
   }
 
   CGUIListItemPtr selectedButton = pContainer->GetSelectedItemPtr();
   if (!selectedButton.get())
   {
-    CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::HandleClickOnButtonList - FAILED to get the SelectedItem from container [%d=BUTTONS_LIST] container (bma)",BUTTONS_LIST);
+    CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::HandleClickOnMovieAdditinalButtonList - FAILED to get the SelectedItem from container [%d=ADDITIONAL_MOVIE_BUTTONS_LIST] container (bma)",ADDITIONAL_MOVIE_BUTTONS_LIST);
+    return false;
+  }
+
+  CStdString selectedButtonLabel = selectedButton->GetLabel();
+
+  if (selectedButtonLabel == g_localizeStrings.Get(90452))
+  {
+    g_settings.SetSkinString(g_settings.TranslateSkinString("MediaAction"),"Overview");
+  }
+  else if (selectedButtonLabel == g_localizeStrings.Get(90453))
+  {
+    g_settings.SetSkinString(g_settings.TranslateSkinString("MediaAction"),"CastCrew");
+  }
+  else
+  {
+    CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::HandleClickOnMovieAdditinalButtonList - FAILED to handle SelectedItem [label=%s] (bma)",selectedButtonLabel.c_str());
+    return false;
+  }
+
+  CGUIMessage winmsg(GUI_MSG_UNMARK_ALL_ITEMS, GetID(), ADDITIONAL_MOVIE_BUTTONS_LIST);
+  OnMessage(winmsg);
+
+  pContainer->SetSingleSelectedItem();
+
+  return true;
+}
+
+bool CGUIDialogBoxeeMediaAction::HandleClickOnButtonList(bool& needToCloseDialog)
+{
+  m_visibleButtonsListId = GetVisibleButtonListControlId();
+
+  if (m_visibleButtonsListId == 0)
+  {
+    CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::FillDialogButtons - FAILED to get visible ButtonList id (bma)");
+    return false;
+  }
+
+  CGUIBaseContainer* pContainer = (CGUIBaseContainer*)GetControl(m_visibleButtonsListId);
+
+  if (!pContainer)
+  {
+    CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::HandleClickOnButtonList - FAILED to get container [visibleButtonsListId=%d] (bma)",m_visibleButtonsListId);
+    return false;
+  }
+
+  CGUIListItemPtr selectedButton = pContainer->GetSelectedItemPtr();
+  if (!selectedButton.get())
+  {
+    CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::HandleClickOnButtonList - FAILED to get the SelectedItem from container [visibleButtonsListId=%d] container (bma)",m_visibleButtonsListId);
     return false;
   }
 
@@ -1350,8 +1449,8 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnButtonList(bool& needToCloseDialog
 
     if (succeeded)
     {
-      needToCloseDialog = true;
-    }
+    needToCloseDialog = true;
+  }
   }
   break;
   case CDialogButtons::BTN_SHARE:
@@ -1377,18 +1476,14 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnButtonList(bool& needToCloseDialog
   {
     CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnButtonList - Handling click on [%s=%d=BTN_BROWSE] (bma)",selectedButtonLabel.c_str(),selectedButtonEnum);
 
-    HandleClickOnBrowse();
-
-    needToCloseDialog = true;
+    needToCloseDialog = HandleClickOnBrowse();
   }
   break;
   case CDialogButtons::BTN_RESOLVE:
   {
     CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnButtonList - Handling click on [%s=%d=BTN_BROWSE] (bma)",selectedButtonLabel.c_str(),selectedButtonEnum);
 
-    HandleClickOnResolve();
-
-    needToCloseDialog = true;
+    needToCloseDialog = HandleClickOnResolve();
   }
   break;
   case CDialogButtons::BTN_ADD_TO_QUEUE:
@@ -1439,18 +1534,6 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnButtonList(bool& needToCloseDialog
       {
         needToCloseDialog = true;
       }
-      else if (activeWindow == WINDOW_HOME)
-      {
-        CGUIWindowBoxeeMain* pHomeWindow = (CGUIWindowBoxeeMain*)g_windowManager.GetWindow(WINDOW_HOME);
-        if (!pHomeWindow)
-        {
-          CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::HandleClickOnButtonList - FAILED to get WINDOW_HOME. item [label=%s][path=%s][boxeeId=%s] (bma)",m_item.GetLabel().c_str(),m_item.m_strPath.c_str(),m_item.GetProperty("boxeeid").c_str());
-        }
-        else if (pHomeWindow->GetFocusedControlID() == LIST_QUEUE)
-        {
-          needToCloseDialog = true;
-        }
-      }
     }
   }
   break;
@@ -1463,7 +1546,7 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnButtonList(bool& needToCloseDialog
     if (succeeded)
     {
       selectedButton->SetProperty(BUTTON_ACTION_PROPERTY_NAME,ACTION_MARK_AS_UNSEEN);
-    }
+  }
   }
   break;
   case CDialogButtons::BTN_MARK_AS_UNSEEN:
@@ -1487,7 +1570,7 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnButtonList(bool& needToCloseDialog
     if (succeeded)
     {
       selectedButton->SetProperty(BUTTON_ACTION_PROPERTY_NAME,ACTION_REMOVE_FROM_SHORTCUT);
-    }
+  }
   }
   break;
   case CDialogButtons::BTN_REMOVE_FROM_SHORTCUT:
@@ -1526,6 +1609,30 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnButtonList(bool& needToCloseDialog
     }
   }
   break;
+  case CDialogButtons::BTN_ADD_TO_FAVORITE:
+  {
+    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnButtonList - Handling click on [%s=%d=BTN_ADD_TO_FAVORITE] (bma)",selectedButtonLabel.c_str(),selectedButtonEnum);
+
+    succeeded = HandleClickOnAddToFavorite(newLabelToUpdate, newThumbToUpdate);
+
+    if (succeeded)
+    {
+      selectedButton->SetProperty(BUTTON_ACTION_PROPERTY_NAME,ACTION_REMOVE_FROM_FAVORITE);
+    }
+  }
+  break;
+  case CDialogButtons::BTN_REMOVE_FROM_FAVORITE:
+  {
+    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnButtonList - Handling click on [%s=%d=BTN_REMOVE_FROM_FAVORITE] (bma)",selectedButtonLabel.c_str(),selectedButtonEnum);
+
+    succeeded = HandleClickOnRemoveFromFavorite(newLabelToUpdate, newThumbToUpdate);
+
+    if (succeeded)
+    {
+      selectedButton->SetProperty(BUTTON_ACTION_PROPERTY_NAME,ACTION_ADD_TO_FAVORITE);
+    }
+  }
+  break;
   default:
   {
     CLog::Log(LOGWARNING,"CGUIDialogBoxeeMediaAction::HandleClickOnButtonList - UNKNOWN button was click. [%s=%d] (bma)",selectedButtonLabel.c_str(),selectedButtonEnum);
@@ -1559,7 +1666,7 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnReadMore()
   CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnReadMore - Enter function (bma)");
 
   SET_CONTROL_VISIBLE(INFO_GROUP);
-  SET_CONTROL_FOCUS(BACK_GROUP,0);
+  SET_CONTROL_FOCUS(MORE_INFO_SCROLLBAR,0);
 
   return true;
 }
@@ -1569,18 +1676,62 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnTrailer()
   CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnTrailer - Enter function (bma)");
 
   bool succeeded = false;
+/*
+  CFileItemList trailersList;
 
-  if (m_trailerItem.get())
+  for (int i = 0 ; i < m_item.GetLinksList()->Size() ; i++)
   {
-    if (m_trailerItem->IsInternetStream() && !g_application.IsConnectedToInternet())
+    CFileItemPtr currentItem = m_item.GetLinksList()->Get(i);
+    if (CFileItemList::GetLinkBoxeeTypeAsEnum(currentItem->GetProperty("link-boxeetype")) == CLinkBoxeeType::TRAILER)
+    {
+      trailersList.Add(currentItem);
+    }
+  }
+
+  if (trailersList.Size() > 1)
+  {
+    CGUIDialogBoxeeSelectionList *pDlgSelectionList = (CGUIDialogBoxeeSelectionList*)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_SELECTION_LIST);
+    pDlgSelectionList->Reset();
+    pDlgSelectionList->SetTitle(g_localizeStrings.Get(12034));
+    pDlgSelectionList->Set(trailersList);
+    pDlgSelectionList->DoModal();
+
+    if (pDlgSelectionList->IsCanceled())
+    {
+      return false;
+    }
+
+    int chosenItem = pDlgSelectionList->GetSelectedItemPos();
+
+    if (chosenItem >= 0 && chosenItem < trailersList.Size())
+      m_trailerLinkItem = trailersList.Get(chosenItem);
+  }*/
+
+  if (m_trailerLinkItem.get())
+  {
+    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnTrailer - going to launch following trailer item [path=%s] (bma)",m_trailerLinkItem->m_strPath.c_str());
+    m_trailerLinkItem->Dump();
+
+    if (m_trailerLinkItem->IsInternetStream() && !g_application.IsConnectedToInternet())
     {
       CGUIDialogBoxeeNetworkNotification::ShowAndGetInput(53743,53746);
       return false;
     }
 
-    m_trailerItem->Dump();
+    CStdString trailetLabel = m_item.GetLabel();
+    trailetLabel += " (";
+    trailetLabel += g_localizeStrings.Get(53777);
+    trailetLabel += ")";
+    CFileItem trailerItem(trailetLabel);
+    trailerItem.SetThumbnailImage(m_item.GetThumbnailImage());
+    trailerItem.SetProperty("OriginalThumb",m_item.GetProperty("OriginalThumb"));
+    trailerItem.SetProperty("description",m_item.GetProperty("description"));
+    trailerItem.SetProperty("isVideo", true);
+    trailerItem.m_strPath = m_trailerLinkItem->m_strPath;
+    trailerItem.SetProperty("isinternetstream", m_trailerLinkItem->IsInternetStream());
+    trailerItem.SetContentType(m_trailerLinkItem->GetContentType(true));
 
-    succeeded = OnPlay(*m_trailerItem.get());
+    succeeded = OnPlay(trailerItem);
   }
   else
   {
@@ -1638,13 +1789,12 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnAddToQueue(CStdString& newLabelToU
 
   if (succeeded)
   {
-    g_application.m_guiDialogKaiToast.QueueNotification(g_localizeStrings.Get(53780), "", g_localizeStrings.Get(53731), 2000);
+    //g_application.m_guiDialogKaiToast.QueueNotification(g_localizeStrings.Get(53780), "", g_localizeStrings.Get(53731), 2000);
 
-    CGUIMessage refreshQueueWinMsg(GUI_MSG_UPDATE, WINDOW_BOXEE_BROWSE_QUEUE, 0);
-    g_windowManager.SendThreadMessage(refreshQueueWinMsg);
-
-    CGUIMessage refreshHomeWinMsg(GUI_MSG_UPDATE, WINDOW_HOME, 0);
-    g_windowManager.SendThreadMessage(refreshHomeWinMsg);
+    if (g_windowManager.GetActiveWindow() == WINDOW_BOXEE_BROWSE_QUEUE)
+    {
+      m_refreshActiveWindow = true;
+    }
 
     newLabelToUpdate = g_localizeStrings.Get(53712);
     newThumbToUpdate = g_localizeStrings.Get(53796);
@@ -1671,13 +1821,12 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnRemoveFromQueue(CStdString& newLab
 
   if (succeeded)
   {
-    g_application.m_guiDialogKaiToast.QueueNotification(g_localizeStrings.Get(53781), "", g_localizeStrings.Get(53732), 3000);
+    //g_application.m_guiDialogKaiToast.QueueNotification(g_localizeStrings.Get(53781), "", g_localizeStrings.Get(53732), 3000);
 
-    CGUIMessage refreshQueueWinMsg(GUI_MSG_UPDATE, WINDOW_BOXEE_BROWSE_QUEUE, 0);
-    g_windowManager.SendThreadMessage(refreshQueueWinMsg);
-
-    CGUIMessage refreshHomeWinMsg(GUI_MSG_UPDATE, WINDOW_HOME, 0);
-    g_windowManager.SendThreadMessage(refreshHomeWinMsg);
+    if (g_windowManager.GetActiveWindow() == WINDOW_BOXEE_BROWSE_QUEUE)
+    {
+      m_refreshActiveWindow = true;
+    }
 
     newLabelToUpdate = g_localizeStrings.Get(53711);
     newThumbToUpdate = g_localizeStrings.Get(53791);
@@ -1696,15 +1845,35 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnMarkAsSeen(CStdString& newLabelToU
 
   bool succeeded = true;
 
-  BOXEE::Boxee::GetInstance().GetMetadataEngine().MarkAsWatched(m_item.m_strPath, m_item.GetProperty("boxeeid"), 0);
+  if (!m_item.HasLinksList())
+  {
+    BOXEE::Boxee::GetInstance().GetMetadataEngine().MarkAsWatched(m_item.m_strPath, m_item.GetProperty("boxeeid"), 0);
+  }
+  else
+  {
+    const CFileItemList* fileLinksList = m_item.GetLinksList();
+    for (int i=0; i<fileLinksList->Size(); i++)
+    {
+      CFileItemPtr linkItem = fileLinksList->Get(i);
+      CLinkBoxeeType::LinkBoxeeTypeEnums linkType = CFileItemList::GetLinkBoxeeTypeAsEnum(linkItem->GetProperty("link-boxeetype"));
+      if (linkType == CLinkBoxeeType::FEATURE || linkType == CLinkBoxeeType::LOCAL)
+      {
+        BOXEE::Boxee::GetInstance().GetMetadataEngine().MarkAsWatched(linkItem->m_strPath, m_item.GetProperty("boxeeid"), 0);
+      }
+    }
+  }
 
   m_item.SetProperty("watched", true);
 
   newLabelToUpdate = g_localizeStrings.Get(53714);
   newThumbToUpdate = g_localizeStrings.Get(53799);
 
-  CGUIMessage winmsg(GUI_MSG_UPDATE, g_windowManager.GetActiveWindow(), 0);
-  g_windowManager.SendThreadMessage(winmsg);
+  g_directoryCache.ClearSubPaths("boxeedb://movies/");
+  g_directoryCache.ClearSubPaths("boxee://movies/");
+  g_directoryCache.ClearSubPaths("boxeedb://episodes/");
+  g_directoryCache.ClearSubPaths("boxee://tvshows/episodes/");
+
+  m_refreshActiveWindow = true;
 
   return succeeded;
 }
@@ -1715,15 +1884,31 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnMarkAsUnseen(CStdString& newLabelT
 
   bool succeeded = true;
 
-  BOXEE::Boxee::GetInstance().GetMetadataEngine().MarkAsUnWatched(m_item.m_strPath, m_item.GetProperty("boxeeid"));
+  if (!m_item.HasLinksList())
+  {
+    BOXEE::Boxee::GetInstance().GetMetadataEngine().MarkAsUnWatched(m_item.m_strPath, m_item.GetProperty("boxeeid"));
+  }
+  else
+  {
+    const CFileItemList* fileLinksList = m_item.GetLinksList();
+    for (int i=0; i<fileLinksList->Size(); i++)
+    {
+      CFileItemPtr linkItem = fileLinksList->Get(i);
+      BOXEE::Boxee::GetInstance().GetMetadataEngine().MarkAsUnWatched(linkItem->m_strPath, m_item.GetProperty("boxeeid"));
+    }
+  }
 
   m_item.SetProperty("watched", false);
 
   newLabelToUpdate = g_localizeStrings.Get(53713);
   newThumbToUpdate = g_localizeStrings.Get(53792);
 
-  CGUIMessage winmsg(GUI_MSG_UPDATE, g_windowManager.GetActiveWindow(), 0);
-  g_windowManager.SendThreadMessage(winmsg);
+  g_directoryCache.ClearSubPaths("boxeedb://movies/");
+  g_directoryCache.ClearSubPaths("boxee://movies/");
+  g_directoryCache.ClearSubPaths("boxeedb://episodes/");
+  g_directoryCache.ClearSubPaths("boxee://tvshows/episodes/");
+
+  m_refreshActiveWindow = true;
 
   return succeeded;
 }
@@ -1764,7 +1949,7 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnAddShortcut(CStdString& newLabelTo
         }
       }
     }
-     */
+    */
   }
   else
   {
@@ -1801,10 +1986,20 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnRemoveFromShortcut(CStdString& new
 bool CGUIDialogBoxeeMediaAction::HandleClickOnGotoShow()
 {
   CStdString showId = m_item.GetProperty("showid");
+  CStdString showLabel = m_item.GetVideoInfoTag()->m_strShowTitle;
 
   CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnGotoShow - Enter function. Item ShowId is [%s] (bma)",showId.c_str());
 
-  CStdString urlStr = "boxee://tvshows/episodes?local=true&remote=true&seriesId=" + showId;
+  if (g_application.IsPlayingVideo())
+  {
+    g_application.StopPlaying();
+  }
+
+  CStdString urlStr;
+  CStdString encodedProperty = showLabel;
+  CUtil::URLEncode(encodedProperty);
+
+  urlStr.Format("boxeeui://tvshows/?seriesId=%s&title=%s",showId,encodedProperty);
   g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_TVEPISODES, urlStr);
 
   return true;
@@ -1852,15 +2047,125 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnEject()
 
   return succeeded;
 }
+
+#ifdef HAVE_LIBBLURAY
+struct VectorSortByDurationFunctor {
+    bool operator()(const DemuxTitleInfo &a, const DemuxTitleInfo &b) const {
+        return a.duration > b.duration;
+    }
+};
+#endif
+
 bool CGUIDialogBoxeeMediaAction::HandleClickOnBrowse()
 {
   CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnBrowse - Enter function (bma)");
 
   bool succeeded = true;
-  g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE, m_item.m_strPath);
+  CStdString strPath = m_item.m_strPath;
+
+  if(strPath.empty())
+  {
+    CGUIMessage msg(GUI_MSG_ITEM_SELECTED, GetID(), ADDITIONAL_LINKS_LIST);
+    g_windowManager.SendMessage(msg);
+    int itemIndex = msg.GetParam1();
+
+    if ((itemIndex < 0) || (itemIndex >= (int)m_linksFileItemList.size()))
+    {
+      CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::HandleClickOnBrowse - Index of item clicked foo browsw is [%d] while [LinksFileItemListSize=%zu] (bma)",itemIndex,m_linksFileItemList.size());
+      return false;
+    }
+
+    strPath = m_linksFileItemList[itemIndex]->m_strPath;
+  }
+  
+#ifdef HAVE_LIBBLURAY
+  if( m_item.GetPropertyBOOL("isBlurayFolder") || m_item.IsType(".iso") )
+  {
+    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnBrowse - Running bluray title selection " );
+
+    /////// LOAD PROGRESS
+    // pulling title info through libbluray over a network interface may take a bit.
+    // unfortunately we are doing this on the main thread...
+    CGUIDialogProgress* progress = (CGUIDialogProgress *)g_windowManager.GetWindow(WINDOW_DIALOG_PROGRESS);
+    if (progress)
+    {
+      progress->StartModal();
+      progress->Progress();
+    }
+
+    
+    CDVDInputStreamBluray bluray;
+    if( !bluray.Open( strPath + "/BDMV/index.bdmv", "bluray/bluray" ) ) // content type is ignored
+    {
+      CLog::Log(LOGERROR, "CGUIDialogBoxeeMediaAction::HandleClickOnBrowse - failed to open br path [%s]", strPath.c_str());
+      return false;
+    }
+    
+    if( progress )  progress->Progress();
+
+    std::vector<DemuxTitleInfo> titles;
+    int title_count = bluray.GetTitleCount();
+    int selectedTitle=1;
+
+    CLog::Log(LOGDEBUG, "CGUiDialogBoxeeMediaAction::HandleClickOnBrowse - found %d titles", title_count);
+    
+    for( int i = 1; i <= title_count; i++ )
+    {
+      DemuxTitleInfo info;
+      bluray.GetTitleInfo(i, info.duration, info.title);
+      info.id = i;
+      info.duration /= 1000;
+      
+      if( info.duration > 60 )
+      {
+        titles.push_back(info);
+      }
+	  }
+
+	  // Now sort, based on duration:
+	  std::sort(titles.begin(), titles.end(), VectorSortByDurationFunctor());
+
+    //////// UNLOAD PROGRESS
+    if( progress )
+    {
+      progress->Close();
+    }
+    
+    bool selection = false;
+    if( title_count > 0 )
+    {
+      selection = CGUIDialogBoxeeChapters::Show(titles, selectedTitle, !m_item.IsType(".iso"));
+      if( selection && selectedTitle != -1 )
+      {
+        // trigger playback with the selected title
+        CFileItem item(m_item);
+        item.m_strPath = strPath;
+        CLog::Log(LOGDEBUG, "CGUiDialogBoxeeMediaAction::HandleClickOnBrowse - playing with selected title == %d\n", selectedTitle);
+        item.SetProperty("BlurayStartingTitle", selectedTitle);
+        item.ClearLinksList(); //clear the link list if its a bluray playable folder, so we don't show the quality selection dialog
+        return OnPlay(item);
+      }
+      else if( !selection )
+        return false;
+    }
+  }
+  // if we get here, the user selected the browse option (selectedTitle == -1)
+  
+#endif
+
+  CStdString pathEncoded = strPath;
+  CUtil::URLEncode(pathEncoded);
+
+  CStdString pathToBrowse = "boxeeui://files/?path=";
+  pathToBrowse += pathEncoded;
+
+  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnBrowse - Call ActivateWindow with [pathToBrowse=%s] (bma)",pathToBrowse.c_str());
+
+  g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_LOCAL, pathToBrowse);
+
   g_windowManager.CloseDialogs(true);
 
-  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnBrowse - Exit function and return [succeeded=%d] (bma)",succeeded);
+  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnBrowse - Exit function (bma)");
 
   return succeeded;
 }
@@ -1904,7 +2209,9 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnResolve()
 
       for (int i = 0; i < (int)localPathsList.size(); i++)
       {
-        pDlgSelect->Add(localPathsList[i]->m_strPath);
+        CStdString strPathNoPassword(localPathsList[i]->m_strPath);
+        CUtil::RemovePasswordFromPath(strPathNoPassword);
+        pDlgSelect->Add(strPathNoPassword);
       }
 
       pDlgSelect->EnableButton(TRUE);
@@ -1929,7 +2236,7 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnResolve()
 
   unresolvedItem->m_strPath = strPath;
 
-  if (CGUIDialogBoxeeManualResolve::Show(unresolvedItem))
+  if ((succeeded = CGUIDialogBoxeeManualResolve::Show(unresolvedItem)))
   {
     CGUIMessage winmsg(GUI_MSG_UPDATE, g_windowManager.GetActiveWindow(), 0);
     g_windowManager.SendThreadMessage(winmsg);
@@ -1940,38 +2247,115 @@ bool CGUIDialogBoxeeMediaAction::HandleClickOnResolve()
   return succeeded;
 }
 
+bool CGUIDialogBoxeeMediaAction::HandleClickOnAddToFavorite(CStdString& newLabelToUpdate, CStdString& newThumbToUpdate)
+{
+  bool succeeded = false;
+
+  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnAddToFavorite - Enter function. (bma)");
+
+  if (m_item.GetProperty("showid").IsEmpty() || !m_item.GetVideoInfoTag() || m_item.GetVideoInfoTag()->m_strShowTitle.IsEmpty())
+  {
+    CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::HandleClickOnAddToFavorite - FAILED adding [showid=%s] to favorite (bma)",m_item.GetProperty("showid").c_str());
+    return succeeded;
+  }
+
+  SubscribeJob* job = new SubscribeJob(CSubscriptionType::TVSHOW_SUBSCRIPTION, m_item.GetProperty("showid"), m_item.GetVideoInfoTag()->m_strShowTitle, true);
+
+  succeeded = (CUtil::RunInBG(job) == JOB_SUCCEEDED);
+
+  if (succeeded)
+  {
+    int activeWindow = g_windowManager.GetActiveWindow();
+    if (activeWindow == WINDOW_BOXEE_BROWSE_TVEPISODES)
+    {
+      CGUIMessage refreshTvEpisodesWinMsg(GUI_MSG_UPDATE_ITEM, WINDOW_BOXEE_BROWSE_TVEPISODES,0);
+      refreshTvEpisodesWinMsg.SetStringParam("favorite update");
+      g_windowManager.SendThreadMessage(refreshTvEpisodesWinMsg);
+   }
+
+    newLabelToUpdate = g_localizeStrings.Get(53730);
+    newThumbToUpdate = g_localizeStrings.Get(53785);
+  }
+
+  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnAddToFavorite - Exit function. [succeeded=%d] (bma)",succeeded);
+
+  return succeeded;
+}
+
+bool CGUIDialogBoxeeMediaAction::HandleClickOnRemoveFromFavorite(CStdString& newLabelToUpdate, CStdString& newThumbToUpdate)
+{
+  bool succeeded = false;
+
+  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnRemoveFromFavorite - Enter function. (bma)");
+
+  if (m_item.GetProperty("showid").IsEmpty() || !m_item.GetVideoInfoTag() || m_item.GetVideoInfoTag()->m_strShowTitle.IsEmpty())
+  {
+    CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::HandleClickOnRemoveFromFavorite - FAILED removing [showid=%s] from favorite (bma)",m_item.GetProperty("showid").c_str());
+    return succeeded;
+  }
+
+  SubscribeJob* job = new SubscribeJob(CSubscriptionType::TVSHOW_SUBSCRIPTION, m_item.GetProperty("showid"), m_item.GetVideoInfoTag()->m_strShowTitle, false);
+
+  succeeded = (CUtil::RunInBG(job) == JOB_SUCCEEDED);
+
+  if (succeeded)
+  {
+    int activeWindow = g_windowManager.GetActiveWindow();
+    if (activeWindow == WINDOW_BOXEE_BROWSE_TVEPISODES)
+    {
+      CGUIMessage refreshTvEpisodesWinMsg(GUI_MSG_UPDATE_ITEM, WINDOW_BOXEE_BROWSE_TVEPISODES,0);
+      refreshTvEpisodesWinMsg.SetStringParam("favorite update");
+      g_windowManager.SendThreadMessage(refreshTvEpisodesWinMsg);
+    }
+
+    newLabelToUpdate = g_localizeStrings.Get(53729);
+    newThumbToUpdate = g_localizeStrings.Get(53784);
+  }
+
+  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::HandleClickOnRemoveFromFavorite - Exit function. [succeeded=%d] (bma)",succeeded);
+
+  return succeeded;
+}
+
 int CGUIDialogBoxeeMediaAction::FillDialogButtons(bool itemHasLinks)
 {
-  CGUIMessage msg1(GUI_MSG_LABEL_RESET, GetID(), BUTTONS_LIST, 0);
+  CGUIMessage msg(GUI_MSG_LABEL_RESET, GetID(), BUTTONS_LIST_MOVIE, 0);
+  OnMessage(msg);
+
+  CGUIMessage msg1(GUI_MSG_LABEL_RESET, GetID(), BUTTONS_LIST_NOT_MOVIE, 0);
   OnMessage(msg1);
 
-  CGUIMessage msg2(GUI_MSG_LABEL_RESET, GetID(), TRAILER_LIST, 0);
-  OnMessage(msg2);
+  //CGUIMessage msg2(GUI_MSG_LABEL_RESET, GetID(), TRAILER_LIST, 0);
+  //OnMessage(msg2);
 
   //m_item.Dump();
+
+  CFileItemList buttonsList;
 
   /////////////////////
   // Trailer button //
   /////////////////////
 
-  if (m_trailerItem.get() && (m_playButtonItemIndex > (-1)))
+  /*
+  if (m_trailerLinkItem.get() && !m_tarilerWasAddedToLinkList && !m_item.GetPropertyBOOL("IsTrailer"))
   {
     CFileItemPtr trailerButton(new CFileItem(g_localizeStrings.Get(53718)));
     trailerButton->SetThumbnailImage(g_localizeStrings.Get(53794));
     trailerButton->SetProperty(BUTTON_ACTION_PROPERTY_NAME,ACTION_PLAY_TRAILER);
+	  buttonsList.Add(trailerButton);
 
-    CGUIMessage winmsg(GUI_MSG_LABEL_ADD, GetID(), TRAILER_LIST, 0, 0, trailerButton);
-    OnMessage(winmsg);
+    //CGUIMessage winmsg(GUI_MSG_LABEL_ADD, GetID(), TRAILER_LIST, 0, 0, trailerButton);
+    //OnMessage(winmsg);
 
     CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - Add TRAILER button. (bma)");
   }
-
-  CFileItemList buttonsList;
+  */
 
   /////////////////////
   // ReadMore button //
   /////////////////////
 
+  /*
   if (BoxeeUtils::HasDescription(m_item))
   {
     CFileItemPtr moreInfoButton(new CFileItem(g_localizeStrings.Get(53710)));
@@ -1981,83 +2365,78 @@ int CGUIDialogBoxeeMediaAction::FillDialogButtons(bool itemHasLinks)
 
     CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - Add MORE_INFO button. [ButtonsListSize=%d] (bma)",buttonsList.Size());
   }
+  */
 
   //////////////////////////
   // Queue/Dequeue button //
   //////////////////////////
+
   int activeWindow = g_windowManager.GetActiveWindow();
 
-  // DVD Media Action Dialog doesnt need Queue/Dequeue button
-  if (!m_item.IsDVD()) {
-	  CGUIWindowBoxeeMain* pHomeWindow = (CGUIWindowBoxeeMain*)g_windowManager.GetWindow(WINDOW_HOME);
-	  if (!pHomeWindow)
-	  {
-		  CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::FillDialogButtons - FAILED to get WINDOW_HOME. item [label=%s][path=%s][boxeeId=%s] (bma)",m_item.GetLabel().c_str(),m_item.m_strPath.c_str(),m_item.GetProperty("boxeeid").c_str());
-	  }
+  // DVD Media Action Dialog doesn't need Queue/Dequeue button
+  if (!m_item.IsDVD())
+  {
+    CGUIWindowBoxeeMain* pHomeWindow = (CGUIWindowBoxeeMain*)g_windowManager.GetWindow(WINDOW_HOME);
+    if (!pHomeWindow)
+    {
+      CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::FillDialogButtons - FAILED to get WINDOW_HOME. item [label=%s][path=%s][boxeeId=%s] (bma)",m_item.GetLabel().c_str(),m_item.m_strPath.c_str(),m_item.GetProperty("boxeeid").c_str());
+    }
 
-	  CStdString referral;
+    CStdString referral;
 
-	  bool canQueue = BoxeeUtils::CanQueue(m_item,referral);
+    bool canQueue = BoxeeUtils::CanQueue(m_item,referral);
+    bool isInQueue = BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().IsInQueue(m_item.GetProperty("boxeeid"),m_item.m_strPath,referral);
 
-	  if ((activeWindow == WINDOW_BOXEE_BROWSE_QUEUE))
-	  {
-		  /////////////////////////////////////////////////////
-		  // in QueueWindow -> need to add REMOVE_FROM_QUEUE //
-		  /////////////////////////////////////////////////////
+    if ((activeWindow == WINDOW_BOXEE_BROWSE_QUEUE))
+    {
+      /////////////////////////////////////////////////////
+      // in QueueWindow -> need to add REMOVE_FROM_QUEUE //
+      /////////////////////////////////////////////////////
 
-		  if (canQueue)
-		  {
-			  CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::FillDialogButtons - In QueueWindow and [canQueue=%d] for item [label=%s][path=%s][boxeeId=%s] (bma)",canQueue,m_item.GetLabel().c_str(),m_item.m_strPath.c_str(),m_item.GetProperty("boxeeid").c_str());
-		  }
+      if (canQueue)
+      {
+        CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::FillDialogButtons - In QueueWindow and [canQueue=%d] for item [label=%s][path=%s][boxeeId=%s] (bma)",canQueue,m_item.GetLabel().c_str(),m_item.m_strPath.c_str(),m_item.GetProperty("boxeeid").c_str());
+      }
 
-		  AddDequeueButton(buttonsList, referral);
+      AddDequeueButton(buttonsList, referral);
 
-		  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - In QueueScreen -> Add REMOVE_FROM_QUEUE button and set property [referral=%s]. [ButtonsListSize=%d] (bma)",m_item.GetProperty("referral").c_str(),buttonsList.Size());
-	  }
-	  else if ((activeWindow == WINDOW_HOME) && pHomeWindow && (pHomeWindow->GetFocusedControlID() == LIST_QUEUE))
-	  {
-		  ///////////////////////////////////////////////////////////////////////////
-		  // in HomeWindow and click on QueueList -> need to add REMOVE_FROM_QUEUE //
-		  ///////////////////////////////////////////////////////////////////////////
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - In QueueScreen -> Add REMOVE_FROM_QUEUE button and set property [referral=%s]. [ButtonsListSize=%d] (bma)",m_item.GetProperty("referral").c_str(),buttonsList.Size());
+    }
+    else if (itemHasLinks)
+    {
+      if (isInQueue)
+      {
+        AddDequeueButton(buttonsList, referral);
+        CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - Add REMOVE_FROM_QUEUE button. [ButtonsListSize=%d] (bma)",buttonsList.Size());
+      }
+      else
+      {
+        if (canQueue)
+        {
+          CFileItemPtr queueButton(new CFileItem(g_localizeStrings.Get(53711)));
+          queueButton->SetThumbnailImage(g_localizeStrings.Get(53791));
+          queueButton->SetProperty(BUTTON_ACTION_PROPERTY_NAME,ACTION_ADD_TO_QUEUE);
+          buttonsList.Add(queueButton);
 
-		  if (canQueue)
-		  {
-			  CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::FillDialogButtons - In HomeWindow, click on QueueItem and [canQueue=%d] for item [label=%s][path=%s][boxeeId=%s] (bma)",canQueue,m_item.GetLabel().c_str(),m_item.m_strPath.c_str(),m_item.GetProperty("boxeeid").c_str());
-		  }
-
-		  AddDequeueButton(buttonsList, referral);
-
-		  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - In HomeWindow and click on QueueItem -> Add REMOVE_FROM_QUEUE button and set property [referral=%s]. [ButtonsListSize=%d] (bma)",m_item.GetProperty("referral").c_str(),buttonsList.Size());
-	  }
-	  else if (itemHasLinks)
-	  {
-		  if (canQueue)
-		  {
-			  CFileItemPtr queueButton(new CFileItem(g_localizeStrings.Get(53711)));
-			  queueButton->SetThumbnailImage(g_localizeStrings.Get(53791));
-			  queueButton->SetProperty(BUTTON_ACTION_PROPERTY_NAME,ACTION_ADD_TO_QUEUE);
-			  buttonsList.Add(queueButton);
-
-			  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - Add ADD_TO_QUEUE button. [ButtonsListSize=%d] (bma)",buttonsList.Size());
-		  }
-		  else
-		  {
-			  AddDequeueButton(buttonsList, referral);
-
-			  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - Add REMOVE_FROM_QUEUE button and set property [referral=%s]. [ButtonsListSize=%d] (bma)",m_item.GetProperty("referral").c_str(),buttonsList.Size());
-		  }
-	  }
-	  else
-	  {
-		  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - Not adding queue/dequeue button. [activeWindow=%d][itemHasLinks=%d] for item [label=%s][path=%s][boxeeId=%s] (bma)",activeWindow,itemHasLinks,m_item.GetLabel().c_str(),m_item.m_strPath.c_str(),m_item.GetProperty("boxeeid").c_str());
-	  }
+          CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - Add ADD_TO_QUEUE button. [ButtonsListSize=%d] (bma)",buttonsList.Size());
+        }
+        else
+        {
+          CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - Not adding queue/dequeue button. [activeWindow=%d][canQueue=%d][isInQueue=%d][referral=%s]. [itemHasLinks=%d][label=%s][path=%s][boxeeId=%s] (bma)",activeWindow,canQueue,isInQueue,referral.c_str(),itemHasLinks,m_item.GetLabel().c_str(),m_item.m_strPath.c_str(),m_item.GetProperty("boxeeid").c_str());
+        }
+      }
+    }
+    else
+    {
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - Not adding queue/dequeue button. [activeWindow=%d][canQueue=%d][isInQueue=%d][referral=%s]. [itemHasLinks=%d] for item [label=%s][path=%s][boxeeId=%s] (bma)",activeWindow,canQueue,isInQueue,referral.c_str(),itemHasLinks,m_item.GetLabel().c_str(),m_item.m_strPath.c_str(),m_item.GetProperty("boxeeid").c_str());
+    }
   }
 
   ////////////////////////
   // Seen/Unseen button //
   ////////////////////////
 
-  if (itemHasLinks)
+  if (itemHasLinks && !m_item.GetPropertyBOOL("IsTrailer"))
   {
     CFileMarkOptions::FileMarkOptionsEnums fileMarkStatus = GetFileMarkStatus(m_item);
     if (fileMarkStatus == CFileMarkOptions::MARKED_AS_SEEN)
@@ -2084,6 +2463,7 @@ int CGUIDialogBoxeeMediaAction::FillDialogButtons(bool itemHasLinks)
     }
   }
 
+  /*
   /////////////////////
   // Shortcut button //
   /////////////////////
@@ -2103,7 +2483,7 @@ int CGUIDialogBoxeeMediaAction::FillDialogButtons(bool itemHasLinks)
       }
       else
       {
-        CFileItemPtr  shortcutButton(new CFileItem(g_localizeStrings.Get(53716)));
+        CFileItemPtr shortcutButton(new CFileItem(g_localizeStrings.Get(53716)));
         shortcutButton->SetThumbnailImage(g_localizeStrings.Get(53795));
         shortcutButton->SetProperty(BUTTON_ACTION_PROPERTY_NAME,ACTION_REMOVE_FROM_SHORTCUT);
         buttonsList.Add(shortcutButton);
@@ -2112,12 +2492,13 @@ int CGUIDialogBoxeeMediaAction::FillDialogButtons(bool itemHasLinks)
       }
     }
   }
+  */
 
   //////////////////
   // Share screen //
   //////////////////
 
-  if (BoxeeUtils::CanShare(m_item) )
+  if (BoxeeUtils::CanShare(m_item))
   {
     CFileItemPtr shareButton(new CFileItem(g_localizeStrings.Get(53719)));
     shareButton->SetThumbnailImage(g_localizeStrings.Get(53798));
@@ -2130,6 +2511,7 @@ int CGUIDialogBoxeeMediaAction::FillDialogButtons(bool itemHasLinks)
   /////////////////////////
   /// DVD Dialog Buttons //
   /////////////////////////
+
   if ( BoxeeUtils::CanEject(m_item))
   {
 	    CFileItemPtr ejectButton(new CFileItem(g_localizeStrings.Get(53721)));
@@ -2139,15 +2521,67 @@ int CGUIDialogBoxeeMediaAction::FillDialogButtons(bool itemHasLinks)
 	    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - Add BTN_EJECT button. [ButtonsListSize=%d] (bma)",buttonsList.Size());
 
   }
-  if ( m_item.IsDVD())
+
+  // support for browse in br iso for title lookup
+  bool bBlurayISO = false;
+
+#ifdef HAVE_LIBBLURAY
+  if( m_item.IsType(".iso") )
+  {
+    CStdString type;
+    
+    // this op can be expensive over a slow network connection
+    if( CUtil::GetIsoDiskType( m_item.m_strPath, type) && type == "BD")
+    {
+      // should probably store as a property of the fileitem/persist this
+      bBlurayISO = true;
+    }
+  }
+#endif
+  
+  if ( m_item.IsDVD() || m_item.IsPlayableFolder() || bBlurayISO )
   {
 	    CFileItemPtr browseButton(new CFileItem(g_localizeStrings.Get(53722)));
 	    browseButton->SetThumbnailImage(g_localizeStrings.Get(53787));
 	    browseButton->SetProperty(BUTTON_ACTION_PROPERTY_NAME,ACTION_BROWSE);
 	    buttonsList.Add(browseButton);
 	    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - Add BTN_BROWSE button. [ButtonsListSize=%d] (bma)",buttonsList.Size());
-
   }
+
+  /*
+  /////////////////////
+  // Favorite button //
+  /////////////////////
+
+  CStdString showId = m_item.GetProperty("showid");
+
+  if (!showId.IsEmpty())
+  {
+    bool isSubscribe = BoxeeUtils::IsSubscribe(showId);
+    if (isSubscribe)
+    {
+      // already subscribe -> Add button for unSubscribe
+
+      CFileItemPtr unFavoriteButton(new CFileItem(g_localizeStrings.Get(53730)));
+      unFavoriteButton->SetThumbnailImage(g_localizeStrings.Get(53785));
+      unFavoriteButton->SetProperty(BUTTON_ACTION_PROPERTY_NAME,ACTION_REMOVE_FROM_FAVORITE);
+      buttonsList.Add(unFavoriteButton);
+
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - Add ACTION_REMOVE_FAVORITE button. [ButtonsListSize=%d] (bma)",buttonsList.Size());
+    }
+    else
+    {
+      // not subscribe -> Add button for subscribe
+
+      CFileItemPtr favoriteButton(new CFileItem(g_localizeStrings.Get(53729)));
+      favoriteButton->SetThumbnailImage(g_localizeStrings.Get(53784));
+      favoriteButton->SetProperty(BUTTON_ACTION_PROPERTY_NAME,ACTION_ADD_TO_FAVORITE);
+      buttonsList.Add(favoriteButton);
+
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - Add ACTION_ADD_FAVORITE button. [ButtonsListSize=%d] (bma)",buttonsList.Size());
+    }
+  }
+  */
 
   //////////////////////
   // Goto show screen //
@@ -2163,6 +2597,7 @@ int CGUIDialogBoxeeMediaAction::FillDialogButtons(bool itemHasLinks)
     CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - Add BTN_GOTO_SHOW button. [ButtonsListSize=%d] (bma)",buttonsList.Size());
   }
 
+  /*
   /////////////////////////
   // remove from history //
   /////////////////////////
@@ -2176,14 +2611,17 @@ int CGUIDialogBoxeeMediaAction::FillDialogButtons(bool itemHasLinks)
 
     CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - Add BTN_GOTO_SHOW button. [ButtonsListSize=%d] (bma)",buttonsList.Size());
   }
+  */
 
-  /////////////////////////
-  // manually    resolve //
-  /////////////////////////
-  if ( BoxeeUtils::CanRecognize(m_item))
+  //////////////////////
+  // manually resolve //
+  //////////////////////
+
+  if ((activeWindow != WINDOW_BOXEE_BROWSE_HISTORY) && BoxeeUtils::CanRecognize(m_item))
   {
     CStdString strLabel;
     CStdString strThumb;
+
     if (m_item.GetPropertyBOOL("isFolderItem"))
     {
       strLabel = g_localizeStrings.Get(52126);
@@ -2200,7 +2638,6 @@ int CGUIDialogBoxeeMediaAction::FillDialogButtons(bool itemHasLinks)
     resolveButton->SetProperty(BUTTON_ACTION_PROPERTY_NAME,ACTION_RESOLVE);
     buttonsList.Add(resolveButton);
     CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - Add BTN_RESOLVE button. [ButtonsListSize=%d] (bma)",buttonsList.Size());
-
   }
 
   CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - Going to add [ButtonsListSize=%d] to dialog (bma)",buttonsList.Size());
@@ -2211,9 +2648,42 @@ int CGUIDialogBoxeeMediaAction::FillDialogButtons(bool itemHasLinks)
 
     CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillDialogButtons - [%d/%d] - Going to add button [label=%s] to ButtonsListSize (bma)",i+1,buttonsList.Size(),item->GetLabel().c_str());
 
-    CGUIMessage winmsg(GUI_MSG_LABEL_ADD, GetID(), BUTTONS_LIST, 0, 0, item);
+    CGUIMessage winmsg(GUI_MSG_LABEL_ADD, GetID(), BUTTONS_LIST_MOVIE, 0, 0, item);
     OnMessage(winmsg);
+
+    CGUIMessage winmsg1(GUI_MSG_LABEL_ADD, GetID(), BUTTONS_LIST_NOT_MOVIE, 0, 0, item);
+    OnMessage(winmsg1);
   }
+
+  return buttonsList.Size();
+}
+
+int CGUIDialogBoxeeMediaAction::FillMovieAdditionalDialogButtons()
+{
+  CFileItemList buttonsList;
+
+  const CGUIControl* list = GetControl(ADDITIONAL_MOVIE_BUTTONS_LIST);
+
+  if (!list || !list->IsVisible())
+  {
+    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::FillMovieAdditionalDialogButtons - NOT adding movie additional buttons since [list=%p][listIsVisible=%d] (bma)",list,(list ? list->IsVisible() : false));
+    return buttonsList.Size();
+  }
+
+  CGUIMessage msg2(GUI_MSG_LABEL_RESET, GetID(), ADDITIONAL_MOVIE_BUTTONS_LIST, 0);
+  OnMessage(msg2);
+
+  CFileItemPtr overviewButton(new CFileItem(g_localizeStrings.Get(90452)));
+  overviewButton->Select(true);
+  buttonsList.Add(overviewButton);
+
+  CFileItemPtr castAndCrewButton(new CFileItem(g_localizeStrings.Get(90453)));
+  buttonsList.Add(castAndCrewButton);
+
+  CGUIMessage msg(GUI_MSG_LABEL_BIND, GetID(), ADDITIONAL_MOVIE_BUTTONS_LIST, 0, 0, &buttonsList);
+  OnMessage(msg);
+
+  CONTROL_SELECT_ITEM(ADDITIONAL_MOVIE_BUTTONS_LIST,0);
 
   return buttonsList.Size();
 }
@@ -2238,13 +2708,20 @@ void CGUIDialogBoxeeMediaAction::AddDequeueButton(CFileItemList& buttonsList, co
 
 void CGUIDialogBoxeeMediaAction::OnDeinitWindow(int nextWindowID)
 {
+  if (m_refreshActiveWindow)
+  {
+    CGUIMessage winmsg(GUI_MSG_UPDATE, g_windowManager.GetActiveWindow(), 0);
+    g_windowManager.SendThreadMessage(winmsg);
+    m_refreshActiveWindow = false;
+  }
+
   CGUIMessage winmsg1(GUI_MSG_LABEL_RESET, GetID(), 5000);
   g_windowManager.SendMessage(winmsg1);
 
   // reset the window property "link-path-to-show"
   SetLinkPathAsWindowProperty("");
 
-  m_trailerItem.reset();
+  m_trailerLinkItem.reset();
 }
 
 CStdString CGUIDialogBoxeeMediaAction::GetLabel(const CFileItem& item)
@@ -2330,10 +2807,19 @@ bool CGUIDialogBoxeeMediaAction::ShowAndGetInput(const CFileItem* pItem)
 {
   CGUIDialogBoxeeMediaAction *dialog = (CGUIDialogBoxeeMediaAction *)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_MEDIA_ACTION);
   if (!pItem || !dialog)
+  {
     return false;
+  }
+
+  CStdString itemId = pItem->GetProperty("itemid");
+
+  g_application.GetItemLoader().AddItemLoadedObserver(itemId,dialog->GetID());
 
   dialog->m_item = *pItem;
+
   dialog->DoModal();
+
+  g_application.GetItemLoader().RemoveItemLoadedObserver(itemId,dialog->GetID());
 
   return dialog->m_bConfirmed;
 }
@@ -2342,37 +2828,34 @@ bool CGUIDialogBoxeeMediaAction::OnBrowse(const CFileItem& item)
 {
   if (item.m_bIsFolder)
   {
+    AddItemToHistory(item);
+
+    CStdString path;
+    CStdString encodedProperty= item.m_strPath;
+    CUtil::URLEncode(encodedProperty);
+    path = "boxeeui://files/?path=";
+    path += encodedProperty;
+
     if (item.GetPropertyBOOL("ispicturefolder") || item.HasPictureInfoTag())
     {
-      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnBrowse - Going to open WINDOW_BOXEE_BROWSE_PHOTOS with [path=%s] (bma)(browse)",item.m_strPath.c_str());
-      g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_PHOTOS, item.m_strPath);
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnBrowse - Going to open WINDOW_BOXEE_BROWSE_PHOTOS with [path=%s] (bma)(browse)",path.c_str());
+      g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_PHOTOS, path);
     }
-    else if (item.GetPropertyBOOL("IsAlbum"))
+    else if (item.GetPropertyBOOL("IsAlbum") && !item.GetProperty("BoxeeDBAlbumId").IsEmpty())
     {
-      CStdString strPath;
-
-      if (item.m_strPath.Left(17) == "boxeedb://tracks/" && item.m_strPath.length() > 17)
-      {
-        strPath = item.m_strPath;
-      }
-      else if (!item.GetProperty("BoxeeDBAlbumId").IsEmpty())
-      {
-        strPath = "boxeedb://tracks/";
-        strPath += item.GetProperty("BoxeeDBAlbumId");
-      }
-
-      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnBrowse - Going to open WINDOW_BOXEE_BROWSE_TRACKS with [path=%s] (bma)(browse)",strPath.c_str());
-      g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_TRACKS, strPath);
+      CStdString albumId = item.GetProperty("BoxeeDBAlbumId");
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnBrowse - Going to open WINDOW_BOXEE_BROWSE_TRACKS with [albumId=%s] (bma)(browse)",albumId.c_str());
+      g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_TRACKS, albumId);
     }
     else if (item.GetPropertyBOOL("isMusicFolder") || item.HasMusicInfoTag())
     {
-      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnBrowse - Going to open WINDOW_BOXEE_BROWSE_LOCAL with [path=%s] (bma)(browse)",item.m_strPath.c_str());
-      g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_LOCAL, item.m_strPath);
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnBrowse - Going to open WINDOW_BOXEE_BROWSE_LOCAL with [path=%s]. [isMusicFolder=%d][HasMusicInfoTag=%d] (bma)(browse)",path.c_str(),item.GetPropertyBOOL("isMusicFolder"),item.HasMusicInfoTag());
+      g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_LOCAL, path);
     }
     else
     {
-      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnBrowse - Going to open WINDOW_BOXEE_BROWSE with [path=%s] (bma)(browse)",item.m_strPath.c_str());
-      g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE, item.m_strPath);
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnBrowse - Going to open WINDOW_BOXEE_BROWSE_LOCAL with [path=%s] (bma)(browse)",path.c_str());
+      g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_LOCAL, path);
     }
   }
   else
@@ -2399,19 +2882,19 @@ bool CGUIDialogBoxeeMediaAction::OnBrowse(const CFileItem& item)
   else if (item.GetPropertyBOOL("ishistory") && item.HasProperty("parentfolder")) 
   {
     CStdString strType;
-    if (item.IsVideo())
-    {
+	  if (item.IsVideo()) 
+	  {
       strType = "video";
-    }
-    else if (item.IsAudio())
-    {
+	  }
+	  else if (item.IsAudio()) 
+	  {
       strType = "music";
-    }
-    else
-    {
+	  }
+	  else
+	  {
       strType = "pictures";
-    }
-
+	  }
+    
     CStdString strLabel;
     if (item.HasProperty("rsschanneltitle"))
     {
@@ -2471,7 +2954,7 @@ bool CGUIDialogBoxeeMediaAction::OnBrowse(const CFileItem& item)
 }
 
 bool CGUIDialogBoxeeMediaAction::OnPlay(const CFileItem& item)
-{
+{ 
   if (item.IsAudio() && item.HasProperty("isFolderItem"))
   {
     //CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnPlay, playing audio folder, path = %s", item.m_strPath.c_str());
@@ -2492,9 +2975,7 @@ bool CGUIDialogBoxeeMediaAction::OnPlay(const CFileItem& item)
   {
     AddItemToHistory(item);
 
-    CStdString strPath = "boxeedb://tracks/";
-    strPath += item.GetProperty("BoxeeDBAlbumId");
-    g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_TRACKS, strPath);
+    g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_TRACKS, item.GetProperty("BoxeeDBAlbumId"));
     return true;
   }
   else if (item.IsPicture()) 
@@ -2520,13 +3001,15 @@ bool CGUIDialogBoxeeMediaAction::OnPlay(const CFileItem& item)
 
     return DIRECTORY::CPluginDirectory::RunScriptWithParams(item.m_strPath);
   }
+#ifdef HAS_LASTFM
   else if (item.IsLastFM()) 
   {
     AddItemToHistory(item);
 
     CLastFmManager::GetInstance()->StopRadio();
-    CLastFmManager::GetInstance()->ChangeStation(CURL(item.m_strPath));
+    CLastFmManager::GetInstance()->ChangeStation(CURI(item.m_strPath));
   }
+#endif
   else if ((item.m_bIsFolder) && (item.GetPropertyBOOL("isDvdFolder")))
   {
     CLog::Log(LOGDEBUG,"In CGUIDialogBoxeeMediaAction::OnPlay - Going to build a playlist for dvd folder [item=%s] and then play it (dvdfolder)",(item.m_strPath).c_str());
@@ -2542,23 +3025,21 @@ bool CGUIDialogBoxeeMediaAction::OnPlay(const CFileItem& item)
     AddItemToHistory(item);
 
     //CreatePlaylistAndPlay(item,CPlaylistSourceType::STACK);
-    OnPlayMedia(item);
+	  OnPlayMedia(item);
   }
   else
   {
     if(item.GetPropertyBOOL("istrailer") == true)
     {
       // If item is trailer -> Need to add (trailer) to its label
-
+      
       CFileItemPtr trailerItem(new CFileItem(item));
-
-      BoxeeUtils::AddTrailerStrToItemLabel(*((CFileItem*)trailerItem.get()));
-
+      
       AddItemToHistory(*((CFileItem*)trailerItem.get()));
 
       CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnPlay - Going to play trailer file from folder mode. [path=%s][label=%s][thumb=%s] (tr)", (trailerItem->m_strPath).c_str(),(trailerItem->GetLabel()).c_str(),(trailerItem->GetThumbnailImage()).c_str());
 
-      OnPlayMedia(*((CFileItem*)trailerItem.get()));
+      return OnPlayMedia(*((CFileItem*)trailerItem.get()));
     }
     else
     {
@@ -2577,7 +3058,7 @@ bool CGUIDialogBoxeeMediaAction::OnResume(const CFileItem& item)
 {
   bool resumeItem = g_guiSettings.GetInt("myvideos.resumeautomatically") != RESUME_ASK;
 
-  if (!item.m_bIsFolder && !resumeItem)
+  if ((item.IsPlayableFolder() || !item.m_bIsFolder) && !resumeItem)
   {
     // check to see whether we have a resume offset available
     BXUserProfileDatabase db;
@@ -2587,48 +3068,58 @@ bool CGUIDialogBoxeeMediaAction::OnResume(const CFileItem& item)
       CStdString itemPath(item.m_strPath);
 
       if ( db.GetTimeWatchedByPath(itemPath , timeInSeconds) )
-      { // prompt user whether they wish to resume
+      {
+        // prompt user whether they wish to resume
         std::vector<CStdString> choices;
         CStdString resumeString, time;
         StringUtils::SecondsToTimeString(lrint(timeInSeconds), time);
+        CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnResume - setting Resume Dialog with [timeInSeconds=%f=%s]. [path=%s] (bma)",timeInSeconds,time.c_str(),itemPath.c_str());
         resumeString.Format(g_localizeStrings.Get(12022).c_str(), time.c_str());
         choices.push_back(resumeString);
         choices.push_back(g_localizeStrings.Get(12021)); // start from the beginning
-        int retVal = CGUIDialogContextMenu::ShowAndGetChoice(choices);
 
-        if (!retVal)
-        return false; // don't do anything
+        int choiceIndex = CGUIDialogBoxeeVideoResume::ShowAndGetInput(choices);
 
-        resumeItem = (retVal == 1);
+        CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnResume - Resume dialog returned [choiceIndex=%d] (bma)",choiceIndex);
+
+        if (choiceIndex == -1)
+        {
+          // don't do anything
+          return false;
+        }
+
+        resumeItem = (choices[choiceIndex] == resumeString);
       }
 
-    db.Close();
+      db.Close();
     }
   }
-
+  
   AddItemToHistory(item);
 
   // We have to copy the item here because it was passed as const
   CFileItem newItem(item);
   if (resumeItem)
+  {
     newItem.m_lStartOffset = STARTOFFSET_RESUME;
-
+  }
+  
   OnPlayMedia(newItem);
-
+    
   return true;
 }
 
 bool CGUIDialogBoxeeMediaAction::GetPreferredQuality(const CFileItem& item, int &chosenItem)
 {
-  int quality = BOXEE::Boxee::GetInstance().GetMetadataEngine().GetProviderPerfQuality(item.GetProperty("link-providername"));
+  int quality = BOXEE::Boxee::GetInstance().GetMetadataEngine().GetProviderPerfQuality(item.GetProperty("link-provider"));
   // get the previous played quality from the database
   if (quality == MEDIA_DATABASE_ERROR)
   {
-    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::GetPreferredQuality  provider [%s] doesnt have preffered quality ", item.GetProperty("link-providername").c_str());
+    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::GetPreferredQuality - [provider=%s][providerName=%s] doesn't have preferred quality (bma)",item.GetProperty("link-provider").c_str(),item.GetProperty("link-providername").c_str());
     return false;
   }
 
-  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::GetPreferredQuality provider [%s]  played before with quality %d ", item.GetProperty("link-providername").c_str(), quality);
+  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::GetPreferredQuality - [provider=%s][providerName=%s] played before with quality [%d] (bma)",item.GetProperty("link-provider").c_str(),item.GetProperty("link-providername").c_str(),quality);
 
   // the list is sorted in desc order - so in case the we are looking for an item with the same quality or the item with the closest quality that (less then the previous)
   const CFileItemList* linksFileItemList = item.GetLinksList();
@@ -2637,7 +3128,7 @@ bool CGUIDialogBoxeeMediaAction::GetPreferredQuality(const CFileItem& item, int 
     CFileItemPtr linkFileItemToAdd = linksFileItemList->Get(i);
     if  (linkFileItemToAdd->GetPropertyInt("quality") <= quality)
     {
-      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::found link with quality %d ", linkFileItemToAdd->GetPropertyInt("quality"));
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::GetPreferredQuality - found link with quality [%d] (bma)",linkFileItemToAdd->GetPropertyInt("quality"));
       chosenItem = i;
       return true;
 
@@ -2679,16 +3170,16 @@ bool CGUIDialogBoxeeMediaAction::ChooseVideoQuality(const CFileItem& item, int  
   {
     return false;
   }
+
   chosenItem = pDlgVideoQuality->GetSelectedItemPos();
 
   if( pDlgVideoQuality->GetSavePerference())
   {
     CFileItemPtr chosenFileItem = linksFileItemList->Get(chosenItem);
-    BOXEE::Boxee::GetInstance().GetMetadataEngine().AddProviderPerf(chosenFileItem->GetProperty("link-providername"),
-                                                                    chosenFileItem->GetPropertyInt("quality"));
+    BOXEE::Boxee::GetInstance().GetMetadataEngine().AddProviderPerf(chosenFileItem->GetProperty("link-provider"),chosenFileItem->GetPropertyInt("quality"));
   }
-  return true;
 
+  return true;
 }
 
 bool CGUIDialogBoxeeMediaAction::OnPlayMedia(const CFileItem& item)
@@ -2700,7 +3191,7 @@ bool CGUIDialogBoxeeMediaAction::OnPlayMedia(const CFileItem& item)
   g_playlistPlayer.Reset();
   g_playlistPlayer.SetCurrentPlaylist(PLAYLIST_NONE);
 
-  if (PlayableItem.HasLinksList())
+  if (PlayableItem.HasLinksList() && PlayableItem.GetLinksList()->Size() > 0)
   {
     CBoxeeSort qualitySort("quality", SORT_METHOD_VIDEO_QUALITY, SORT_ORDER_DESC, "Best Quality", "");
     PlayableItem.SortLinkList(qualitySort);
@@ -2717,6 +3208,7 @@ bool CGUIDialogBoxeeMediaAction::OnPlayMedia(const CFileItem& item)
     }
 
     CFileItemPtr chosenItem = PlayableItem.GetLinksList()->Get(chooseQuality);
+    chosenItem->Dump();
     if (chosenItem.get() == NULL)
     {
       CLog::Log(LOGERROR,"CGUIDialogBoxeeMediaAction::OnPlayMedia choose NULL item");
@@ -2734,7 +3226,6 @@ bool CGUIDialogBoxeeMediaAction::OnPlayMedia(const CFileItem& item)
   }
 
   return g_application.PlayMedia(PlayableItem);
-
 }
 
 bool CGUIDialogBoxeeMediaAction::OnPlayAudioFromFolder(const CFileItem& item)
@@ -2745,7 +3236,7 @@ bool CGUIDialogBoxeeMediaAction::OnPlayAudioFromFolder(const CFileItem& item)
   CFileItemList fileList;
   CFileItemList audioFileList;
   CStdString playlistFileSource;
-
+  
   bool isItemPlayList = item.IsPlayList();
 
   if(isItemPlayList)
@@ -2754,7 +3245,12 @@ bool CGUIDialogBoxeeMediaAction::OnPlayAudioFromFolder(const CFileItem& item)
   }
   else
   {
-    playlistFileSource = BXUtils::GetParentPath(item.m_strPath);
+    // in some cases we couldn't retrieve parent path (e.q UPnP path)
+    // so we use the parentPath prop which stored in DIRECTORY::GetDirectory 
+    if(item.HasProperty("parentPath"))
+      playlistFileSource = item.GetProperty("parentPath");
+    else
+      playlistFileSource = BXUtils::GetParentPath(item.m_strPath);
   }
 
   CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnPlayAudioFromFolder - playlistFileSource was set to [%s]. [isItemPlayList=%d] (apl)",playlistFileSource.c_str(),isItemPlayList);
@@ -2797,7 +3293,7 @@ bool CGUIDialogBoxeeMediaAction::OnPlayAudioFromFolder(const CFileItem& item)
   if(!isItemPlayList)
   {
     audioFileList.Sort(SORT_METHOD_FILE,SORT_ORDER_ASC);
-
+    
     CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::OnPlayAudioFromFolder - playlistFileSource [%s] is NOT a playlist [isItemPlayList=%d] and therefore it was sort by SORT_METHOD_FILE (apl)",playlistFileSource.c_str(),isItemPlayList);
   }
 
@@ -3060,6 +3556,14 @@ CDialogButtons::DialogButtonsEnums CGUIDialogBoxeeMediaAction::GetButtonAsEnum(c
   {
     return CDialogButtons::BTN_BROWSE;
   }
+  else if (buttonLabel == g_localizeStrings.Get(53729))
+  {
+    return CDialogButtons::BTN_ADD_TO_FAVORITE;
+  }
+  else if (buttonLabel == g_localizeStrings.Get(53730))
+  {
+    return CDialogButtons::BTN_REMOVE_FROM_FAVORITE;
+  }
   else
   {
     return CDialogButtons::BTN_UNKNOWN;
@@ -3087,6 +3591,14 @@ CDialogButtons::DialogButtonsEnums CGUIDialogBoxeeMediaAction::GetButtonActionPr
   else if (buttonActionProperty == ACTION_MARK_AS_UNSEEN)
   {
     return CDialogButtons::BTN_MARK_AS_UNSEEN;
+  }
+  else if (buttonActionProperty == ACTION_ADD_TO_FAVORITE)
+  {
+    return CDialogButtons::BTN_ADD_TO_FAVORITE;
+  }
+  else if (buttonActionProperty == ACTION_REMOVE_FROM_FAVORITE)
+  {
+    return CDialogButtons::BTN_REMOVE_FROM_FAVORITE;
   }
   else if (buttonActionProperty == ACTION_ADD_AS_SHORTCUT)
   {
@@ -3178,6 +3690,9 @@ void CGUIDialogBoxeeMediaAction::SetLinkPathAsWindowProperty(const CStdString& _
     // Translate the path
     translatedPath = _P(path);
 
+    if (CUtil::IsHD(translatedPath))
+      CUtil::HideExternalHDPath(translatedPath, translatedPath);
+
     if (shortenPath)
     {
       // Shorten the path
@@ -3189,10 +3704,7 @@ void CGUIDialogBoxeeMediaAction::SetLinkPathAsWindowProperty(const CStdString& _
     if(!translatedPath.IsEmpty())
     {
       // Build path label
-      pathLabel = g_localizeStrings.Get(15311);
-      pathLabel += " ";
       pathLabel += translatedPath;
-
       CUtil::RemovePasswordFromPath(pathLabel);
     }
   }
@@ -3208,7 +3720,7 @@ bool CGUIDialogBoxeeMediaAction::AddShortcut(const CBoxeeShortcut& shortcut)
   {
     CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::AddShortcut - ShortcutItem [name=%s][path=%s] was added (bma)",shortcut.GetName().c_str(),shortcut.GetPath().c_str());
 
-    g_application.m_guiDialogKaiToast.QueueNotification(g_localizeStrings.Get(53782), "", g_localizeStrings.Get(53737), 3000);
+    //g_application.m_guiDialogKaiToast.QueueNotification(g_localizeStrings.Get(53782), "", g_localizeStrings.Get(53737), 3000);
   }
 
   return succeeded;
@@ -3222,7 +3734,7 @@ bool CGUIDialogBoxeeMediaAction::RemoveShortcut(const CBoxeeShortcut& shortcut)
   {
     CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::RemoveShortcut - ShortcutItem [name=%s][path=%s] was removed (bma)",shortcut.GetName().c_str(),shortcut.GetPath().c_str());
 
-    g_application.m_guiDialogKaiToast.QueueNotification(g_localizeStrings.Get(53783), "", g_localizeStrings.Get(53739), 3000);
+    //g_application.m_guiDialogKaiToast.QueueNotification(g_localizeStrings.Get(53783), "", g_localizeStrings.Get(53739), 3000);
 
     CGUIMessage winmsg(GUI_MSG_UPDATE, WINDOW_BOXEE_BROWSE_SHORTCUTS, 0);
     g_windowManager.SendThreadMessage(winmsg);
@@ -3258,49 +3770,90 @@ void CGUIDialogBoxeeMediaAction::CopyItemContnetProperties(CFileItem &dstItem, c
   dstItem.SetContentType(linkItem->GetContentType());
   dstItem.SetProperty("link-type",linkItem->GetProperty("link-type"));
   dstItem.SetProperty("link-boxeetype",linkItem->GetProperty("link-boxeetype"));
+  dstItem.SetProperty("link-boxeeoffer",linkItem->GetProperty("link-boxeeoffer"));
+  dstItem.SetProperty("link-title",linkItem->GetProperty("link-title"));
 
   if (!linkItem->GetProperty("isinternetstream").IsEmpty())
   {
-	dstItem.SetProperty("isinternetstream",linkItem->GetProperty("isinternetstream"));
+	  dstItem.SetProperty("isinternetstream",linkItem->GetProperty("isinternetstream"));
   }
 
   if (!linkItem->GetProperty("NeedVerify").IsEmpty())
   {
-	dstItem.SetProperty("NeedVerify",linkItem->GetProperty("NeedVerify"));
+	  dstItem.SetProperty("NeedVerify",linkItem->GetProperty("NeedVerify"));
   }
 
   if (!linkItem->GetProperty("link-provider").IsEmpty())
   {
-	dstItem.SetProperty("link-provider",linkItem->GetProperty("link-provider"));
+	  dstItem.SetProperty("link-provider",linkItem->GetProperty("link-provider"));
   }
 
   if (!linkItem->GetProperty("link-providername").IsEmpty())
   {
-	dstItem.SetProperty("link-providername",linkItem->GetProperty("link-providername"));
+	  dstItem.SetProperty("link-providername",linkItem->GetProperty("link-providername"));
   }
 
   if (!linkItem->GetProperty("link-providerthumb").IsEmpty())
   {
-	dstItem.SetProperty("link-providerthumb",linkItem->GetProperty("link-providerthumb"));
+	  dstItem.SetProperty("link-providerthumb",linkItem->GetProperty("link-providerthumb"));
   }
 
   if (!linkItem->GetProperty("link-countrycodes").IsEmpty())
   {
-	dstItem.SetProperty("link-countrycodes",linkItem->GetProperty("link-countrycodes"));
+	  dstItem.SetProperty("link-countrycodes",linkItem->GetProperty("link-countrycodes"));
   }
 
-  if (!linkItem->GetProperty("link-countryrel").IsEmpty())
+  if (linkItem->HasProperty("link-countryrel"))
   {
-	dstItem.SetProperty("link-countryrel",linkItem->GetProperty("link-countryrel"));
+	  dstItem.SetProperty("link-countryrel",linkItem->GetPropertyBOOL("link-countryrel"));
   }
 
   if (!linkItem->GetProperty("quality-lbl").IsEmpty())
   {
-	dstItem.SetProperty("quality-lbl",linkItem->GetProperty("quality-lbl"));
+	  dstItem.SetProperty("quality-lbl",linkItem->GetProperty("quality-lbl"));
   }
 
   dstItem.SetProperty("quality",linkItem->GetPropertyInt("quality"));
+
+  dstItem.SetProperty("link-productslist",linkItem->GetPropertyInt("link-productslist"));
+
+  if (dstItem.GetPropertyBOOL("istrailer"))
+    BoxeeUtils::AddTrailerStrToItemLabel(dstItem);
+
   dstItem.Dump();
+}
+
+bool CGUIDialogBoxeeMediaAction::NeedToSubscribe()
+{
+  // TODO: temp for commit. Need to remove //
+  //return false;
+  ///////////////////////////////////////////
+
+  if (!m_item.HasProperty("NeedToSubscribe"))
+  {
+    return false;
+  }
+
+  if (!m_item.GetPropertyBOOL("NeedToSubscribe"))
+  {
+    return false;
+  }
+
+  return true;
+}
+
+bool CGUIDialogBoxeeMediaAction::OnSubscription()
+{
+  CFileItemPtr itemPtr(new CFileItem(m_item));
+  itemPtr->SetProperty("link-medialabel",m_item.GetLabel());
+
+  bool retVal = false;
+  if (CGUIDialogBoxeePaymentProducts::Show(itemPtr))
+  {
+    retVal = CGUIDialogBoxeePaymentOkPlay::Show();
+  }
+
+  return retVal;
 }
 
 void CGUIDialogBoxeeMediaAction::OpenDvdDialog()
@@ -3349,3 +3902,85 @@ void CGUIDialogBoxeeMediaAction::OpenDvdDialog()
   CGUIDialogBoxeeMediaAction::ShowAndGetInput(&dvdItem);
 #endif
 }
+
+bool CGUIDialogBoxeeMediaAction::SetupTrailer(int& linksAddedCounter)
+{
+  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::SetupTrailer - enter function with [linksAddedCounter=%d]. [trailerExist=%d] (bma)",linksAddedCounter,(m_trailerLinkItem.get() != NULL));
+
+  if (!m_trailerLinkItem.get())
+  {
+    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::SetupTrailer - No trailer to set (bma)");
+    SET_CONTROL_HIDDEN(TRAILER_BUTTON);
+    return true;
+  }
+
+  SET_CONTROL_VISIBLE(TRAILER_BUTTON);
+
+  if (linksAddedCounter == 0)
+  {
+    // in case no link was added and there is a trailer item (can happen in feed) -> add the trailer to the ADDITIONAL_LINKS_LIST
+
+    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::InitNotAppItem - No links was added and there is a TRAILER item -> add the trailer to the ADDITIONAL_LINKS_LIST (bma)");
+
+    m_linksFileItemList.push_back(m_trailerLinkItem);
+
+    CFileItemPtr trailerLinkItem = m_trailerLinkItem;
+    CGUIMessage winmsg(GUI_MSG_LABEL_ADD, GetID(), ADDITIONAL_LINKS_LIST, 0, 0, trailerLinkItem);
+    OnMessage(winmsg);
+
+    linksAddedCounter++;
+    m_tarilerWasAddedToLinkList = true;
+
+    SET_CONTROL_HIDDEN(TRAILER_BUTTON);
+  }
+
+  return true;
+}
+
+void CGUIDialogBoxeeMediaAction::InitCastPanel()
+{
+  CVideoInfoTag* videoInfoTag = m_item.GetVideoInfoTag();
+  if (!videoInfoTag || videoInfoTag->m_cast.empty())
+  {
+    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::InitCastPanel - there is NO VideoInfoTag [%p] or cast container is empty. [numOfCast=%zu] (bma)",videoInfoTag,videoInfoTag->m_cast.size());
+    return;
+  }
+
+  CFileItemList castList;
+  for (size_t i=0; (i<videoInfoTag->m_cast.size() && i<MAX_NUM_OF_CAST_MEMBER_TO_SHOW); i++)
+  {
+    CFileItemPtr castItem(new CFileItem());
+    castItem->SetLabel(videoInfoTag->m_cast[i].strName);
+    castItem->SetLabel2(videoInfoTag->m_cast[i].strRole);
+
+    castList.Add(castItem);
+  }
+
+  CGUIMessage msgBind(GUI_MSG_LABEL_BIND, GetID(), CAST_PANEL_ID, 0,0, &castList);
+  OnMessage(msgBind);
+}
+
+int CGUIDialogBoxeeMediaAction::GetVisibleButtonListControlId()
+{
+  if (m_visibleButtonsListId == 0)
+  {
+    const CGUIControl* pButtonListCtrl = GetControl(BUTTONS_LIST_MOVIE);
+    if (pButtonListCtrl && pButtonListCtrl->IsVisible())
+    {
+      m_visibleButtonsListId = pButtonListCtrl->GetID();
+    }
+    else
+    {
+      pButtonListCtrl = GetControl(BUTTONS_LIST_NOT_MOVIE);
+      if (pButtonListCtrl && pButtonListCtrl->IsVisible())
+      {
+        m_visibleButtonsListId = pButtonListCtrl->GetID();
+      }
+    }
+  }
+
+  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMediaAction::GetVisibleButtonListControlId - visible ButtonList is [id=%d] (bma)",m_visibleButtonsListId);
+
+  return m_visibleButtonsListId;
+}
+

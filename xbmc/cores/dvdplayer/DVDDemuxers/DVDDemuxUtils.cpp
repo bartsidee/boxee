@@ -26,14 +26,14 @@
 #include "DVDClock.h"
 #include "utils/log.h"
 extern "C" {
-#if (defined USE_EXTERNAL_FFMPEG) || (defined WIN32)
+#if (defined USE_EXTERNAL_FFMPEG)
   #if (defined HAVE_LIBAVCODEC_AVCODEC_H)
     #include <libavcodec/avcodec.h>
   #else
     #include <ffmpeg/avcodec.h>
   #endif
 #else
-#include "../../ffmpeg/avcodec.h"
+#include "ffmpeg/libavcodec/avcodec.h"
 #endif
 }
 
@@ -86,6 +86,7 @@ DemuxPacket* CDVDDemuxUtils::AllocateDemuxPacket(int iDataSize)
     pPacket->dts       = DVD_NOPTS_VALUE;
     pPacket->pts       = DVD_NOPTS_VALUE;
     pPacket->iStreamId = -1;
+    pPacket->flags     = 0;
   }
   catch(...)
   {

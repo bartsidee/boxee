@@ -36,6 +36,11 @@ public:
   virtual void OnPlayBackStarted() = 0;
   virtual void OnPlayBackStopped() = 0;
   virtual void OnQueueNextItem() = 0;
+  virtual void OnPlayBackPaused() {};
+  virtual void OnPlayBackResumed() {};
+  virtual void OnPlayBackSeek(int iTime, int seekOffset) {};
+  virtual void OnPlayBackSeekChapter(int iChapter) {};
+  virtual void OnPlayBackSpeedChanged(int iSpeed) {};
 };
 
 class CPlayerOptions
@@ -44,11 +49,13 @@ public:
   CPlayerOptions()
   {
     starttime = 0LL;
+    startpercent = 0LL;
     identify = false;
     fullscreen = false;
     video_only = false;
   }
   double  starttime; /* start time in seconds */
+  double  startpercent; /* start time in percent between 0-1 */
   bool    identify;  /* identify mode, used for checking format and length of a file */
   CStdString state;  /* potential playerstate to restore to */
   bool    fullscreen; /* player is allowed to switch to fullscreen */
@@ -57,6 +64,15 @@ public:
 
 class CFileItem;
 class CRect;
+
+// define some possible errors for IPlayer
+typedef enum {
+   IPLAYER_SUCCESS               =  0,
+   IPLAYER_FILE_OPEN_ERROR       =  1,
+   IPLAYER_FORMAT_NOT_SUPPORTED  =  2,
+   IPLAYER_ERROR_UNSPECIFIED     =  99
+} iplayer_error;
+
 
 class IPlayer
 {
@@ -75,6 +91,7 @@ public:
   virtual bool IsPaused() const = 0;
   virtual bool HasVideo() const = 0;
   virtual bool HasAudio() const = 0;
+  virtual bool HasLiveTV() const { return false; }
   virtual bool IsPassthrough() const { return false;}
   virtual bool CanSeek() {return true;}
   virtual void Seek(bool bPlus = true, bool bLargeStep = false) = 0;
@@ -82,6 +99,7 @@ public:
   virtual void SeekPercentage(float fPercent = 0){}
   virtual float GetPercentage(){ return 0;}
   virtual float GetPercentageWithCache(){ return GetPercentage();}
+  virtual int GetPositionWithCache() { return 0;}
   virtual void SetVolume(long nVolume){}
   virtual void SetDynamicRangeCompression(long drc){}
   virtual void GetAudioInfo( CStdString& strAudioInfo) = 0;
@@ -95,6 +113,7 @@ public:
   virtual bool Record(bool bOnOff) { return false;};
   virtual bool IsDirectRendering() { return false;};
 
+  virtual bool CanSeekToTime() {return true;}
 
   virtual void  SetAVDelay(float fValue = 0.0f) { return; }
   virtual float GetAVDelay()                    { return 0.0f;};
@@ -104,15 +123,19 @@ public:
   virtual int  GetSubtitleCount()     { return 0; }
   virtual int  GetSubtitle()          { return -1; }
   virtual void GetSubtitleName(int iStream, CStdString &strStreamName){};
+  virtual void GetSubtitleLang(int iStream, CStdString &strStreamLang){};
   virtual void SetSubtitle(int iStream){};
   virtual bool GetSubtitleVisible(){ return false;};
   virtual void SetSubtitleVisible(bool bVisible){};
+  virtual bool GetSubtitleForced(){ return false;};
+  virtual void SetSubtitleForced(bool bVisible){};
   virtual bool GetSubtitleExtension(CStdString &strSubtitleExtension){ return false;};
   virtual bool AddSubtitle(const CStdString& strSubPath) {return false;};
 
   virtual int  GetAudioStreamCount()  { return 0; }
   virtual int  GetAudioStream()       { return -1; }
   virtual void GetAudioStreamName(int iStream, CStdString &strStreamName){};
+  virtual void GetAudioStreamLang(int iStream, CStdString &strStreamLang){};
   virtual void SetAudioStream(int iStream){};
 
   virtual TextCacheStruct_t* GetTeletextCache() { return NULL; };
@@ -126,6 +149,7 @@ public:
 
   virtual float GetActualFPS() { return 0.0f; };
   virtual void SeekTime(__int64 iTime = 0){};
+  virtual bool CanReportGetTime() { return true; }
   virtual __int64 GetTime(){ return 0;};
   virtual void ResetTime() {};
   virtual int GetTotalTime(){ return 0;};
@@ -139,6 +163,7 @@ public:
   virtual CStdString GetAudioCodecName(){ return "";}
   virtual CStdString GetVideoCodecName(){ return "";}
   virtual int GetPictureWidth(){ return 0;}
+  virtual int GetPictureHeight(){ return 0;}
   virtual bool GetStreamDetails(CStreamDetails &details){ return false;}
   virtual void ToFFRW(int iSpeed = 0){};
   // Skip to next track/item inside the current media (if supported).
@@ -147,10 +172,11 @@ public:
   //Returns true if not playback (paused or stopped beeing filled)
   virtual bool IsCaching() const {return false;};
   //Cache filled in Percent
-  virtual int GetCacheLevel() const {return -1;}; 
+  virtual int GetCacheLevel() const {return -1;}
+  virtual void SetCaching(bool enabled) { }
 
-  virtual bool IsInMenu() const {return false;};
-  virtual bool HasMenu() { return false; };
+  virtual bool IsInMenu() const {return false;}
+  virtual bool HasMenu() { return false; }
 
   virtual void DoAudioWork(){};
   virtual bool OnAction(const CAction &action) { return false; };
@@ -176,7 +202,19 @@ public:
 
   virtual void OSDExtensionClicked(int nId) {}
   virtual bool RestartSubtitleStream(){return true;}
+  virtual void ProcessExternalMessage(/*ThreadMessage */  void *pMsg) {};
   
+  virtual iplayer_error GetError() { return IPLAYER_SUCCESS; }
+  virtual CStdString GetErrorString() { return ""; }
+  virtual bool ForceMouseRendering() { return false;}
+  virtual bool MouseRenderingEnabled() {return false;}
+  virtual bool KeyboardPassthrough() {return false;}
+  virtual bool OnAppMessage(const CStdString& strHandler, const CStdString& strParam) {return false;}
+  virtual bool IsPlayingStreamPlaylist() {return false;}
+  virtual int  GetStreamPlaylistTimecode() {return -1;}
+
+  virtual void GetVideoCacheLevel(unsigned int& cur, unsigned int& max) { cur = 0; max = 0; }
+  virtual void GetAudioCacheLevel(unsigned int& cur, unsigned int& max) { cur = 0; max = 0; }
 protected:
   IPlayerCallback& m_callback;
 };

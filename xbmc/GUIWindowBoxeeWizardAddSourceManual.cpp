@@ -4,6 +4,7 @@
 #include "GUIEditControl.h"
 #include "GUIDialogKeyboard.h"
 #include "utils/log.h"
+#include "URL.h"
 
 #define CONTROL_HOST      9001
 #define CONTROL_USER      9002
@@ -45,21 +46,28 @@ bool CGUIWindowBoxeeWizardAddSourceManual::OnMessage(CGUIMessage& message)
   case GUI_MSG_CLICKED:
   {    
     DWORD senderId = message.GetSenderId();
-
+    
     if(senderId == CONTROL_OK)
     {
       CLog::Log(LOGDEBUG,"CGUIWindowBoxeeMediaSourceAddFolder::OnMessage - Enter GUI_MSG_CLICKED case with [SenderId=CONTROL_OK] (msmk)");
 
+      // ideally we would validate the user input here
       CGUIEditControl* textButton = (CGUIEditControl*) GetControl(CONTROL_HOST);
       m_host = textButton->GetLabel2();
       textButton = (CGUIEditControl*) GetControl(CONTROL_USER);
       m_user = textButton->GetLabel2();
       textButton = (CGUIEditControl*) GetControl(CONTROL_PASSWORD);
       m_password = textButton->GetLabel2();      
-      
-      CLog::Log(LOGDEBUG,"CGUIWindowBoxeeWizardAddSourceManual::OnAction - In [iControl=%d=CONTROL_OK]. After set [m_host=%s][m_user=%s][m_password=%s] (was)(msmk)",senderId,m_host.c_str(),m_user.c_str(),m_password.c_str());
-      
-      m_IsConfirmed = true;
+
+      CLog::Log(LOGDEBUG,"CGUIWindowBoxeeWizardAddSourceManual::OnAction - In [iControl=%d=CONTROL_OK]. After set [m_host=%s](was)(msmk)",senderId,m_host.c_str());
+      if(m_host.IsEmpty() && m_user.IsEmpty())
+      {
+        m_IsConfirmed = false;
+      }
+      else
+      {
+        m_IsConfirmed = true;
+      }
       Close();
       return true;       
     }
@@ -85,19 +93,62 @@ void CGUIWindowBoxeeWizardAddSourceManual::OnInitWindow()
 
 CStdString CGUIWindowBoxeeWizardAddSourceManual::GetURL()
 {
-   CStdString result = "smb://";
-   if (m_user != "")
-   {
-      result += m_user;
-      if (m_password != "")
-         result += ":" + m_password;
-      result += "@";
-   }
-   result += m_host;
+   CURI u;
+   CStdString result = "";
 
-   CLog::Log(LOGDEBUG,"CGUIWindowBoxeeWizardAddSourceManual::GetURL - Exit function and return [result=%s]. [m_user=%s][m_password=%s][m_host=%s] (was)",result.c_str(),m_user.c_str(),m_password.c_str(),m_host.c_str());
+   // If this is a windows format URL, we swap the slashes and
+   // run it through the URL handler
+   if( m_host.Left(2).Equals( "\\\\" ) )
+   {
+     CLog::Log(LOGDEBUG, "Remapping windows-format path %s\n", m_host.c_str());
+     CStdString h = m_host;
+     h.Replace( "\\", "/" );
+     h = "smb://" + h;
+     u = CURI( h );
+   }
+   // If the user gave smb:// then just parse that
+   else if( m_host.Left(6).Equals( "smb://" ) )
+   {
+     u = CURI( m_host );
+   }
+   // Everything else - the user put an IP or hostname in
+   //  just add in the hostname as a raw host and set the protocol
+   else
+   {
+     if(!m_protocol.IsEmpty())
+     {
+       u.SetProtocol(m_protocol);
+     }
+     else
+     {
+       u.SetProtocol( "smb" );
+     }
+
+     u.SetHostName( m_host );
+   }
+   
+   // Add credentials if provided; always overwrite anything from a previous parse
+   if( m_user != "" )
+   {
+     u.SetUserName( m_user );
+     u.SetPassword( m_password );
+   }
+
+   result = u.Get();
+
+   CLog::Log(LOGDEBUG,"CGUIWindowBoxeeWizardAddSourceManual::GetURL - Exit function and return [result=%s]. [m_user=%s][m_password=%s][m_host=%s] (was)",result.c_str(),"***","***",m_host.c_str());
 
    return result;
+}
+
+void CGUIWindowBoxeeWizardAddSourceManual::SetProtocol(const CStdString newProtocol)
+{
+  m_protocol = newProtocol;
+}
+
+CStdString CGUIWindowBoxeeWizardAddSourceManual::GetProtocol()
+{
+  return m_protocol;
 }
 
 bool CGUIWindowBoxeeWizardAddSourceManual::IsConfirmed()

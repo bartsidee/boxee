@@ -24,8 +24,6 @@
 #include "utils/CriticalSection.h"
 
 /* put types of curl in namespace to avoid namespace pollution */
-namespace XCURL
-{
   #define CURL CURL_HANDLE
   #if (defined(_LINUX) && !defined(__APPLE__)) || defined(HAS_EMBEDDED)
   #include <curl/curl.h>
@@ -33,23 +31,30 @@ namespace XCURL
   #include "curl/curl.h"
   #endif
   #undef CURL
+  
+#ifdef A_WIN32
+#define CURL_LIB_BASE_CLASS DllDynamic
+#define CURL_RESOLVE_METHOD_RENAME RESOLVE_METHOD_RENAME
+#define CURL_RESOLVE_METHOD_RENAME_FP RESOLVE_METHOD_RENAME_FP
+#define CURL_DECLARE_LIB_WRAPPER() DECLARE_DLL_WRAPPER(DllLibCurl, DLL_PATH_LIBCURL)
+#else
+#define CURL_LIB_BASE_CLASS LibStatic
+#define CURL_RESOLVE_METHOD_RENAME STATIC_RESOLVE_METHOD_RENAME
+#define CURL_RESOLVE_METHOD_RENAME_FP STATIC_RESOLVE_METHOD_RENAME_FP
+#define CURL_DECLARE_LIB_WRAPPER() DECLARE_LIB_WRAPPER(DllLibCurl)
+#endif
 
-  class DllLibCurlInterface
+    class DllLibCurlInterface
   {
   public:
     virtual ~DllLibCurlInterface() {}
     virtual CURLcode global_init(long flags)=0;
     virtual void global_cleanup(void)=0;
     virtual CURL_HANDLE * easy_init(void)=0;
-    virtual CURLcode easy_setopt(CURL_HANDLE *handle, CURLoption option, int64_t num)=0;
-    virtual CURLcode easy_setopt(CURL_HANDLE *handle, CURLoption option, int num)=0;
-    virtual CURLcode easy_setopt(CURL_HANDLE *handle, CURLoption option, void *param)=0;
-    virtual CURLcode easy_setopt(CURL_HANDLE *handle, CURLoption option, const char *param)=0;
-	virtual CURLcode easy_perform(CURL_HANDLE * handle )=0;
+    //virtual CURLcode easy_setopt(CURL_HANDLE *handle, CURLoption option, ...)=0;
+    virtual CURLcode easy_perform(CURL_HANDLE * handle )=0;
     virtual void easy_reset(CURL_HANDLE * handle)=0;
-    virtual CURLcode easy_getinfo(CURL_HANDLE *curl, CURLINFO info, double *dParam )=0;
-    virtual CURLcode easy_getinfo(CURL_HANDLE *curl, CURLINFO info, long *nParam )=0;
-    virtual CURLcode easy_getinfo(CURL_HANDLE *curl, CURLINFO info, char *param )=0;
+    //virtual CURLcode easy_getinfo(CURL_HANDLE *curl, CURLINFO info, ... )=0;
     virtual void easy_cleanup(CURL_HANDLE * handle )=0;
     virtual CURL_HANDLE *easy_duphandle(CURL_HANDLE *handle )=0;
     virtual CURLM * multi_init(void)=0;
@@ -62,37 +67,70 @@ namespace XCURL
     virtual void multi_cleanup(CURL_HANDLE * handle )=0;
     virtual struct curl_slist* slist_append(struct curl_slist *, const char *)=0;
     virtual void  slist_free_all(struct curl_slist *)=0;
+	virtual time_t getdate(const char *p, const time_t *unused)=0;
+	virtual char *escape(const char *string, int length)=0;
+	virtual void free_curl(void *p)=0;
+	virtual char *easy_unescape(CURL_HANDLE *handle, const char *string, int length, int *outlength)=0;
+	virtual char *easy_escape(CURL_HANDLE *handle, const char *string, int length)=0;
   };
 
-  class DllLibCurl : public DllLibCurlInterface
+
+  class DllLibCurl : public CURL_LIB_BASE_CLASS, DllLibCurlInterface
   {
-  public:
-    virtual ~DllLibCurl() {}
-    virtual CURLcode global_init(long flags) { return curl_global_init(flags); }
-    virtual void global_cleanup(void) {  curl_global_cleanup();}
-    virtual CURL_HANDLE * easy_init(void) { return curl_easy_init(); }
-    virtual CURLcode easy_perform(CURL_HANDLE * handle ) { return curl_easy_perform(handle); }
-    virtual void easy_reset(CURL_HANDLE * handle) { curl_easy_reset(handle); }
-    virtual CURLcode easy_getinfo(CURL_HANDLE *curl, CURLINFO info, double *dParam ) { return curl_easy_getinfo(curl, info, dParam); }
-    virtual CURLcode easy_getinfo(CURL_HANDLE *curl, CURLINFO info, long *nParam ) { return curl_easy_getinfo(curl, info, nParam); }
-    virtual CURLcode easy_getinfo(CURL_HANDLE *curl, CURLINFO info, char *param ) { return curl_easy_getinfo(curl, info, param); }
-    virtual void easy_cleanup(CURL_HANDLE * handle ) { curl_easy_cleanup(handle); }
-    virtual CURL_HANDLE *easy_duphandle(CURL_HANDLE *handle ) { return curl_easy_duphandle(handle); }
-    virtual CURLM * multi_init(void) { return curl_multi_init(); }
-    virtual CURLMcode multi_add_handle(CURLM *multi_handle, CURL_HANDLE *easy_handle) { return curl_multi_add_handle(multi_handle, easy_handle); }
-    virtual CURLcode easy_setopt(CURL_HANDLE *handle, CURLoption option, int64_t num) { return curl_easy_setopt(handle, option, num); }
-    virtual CURLcode easy_setopt(CURL_HANDLE *handle, CURLoption option, int num) { return curl_easy_setopt(handle, option, num); }
-    virtual CURLcode easy_setopt(CURL_HANDLE *handle, CURLoption option, void *param) { return curl_easy_setopt(handle, option, param); }
-    virtual CURLcode easy_setopt(CURL_HANDLE *handle, CURLoption option, const char *param) { return curl_easy_setopt(handle, option, param); }
-    virtual CURLMcode multi_perform(CURLM *multi_handle, int *running_handles) { return curl_multi_perform(multi_handle, running_handles); }
-    virtual CURLMcode multi_remove_handle(CURLM *multi_handle, CURL_HANDLE *easy_handle) { return curl_multi_remove_handle(multi_handle, easy_handle); }
-    virtual CURLMcode multi_fdset(CURLM *multi_handle, fd_set *read_fd_set, fd_set *write_fd_set, fd_set *exc_fd_set, int *max_fd) { return curl_multi_fdset(multi_handle, read_fd_set, write_fd_set, exc_fd_set, max_fd); }
-    virtual CURLMcode multi_timeout(CURLM *multi_handle, long *timeout) { return curl_multi_timeout(multi_handle, timeout); }
-    virtual CURLMsg*  multi_info_read(CURLM *multi_handle, int *msgs_in_queue) { return curl_multi_info_read(multi_handle, msgs_in_queue); }
-    virtual void multi_cleanup(CURL_HANDLE * handle ) {  curl_multi_cleanup(handle); }
-    virtual struct curl_slist* slist_append(struct curl_slist *list, const char *a) { return curl_slist_append(list, a); }
-    virtual void  slist_free_all(struct curl_slist *a) { curl_slist_free_all(a); }
+	CURL_DECLARE_LIB_WRAPPER()
+    DEFINE_METHOD1(CURLcode, global_init, (long p1))
+    DEFINE_METHOD0(void, global_cleanup)
+    DEFINE_METHOD0(CURL_HANDLE *, easy_init)
+    DEFINE_METHOD_FP(CURLcode, easy_setopt, (CURL_HANDLE *p1, CURLoption p2, ...))
+    DEFINE_METHOD1(CURLcode, easy_perform, (CURL_HANDLE * p1 ))
+    DEFINE_METHOD1(void, easy_reset, (CURL_HANDLE * p1 ))
+    DEFINE_METHOD_FP(CURLcode, easy_getinfo, (CURL_HANDLE *p1, CURLINFO p2, ... ))
+    DEFINE_METHOD1(void, easy_cleanup, (CURL_HANDLE * p1))
+    DEFINE_METHOD1(CURL_HANDLE *, easy_duphandle, (CURL_HANDLE * p1))
+    DEFINE_METHOD0(CURLM *, multi_init)
+    DEFINE_METHOD2(CURLMcode, multi_add_handle, (CURLM *p1, CURL_HANDLE *p2))
+    DEFINE_METHOD2(CURLMcode, multi_perform, (CURLM *p1, int *p2))
+    DEFINE_METHOD2(CURLMcode, multi_remove_handle, (CURLM *p1, CURL_HANDLE *p2))
+    DEFINE_METHOD5(CURLMcode, multi_fdset, (CURLM *p1, fd_set *p2, fd_set *p3, fd_set *p4, int *p5))
+    DEFINE_METHOD2(CURLMcode, multi_timeout, (CURLM *p1, long *p2))
+    DEFINE_METHOD2(CURLMsg*,  multi_info_read, (CURLM *p1, int *p2))
+    DEFINE_METHOD1(void, multi_cleanup, (CURLM *p1))
+    DEFINE_METHOD2(struct curl_slist*, slist_append, (struct curl_slist * p1, const char * p2))
+    DEFINE_METHOD1(void, slist_free_all, (struct curl_slist * p1))
+	DEFINE_METHOD2(time_t, getdate, (const char *p1, const time_t *p2))
+	DEFINE_METHOD2(char *, escape, (const char *p1, int p2))
+	DEFINE_METHOD1(void, free_curl, (void *p1))
+	DEFINE_METHOD4(char *, easy_unescape, (CURL_HANDLE *p1, const char *p2, int p3, int *p4))
+	DEFINE_METHOD3(char *, easy_escape, (CURL_HANDLE *p1, const char *p2, int p3))
+    BEGIN_METHOD_RESOLVE()
+      CURL_RESOLVE_METHOD_RENAME(curl_global_init, global_init)
+      CURL_RESOLVE_METHOD_RENAME(curl_global_cleanup, global_cleanup)
+      CURL_RESOLVE_METHOD_RENAME(curl_easy_init, easy_init)
+      CURL_RESOLVE_METHOD_RENAME_FP(curl_easy_setopt, easy_setopt)
+      CURL_RESOLVE_METHOD_RENAME(curl_easy_perform, easy_perform)
+      CURL_RESOLVE_METHOD_RENAME(curl_easy_reset, easy_reset)
+      CURL_RESOLVE_METHOD_RENAME_FP(curl_easy_getinfo, easy_getinfo)
+      CURL_RESOLVE_METHOD_RENAME(curl_easy_cleanup, easy_cleanup)
+      CURL_RESOLVE_METHOD_RENAME(curl_easy_duphandle, easy_duphandle)
+      CURL_RESOLVE_METHOD_RENAME(curl_multi_init, multi_init)
+      CURL_RESOLVE_METHOD_RENAME(curl_multi_add_handle, multi_add_handle)
+      CURL_RESOLVE_METHOD_RENAME(curl_multi_perform, multi_perform)
+      CURL_RESOLVE_METHOD_RENAME(curl_multi_remove_handle, multi_remove_handle)
+      CURL_RESOLVE_METHOD_RENAME(curl_multi_fdset, multi_fdset)
+      CURL_RESOLVE_METHOD_RENAME(curl_multi_timeout, multi_timeout)
+      CURL_RESOLVE_METHOD_RENAME(curl_multi_info_read, multi_info_read)
+      CURL_RESOLVE_METHOD_RENAME(curl_multi_cleanup, multi_cleanup)
+      CURL_RESOLVE_METHOD_RENAME(curl_slist_append, slist_append)
+      CURL_RESOLVE_METHOD_RENAME(curl_slist_free_all, slist_free_all)
+	  CURL_RESOLVE_METHOD_RENAME(curl_getdate, getdate)
+	  CURL_RESOLVE_METHOD_RENAME(curl_escape, escape)
+	  CURL_RESOLVE_METHOD_RENAME(curl_free, free_curl)	// Can't be free, to prevent name clashing when MEMORY_LEAK_DETECT is defined.
+	  CURL_RESOLVE_METHOD_RENAME(curl_easy_unescape, easy_unescape)
+	  CURL_RESOLVE_METHOD_RENAME(curl_easy_escape, easy_escape)
+    END_METHOD_RESOLVE()
+
   };
+
 
   class DllLibCurlGlobal : public DllLibCurl
   {
@@ -120,10 +158,9 @@ namespace XCURL
     } SSession;
 
     typedef std::vector<SSession> VEC_CURLSESSIONS;
-
-    VEC_CURLSESSIONS m_sessions;
+    
+    VEC_CURLSESSIONS m_sessions;  
     CCriticalSection m_critSection;
   };
-}
 
-extern XCURL::DllLibCurlGlobal g_curlInterface;
+extern DllLibCurlGlobal g_curlInterface;

@@ -35,7 +35,7 @@ bool CRepositoriesDirectory::GetDirectory(const CStdString& strPath, CFileItemLi
 {
   CLog::Log(LOGDEBUG,"CRepositoriesDirectory::GetDirectory - Enter function with [strPath=%s] (bapps)",strPath.c_str());
 
-  CURL url(strPath);
+  CURI url(strPath);
   CStdString strProtocol = url.GetProtocol();
 
   if (strProtocol.CompareNoCase("repositories") != 0)
@@ -72,7 +72,7 @@ void CRepositoriesDirectory::GetRepositoriesList(CFileItemList &items, const CSt
     }
 
     // Create new share FileItem
-    CFileItemPtr share (new CFileItem(repository.GetName()));
+    CFileItemPtr share ( new CFileItem(repository.GetName()) );
     share->m_strPath = repository.GetURL();//repository.GetName();
     share->SetThumbnailImage(repository.GetThumbnail());
     share->SetProperty("description", repository.GetDescription());

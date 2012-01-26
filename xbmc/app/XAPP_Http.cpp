@@ -1,7 +1,7 @@
 #include "XAPP_Http.h"
 #include "FileCurl.h"
 #include "bxcurl.h"
-#include "lib/libPython/XBPython.h"
+#include "AppManager.h"
 
 #include <algorithm>
 
@@ -53,12 +53,12 @@ namespace XAPP
   void Http::Reset()
   {
     m_curl.Reset();
-    PyObject *app = PySys_GetObject((char*)"app-id");
-    if (app)
+
+    const char *strAppId = CAppManager::GetInstance().GetCurrentContextAppId();
+    if (strAppId)
     {
-      const char *id = PyString_AsString(app);
-      m_curl.SetRequestHeader(APP_ID_HTTP_HEADER, id);
-    }    
+      m_curl.SetRequestHeader(APP_ID_HTTP_HEADER, strAppId);
+    }
   }
 
   void Http::SetUserAgent(const std::string &strUserAgent)
@@ -72,7 +72,7 @@ namespace XAPP
     m_curl.Get(strUrl.c_str(), strResp);
     return strResp.c_str();
   }
-
+  
   std::string Http::Delete(const std::string &strUrl)
   {
     BOXEE::BXCurl curl;
@@ -93,3 +93,4 @@ namespace XAPP
   }
   
 }
+

@@ -41,7 +41,7 @@ bool CGUIDialogBoxeeManualResolveEpisode::Show(CFileItemPtr pItem)
 
   return pDialog->m_bConfirmed;
 
-}
+  }
 
 void CGUIDialogBoxeeManualResolveEpisode::OnInitWindow()
 {
@@ -62,7 +62,6 @@ void CGUIDialogBoxeeManualResolveEpisode::OnInitWindow()
   ((CGUIEditControl*)GetControl(EPISODE_EDIT))->SetLabel2(strEpisode);
 
   m_videoItem->Dump();
-
 }
 
 void CGUIDialogBoxeeManualResolveEpisode::OnDeinitWindow(int nextWindowID)

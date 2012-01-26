@@ -12,19 +12,19 @@ rem If Winrar isn't installed under standard programs, SET the path for WinRAR's
 rem and finally set the options for the final rar.
 rem -------------------------------------------------------------
 rem	CONFIG START
-	IF "%VS90COMNTOOLS%"=="" (
-	  set NET="%ProgramFiles%\Microsoft Visual Studio 9.0 Express\Common7\IDE\VCExpress.exe"
+	IF "%VS100COMNTOOLS%"=="" (
+	  set NET="%ProgramFiles%\Microsoft Visual Studio 10.0\Common7\IDE\VCExpress.exe"
 	) ELSE (
-	  set NET="%VS90COMNTOOLS%\..\IDE\VCExpress.exe"
+	  set NET="%VS100COMNTOOLS%\..\IDE\VCExpress.exe"
 	)
 	IF NOT EXIST %NET% (
-	  set DIETEXT=Visual Studio .NET 2008 Express was not found.
+	  set DIETEXT=Visual Studio .NET 2010 Express was not found.
 	  goto DIE
 	) 
  
-  set OPTS_EXE="..\VS2008Express\XBMC for Windows.sln" /build "Release (SDL)"
-	set CLEAN_EXE="..\VS2008Express\XBMC for Windows.sln" /clean "Release (SDL)"
-	set EXE= "..\VS2008Express\XBMC\Release (SDL)\BOXEE.exe"
+  set OPTS_EXE="..\VS2010Express\BOXEE for Windows.sln" /build "Release (DirectX)"
+	set CLEAN_EXE="..\VS2010Express\BOXEE for Windows.sln" /clean "Release (DirectX)"
+	set EXE= "..\VS2010Express\BOXEE\Release (DirectX)\BOXEE.exe"
 	
   rem	CONFIG END
   rem -------------------------------------------------------------
@@ -100,7 +100,7 @@ ECHO	 M++++++++sNMMMdo/::+smMMNo:hMMMMm+oNMs++++++++NM++++++++oMMM
   rem %NET% %OPTS_EXE%
   
   IF NOT EXIST %EXE% (
-  	set DIETEXT="XBMC.EXE failed to build!  See ..\vs2008express\XBMC\Release (SDL)\BuildLog.htm for details."
+  	set DIETEXT="BOXEE.EXE failed to build!  See ..\vs2010express\BOXEE\Release (DirectX)\BuildLog.htm for details."
   	goto DIE
   )   
   ECHO Done!
@@ -113,7 +113,7 @@ ECHO	 M++++++++sNMMMdo/::+smMMNo:hMMMMm+oNMs++++++++NM++++++++oMMM
   ECHO Compiling Solution...
   %NET% %OPTS_EXE%
   IF NOT EXIST %EXE% (
-  	set DIETEXT="XBMC.EXE failed to build!  See ..\vs2008express\XBMC\Release (SDL)\BuildLog\BuildLog.htm for details."
+  	set DIETEXT="BOXEE.EXE failed to build!  See ..\vs2010express\BOXEE\Release (DirectX)\BuildLog\BuildLog.htm for details."
   	goto DIE
   )
   ECHO Done!
@@ -262,10 +262,10 @@ ECHO	 M++++++++sNMMMdo/::+smMMNo:hMMMMm+oNMs++++++++NM++++++++oMMM
   ECHO ------------------------------------------------------------
 
 :VIEWLOG_EXE
-  IF NOT EXIST "%CD%\..\vs2008express\XBMC\Release (SDL)\BuildLog.htm" goto END
+  IF NOT EXIST "%CD%\..\vs2010express\BOXEE\Release (DirectX)\BuildLog.htm" goto END
   set /P XBMC_BUILD_ANSWER=View the build log in your HTML browser? [y/n]
   if /I %XBMC_BUILD_ANSWER% NEQ y goto END
-  start /D"%CD%\..\vs2008express\XBMC\Release (SDL)\BuildLog.htm"
+  start /D"%CD%\..\vs2010express\BOXEE\Release (DirectX)\BuildLog.htm"
   goto END
 
 :END

@@ -36,6 +36,7 @@ PHANDLE_EVENT_FUNC CWinEventsBase::m_pEventFunc = NULL;
 bool CWinEventsSDL::MessagePump()
 { 
   SDL_Event event;
+  memset(&event, 0, sizeof(SDL_Event));
   bool ret = false;
   
   while (SDL_PollEvent(&event))
@@ -181,7 +182,7 @@ bool CWinEventsSDL::MessagePump()
     }
     
     }
-    memset(&event, 0, sizeof(XBMC_Event));
+    memset(&event, 0, sizeof(SDL_Event));
   }
   
   return ret;
@@ -241,13 +242,13 @@ bool CWinEventsSDL::ProcessOSXShortcuts(SDL_Event& event)
 bool CWinEventsSDL::ProcessLinuxShortcuts(SDL_Event& event)
 {
   Uint8* keystate = SDL_GetKeyState( NULL );
-  
+
   bool ctrl = keystate[ SDLK_LCTRL ] || keystate[ SDLK_RCTRL ];
   bool alt = keystate[ SDLK_LALT ] || keystate[ SDLK_RALT ];
-  
-  if( alt && event.key.type == SDL_KEYDOWN )
+
+  if (alt && event.key.type == SDL_KEYDOWN)
   {
-    switch( event.key.keysym.sym )
+    switch(event.key.keysym.sym)
     {
       case SDLK_TAB:  // ALT+TAB to minimize/hide
         g_application.Minimize();

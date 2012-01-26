@@ -395,10 +395,10 @@ int SqliteDataset::exec(const string &sql) {
   }
   ::LeaveCriticalSection(g_lock);
    if(res == SQLITE_OK)
-      return res;
-  
-  throw DbErrors("%s", db->getErrorMsg());
-}
+    return res;
+    
+      throw DbErrors("%s", db->getErrorMsg());
+    }
 
 int SqliteDataset::exec() {
 	return exec(sql);

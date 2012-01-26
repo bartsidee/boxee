@@ -23,6 +23,8 @@
 #include "LocalizeStrings.h"
 #include "GUIDialogVideoSettings.h"
 #include "GUIWindowManager.h"
+#include "GUIDialogSelect.h"
+#include "GUIButtonControl.h"
 #include "GUIPassword.h"
 #include "Util.h"
 #include "MathUtils.h"
@@ -34,13 +36,14 @@
 #include "GUIDialogYesNo.h"
 #include "Settings.h"
 #include "SkinInfo.h"
+#include "Application.h"
 
 #ifdef HAVE_LIBVDPAU
 #include "cores/dvdplayer/DVDCodecs/Video/VDPAU.h"
 #endif
 
 CGUIDialogVideoSettings::CGUIDialogVideoSettings(void)
-    : CGUIDialogSettings(WINDOW_DIALOG_VIDEO_OSD_SETTINGS, "VideoOSDSettings.xml"),m_advance(false)
+    : CGUIDialogSettings(WINDOW_DIALOG_VIDEO_OSD_SETTINGS, "custom_boxee_osd_advanced.xml"),m_advance(false)
 {
 }
 
@@ -49,107 +52,37 @@ CGUIDialogVideoSettings::~CGUIDialogVideoSettings(void)
 }
 
 #ifdef NEW_VIDEO_OSD
-#define VIDEO_SETTINGS_CROP               1
 #define VIDEO_SETTINGS_VIEW_MODE          2
-#define VIDEO_SETTINGS_BRIGHTNESS         5
-#define VIDEO_SETTINGS_CONTRAST           6
-#define VIDEO_SETTINGS_GAMMA              7
-// separator 9
-#define VIDEO_SETTINGS_MAKE_DEFAULT       10
-#define VIDEO_SETTINGS_CALIBRATION        11
-
-#define VIDEO_SETTINGS_SOFTEN             13
-#define VIDEO_SETTINGS_SCALINGMETHOD      18
-
-#define VIDEO_SETTING_VDPAU_NOISE         19
-#define VIDEO_SETTING_VDPAU_SHARPNESS     20
+#define SUBTITLE_OFFSET_SLIDER            22
+#define AUDIO_OFFSET_SLIDER               23
 #else
 #define VIDEO_SETTINGS_VIEW_MODE          2
-#define VIDEO_SETTINGS_ZOOM               3
-#define VIDEO_SETTINGS_PIXEL_RATIO        4
-#define VIDEO_SETTINGS_INTERLACEMETHOD    8
-#define VIDEO_SETTINGS_CALIBRATION        11
-#define VIDEO_SETTINGS_ADVANCE            21
+#define SUBTITLE_OFFSET_SLIDER            22
+#define AUDIO_OFFSET_SLIDER               23
 #endif
+
+const int g_entries[] = {630, 631, 632, 633, 634, 635, 636 };
 
 void CGUIDialogVideoSettings::CreateSettings()
 {
   m_usePopupSliders = g_SkinInfo.HasSkinFile("DialogSlider.xml");
   // clear out any old settings
   m_settings.clear();
-
 #ifdef NEW_VIDEO_OSD
 
-  // create our settings
-  {
-    const int entries[] = { 16301, 16302, 16303, 16304, 16305, 16306, 16307, 16308, 16309 };
-    AddSpin(VIDEO_SETTINGS_SCALINGMETHOD, 16300, (int*)&g_stSettings.m_currentVideoSettings.m_ScalingMethod, 3, entries);
-  }
-  AddBool(VIDEO_SETTINGS_CROP, 644, &g_stSettings.m_currentVideoSettings.m_Crop);
-  {
-    const int entries[] = {630, 631, 632, 633, 634, 635, 636 };
-    AddSpin(VIDEO_SETTINGS_VIEW_MODE, 629, &g_stSettings.m_currentVideoSettings.m_ViewMode, 7, entries);
-  }
-  
-#ifdef HAS_VIDEO_PLAYBACK
-  if (g_renderManager.SupportsBrightness())
-    AddSlider(VIDEO_SETTINGS_BRIGHTNESS, 464, &g_stSettings.m_currentVideoSettings.m_Brightness, 0, 1, 100, FormatInteger);
-  if (g_renderManager.SupportsContrast())
-    AddSlider(VIDEO_SETTINGS_CONTRAST, 465, &g_stSettings.m_currentVideoSettings.m_Contrast, 0, 1, 100, FormatInteger);
-  if (g_renderManager.SupportsGamma())
-    AddSlider(VIDEO_SETTINGS_GAMMA, 466, &g_stSettings.m_currentVideoSettings.m_Gamma, 0, 1, 100, FormatInteger);
-#ifdef HAVE_LIBVDPAU
-  CSharedLock lock(g_renderManager.GetSection());
-  if (g_VDPAU) {
-    AddSlider(VIDEO_SETTING_VDPAU_NOISE, 16312, &g_stSettings.m_currentVideoSettings.m_NoiseReduction, 0.0f, 0.01f, 1.0f, FormatFloat);
-    AddSlider(VIDEO_SETTING_VDPAU_SHARPNESS, 16313, &g_stSettings.m_currentVideoSettings.m_Sharpness, -1.0f, 0.02f, 1.0f, FormatFloat);
-  }
-#endif
-#endif
-  AddSeparator(8);
-  AddButton(VIDEO_SETTINGS_MAKE_DEFAULT, 12376);
-#ifdef HAS_XBOX_HARDWARE
-  m_flickerFilter = g_guiSettings.GetInt("videoplayer.flicker");
-  AddSpin(VIDEO_SETTINGS_FLICKER, 13100, &m_flickerFilter, 0, 5, g_localizeStrings.Get(351).c_str());
-  m_soften = g_guiSettings.GetBool("videoplayer.soften");
-  AddBool(VIDEO_SETTINGS_SOFTEN, 215, &m_soften);
-#endif
-  AddButton(VIDEO_SETTINGS_CALIBRATION, 214);
-
+  AddSlider(SUBTITLE_OFFSET_SLIDER, 22006,&g_stSettings.m_currentVideoSettings.m_SubtitleDelay,-g_advancedSettings.m_videoSubsDelayRange, 0.25, g_advancedSettings.m_videoSubsDelayRange, FormatFloat);
+  AddSlider(AUDIO_OFFSET_SLIDER, 297, &g_stSettings.m_currentVideoSettings.m_AudioDelay,-g_advancedSettings.m_videoAudioDelayRange, 1, g_advancedSettings.m_videoAudioDelayRange, FormatInteger);
+  AddButton(VIDEO_SETTINGS_VIEW_MODE, 629,g_stSettings.m_currentVideoSettings.m_ViewMode,g_localizeStrings.Get(g_entries[g_stSettings.m_currentVideoSettings.m_ViewMode]));
 #else
-  {
-    const int entries[] = {630, 631, 632, 633, 634, 635, 636 };
-    AddSpin(VIDEO_SETTINGS_VIEW_MODE, 629, &g_stSettings.m_currentVideoSettings.m_ViewMode, 7, entries);
-  }
-  AddButton(VIDEO_SETTINGS_CALIBRATION, 214);
-  AddSlider(VIDEO_SETTINGS_ZOOM, 216, &g_stSettings.m_currentVideoSettings.m_CustomZoomAmount, 0.5f, 0.01f, 2.0f, FormatFloat);
-  AddSlider(VIDEO_SETTINGS_PIXEL_RATIO, 217, &g_stSettings.m_currentVideoSettings.m_CustomPixelRatio, 0.5f, 0.01f, 2.0f, FormatFloat);
-  {
-#ifdef HAVE_LIBVDPAU
-    const int entries[] = { 16018, 16019, 20131, 20130, 20129, 16022, 16021, 16020, 16310, 16314};
-    AddSpin(VIDEO_SETTINGS_INTERLACEMETHOD, 16023, (int*)&g_stSettings.m_currentVideoSettings.m_InterlaceMethod, 10, entries);
-#else
-    const int entries[] = { 16018, 16019, 20131, 20130, 20129, 16022, 16021, 16020, 16314};
-    AddSpin(VIDEO_SETTINGS_INTERLACEMETHOD, 16023, (int*)&g_stSettings.m_currentVideoSettings.m_InterlaceMethod, 9, entries);
-#endif
-  }
-  if (m_advance)
-  {
-    AddButton(VIDEO_SETTINGS_ADVANCE, 576);
-  }
-  else
-  {
-    AddButton(VIDEO_SETTINGS_ADVANCE, 575);
-  }
+  AddSlider(SUBTITLE_OFFSET_SLIDER, 22006,&g_stSettings.m_currentVideoSettings.m_SubtitleDelay,-g_advancedSettings.m_videoSubsDelayRange, 0.25, g_advancedSettings.m_videoSubsDelayRange, FormatFloat);
+  AddSlider(AUDIO_OFFSET_SLIDER, 297, &g_stSettings.m_currentVideoSettings.m_AudioDelay,-g_advancedSettings.m_videoAudioDelayRange, 0.01, g_advancedSettings.m_videoAudioDelayRange, FormatFloat);
+  AddButton(VIDEO_SETTINGS_VIEW_MODE, 629,&g_stSettings.m_currentVideoSettings.m_ViewMode,g_localizeStrings.Get(g_entries[g_stSettings.m_currentVideoSettings.m_ViewMode]));
 #endif
 }
 
 void CGUIDialogVideoSettings::SetupPage()
 {
   CGUIDialogSettings::SetupPage();
-  SetSettingVisiable(VIDEO_SETTINGS_ZOOM,m_advance);
-  SetSettingVisiable(VIDEO_SETTINGS_PIXEL_RATIO,m_advance);
-  SetSettingVisiable(VIDEO_SETTINGS_INTERLACEMETHOD,m_advance);
 }
 
 void CGUIDialogVideoSettings::OnSettingChanged(SettingInfo &setting)
@@ -157,95 +90,81 @@ void CGUIDialogVideoSettings::OnSettingChanged(SettingInfo &setting)
 #ifdef NEW_VIDEO_OSD
   // check and update anything that needs it
 #ifdef HAS_VIDEO_PLAYBACK
-  if (setting.id == VIDEO_SETTINGS_CROP)
-    g_renderManager.AutoCrop(g_stSettings.m_currentVideoSettings.m_Crop);
-  else if (setting.id == VIDEO_SETTINGS_VIEW_MODE)
+  if (setting.id == VIDEO_SETTINGS_VIEW_MODE)
   {
-    g_renderManager.SetViewMode(g_stSettings.m_currentVideoSettings.m_ViewMode);
-    g_stSettings.m_currentVideoSettings.m_CustomZoomAmount = g_stSettings.m_fZoomAmount;
-    g_stSettings.m_currentVideoSettings.m_CustomPixelRatio = g_stSettings.m_fPixelRatio;
-    UpdateSetting(VIDEO_SETTINGS_ZOOM);
-    UpdateSetting(VIDEO_SETTINGS_PIXEL_RATIO);
+    if(OnViewModeChange())
+    {
+      int selectedLabel = g_stSettings.m_currentVideoSettings.m_ViewMode;
+      selectedLabel = g_entries[selectedLabel];
+      CStdString label = g_localizeStrings.Get(selectedLabel);
+      setting.label2 = label;
+    }
   }
-  else if (setting.id == VIDEO_SETTINGS_ZOOM || setting.id == VIDEO_SETTINGS_PIXEL_RATIO)
+  else if (setting.id == AUDIO_OFFSET_SLIDER)
   {
-    g_stSettings.m_currentVideoSettings.m_ViewMode = VIEW_MODE_CUSTOM;
-    g_renderManager.SetViewMode(VIEW_MODE_CUSTOM);
-    UpdateSetting(VIDEO_SETTINGS_VIEW_MODE);
+    if (g_application.m_pPlayer)
+      g_application.m_pPlayer->SetAVDelay(g_stSettings.m_currentVideoSettings.m_AudioDelay);
+  }
+  else if (setting.id == SUBTITLE_OFFSET_SLIDER)
+  {
+    if (g_application.m_pPlayer)
+      g_application.m_pPlayer->SetSubTitleDelay(g_stSettings.m_currentVideoSettings.m_SubtitleDelay);
   }
   else 
 #endif
-  if (setting.id == VIDEO_SETTINGS_BRIGHTNESS || setting.id == VIDEO_SETTINGS_CONTRAST || setting.id == VIDEO_SETTINGS_GAMMA)
-    CUtil::SetBrightnessContrastGammaPercent(g_stSettings.m_currentVideoSettings.m_Brightness, g_stSettings.m_currentVideoSettings.m_Contrast, g_stSettings.m_currentVideoSettings.m_Gamma, true);
 #ifdef HAS_XBOX_HARDWARE
-  else if (setting.id == VIDEO_SETTINGS_FLICKER || setting.id == VIDEO_SETTINGS_SOFTEN)
-  {
-    RESOLUTION res = g_graphicsContext.GetVideoResolution();
-    g_guiSettings.SetInt("videoplayer.flicker", m_flickerFilter);
-    g_guiSettings.SetBool("videoplayer.soften", m_soften);
-    g_graphicsContext.SetVideoResolution(res);
-  }
 #endif
-  else if (setting.id == VIDEO_SETTINGS_CALIBRATION)
-  {
-    // launch calibration window
-    if (g_settings.m_vecProfiles[g_settings.m_iLastLoadedProfileIndex].settingsLocked() && g_settings.m_vecProfiles[0].getLockMode() != LOCK_MODE_EVERYONE)
-      if (!g_passwordManager.IsMasterLockUnlocked(true))
-        return;
-    g_windowManager.ActivateWindow(WINDOW_SCREEN_CALIBRATION);
-  }
-  else if (setting.id == VIDEO_SETTINGS_MAKE_DEFAULT)
-  {
-    if (g_settings.m_vecProfiles[g_settings.m_iLastLoadedProfileIndex].settingsLocked() && g_settings.m_vecProfiles[0].getLockMode() != LOCK_MODE_EVERYONE)
-      if (!g_passwordManager.IsMasterLockUnlocked(true))
-        return;
+#else
+    if (setting.id == VIDEO_SETTINGS_VIEW_MODE)
+    {
+      if(OnViewModeChange())
+      {
+        int selectedLabel = g_stSettings.m_currentVideoSettings.m_ViewMode;
+        selectedLabel = g_entries[selectedLabel];
+        CStdString label = g_localizeStrings.Get(selectedLabel);
+        setting.label2 = label;
+      }
+    }
+    else if (setting.id == AUDIO_OFFSET_SLIDER)
+    {
+      if (g_application.m_pPlayer)
+        g_application.m_pPlayer->SetAVDelay(g_stSettings.m_currentVideoSettings.m_AudioDelay);
+    }
+    else if (setting.id == SUBTITLE_OFFSET_SLIDER)
+    {
+      if (g_application.m_pPlayer)
+        g_application.m_pPlayer->SetSubTitleDelay(g_stSettings.m_currentVideoSettings.m_SubtitleDelay);
+    }
+#endif
+}
 
-    // prompt user if they are sure
-    if (CGUIDialogYesNo::ShowAndGetInput(12376, 750, 0, 12377))
-    { // reset the settings
-      CVideoDatabase db;
-      db.Open();
-      db.EraseVideoSettings();
-      db.Close();
-      g_stSettings.m_defaultVideoSettings = g_stSettings.m_currentVideoSettings;
-      g_settings.Save();
+bool CGUIDialogVideoSettings::OnViewModeChange()
+{
+  CGUIDialogSelect *pDlgSelect = (CGUIDialogSelect*)g_windowManager.GetWindow(WINDOW_DIALOG_SELECT);
+
+  if(pDlgSelect)
+  {
+    pDlgSelect->Reset();
+    pDlgSelect->SetHeading(21443);
+
+    for(size_t i = 0; i < 7; i++)
+    {
+      pDlgSelect->Add(g_localizeStrings.Get(g_entries[i]));
+    }
+
+    pDlgSelect->DoModal();
+
+    if(pDlgSelect->IsConfirmed())
+    {
+      g_stSettings.m_currentVideoSettings.m_ViewMode = pDlgSelect->GetSelectedLabel();
+      g_renderManager.SetViewMode(g_stSettings.m_currentVideoSettings.m_ViewMode);
+      g_stSettings.m_currentVideoSettings.m_CustomZoomAmount = g_stSettings.m_fZoomAmount;
+      g_stSettings.m_currentVideoSettings.m_CustomPixelRatio = g_stSettings.m_fPixelRatio;
+
+      return true;
     }
   }
-
-#else
-  if (setting.id == VIDEO_SETTINGS_VIEW_MODE)
-  {
-    g_renderManager.SetViewMode(g_stSettings.m_currentVideoSettings.m_ViewMode);
-    g_stSettings.m_currentVideoSettings.m_CustomZoomAmount = g_stSettings.m_fZoomAmount;
-    g_stSettings.m_currentVideoSettings.m_CustomPixelRatio = g_stSettings.m_fPixelRatio;
-    UpdateSetting(VIDEO_SETTINGS_ZOOM);
-    UpdateSetting(VIDEO_SETTINGS_PIXEL_RATIO);
-  }
-  else if (setting.id == VIDEO_SETTINGS_CALIBRATION)
-  {
-    // launch calibration window
-    if (g_settings.m_vecProfiles[g_settings.m_iLastLoadedProfileIndex].settingsLocked() && g_settings.m_vecProfiles[0].getLockMode() != LOCK_MODE_EVERYONE)
-      if (!g_passwordManager.IsMasterLockUnlocked(true))
-        return;
-    g_windowManager.ActivateWindow(WINDOW_SCREEN_CALIBRATION);
-  }
-  else if (setting.id == VIDEO_SETTINGS_ZOOM || setting.id == VIDEO_SETTINGS_PIXEL_RATIO)
-  {
-    g_stSettings.m_currentVideoSettings.m_ViewMode = VIEW_MODE_CUSTOM;
-    g_renderManager.SetViewMode(VIEW_MODE_CUSTOM);
-    UpdateSetting(VIDEO_SETTINGS_VIEW_MODE);
-  }
-  else if (setting.id == VIDEO_SETTINGS_ADVANCE)
-  {
-    m_advance = !m_advance;
-    setting.name = m_advance ?   g_localizeStrings.Get(576) : g_localizeStrings.Get(575);
-    SetSettingVisiable(VIDEO_SETTINGS_ZOOM,m_advance);
-    SetSettingVisiable(VIDEO_SETTINGS_PIXEL_RATIO,m_advance);
-    SetSettingVisiable(VIDEO_SETTINGS_INTERLACEMETHOD,m_advance);
-    UpdateSetting(VIDEO_SETTINGS_ADVANCE);
-  }
-#endif
-
+  return false;
 }
 
 CStdString CGUIDialogVideoSettings::FormatInteger(float value, float minimum)

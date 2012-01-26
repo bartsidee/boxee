@@ -27,14 +27,27 @@
 #include "FileSystem/FileCurl.h"
 #include "Util.h"
 #include "DllImageLib.h"
+#include "Application.h"
 
 using namespace XFILE;
 
 bool CPicture::CreateThumbnail(const CStdString& file, const CStdString& thumbFile, bool checkExistence /*= false*/)
 {
+
   // don't create the thumb if it already exists
   if (checkExistence && CFile::Exists(thumbFile))
+  {
+    // get the file size
+	uint64_t size = 0;
+	struct __stat64 stat;
+    if (CFile::Stat(thumbFile,&stat) == 0)
+    {
+	  size = stat.st_size;
+    }
+    
+    g_application.GetThumbnailsManager().TouchThumbnailFile(thumbFile, size);
     return true;
+  }
 
   if (thumbFile.IsEmpty())
   {
@@ -44,7 +57,7 @@ bool CPicture::CreateThumbnail(const CStdString& file, const CStdString& thumbFi
 
   CLog::Log(LOGDEBUG, "Creating thumb from: %s as: %s", file.c_str(), thumbFile.c_str());
 
-  CURL url(file);
+  CURI url(file);
   if (url.GetProtocol().Equals("http") || url.GetProtocol().Equals("https"))
   {
     CFileCurl http;
@@ -60,6 +73,16 @@ bool CPicture::CreateThumbnail(const CStdString& file, const CStdString& thumbFi
     CLog::Log(LOGERROR, "%s: Unable to create thumbfile %s from image %s", __FUNCTION__, thumbFile.c_str(), file.c_str());
     return false;
   }
+
+  // get the file size
+  uint64_t size = 0;
+  struct __stat64 stat;
+  if (CFile::Stat(thumbFile,&stat) == 0)
+  {
+	  size = stat.st_size;
+  }
+   
+  g_application.GetThumbnailsManager().TouchThumbnailFile(thumbFile, size);
   return true;
 }
 
@@ -91,6 +114,7 @@ bool CPicture::CreateThumbnailFromMemory(const unsigned char* buffer, int bufSiz
     CLog::Log(LOGERROR, "%s: exception with fileType: %s", __FUNCTION__, extension.c_str());
     return false;
   }
+  g_application.GetThumbnailsManager().TouchThumbnailFile(thumbFile, bufSize);
   return true;
 }
 

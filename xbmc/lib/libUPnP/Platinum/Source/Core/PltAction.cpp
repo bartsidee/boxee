@@ -2,7 +2,7 @@
 |
 |   Platinum - Service Action
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -29,7 +29,7 @@
 | 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 | http://www.gnu.org/licenses/gpl-2.0.html
 |
- ****************************************************************/
+****************************************************************/
 
 /*----------------------------------------------------------------------
 |   includes
@@ -105,7 +105,7 @@ PLT_ActionDesc::GetArgumentDesc(const char* name)
 +---------------------------------------------------------------------*/
 PLT_Action::PLT_Action(PLT_ActionDesc& action_desc) :
     m_ActionDesc(action_desc),
-    m_ErrorCode(0) 
+    m_ErrorCode(0)
 {
 }
 
@@ -202,7 +202,7 @@ PLT_Action::GetArgument(const char* name)
 +---------------------------------------------------------------------*/
 NPT_Result
 PLT_Action::SetArgumentValue(const char* name,
-                             const char* value) 
+                             const char* value)
 {
     // look for this argument in our argument list
     // and replace the value if we found it 
@@ -225,10 +225,10 @@ PLT_Action::SetArgumentValue(const char* name,
     for (NPT_Cardinal i=0;
          i<m_Arguments.GetItemCount();
          i++) {
-        NPT_Array<PLT_Argument*>::Iterator iter = m_Arguments.GetItem(i);
+        iter = m_Arguments.GetItem(i);
         if ((*iter)->GetPosition() > arg->GetPosition()) {
             return m_Arguments.Insert(iter, arg);
-    }
+        }
     }
 
     return m_Arguments.Add(arg);
@@ -345,9 +345,9 @@ PLT_Action::SetError(unsigned int code, const char* description)
 |   PLT_Action::GetError
 +---------------------------------------------------------------------*/
 const char* 
-PLT_Action::GetError(unsigned int& code) 
+PLT_Action::GetError(unsigned int* code /* = NULL */) 
 {
-    code = m_ErrorCode;
+    if (code) *code = m_ErrorCode;
     return m_ErrorDescription;
 }
 
@@ -441,9 +441,9 @@ PLT_Action::FormatSoapResponse(NPT_OutputStream& stream)
             if (var) {
                 node->SetNamespaceUri("dt", "urn:schemas-microsoft-com:datatypes");
                 node->SetAttribute("dt", "dt", var->GetDataType());
-        }
+            }
 #endif
-    }
+        }
     }
 
     // this will xmlescape any values that contain xml characters

@@ -7,7 +7,6 @@
 #include "XAPP_Window.h"
 #include "XAPP_Player.h"
 #include "XAPP_App.h"
-#include "GUIWindowManager.h"
 
 namespace XAPP
 {
@@ -180,12 +179,98 @@ public:
   static std::string GetGeoLocation();
 
   /**
+    * Returns device id
+    */
+   static std::string GetDeviceId();
+
+   /**
+    * Returns platform id
+    */
+   static std::string GetPlatform();
+
+   /**
+    * Returns true if running on embedded platform and false otherwise
+    */
+   static bool IsEmbedded();
+
+  /**
    * Returns current position of the played video in seconds
    * @param strPath - path of the video
    */
   static int GetCurrentPositionInSec(const std::string& strPath);
 
+   /**
+    * Return the current weather setting location. For example: "USNY0996 - New York, NY"
+    */
+   static std::string GetWeatherLocation();
 
+   /**
+    * Return the current weather setting location. For example: "USNY0996 - New York, NY"
+    */
+   static void SetWeatherLocation(std::string location);
+
+   /**
+    * Set the current weather setting location.
+    * @param cityName - the city name
+    * @param countryCode - the city country code
+    * Returns true on success and false on failure
+    */
+   static bool SetWeatherLocation2(std::string cityName, std::string countryCode);
+
+   /**
+    * Return the current timezone country setting location
+    */
+   static std::string GetTimezoneCountry();
+  
+   /**
+    * Return the current timezone city setting location
+    */
+   static std::string GetTimezoneCity();
+
+   /**
+    * Return the current temperature scale. Either 'C' or 'F'.
+    */
+   static std::string GetTemperatureScale();
+
+   /**
+    * Set the temperature scale. Input should be either 'C' or 'F'.
+    */
+   static void SetTemperatureScale(std::string scale);
+
+   /**
+    * Returns true if has internet connection
+    */
+   static bool IsConnectedToInternet();
+
+   /**
+    * Returns unique box id
+    */
+   static std::string GetUniqueId();
+
+   /**
+    * Returns the system language
+    */
+   static std::string GetSystemLanguage();
+
+   /**
+    * Returns box vendor name
+    */
+   static std::string GetHardwareVendor();
+
+   /**
+    * Returns box model name
+    */
+   static std::string GetHardwareModel();
+
+   /**
+    * Returns box revision number
+    */
+   static std::string GetHardwareRevision();
+
+   /**
+    * Returns box revision number
+    */
+   static std::string GetHardwareSerialNumber();
 
 private:
   static std::map<std::string, int> m_translatedInfo;  

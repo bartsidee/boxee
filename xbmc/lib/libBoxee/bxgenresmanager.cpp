@@ -14,6 +14,10 @@
 #include "logger.h"
 #include "MetadataResolverVideo.h"
 #include "../../Application.h"
+#include "GUIUserMessages.h"
+#include "../../guilib/GUIWindowManager.h"
+#include "../../LangInfo.h"
+#include "BoxeeBrowseMenuManager.h"
 
 namespace BOXEE
 {
@@ -39,7 +43,7 @@ bool BXGenresManager::Initialize()
 {
   m_vecMovieGenres.clear();
   m_vecTvGenres.clear();
-
+  
   return true;
 }
 
@@ -126,7 +130,25 @@ void BXGenresManager::SetMovieGenres(const std::vector<GenreItem>& movieGenresVe
 {
   LockMovieGenresList();
 
+  bool vectorChanged = false;
+
+  //we need to check for any changes
+
+  if (m_vecMovieGenres.size() != movieGenresVec.size())
+  {
+    // if they are different in size, there was a change
+    vectorChanged = true;
+  }
+
   m_vecMovieGenres = movieGenresVec;
+
+  if (vectorChanged)
+  {
+    //send message to the menu to update
+    CLog::Log(LOGDEBUG,"BXGenresManager::SetMovieGenres, there was a change in the vector, sending update to the menu (genres)");
+
+    CBoxeeBrowseMenuManager::GetInstance().ClearDynamicMenuButtons("mn_library_movies_genres");
+  }
 
   UnLockMovieGenresList();
 }
@@ -146,7 +168,26 @@ void BXGenresManager::SetTvGenres(const std::vector<GenreItem>& tvGenresVec)
 {
   LockTvGenresList();
 
+  //we need to check for any changes
+  bool vectorChanged = false;
+
+  //we need to check for any changes
+
+  if (m_vecTvGenres.size() != tvGenresVec.size())
+  {
+    // if they are different in size, there was a change
+    vectorChanged = true;
+  }
+
   m_vecTvGenres = tvGenresVec;
+
+  if (vectorChanged)
+  {
+    //send message to the menu to update
+    CLog::Log(LOGDEBUG,"BXGenresManager::SetTvGenres - there was a change in the vector. sending clear to the BrowseMenu (genres)");
+
+    CBoxeeBrowseMenuManager::GetInstance().ClearDynamicMenuButtons("mn_library_shows_genres");
+  }
 
   UnLockTvGenresList();
 }
@@ -206,15 +247,21 @@ void BXGenresManager::CRequestVideoGenresListFromServerTask::DoWork()
 {
   LOG(LOG_LEVEL_DEBUG,"CRequestVideoGenresListFromServerTask::DoWork - Enter function (genres)");
 
-  if (!g_application.IsConnectedToInternet())
+  if (!g_application.ShouldConnectToInternet())
   {
-    LOG(LOG_LEVEL_DEBUG,"CRequestVideoGenresListFromServerTask::DoWork - [IsConnectedToInternet=FALSE] -> Exit function (genres)");
+    LOG(LOG_LEVEL_DEBUG,"CRequestVideoGenresListFromServerTask::DoWork - [ShouldConnectToInternet=FALSE] -> Exit function (genres)");
     return;
   }
 
   std::string strLink = BXConfiguration::GetInstance().GetStringParam("Boxee.Resolver.Server","http://res.boxee.tv");
   strLink += "/titles/genres?type=";
   strLink += m_genresType;
+
+  if (!g_langInfo.GetLanguageCode().IsEmpty())
+  {
+    strLink += "&lang=";
+    strLink += g_langInfo.GetLanguageCode().c_str();
+  }
 
   BXXMLDocument xmlDoc;
 
@@ -291,9 +338,9 @@ void BXGenresManager::CRequestBadWordsListFromServerTask::DoWork()
 {
   LOG(LOG_LEVEL_DEBUG,"CRequestBadWordsListFromServerTask::DoWork - Enter function (badwords)");
 
-  if (!g_application.IsConnectedToInternet())
+  if (!g_application.ShouldConnectToInternet())
   {
-    LOG(LOG_LEVEL_DEBUG,"CRequestBadWordsListFromServerTask::DoWork - [IsConnectedToInternet=FALSE] -> Exit function (badwords)");
+    LOG(LOG_LEVEL_DEBUG,"CRequestBadWordsListFromServerTask::DoWork - [ShouldConnectToInternet=FALSE] -> Exit function (badwords)");
     return;
   }
 

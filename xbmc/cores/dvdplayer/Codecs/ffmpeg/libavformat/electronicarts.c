@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavformat/electronicarts.c
+ * @file
  * Electronic Arts Multimedia file demuxer (WVE/UV2/etc.)
  * by Robin Kay (komadori at gekkou.co.uk)
  */
@@ -109,7 +109,7 @@ static int process_audio_header_elements(AVFormatContext *s)
     ea->sample_rate = -1;
     ea->num_channels = 1;
 
-    while (inHeader) {
+    while (!url_feof(pb) && inHeader) {
         int inSubheader;
         uint8_t byte;
         byte = get_byte(pb);
@@ -118,7 +118,7 @@ static int process_audio_header_elements(AVFormatContext *s)
         case 0xFD:
             av_log (s, AV_LOG_DEBUG, "entered audio subheader\n");
             inSubheader = 1;
-            while (inSubheader) {
+            while (!url_feof(pb) && inSubheader) {
                 uint8_t subbyte;
                 subbyte = get_byte(pb);
 
@@ -192,6 +192,7 @@ static int process_audio_header_elements(AVFormatContext *s)
         case 16: ea->audio_codec = CODEC_ID_MP3; break;
         case -1: break;
         default:
+            ea->audio_codec = CODEC_ID_NONE;
             av_log(s, AV_LOG_ERROR, "unsupported stream type; revision2=%i\n", revision2);
             return 0;
         }
@@ -300,7 +301,7 @@ static int process_ea_header(AVFormatContext *s) {
         if (i == 0)
             ea->big_endian = size > 0x000FFFFF;
         if (ea->big_endian)
-            size = bswap_32(size);
+            size = av_bswap32(size);
 
         switch (blockid) {
             case ISNh_TAG:
@@ -394,7 +395,7 @@ static int ea_probe(AVProbeData *p)
         return 0;
     }
     if (AV_RL32(&p->buf[4]) > 0xfffff && AV_RB32(&p->buf[4]) > 0xfffff)
-    return 0;
+        return 0;
     return AVPROBE_SCORE_MAX;
 }
 
@@ -413,7 +414,7 @@ static int ea_read_header(AVFormatContext *s,
         if (!st)
             return AVERROR(ENOMEM);
         ea->video_stream_index = st->index;
-        st->codec->codec_type = CODEC_TYPE_VIDEO;
+        st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
         st->codec->codec_id = ea->video_codec;
         st->codec->codec_tag = 0;  /* no fourcc */
         st->codec->time_base = ea->time_base;
@@ -422,12 +423,23 @@ static int ea_read_header(AVFormatContext *s,
     }
 
     if (ea->audio_codec) {
+        if (ea->num_channels <= 0) {
+            av_log(s, AV_LOG_WARNING, "Unsupported number of channels: %d\n", ea->num_channels);
+            ea->audio_codec = 0;
+            return 1;
+        }
+        if (ea->sample_rate <= 0) {
+            av_log(s, AV_LOG_ERROR, "Unsupported sample rate: %d\n", ea->sample_rate);
+            ea->audio_codec = 0;
+            return 1;
+        }
+
         /* initialize the audio decoder stream */
         st = av_new_stream(s, 0);
         if (!st)
             return AVERROR(ENOMEM);
         av_set_pts_info(st, 33, 1, ea->sample_rate);
-        st->codec->codec_type = CODEC_TYPE_AUDIO;
+        st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
         st->codec->codec_id = ea->audio_codec;
         st->codec->codec_tag = 0;  /* no tag */
         st->codec->channels = ea->num_channels;
@@ -480,26 +492,26 @@ static int ea_read_packet(AVFormatContext *s,
             ret = av_get_packet(pb, pkt, chunk_size);
             if (ret < 0)
                 return ret;
-                    pkt->stream_index = ea->audio_stream_index;
-                    pkt->pts = 90000;
-                    pkt->pts *= ea->audio_frame_counter;
-                    pkt->pts /= ea->sample_rate;
+            pkt->stream_index = ea->audio_stream_index;
+            pkt->pts = 90000;
+            pkt->pts *= ea->audio_frame_counter;
+            pkt->pts /= ea->sample_rate;
 
-                    switch (ea->audio_codec) {
-                    case CODEC_ID_ADPCM_EA:
-                    /* 2 samples/byte, 1 or 2 samples per frame depending
-                     * on stereo; chunk also has 12-byte header */
-                    ea->audio_frame_counter += ((chunk_size - 12) * 2) /
-                        ea->num_channels;
-                        break;
-                    case CODEC_ID_PCM_S16LE_PLANAR:
-                    case CODEC_ID_MP3:
-                        ea->audio_frame_counter += num_samples;
-                        break;
-                    default:
-                        ea->audio_frame_counter += chunk_size /
-                            (ea->bytes * ea->num_channels);
-                    }
+            switch (ea->audio_codec) {
+            case CODEC_ID_ADPCM_EA:
+                /* 2 samples/byte, 1 or 2 samples per frame depending
+                 * on stereo; chunk also has 12-byte header */
+                ea->audio_frame_counter += ((chunk_size - 12) * 2) /
+                    ea->num_channels;
+                break;
+            case CODEC_ID_PCM_S16LE_PLANAR:
+            case CODEC_ID_MP3:
+                ea->audio_frame_counter += num_samples;
+                break;
+            default:
+                ea->audio_frame_counter += chunk_size /
+                    (ea->bytes * ea->num_channels);
+            }
 
             packet_read = 1;
             break;
@@ -519,7 +531,7 @@ static int ea_read_packet(AVFormatContext *s,
         case pQGT_TAG:
         case TGQs_TAG:
         case MADk_TAG:
-            key = PKT_FLAG_KEY;
+            key = AV_PKT_FLAG_KEY;
         case MVIf_TAG:
         case fVGT_TAG:
         case MADm_TAG:
@@ -536,14 +548,14 @@ static int ea_read_packet(AVFormatContext *s,
         case MV0K_TAG:
         case MPCh_TAG:
         case pIQT_TAG:
-            key = PKT_FLAG_KEY;
+            key = AV_PKT_FLAG_KEY;
         case MV0F_TAG:
 get_video_packet:
             ret = av_get_packet(pb, pkt, chunk_size);
             if (ret < 0)
                 return ret;
-                pkt->stream_index = ea->video_stream_index;
-                pkt->flags |= key;
+            pkt->stream_index = ea->video_stream_index;
+            pkt->flags |= key;
             packet_read = 1;
             break;
 
@@ -556,7 +568,7 @@ get_video_packet:
     return ret;
 }
 
-AVInputFormat ea_demuxer = {
+AVInputFormat ff_ea_demuxer = {
     "ea",
     NULL_IF_CONFIG_SMALL("Electronic Arts Multimedia Format"),
     sizeof(EaDemuxContext),

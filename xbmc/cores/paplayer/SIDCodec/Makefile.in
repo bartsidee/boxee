@@ -12,9 +12,9 @@ SLIB=../../../../system/players/paplayer/libsidplay2-@ARCH@.so
 
 $(SLIB): $(OBJS) ../../../linux/XHandle.o
 ifeq ($(findstring osx,$(ARCH)), osx)
-	ld -bundle -flat_namespace -undefined suppress -o $@ \
+	$(CXX) $(LDFLAGS) -Wl,-alias_list,../../DllLoader/exports/wrapper_mach_alias \
+		-bundle -undefined dynamic_lookup -fPIC -o $@ ../../DllLoader/exports/wrapper.o \
 		$(OBJS) ../../../linux/XHandle.o $(BUNDLE1_O)
-	../../../../tools/Mach5/wrapper.rb $@;mv output.so $@
 	chmod +x $@
 else
 	$(CC) -fPIC -shared -o $@ $(OBJS) ../../../linux/XHandle.o `cat ../../DllLoader/exports/wrapper.def` ../../DllLoader/exports/wrapper.o

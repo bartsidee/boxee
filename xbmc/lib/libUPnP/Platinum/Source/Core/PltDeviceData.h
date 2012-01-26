@@ -2,7 +2,7 @@
 |
 |   Platinum - Device Data
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -31,6 +31,10 @@
 |
 ****************************************************************/
 
+/** @file
+ UPnP Device information
+ */
+
 #ifndef _PLT_DEVICE_DATA_H_
 #define _PLT_DEVICE_DATA_H_
 
@@ -52,6 +56,9 @@ typedef NPT_List<PLT_DeviceDataReference> PLT_DeviceDataReferenceList;
 /*----------------------------------------------------------------------
 |   PLT_DeviceIcon class
 +---------------------------------------------------------------------*/
+/** 
+ The PLT_DeviceIcon class represents a given instance of a UPnP device icon.
+ */
 class PLT_DeviceIcon
 {
 public:
@@ -66,7 +73,7 @@ public:
         m_Depth(depth),
         m_UrlPath(urlpath) {}
     virtual ~PLT_DeviceIcon() {}
-
+   
     NPT_String  m_MimeType;
     NPT_Int32   m_Width;
     NPT_Int32   m_Height;
@@ -77,6 +84,11 @@ public:
 /*----------------------------------------------------------------------
 |   PLT_DeviceData class
 +---------------------------------------------------------------------*/
+/**
+ The PLT_DeviceData class holds information about a device being advertised or
+ being found by a control point. It maintains a list of services and 
+ embedded devices if any.
+ */
 class PLT_DeviceData
 {
 public:
@@ -87,7 +99,7 @@ public:
         const char*      device_type = "",
         const char*      friendly_name = "");
 
-    /* Getters */
+    /* methods */
     virtual NPT_Result  GetDescription(NPT_String& desc);
     virtual NPT_String  GetDescriptionUrl(const char* bind_addr = NULL);
     virtual NPT_HttpUrl GetURLBase();
@@ -110,7 +122,8 @@ public:
     NPT_Result FindEmbeddedDeviceByType(const char* type, PLT_DeviceDataReference& device);
     NPT_Result FindServiceById(const char* id, PLT_Service*& service);
     NPT_Result FindServiceByType(const char* type, PLT_Service*& service);
-    NPT_Result FindServiceBySCPDURL(const char* url, PLT_Service*& service);
+	NPT_Result FindServiceByName(const char* name, PLT_Service*& service);
+    NPT_Result FindServiceBySCPDURL(const char* url, PLT_Service*& service, bool recursive = false);
     NPT_Result FindServiceByControlURL(const char* url, PLT_Service*& service, bool recursive = false);
     NPT_Result FindServiceByEventSubURL(const char* url, PLT_Service*& service, bool recursive = false);
 
@@ -118,6 +131,7 @@ public:
     NPT_Result AddEmbeddedDevice(PLT_DeviceDataReference& device);
     NPT_Result RemoveEmbeddedDevice(PLT_DeviceDataReference& device);
     NPT_Result AddService(PLT_Service* service);
+	NPT_Result RemoveService(PLT_Service* service);
 
     operator const char* ();
 
@@ -125,14 +139,14 @@ protected:
     virtual ~PLT_DeviceData();
     virtual void       Cleanup();
     virtual NPT_Result OnAddExtraInfo(NPT_XmlElementNode* /*device_node*/) { return NPT_SUCCESS; }
+    NPT_Result         SetLeaseTime(NPT_TimeInterval lease_time);
 
 private:
     /* called by PLT_CtrlPoint when new device is discovered */
     NPT_Result    SetURLBase(NPT_HttpUrl& url_base);
     NPT_TimeStamp GetLeaseTimeLastUpdate();
-    NPT_Result    SetLeaseTime(NPT_TimeInterval lease_time);
-    NPT_Result    SetDescription(const char*          szDescription, 
-                                 const NPT_IpAddress& local_iface_ip);
+    NPT_Result    SetDescription(const char*                   szDescription, 
+                                 const NPT_HttpRequestContext& context);
     NPT_Result    SetDescriptionDevice(NPT_XmlElementNode* device_node);
 
 public:
@@ -157,26 +171,30 @@ protected:
 
     //members
     NPT_String                         m_ParentUUID;
-    NPT_String                m_UUID;
-    NPT_HttpUrl               m_URLDescription;
+    NPT_String                         m_UUID;
+    NPT_HttpUrl                        m_URLDescription;
     NPT_HttpUrl                        m_URLBase;
-    NPT_String                m_DeviceType;
-    NPT_String                m_FriendlyName;
-    NPT_TimeInterval          m_LeaseTime;
-    NPT_TimeStamp             m_LeaseTimeLastUpdate;
-    NPT_Array<PLT_Service*>   m_Services;
+    NPT_String                         m_DeviceType;
+    NPT_String                         m_FriendlyName;
+    NPT_TimeInterval                   m_LeaseTime;
+    NPT_TimeStamp                      m_LeaseTimeLastUpdate;
+    NPT_Array<PLT_Service*>            m_Services;
     NPT_Array<PLT_DeviceDataReference> m_EmbeddedDevices;
-    NPT_Array<PLT_DeviceIcon> m_Icons;
+    NPT_Array<PLT_DeviceIcon>          m_Icons;
 
     /* IP address of interface used when retrieving device description.
        We need the info for the control point subscription callback */
-    NPT_IpAddress   m_LocalIfaceIp; 
+    NPT_IpAddress                      m_LocalIfaceIp; 
     NPT_String                         m_Representation;
 };
 
 /*----------------------------------------------------------------------
 |   PLT_DeviceDataFinder
 +---------------------------------------------------------------------*/
+/**
+ The PLT_DeviceDataFinder class returns a PLT_DeviceData instance given
+ a device UUID.
+ */
 class PLT_DeviceDataFinder
 {
 public:
@@ -190,12 +208,16 @@ public:
 
 private:
     // members
-    NPT_String   m_UUID;
+    NPT_String m_UUID;
 };
 
 /*----------------------------------------------------------------------
 |   PLT_DeviceDataFinderByType
 +---------------------------------------------------------------------*/
+/**
+ The PLT_DeviceDataFinderByType class returns a PLT_DeviceData instance 
+ given a device type.
+ */
 class PLT_DeviceDataFinderByType
 {
 public:

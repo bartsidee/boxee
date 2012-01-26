@@ -19,6 +19,9 @@
 */
 
 #include "FileXBMSP.h"
+
+#ifdef HAS_CCXSTREAM
+
 #include "Util.h"
 #include "FileSystem/Directory.h"
 #include "SectionLoader.h"
@@ -69,13 +72,12 @@ CFileXBMSP::~CFileXBMSP()
 }
 
 //*********************************************************************************************
-bool CFileXBMSP::Open(const CURL& urlUtf8)
+bool CFileXBMSP::Open(const CURI& urlUtf8)
 {
-  CStdString strURL;
-  urlUtf8.GetURL(strURL);
+  CStdString strURL = urlUtf8.Get();
   g_charsetConverter.utf8ToStringCharset(strURL);
 
-  CURL url(strURL);
+  CURI url(strURL);
   const char* strUserName = url.GetUserName().c_str();
   const char* strPassword = url.GetPassWord().c_str();
   const char* strHostName = url.GetHostName().c_str();
@@ -90,7 +92,7 @@ bool CFileXBMSP::Open(const CURL& urlUtf8)
   m_fileSize = 0;
   m_filePos = 0;
 
-  CLog::Log(LOGDEBUG,"xbms:open: %s",strFileName);
+    CLog::Log(LOGDEBUG,"xbms:open: %s",strFileName);
 
   if (cc_xstream_client_connect(strHostName,
                                 (iport > 0) ? iport : 1400,
@@ -132,7 +134,7 @@ bool CFileXBMSP::Open(const CURL& urlUtf8)
   CStdString strDir, strPath;
   strDir = "";
 
-  CLog::Log(LOGDEBUG,"xbms:setdir:/");
+    CLog::Log(LOGDEBUG,"xbms:setdir:/");
 
   if (cc_xstream_client_setcwd(m_connection, "/") == CC_XSTREAM_CLIENT_OK)
   {
@@ -143,7 +145,7 @@ bool CFileXBMSP::Open(const CURL& urlUtf8)
       {
         if (strDir != "")
         {
-          CLog::Log(LOGDEBUG,"xbms:setdir: %s",strDir.c_str());
+            CLog::Log(LOGDEBUG,"xbms:setdir: %s",strDir.c_str());
 
           if (cc_xstream_client_setcwd(m_connection, strDir.c_str()) != CC_XSTREAM_CLIENT_OK)
           {
@@ -168,7 +170,7 @@ bool CFileXBMSP::Open(const CURL& urlUtf8)
   }
   if (strDir.size() > 0)
   {  
-    CLog::Log(LOGDEBUG,"xbms:setdir: %s",strDir.c_str());
+      CLog::Log(LOGDEBUG,"xbms:setdir: %s",strDir.c_str());
 
     if (cc_xstream_client_setcwd(m_connection, strDir.c_str()) != CC_XSTREAM_CLIENT_OK)
     {
@@ -216,7 +218,7 @@ bool CFileXBMSP::Open(const CURL& urlUtf8)
   return true;
 }
 
-bool CFileXBMSP::Exists(const CURL& url)
+bool CFileXBMSP::Exists(const CURI& url)
 {
   bool exist(true);
   exist = CFileXBMSP::Open(url);
@@ -224,7 +226,7 @@ bool CFileXBMSP::Exists(const CURL& url)
   return exist;
 }
 
-int CFileXBMSP::Stat(const CURL& url, struct __stat64* buffer)
+int CFileXBMSP::Stat(const CURI& url, struct __stat64* buffer)
 {
   if (Open(url))
   {
@@ -235,8 +237,7 @@ int CFileXBMSP::Stat(const CURL& url, struct __stat64* buffer)
     return 0;
   }
 
-  CStdString strURL;
-  url.GetURL(strURL);
+  CStdString strURL = url.Get();
 
   int dot = url.GetFileName().rfind('.');
   int slash = url.GetFileName().rfind('/');
@@ -396,4 +397,4 @@ int64_t CFileXBMSP::GetPosition()
 
 }
 
-
+#endif

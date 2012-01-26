@@ -33,20 +33,6 @@ void CGUIDialogBoxeeManualResolveDetails::OnDeinitWindow(int nextWindowID)
 
 bool CGUIDialogBoxeeManualResolveDetails::OnMessage(CGUIMessage& message)
 {
-  switch ( message.GetMessage() )
-  {
-  case GUI_MSG_CLICKED:
-  {
-    int iControl = message.GetSenderId();
-//    if (iControl == BTN_ISMOVIE)
-//    {
-//    }
-//    else if (iControl == BTN_ISTVSHOW)
-//    {
-//    }
-  }
-  break;
-  } // switch
   return CGUIDialog::OnMessage(message);
 }
 

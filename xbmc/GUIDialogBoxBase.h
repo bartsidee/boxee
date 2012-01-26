@@ -41,5 +41,7 @@ public:
 protected:
   virtual void OnInitWindow();
   bool m_bConfirmed;
+  bool m_bDetails;
   int m_defaultChoice;
+  int m_headerId;
 };

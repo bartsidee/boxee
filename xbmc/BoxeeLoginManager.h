@@ -1,9 +1,12 @@
 #ifndef BOXEELOGINMANAGER_H_
 #define BOXEELOGINMANAGER_H_
 
+#include "lib/libBoxee/boxee.h"
 #include "lib/libBoxee/bxobject.h"
 
 #include <SDL/SDL.h>
+
+#define NEW_USER_PROFILE_ID                           -100
 
 class CBoxeeLoginStatusTypes
 {
@@ -31,12 +34,17 @@ public:
   void SetInChangeUserProcess(bool inChangeUserProcess);
   bool IsInChangeUserProcess();
 
-  void FinishSuccessfulLogin(bool firstUser = false);
+  void FinishSuccessfulLogin();
 
   static void SetProxyCreds(BOXEE::BXCredentials &creds);
 
   int CreateProfile(const CStdString& username, const BOXEE::BXObject& userObj);
   void UpdateProfile(int profileId, const CStdString& password, bool rememberPassword);
+
+  static bool DoesThisUserAlreadyExist(const CStdString& username);
+  static CStdString EncodePassword(CStdString password);
+
+  static BOXEE::BXLoginStatus DoLogin(const CStdString& username, const CStdString& password, bool rememberPassword, int profileId = NEW_USER_PROFILE_ID);
 
 private:
 

@@ -15,14 +15,8 @@
 				<posy>70</posy>
 				<width>1220</width>
 				<height>510</height>
-				<texture border="64">action_menu_bg.png</texture>
-			</control>
-			<control type="image">
-				<posx>100</posx>
-				<posy>104</posy>
-				<width>1020</width>
-				<height>256</height>
-				<texture border="128">feather_divider.png</texture>
+				<texture border="20">browse_menu_dialog_background.png</texture>
+				<colordiffuse>FF212121</colordiffuse>
 			</control>
 			<control type="label" id="411">
 				<posx>26</posx>
@@ -32,8 +26,8 @@
 				<align>left</align>
 				<aligny>top</aligny>
 				<haspath>true</haspath>
-				<font>title28b</font>
-				<textcolor>title</textcolor>
+				<font>font48b</font>
+				<textcolor>white</textcolor>
 			</control>
 			<control type="group">
 				<posx>30</posx>
@@ -41,13 +35,13 @@
 				<control type="label" id="412">
 					<description>path</description>
 					<posx>30</posx>
-					<posy>-16</posy>
+					<posy>-36</posy>
 					<width>856</width>
-					<height>40</height>
-					<font>font24b</font>
+					<height>52</height>
+					<font>font30b</font>
 					<aligny>center</aligny>
 					<align>left</align>
-					<textcolor>title</textcolor>
+					<textcolor>white</textcolor>
 					<haspath>true</haspath>
 				</control>
 				<control type="list" id="450">
@@ -63,65 +57,66 @@
 					<scrolltime>200</scrolltime>
 					<orientation>vertical</orientation>
 					<offsety>8</offsety>
-					<itemlayout height="42">
+					<itemlayout height=52>
 						<control type="image">
-							<posx>10</posx>
+							<posx>0</posx>
 							<posy>0</posy>
 							<width>856</width>
-							<height>46</height>
-							<texture border="15">button_settings_line_divider.png</texture>
-						</control>
+							<height>52</height>
+							<texture>browse_line_feather.png</texture>
+						</control>						
 						<control type="label">
 							<posx>28</posx>
 							<posy>0</posy>
 							<width>804</width>
 							<height>42</height>
-							<font>font22</font>
+							<font>font30</font>
 							<align>left</align>
 							<aligny>center</aligny>
 							<label>$INFO[ListItem.Label]</label>
-							<textcolor>grey</textcolor>
+							<textcolor>white</textcolor>
 						</control>
 					</itemlayout>
-					<focusedlayout height="42">
+					<focusedlayout height=52>
 						<control type="image">
+							<visible>Control.HasFocus(450)</visible>
 							<posx>10</posx>
 							<posy>0</posy>
 							<width>856</width>
-							<height>46</height>
-							<texture border="15">button_settings_line_divider.png</texture>
+							<height>52</height>
+							<texture border="20" diffuse="masks/10b9f2.png">browse_line_focus.png</texture>
 						</control>
 						<control type="image">
-							<visible>Control.HasFocus(450)</visible>
+							<visible>!Control.HasFocus(450)</visible>
 							<posx>0</posx>
 							<posy>-8</posy>
 							<width>876</width>
-							<height>58</height>
-							<texture border="20">button_action_menu_source_on.png</texture>
+							<height>52</height>
+							<texture>browse_line_feather.png</texture>
 						</control>
 						<control type="label">
 							<visible>!Control.HasFocus(450)</visible>
 							<posx>28</posx>
 							<posy>0</posy>
 							<width>804</width>
-							<height>42</height>
-							<font>font22</font>
+							<height>52</height>
+							<font>font30</font>
 							<align>left</align>
 							<aligny>center</aligny>
 							<label>$INFO[ListItem.Label]</label>
-							<textcolor>grey</textcolor>
+							<textcolor>white</textcolor>
 						</control>
 						<control type="label">
 							<visible>Control.HasFocus(450)</visible>
 							<posx>28</posx>
 							<posy>0</posy>
 							<width>804</width>
-							<height>42</height>
-							<font>font22</font>
+							<height>52</height>
+							<font>font30</font>
 							<align>left</align>
 							<aligny>center</aligny>
 							<label>$INFO[ListItem.Label]</label>
-							<textcolor>white</textcolor>
+							<textcolor>black</textcolor>
 						</control>
 					</focusedlayout>
 				</control>
@@ -129,29 +124,17 @@
 					<visible>Control.IsVisible(450)</visible>
 					<posx>870</posx>
 					<posy>24</posy>
-					<width>28</width>
+					<width>12</width>
 					<height>312</height>
-					<texturesliderbackground border="14">scrollbar_bg.png</texturesliderbackground>
-					<textureslidernib>scrollbar_slider.png</textureslidernib>
-					<textureslidernibfocus>scrollbar_slider.png</textureslidernibfocus>
-					<texturesliderbar>-</texturesliderbar>
-					<texturesliderbarfocus>-</texturesliderbarfocus>
-					<orientation>vertical</orientation>
-					<showonepage>false</showonepage>
+					<include>ScrollBarCommonProperties</include>
 				</control>
 				<control type="scrollbar" id="61">
 					<visible>Control.IsVisible(451)</visible>
 					<posx>870</posx>
 					<posy>24</posy>
-					<width>28</width>
 					<height>312</height>
-					<texturesliderbackground border="14">scrollbar_bg.png</texturesliderbackground>
-					<textureslidernib>scrollbar_slider.png</textureslidernib>
-					<textureslidernibfocus>scrollbar_slider.png</textureslidernibfocus>
-					<texturesliderbar>-</texturesliderbar>
-					<texturesliderbarfocus>-</texturesliderbarfocus>
-					<orientation>vertical</orientation>
-					<showonepage>false</showonepage>
+					<width>12</width>
+					<include>ScrollBarCommonProperties</include>
 				</control>
 				<control type="panel" id="451">
 					<preloaditems>10</preloaditems>
@@ -190,7 +173,7 @@
 							<bordertexture border="12">masks/thumb_background.png</bordertexture>
 							<bordersize>12</bordersize>
 							<texture>black.png</texture>
-						</control>						
+						</control>
 						<control type="label">
 							<include>BrowseThumbAnimationUnfocus</include>
 							<posx>87</posx>
@@ -198,7 +181,7 @@
 							<width>158</width>
 							<height>18</height>
 							<label>[UPPERCASE]$INFO[ListItem.label][/UPPERCASE]</label>
-							<font>title18b</font>
+							<font>font18b</font>
 							<align>center</align>
 							<aligny>center</aligny>
 							<textcolor>white</textcolor>
@@ -211,7 +194,7 @@
 							<width>168</width>
 							<height>18</height>
 							<label>[UPPERCASE]$INFO[ListItem.label][/UPPERCASE]</label>
-							<font>title18b</font>
+							<font>font18b</font>
 							<align>center</align>
 							<aligny>center</aligny>
 							<textcolor>white</textcolor>
@@ -243,7 +226,7 @@
 								<bordertexture border="12">masks/thumb_background.png</bordertexture>
 								<bordersize>12</bordersize>
 								<texture>black.png</texture>
-							</control>						
+							</control>
 							<control type="label">
 								<include>BrowseThumbAnimationUnfocus</include>
 								<posx>87</posx>
@@ -251,7 +234,7 @@
 								<width>158</width>
 								<height>18</height>
 								<label>[UPPERCASE]$INFO[ListItem.label][/UPPERCASE]</label>
-								<font>title18b</font>
+								<font>font18b</font>
 								<align>center</align>
 								<aligny>center</aligny>
 								<textcolor>white</textcolor>
@@ -264,7 +247,7 @@
 								<width>168</width>
 								<height>18</height>
 								<label>[UPPERCASE]$INFO[ListItem.label][/UPPERCASE]</label>
-								<font>title18b</font>
+								<font>font18b</font>
 								<align>center</align>
 								<aligny>center</aligny>
 								<textcolor>white</textcolor>
@@ -306,7 +289,7 @@
 								<width>175</width>
 								<height>18</height>
 								<label>[UPPERCASE]$INFO[ListItem.label][/UPPERCASE]</label>
-								<font>title18b</font>
+								<font>font18b</font>
 								<align>center</align>
 								<aligny>center</aligny>
 								<textcolor>white</textcolor>
@@ -320,7 +303,7 @@
 								<width>168</width>
 								<height>18</height>
 								<label>[UPPERCASE]$INFO[ListItem.label][/UPPERCASE]</label>
-								<font>title18b</font>
+								<font>font18b</font>
 								<align>center</align>
 								<aligny>center</aligny>
 								<textcolor>white</textcolor>
@@ -335,68 +318,59 @@
 					<control type="button" id="413">
 						<posx>0</posx>
 						<posy>0</posy>
-						<width>216</width>
-						<height>30</height>
 						<onup>-</onup>
 						<ondown>414</ondown>
 						<onleft>450</onleft>
 						<onright>-</onright>
 						<label>186</label>
-						<font>font20b</font>
-						<align>left</align>
+						<width>218</width>
+						<height>52</height>
+						<align>center</align>
 						<aligny>center</aligny>
 						<textcolor>white</textcolor>
-						<focusedcolor>white</focusedcolor>
-						<textcolor2>white</textcolor2>
-						<textoffsetx>14</textoffsetx>
-						<texturenofocus>button_option_menu.png</texturenofocus>
-						<texturefocus>button_option_menu_on.png</texturefocus>
-						<textureclick>button_option_menu_click.png</textureclick>
-						<pulseonselect>false</pulseonselect>
+						<focusedcolor>black</focusedcolor>
+						<texturenofocus border="16" diffuse="masks/464646.png">button_8_pixel.png</texturenofocus>
+						<texturefocus border="16" diffuse="masks/10b9f2.png">button_8_pixel.png</texturefocus>
+						<textureclick border="16" diffuse="masks/f1f1f1.png">button_8_pixel.png</textureclick>
+						<font>font28b</font>
 					</control>
 					<control type="button" id="414">
 						<posx>0</posx>
-						<posy>40</posy>
-						<width>216</width>
-						<height>30</height>
+						<posy>70</posy>
 						<onup>413</onup>
 						<ondown>415</ondown>
 						<onleft>450</onleft>
 						<onright>-</onright>
 						<label>222</label><!--Cancel-->
-						<font>font20b</font>
-						<align>left</align>
+						<width>218</width>
+						<height>52</height>
+						<align>center</align>
 						<aligny>center</aligny>
 						<textcolor>white</textcolor>
-						<focusedcolor>white</focusedcolor>
-						<textcolor2>white</textcolor2>
-						<textoffsetx>14</textoffsetx>
-						<texturenofocus>button_option_menu.png</texturenofocus>
-						<texturefocus>button_option_menu_on.png</texturefocus>
-						<textureclick>button_option_menu_click.png</textureclick>
-						<pulseonselect>false</pulseonselect>
+						<focusedcolor>black</focusedcolor>
+						<texturenofocus border="16" diffuse="masks/464646.png">button_8_pixel.png</texturenofocus>
+						<texturefocus border="16" diffuse="masks/10b9f2.png">button_8_pixel.png</texturefocus>
+						<textureclick border="16" diffuse="masks/f1f1f1.png">button_8_pixel.png</textureclick>
+						<font>font28b</font>
 					</control>
 					<control type="button" id="415">
 						<posx>0</posx>
-						<posy>80</posy>
-						<width>216</width>
-						<height>30</height>
+						<posy>140</posy>
 						<onup>414</onup>
 						<ondown>-</ondown>
 						<onleft>450</onleft>
 						<onright>-</onright>
 						<label>119</label><!--New Folder-->
-						<font>font20b</font>
-						<align>left</align>
+						<width>218</width>
+						<height>52</height>
+						<align>center</align>
 						<aligny>center</aligny>
 						<textcolor>white</textcolor>
-						<focusedcolor>white</focusedcolor>
-						<textcolor2>white</textcolor2>
-						<textoffsetx>14</textoffsetx>
-						<texturenofocus>button_option_menu.png</texturenofocus>
-						<texturefocus>button_option_menu_on.png</texturefocus>
-						<textureclick>button_option_menu_click.png</textureclick>
-						<pulseonselect>false</pulseonselect>
+						<focusedcolor>black</focusedcolor>
+						<texturenofocus border="16" diffuse="masks/464646.png">button_8_pixel.png</texturenofocus>
+						<texturefocus border="16" diffuse="masks/10b9f2.png">button_8_pixel.png</texturefocus>
+						<textureclick border="16" diffuse="masks/f1f1f1.png">button_8_pixel.png</textureclick>
+						<font>font28b</font>
 					</control>
 				</control>
 			</control>

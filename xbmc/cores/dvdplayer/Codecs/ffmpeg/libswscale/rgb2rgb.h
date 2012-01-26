@@ -4,7 +4,7 @@
  *               Software YUV to YUV converter
  *               Software YUV to RGB converter
  *  Written by Nick Kurshev.
- *  palette & YUV & runtime CPU stuff by Michael (michaelni@gmx.at)
+ *  YUV & runtime CPU stuff by Michael (michaelni@gmx.at)
  *
  * This file is part of FFmpeg.
  *
@@ -28,6 +28,9 @@
 
 #include <inttypes.h>
 
+#include "libswscale/swscale.h"
+#include "libavutil/avutil.h"
+
 /* A full collection of RGB to RGB(BGR) converters */
 extern void (*rgb24tobgr32)(const uint8_t *src, uint8_t *dst, long src_size);
 extern void (*rgb24tobgr16)(const uint8_t *src, uint8_t *dst, long src_size);
@@ -44,7 +47,7 @@ extern void (*rgb16to32)   (const uint8_t *src, uint8_t *dst, long src_size);
 extern void (*rgb24tobgr24)(const uint8_t *src, uint8_t *dst, long src_size);
 extern void (*rgb24to16)   (const uint8_t *src, uint8_t *dst, long src_size);
 extern void (*rgb24to15)   (const uint8_t *src, uint8_t *dst, long src_size);
-extern void (*rgb32tobgr32)(const uint8_t *src, uint8_t *dst, long src_size);
+extern void (*shuffle_bytes_2103)(const uint8_t *src, uint8_t *dst, long src_size);
 extern void (*rgb32tobgr16)(const uint8_t *src, uint8_t *dst, long src_size);
 extern void (*rgb32tobgr15)(const uint8_t *src, uint8_t *dst, long src_size);
 
@@ -60,13 +63,20 @@ void rgb15tobgr16(const uint8_t *src, uint8_t *dst, long src_size);
 void rgb15tobgr15(const uint8_t *src, uint8_t *dst, long src_size);
 void bgr8torgb8  (const uint8_t *src, uint8_t *dst, long src_size);
 
+void shuffle_bytes_0321(const uint8_t *src, uint8_t *dst, long src_size);
+void shuffle_bytes_1230(const uint8_t *src, uint8_t *dst, long src_size);
+void shuffle_bytes_3012(const uint8_t *src, uint8_t *dst, long src_size);
+void shuffle_bytes_3210(const uint8_t *src, uint8_t *dst, long src_size);
 
-void palette8topacked32(const uint8_t *src, uint8_t *dst, long num_pixels, const uint8_t *palette);
-void palette8topacked24(const uint8_t *src, uint8_t *dst, long num_pixels, const uint8_t *palette);
-void palette8torgb16(const uint8_t *src, uint8_t *dst, long num_pixels, const uint8_t *palette);
-void palette8tobgr16(const uint8_t *src, uint8_t *dst, long num_pixels, const uint8_t *palette);
-void palette8torgb15(const uint8_t *src, uint8_t *dst, long num_pixels, const uint8_t *palette);
-void palette8tobgr15(const uint8_t *src, uint8_t *dst, long num_pixels, const uint8_t *palette);
+#if LIBSWSCALE_VERSION_MAJOR < 1
+/* deprecated, use the public versions in swscale.h */
+attribute_deprecated void palette8topacked32(const uint8_t *src, uint8_t *dst, long num_pixels, const uint8_t *palette);
+attribute_deprecated void palette8topacked24(const uint8_t *src, uint8_t *dst, long num_pixels, const uint8_t *palette);
+
+/* totally deprecated, please fix code that uses this */
+attribute_deprecated void palette8torgb16(const uint8_t *src, uint8_t *dst, long num_pixels, const uint8_t *palette);
+attribute_deprecated void palette8tobgr16(const uint8_t *src, uint8_t *dst, long num_pixels, const uint8_t *palette);
+#endif
 
 /**
  * Height should be a multiple of 2 and width should be a multiple of 16.
@@ -126,7 +136,7 @@ extern void (*rgb24toyv12)(const uint8_t *src, uint8_t *ydst, uint8_t *udst, uin
 extern void (*planar2x)(const uint8_t *src, uint8_t *dst, long width, long height,
                         long srcStride, long dstStride);
 
-extern void (*interleaveBytes)(uint8_t *src1, uint8_t *src2, uint8_t *dst,
+extern void (*interleaveBytes)(const uint8_t *src1, const uint8_t *src2, uint8_t *dst,
                                long width, long height, long src1Stride,
                                long src2Stride, long dstStride);
 
@@ -144,17 +154,17 @@ extern void (*yvu9_to_yuy2)(const uint8_t *src1, const uint8_t *src2, const uint
 
 
 extern void (*uyvytoyuv420)(uint8_t *ydst, uint8_t *udst, uint8_t *vdst, const uint8_t *src,
-                                      long width, long height,
-                                      long lumStride, long chromStride, long srcStride);
+                            long width, long height,
+                            long lumStride, long chromStride, long srcStride);
 extern void (*uyvytoyuv422)(uint8_t *ydst, uint8_t *udst, uint8_t *vdst, const uint8_t *src,
-                                      long width, long height,
-                                      long lumStride, long chromStride, long srcStride);
+                            long width, long height,
+                            long lumStride, long chromStride, long srcStride);
 extern void (*yuyvtoyuv420)(uint8_t *ydst, uint8_t *udst, uint8_t *vdst, const uint8_t *src,
-                                      long width, long height,
-                                      long lumStride, long chromStride, long srcStride);
+                            long width, long height,
+                            long lumStride, long chromStride, long srcStride);
 extern void (*yuyvtoyuv422)(uint8_t *ydst, uint8_t *udst, uint8_t *vdst, const uint8_t *src,
-                                      long width, long height,
-                                      long lumStride, long chromStride, long srcStride);
+                            long width, long height,
+                            long lumStride, long chromStride, long srcStride);
 
 void sws_rgb2rgb_init(int flags);
 

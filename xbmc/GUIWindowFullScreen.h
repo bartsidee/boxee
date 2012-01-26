@@ -24,6 +24,7 @@
 #include "GUIWindow.h"
 #include "utils/CriticalSection.h"
 #include "GUIDialogSlider.h"
+#include "GUIDialogBoxeeVideoCtx.h"
 
 class CGUITextLayout; // forward
 
@@ -55,6 +56,8 @@ private:
   void PreloadDialog(unsigned int windowID);
   void UnloadDialog(unsigned int windowID);
 
+  void ShowOSD(CSeekDirection::SeekDirectionEnums seekDirection = CSeekDirection::NONE);
+
   bool m_bShowViewModeInfo;
   unsigned int m_dwShowViewModeTimeout;
 
@@ -65,6 +68,8 @@ private:
   unsigned int m_timeCodeTimeout;
   int m_timeCodeStamp[5];
   int m_timeCodePosition;
+
+  bool m_bHardwareScalerEnabled;
 
   CCriticalSection m_fontLock;
   CGUITextLayout* m_subsLayout;

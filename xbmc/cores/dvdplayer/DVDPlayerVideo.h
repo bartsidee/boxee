@@ -47,6 +47,7 @@ public:
   virtual ~CDVDPlayerVideo();
 
   bool OpenStream(CDVDStreamInfo &hint);
+  void OpenStream(CDVDStreamInfo &hint, CDVDVideoCodec* codec);
   void CloseStream(bool bWaitForBuffers);
 
   void StepFrame();
@@ -68,7 +69,12 @@ public:
   void EnableSubtitle(bool bEnable)                 { m_bRenderSubs = bEnable; }
   bool IsSubtitleEnabled()                          { return m_bRenderSubs; }
 
+  void SetForcedSub(bool bForced)                   { m_bSubsForced = bForced; }
+  bool GetForcedSub()                               { return m_bSubsForced; }
+
   void EnableFullscreen(bool bEnable)               { m_bAllowFullscreen = bEnable; }
+
+  void SetHtml5EmbeddedVideo(bool bIsHtml5EmbeddedVideo) { m_bIsHtml5EmbeddedVideo = bIsHtml5EmbeddedVideo;}
 
 #ifdef HAS_VIDEO_PLAYBACK
   void GetVideoRect(CRect& SrcRect, CRect& DestRect)  { g_renderManager.GetVideoRect(SrcRect, DestRect); }
@@ -81,8 +87,7 @@ public:
   double GetSubtitleDelay()                                { return m_iSubtitleDelay; }
   void SetSubtitleDelay(double delay)                      { m_iSubtitleDelay = delay; }
 
-  bool IsStalled()                                  { return m_stalled
-                                                          && m_messageQueue.GetDataSize() == 0; }
+  bool IsStalled();
   int GetNrOfDroppedFrames()                        { return m_iDroppedFrames; }
 
   bool InitializedOutputDevice();
@@ -95,13 +100,11 @@ public:
   int GetVideoBitrate();
 
   void SetSpeed(int iSpeed);
-  virtual bool IsDirectRendering() 
-  { 
-    if(m_pVideoCodec) 
-      return m_pVideoCodec->IsDirectRendering(); 
-    else
-      return false;
-  }
+  virtual bool IsDirectRendering();
+
+  bool IsTimed() { return m_bTimed; }
+  void DisablePtsCorrection(bool bDisable) { m_bDisablePtsCorrection = bDisable; }
+  double GetTimeWithCache() { return m_messageQueue.GetLastPTS(); }
 
   // classes
   CDVDMessageQueue m_messageQueue;
@@ -140,6 +143,9 @@ protected:
   double m_fStableFrameRate; //place to store calculated framerates
   int    m_iFrameRateCount;  //how many calculated framerates we stored in m_fStableFrameRate
   bool   m_bAllowDrop;       //we can't drop frames until we've calculated the framerate
+  int    m_iFrameRateErr;    //how many frames we couldn't calculate the framerate, we give up after a while
+  int    m_iFrameRateLength; //how many seconds we should measure the framerate
+  bool   m_bTimed;           // render pts directly to output (renderer will take care of sync)
 
   struct SOutputConfiguration
   {
@@ -155,6 +161,7 @@ protected:
 
   bool m_bAllowFullscreen;
   bool m_bRenderSubs;
+  bool m_bSubsForced;
   
   float m_fForcedAspectRatio;
   
@@ -167,6 +174,7 @@ protected:
   bool m_stalled;
   bool m_started;
   std::string m_codecname;
+  bool m_bDisablePtsCorrection;
 
   /* autosync decides on how much of clock we should use when deciding sleep time */
   /* the value is the same as 63% timeconstant, ie that the step response of */
@@ -184,5 +192,7 @@ protected:
   CRITICAL_SECTION m_critCodecSection;
   
   CPullupCorrection m_pullupCorrection;
+
+  bool m_bIsHtml5EmbeddedVideo;
 };
 

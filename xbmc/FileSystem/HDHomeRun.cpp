@@ -20,6 +20,9 @@
  */
 
 #include "system.h" // needed prior to Util.h due to include order issues
+
+#ifdef HAS_FILESYSTEM_HDHOMERUN
+
 #include "Util.h"
 #include "URL.h"
 #include "FileItem.h"
@@ -41,7 +44,7 @@ public:
     for(vector<CStdString>::iterator it = options.begin();it != options.end(); it++)
     {
       CStdString name, value;
-      unsigned int pos = it->find_first_of('=');
+      size_t pos = it->find_first_of('=');
       if(pos != CStdString::npos)
       {
         name = it->substr(0, pos);
@@ -80,7 +83,7 @@ bool CDirectoryHomeRun::GetDirectory(const CStdString& strPath, CFileItemList &i
   if(!m_dll.IsLoaded())
     return false;
 
-  CURL url(strPath);
+  CURI url(strPath);
 
   if(url.GetHostName().IsEmpty())
   {
@@ -163,7 +166,7 @@ CFileHomeRun::~CFileHomeRun()
   Close();
 }
 
-bool CFileHomeRun::Exists(const CURL& url)
+bool CFileHomeRun::Exists(const CURI& url)
 {
   bool status = true;
   CStdString path(url.GetFileName());
@@ -181,7 +184,7 @@ int64_t CFileHomeRun::Seek(int64_t iFilePosition, int iWhence)
   return -1;
 }
 
-int CFileHomeRun::Stat(const CURL& url, struct __stat64* buffer)
+int CFileHomeRun::Stat(const CURI& url, struct __stat64* buffer)
 {
   return 0;
 }
@@ -196,7 +199,7 @@ int64_t CFileHomeRun::GetLength()
   return 0;
 }
 
-bool CFileHomeRun::Open(const CURL &url)
+bool CFileHomeRun::Open(const CURI &url)
 {
   if(!m_dll.IsLoaded())
     return false;
@@ -225,7 +228,7 @@ bool CFileHomeRun::Open(const CURL &url)
 
 unsigned int CFileHomeRun::Read(void* lpBuf, int64_t uiBufSize)
 {
-  unsigned int datasize;
+  size_t datasize;
   // for now, let it it time out after 5 seconds,
   // neither of the players can be forced to 
   // continue even if read return 0 as can happen
@@ -233,7 +236,7 @@ unsigned int CFileHomeRun::Read(void* lpBuf, int64_t uiBufSize)
   unsigned int timestamp = CTimeUtils::GetTimeMS() + 5000;
   while(1) 
   {
-    datasize = (unsigned int)min((unsigned int) uiBufSize,UINT_MAX);
+    datasize = (size_t)min((unsigned int) uiBufSize,UINT_MAX);
     uint8_t* ptr = m_dll.device_stream_recv(m_device, datasize, &datasize);
     if(ptr)
     {
@@ -258,3 +261,5 @@ void CFileHomeRun::Close()
     m_device = NULL;
   }
 }
+
+#endif

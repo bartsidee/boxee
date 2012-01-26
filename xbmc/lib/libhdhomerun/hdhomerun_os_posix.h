@@ -1,7 +1,7 @@
 /*
  * hdhomerun_os_posix.h
  *
- * Copyright © 2006-2008 Silicondust Engineering Ltd. <www.silicondust.com>.
+ * Copyright © 2006-2010 Silicondust USA Inc. <www.silicondust.com>.
  *
  * This library is free software; you can redistribute it and/or 
  * modify it under the terms of the GNU Lesser General Public
@@ -38,47 +38,34 @@
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/timeb.h>
 #include <sys/wait.h>
-#include <sys/signal.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <pthread.h>
 
 typedef int bool_t;
+typedef void (*sig_t)(int);
 
 #define LIBTYPE
-#define sock_getlasterror errno
-#define sock_getlasterror_socktimeout (errno == EAGAIN)
 #define console_vprintf vprintf
 #define console_printf printf
 #define THREAD_FUNC_PREFIX void *
 
-static inline int msleep(unsigned int ms)
-{
-	usleep(ms * 1000);
-	return 0;
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern LIBTYPE uint32_t random_get32(void);
+extern LIBTYPE uint64_t getcurrenttime(void);
+extern LIBTYPE void msleep_approx(uint64_t ms);
+extern LIBTYPE void msleep_minimum(uint64_t ms);
+
+#ifdef __cplusplus
 }
-
-static inline uint64_t getcurrenttime(void)
-{
-	struct timeval t;
-	gettimeofday(&t, NULL);
-	return ((uint64_t)t.tv_sec * 1000) + (t.tv_usec / 1000);
-}
-
-static inline int setsocktimeout(int s, int level, int optname, uint64_t timeout)
-{
-	struct timeval t;
-	t.tv_sec = timeout / 1000;
-	t.tv_usec = (timeout % 1000) * 1000;
-	return setsockopt(s, level, optname, (char *)&t, sizeof(t));
-}
-
-#define min(a,b) (((a)<(b))?(a):(b))
-#define max(a,b) (((a)>(b))?(a):(b))
-
+#endif

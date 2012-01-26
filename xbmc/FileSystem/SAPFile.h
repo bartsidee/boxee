@@ -23,6 +23,10 @@
 
 #pragma once
 
+#include "system.h"
+
+#ifdef HAS_FILESYSTEM_SAP
+
 #include "IFile.h"
 #include <sstream>
 
@@ -35,18 +39,20 @@ public:
   virtual ~CSAPFile();
   virtual int64_t GetPosition();
   virtual int64_t GetLength();
-  virtual bool Open(const CURL& url);
-  virtual bool Exists(const CURL& url);
-  virtual int Stat(const CURL& url, struct __stat64* buffer);
+  virtual bool Open(const CURI& url);
+  virtual bool Exists(const CURI& url);
+  virtual int Stat(const CURI& url, struct __stat64* buffer);
   virtual unsigned int Read(void* lpBuf, int64_t uiBufSize);
   virtual int64_t Seek(int64_t iFilePosition, int iWhence = SEEK_SET);
   virtual void Close();
 
-  virtual bool Delete(const CURL& url);
-  virtual bool Rename(const CURL& url, const CURL& urlnew);
+  virtual bool Delete(const CURI& url);
+  virtual bool Rename(const CURI& url, const CURI& urlnew);
 protected:
   std::stringstream m_stream;
   int               m_len;
 };
 
 }
+
+#endif

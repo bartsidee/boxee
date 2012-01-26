@@ -5,19 +5,25 @@ LDFLAGS=-shared -fPIC -rdynamic
 ARCH=@ARCH@
 SYSDIR=../../../../system/players/dvdplayer
 WRAPPER=../../DllLoader/exports/wrapper.o
-WRAPPER_OSX=../../../../tools/Mach5/wrapper.rb
+WRAPPER_OSX=../../DllLoader/exports/wrapper_mach_alias
 DIRS=
 ifneq (@USE_EXTERNAL_FFMPEG@,1)
   DIRS+=ffmpeg
 endif
+ifeq (@SUPPORT_DVD_LIBA52@,1) 
 ifneq (@USE_EXTERNAL_LIBA52@,1)
   DIRS+=liba52
 endif
+endif
+ifeq (@SUPPORT_DVD_LIBDTS@,1) 
 ifneq (@USE_EXTERNAL_LIBDTS@,1)
   DIRS+=libdts
 endif
+endif
+ifeq (@SUPPORT_DVD_LIBMPEG2@,1) 
 ifneq (@USE_EXTERNAL_LIBMPEG2@,1)
   DIRS+=libmpeg2
+endif
 endif
 
 LIBS=
@@ -25,20 +31,30 @@ ifneq (@USE_EXTERNAL_FFMPEG@,1)
   LIBS+=avutil-50-$(ARCH).so \
 	avcodec-52-$(ARCH).so \
 	avformat-52-$(ARCH).so \
-	postproc-51-$(ARCH).so \
-	swscale-0.6.1-$(ARCH).so
+	swscale-0.6.1-$(ARCH).so \
+  	avcore-0.16.1-$(ARCH).so
 endif
+
+ifeq (@DISABLE_FFMPEG_POSTPROC@,0)
+  LIBS+= postproc-51-$(ARCH).so
+endif
+
+ifeq (@SUPPORT_DVD_LIBA52@,1) 
 ifneq (@USE_EXTERNAL_LIBA52@,1)
   LIBS+=liba52-$(ARCH).so \
 	libao-$(ARCH).so
 endif
+endif
+ifeq (@SUPPORT_DVD_LIBDTS@,1) 
 ifneq (@USE_EXTERNAL_LIBDTS@,1)
   LIBS+=libdts-$(ARCH).so
 endif
+endif
+ifeq (@SUPPORT_DVD_LIBMPEG2@,1) 
 ifneq (@USE_EXTERNAL_LIBMPEG2@,1)
   LIBS+=libmpeg2-$(ARCH).so
 endif
-
+endif
 ifeq ($(findstring osx,$(ARCH)),osx)
 	DIRS+=libmad
 	LIBS+=libmad-$(ARCH).so
@@ -49,6 +65,8 @@ LIBS+=libfaad-$(ARCH).so
 
 ifneq (,$(findstring powerpc,$(ARCH)))
   ARCH_DIR=ppc
+else ifneq (,$(findstring arm,$(ARCH)))
+  ARCH_DIR=arm
 else
   ARCH_DIR=x86
 endif
@@ -66,75 +84,84 @@ BUNDLE1_O = -lbundle1.o
 endif
 
 $(SYSDIR)/avutil-50-$(ARCH).so: ffmpeg/libavutil/libavutil.dylib
-        cp ffmpeg/libavutil/libavutil.dylib $@
-        install_name_tool -id '@loader_path/'avutil-50-$(ARCH).so $@
-        chmod +x $@
+	cp ffmpeg/libavutil/libavutil.dylib $@
+	install_name_tool -id '@loader_path/'avutil-50-$(ARCH).so $@
+	chmod +x $@
 
 $(SYSDIR)/avcodec-52-$(ARCH).so: ffmpeg/libavcodec/libavcodec.dylib
-        cp ffmpeg/libavcodec/libavcodec.dylib $@
-        install_name_tool -id '@loader_path/'avcodec-52-$(ARCH).so $@
-        install_name_tool -change /usr/local/lib/libavutil.dylib '@loader_path/'avutil-50-$(ARCH).so $@
-        chmod +x $@
+	cp ffmpeg/libavcodec/libavcodec.dylib $@
+	install_name_tool -id '@loader_path/'avcodec-52-$(ARCH).so $@
+	install_name_tool -change /usr/local/lib/libavutil.dylib '@loader_path/'avutil-50-$(ARCH).so $@
+	install_name_tool -change /usr/local/lib/libavcore.dylib '@loader_path/'avcore-0.16.1-$(ARCH).so $@
+	chmod +x $@
 
 $(SYSDIR)/avformat-52-$(ARCH).so: ffmpeg/libavformat/libavformat.dylib
-        cp ffmpeg/libavformat/libavformat.dylib $@
-        install_name_tool -id '@loader_path/'avformat-52-$(ARCH).so $@
-        install_name_tool -change /usr/local/lib/libavutil.dylib '@loader_path/'avutil-50-$(ARCH).so $@
-        install_name_tool -change /usr/local/lib/libavcodec.dylib '@loader_path/'avcodec-52-$(ARCH).so $@
-        chmod +x $@
+	cp ffmpeg/libavformat/libavformat.dylib $@
+	install_name_tool -id '@loader_path/'avformat-52-$(ARCH).so $@
+	install_name_tool -change /usr/local/lib/libavutil.dylib '@loader_path/'avutil-50-$(ARCH).so $@
+	install_name_tool -change /usr/local/lib/libavcore.dylib '@loader_path/'avcore-0.16.1-$(ARCH).so $@
+	install_name_tool -change /usr/local/lib/libavcodec.dylib '@loader_path/'avcodec-52-$(ARCH).so $@
+	chmod +x $@
 
 $(SYSDIR)/swscale-0.6.1-$(ARCH).so: ffmpeg/libswscale/libswscale.dylib
-        cp ffmpeg/libswscale/libswscale.dylib $@
-        install_name_tool -id '@loader_path/'swscale-0.6.1-$(ARCH).so $@
-        install_name_tool -change /usr/local/lib/libavutil.dylib '@loader_path/'avutil-50-$(ARCH).so $@
-        chmod +x $@
+	cp ffmpeg/libswscale/libswscale.dylib $@
+	install_name_tool -id '@loader_path/'swscale-0.6.1-$(ARCH).so $@
+	install_name_tool -change /usr/local/lib/libavutil.dylib '@loader_path/'avutil-50-$(ARCH).so $@
+	chmod +x $@
 
 $(SYSDIR)/postproc-51-$(ARCH).so: ffmpeg/libpostproc/libpostproc.dylib
-        cp ffmpeg/libpostproc/libpostproc.dylib $@
-        install_name_tool -id '@loader_path/'postproc-51-$(ARCH).so $@
-        install_name_tool -change /usr/local/lib/libavutil.dylib '@loader_path/'avutil-50-$(ARCH).so $@
-        chmod +x $@
+	cp ffmpeg/libpostproc/libpostproc.dylib $@
+	install_name_tool -id '@loader_path/'postproc-51-$(ARCH).so $@
+	install_name_tool -change /usr/local/lib/libavutil.dylib '@loader_path/'avutil-50-$(ARCH).so $@
+	chmod +x $@
+
+$(SYSDIR)/avcore-0.16.1-$(ARCH).so: ffmpeg/libavcore/libavcore.dylib
+	cp ffmpeg/libavcore/libavcore.dylib $@
+	install_name_tool -id '@loader_path/'avcore-0.16.1-$(ARCH).so $@
+	install_name_tool -change /usr/local/lib/libavutil.dylib '@loader_path/'avutil-50-$(ARCH).so $@
+	chmod +x $@
 
 ffmpeg/libavutil/libavutil.dylib     : ffmpeg;
 ffmpeg/libavcodec/libavcodec.dylib   : ffmpeg;
 ffmpeg/libavformat/libavformat.dylib : ffmpeg;
 ffmpeg/libswscale/libswscale.dylib   : ffmpeg;
 ffmpeg/libpostproc/libpostproc.dylib : ffmpeg;
+ffmpeg/libavcore/libavcore.dylib     : ffmpeg;
 ffmpeg:
 	$(MAKE) -C $@
 
-$(SYSDIR)/libdts-$(ARCH).so:  $(WRAPPER_OSX) libdts/libdts/libdts.a
-	$(CC) -bundle -flat_namespace -undefined suppress \
-		-o $@ libdts/libdts/bitstream.o \
+$(SYSDIR)/libdts-$(ARCH).so:  $(WRAPPER) $(WRAPPER_OSX) libdts/libdts/libdts.a
+	$(CXX) $(LDFLAGS) -Wl,-alias_list,$(WRAPPER_OSX) \
+		-undefined dynamic_lookup -fPIC -o $@ $(WRAPPER) \
+		libdts/libdts/bitstream.o \
 		libdts/libdts/downmix.o \
 		libdts/libdts/parse.o
-	$(WRAPPER_OSX) $@;mv output.so $@
 	chmod +x $@
 
-$(SYSDIR)/libfaad-$(ARCH).so:  $(WRAPPER_OSX) libfaad2/libfaad/libfaad.la
-	ld -bundle -flat_namespace -undefined suppress -o $@ \
+$(SYSDIR)/libfaad-$(ARCH).so:  $(WRAPPER) $(WRAPPER_OSX) libfaad2/libfaad/libfaad.la
+	$(CXX) $(LDFLAGS) -Wl,-alias_list,$(WRAPPER_OSX) \
+		-undefined dynamic_lookup -fPIC -o $@ $(WRAPPER) \
 		libfaad2/libfaad/*.o $(BUNDLE1_O)
-	$(WRAPPER_OSX) $@;mv output.so $@
 
-$(SYSDIR)/libmad-$(ARCH).so: $(WRAPPER_OSX) libmad/libmad.la
-	ld -bundle -flat_namespace -undefined suppress -o $@ \
+$(SYSDIR)/libmad-$(ARCH).so: $(WRAPPER) $(WRAPPER_OSX) libmad/libmad.la
+	$(CXX) $(LDFLAGS) -Wl,-alias_list,$(WRAPPER_OSX) \
+		-undefined dynamic_lookup -fPIC -o $@ $(WRAPPER) \
 		libmad/.libs/*.o $(BUNDLE1_O)
-	$(WRAPPER_OSX) $@;mv output.so $@
 
-$(SYSDIR)/liba52-$(ARCH).so: $(WRAPPER_OSX) liba52/liba52/liba52.la
-	ld -bundle -flat_namespace -undefined suppress -o $@ \
+$(SYSDIR)/liba52-$(ARCH).so: $(WRAPPER) $(WRAPPER_OSX) liba52/liba52/liba52.la
+	$(CXX) $(LDFLAGS) -Wl,-alias_list,$(WRAPPER_OSX) \
+		 -undefined dynamic_lookup -fPIC -o $@ $(WRAPPER) \
 		liba52/liba52/.libs/*.o $(BUNDLE1_O)
-	$(WRAPPER_OSX) $@;mv output.so $@
 
-$(SYSDIR)/libao-$(ARCH).so: $(WRAPPER_OSX) liba52/libao/libao.a
-	ld -bundle -flat_namespace -undefined suppress -o $@ \
+$(SYSDIR)/libao-$(ARCH).so: $(WRAPPER) $(WRAPPER_OSX) liba52/libao/libao.a
+	$(CXX) $(LDFLAGS) -Wl,-alias_list,$(WRAPPER_OSX) \
+		-undefined dynamic_lookup -fPIC -o $@ $(WRAPPER) \
 		liba52/libao/libao.a $(BUNDLE1_O)
-	#$(WRAPPER_OSX) $@;mv output.so $@
 
-$(SYSDIR)/libmpeg2-$(ARCH).so: $(WRAPPER_OSX) libmpeg2/libmpeg2/libmpeg2.la
-	ld -bundle -flat_namespace -undefined suppress -o $@ \
+$(SYSDIR)/libmpeg2-$(ARCH).so: $(WRAPPER) $(WRAPPER_OSX) libmpeg2/libmpeg2/libmpeg2.la
+	$(CXX) $(LDFLAGS) -Wl,-alias_list,$(WRAPPER_OSX) \
+		-undefined dynamic_lookup -fPIC -o $@ $(WRAPPER) \
 		libmpeg2/libmpeg2/.libs/*.o $(BUNDLE1_O)
-	$(WRAPPER_OSX) $@;mv output.so $@
 
 libdts/libdts/libdts.a : libdts;
 libdts:
@@ -160,53 +187,52 @@ libmpeg2:
 else
 
 $(SYSDIR)/avutil-50-$(ARCH).so: ffmpeg/libavutil/libavutil.so
-	$(CC) -o $@ $(LDFLAGS) --soname,$@ ffmpeg/libavutil/*.o \
-		`cat $(WRAPPER:.o=.def)` $(WRAPPER)
+	cp ffmpeg/libavutil/libavutil.so $@
 
 $(SYSDIR)/avcodec-52-$(ARCH).so: $(WRAPPER) ffmpeg/libavcodec/libavcodec.so
-	$(CC) -o $@ $(LDFLAGS) --soname,$@ ffmpeg/libavcodec/*.o \
-		ffmpeg/libavcodec/$(ARCH_DIR)/*.o `cat $(WRAPPER:.o=.def)` $(WRAPPER)
+	cp ffmpeg/libavcodec/libavcodec.so $@
 
 $(SYSDIR)/avformat-52-$(ARCH).so: $(WRAPPER) ffmpeg/libavformat/libavformat.so
-	$(CC) -o $@ $(LDFLAGS) --soname,$@ ffmpeg/libavformat/*.o \
-		`cat $(WRAPPER:.o=.def)` $(WRAPPER)
+	cp ffmpeg/libavformat/libavformat.so $@
 
 $(SYSDIR)/swscale-0.6.1-$(ARCH).so: $(WRAPPER) ffmpeg/libswscale/libswscale.so
-	$(CC) -o $@ $(LDFLAGS) --soname,$@ ffmpeg/libswscale/*.o ffmpeg/libswscale/$(ARCH_DIR)/*.o \
-		`cat $(WRAPPER:.o=.def)` $(WRAPPER)
+	cp ffmpeg/libswscale/libswscale.so $@
 
 $(SYSDIR)/postproc-51-$(ARCH).so: $(WRAPPER) ffmpeg/libpostproc/libpostproc.so
-	$(CC) -o $@ $(LDFLAGS) --soname,$@ ffmpeg/libpostproc/*.o \
-		`cat $(WRAPPER:.o=.def)` $(WRAPPER)
+	cp ffmpeg/libpostproc/libpostproc.so $@
+
+$(SYSDIR)/avcore-0.16.1-$(ARCH).so: $(WRAPPER) ffmpeg/libavcore/libavcore.so
+	cp ffmpeg/libavcore/libavcore.so $@
 
 ffmpeg/libavutil/libavutil.so     : ffmpeg;
 ffmpeg/libavcodec/libavcodec.so   : ffmpeg;
 ffmpeg/libavformat/libavformat.so : ffmpeg;
 ffmpeg/libswscale/libswscale.so   : ffmpeg;
 ffmpeg/libpostproc/libpostproc.so : ffmpeg;
+ffmpeg/libavcore/libavcore.so     : ffmpeg;
 ffmpeg:
 	$(MAKE) -C $@
 
 $(SYSDIR)/libdts-$(ARCH).so: $(WRAPPER) libdts/libdts/libdts.a
-	$(CC) -o $@ $(LDFLAGS) --soname,$@ \
+	$(CC) -o $@ $(LDFLAGS) -Wl,-soname,$@ \
 		libdts/libdts/bitstream.o \
 		libdts/libdts/downmix.o libdts/libdts/parse.o \
 		`cat $(WRAPPER:.o=.def)` $(WRAPPER)
 
 $(SYSDIR)/libfaad-$(ARCH).so:  $(WRAPPER) libfaad2/libfaad/libfaad.la
-	$(CC) -o $@ $(LDFLAGS) --soname,$@ libfaad2/libfaad/*.o \
+	$(CC) -o $@ $(LDFLAGS) -Wl,-soname,$@ libfaad2/libfaad/*.o \
 		-Wl`cat $(WRAPPER:.o=.def)` $(WRAPPER)
 
 $(SYSDIR)/liba52-$(ARCH).so: $(WRAPPER) liba52/liba52/liba52.la
-	$(CC) -o $@ $(LDFLAGS) --soname,$@ liba52/liba52/.libs/*.o \
+	$(CC) -o $@ $(LDFLAGS) -Wl,-soname,$@ liba52/liba52/.libs/*.o \
 		-Wl`cat $(WRAPPER:.o=.def)` $(WRAPPER)
 
 $(SYSDIR)/libao-$(ARCH).so: $(WRAPPER) liba52/libao/libao.a
-	$(CC) -o $@ $(LDFLAGS) --soname,$@ liba52/libao/libao.a \
+	$(CC) -o $@ $(LDFLAGS) -Wl,-soname,$@ liba52/libao/libao.a \
 		-Wl`cat $(WRAPPER:.o=.def)` $(WRAPPER)
 
 $(SYSDIR)/libmpeg2-$(ARCH).so: $(WRAPPER) libmpeg2/libmpeg2/libmpeg2.la
-	$(CC) -o $@ $(LDFLAGS) --soname,$@ libmpeg2/libmpeg2/.libs/*.o \
+	$(CC) -o $@ $(LDFLAGS) -Wl,-soname,$@ libmpeg2/libmpeg2/.libs/*.o \
 		-Wl`cat $(WRAPPER:.o=.def)` $(WRAPPER)
 
 libdts/libdts/libdts.a : libdts;

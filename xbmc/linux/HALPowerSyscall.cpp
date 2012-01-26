@@ -99,7 +99,7 @@ bool CHALPowerSyscall::doPowerCall(const char *powerstate)
       {
         CLog::Log(LOGERROR, "DBus: %s - %s", error.name, error.message);
         if (strcmp(error.name, "org.freedesktop.Hal.Device.PermissionDeniedByPolicy") == 0)
-          g_application.m_guiDialogKaiToast.QueueNotification(g_localizeStrings.Get(257), g_localizeStrings.Get(13020));
+          g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_EXCLAMATION,g_localizeStrings.Get(257), g_localizeStrings.Get(13020), TOAST_DISPLAY_TIME, KAI_RED_COLOR , KAI_RED_COLOR);
 
         return false;
       }
@@ -159,6 +159,11 @@ bool CHALPowerSyscall::QueryCapability(const char *capability)
 
   if (dbus_error_is_set(&error))
     dbus_error_free(&error);
+  return false;
+}
+
+bool CHALPowerSyscall::IsSuspended()
+{
   return false;
 }
 #endif

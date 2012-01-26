@@ -31,7 +31,16 @@
 
 #pragma once
 
-#if defined(HAS_GL) || defined(HAS_GLES)
+#if defined(HAS_GL2) || defined(HAS_GLES)
+
+#ifdef USE_EGL_IMAGE
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#ifdef HAS_GDL
+#include <libgdl.h>
+#include <libgma.h>
+#endif
+#endif
 
 /************************************************************************/
 /*    CGLTexture                                                       */
@@ -45,6 +54,16 @@ public:
   void CreateTextureObject();
   virtual void DestroyTextureObject();
   void LoadToGPU();
+
+  void DeletePixels();
+
+private:
+#ifdef USE_EGL_IMAGE
+#ifdef HAS_GDL
+  gma_pixmap_t m_pixmap;
+#endif
+  EGLImageKHR m_textureImage;
+#endif
 };
 
 #endif

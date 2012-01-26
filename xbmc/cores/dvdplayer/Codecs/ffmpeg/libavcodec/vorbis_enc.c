@@ -19,7 +19,7 @@
  */
 
 /**
- * @file libavcodec/vorbis_enc.c
+ * @file
  * Native Vorbis encoder.
  * @author Oded Shimon <ods15@ods15.dyndns.org>
  */
@@ -27,6 +27,7 @@
 #include <float.h>
 #include "avcodec.h"
 #include "dsputil.h"
+#include "fft.h"
 #include "vorbis.h"
 #include "vorbis_enc_data.h"
 
@@ -124,6 +125,17 @@ typedef struct {
 
     int64_t sample_count;
 } vorbis_enc_context;
+
+#define MAX_CHANNELS     2
+#define MAX_CODEBOOK_DIM 8
+
+#define MAX_FLOOR_CLASS_DIM  4
+#define NUM_FLOOR_PARTITIONS 8
+#define MAX_FLOOR_VALUES     (MAX_FLOOR_CLASS_DIM*NUM_FLOOR_PARTITIONS+2)
+
+#define RESIDUE_SIZE           1600
+#define RESIDUE_PART_SIZE      32
+#define NUM_RESIDUE_PARTITIONS (RESIDUE_SIZE/RESIDUE_PART_SIZE)
 
 static inline void put_codeword(PutBitContext *pb, vorbis_enc_codebook *cb,
                                 int entry)
@@ -262,7 +274,7 @@ static void create_vorbis_context(vorbis_enc_context *venc,
 
     // just 1 floor
     fc = &venc->floors[0];
-    fc->partitions         = 8;
+    fc->partitions         = NUM_FLOOR_PARTITIONS;
     fc->partition_to_class = av_malloc(sizeof(int) * fc->partitions);
     fc->nclasses           = 0;
     for (i = 0; i < fc->partitions; i++) {
@@ -667,7 +679,7 @@ static void floor_fit(vorbis_enc_context *venc, vorbis_enc_floor *fc,
     int range = 255 / fc->multiplier + 1;
     int i;
     float tot_average = 0.;
-    float averages[fc->values];
+    float averages[MAX_FLOOR_VALUES];
     for (i = 0; i < fc->values; i++) {
         averages[i] = get_floor_average(fc, coeffs, i);
         tot_average += averages[i];
@@ -680,7 +692,7 @@ static void floor_fit(vorbis_enc_context *venc, vorbis_enc_floor *fc,
         float average = averages[i];
         int j;
 
-        average *= pow(tot_average / average, 0.5) * pow(1.25, position/200.); // MAGIC!
+        average = sqrt(tot_average * average) * pow(1.25f, position*0.005f); // MAGIC!
         for (j = 0; j < range - 1; j++)
             if (ff_vorbis_floor1_inverse_db_table[j * fc->multiplier] > average)
                 break;
@@ -698,7 +710,7 @@ static void floor_encode(vorbis_enc_context *venc, vorbis_enc_floor *fc,
                          float *floor, int samples)
 {
     int range = 255 / fc->multiplier + 1;
-    int coded[fc->values]; // first 2 values are unused
+    int coded[MAX_FLOOR_VALUES]; // first 2 values are unused
     int i, counter;
 
     put_bits(pb, 1, 1); // non zero
@@ -806,7 +818,7 @@ static void residue_encode(vorbis_enc_context *venc, vorbis_enc_residue *rc,
     int psize      = rc->partition_size;
     int partitions = (rc->end - rc->begin) / psize;
     int channels   = (rc->type == 2) ? 1 : real_ch;
-    int classes[channels][partitions];
+    int classes[MAX_CHANNELS][NUM_RESIDUE_PARTITIONS];
     int classwords = venc->codebooks[rc->classbook].ndimentions;
 
     assert(rc->type == 2);
@@ -863,7 +875,7 @@ static void residue_encode(vorbis_enc_context *venc, vorbis_enc_residue *rc,
                         s  = real_ch * samples;
                         for (k = 0; k < psize; k += book->ndimentions) {
                             int dim, a2 = a1, b2 = b1;
-                            float vec[book->ndimentions], *pv = vec;
+                            float vec[MAX_CODEBOOK_DIM], *pv = vec;
                             for (dim = book->ndimentions; dim--; ) {
                                 *pv++ = coeffs[a2 + b2];
                                 if ((a2 += samples) == s) {
@@ -887,7 +899,7 @@ static void residue_encode(vorbis_enc_context *venc, vorbis_enc_residue *rc,
     }
 }
 
-static int apply_window_and_mdct(vorbis_enc_context *venc, signed short *audio,
+static int apply_window_and_mdct(vorbis_enc_context *venc, const signed short *audio,
                                  int samples)
 {
     int i, j, channel;
@@ -914,7 +926,7 @@ static int apply_window_and_mdct(vorbis_enc_context *venc, signed short *audio,
             float * offset = venc->samples + channel*window_len*2 + window_len;
             j = channel;
             for (i = 0; i < samples; i++, j += venc->channels)
-                offset[i] = -audio[j] / 32768. / n * win[window_len - i - 1]; //FIXME find out why the sign has to be fliped
+                offset[i] = audio[j] / 32768. / n * win[window_len - i - 1];
         }
     } else {
         for (channel = 0; channel < venc->channels; channel++)
@@ -931,7 +943,7 @@ static int apply_window_and_mdct(vorbis_enc_context *venc, signed short *audio,
             float *offset = venc->saved + channel * window_len;
             j = channel;
             for (i = 0; i < samples; i++, j += venc->channels)
-                offset[i] = -audio[j] / 32768. / n * win[i]; //FIXME find out why the sign has to be fliped
+                offset[i] = audio[j] / 32768. / n * win[i];
         }
         venc->have_saved = 1;
     } else {
@@ -954,7 +966,7 @@ static av_cold int vorbis_encode_init(AVCodecContext *avccontext)
     if (avccontext->flags & CODEC_FLAG_QSCALE)
         venc->quality = avccontext->global_quality / (float)FF_QP2LAMBDA / 10.;
     else
-        venc->quality = 1.;
+        venc->quality = 0.03;
     venc->quality *= venc->quality;
 
     avccontext->extradata_size = put_main_header(venc, (uint8_t**)&avccontext->extradata);
@@ -972,7 +984,7 @@ static int vorbis_encode_frame(AVCodecContext *avccontext,
                                int buf_size, void *data)
 {
     vorbis_enc_context *venc = avccontext->priv_data;
-    signed short *audio = data;
+    const signed short *audio = data;
     int samples = data ? avccontext->frame_size : 0;
     vorbis_enc_mode *mode;
     vorbis_enc_mapping *mapping;
@@ -998,7 +1010,7 @@ static int vorbis_encode_frame(AVCodecContext *avccontext,
 
     for (i = 0; i < venc->channels; i++) {
         vorbis_enc_floor *fc = &venc->floors[mapping->floor[mapping->mux[i]]];
-        uint_fast16_t posts[fc->values];
+        uint_fast16_t posts[MAX_FLOOR_VALUES];
         floor_fit(venc, fc, &venc->coeffs[i * samples], posts, samples);
         floor_encode(venc, fc, &pb, posts, &venc->floor[i * samples], samples);
     }
@@ -1090,15 +1102,15 @@ static av_cold int vorbis_encode_close(AVCodecContext *avccontext)
     return 0 ;
 }
 
-AVCodec vorbis_encoder = {
+AVCodec ff_vorbis_encoder = {
     "vorbis",
-    CODEC_TYPE_AUDIO,
+    AVMEDIA_TYPE_AUDIO,
     CODEC_ID_VORBIS,
     sizeof(vorbis_enc_context),
     vorbis_encode_init,
     vorbis_encode_frame,
     vorbis_encode_close,
-    .capabilities= CODEC_CAP_DELAY,
-    .sample_fmts = (const enum SampleFormat[]){SAMPLE_FMT_S16,SAMPLE_FMT_NONE},
+    .capabilities= CODEC_CAP_DELAY | CODEC_CAP_EXPERIMENTAL,
+    .sample_fmts = (const enum AVSampleFormat[]){AV_SAMPLE_FMT_S16,AV_SAMPLE_FMT_NONE},
     .long_name = NULL_IF_CONFIG_SMALL("Vorbis"),
 };

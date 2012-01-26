@@ -60,16 +60,17 @@ CAdvancedSettings::CAdvancedSettings()
 
   m_audioDefaultPlayer = "paplayer";
   m_audioPlayCountMinimumPercent = 90.0f;
+  m_videoVDPAUScaling = false;
   m_audioHost = "default";
 
-  m_videoSubsDelayRange = 10;
-  m_videoAudioDelayRange = 10;
+  m_videoSubsDelayRange = 200;
+  m_videoAudioDelayRange = 25;
   m_videoSmallStepBackSeconds = 7;
   m_videoSmallStepBackTries = 3;
   m_videoSmallStepBackDelay = 300;
   m_videoUseTimeSeeking = true;
   m_videoTimeSeekForward = 30;
-  m_videoTimeSeekBackward = -30;
+  m_videoTimeSeekBackward = -10;
   m_videoTimeSeekForwardBig = 600;
   m_videoTimeSeekBackwardBig = -600;
   m_videoPercentSeekForward = 2;
@@ -83,6 +84,13 @@ CAdvancedSettings::CAdvancedSettings()
   m_videoIgnoreAtStart = 15;
   m_videoIgnoreAtEnd = 5; 
   m_videoPlayCountMinimumPercent = 90.0f;
+
+  m_videoNonLinStretchRatio = 0.5f;
+  m_videoAllowLanczos3 = false;
+  m_videoAutoScaleMaxFps = 30.0;
+  m_videoAllowMpeg4VDPAU = false;
+  m_DXVACheckCompatibility = false;
+  m_DXVACheckCompatibilityPresent = false;
 
   m_musicUseTimeSeeking = true;
   m_musicTimeSeekForward = 10;
@@ -105,7 +113,6 @@ CAdvancedSettings::CAdvancedSettings()
   m_lcdAddress2 = 0x40;
   m_lcdAddress3 = 0x14;
   m_lcdAddress4 = 0x54;
-  m_lcdHeartbeat = false;
   m_lcdScrolldelay = 1;
 
   m_autoDetectPingTime = 30;
@@ -123,7 +130,7 @@ CAdvancedSettings::CAdvancedSettings()
 
   m_videoCleanDateTimeRegExp = "(.+[^ _\\,\\.\\(\\)\\[\\]\\-])[ _\\.\\(\\)\\[\\]\\-]+(19[0-9][0-9]|20[0-1][0-9])([ _\\,\\.\\(\\)\\[\\]\\-]|[^0-9]$)";
 
-  m_videoCleanStringRegExps.push_back("[ _\\,\\.\\(\\)\\[\\]\\-](ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvd5|dvd9|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip|hdtvrip|internal|limited|multisubs|ntsc|ogg|ogm|pal|pdtv|proper|repack|rerip|retail|r3|r5|bd5|se|svcd|swedish|german|read.nfo|nfofix|unrated|extended|ws|telesync|ts|telecine|tc|brrip|bdrip|480p|480i|576p|576i|720p|720i|1080p|1080i|hrhd|hrhdtv|hddvd|bluray|x264|h264|xvid|xvidvd|xxx|www.www|cd[1-9]|\\[.*\\])([ _\\,\\.\\(\\)\\[\\]\\-]|$)");
+  m_videoCleanStringRegExps.push_back("[ _\\,\\.\\(\\)\\[\\]\\-](ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvd5|dvd9|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip|hdtvrip|internal|limited|multisubs|ntsc|ogg|ogm|pal|pdtv|proper|repack|rerip|retail|r3|r5|bd5|se|svcd|swedish|german|read.nfo|nfofix|unrated|extended|ws|telesync|ts|telecine|tc|brrip|bdrip|480p|480i|576p|576i|720p|720i|1080p|1080i|hrhd|hrhdtv|hddvd|bluray|x264|h264|xvid|xvidvd|xxx|www.www|subbed|festival|workprint|swesub|nlsub|nl-subs|dvdrscreener|italian|cd[1-9]|\\[.*\\])([ _\\,\\.\\(\\)\\[\\]\\-]|$)");
   m_videoCleanStringRegExps.push_back("(\\[.*\\])");
 
   m_moviesExcludeFromScanRegExps.push_back("-trailer");
@@ -149,7 +156,7 @@ CAdvancedSettings::CAdvancedSettings()
 
   m_tvshowMultiPartStackRegExp = "^[-EeXx]+([0-9]+)";
 
-  m_remoteRepeat = 480;
+  m_remoteDelay = 3;
   m_controllerDeadzone = 0.2f;
 
   m_playlistAsFolders = true;
@@ -220,6 +227,11 @@ CAdvancedSettings::CAdvancedSettings()
   m_bVirtualShares = true;
   m_sleepBeforeFlip = 0;
 
+  m_AllowD3D9Ex = true;
+  m_ForceD3D9Ex = false;
+  m_AllowDynamicTextures = true;
+  m_RestrictCapsMask = 0;
+
 //caused lots of jerks
 //#ifdef _WIN32
 //  m_ForcedSwapTime = 2.0;
@@ -245,6 +257,16 @@ CAdvancedSettings::CAdvancedSettings()
   m_bCountPixels = false;
 
   m_logFileSize = DEFAULT_LOG_FILE_SIZE;
+
+  m_bForceVideoHardwareDecoding = false;
+  m_bForceAudioHardwarePassthrough = false;
+  m_bForceWMV3Flushing = false;
+
+  m_httpCacheMaxSize = 1024*50 * 1024;
+  m_appsMaxSize = 1024*50 * 1024;
+  m_thumbsMaxSize = 1024*100 * 1024;
+
+  m_ddplus.Clear();
 }
 
 bool CAdvancedSettings::Load()
@@ -314,7 +336,22 @@ bool CAdvancedSettings::Load()
       GetCustomRegexps(pAudioExcludes, m_audioExcludeFromScanRegExps);
 
     XMLUtils::GetString(pElement, "audiohost", m_audioHost);
-    XMLUtils::GetBoolean(pElement, "applydrc", m_audioApplyDrc);        
+    XMLUtils::GetBoolean(pElement, "applydrc", m_audioApplyDrc);  
+    
+    TiXmlElement* pDDPlusCert = pElement->FirstChildElement("ddpluscert");
+    if( pDDPlusCert )
+    {
+      XMLUtils::GetBoolean(pDDPlusCert, "ltrtmode", m_ddplus.ltmode);  
+      XMLUtils::GetBoolean(pDDPlusCert, "rfmode", m_ddplus.rfmode);
+      XMLUtils::GetBoolean(pDDPlusCert, "lfemode", m_ddplus.lfemode);
+      XMLUtils::GetBoolean(pDDPlusCert, "drc", m_ddplus.drc);
+      CStdString mono;
+      XMLUtils::GetString(pDDPlusCert, "monomode", mono);
+      if( mono == "stereo" )     m_ddplus.monomode = __ddplus::_stereo;
+      else if( mono == "left" )  m_ddplus.monomode = __ddplus::_left;
+      else if( mono == "right" ) m_ddplus.monomode = __ddplus::_right;
+      else if( mono == "mixed" ) m_ddplus.monomode = __ddplus::_mixed;
+    }
   }
 
   pElement = pRootElement->FirstChildElement("karaoke");
@@ -387,6 +424,8 @@ bool CAdvancedSettings::Load()
 
     XMLUtils::GetString(pElement,"cleandatetime", m_videoCleanDateTimeRegExp);
     XMLUtils::GetString(pElement,"postprocessing",m_videoPPFFmpegType);
+
+	m_DXVACheckCompatibilityPresent = XMLUtils::GetBoolean(pElement,"checkdxvacompatibility", m_DXVACheckCompatibility);
   }
 
   pElement = pRootElement->FirstChildElement("musiclibrary");
@@ -479,6 +518,7 @@ bool CAdvancedSettings::Load()
   XMLUtils::GetInt(pRootElement, "busydialogdelay", m_busyDialogDelay, 0, 5000);
   XMLUtils::GetInt(pRootElement, "playlistretries", m_playlistRetries, -1, 5000);
   XMLUtils::GetInt(pRootElement, "playlisttimeout", m_playlistTimeout, 0, 5000);
+
 
   XMLUtils::GetBoolean(pRootElement,"rootovershoot",m_bUseEvilB);
   XMLUtils::GetBoolean(pRootElement,"glrectanglehack", m_GLRectangleHack);
@@ -605,7 +645,7 @@ bool CAdvancedSettings::Load()
     }
   }
 
-  XMLUtils::GetInt(pRootElement, "remoterepeat", m_remoteRepeat, 1, INT_MAX);
+  XMLUtils::GetInt(pRootElement, "remotedelay", m_remoteDelay, 1, 20);
   XMLUtils::GetFloat(pRootElement, "controllerdeadzone", m_controllerDeadzone, 0.0f, 1.0f);
   XMLUtils::GetInt(pRootElement, "thumbsize", m_thumbSize, 64, 1024);
   XMLUtils::GetBoolean(pRootElement, "useddsfanart", m_useDDSFanart);
@@ -671,6 +711,35 @@ bool CAdvancedSettings::Load()
   XMLUtils::GetBoolean(pRootElement,"wireframe",m_bWireFrameMode);
   XMLUtils::GetBoolean(pRootElement,"countpixels",m_bCountPixels);
   XMLUtils::GetInt(pRootElement, "logfilesize", m_logFileSize);
+
+  XMLUtils::GetBoolean(pRootElement, "forcevideohardwaredecoding", m_bForceVideoHardwareDecoding);
+  XMLUtils::GetBoolean(pRootElement, "forceaudiohardwarepassthrough", m_bForceAudioHardwarePassthrough);
+  XMLUtils::GetBoolean(pRootElement, "forcewmv3flushing", m_bForceWMV3Flushing);
+
+  XMLUtils::GetBoolean(pRootElement,"allowd3d9ex", m_AllowD3D9Ex);
+  XMLUtils::GetBoolean(pRootElement,"forced3d9ex", m_ForceD3D9Ex);
+  XMLUtils::GetBoolean(pRootElement,"allowdynamictextures", m_AllowDynamicTextures);
+  XMLUtils::GetUInt(pRootElement,"restrictcapsmask", m_RestrictCapsMask);
+
+  // Disk Quota settings
+  pElement = pRootElement->FirstChildElement("quota");
+  if (pElement)
+  {
+
+    uint32_t tmp_size = 0;
+    if (XMLUtils::GetUInt(pElement, "httpcachemaxsize", tmp_size))
+    {
+      m_httpCacheMaxSize = tmp_size * 1024;
+    }
+    if (XMLUtils::GetUInt(pElement, "appsmaxsize", tmp_size))
+    {
+      m_appsMaxSize = tmp_size * 1024;
+    }
+    if (XMLUtils::GetUInt(pElement, "thumbsmaxsize", tmp_size))
+    {
+      m_thumbsMaxSize = tmp_size * 1024;
+    }
+  }
 
   // load in the GUISettings overrides:
   g_guiSettings.LoadXML(pRootElement, true);  // true to hide the settings we read in

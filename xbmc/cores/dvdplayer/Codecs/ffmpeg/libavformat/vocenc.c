@@ -20,6 +20,7 @@
  */
 
 #include "voc.h"
+#include "internal.h"
 
 
 typedef struct voc_enc_context {
@@ -33,7 +34,7 @@ static int voc_write_header(AVFormatContext *s)
     const int version = 0x0114;
 
     if (s->nb_streams != 1
-        || s->streams[0]->codec->codec_type != CODEC_TYPE_AUDIO)
+        || s->streams[0]->codec->codec_type != AVMEDIA_TYPE_AUDIO)
         return AVERROR_PATCHWELCOME;
 
     put_buffer(pb, ff_voc_magic, sizeof(ff_voc_magic) - 1);
@@ -88,7 +89,7 @@ static int voc_write_trailer(AVFormatContext *s)
     return 0;
 }
 
-AVOutputFormat voc_muxer = {
+AVOutputFormat ff_voc_muxer = {
     "voc",
     NULL_IF_CONFIG_SMALL("Creative Voice file format"),
     "audio/x-voc",

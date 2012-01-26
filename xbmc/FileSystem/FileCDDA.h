@@ -34,9 +34,9 @@ class CFileCDDA : public IFile
 public:
   CFileCDDA(void);
   virtual ~CFileCDDA(void);
-  virtual bool Open(const CURL& url);
-  virtual bool Exists(const CURL& url);
-  virtual int Stat(const CURL& url, struct __stat64* buffer);
+  virtual bool Open(const CURI& url);
+  virtual bool Exists(const CURI& url);
+  virtual int Stat(const CURI& url, struct __stat64* buffer);
 
   virtual unsigned int Read(void* lpBuf, int64_t uiBufSize);
   virtual int64_t Seek(int64_t iFilePosition, int iWhence = SEEK_SET);
@@ -46,8 +46,8 @@ public:
   virtual int GetChunkSize();
 
 protected:
-  bool IsValidFile(const CURL& url);
-  int GetTrackNum(const CURL& url);
+  bool IsValidFile(const CURI& url);
+  int GetTrackNum(const CURI& url);
 
 protected:
   CdIo_t* m_pCdIo;

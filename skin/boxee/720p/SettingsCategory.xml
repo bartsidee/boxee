@@ -1,85 +1,26 @@
-﻿<?xml version="1.0"?>
+<?xml version="1.0"?>
 <window id="12">
 	<defaultcontrol>3</defaultcontrol>
 	<allowoverlay>no</allowoverlay>
 	<controls>
-		<include>Common_Background</include>
-		<include>Common_Status</include>
-		<include>Common_Now_Playing</include>
-		<control type="image">
-			<!--animation type="WindowOpen" condition="!Window.Previous(Settings.xml) + !Window.Previous(SettingsCategory.xml)">
-				<effect type="fade" start="0" end="100" time="200" delay="0"/>
-			</animation>
-			<animation type="WindowClose" condition="!Window.Next(Settings.xml) + !Window.Next(SettingsCategory.xml)">
-				<effect type="fade" start="100" end="0" time="200" delay="0"/>
-			</animation-->
-			<posx>0</posx>
-			<posy>0</posy>
-			<width>1280</width>
-			<height>720</height>
-			<texture>black.png</texture>
-			<colordiffuse>80FFFFFF</colordiffuse>
-		</control>
-		<control type="group">
-			<!--animation type="WindowOpen" condition="!Window.Previous(Settings.xml) + !Window.Previous(SettingsCategory.xml)">
-				<effect type="fade" start="0" end="100" time="200" tween="cubic" easing="inout"/>
-				<effect type="zoom" start="150,150" end="100,100" center="auto" time="200" tween="cubic" easing="inout"/>
-			</animation>			
-			<animation type="WindowClose" condition="!Window.Next(Settings.xml) + !Window.Next(SettingsCategory.xml)">
-				<effect type="fade" start="100" end="0" time="200" tween="cubic" easing="inout"/>
-				<effect type="zoom" start="100,100" end="150,150" center="auto" time="200" tween="cubic" easing="inout"/>
-			</animation-->
-			<posx>30</posx>
-			<posy>46</posy>
-			<width>1220</width>
-			<height>660</height>
-			<control type="image">
-				<posx>0</posx>
-				<posy>70</posy>
-				<width>1220</width>
-				<height>510</height>
-				<texture border="64">action_menu_bg.png</texture>
-			</control>
-			<control type="image">
-				<posx>100</posx>
-				<posy>104</posy>
-				<width>1020</width>
-				<height>256</height>
-				<texture border="128">feather_divider.png</texture>
-			</control>
-			<control type="label">
-				<posx>34</posx>
-				<posy>94</posy>
-				<width>1100</width>
-				<height>56</height>
+		<include>Common_Settings_Background</include>
+		<control type="group" id="9000">
+			<control type="label" id="92">
+				<posx>28</posx>
+				<posy>18</posy>
+				<width>925</width>
+				<font>font40b</font>
 				<align>left</align>
-				<aligny>center</aligny>
-				<haspath>true</haspath>
-				<font>title56b</font>
-				<textcolor>white</textcolor>
-				<label>[UPPERCASE]$LOCALIZE[5][/UPPERCASE]</label>
-			</control>
-			<control type="label">
-				<posx>330</posx>
-				<posy>119</posy>
-				<width>1000</width>
-				<height>28</height>
-				<align>left</align>
-				<aligny>top</aligny>
-				<haspath>true</haspath>
-				<font>font24b</font>
-				<textcolor>title</textcolor>
-				<label>[UPPERCASE]$INFO[System.CurrentWindow][/UPPERCASE]</label>
+				<label>[B]$LOCALIZE[5][/B]</label>
 			</control>
 		</control>
 		<control type="group" id="9000">
 			<control type="grouplist" id="3">
 				<description>button area</description>
-				<posx>60</posx>
-				<posy>270</posy>
-				<width>216</width>
+				<posx>29</posx>
+				<posy>100</posy>
+				<width>340</width>
 				<height>480</height>
-				<itemgap>10</itemgap>
 				<onleft>-</onleft>
 				<onright>5</onright>
 				<onup>-</onup>
@@ -87,35 +28,38 @@
 			</control>
 			<control type="grouplist" id="5">
 				<description>control area</description>
-				<posx>360</posx>
-				<posy>264</posy>
-				<width>856</width>
-				<height>484</height>
+				<posx>400</posx>
+				<posy>100</posy>
+				<width>850</width>
+				<height>524</height>
 				<itemgap>0</itemgap>
-				<pagecontrol>90</pagecontrol>
+				<pagecontrol>-</pagecontrol>
 				<onleft>3</onleft>
 				<onright>-</onright>
 				<onup>-</onup>
 				<ondown>-</ondown>
 			</control>
-			<control type="button" id="10">
+			<control type="togglebutton" id="10">
 				<description>Default Category Button</description>
-				<posx>0</posx>
+				<posx/>
 				<posy>0</posy>
-				<width>216</width>
-				<height>30</height>
+				<width>340</width>
+				<height>52</height>
 				<onleft>-</onleft>
 				<onright>5</onright>
-				<font>font20b</font>
+				<height>56</height>
+				<texturefocus srcborder="24" border="16">button-focused.png</texturefocus>
+				<texturenofocus>-</texturenofocus>
+                <alttexturefocus srcborder="24" border="16">button-on.png</alttexturefocus>
+				<textureclick srcborder="24" border="16">button-on.png</textureclick>
+				<font>font24</font>
+				<textcolor>lightgreyheidi</textcolor>
+                <alttextcolor>lightgreyheidi</alttextcolor>
+                <altfocusedcolor>lightgreyheidi</altfocusedcolor>
+				<focusedcolor>whiteheidi</focusedcolor>
 				<align>left</align>
 				<aligny>center</aligny>
-				<textcolor>white</textcolor>
-				<focusedcolor>white</focusedcolor>
-				<textcolor2>white</textcolor2>
-				<textoffsetx>14</textoffsetx>
-				<texturenofocus>button_settings_menu.png</texturenofocus>
-				<texturefocus>button_settings_menu_on.png</texturefocus>
-				<!--textureclick>button_option_menu_click.png</textureclick-->
+				<textoffsetx>20</textoffsetx>
 				<pulseonselect>false</pulseonselect>
 				<onclick>SetFocus(5)</onclick>
 			</control>
@@ -123,54 +67,59 @@
 				<description>Default Button</description>
 				<posx>0</posx>
 				<posy>0</posy>
-				<height>40</height>
-				<font>font22</font>
-				<textcolor>white</textcolor>
-				<textcolor2>white</textcolor2>
-				<focusedcolor>white</focusedcolor>
-				<focusedcolor2>white</focusedcolor2>
-				<disabledcolor>disabled</disabledcolor>
+				<height>56</height>
+				<texturefocus srcborder="24" border="16">button-focused.png</texturefocus>
+				<texturenofocus>-</texturenofocus>
+				<font>font24</font>
+				<textcolor>lightgreyheidi</textcolor>
+				<focusedcolor>whiteheidi</focusedcolor>
+				<disabledcolor>mediumgreyheidi</disabledcolor>
+				<align>center</align>
+				<aligny>center</aligny>
 				<textoffsetx>20</textoffsetx>
-				<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
-				<texturefocus border="15">button_option_menu_on.png</texturefocus>
 				<pulseonselect>false</pulseonselect>
 			</control>
 			<control type="radiobutton" id="8">
 				<description>Default RadioButton</description>
 				<posx>0</posx>
 				<posy>0</posy>
-				<height>40</height>
-				<font>font22</font>
-				<textcolor>white</textcolor>
-				<focusedcolor>white</focusedcolor>
-				<disabledcolor>disabled</disabledcolor>
+				<height>56</height>
+				<type>radiobutton</type>
+				<texturefocus srcborder="24" border="16">button-focused.png</texturefocus>
+				<texturenofocus srcborder="24" border="16">-</texturenofocus>
+				<textureradioon>universal/graphic-radio-check.png</textureradioon>
+				<textureradiooff>universal/graphic-radio-blank.png</textureradiooff>
+				<textcolor>lightgreyheidi</textcolor>
+				<focusedcolor>whiteheidi</focusedcolor>
+				<disabledcolor>mediumgreyheidi</disabledcolor>
+				<align>left</align>
+				<aligny>center</aligny>
 				<textoffsetx>20</textoffsetx>
-				<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
-				<texturefocus border="15">button_option_menu_on.png</texturefocus>
-				<textureradiofocus>icons/icon_checkbox_full.png</textureradiofocus>
-				<textureradionofocus>icons/icon_checkbox_empty.png</textureradionofocus>
+				<textoffsety>0</textoffsety>
 				<pulseonselect>false</pulseonselect>
-				<radioposy>10</radioposy>
-				<radiowidth>20</radiowidth>
-				<radioheight>20</radioheight>
+				<radioposx>808</radioposx>
+				<radioposy>14</radioposy>
+				<radiowidth>28</radiowidth>
+				<radioheight>28</radioheight>
+				<font>font24</font>
 			</control>
 			<control type="spincontrolex" id="9">
 				<description>Default SpinControlex</description>
 				<posx>0</posx>
 				<posy>0</posy>
-				<height>40</height>
+				<height>56</height>
 				<font>font22</font>
-				<textcolor>white</textcolor>
-				<focusedcolor>white</focusedcolor>
-				<disabledcolor>disabled</disabledcolor>
+				<textcolor>lightgreyheidi</textcolor>
+				<focusedcolor>whiteheidi</focusedcolor>
+				<disabledcolor>mediumgreyheidi</disabledcolor>
 				<textoffsetx>20</textoffsetx>
 				<aligny>center</aligny>
-				<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
-				<texturefocus border="15">button_option_menu_on.png</texturefocus>
-				<textureup diffuse="nofocus.png">icons/icon_settings_arrow_up.png</textureup>
-				<texturedown diffuse="nofocus.png">icons/icon_settings_arrow_down.png</texturedown>
-				<textureupfocus diffuse="green.png">icons/icon_settings_arrow_up_on.png</textureupfocus>
-				<texturedownfocus diffuse="green.png">icons/icon_settings_arrow_down_on.png</texturedownfocus>
+				<texturenofocus>-</texturenofocus>
+				<texturefocus srcborder="24" border="16">button-focused.png</texturefocus>
+				<textureup diffuse="colors/color-grey.png">universal/graphic-spin-control-off.png</textureup>
+				<texturedown flipy="true" diffuse="colors/color-grey.png">universal/graphic-spin-control-off.png</texturedown>
+				<textureupfocus diffuse="colors/color-blue.png">universal/graphic-spin-control-on.png</textureupfocus>
+				<texturedownfocus flipy="true" diffuse="colors/color-blue.png">universal/graphic-spin-control-on.png</texturedownfocus>
 				<reverse>yes</reverse>
 				<pulseonselect>false</pulseonselect>
 			</control>
@@ -179,33 +128,14 @@
 				<posy>264</posy>
 				<width>28</width>
 				<height>344</height>
-				<texturesliderbackground border="14">scrollbar_bg.png</texturesliderbackground>
-				<textureslidernib>scrollbar_slider.png</textureslidernib>
-				<textureslidernibfocus>scrollbar_slider.png</textureslidernibfocus>
+				<texturesliderbackground border="14">-</texturesliderbackground>
+				<textureslidernib>-</textureslidernib>
+				<textureslidernibfocus>-</textureslidernibfocus>
 				<texturesliderbar>-</texturesliderbar>
 				<texturesliderbarfocus>-</texturesliderbarfocus>
 				<orientation>vertical</orientation>
 				<showonepage>false</showonepage>
 			</control>
-			<!--control type="spincontrol" id="90">
-				<description>Next page button</description>
-				<posx>1240</posx>
-				<posy>247</posy>
-				<subtype>page</subtype>
-				<font>font18</font>
-				<align>right</align>
-				<textcolor>green</textcolor>
-				<textureup>-</textureup>
-				<texturedown>-</texturedown>
-				<textureupfocus>-</textureupfocus>
-				<texturedownfocus>-</texturedownfocus>
-				<onleft>-</onleft>
-				<onright>-</onright>
-				<ondown>-</ondown>
-				<onup>-</onup>
-				<showonepage>true</showonepage>
-				<visible>false</visible>
-			</control-->
 		</control>
 	</controls>
 </window>

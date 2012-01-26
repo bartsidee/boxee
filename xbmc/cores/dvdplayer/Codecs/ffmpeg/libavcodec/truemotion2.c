@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/truemotion2.c
+ * @file
  * Duck TrueMotion2 decoder.
  */
 
@@ -260,7 +260,8 @@ static int tm2_read_deltas(TM2Context *ctx, int stream_id) {
     return 0;
 }
 
-static int tm2_read_stream(TM2Context *ctx, const uint8_t *buf, int stream_id) {
+static int tm2_read_stream(TM2Context *ctx, const uint8_t *buf, int stream_id, int buf_size)
+{
     int i;
     int cur = 0;
     int skip = 0;
@@ -273,6 +274,11 @@ static int tm2_read_stream(TM2Context *ctx, const uint8_t *buf, int stream_id) {
 
     if(len == 0)
         return 4;
+
+    if (len >= INT_MAX/4-1 || len < 0 || len > buf_size) {
+        av_log(ctx->avctx, AV_LOG_ERROR, "Error, invalid stream size.\n");
+        return -1;
+    }
 
     toks = AV_RB32(buf); buf += 4; cur += 4;
     if(toks & 1) {
@@ -313,8 +319,13 @@ static int tm2_read_stream(TM2Context *ctx, const uint8_t *buf, int stream_id) {
     len = AV_RB32(buf); buf += 4; cur += 4;
     if(len > 0) {
         init_get_bits(&ctx->gb, buf, (skip - cur) * 8);
-        for(i = 0; i < toks; i++)
+        for(i = 0; i < toks; i++) {
+            if (get_bits_left(&ctx->gb) <= 0) {
+                av_log(ctx->avctx, AV_LOG_ERROR, "Incorrect number of tokens: %i\n", toks);
+                return -1;
+            }
             ctx->tokens[stream_id][i] = tm2_get_token(&ctx->gb, &codes);
+        }
     } else {
         for(i = 0; i < toks; i++)
             ctx->tokens[stream_id][i] = codes.recode[0];
@@ -744,9 +755,9 @@ static int tm2_decode_blocks(TM2Context *ctx, AVFrame *p)
         if (j & 1) {
             U += ctx->avctx->width >> 1;
             V += ctx->avctx->width >> 1;
-    }
-        dst += p->linesize[0];
         }
+        dst += p->linesize[0];
+    }
 
     return keyframe;
 }
@@ -788,7 +799,7 @@ static int decode_frame(AVCodecContext *avctx,
     }
 
     for(i = 0; i < TM2_NUM_STREAMS; i++){
-        t = tm2_read_stream(l, swbuf + skip, tm2_stream_order[i]);
+        t = tm2_read_stream(l, swbuf + skip, tm2_stream_order[i], buf_size);
         if(t == -1){
             av_free(swbuf);
             return -1;
@@ -813,9 +824,6 @@ static av_cold int decode_init(AVCodecContext *avctx){
     TM2Context * const l = avctx->priv_data;
     int i;
 
-    if (avcodec_check_dimensions(avctx, avctx->width, avctx->height) < 0) {
-        return -1;
-    }
     if((avctx->width & 3) || (avctx->height & 3)){
         av_log(avctx, AV_LOG_ERROR, "Width and height must be multiple of 4\n");
         return -1;
@@ -848,6 +856,7 @@ static av_cold int decode_init(AVCodecContext *avctx){
 
 static av_cold int decode_end(AVCodecContext *avctx){
     TM2Context * const l = avctx->priv_data;
+    AVFrame *pic = &l->pic;
     int i;
 
     if(l->last)
@@ -865,12 +874,16 @@ static av_cold int decode_end(AVCodecContext *avctx){
         av_free(l->U2);
         av_free(l->V2);
     }
+
+    if (pic->data[0])
+        avctx->release_buffer(avctx, pic);
+
     return 0;
 }
 
-AVCodec truemotion2_decoder = {
+AVCodec ff_truemotion2_decoder = {
     "truemotion2",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_TRUEMOTION2,
     sizeof(TM2Context),
     decode_init,

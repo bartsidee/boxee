@@ -13,7 +13,7 @@
 #include "Picture.h"
 #include "Util.h"
 #include "File.h"
-
+#include "LocalizeStrings.h"
 #include "BoxeeItemsHistory.h"
 
 using namespace MUSIC_INFO;
@@ -36,10 +36,10 @@ bool CBoxeeItemsHistoryDirectory::GetDirectory(const CStdString& strPath, CFileI
 {
   g_application.GetBoxeeItemsHistoryList().WaitForHistoryReady(INFINITE);
 
-  // Check if request if for "history" hostname
+  // Check if request if for "history" protocol
   if (strPath.Left(10).Equals("history://") == false)
   {
-    CLog::Log(LOGERROR, "Trying to retrive files history with invalid name [%s] - (bh)", strPath.c_str());
+    CLog::Log(LOGERROR, "Trying to retrieve files history with invalid name [%s] - (bh)", strPath.c_str());
     return false;
   }
     
@@ -66,47 +66,47 @@ bool CBoxeeItemsHistoryDirectory::GetDirectory(const CStdString& strPath, CFileI
     CLog::Log(LOGDEBUG,"The ItemsHistoryList contains [%d] files, therefore there are no history files to return (bh)",itemsHistoryList.Size());
     return true;
   }
-
+    
   int numOfHistoryFilesToRetrieve = itemsHistoryList.Size();
-
-  CLog::Log(LOGDEBUG,"After parsing request [%s]. Going to retrieve media for type [%s] - (bh)",strPath.c_str(),GetBoxeeMediaTypeEnumAsString(typeToRetrieve));
-
-  // Check if there is a limit on the number of history item to retrieve
-  CStdString strDir;
-  CStdString strFile;
-  std::map<std::string, std::string> mapParams;
-
+    
+	CLog::Log(LOGDEBUG,"After parsing request [%s]. Going to retrieve media for type [%s] - (bh)",strPath.c_str(),GetBoxeeMediaTypeEnumAsString(typeToRetrieve));
+    
+	// Check if there is a limit on the number of history item to retrieve
+	CStdString strDir;
+	CStdString strFile;
+	std::map<std::string, std::string> mapParams;
+    
   if( BoxeeUtils::ParseBoxeeDbUrl( strPath, strDir, strFile, mapParams ) )
-  {
-    // Get the limit
-    int limit = BXUtils::StringToInt( mapParams[ "limit" ] );
-
-    CLog::Log( LOGDEBUG, "The limit that was read from [strPath=%s] is [%d] - (bh)", strPath.c_str(), limit );
-    if( limit > 0 )
+	{
+	  // Get the limit
+    int limit = BXUtils::StringToInt(mapParams["limit"]);
+      
+    CLog::Log(LOGDEBUG,"The limit that was read from [strPath=%s] is [%d] - (bh)",strPath.c_str(),limit);
+    if(limit > 0)
     {
-      if( limit < numOfHistoryFilesToRetrieve )
-      {	
-        CLog::Log( LOGDEBUG, "The request was recived with limit [%d] and the HistoryFiles list size is [%d], therefore going to return the limit size - (bh)", limit, numOfHistoryFilesToRetrieve );
+      if(limit < numOfHistoryFilesToRetrieve)
+      {
+        CLog::Log(LOGDEBUG,"The request was recived with limit [%d] and the HistoryFiles list size is [%d], therefore going to return the limit size - (bh)",limit,numOfHistoryFilesToRetrieve);
         numOfHistoryFilesToRetrieve = limit;
       }
     }
-    else if( limit == 0 )
+    else if(limit == 0)
     {
-       CLog::Log(LOGDEBUG,"The limit that was read from [strPath=%s] is [%d], either it exist as [limit=%d] or doesn't, therefore going to return all of the file that qualify - (bh)",strPath.c_str(),limit,limit);
+      CLog::Log(LOGDEBUG,"The limit that was read from [strPath=%s] is [%d], either it exist as [limit=%d] or doesn't, therefore going to return all of the file that qualify - (bh)",strPath.c_str(),limit,limit);
     }
     else
     {
-      CLog::Log( LOGERROR,"Received limit with negative value [strPath=%s], therefore going to return all of the file that qualify - (bh)", strPath.c_str() );
+      CLog::Log(LOGERROR,"Received limit with negative value [strPath=%s], therefore going to return all of the file that qualify - (bh)",strPath.c_str());
     }
-  }
+	}
   else
   {
     CLog::Log(LOGERROR,"Failed to parse [strPath=%s] by BoxeeUtils::ParseBoxeeDbUrl - (bh)",strPath.c_str());
     return false;
   }
-
-  for(int i=0; i<itemsHistoryList.Size(); i++)
-  {
+    
+	for(int i=0; i<itemsHistoryList.Size(); i++)
+	{
     CFileItemPtr item = itemsHistoryList.Get(i);
       
     if(item != NULL)
@@ -149,7 +149,9 @@ bool CBoxeeItemsHistoryDirectory::GetDirectory(const CStdString& strPath, CFileI
             CLog::Log(LOGDEBUG,"CBoxeeItemsHistoryDirectory::GetDirectory - Because the thumb of the history item [%s] was [defaultloading.gif], it was changed to [thumb=%s] in order to show the DefaultThumb (bh)",(newItem->m_strPath).c_str(),(newItem->GetThumbnailImage()).c_str());
           }
         }
-          
+
+        UpdateHistoryItemProperties(newItem);
+
         itemsList.Add(newItem);
           
         if(itemsList.Size() == numOfHistoryFilesToRetrieve)
@@ -164,6 +166,8 @@ bool CBoxeeItemsHistoryDirectory::GetDirectory(const CStdString& strPath, CFileI
       continue;
     }
 	}
+
+	itemsList.SetProperty("empty",itemsHistoryList.GetPropertyBOOL("empty"));
     
 	CLog::Log(LOGDEBUG,"Going to return a HistoryList with size [%d] - (bh)",itemsList.Size());
     
@@ -180,12 +184,38 @@ bool CBoxeeItemsHistoryDirectory::Exists(const char* strPath)
 ///////				Private functions				///////
 /////////////////////////////////////////////
 
+void CBoxeeItemsHistoryDirectory::UpdateHistoryItemProperties(CFileItemPtr historyItem)
+{
+  if (historyItem->GetPropertyBOOL("isseparator"))
+  {
+    return;
+  }
+
+  CStdString addToHistoryDesc = "";
+  CStdString historyItemType = historyItem->GetProperty("MediaType");
+
+  if (historyItemType == "video" || historyItemType == "picture")
+  {
+    addToHistoryDesc = g_localizeStrings.Get(57040);
+  }
+  else
+  {
+    addToHistoryDesc = g_localizeStrings.Get(57041);
+  }
+
+  int tmAddToHistory = historyItem->GetPropertyInt("AddedToHistoryListTime");
+
+  addToHistoryDesc += BoxeeUtils::GetTimeAddedToDirectoryLabel(tmAddToHistory).ToLower();
+
+  historyItem->SetProperty("addToHistoryDesc",addToHistoryDesc);
+}
+
 CBoxeeMediaTypes::BoxeeMediaTypesEnums CBoxeeItemsHistoryDirectory::GetTypeToRetrieve(const CStdString& strPath)
 {
 	CBoxeeMediaTypes::BoxeeMediaTypesEnums typeToRetrieve = CBoxeeMediaTypes::NONE;
 
 	// Analyze the url and determime which actions should be included
-	CURL url(strPath);
+	CURI url(strPath);
 	CStdString typeToRetrieveStr = url.GetHostName();
 
 	if(typeToRetrieveStr == "all")

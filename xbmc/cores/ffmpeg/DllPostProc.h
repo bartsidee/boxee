@@ -29,8 +29,8 @@ extern "C" {
     #include <ffmpeg/postprocess.h>
   #endif
 #else
-#include "avutil.h"
-#include "postprocess.h"
+#include "ffmpeg/libavutil/avutil.h"
+#include "ffmpeg/libpostproc/postprocess.h"
 #endif
 }
 

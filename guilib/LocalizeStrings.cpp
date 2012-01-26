@@ -28,7 +28,7 @@
 #include "SingleLock.h"
 #include "GraphicContext.h"
 
-extern CStdString g_LoadErrorStr; 
+extern CStdString g_LoadErrorStr;
 
 CLocalizeStrings::CLocalizeStrings(void)
 {
@@ -152,14 +152,16 @@ bool CLocalizeStrings::Load(const CStdString& strFileName, const CStdString& str
 
   // fill in the constant strings
   m_strings[20022] = "";
-  m_strings[20027] = ToUTF8(encoding, "°F");
-  m_strings[20028] = ToUTF8(encoding, "K");
-  m_strings[20029] = ToUTF8(encoding, "°C");
-  m_strings[20030] = ToUTF8(encoding, "°Ré");
-  m_strings[20031] = ToUTF8(encoding, "°Ra"); 
-  m_strings[20032] = ToUTF8(encoding, "°Rø"); 
-  m_strings[20033] = ToUTF8(encoding, "°De"); 
-  m_strings[20034] = ToUTF8(encoding, "°N");
+
+  g_charsetConverter.wToUTF8(L"\x0B0F", m_strings[20027]);
+  g_charsetConverter.wToUTF8(L"\x0B0K", m_strings[20028]);
+  g_charsetConverter.wToUTF8(L"\x0B0C", m_strings[20029]);
+  g_charsetConverter.wToUTF8(L"\x0B0R", m_strings[20030]);
+  g_charsetConverter.wToUTF8(L"\x0B0Ra", m_strings[20031]);
+  g_charsetConverter.wToUTF8(L"\x0B0R", m_strings[20032]);
+  g_charsetConverter.wToUTF8(L"\x0B0De", m_strings[20033]);
+  g_charsetConverter.wToUTF8(L"\x0B0N", m_strings[20034]);
+  g_charsetConverter.wToUTF8(L"\x0B0", m_strings[20035]);
 
   m_strings[20200] = ToUTF8(encoding, "km/h");
   m_strings[20201] = ToUTF8(encoding, "m/min");

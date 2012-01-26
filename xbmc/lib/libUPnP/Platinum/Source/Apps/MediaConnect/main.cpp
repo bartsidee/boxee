@@ -2,7 +2,7 @@
 |
 |      Platinum - Test UPnP A/V Media Connect
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -29,7 +29,7 @@
 | 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 | http://www.gnu.org/licenses/gpl-2.0.html
 |
- ****************************************************************/
+****************************************************************/
 
 /*----------------------------------------------------------------------
 |       includes
@@ -93,18 +93,26 @@ int
 main(int argc, char** argv)
 {
     // setup Neptune logging
-    NPT_LogManager::GetDefault().Configure("plist:.level=FINER;.handlers=ConsoleHandler;.ConsoleHandler.colors=off;.ConsoleHandler.filter=26");
+    NPT_LogManager::GetDefault().Configure("plist:.level=FINE;.handlers=ConsoleHandler;.ConsoleHandler.colors=off;.ConsoleHandler.filter=63");
     
     NPT_COMPILER_UNUSED(argc);
-
-    /* parse command line */
+    
+    // parse command line
     ParseCommandLine(argv);
     
-    PLT_DeviceHostReference device(
-        new PLT_MediaConnect(Options.path, "Platinum"));
+	// setup device
+    PLT_MediaConnect* connect(
+        new PLT_MediaConnect("Platinum"));
+	connect->SetByeByeFirst(false);
+    
+	// setup delegate
+	NPT_Reference<PLT_FileMediaConnectDelegate> delegate( 
+		new PLT_FileMediaConnectDelegate("/", Options.path));
+    connect->SetDelegate((PLT_MediaServerDelegate*)delegate.AsPointer());
+    
     PLT_UPnP upnp;
+    PLT_DeviceHostReference device(connect);
     upnp.AddDevice(device);
-
     if (NPT_FAILED(upnp.Start()))
         return 1;
 

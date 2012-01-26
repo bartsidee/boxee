@@ -37,7 +37,7 @@ bool CAppBoxDirectory::GetDirectory(const CStdString& strPath, CFileItemList &it
 {
   CLog::Log(LOGDEBUG,"CAppBoxDirectory::GetDirectory - Enter function with [strPath=%s] (bapps)",strPath.c_str());
 
-  CURL url(strPath);
+  CURI url(strPath);
   CStdString strProtocol = url.GetProtocol();
 
   if (strProtocol.CompareNoCase("appbox") != 0)
@@ -49,7 +49,7 @@ bool CAppBoxDirectory::GetDirectory(const CStdString& strPath, CFileItemList &it
   return HandleAppBoxRequest(url, items);
 }
 
-bool CAppBoxDirectory::HandleAppBoxRequest(const CURL& url, CFileItemList &items)
+bool CAppBoxDirectory::HandleAppBoxRequest(const CURI& url, CFileItemList &items)
 {
   CLog::Log(LOGDEBUG,"CAppBoxDirectory::HandleAppBoxRequest - Enter function with [protocol=%s][host=%s][share=%s][FileName=%s][GetOptions=%s] (bapps)",url.GetProtocol().c_str(),url.GetHostName().c_str(),url.GetShareName().c_str(),url.GetFileName().c_str(),url.GetOptions().c_str());
 
@@ -69,8 +69,7 @@ bool CAppBoxDirectory::HandleAppBoxRequest(const CURL& url, CFileItemList &items
     std::map<CStdString, CStdString> mapOptions;
     mapOptions = url.GetOptionsAsMap();
 
-    CStdString strPath;
-    url.GetURL(strPath);
+    CStdString strPath = url.Get();
     CLog::Log(LOGDEBUG,"CAppBoxDirectory::HandleAppBoxRequest - For [strPath=%s] mapOptions size is [%d]. [options=%s] (bapps)",strPath.c_str(),(int)mapOptions.size(),url.GetProtocolOptions().c_str());
 
     // get the Repository id
@@ -82,12 +81,15 @@ bool CAppBoxDirectory::HandleAppBoxRequest(const CURL& url, CFileItemList &items
     }
     else
     {
-      CStdString strPath;
-      url.GetURL(strPath);
+      CStdString strPath = url.Get();
       CLog::Log(LOGERROR,"CAppBoxDirectory::HandleAppBoxRequest - FAILED to get repoid from [strPath=%s] (bapps)",strPath.c_str());
       return false;
     }
   }
+
+  std::map<CStdString, CStdString> options = url.GetOptionsAsMap();
+  std::map<CStdString, CStdString>::iterator it_category;
+  it_category = options.find("category");
 
   std::vector<CAppRepository> repositories = CAppManager::GetInstance().GetRepositories().Get();
   for (size_t i = 0; i < repositories.size(); i++)
@@ -98,24 +100,22 @@ bool CAppBoxDirectory::HandleAppBoxRequest(const CURL& url, CFileItemList &items
 
     if (repoId == repository.GetID())
     {
-      availableAppsDesc = repository.GetAvailableApps();
+      if (repoId == "tv.boxee" && it_category != options.end())
+      {
+        availableAppsDesc = repository.GetAvailableApps(it_category->second);
+      }
+      else
+      {
+        availableAppsDesc = repository.GetAvailableApps();
+      }
       break;
     }
-  }
-
-  if (availableAppsDesc.size() == 0)
-  {
-    CStdString strPath;
-    url.GetURL(strPath);
-    CLog::Log(LOGWARNING,"CAppBoxDirectory::HandleAppBoxRequest - FAILED to get apps descriptors. [strPath=%s] (bapps)",strPath.c_str());
-    return false;
   }
 
   int numOfDescriptors = availableAppsDesc.size();
   if (numOfDescriptors < 1)
   {
-    CStdString strPath;
-    url.GetURL(strPath);
+    CStdString strPath = url.Get();
     CLog::Log(LOGWARNING,"CAppBoxDirectory::HandleAppBoxRequest - Got [%d] apps descriptors. [strPath=%s] (bapps)",numOfDescriptors,strPath.c_str());
     return true;
   }
@@ -125,7 +125,7 @@ bool CAppBoxDirectory::HandleAppBoxRequest(const CURL& url, CFileItemList &items
   return true;
 }
 
-bool CAppBoxDirectory::GetAppBoxDirectoryByType(const CAppDescriptor::AppDescriptorsMap& availableAppsDesc, const CURL& url, CFileItemList &items)
+bool CAppBoxDirectory::GetAppBoxDirectoryByType(const CAppDescriptor::AppDescriptorsMap& availableAppsDesc, const CURI& url, CFileItemList &items)
 {
   CStdString strType = "";
 
@@ -135,21 +135,21 @@ bool CAppBoxDirectory::GetAppBoxDirectoryByType(const CAppDescriptor::AppDescrip
   }
 
   bool doSearch = false;
-  CStdString strSearch = "";
+  CStdString strSearchTerm = "";
   std::map<CStdString, CStdString> optionsMap = url.GetOptionsAsMap();
   if ((int)optionsMap.size() > 0)
   {
-    strSearch = optionsMap["search"];
-    if (!strSearch.IsEmpty())
+    strSearchTerm = optionsMap["term"];
+    if (!strSearchTerm.IsEmpty())
     {
-      strSearch.Trim();
-      strSearch.ToLower();
+      strSearchTerm.Trim();
+      strSearchTerm.ToLower();
 
       doSearch = true;
     }
   }
 
-  CLog::Log(LOGDEBUG,"CAppBoxDirectory::GetAppBoxDirectoryByType - Enter function with [strType=%s][strSearch=%s] (bapps)",url.GetHostName().c_str(),strSearch.c_str());
+  CLog::Log(LOGDEBUG,"CAppBoxDirectory::GetAppBoxDirectoryByType - Enter function with [strType=%s][strSearchTerm=%s] (bapps)",url.GetHostName().c_str(),strSearchTerm.c_str());
 
   // filter all available apps by type and get it as FileItemList
   CFileItemList availableAppsItemList;
@@ -168,18 +168,26 @@ bool CAppBoxDirectory::GetAppBoxDirectoryByType(const CAppDescriptor::AppDescrip
       appLabel.Trim();
       appLabel.ToLower();
 
-      std::set<CStdString> tagsSet;
-      CStdString appTags = appItem->GetProperty("tags");
-      if (!appTags.IsEmpty())
+      std::set<CStdString> wordSet;
+      wordSet.insert(appLabel);
+
+      if (!appLabel.IsEmpty())
       {
-        BoxeeUtils::StringTokenize(appItem->GetProperty("tags"),tagsSet,",",true,true);
+        BoxeeUtils::StringTokenize(appLabel,wordSet," ",true,true);
       }
 
-      // if strSearch isn't empty -> check if app label match
-      if ((appLabel.Find(strSearch) == (-1)) && (tagsSet.find(strSearch) == tagsSet.end()))
+      bool shouldAdd=false;
+      for (std::set<CStdString>::iterator it= wordSet.begin() ; it != wordSet.end() ; it++)
       {
-        continue;
+        if (it->find(strSearchTerm) == 0) //should find it in the begining of the word
+        {
+          shouldAdd = true;
+          break;
+        }
       }
+
+      if (!shouldAdd)
+        continue;
     }
 
     CFileItemPtr appItemToAdd(new CFileItem(*appItem));
@@ -201,7 +209,15 @@ bool CAppBoxDirectory::GetAppBoxDirectoryByType(const CAppDescriptor::AppDescrip
       appItemToAdd->SetProperty("value",appItemToAdd->GetLabel());
     }
 
-    items.Add(appItemToAdd);
+    bool isAllowed = appItemToAdd->IsAllowed();
+    if (isAllowed)
+    {
+      items.Add(appItemToAdd);
+    }
+    else
+    {
+      CLog::Log(LOGDEBUG,"CAppBoxDirectory::GetAppBoxDirectoryByType - [%d/%d] - NOT adding app [label=%s] since [IsAllowed=%d] (bapps)",i+1,availableAppsItemList.Size(),appItemToAdd->GetLabel().c_str(),isAllowed);
+    }
   }
 
   return true;

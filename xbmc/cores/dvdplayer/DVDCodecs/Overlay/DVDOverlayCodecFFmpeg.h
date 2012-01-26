@@ -23,6 +23,7 @@
 
 #include "DVDOverlayCodec.h"
 #include "cores/ffmpeg/DllAvCodec.h"
+#include "cores/ffmpeg/DllAvUtil.h"
 
 class CDVDOverlaySpu;
 class CDVDOverlayText;
@@ -38,7 +39,7 @@ public:
   virtual void Reset();
   virtual void Flush();
   virtual CDVDOverlay* GetOverlay();
-  
+
 private:
   void FreeSubtitle(AVSubtitle &sub);
 
@@ -49,6 +50,7 @@ private:
   int             m_width;
   int             m_height;
 
+  DllAvCore       m_dllAvCore;
   DllAvCodec      m_dllAvCodec;
   DllAvUtil       m_dllAvUtil;
 

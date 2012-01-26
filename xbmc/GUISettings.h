@@ -37,8 +37,9 @@ class TiXmlElement;
 #define RENDER_METHOD_ARB       1
 #define RENDER_METHOD_GLSL      2
 #define RENDER_METHOD_SOFTWARE  3
-#define RENDER_METHOD_VDPAU     4
+#define RENDER_METHOD_D3D_PS    4
 #define RENDER_OVERLAYS         99   // to retain compatibility
+
 
 // Scaling options.
 #define SOFTWARE_UPSCALING_DISABLED   0
@@ -84,8 +85,18 @@ class TiXmlElement;
 #define CDDARIP_QUALITY_STANDARD 2
 #define CDDARIP_QUALITY_EXTREME  3
 
-#define AUDIO_ANALOG      0
-#define AUDIO_DIGITAL      1
+#define AUDIO_ANALOG         0
+#define AUDIO_DIGITAL_SPDIF  1
+#define AUDIO_DIGITAL_HDMI   2
+#define DD_TRUEHD_DRC_AUTO       0
+#define DD_TRUEHD_DRC_OFF        1
+#define DD_TRUEHD_DRC_ON         2
+#define STAGING_ON           0
+#define DD_TRUEHD_DRC_PRC_MIN    0
+#define DD_TRUEHD_DRC_PRC_MAX    100
+#ifdef HAS_INTEL_SMD
+#define AUDIO_ALL_OUTPUTS    3
+#endif
 
 #define AUDIO_LIBRARY_ALSA       0
 #define AUDIO_LIBRARY_PULSEAUDIO 1
@@ -175,6 +186,11 @@ class TiXmlElement;
 #define RESAMPLE_MID 1
 #define RESAMPLE_HIGH 2
 #define RESAMPLE_REALLYHIGH 3
+
+//Netflix / Play/Pause button
+#define NRDPP_DEFAULT   0
+#define NRDPP_NETFLIX   1
+#define NRDPP_PLAYPAUSE 2
 
 enum PowerState
 {
@@ -320,7 +336,7 @@ public:
 class CSettingString : public CSetting
 {
 public:
-	  CSettingString(int iOrder, const char *strSetting, int iLabel, const char *strData, int iControlType, bool bAllowEmpty, int iHeadingString);
+  CSettingString(int iOrder, const char *strSetting, int iLabel, const char *strData, int iControlType, bool bAllowEmpty, int iHeadingString);
 	  CSettingString(int iOrder, const char *strSetting, CStdString labelStr, const char *strData, int iControlType, bool bAllowEmpty, int iHeadingString);
   virtual ~CSettingString() {};
 
@@ -387,11 +403,12 @@ typedef std::vector<CSettingsCategory *> vecSettingsCategory;
 class CSettingsGroup
 {
 public:
-  CSettingsGroup(int groupID, int labelID, int windowID = 0)
+  CSettingsGroup(int groupID, int labelID, int windowID = 0, int titleID = 0)
   {
     m_groupID = groupID;
     m_labelID = labelID;
     m_windowID = windowID;
+    m_titleID = titleID;
   }
   ~CSettingsGroup()
   {
@@ -416,11 +433,13 @@ public:
   int GetLabelID() { return m_labelID; }
   int GetGroupID() { return m_groupID; }
   int GetWindowID() { return m_windowID; }
+  int GetTitleID() { return m_titleID; }
 private:
   vecSettingsCategory m_vecCategories;
   int m_groupID;
   int m_labelID;
   int m_windowID;
+  int m_titleID;
 };
 
 class CGUISettings : public InfoPageble
@@ -463,6 +482,7 @@ public:
   void AddSeparator(int iOrder, const char *strSetting);
 
   CSetting *GetSetting(const char *strSetting);
+  bool HasSetting(const char *strSetting);
   void     DeleteSetting(const char *strSetting);
 
   void GetSettingsGroup(const char *strGroup, vecSettings &settings);

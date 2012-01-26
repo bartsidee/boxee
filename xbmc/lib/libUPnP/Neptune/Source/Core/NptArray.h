@@ -270,7 +270,11 @@ NPT_Array<T>::Allocate(NPT_Cardinal count, NPT_Cardinal& allocated)
     if (allocated < count) allocated = count;
 
     // allocate the items
+#ifdef WIN32_MEMORY_LEAK_DETECT
+	return (T*) _malloc_dbg(allocated*sizeof(T), _NORMAL_BLOCK , __FILE__ , __LINE__ );
+#else
     return (T*)::operator new(allocated*sizeof(T));
+#endif
 }
 
 /*----------------------------------------------------------------------

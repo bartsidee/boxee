@@ -21,12 +21,19 @@
 
 
 #include "system.h"
+#ifndef WIN32
+#include <config.h>
+#endif
 #include "Util.h"
 #include "FactoryFileDirectory.h"
 #ifdef HAS_FILESYSTEM
 #include "OGGFileDirectory.h"
+#ifdef HAS_NSF_CODEC
 #include "NSFFileDirectory.h"
+#endif
+#ifdef HAS_SID_CODEC
 #include "SIDFileDirectory.h"
+#endif
 #include "ASAPFileDirectory.h"
 #include "cores/paplayer/ASAPCodec.h"
 #endif
@@ -80,6 +87,7 @@ IFileDirectory* CFactoryFileDirectory::Create(const CStdString& strPath, CFileIt
     delete pDir;
     return NULL;
   }
+#ifdef HAS_NSF_CODEC
   if (strExtension.Equals(".nsf") && CFile::Exists(strPath))
   {
     IFileDirectory* pDir=new CNSFFileDirectory;
@@ -90,6 +98,8 @@ IFileDirectory* CFactoryFileDirectory::Create(const CStdString& strPath, CFileIt
     delete pDir;
     return NULL;
   }
+#endif
+#ifdef HAS_SID_CODEC
   if (strExtension.Equals(".sid") && CFile::Exists(strPath))
   {
     IFileDirectory* pDir=new CSIDFileDirectory;
@@ -100,6 +110,7 @@ IFileDirectory* CFactoryFileDirectory::Create(const CStdString& strPath, CFileIt
     delete pDir;
     return NULL;
   }
+#endif
   if (ASAPCodec::IsSupportedFormat(strExtension) && CFile::Exists(strPath))
   {
     IFileDirectory* pDir=new CASAPFileDirectory;

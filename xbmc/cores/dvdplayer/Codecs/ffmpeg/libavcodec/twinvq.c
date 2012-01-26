@@ -22,6 +22,8 @@
 #include "avcodec.h"
 #include "get_bits.h"
 #include "dsputil.h"
+#include "fft.h"
+#include "lsp.h"
 
 #include <math.h>
 #include <stdint.h>
@@ -200,6 +202,7 @@ typedef struct TwinContext {
 } TwinContext;
 
 #define PPC_SHAPE_CB_SIZE 64
+#define PPC_SHAPE_LEN_MAX 60
 #define SUB_AMP_MAX       4500.0
 #define MULAW_MU          100.0
 #define GAIN_BITS         8
@@ -207,6 +210,11 @@ typedef struct TwinContext {
 #define SUB_GAIN_BITS     5
 #define WINDOW_TYPE_BITS  4
 #define PGAIN_MU          200
+#define LSP_COEFS_MAX     20
+#define LSP_SPLIT_MAX     4
+#define CHANNELS_MAX      2
+#define SUBBLOCKS_MAX     16
+#define BARK_N_COEF_MAX   4
 
 /** @note not speed critical, hence not optimized */
 static void memset_float(float *buf, float val, int size)
@@ -250,7 +258,7 @@ static float eval_lpc_spectrum(const float *lsp, float cos_val, int order)
 }
 
 /**
- * Evaluates the LPC amplitude spectrum envelope from the line spectrum pairs.
+ * Evaluate the LPC amplitude spectrum envelope from the line spectrum pairs.
  */
 static void eval_lpcenv(TwinContext *tctx, const float *cos_vals, float *lpc)
 {
@@ -283,7 +291,7 @@ static inline float get_cos(int idx, int part, const float *cos_tab, int size)
 }
 
 /**
- * Evaluates the LPC amplitude spectrum envelope from the line spectrum pairs.
+ * Evaluate the LPC amplitude spectrum envelope from the line spectrum pairs.
  * Probably for speed reasons, the coefficients are evaluated as
  * siiiibiiiisiiiibiiiisiiiibiiiisiiiibiiiis ...
  * where s is an evaluated value, i is a value interpolated from the others
@@ -536,17 +544,6 @@ static void rearrange_lsp(int order, float *lsp, float min_dist)
         }
 }
 
-static void bubblesort(float *lsp, int lp_order)
-{
-    int i,j;
-
-    /* sort lsp in ascending order. float bubble agorithm,
-       O(n) if data already sorted, O(n^2) - otherwise */
-    for (i = 0; i < lp_order - 1; i++)
-        for (j = i; j >= 0 && lsp[j] > lsp[j+1]; j--)
-            FFSWAP(float, lsp[j], lsp[j+1]);
-}
-
 static void decode_lsp(TwinContext *tctx, int lpc_idx1, uint8_t *lpc_idx2,
                        int lpc_hist_idx, float *lsp, float *hist)
 {
@@ -583,7 +580,7 @@ static void decode_lsp(TwinContext *tctx, int lpc_idx1, uint8_t *lpc_idx2,
 
     rearrange_lsp(mtab->n_lsp, lsp, 0.0001);
     rearrange_lsp(mtab->n_lsp, lsp, 0.000095);
-    bubblesort(lsp, mtab->n_lsp);
+    ff_sort_nearly_sorted_floats(lsp, mtab->n_lsp);
 }
 
 static void dec_lpc_spectrum_inv(TwinContext *tctx, float *lsp,
@@ -649,7 +646,6 @@ static void imdct_and_window(TwinContext *tctx, enum FrameType ftype, int wtype,
                                      prev_buf + (bsize-wsize)/2,
                                      buf1 + bsize*j,
                                      ff_sine_windows[av_log2(wsize)],
-                                     0.0,
                                      wsize/2);
         out2 += wsize;
 
@@ -736,14 +732,14 @@ static void read_and_decode_spectrum(TwinContext *tctx, GetBitContext *gb,
     int channels = tctx->avctx->channels;
     int sub = mtab->fmode[ftype].sub;
     int block_size = mtab->size / sub;
-    float gain[channels*sub];
-    float ppc_shape[mtab->ppc_shape_len * channels * 4];
-    uint8_t bark1[channels][sub][mtab->fmode[ftype].bark_n_coef];
-    uint8_t bark_use_hist[channels][sub];
+    float gain[CHANNELS_MAX*SUBBLOCKS_MAX];
+    float ppc_shape[PPC_SHAPE_LEN_MAX * CHANNELS_MAX * 4];
+    uint8_t bark1[CHANNELS_MAX][SUBBLOCKS_MAX][BARK_N_COEF_MAX];
+    uint8_t bark_use_hist[CHANNELS_MAX][SUBBLOCKS_MAX];
 
-    uint8_t lpc_idx1[channels];
-    uint8_t lpc_idx2[channels][tctx->mtab->lsp_split];
-    uint8_t lpc_hist_idx[channels];
+    uint8_t lpc_idx1[CHANNELS_MAX];
+    uint8_t lpc_idx2[CHANNELS_MAX][LSP_SPLIT_MAX];
+    uint8_t lpc_hist_idx[CHANNELS_MAX];
 
     int i, j, k;
 
@@ -780,13 +776,13 @@ static void read_and_decode_spectrum(TwinContext *tctx, GetBitContext *gb,
 
     for (i = 0; i < channels; i++) {
         float *chunk = out + mtab->size * i;
-        float lsp[tctx->mtab->n_lsp];
+        float lsp[LSP_COEFS_MAX];
 
         for (j = 0; j < sub; j++) {
             dec_bark_env(tctx, bark1[i][j], bark_use_hist[i][j], i,
                          tctx->tmp_buf, gain[sub*i+j], ftype);
 
-            tctx->dsp.vector_fmul(chunk + block_size*j, tctx->tmp_buf,
+            tctx->dsp.vector_fmul(chunk + block_size*j, chunk + block_size*j, tctx->tmp_buf,
                                   block_size);
 
         }
@@ -808,7 +804,7 @@ static void read_and_decode_spectrum(TwinContext *tctx, GetBitContext *gb,
         dec_lpc_spectrum_inv(tctx, lsp, ftype, tctx->tmp_buf);
 
         for (j = 0; j < mtab->fmode[ftype].sub; j++) {
-            tctx->dsp.vector_fmul(chunk, tctx->tmp_buf, block_size);
+            tctx->dsp.vector_fmul(chunk, chunk, tctx->tmp_buf, block_size);
             chunk += block_size;
         }
     }
@@ -859,9 +855,6 @@ static int twin_decode_frame(AVCodecContext * avctx, void *data,
         return buf_size;
     }
 
-    tctx->dsp.vector_clipf(out, out, -32700./(1<<15), 32700./(1<<15),
-                           avctx->channels * mtab->size);
-
     *data_size = mtab->size*avctx->channels*4;
 
     return buf_size;
@@ -903,9 +896,9 @@ static av_cold void init_mdct_win(TwinContext *tctx)
     }
 
 
-    ff_sine_window_init(ff_sine_windows[av_log2(size_m)    ], size_m  );
-    ff_sine_window_init(ff_sine_windows[av_log2(size_s/2)  ], size_s/2);
-    ff_sine_window_init(ff_sine_windows[av_log2(mtab->size)], mtab->size);
+    ff_init_ff_sine_windows(av_log2(size_m));
+    ff_init_ff_sine_windows(av_log2(size_s/2));
+    ff_init_ff_sine_windows(av_log2(mtab->size));
 }
 
 /**
@@ -1014,6 +1007,7 @@ static av_cold void init_bitstream_params(TwinContext *tctx)
     int bsize_no_main_cb[3];
     int bse_bits[3];
     int i;
+    enum FrameType frametype;
 
     for (i = 0; i < 3; i++)
         // +1 for history usage switch
@@ -1062,8 +1056,8 @@ static av_cold void init_bitstream_params(TwinContext *tctx)
         tctx->length_change[i] = num_rounded_up;
     }
 
-    for (i = 0; i < 4; i++)
-        construct_perm_table(tctx, i);
+    for (frametype = FT_SHORT; frametype <= FT_PPC; frametype++)
+        construct_perm_table(tctx, frametype);
 }
 
 static av_cold int twin_decode_init(AVCodecContext *avctx)
@@ -1073,9 +1067,9 @@ static av_cold int twin_decode_init(AVCodecContext *avctx)
     int ibps = avctx->bit_rate/(1000 * avctx->channels);
 
     tctx->avctx       = avctx;
-    avctx->sample_fmt = SAMPLE_FMT_FLT;
+    avctx->sample_fmt = AV_SAMPLE_FMT_FLT;
 
-    if (avctx->channels > 2) {
+    if (avctx->channels > CHANNELS_MAX) {
         av_log(avctx, AV_LOG_ERROR, "Unsupported number of channels: %i\n",
                avctx->channels);
         return -1;
@@ -1124,10 +1118,10 @@ static av_cold int twin_decode_close(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec twinvq_decoder =
+AVCodec ff_twinvq_decoder =
 {
     "twinvq",
-    CODEC_TYPE_AUDIO,
+    AVMEDIA_TYPE_AUDIO,
     CODEC_ID_TWINVQ,
     sizeof(TwinContext),
     twin_decode_init,

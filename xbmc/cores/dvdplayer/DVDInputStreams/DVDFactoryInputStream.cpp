@@ -30,6 +30,9 @@
 #include "../../../FileSystem/cdioSupport.h"
 #include "DVDInputStreamTV.h"
 #include "DVDInputStreamRTMP.h"
+#ifdef HAVE_LIBBLURAY
+#include "DVDInputStreamBluray.h"
+#endif
 #ifdef HAS_FILESYSTEM_HTSP
 #include "DVDInputStreamHTSP.h"
 #endif
@@ -44,19 +47,25 @@
 CDVDInputStream* CDVDFactoryInputStream::CreateInputStream(IDVDPlayer* pPlayer, const std::string& file, const std::string& content)
 {
   CFileItem item(file.c_str(), false);
-  if (item.IsDVDFile(false, true) || item.IsDVDImage() ||
+  if (content != "bluray/iso" && (item.IsDVDFile(false, true) || item.IsDVDImage() ||
 #ifdef HAS_DVD_DRIVE
 #ifdef _WIN32
-    file.compare(MEDIA_DETECT::CLibcdio::GetInstance()->GetDeviceFileName()+4) == 0 )
+    file.compare(MEDIA_DETECT::CLibcdio::GetInstance()->GetDeviceFileName()+4) == 0 ))
 #else
-    file.compare(MEDIA_DETECT::CLibcdio::GetInstance()->GetDeviceFileName()) == 0 )
+    file.compare(MEDIA_DETECT::CLibcdio::GetInstance()->GetDeviceFileName()) == 0 ))
 #endif
 #else
-  0 )
+  0 ))
 #endif
   {
     return (new CDVDInputStreamNavigator(pPlayer));
   }
+#ifdef HAVE_LIBBLURAY
+  else if (item.IsType(".bdmv") || item.IsType(".mpls") || content == "bluray/iso")
+  { 
+    return new CDVDInputStreamBluray(pPlayer);  
+  } 
+#endif
   else if(file.substr(0, 6) == "rtp://"
        || file.substr(0, 7) == "rtsp://"
        || file.substr(0, 6) == "sdp://"
@@ -66,7 +75,8 @@ CDVDInputStream* CDVDFactoryInputStream::CreateInputStream(IDVDPlayer* pPlayer, 
   else if(file.substr(0, 7) == "myth://"
        || file.substr(0, 8) == "cmyth://"
        || file.substr(0, 8) == "gmyth://"
-       || file.substr(0, 6) == "vtp://")
+       || file.substr(0, 6) == "vtp://"
+       || file.substr(0, 6) == "dvb://")
     return new CDVDInputStreamTV();
 #ifdef ENABLE_DVDINPUTSTREAM_STACK
   else if(file.substr(0, 8) == "stack://")

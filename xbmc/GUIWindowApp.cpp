@@ -14,6 +14,8 @@
 #include "utils/SingleLock.h"
 #include "LocalizeStrings.h"
 #include "GUIUserMessages.h"
+#include "AppManager.h"
+#include "GUILabelControl.h"
 
 CGUIWindowApp::CGUIWindowApp(DWORD dwID, const CStdString &xmlFile, const CAppDescriptor appDescriptor) :
   CGUIWindow(dwID, xmlFile)
@@ -32,6 +34,21 @@ CGUIWindowApp::~CGUIWindowApp(void)
   if (m_savedState)
     delete m_savedState;
   m_savedState = NULL;
+}
+
+void CGUIWindowApp::Render()
+{
+  XAPP::WindowEvent event;
+  event.windowId = GetID();
+  for (size_t i = 0; i < m_windowListeners.size(); i++)
+  {
+    m_windowListeners[i]->WindowRender(event);
+  }
+
+
+  g_Windowing.ClearBuffers(0, 0, 0, 1.0f);
+
+  CGUIWindow::Render();
 }
 
 bool CGUIWindowApp::OnMessage(CGUIMessage& message)
@@ -93,12 +110,12 @@ bool CGUIWindowApp::OnMessage(CGUIMessage& message)
             CFileItem* fileItem = dynamic_cast<CFileItem*> ((*it).get());
             if (fileItem && !fileItem->IsAllowed())
             {
-              it = items.erase(it);
+               it = items.erase(it);
             } 
             else 
             {
               UpdateItemWithAppData(fileItem);
-              ++it;
+               ++it;
             }
           }
         }
@@ -109,6 +126,18 @@ bool CGUIWindowApp::OnMessage(CGUIMessage& message)
       }
       
       return ret;
+    }
+
+    case GUI_MSG_WINDOW_DEINIT:
+    {  
+      CAppManager& mgr = CAppManager::GetInstance();
+      CStdString strAppId = mgr.GetLastLaunchedId();
+      
+      if(message.GetParam1() == 0 && !strAppId.empty())
+      {
+        mgr.Close(mgr.GetLastLaunchedId());
+      }
+      break;
     }
 
     case GUI_MSG_LOAD_FAILED:
@@ -141,8 +170,30 @@ bool CGUIWindowApp::OnMessage(CGUIMessage& message)
 
     case GUI_MSG_CLICKED:
     {
+      {
+        XAPP::KeyEvent event;
+        event.windowId = GetID();
+        event.key = XAPP::KeyEvent::XAPP_KEY_SELECT;
+        for (size_t i = 0; i < m_keyListeners.size(); i++)
+        {
+          if (m_keyListeners[i]->KeyPressed(event))
+            return true;
+        }
+      }
+
       int iControl = message.GetSenderId();
       int iAction = message.GetParam1();
+
+      XAPP::ActionEvent event;
+      event.controlId = iControl;
+      event.windowId = GetID();
+      for (size_t i = 0; i < m_actionListeners.size(); i++)
+      {
+        if (m_actionListeners[i]->ActionPerformed(event))
+        {
+          return true;
+        }
+      }
 
       // Check action type
       if (iAction == ACTION_SELECT_ITEM || iAction == ACTION_MOUSE_LEFT_CLICK)
@@ -182,7 +233,7 @@ void CGUIWindowApp::UpdateItemWithAppData(CFileItem* fileItem)
   {
     return;
   }
-
+  
   //////////////////
   // update appid //
   //////////////////
@@ -212,19 +263,25 @@ void CGUIWindowApp::SetContainerPath(DWORD controlId, CStdString& path)
   msg.SetLabel(path);
   g_application.getApplicationMessenger().SendGUIMessageToWindow(msg, GetID(), true);
 
-  CSingleLock lock(m_loadingContainersLock);
+    CSingleLock lock(m_loadingContainersLock);
   g_application.GetItemLoader().AddControl(GetID(), controlId, path);
-  m_loadingContainers++;
+    m_loadingContainers++;
   
-}
+  }
 
 void CGUIWindowApp::OnInitWindow()
 {
+  XAPP::WindowEvent event;
+  event.windowId = GetID();
+  for (size_t i = 0; i < m_windowListeners.size(); i++)
+  {
+    m_windowListeners[i]->WindowOpening(event);
+  }
+
   {
     CSingleLock lock(m_loadingContainersLock);
     m_loadingContainers = 0;
   }
-	
 	
   SetRunActionsManually();
   CGUIWindow::OnInitWindow();
@@ -238,10 +295,22 @@ void CGUIWindowApp::OnInitWindow()
   }
 
   RunLoadActions();
+
+  for (size_t i = 0; i < m_windowListeners.size(); i++)
+  {
+    m_windowListeners[i]->WindowOpened(event);
+  }
 }
 
 void CGUIWindowApp::OnDeinitWindow(int nextWindowID)
 {
+  XAPP::WindowEvent event;
+  event.windowId = GetID();
+  for (size_t i = 0; i < m_windowListeners.size(); i++)
+  {
+    m_windowListeners[i]->WindowClosing(event);
+  }
+
   SaveWindowState();
   RunUnloadActions();
 
@@ -252,6 +321,11 @@ void CGUIWindowApp::OnDeinitWindow(int nextWindowID)
   }
   
   CGUIWindow::OnDeinitWindow(nextWindowID);
+
+  for (size_t i = 0; i < m_windowListeners.size(); i++)
+  {
+    m_windowListeners[i]->WindowClosed(event);
+  }
 }
 
 void CGUIWindowApp::RegisterContainers(CWindowAppState* state)
@@ -276,7 +350,7 @@ void CGUIWindowApp::RegisterContainers(CWindowAppState* state)
     int iSelectedItem = -1;
     if (state)
     {
-      for (int i = 0; i < state->containers.size(); i++)
+      for (size_t i = 0; i < state->containers.size(); i++)
       {
         if (state->containers[i]->controlId == pContainer->GetID())
         {
@@ -313,6 +387,21 @@ bool CGUIWindowApp::OnAction(const CAction &action)
 {
   if (action.id == ACTION_PREVIOUS_MENU || action.id == ACTION_PARENT_DIR)
   {
+    XAPP::KeyEvent event;
+    event.windowId = GetID();
+    event.key = XAPP::KeyEvent::XAPP_KEY_BACK;
+    for (size_t i = 0; i < m_keyListeners.size(); i++)
+    {
+      if (m_keyListeners[i]->KeyPressed(event))
+        return true;
+    }
+
+#ifdef HAS_EMBEDDED
+    if (g_application.IsPlaying())
+    {
+      g_application.GetItemLoader().Resume();
+    }
+#endif
     if (m_windowStateHistory.empty())
     {
       g_windowManager.PreviousWindow();
@@ -323,6 +412,59 @@ bool CGUIWindowApp::OnAction(const CAction &action)
       PopWindowState(true);
       return true;
     }
+  }
+
+  else if (action.id == ACTION_MOVE_DOWN)
+  {
+    XAPP::KeyEvent event;
+    event.windowId = GetID();
+    event.key = XAPP::KeyEvent::XAPP_KEY_DOWN;
+    for (size_t i = 0; i < m_keyListeners.size(); i++)
+    {
+      if (m_keyListeners[i]->KeyPressed(event))
+        return true;
+    }
+  }
+
+  else if (action.id == ACTION_MOVE_UP)
+  {
+    XAPP::KeyEvent event;
+    event.windowId = GetID();
+    event.key = XAPP::KeyEvent::XAPP_KEY_UP;
+    for (size_t i = 0; i < m_keyListeners.size(); i++)
+    {
+      if (m_keyListeners[i]->KeyPressed(event))
+        return true;
+    }
+  }
+
+  else if (action.id == ACTION_MOVE_LEFT)
+  {
+    XAPP::KeyEvent event;
+    event.windowId = GetID();
+    event.key = XAPP::KeyEvent::XAPP_KEY_LEFT;
+    for (size_t i = 0; i < m_keyListeners.size(); i++)
+    {
+      if (m_keyListeners[i]->KeyPressed(event))
+        return true;
+    }
+  }
+
+  else if (action.id == ACTION_MOVE_RIGHT)
+  {
+    XAPP::KeyEvent event;
+    event.windowId = GetID();
+    event.key = XAPP::KeyEvent::XAPP_KEY_RIGHT;
+    for (size_t i = 0; i < m_keyListeners.size(); i++)
+    {
+      if (m_keyListeners[i]->KeyPressed(event))
+        return true;
+    }
+  }
+
+  else if (action.id == ACTION_OSD_EXT_CLICK)
+  {
+    printf("***** EXT CLICK!!!!\n");
   }
 
   return CGUIWindow::OnAction(action);
@@ -353,7 +495,7 @@ void CGUIWindowApp::ClearStateStack()
 
 void CGUIWindowApp::PushWindowState()
 {
-  CLog::Log(LOGDEBUG,"CGUIWindowApp::PushWindowState - Enter function. Going to call GetWindowState(). [WindowHistorySize=%lu] (was)",m_windowStateHistory.size());
+  CLog::Log(LOGDEBUG,"CGUIWindowApp::PushWindowState - Enter function. Going to call GetWindowState(). [WindowHistorySize=%zu] (was)",m_windowStateHistory.size());
   
   CWindowAppState* currentState = GetWindowState();
   
@@ -361,13 +503,13 @@ void CGUIWindowApp::PushWindowState()
     m_windowStateHistory.push(currentState);
   else
   {
-    CLog::Log(LOGDEBUG,"CGUIWindowApp::PushWindowState - Calling to GetWindowState() returned a NULL CWindowAppState object. Not going to save it in WindowHistory. [WindowHistorySize=%lu] (was)",m_windowStateHistory.size());    
+    CLog::Log(LOGDEBUG,"CGUIWindowApp::PushWindowState - Calling to GetWindowState() returned a NULL CWindowAppState object. Not going to save it in WindowHistory. [WindowHistorySize=%zu] (was)",m_windowStateHistory.size());    
   }
 }
 
 void CGUIWindowApp::PopWindowState(bool restoreState)
 {
-  CLog::Log(LOGDEBUG,"CGUIWindowApp::PopWindowState - Enter function with [restoreState=%d]. [WindowHistorySize=%lu] (was)",restoreState,m_windowStateHistory.size());
+  CLog::Log(LOGDEBUG,"CGUIWindowApp::PopWindowState - Enter function with [restoreState=%d]. [WindowHistorySize=%zu] (was)",restoreState,m_windowStateHistory.size());
 
   if (!m_windowStateHistory.empty())
   {
@@ -378,7 +520,7 @@ void CGUIWindowApp::PopWindowState(bool restoreState)
     {
       if(lastState)
       {
-        CLog::Log(LOGDEBUG,"CGUIWindowApp::PopWindowState - Because [restoreState=%d] going ot call SetWindowState() with CWindowAppState object that was pop. [WindowHistorySize=%lu] (was)",restoreState,m_windowStateHistory.size());
+        CLog::Log(LOGDEBUG,"CGUIWindowApp::PopWindowState - Because [restoreState=%d] going ot call SetWindowState() with CWindowAppState object that was pop. [WindowHistorySize=%zu] (was)",restoreState,m_windowStateHistory.size());
 
         SetWindowState(lastState);
       }
@@ -392,7 +534,7 @@ void CGUIWindowApp::PopWindowState(bool restoreState)
 
 void CGUIWindowApp::PopToWindowState(bool restoreState, int numberInStack)
 {
-  CLog::Log(LOGDEBUG,"CGUIWindowApp::PopToWindowState - Enter function with [restoreState=%d][numberInStack=%d]. [WindowHistorySize=%lu] (was)",restoreState,numberInStack,m_windowStateHistory.size());
+  CLog::Log(LOGDEBUG,"CGUIWindowApp::PopToWindowState - Enter function with [restoreState=%d][numberInStack=%d]. [WindowHistorySize=%zu] (was)",restoreState,numberInStack,m_windowStateHistory.size());
 
   bool gotState = false;
   CWindowAppState* lastState = NULL;
@@ -415,7 +557,7 @@ void CGUIWindowApp::PopToWindowState(bool restoreState, int numberInStack)
   {
     if(lastState)
     {
-      CLog::Log(LOGDEBUG,"CGUIWindowApp::PopToWindowState - Because [restoreState=%d] and [gotState=%d] going ot call SetWindowState() with CWindowAppState object that was pop. [WindowHistorySize=%lu] (was)",restoreState,gotState,m_windowStateHistory.size());
+      CLog::Log(LOGDEBUG,"CGUIWindowApp::PopToWindowState - Because [restoreState=%d] and [gotState=%d] going ot call SetWindowState() with CWindowAppState object that was pop. [WindowHistorySize=%zu] (was)",restoreState,gotState,m_windowStateHistory.size());
 
       SetWindowState(lastState);
     }
@@ -467,7 +609,7 @@ CWindowAppState* CGUIWindowApp::GetWindowState()
   {
     CWindowAppStateContainer* stateContainer = new CWindowAppStateContainer();
     
-    CLog::Log(LOGDEBUG,"CGUIWindowApp::GetWindowState - [%lu] Allocate CWindowAppStateContainer (was)",i);
+    //CLog::Log(LOGDEBUG,"CGUIWindowApp::GetWindowState - [%lu] Allocate CWindowAppStateContainer (was)",i);
 
     stateContainer->controlId = containers[i]->GetID();
     stateContainer->isVisible = containers[i]->IsVisible();
@@ -487,16 +629,17 @@ CWindowAppState* CGUIWindowApp::GetWindowState()
       for(size_t k = 0; k < stateContainer->guiListItemArraySize; k++)
       {
         stateContainer->guiListItemArray[k] = new CFileItem(*((CFileItem*) containerGuiListItemsVec[k].get()));        
-        CLog::Log(LOGDEBUG,"CGUIWindowApp::GetWindowState - [%lu][%lu] Allocate CFileItem for [label=%s] (was)",i,k,((stateContainer->guiListItemArray[k])->GetLabel()).c_str());
+        //CLog::Log(LOGDEBUG,"CGUIWindowApp::GetWindowState - [%lu][%lu] Allocate CFileItem for [label=%s] (was)",i,k,((stateContainer->guiListItemArray[k])->GetLabel()).c_str());
       }
     }
 
     CGUIMessage msg(GUI_MSG_ITEM_SELECTED, GetID(), stateContainer->controlId);
     OnMessage(msg);
     stateContainer->selectedItem = msg.GetParam1();
+
     result->containers.push_back(stateContainer);
     
-    CLog::Log(LOGDEBUG,"CGUIWindowApp::GetWindowState - [%lu] After push CWindowAppStateContainer [controlId=%d][selectedItem=%d]. [ContainersVecSize=%lu] (was)",i,stateContainer->controlId,stateContainer->selectedItem,(result->containers).size());
+    //CLog::Log(LOGDEBUG,"CGUIWindowApp::GetWindowState - [%lu] After push CWindowAppStateContainer [controlId=%d][selectedItem=%d]. [ContainersVecSize=%lu] (was)",i,stateContainer->controlId,stateContainer->selectedItem,(result->containers).size());
   }
 
   // For each control remember whether it's visible or not
@@ -520,6 +663,9 @@ CWindowAppState* CGUIWindowApp::GetWindowState()
 
     stateControl->controlId = controls[i]->GetID();
     stateControl->isVisible = controls[i]->IsVisible();
+
+    if (controls[i]->GetControlType() == CGUIControl::GUICONTROL_LABEL)
+      stateControl->label = ((CGUILabelControl*)controls[i])->GetInfo();
     result->controls.push_back(stateControl);
     
     //CLog::Log(LOGDEBUG,"CGUIWindowApp::GetWindowState - [%d] After push CWindowAppStateControl. [ControlsVecSize=%d] (was)",i,(result->controls).size());
@@ -530,7 +676,7 @@ CWindowAppState* CGUIWindowApp::GetWindowState()
   // Remember the focused control
   result->focusedControl = GetFocusedControlID();
 
-  CLog::Log(LOGDEBUG,"CGUIWindowApp::GetWindowState - Exit function and return CWindowAppState. [ContainersVecSize=%lu][ControlsVecSize=%lu] (was)",(result->containers).size(),(result->controls).size());
+  //CLog::Log(LOGDEBUG,"CGUIWindowApp::GetWindowState - Exit function and return CWindowAppState. [ContainersVecSize=%lu][ControlsVecSize=%lu] (was)",(result->containers).size(),(result->controls).size());
 
   return result;
 }
@@ -539,8 +685,10 @@ void CGUIWindowApp::SetWindowState(CWindowAppState* state)
 {
   if(state)
   {
-    CLog::Log(LOGDEBUG,"CGUIWindowApp::SetWindowState - Enter function with CWindowAppState. [ContainersVecSize=%lu][ControlsVecSize=%lu] (was)",(state->containers).size(),(state->controls).size());
+    CLog::Log(LOGDEBUG,"CGUIWindowApp::SetWindowState - Enter function with CWindowAppState. [ContainersVecSize=%zu][ControlsVecSize=%zu] (was)",(state->containers).size(),(state->controls).size());
   }
+
+  int selectedItem = 0;
 
   // Set path for each container
   for (size_t i = 0; i < (state->containers).size(); i++)
@@ -568,6 +716,11 @@ void CGUIWindowApp::SetWindowState(CWindowAppState* state)
           }  
           
           ((CGUIBaseContainer*) pControl)->SetItems(savedContainerGuiListItemsArray);
+
+          SET_CONTROL_FOCUS(state->containers[i]->controlId, state->containers[i]->selectedItem);
+
+          if (state->containers[i]->controlId == state->focusedControl)
+            selectedItem = state->containers[i]->selectedItem;
         }
       }
     }
@@ -579,21 +732,25 @@ void CGUIWindowApp::SetWindowState(CWindowAppState* state)
   // Set visibility to all controls
   for (size_t i = 0; i < (state->controls).size(); i++)
   {
-    if ((state->controls[i])->isVisible)
+    if (state->controls[i]->isVisible)
     {
-      SET_CONTROL_VISIBLE((state->controls[i])->controlId);
+      SET_CONTROL_VISIBLE(state->controls[i]->controlId);
     }
     else
     {
-      SET_CONTROL_HIDDEN((state->controls[i])->controlId);
+      SET_CONTROL_HIDDEN(state->controls[i]->controlId);
     }
+
+    if (GetControl(state->controls[i]->controlId)->GetControlType() == CGUIControl::GUICONTROL_LABEL)
+       ((CGUILabelControl*)GetControl(state->controls[i]->controlId))->SetInfo(state->controls[i]->label);
   }
 
   // Restore the focused control
   SetInitialVisibility();
   SET_CONTROL_VISIBLE(state->focusedControl);
   SetInitialVisibility();
-  SET_CONTROL_FOCUS(state->focusedControl, 0);
+
+  SET_CONTROL_FOCUS(state->focusedControl, selectedItem);
   
   if(state)
   {
@@ -636,16 +793,69 @@ void CGUIWindowApp::GetAllControls(std::vector<CGUIControl*>& controls)
   }
 }
 
+void CGUIWindowApp::AddActionListener(XAPP::ActionListener* listener)
+{
+  m_actionListeners.push_back(listener);
+}
+
+void CGUIWindowApp::RemoveActionListener(XAPP::ActionListener* listener)
+{
+  for (size_t i = 0; i < m_actionListeners.size(); i++)
+  {
+    if (m_actionListeners[i] == listener)
+    {
+      m_actionListeners.erase(m_actionListeners.begin() + i);
+      break;
+    }
+  }
+}
+
+void CGUIWindowApp::AddWindowListener(XAPP::WindowListener* listener)
+{
+  m_windowListeners.push_back(listener);
+}
+
+void CGUIWindowApp::RemoveWindowListener(XAPP::WindowListener* listener)
+{
+  for (size_t i = 0; i < m_windowListeners.size(); i++)
+  {
+    if (m_windowListeners[i] == listener)
+    {
+      m_windowListeners.erase(m_windowListeners.begin() + i);
+      break;
+    }
+  }
+}
+
+void CGUIWindowApp::AddKeyListener(XAPP::KeyListener* listener)
+{
+  m_keyListeners.push_back(listener);
+}
+
+void CGUIWindowApp::RemoveKeyListener(XAPP::KeyListener* listener)
+{
+  for (size_t i = 0; i < m_keyListeners.size(); i++)
+  {
+    if (m_keyListeners[i] == listener)
+    {
+      m_keyListeners.erase(m_keyListeners.begin() + i);
+      break;
+    }
+  }
+}
+
 void CGUIWindowAppWaitLoading::Run()
 {
   CGUIWindowApp* pWindow = (CGUIWindowApp*) g_windowManager.GetWindow(g_windowManager.GetActiveWindow());
+  int nRounds = 0;
   while (pWindow->GetNumberOfLoadingContainers() > 0)
   {
     Sleep(200);
-    if (pParent && !pParent->IsRunning())
+    if ((pParent && !pParent->IsRunning()) || (nRounds >= 18000 /* 1 min */))
     {
       break;
     }
+    ++nRounds;
   }
 }
 
@@ -732,4 +942,3 @@ const CWindowAppStateContainer& CWindowAppStateContainer::operator =(const CWind
   
   return *this;
 }
-

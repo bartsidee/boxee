@@ -20,20 +20,24 @@
  */
 
 /**
- * @file libavcodec/ac3.h
+ * @file
  * Common code between the AC-3 encoder and decoder.
  */
 
 #ifndef AVCODEC_AC3_H
 #define AVCODEC_AC3_H
 
-#include "ac3tab.h"
-
 #define AC3_MAX_CODED_FRAME_SIZE 3840 /* in bytes */
 #define AC3_MAX_CHANNELS 6 /* including LFE channel */
 
-#define NB_BLOCKS 6 /* number of PCM blocks inside an AC-3 frame */
-#define AC3_FRAME_SIZE (NB_BLOCKS * 256)
+#define AC3_MAX_COEFS   256
+#define AC3_BLOCK_SIZE  256
+#define AC3_MAX_BLOCKS    6
+#define AC3_FRAME_SIZE (AC3_MAX_BLOCKS * 256)
+#define AC3_WINDOW_SIZE (AC3_BLOCK_SIZE * 2)
+#define AC3_CRITICAL_BANDS 50
+
+#include "ac3tab.h"
 
 /* exponent encoding strategy */
 #define EXP_REUSE 0
@@ -111,10 +115,10 @@ typedef enum {
     EAC3_FRAME_TYPE_RESERVED
 } EAC3FrameType;
 
-void ac3_common_init(void);
+void ff_ac3_common_init(void);
 
 /**
- * Calculates the log power-spectral density of the input signal.
+ * Calculate the log power-spectral density of the input signal.
  * This gives a rough estimate of signal power in the frequency domain by using
  * the spectral envelope (exponents).  The psd is also separately grouped
  * into critical bands for use in the calculating the masking curve.
@@ -131,7 +135,7 @@ void ff_ac3_bit_alloc_calc_psd(int8_t *exp, int start, int end, int16_t *psd,
                                int16_t *band_psd);
 
 /**
- * Calculates the masking curve.
+ * Calculate the masking curve.
  * First, the excitation is calculated using parameters in s and the signal
  * power in each critical band.  The excitation is compared with a predefined
  * hearing threshold table to produce the masking curve.  If delta bit
@@ -159,7 +163,7 @@ int ff_ac3_bit_alloc_calc_mask(AC3BitAllocParameters *s, int16_t *band_psd,
                                int16_t *mask);
 
 /**
- * Calculates bit allocation pointers.
+ * Calculate bit allocation pointers.
  * The SNR is the difference between the masking curve and the signal.  AC-3
  * uses this value for each frequency bin to allocate bits.  The snroffset
  * parameter is a global adjustment to the SNR for all bins.
@@ -176,12 +180,5 @@ int ff_ac3_bit_alloc_calc_mask(AC3BitAllocParameters *s, int16_t *band_psd,
 void ff_ac3_bit_alloc_calc_bap(int16_t *mask, int16_t *psd, int start, int end,
                                int snr_offset, int floor,
                                const uint8_t *bap_tab, uint8_t *bap);
-
-void ac3_parametric_bit_allocation(AC3BitAllocParameters *s, uint8_t *bap,
-                                   int8_t *exp, int start, int end,
-                                   int snr_offset, int fast_gain, int is_lfe,
-                                   int dba_mode, int dba_nsegs,
-                                   uint8_t *dba_offsets, uint8_t *dba_lengths,
-                                   uint8_t *dba_values);
 
 #endif /* AVCODEC_AC3_H */

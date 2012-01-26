@@ -41,12 +41,14 @@ class CThread;
 class IRunnable
 {
 public:
-  IRunnable(): m_bJobResult(true), m_IsCanceled(false), pParent(NULL) {}
+  IRunnable(): m_bJobResult(true), m_IsCanceled(false), pParent(NULL) , m_IsSilent(false) , m_allowAbort(true){}
   virtual void Run()=0;
   virtual ~IRunnable() {}
   bool m_bJobResult;
   bool m_IsCanceled;
   CThread *pParent;
+  bool m_IsSilent;
+  bool m_allowAbort;
 };
 
 #ifdef CTHREAD
@@ -67,8 +69,8 @@ public:
   virtual ~CThread();
   void Create(bool bAutoDelete = false, unsigned stacksize = THREAD_NORMALSTACKSIZE);
   bool WaitForThreadExit(unsigned int milliseconds);
-  DWORD WaitForSingleObject(HANDLE hHandle, unsigned int milliseconds);
-  DWORD WaitForMultipleObjects(DWORD nCount, HANDLE *lpHandles, BOOL bWaitAll, unsigned int milliseconds);
+  DWORD WaitForSingleObject(HANDLE hHandle, unsigned int milliseconds) const;
+  DWORD WaitForMultipleObjects(DWORD nCount, HANDLE *lpHandles, BOOL bWaitAll, unsigned int milliseconds) const;
   void Sleep(unsigned int milliseconds);
   bool SetPriority(const int iPriority);
   void SetName( LPCTSTR szThreadName );

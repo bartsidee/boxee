@@ -12,19 +12,20 @@
 				<posy>0</posy>
 				<width>600</width>
 				<height>302</height>
-				<texture border="64">dialog_background.png</texture>
+				<texture border="20">menu_dialog_background.png</texture>
+				<colordiffuse>FF212121</colordiffuse>
 			</control>
 			<control type="label" id="2">
 				<description>heading label</description>
 				<posx>26</posx>
-				<posy>20</posy>
+				<posy>34</posy>
 				<width>550</width>
-				<height>56</height>
-				<font>title24b</font>
+				<height>70</height>
+				<font>font28b</font>
 				<align>left</align>
 				<aligny>center</aligny>
 				<label>-</label>
-				<textcolor>FF3B2D06</textcolor>
+				<textcolor>white</textcolor>
 				<wrapmultiline>true</wrapmultiline>
 			</control>
 			<control type="button" id="28">
@@ -39,8 +40,8 @@
 				<texturenofocus border="30">-</texturenofocus>
 				<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
 				<textureclick border="30">button_action_menu_source_click.png</textureclick>
-				<font>title22b</font>
-				<label>[UPPERCASE]$LOCALIZE[186][/UPPERCASE]</label>
+				<font>font22b</font>
+				<label>$LOCALIZE[186]</label>
 				<!--OK-->
 				<onup>5</onup>
 				<ondown>-</ondown>
@@ -60,8 +61,8 @@
 				<texturenofocus border="30">-</texturenofocus>
 				<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
 				<textureclick border="30">button_action_menu_source_click.png</textureclick>
-				<font>title22b</font>
-				<label>[UPPERCASE]$LOCALIZE[222][/UPPERCASE]</label>
+				<font>font22b</font>
+				<label>$LOCALIZE[222]</label>
 				<!--Cancel-->
 				<onup>5</onup>
 				<ondown>-</ondown>
@@ -107,12 +108,11 @@
 				<font>font22b</font>
 				<align>left</align>
 				<aligny>center</aligny>
-				<textcolor>white</textcolor>
-				<focusedcolor>darkgrey</focusedcolor>
+				<textcolor>black</textcolor>
+				<focusedcolor>black</focusedcolor>
 				<textoffsetx>14</textoffsetx>
-				<texturenofocus border="20">text_box.png</texturenofocus>
-				<texturefocus border="20">text_box_on.png</texturefocus>
-				<textureclick border="20">text_box_click.png</textureclick>
+				<texturenofocus border="25">browse_menu_dialog_edit.png</texturenofocus>
+				<texturefocus border="25">browse_menu_dialog_edit_focus.png</texturefocus>
 			</control>
 			<control type="radiobutton" id="8">
 				<description>Default RadioButton</description>
@@ -123,13 +123,15 @@
 				<disabledcolor>disabled</disabledcolor>
 				<textoffsetx>20</textoffsetx>
 				<texturenofocus border="15">button_settings_line_divider.png</texturenofocus>
-				<texturefocus border="15">button_option_menu_on.png</texturefocus>
-				<textureradiofocus>icons/icon_checkbox_full.png</textureradiofocus>
-				<textureradionofocus>icons/icon_checkbox_empty.png</textureradionofocus>
+				<texturefocus border="20" diffuse="masks/10b9f2.png">browse_line_focus.png</texturefocus>
+				<textureclick border="20" diffuse="masks/f1f1f1.png">browse_line_focus.png</textureclick>
+				<textureradiofocus>radio_button_quality_check2.png</textureradiofocus>
+				<textureradionofocus>radio_button_quality_off.png</textureradionofocus>
 				<pulseonselect>false</pulseonselect>
-				<radioposy>10</radioposy>
-				<radiowidth>20</radiowidth>
-				<radioheight>20</radioheight>
+				<radioposy>8</radioposy>
+				<radioposx>510</radioposx>
+				<radiowidth>24</radiowidth>
+				<radioheight>24</radioheight>
 			</control>
 			<control type="spincontrolex" id="9">
 				<description>Default SpinControlex</description>

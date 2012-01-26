@@ -49,8 +49,7 @@ CGUIKeyboardControl::CGUIKeyboardControl(DWORD dwParentID, DWORD dwControlId, fl
 {
   ControlType = GUICONTROL_KEYBOARD;
 
-  m_editControl = new CGUIEditControl(dwParentID, dwControlId, posX, posY, width, height, textureFocus, textureNoFocus, labelInfo, text);
-
+  m_editControl = new CGUIEditControl(dwParentID, dwControlId, posX, posY, width, height, textureFocus, textureNoFocus, labelInfo, text, labelInfo, "");
 }
 
 CGUIKeyboardControl::CGUIKeyboardControl(const CGUIKeyboardControl &keyboard)

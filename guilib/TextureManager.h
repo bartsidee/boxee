@@ -58,6 +58,8 @@ public:
   std::vector<int> m_delays;
   int m_width;
   int m_height;
+  int m_initialWidth;
+  int m_initialHeight;
   int m_orientation;
   int m_loops;
   int m_texWidth;
@@ -120,7 +122,7 @@ public:
 
   bool HasTexture(const CStdString &textureName, CStdString *path = NULL, int *bundle = NULL, int *size = NULL);
   bool CanLoad(const CStdString &texturePath) const; ///< Returns true if the texture manager can load this texture
-  int Load(const CStdString& strTextureName, bool checkBundleOnly = false);
+  int Load(const CStdString& strTextureName, bool checkBundleOnly = false, const CStdString& strLoadingTexture = "");
   const CTextureArray& GetTexture(const CStdString& strTextureName);
   void ReleaseTexture(const CStdString& strTextureName);
   void Cleanup();
@@ -143,11 +145,12 @@ public:
   void TextureLoaded(const CStdString& strFileName, const CStdString& strTextureName, CBaseTexture *pTexture);
   
   inline CCriticalSection &GetLock() { return m_lock; }
+
+  CTextureMap *LoadGif(const CStdString& strTextureName, const CStdString& strPath, int bundle);
   
 protected:
   void ReleaseTextureInternal(const CStdString& strTextureName);
-  CTextureMap *LoadGif(const CStdString& strTextureName, const CStdString& strPath, int bundle);
-  
+
   std::vector<CTextureMap*> m_vecTextures;
   std::vector<CTextureMap*> m_unusedTextures;
   typedef std::vector<CTextureMap*>::iterator ivecTextures;
@@ -156,9 +159,9 @@ protected:
 
   std::vector<CStdString> m_texturePaths;
   std::set<CStdString>    m_pinnedTextures; 
-  
+
   CTextureMap          *m_pLoadingTexture;
-  
+
   BOXEE::BXBGProcess   m_bgProcessor;
   CCriticalSection     m_lock;
 };

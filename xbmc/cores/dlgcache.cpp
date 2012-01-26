@@ -55,7 +55,7 @@ void CDlgCache::Close(bool bForceClose)
 
   if (m_pDlg && m_pDlg->IsDialogRunning())
   {
-    ThreadMessage tMsg = {TMSG_CLOSE_DIALOG};
+    ThreadMessage tMsg (TMSG_CLOSE_DIALOG);
     tMsg.lpVoid = m_pDlg;
     tMsg.dwParam1 = true;
     g_application.getApplicationMessenger().SendMessage(tMsg,false);
@@ -119,7 +119,7 @@ void CDlgCache::Process()
     try 
     {
       // instead of calling the blocking pDlg->Progress, use application messenger to send asynch message
-      ThreadMessage tMsg = {TMSG_GUI_WIN_MANAGER_PROCESS};
+      ThreadMessage tMsg (TMSG_GUI_WIN_MANAGER_PROCESS);
       tMsg.dwParam1 = (DWORD)false;
       g_application.getApplicationMessenger().SendMessage(tMsg, false);
 

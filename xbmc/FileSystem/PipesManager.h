@@ -8,7 +8,7 @@
 
 #include <map>
 
-#define PIPE_DEFAULT_MAX_SIZE (1024 * 1024)
+#define PIPE_DEFAULT_MAX_SIZE (6 * 1024 * 1024)
 
 namespace XFILE
 {
@@ -35,6 +35,8 @@ class Pipe
     bool IsEmpty();
     int  Read(char *buf, int nMaxSize, int nWaitMillis);
     bool Write(const char *buf, int nSize, int nWaitMillis);
+
+    void Flush();
     
     void CheckStatus();
     void Close();
@@ -45,14 +47,20 @@ class Pipe
     void SetEof();
     bool IsEof();
     
+    int	GetAvailableRead();
+    void SetOpenThreashold(int threashold);
+
   protected:
     
     bool        m_bOpen;
+    bool        m_bReadyForRead;
+
     bool        m_bEof;
     CRingBuffer m_buffer;
     CStdString  m_strPipeName;  
     int         m_nRefCount;
-    
+    int         m_nOpenThreashold;
+
     CEvent     m_readEvent;
     CEvent     m_writeEvent;
     

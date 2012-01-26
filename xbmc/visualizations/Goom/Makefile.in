@@ -7,9 +7,10 @@ DIRS=goom2k4-0
 
 $(SLIB): $(OBJS) goom2k4-0/src/.libs/libgoom2.a
 ifeq ($(findstring osx,$(ARCH)), osx)
-	$(CXX) -fPIC -dynamiclib -shared -undefined suppress -flat_namespace \
+	$(CXX) -fPIC -dynamiclib -shared -undefined dynamic_lookup \
+		-Wl,-alias_list,../../cores/DllLoader/exports/wrapper_mach_alias \
+		../../cores/DllLoader/exports/wrapper.o \
 		goom2k4-0/src/.libs/libgoom2.a $(CXXFLAGS) -o $(SLIB) $(OBJS)
-	../../../tools/Mach5/wrapper.rb $@;mv output.so $@
 else
 	$(CXX) -fPIC goom2k4-0/src/*.o -shared $(CXXFLAGS) -o $(SLIB) $(OBJS) \
 		`cat ../../cores/DllLoader/exports/wrapper.def` \

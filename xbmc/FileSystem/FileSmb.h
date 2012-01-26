@@ -60,9 +60,9 @@ public:
   CSMB();
   virtual ~CSMB();
   void Init();
-  void Deinit();
+  void Deinit(bool idle = false);
   void Purge();
-  void PurgeEx(const CURL& url);
+  void PurgeEx(const CURI& url);
 #ifdef _LINUX
   void CheckIfIdle();
   void SetActivityTime();
@@ -70,7 +70,7 @@ public:
   void AddIdleConnection();
 #endif
   static CStdString URLEncode(const CStdString &value);
-  static CStdString URLEncode(const CURL &url);
+  static CStdString URLEncode(const CURI &url);
 
   DWORD ConvertUnixToNT(int error);
 private:
@@ -93,28 +93,29 @@ class CFileSMB : public IFile
 {
 public:
   CFileSMB();
-  int OpenFile(const CURL &url, CStdString& strAuth);
+  int OpenFile(const CURI &url, CStdString& strAuth);
   virtual ~CFileSMB();
   virtual void Close();
   virtual int64_t Seek(int64_t iFilePosition, int iWhence = SEEK_SET);
   virtual unsigned int Read(void* lpBuf, int64_t uiBufSize);
-  virtual bool Open(const CURL& url);
-  virtual bool Exists(const CURL& url);
-  virtual int Stat(const CURL& url, struct __stat64* buffer);
+  virtual bool Open(const CURI& url);
+  virtual bool Exists(const CURI& url);
+  virtual int Stat(const CURI& url, struct __stat64* buffer);
   virtual int Stat(struct __stat64* buffer);
   virtual int64_t GetLength();
   virtual int64_t GetPosition();
   virtual int Write(const void* lpBuf, int64_t uiBufSize);
   virtual bool HasFileError(CStdString* err);
 
-  virtual bool OpenForWrite(const CURL& url, bool bOverWrite = false);
-  virtual bool Delete(const CURL& url);
-  virtual bool Rename(const CURL& url, const CURL& urlnew);
-
+  virtual bool OpenForWrite(const CURI& url, bool bOverWrite = false);
+  virtual bool Delete(const CURI& url);
+  virtual bool Rename(const CURI& url, const CURI& urlnew);
+  virtual int GetChunkSize() {return 1;}
+  
 protected:
   bool FillBuffer();
 
-  CURL m_url;
+  CURI m_url;
   bool IsValidFile(const CStdString& strFileName);  
   int64_t m_fileSize;
   __int64 m_filePos;

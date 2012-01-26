@@ -24,9 +24,15 @@
 
 #pragma once
 
+#include "system.h"
+
+#ifdef HAS_BOXEE_HAL
+
 #include <vector>
 #include "GUIDialog.h"
 #include "utils/Network.h"
+#include "HalServices.h"
+#include "Thread.h"
 
 class CGUIDialogAccessPoints : public CGUIDialog
 {
@@ -35,17 +41,36 @@ public:
   virtual ~CGUIDialogAccessPoints(void);
   virtual void OnInitWindow();
   virtual bool OnAction(const CAction &action);
-  void SetInterfaceName(CStdString interfaceName);
-  CStdString GetSelectedAccessPointEssId();
-  EncMode GetSelectedAccessPointEncMode();
+
   bool WasItemSelected();
 
+  void SetEssId(CStdString essId);
+  void SetAuth(CHalWirelessAuthType auth);
+
+  CStdString GetEssId();
+  CStdString GetPassword();
+  CHalWirelessAuthType GetAuth();
+
 private:
-  std::vector<NetworkAccessPoint> m_aps;
-  CStdString m_interfaceName;
-  CStdString m_selectedAPEssId;
-  EncMode m_selectedAPEncMode;
+  std::vector<CHalWirelessNetwork> m_aps;
+  CStdString m_password;
+  CHalWirelessAuthType m_auth;
+  CStdString m_essId;
   bool m_wasItemSelected;
 };
+
+
+class CWirelessScanBG : public IRunnable
+{
+public:
+  CWirelessScanBG(std::vector<CHalWirelessNetwork>& aps);
+  virtual ~CWirelessScanBG() {}
+  virtual void Run();
+
+private:
+  std::vector<CHalWirelessNetwork>& m_aps;
+};
+
+#endif
 
 #endif

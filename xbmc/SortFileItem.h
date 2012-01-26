@@ -50,6 +50,7 @@ struct SSortFileItem
   static void BySongTrackNum(CFileItemPtr &item);
   static void BySongDuration(CFileItemPtr &item);
   static void BySongRating(CFileItemPtr &item);
+  static void ByLinkTitle(CFileItemPtr& item);
 
   static void ByProgramCount(CFileItemPtr &item);
 
@@ -77,6 +78,7 @@ struct SSortFileItem
   static void ByAppUsage(CFileItemPtr& item);
   static void ByAppLastUsedDate(CFileItemPtr& item);
   static void ByVideoQuality(CFileItemPtr& item);
+  static void ByReleaseDate(CFileItemPtr& item);
 
 
   static bool AscendingFilesFirst(const CFileItemPtr &left, const CFileItemPtr &right);
@@ -93,7 +95,11 @@ struct SSortFileItem
 	// Sort by label (exact) without regard to files and folders
 	static bool LabelAscendingExact(const CFileItemPtr &left, const CFileItemPtr &right);
 	static bool LabelDescendingExact(const CFileItemPtr &left, const CFileItemPtr &right);
-	
+
+	// Sort by label (exact) without regard to files and folders
+	static bool LabelAscendingExactNoCase(const CFileItemPtr &left, const CFileItemPtr &right);
+	static bool LabelDescendingExactNoCase(const CFileItemPtr &left, const CFileItemPtr &right);
+
 	// Sort by label, putting the shares first
 	static bool LabelAscendingWithShares(const CFileItemPtr &left, const CFileItemPtr &right);
 	static bool LabelDescendingWithShares(const CFileItemPtr &left, const CFileItemPtr &right);
@@ -113,9 +119,18 @@ struct SSortFileItem
 	// Sorts folders by label ascending and item by date descending
 	static bool RssItems(const CFileItemPtr &left, const CFileItemPtr &right);
 	
-	
-	
-	
+	// Sorts search result items by their search count and label
+	static bool SearchResultPopularity(const CFileItemPtr &left, const CFileItemPtr &right);
+
+	// Sorts episodes
+	static bool EpisodesDateAscending(const CFileItemPtr &left, const CFileItemPtr &right);
+	static bool EpisodesDateDescending(const CFileItemPtr &left, const CFileItemPtr &right);
+
+	// sort shows and movies release date
+	static bool ReleaseDateAscending(const CFileItemPtr &left, const CFileItemPtr &right);
+	static bool ReleaseDateDescending(const CFileItemPtr &left, const CFileItemPtr &right);
+
+
   //Boxee
 };
 
@@ -151,6 +166,9 @@ typedef enum {
   SORT_METHOD_STUDIO,
   SORT_METHOD_STUDIO_IGNORE_THE,
   SORT_METHOD_FULLPATH,
+  SORT_METHOD_LABEL_IGNORE_FOLDERS,
+  SORT_METHOD_LASTPLAYED,
+  SORT_METHOD_LISTENERS,
   SORT_METHOD_UNSORTED,
   //Boxee
   SORT_METHOD_LABEL_FILES_FIRST,
@@ -167,6 +185,9 @@ typedef enum {
   SORT_METHOD_APP_USAGE, // 40
   SORT_METHOD_APP_LAST_USED_DATE, //41
   SORT_METHOD_VIDEO_QUALITY,
+  SORT_METHOD_RELEASE_DATE,
+  SORT_METHOD_SEARCH_COUNT,
+  SORT_METHOD_LINK_TITLE,
   //end Boxee
 	
   SORT_METHOD_MAX,
@@ -198,9 +219,7 @@ class CBoxeeSort
  public:
   CBoxeeSort()
   {
-    m_id = -1;
-    m_sortMethod = SORT_METHOD_NONE;
-    m_sortOrder = SORT_ORDER_NONE;
+    Reset();
   }
 
   CBoxeeSort(CStdString id, SORT_METHOD sortMethod, SORT_ORDER sortOrder, CStdString sortName, CStdString folderPosition)
@@ -210,6 +229,13 @@ class CBoxeeSort
     m_sortOrder = sortOrder;
     m_sortName = sortName;
     m_folderPosition = folderPosition;
+  }
+
+  void Reset()
+  {
+    m_id = "";
+    m_sortMethod = SORT_METHOD_NONE;
+    m_sortOrder = SORT_ORDER_NONE;
   }
 
   CStdString m_id;

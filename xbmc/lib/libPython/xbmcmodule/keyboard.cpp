@@ -25,6 +25,8 @@
 #include "GUIDialogKeyboard.h"
 #include "Application.h"
 
+#include "../../../placement_new.h"
+
 using namespace std;
 
 #ifndef __GNUC__
@@ -46,8 +48,8 @@ namespace PYXBMC
 
     self = (Keyboard*)type->tp_alloc(type, 0);
     if (!self) return NULL;
-    new(&self->strDefault) string();
-    new(&self->strHeading) string();
+   PLACEMENT_NEW(&self->strDefault) string();
+   PLACEMENT_NEW(&self->strHeading) string();
 
     PyObject *line = NULL;
     PyObject *heading = NULL;
@@ -97,7 +99,7 @@ namespace PYXBMC
     pKeyboard->SetHiddenInput(self->bHidden);
 
     // do modal of dialog
-    ThreadMessage tMsg = {TMSG_DIALOG_DOMODAL, WINDOW_DIALOG_KEYBOARD, g_windowManager.GetActiveWindow()};
+    ThreadMessage tMsg (TMSG_DIALOG_DOMODAL, WINDOW_DIALOG_KEYBOARD, g_windowManager.GetActiveWindow());
     g_application.getApplicationMessenger().SendMessage(tMsg, true);
 
     Py_INCREF(Py_None);

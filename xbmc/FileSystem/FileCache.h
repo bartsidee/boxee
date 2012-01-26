@@ -44,11 +44,11 @@ namespace XFILE
     virtual void StopThread(bool bWait = true);
     
     // IFIle methods
-    virtual bool          Open(const CURL& url);
+    virtual bool          Open(const CURI& url);
     virtual bool          Attach(IFile *pFile);
     virtual void          Close();
-    virtual bool          Exists(const CURL& url);
-    virtual int           Stat(const CURL& url, struct __stat64* buffer);
+    virtual bool          Exists(const CURI& url);
+    virtual int           Stat(const CURI& url, struct __stat64* buffer);
     
     virtual unsigned int  Read(void* lpBuf, int64_t uiBufSize);
     
@@ -59,8 +59,6 @@ namespace XFILE
     virtual ICacheInterface* GetCache();
     IFile *GetFileImp();
 
-    virtual int  GetChunkSize() {return m_source.GetChunkSize();}
-
     virtual CStdString GetContent();
 
     virtual __int64	GetAvailableRead();
@@ -68,7 +66,7 @@ namespace XFILE
   private:
     CCacheStrategy *m_pCache;
     bool      m_bDeleteCache;
-    bool      m_bSeekPossible;
+    int64_t   m_seekPossible;
     bool      m_bCanSeekBack;
     CFile      m_source;
     CStdString    m_sourcePath;

@@ -2,7 +2,7 @@
 |
 |   Platinum - AV Media Controller (Media Renderer Control Point)
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -29,7 +29,7 @@
 | 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 | http://www.gnu.org/licenses/gpl-2.0.html
 |
- ****************************************************************/
+****************************************************************/
 
 #ifndef _PLT_MEDIA_CONTROLLER_H_
 #define _PLT_MEDIA_CONTROLLER_H_
@@ -45,13 +45,13 @@
 +---------------------------------------------------------------------*/
 typedef NPT_List<NPT_String> PLT_StringList;
 
-struct PLT_DeviceCapabilities {
+typedef struct {
     PLT_StringList play_media;
     PLT_StringList rec_media;
     PLT_StringList rec_quality_modes;
-};
+} PLT_DeviceCapabilities;
 
-struct PLT_MediaInfo {
+typedef struct {
     NPT_UInt32    num_tracks;
     NPT_TimeStamp media_duration;
     NPT_String    cur_uri;
@@ -61,9 +61,9 @@ struct PLT_MediaInfo {
     NPT_String    play_medium;
     NPT_String    rec_medium;
     NPT_String    write_status;
-};
+} PLT_MediaInfo;
 
-struct PLT_PositionInfo {
+typedef struct {
     NPT_UInt32    track;
     NPT_TimeStamp track_duration;
     NPT_String    track_metadata;
@@ -72,20 +72,20 @@ struct PLT_PositionInfo {
     NPT_TimeStamp abs_time;
     NPT_Int32     rel_count;
     NPT_Int32     abs_count;
-};
+} PLT_PositionInfo;
 
-struct PLT_TransportInfo {
+typedef struct {
     NPT_String cur_transport_state;
     NPT_String cur_transport_status;
     NPT_String cur_speed;
-};
+} PLT_TransportInfo;
 
-struct PLT_TransportSettings {
+typedef struct {
     NPT_String play_mode;
     NPT_String rec_quality_mode;
-};
+} PLT_TransportSettings;
 
-struct PLT_ConnectionInfo {
+typedef struct {
     NPT_UInt32 rcs_id;
     NPT_UInt32 avtransport_id;
     NPT_String protocol_info;
@@ -93,10 +93,10 @@ struct PLT_ConnectionInfo {
     NPT_UInt32 peer_connection_id;
     NPT_String direction;
     NPT_String status;
-};
+} PLT_ConnectionInfo;
 
 /*----------------------------------------------------------------------
-|   PLT_MediaControllerDelegate class
+|   PLT_MediaControllerDelegate
 +---------------------------------------------------------------------*/
 class PLT_MediaControllerDelegate
 {
@@ -232,7 +232,7 @@ public:
 };
 
 /*----------------------------------------------------------------------
-|   PLT_MediaController class
+|   PLT_MediaController
 +---------------------------------------------------------------------*/
 class PLT_MediaController : public PLT_CtrlPointListener
 {
@@ -272,7 +272,7 @@ public:
     NPT_Result GetCurrentConnectionIDs(PLT_DeviceDataReference& device, void* userdata);
     NPT_Result GetCurrentConnectionInfo(PLT_DeviceDataReference& device, NPT_UInt32 connection_id, void* userdata);
     NPT_Result GetProtocolInfo(PLT_DeviceDataReference& device, void* userdata);
-
+    
     // RenderingControl
     NPT_Result SetMute(PLT_DeviceDataReference& device, NPT_UInt32 instance_id, const char* channel, bool mute, void* userdata);
     NPT_Result GetMute(PLT_DeviceDataReference& device, NPT_UInt32 instance_id, const char* channel, void* userdata);
@@ -301,7 +301,7 @@ private:
     NPT_Result OnGetCurrentConnectionIDsResponse(NPT_Result res, PLT_DeviceDataReference& device, PLT_ActionReference& action, void* userdata);
     NPT_Result OnGetCurrentConnectionInfoResponse(NPT_Result res, PLT_DeviceDataReference& device, PLT_ActionReference& action, void* userdata);
     NPT_Result OnGetProtocolInfoResponse(NPT_Result res, PLT_DeviceDataReference& device, PLT_ActionReference& action, void* userdata);
-
+    
     NPT_Result OnGetMuteResponse(NPT_Result res, PLT_DeviceDataReference& device, PLT_ActionReference& action, void* userdata);
 	NPT_Result OnGetVolumeResponse(NPT_Result res, PLT_DeviceDataReference& device, PLT_ActionReference& action, void* userdata);
 
@@ -330,7 +330,7 @@ public:
     }
 
 private:
-    PLT_CtrlPointReference       m_CtrlPoint;
+    PLT_CtrlPointReference                m_CtrlPoint;
     PLT_MediaControllerDelegate*          m_Delegate;
     NPT_Lock<PLT_DeviceDataReferenceList> m_MediaRenderers;
 };

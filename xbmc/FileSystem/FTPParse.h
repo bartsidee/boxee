@@ -15,6 +15,10 @@
 #ifndef FTPPARSE_H
 #define FTPPARSE_H
 
+#include "system.h"
+
+#ifdef HAS_FTP
+
 struct ftpparse 
 {
   char *name;       // not necessarily 0-terminated
@@ -46,5 +50,7 @@ struct ftpparse
 #define FTPPARSE_ID_FULL            1 // unique identifier for files on this FTP server */
 
 extern int ftpparse(struct ftpparse *,char *,int);
+
+#endif
 
 #endif

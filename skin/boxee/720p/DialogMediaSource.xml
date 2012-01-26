@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <window id="129">
 	<defaultcontrol>10</defaultcontrol>
 	<coordinates>
@@ -22,7 +23,7 @@
 			<posy>5</posy>
 			<width>790</width>
 			<height>440</height>
-			<colordiffuse>DDFFFFFF</colordiffuse>
+			<colordiffuse>88FFFFFF</colordiffuse>
 			<texture>black.png</texture>
 		</control>
 		<control type="label" id="2">

@@ -2,7 +2,7 @@
 |
 |   Platinum - HTTP Helper
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -29,7 +29,11 @@
 | 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 | http://www.gnu.org/licenses/gpl-2.0.html
 |
- ****************************************************************/
+****************************************************************/
+
+/** @file
+ HTTP utilities
+ */
 
 #ifndef _PLT_HTTP_H_
 #define _PLT_HTTP_H_
@@ -39,61 +43,82 @@
 +---------------------------------------------------------------------*/
 #include "Neptune.h"
 
+
+/*----------------------------------------------------------------------
+|   types
++---------------------------------------------------------------------*/
+typedef enum {
+	PLT_UNKNOWN_DEVICE,
+	PLT_XBOX,
+	PLT_PS3,
+	PLT_WMP
+} PLT_DeviceSignature;
+
 /*----------------------------------------------------------------------
 |   PLT_HttpHelper
 +---------------------------------------------------------------------*/
+/**
+ The PLT_HttpHelper class is a set of utility functions for manipulating 
+ HTTP headers, entities and messages.
+ */
 class PLT_HttpHelper {
- public:
+public:
     static bool         IsConnectionKeepAlive(NPT_HttpMessage& message);
     static bool         IsBodyStreamSeekable(NPT_HttpMessage& message);
 
     static NPT_Result   ToLog(NPT_LoggerReference logger, int level, NPT_HttpRequest* request);
+    static NPT_Result   ToLog(NPT_LoggerReference logger, int level, const NPT_HttpRequest& request);
     static NPT_Result   ToLog(NPT_LoggerReference logger, int level, NPT_HttpResponse* response);
+    static NPT_Result   ToLog(NPT_LoggerReference logger, int level, const NPT_HttpResponse& response);
 
-    static NPT_Result   GetContentType(NPT_HttpMessage& message, NPT_String& type);
-    static     void     SetContentType(NPT_HttpMessage& message, const char* type);
-    static NPT_Result   GetContentLength(NPT_HttpMessage& message, NPT_LargeSize& len);
-    static void         SetContentLength(NPT_HttpMessage& message, NPT_LargeSize len);
+    static NPT_Result   GetContentType(const NPT_HttpMessage& message, NPT_String& type);
+    static NPT_Result   GetContentLength(const NPT_HttpMessage& message, NPT_LargeSize& len);
 
-    static NPT_Result   GetHost(NPT_HttpRequest& request, NPT_String& value);
+    static NPT_Result   GetHost(const NPT_HttpRequest& request, NPT_String& value);
     static void         SetHost(NPT_HttpRequest& request, const char* host);
-    static NPT_Result   GetRange(NPT_HttpRequest& request, NPT_Position& start, NPT_Position& end);
+    static NPT_Result   GetRange(const NPT_HttpRequest& request, NPT_Position& start, NPT_Position& end);
     static void         SetRange(NPT_HttpRequest& request, NPT_Position start, NPT_Position end = (NPT_Position)-1);
+	static PLT_DeviceSignature GetDeviceSignature(const NPT_HttpRequest& request);
 
-    static NPT_Result   GetContentRange(NPT_HttpResponse& response, NPT_Position& start, NPT_Position& end, NPT_LargeSize& length);
+    static NPT_Result   GetContentRange(const NPT_HttpResponse& response, NPT_Position& start, NPT_Position& end, NPT_LargeSize& length);
     static NPT_Result   SetContentRange(NPT_HttpResponse& response, NPT_Position start, NPT_Position end, NPT_LargeSize length);
 
-    static NPT_Result   SetBody(NPT_HttpMessage& message, NPT_String& body);
-    static NPT_Result   SetBody(NPT_HttpMessage& message, const char* body, NPT_Size len);
-    static NPT_Result   SetBody(NPT_HttpMessage& message, NPT_InputStreamReference& stream, NPT_LargeSize len = 0);
-
-
-    static NPT_Result   GetBody(NPT_HttpMessage& message, NPT_String& body);
-    static NPT_Result   ParseBody(NPT_HttpMessage& message, NPT_XmlElementNode*& xml);
+    static NPT_Result   SetBody(NPT_HttpMessage& message, NPT_String& text, NPT_HttpEntity** entity = NULL);
+    static NPT_Result   SetBody(NPT_HttpMessage& message, const char* text, NPT_HttpEntity** entity = NULL);
+    static NPT_Result   SetBody(NPT_HttpMessage& message, const void* body, NPT_LargeSize len, NPT_HttpEntity** entity = NULL);
+    static NPT_Result   SetBody(NPT_HttpMessage& message, NPT_InputStreamReference stream, NPT_HttpEntity** entity = NULL);
+    static NPT_Result   GetBody(const NPT_HttpMessage& message, NPT_String& body);
+    static NPT_Result   ParseBody(const NPT_HttpMessage& message, NPT_XmlElementNode*& xml);
 
     static NPT_Result   Connect(NPT_Socket&      connection,
                                 NPT_HttpRequest& request,
                                 NPT_Timeout      timeout = NPT_TIMEOUT_INFINITE);
-	static void			SetBasicAuthorization(NPT_HttpRequest& request, const char* login, const char* password);
+	static void			SetBasicAuthorization(NPT_HttpRequest& request, const char* username, const char* password);
 };
 
 /*----------------------------------------------------------------------
 |   PLT_HttpRequestContext
 +---------------------------------------------------------------------*/
+/** 
+ The PLT_HttpRequestContext class holds information about the request sent and the
+ local and remote ip address and port associated with a connection. It is used
+ mostly when processing a HTTP response.
+ */
 class PLT_HttpRequestContext : public NPT_HttpRequestContext {
 public:
     // constructors and destructor
-    PLT_HttpRequestContext(NPT_HttpRequest& request) : 
+    PLT_HttpRequestContext(const NPT_HttpRequest& request) : 
         m_Request(request) {}
-    PLT_HttpRequestContext(NPT_HttpRequest& request, const NPT_HttpRequestContext& context) :
+    PLT_HttpRequestContext(const NPT_HttpRequest& request, const NPT_HttpRequestContext& context) :
         NPT_HttpRequestContext(&context.GetLocalAddress(), &context.GetRemoteAddress()),
         m_Request(request) {}
     virtual ~PLT_HttpRequestContext() {}
     
-    NPT_HttpRequest& GetRequest() const { return m_Request; }
+    const NPT_HttpRequest& GetRequest() const { return m_Request; }
+	PLT_DeviceSignature GetDeviceSignature() { return PLT_HttpHelper::GetDeviceSignature(m_Request); }
     
 private:
-    NPT_HttpRequest& m_Request;
+    const NPT_HttpRequest& m_Request;
 };
 
 /*----------------------------------------------------------------------
@@ -113,23 +138,26 @@ private:
 /*----------------------------------------------------------------------
 |   PLT_HttpRequestHandler
 +---------------------------------------------------------------------*/
-template <class T>
+/**
+ The PLT_HttpRequestHandler class delegates the handling of the response of a
+ received HTTP request by a HTTP Server.
+ */
 class PLT_HttpRequestHandler : public NPT_HttpRequestHandler
 {
 public:
-    PLT_HttpRequestHandler<T>(T* data) : m_Data(data) {}
-    virtual ~PLT_HttpRequestHandler<T>() {}
+    PLT_HttpRequestHandler(NPT_HttpRequestHandler* delegate) : 
+        m_Delegate(delegate) {}
+    virtual ~PLT_HttpRequestHandler() {}
 
     // NPT_HttpRequestHandler methods
     NPT_Result SetupResponse(NPT_HttpRequest&              request, 
                              const NPT_HttpRequestContext& context,
                              NPT_HttpResponse&             response) {
-        return m_Data->ProcessHttpRequest(request, context, response);
+        return m_Delegate->SetupResponse(request, context, response);
     }
 
 private:
-    T* m_Data;
+    NPT_HttpRequestHandler* m_Delegate;
 };
-
 
 #endif /* _PLT_HTTP_H_ */

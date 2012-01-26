@@ -40,6 +40,8 @@
 #include "control.h"
 #include "pyutil.h"
 
+#include "../../../placement_new.h"
+
 using namespace std;
 
 #ifndef __GNUC__
@@ -67,10 +69,10 @@ namespace PYXBMC
 
     self = (ControlSpin*)type->tp_alloc(type, 0);
     if (!self) return NULL;
-    new(&self->strTextureUp) string();    
-    new(&self->strTextureDown) string();    
-    new(&self->strTextureUpFocus) string();    
-    new(&self->strTextureDownFocus) string();      
+   PLACEMENT_NEW(&self->strTextureUp) string();    
+   PLACEMENT_NEW(&self->strTextureDown) string();    
+   PLACEMENT_NEW(&self->strTextureUpFocus) string();    
+   PLACEMENT_NEW(&self->strTextureDownFocus) string();      
 
     if (!PyArg_ParseTuple(args, "llll|Oss", &self->dwPosX, &self->dwPosY, &self->dwWidth, &self->dwHeight,
       &pObjectText, &cTextureFocus, &cTextureNoFocus)) return NULL;
@@ -95,10 +97,10 @@ namespace PYXBMC
     //ControlSpin* self = (ControlSpin*)_PyObject_New(&ControlSpin_Type);
     ControlSpin*self = (ControlSpin*)ControlSpin_Type.tp_alloc(&ControlSpin_Type, 0);
     if (!self) return NULL;
-    new(&self->strTextureUp) string();    
-    new(&self->strTextureDown) string();    
-    new(&self->strTextureUpFocus) string();    
-    new(&self->strTextureDownFocus) string();      
+   PLACEMENT_NEW(&self->strTextureUp) string();    
+   PLACEMENT_NEW(&self->strTextureDown) string();    
+   PLACEMENT_NEW(&self->strTextureUpFocus) string();    
+   PLACEMENT_NEW(&self->strTextureDownFocus) string();      
 
     // default values for spin control
     self->color = 0xffffffff;

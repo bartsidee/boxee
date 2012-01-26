@@ -20,6 +20,10 @@
  *
  */
 
+#include "system.h"
+
+#ifdef HAS_LASTFM
+
 #include "IDirectory.h"
 #include "FileSystem/FileCurl.h"
 #include "tinyXML/tinyxml.h"
@@ -73,3 +77,5 @@ protected:
   CGUIDialogProgress* m_dlgProgress;
 };
 }
+
+#endif

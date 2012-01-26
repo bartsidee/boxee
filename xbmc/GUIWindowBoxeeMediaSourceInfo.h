@@ -41,6 +41,8 @@ public:
 
 private:
   CStdString shortenURL(CStdString path);
+  CStdString ManipulateSourceDisplayName();
+  bool IsOnlyPictureSourceSelected();
 
   CStdString m_editedSourceName;
   CBoxeeMediaSource  m_editedSource;

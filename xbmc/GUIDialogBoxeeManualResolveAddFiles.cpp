@@ -72,7 +72,7 @@ void CGUIDialogBoxeeManualResolveAddFiles::OnInitWindow()
 }
 
 void CGUIDialogBoxeeManualResolveAddFiles::OnDeinitWindow(int nextWindowID)
-{
+  {
   CGUIDialog::OnDeinitWindow(nextWindowID);
 }
 
@@ -82,20 +82,20 @@ bool CGUIDialogBoxeeManualResolveAddFiles::OnAction(const CAction &action)
   {
   case ACTION_PARENT_DIR:
   case ACTION_PREVIOUS_MENU:
+  {
+    if (m_moveShortcut)
     {
-      if (m_moveShortcut)
-      {
-        m_moveShortcut = false;
-        SetProperty("manage-set",false);
-      }
-      else
-      {
-        Close();
-      }
-
-      return true;
+      m_moveShortcut = false;
+      SetProperty("manage-set",false);
     }
-    break;
+    else
+    {
+      Close();
+    }
+
+    return true;
+  }
+  break;
   case ACTION_MOUSE:
   case ACTION_MOVE_LEFT:
   case ACTION_MOVE_RIGHT:
@@ -123,14 +123,13 @@ bool CGUIDialogBoxeeManualResolveAddFiles::OnAction(const CAction &action)
         listItems.erase(listItems.begin() + previousItem);
         listItems.insert(listItems.begin() + currentItem, theScreenItem);
       }
-
       return true;
     }
   }
   break;
   default:
   {
-    // do nothing
+      // do nothing
   }
   break;
   }
@@ -170,9 +169,14 @@ bool CGUIDialogBoxeeManualResolveAddFiles::OnMessage(CGUIMessage& message)
           }
         }
 
+        selectedItem->Select(true); //set the selected item as on
         m_partItems.Add(itemPtr);
 
-        CGUIMessage message2(GUI_MSG_LABEL_BIND, GetID(), PART_LIST, 0, 0, &m_partItems);
+
+        CGUIMessage message3(GUI_MSG_LABEL_BIND, GetID(), PART_LIST, 0, 0, &m_partItems); //for the new added item
+        OnMessage(message3);
+
+        CGUIMessage message2(GUI_MSG_MARK_ITEM, GetID(), FILE_LIST, iSelectedItem, 0); //for the disabled item
         OnMessage(message2);
       }
 
@@ -216,7 +220,7 @@ void CGUIDialogBoxeeManualResolveAddFiles::GetDirectory(const CStdString& strFol
   CLog::Log(LOGERROR,"CGUIDialogBoxeeManualResolveAddFiles::GetDirectory, parent folder, path = %s (manual)", strParentDirectory.c_str());
 
   if (!strParentDirectory.IsEmpty())
-  {
+  { //add the ability to go to the parent folder
     CFileItemPtr parentItemPtr(new CFileItem(".."));
     parentItemPtr->m_strPath = strParentDirectory;
     parentItemPtr->m_bIsFolder = true;
@@ -228,15 +232,29 @@ void CGUIDialogBoxeeManualResolveAddFiles::GetDirectory(const CStdString& strFol
   {
     if (m_fileItems.Get(i)->IsVideo() || m_fileItems.Get(i)->m_bIsFolder)
     {
+
+      //set the initial part of the selected item
       if (m_partItems.Size() == 0 && m_fileItems.Get(i)->m_strPath == m_videoItem->m_strPath)
       {
-        m_partItems.Add(m_fileItems.Get(i));
+        CFileItemPtr initialItem(new CFileItem(*m_fileItems.Get(i).get()));
+        m_partItems.Add(initialItem);
+      }
+
+      //remove items from m_fileItems that exist in the m_partItems
+      for (int j = 0 ; j < m_partItems.Size() ; j++)
+      {
+        CStdString currentFileItemPath = m_fileItems.Get(i)->m_strPath;
+        if (currentFileItemPath == m_partItems.Get(j)->m_strPath)
+        {
+          m_fileItems.Get(i)->Select(true);
+          break; //move on to the next one
+        }
       }
 
       i++;
     }
     else
-    {
+    { //if its not a video or not a folder, don't show it
       m_fileItems.Remove(i);
     }
   }
@@ -253,6 +271,7 @@ void CGUIDialogBoxeeManualResolveAddFiles::GetDirectory(const CStdString& strFol
 void CGUIDialogBoxeeManualResolveAddFiles::OnPartListClick()
 {
   CGUIBaseContainer* pContainer = (CGUIBaseContainer*)GetControl(PART_LIST);
+  CGUIBaseContainer* pFileContainer = (CGUIBaseContainer*)GetControl(FILE_LIST);
 
   if (!pContainer)
   {
@@ -275,6 +294,24 @@ void CGUIDialogBoxeeManualResolveAddFiles::OnPartListClick()
     if (partActionDialog->IsActionRemove())
     {
       int selectedItem = pContainer->GetSelectedItem();
+
+      CFileItemPtr item = m_partItems.Get(selectedItem);
+
+      std::vector < CGUIListItemPtr > fileitems = pFileContainer->GetItems();
+
+      int i = 0;
+      for (std::vector< CGUIListItemPtr >::iterator it = fileitems.begin(); it != fileitems.end(); it++)
+      {
+        CFileItemPtr itemUI(new CFileItem(*((CFileItem*) it->get())));
+        if (item->m_strPath == itemUI->m_strPath)
+        {
+          it->get()->Select(false);
+          item->Select(false);
+          break;
+        }
+        i++;
+      }
+
       m_partItems.Remove(selectedItem);
 
       CGUIMessage message(GUI_MSG_LABEL_RESET, GetID(), PART_LIST);

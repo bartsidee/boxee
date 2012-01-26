@@ -2,7 +2,7 @@
 |
 |   Platinum - DIDL
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -76,6 +76,13 @@ PLT_Didl::ConvertFilterToMask(NPT_String filter)
         if (NPT_String::CompareN(s+i, "*", 1) == 0) {
             // return now, there's no point in parsing the rest
             return PLT_FILTER_MASK_ALL;
+        }
+        
+        // title is required, so we return a non empty mask
+        mask |= PLT_FILTER_MASK_TITLE;
+
+        if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_TITLE, len) == 0) {
+            mask |= PLT_FILTER_MASK_TITLE;
         } else if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_CREATOR, len) == 0) {
             mask |= PLT_FILTER_MASK_CREATOR;
         } else if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_ARTIST, len) == 0) {
@@ -83,7 +90,7 @@ PLT_Didl::ConvertFilterToMask(NPT_String filter)
         } else if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_ACTOR, len) == 0) {
             mask |= PLT_FILTER_MASK_ACTOR;
         } else if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_AUTHOR, len) == 0) {
-            mask |= PLT_FILTER_MASK_AUTHOR;
+            mask |= PLT_FILTER_MASK_AUTHOR;       
         } else if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_DATE, len) == 0) {
             mask |= PLT_FILTER_MASK_DATE;
         } else if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_ALBUM, len) == 0) {
@@ -98,13 +105,24 @@ PLT_Didl::ConvertFilterToMask(NPT_String filter)
             mask |= PLT_FILTER_MASK_ORIGINALTRACK;
         } else if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_SEARCHABLE, len) == 0) {
             mask |= PLT_FILTER_MASK_SEARCHABLE;
+        } else if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_SEARCHCLASS, len) == 0) {
+            mask |= PLT_FILTER_MASK_SEARCHCLASS;
         } else if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_CONTAINER_SEARCHABLE, len) == 0) {
             mask |= PLT_FILTER_MASK_SEARCHABLE;       
         } else if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_CHILDCOUNT, len) == 0) {
             mask |= PLT_FILTER_MASK_CHILDCOUNT;
         } else if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_CONTAINER_CHILDCOUNT, len) == 0) {
             mask |= PLT_FILTER_MASK_CHILDCOUNT;
-        } else if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_RES_DURATION, len) == 0) {
+        } else if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_PROGRAMTITLE, len) == 0) {
+            mask |= PLT_FILTER_MASK_PROGRAMTITLE;
+        } else if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_SERIESTITLE, len) == 0) {
+            mask |= PLT_FILTER_MASK_SERIESTITLE;
+        } else if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_EPISODE, len) == 0) {
+            mask |= PLT_FILTER_MASK_EPISODE;
+        } else if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_RES, len) == 0) {
+            mask |= PLT_FILTER_MASK_RES;
+        } else if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_RES_DURATION, len) == 0 ||
+				   NPT_String::CompareN(s+i, PLT_FILTER_FIELD_RES_DURATION_SHORT, len) == 0) {
             mask |= PLT_FILTER_MASK_RES | PLT_FILTER_MASK_RES_DURATION;
         } else if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_RES_SIZE, len) == 0) {
             mask |= PLT_FILTER_MASK_RES | PLT_FILTER_MASK_RES_SIZE;
@@ -120,9 +138,7 @@ PLT_Didl::ConvertFilterToMask(NPT_String filter)
             mask |= PLT_FILTER_MASK_RES | PLT_FILTER_MASK_RES_NRAUDIOCHANNELS;
 		} else if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_RES_SAMPLEFREQUENCY, len) == 0) {
             mask |= PLT_FILTER_MASK_RES | PLT_FILTER_MASK_RES_SAMPLEFREQUENCY;
-        } else if (NPT_String::CompareN(s+i, PLT_FILTER_FIELD_RES, len) == 0) {
-            mask |= PLT_FILTER_MASK_RES;
-        } 
+		}
 
         if (next_comma < 0) {
             return mask;
@@ -192,99 +208,80 @@ PLT_Didl::AppendXmlEscape(NPT_String& out, const char* in)
 /*----------------------------------------------------------------------
 |   PLT_Didl::FormatTimeStamp
 +---------------------------------------------------------------------*/
-void
-PLT_Didl::FormatTimeStamp(NPT_String& out, NPT_UInt32 seconds)
+NPT_String
+PLT_Didl::FormatTimeStamp(NPT_UInt32 seconds)
 {
+    NPT_String result;
     int hours = seconds/3600;
     if (hours == 0) {
-        out += "0:";
+        result += "0:";
     } else {
-        out += NPT_String::FromInteger(hours) + ":";
+        result += NPT_String::FromInteger(hours) + ":";
     }
 
     int minutes = (seconds/60)%60;
     if (minutes == 0) {
-        out += "00:";
+        result += "00:";
     } else {
         if (minutes < 10) {
-            out += '0';
+            result += '0';
         }
-        out += NPT_String::FromInteger(minutes) + ":";
+        result += NPT_String::FromInteger(minutes) + ":";
     }
 
     int secs = seconds%60;
     if (secs == 0) {
-        out += "00";
+        result += "00";
     } else {
         if (secs < 10) {
-            out += '0';
+            result += '0';
         }
-        out += NPT_String::FromInteger(secs);
+        result += NPT_String::FromInteger(secs);
     }
 
-	out += ".000"; // needed for XBOX360 otherwise it won't play the track
+	result += ".000"; // needed for XBOX360 otherwise it won't play the track
+    return result;
 }
 
 /*----------------------------------------------------------------------
 |   PLT_Didl::ParseTimeStamp
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_Didl::ParseTimeStamp(NPT_String timestamp, NPT_UInt32& seconds)
+PLT_Didl::ParseTimeStamp(const NPT_String& timestamp, NPT_UInt32& seconds)
 {
-    // assume a timestamp in the format HH:MM:SS
-    int colon;
+    // assume a timestamp in the format HH:MM:SS.FFF
+    int separator;
     NPT_String str = timestamp;
-    NPT_UInt32 num;
+    NPT_UInt32 value;
 
-    // extract millisecondsfirst
-    if ((colon = timestamp.ReverseFind('.')) != -1) {
-        str = timestamp.SubString(colon + 1);
-        timestamp = timestamp.Left(colon);
+    // reset output params first
+    seconds = 0;
+    
+    // remove milliseconds first if any
+    if ((separator = str.ReverseFind('.')) != -1) {
+        str = str.Left(separator);
     }
 
+    // look for next separator
+    if ((separator = str.ReverseFind(':')) == -1) return NPT_FAILURE;
+    
     // extract seconds
-    str = timestamp;
-    if ((colon = timestamp.ReverseFind(':')) != -1) {
-        str = timestamp.SubString(colon + 1);
-        timestamp = timestamp.Left(colon);
-    }
+    NPT_CHECK_WARNING(str.SubString(separator+1).ToInteger(value));
+    seconds = value;
+    str = str.Left(separator);
 
-    if (NPT_FAILED(str.ToInteger(num))) {
-        return NPT_FAILURE;
-    }
-
-    seconds = num;
-
+    // look for next separator
+    if ((separator = str.ReverseFind(':')) == -1) return NPT_FAILURE;
+    
     // extract minutes
-    str = timestamp;
-    if (timestamp.GetLength()) {
-        if ((colon = timestamp.ReverseFind(':')) != -1) {
-            str = timestamp.SubString(colon + 1);
-            timestamp = timestamp.Left(colon);
-        }
-
-        if (NPT_FAILED(str.ToInteger(num))) {
-            return NPT_FAILURE;
-        }
-
-        seconds += 60*num;
-    }
-
+    NPT_CHECK_WARNING(str.SubString(separator+1).ToInteger(value));
+    seconds += 60*value;
+    str = str.Left(separator);
+    
     // extract hours
-    str = timestamp;
-    if (timestamp.GetLength()) {
-        if ((colon = timestamp.ReverseFind(':')) != -1) {
-            str = timestamp.SubString(colon + 1);
-            timestamp = timestamp.Left(colon);
-        }
-
-        if (NPT_FAILED(str.ToInteger(num))) {
-            return NPT_FAILURE;
-        }
-
-        seconds += 3600*num;
-    }
-
+    NPT_CHECK_WARNING(str.ToInteger(value));
+    seconds += 3600*value;
+    
     return NPT_SUCCESS;
 }
 
@@ -324,7 +321,7 @@ PLT_Didl::FromDidl(const char* xml, PLT_MediaObjectListReference& objects)
 
     didl = node->AsElementNode();
 
-    if (didl->GetTag().Compare("DIDL-Lite", true)) {
+	if (didl->GetTag().Compare("DIDL-Lite", true)) {
 		NPT_LOG_SEVERE("Invalid node tag");
         goto cleanup;
     }
@@ -342,14 +339,15 @@ PLT_Didl::FromDidl(const char* xml, PLT_MediaObjectListReference& objects)
             object = new PLT_MediaContainer();
         } else if (child->GetTag().Compare("item", true) == 0) {
             object = new PLT_MediaItem();
-        } else {
+		} else {
 			NPT_LOG_WARNING("Invalid node tag");
             continue;
         }
 
-        if(NPT_FAILED(object->FromDidl(child))) {
-          NPT_LOG_WARNING("Invalid didl");
-          continue;
+        if (NPT_FAILED(object->FromDidl(child))) {
+            NPT_LOG_WARNING_1("Invalid didl for object: %s", 
+                (const char*) PLT_XmlHelper::Serialize(*child, false));
+          	continue;
         }
 
         objects->Add(object);

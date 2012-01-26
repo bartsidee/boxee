@@ -42,7 +42,7 @@ public:
   virtual DWORD GetReadAhead() ;
 
   virtual bool Skip(int skipActionType);
-
+  virtual void Abort();
 protected:
   XFILE::CFile* m_pFile;
   bool m_eof;

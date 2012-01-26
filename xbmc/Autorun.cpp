@@ -93,7 +93,7 @@ void CAutorun::RunCdda()
   CFileItemList vecItems;
 
   if (!DIRECTORY::CDirectory::GetDirectory("cdda://local/", vecItems))
-    return;
+    return ;
 
 //  auto_ptr<IDirectory> pDir ( CFactoryDirectory::Create( "cdda://local/" ) );
 //  if ( !pDir->GetDirectory( "cdda://local/", vecItems ) )

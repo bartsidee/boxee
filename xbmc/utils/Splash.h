@@ -37,7 +37,7 @@ public:
   // In case you don't want to use another thread
   void Show();
   void Hide();
-
+  
 private:
   virtual void Process();
   virtual void OnStartup();
@@ -47,7 +47,7 @@ private:
   CStdString m_ImageName;
 #ifdef HAS_DX
   D3DGAMMARAMP newRamp;
-  D3DGAMMARAMP oldRamp;
-
-#endif
+  D3DGAMMARAMP oldRamp;  
+ 
+#endif  
 };

@@ -2,7 +2,7 @@
 |
 |   Platinum - AV Media Renderer Device
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -55,11 +55,18 @@ PLT_MediaRenderer::PLT_MediaRenderer(const char*  friendly_name,
                                      const char*  uuid        /* = NULL */, 
                                      unsigned int port        /* = 0 */,
                                      bool         port_rebind /* = false */) :	
-    PLT_DeviceHost("/", uuid, "urn:schemas-upnp-org:device:MediaRenderer:1", friendly_name, show_ip, port, port_rebind)
+    PLT_DeviceHost("/", 
+                   uuid, 
+                   "urn:schemas-upnp-org:device:MediaRenderer:1", 
+                   friendly_name, 
+                   show_ip, 
+                   port, 
+                   port_rebind),
+    m_Delegate(NULL)
 {
     m_ModelDescription = "Plutinosoft AV Media Renderer Device";
     m_ModelName        = "AV Renderer Device";
-    m_ModelURL         = "http://www.plutinosoft.com/blog/projects/platinum";
+    m_ModelURL         = "http://www.plutinosoft.com/platinum";
     m_DlnaDoc          = "DMR-1.50";
 }
 
@@ -74,32 +81,32 @@ PLT_MediaRenderer::~PLT_MediaRenderer()
 |   PLT_MediaRenderer::SetupServices
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaRenderer::SetupServices(PLT_DeviceData& data)
+PLT_MediaRenderer::SetupServices()
 {
     PLT_Service* service;
 
     {
-    /* AVTransport */
-    service = new PLT_Service(
-            &data,
-        "urn:schemas-upnp-org:service:AVTransport:1", 
+        /* AVTransport */
+        service = new PLT_Service(
+            this,
+            "urn:schemas-upnp-org:service:AVTransport:1", 
             "urn:upnp-org:serviceId:AVTransport",
+            "AVTransport",
             "urn:schemas-upnp-org:metadata-1-0/AVT/");
         NPT_CHECK_FATAL(service->SetSCPDXML((const char*) RDR_AVTransportSCPD));
-        NPT_CHECK_FATAL(service->InitURLs("AVTransport", data.GetUUID()));
-        NPT_CHECK_FATAL(data.AddService(service));
+        NPT_CHECK_FATAL(AddService(service));
 
         service->SetStateVariableRate("LastChange", NPT_TimeInterval(0.2f));
         service->SetStateVariable("A_ARG_TYPE_InstanceID", "0"); 
 
         // GetCurrentTransportActions
         service->SetStateVariable("CurrentTransportActions", "Play,Pause,Stop,Seek,Next,Previous");
-        
+
         // GetDeviceCapabilities
         service->SetStateVariable("PossiblePlaybackStorageMedia", "NONE,NETWORK,HDD,CD-DA,UNKNOWN");
         service->SetStateVariable("PossibleRecordStorageMedia", "NOT_IMPLEMENTED");
         service->SetStateVariable("PossibleRecordQualityModes", "NOT_IMPLEMENTED");
-        
+
         // GetMediaInfo
         service->SetStateVariable("NumberOfTracks", "0");
         service->SetStateVariable("CurrentMediaDuration", "00:00:00");
@@ -109,8 +116,8 @@ PLT_MediaRenderer::SetupServices(PLT_DeviceData& data)
         service->SetStateVariable("NextAVTransportURIMetadata", "NOT_IMPLEMENTED");
         service->SetStateVariable("PlaybackStorageMedium", "NONE");
         service->SetStateVariable("RecordStorageMedium", "NOT_IMPLEMENTED");
-        service->SetStateVariable("RecordMediumWriteStatus", "NOT_IMPLEMENTED");
-        
+		service->SetStateVariable("RecordMediumWriteStatus", "NOT_IMPLEMENTED");
+
         // GetPositionInfo
         service->SetStateVariable("CurrentTrack", "0");
         service->SetStateVariable("CurrentTrackDuration", "00:00:00");
@@ -136,21 +143,21 @@ PLT_MediaRenderer::SetupServices(PLT_DeviceData& data)
         service->SetStateVariable("TransportState", "NO_MEDIA_PRESENT");
         service->SetStateVariable("TransportStatus", "OK");
         service->SetStateVariable("TransportPlaySpeed", "1");
-        
+
         // GetTransportSettings
         service->SetStateVariable("CurrentPlayMode", "NORMAL");
         service->SetStateVariable("CurrentRecordQualityMode", "NOT_IMPLEMENTED");
     }
 
     {
-    /* ConnectionManager */
-    service = new PLT_Service(
-            &data,
-        "urn:schemas-upnp-org:service:ConnectionManager:1", 
-            "urn:upnp-org:serviceId:ConnectionManager");
+        /* ConnectionManager */
+        service = new PLT_Service(
+            this,
+            "urn:schemas-upnp-org:service:ConnectionManager:1", 
+            "urn:upnp-org:serviceId:ConnectionManager",
+            "ConnectionManager");
         NPT_CHECK_FATAL(service->SetSCPDXML((const char*) RDR_ConnectionManagerSCPD));
-        NPT_CHECK_FATAL(service->InitURLs("ConnectionManager", data.GetUUID()));
-        NPT_CHECK_FATAL(data.AddService(service));
+        NPT_CHECK_FATAL(AddService(service));
 
         service->SetStateVariable("CurrentConnectionIDs", "0");
 
@@ -160,24 +167,24 @@ PLT_MediaRenderer::SetupServices(PLT_DeviceData& data)
     }
 
     {
-    /* RenderingControl */
-    service = new PLT_Service(
-            &data,
-        "urn:schemas-upnp-org:service:RenderingControl:1", 
+        /* RenderingControl */
+        service = new PLT_Service(
+            this,
+            "urn:schemas-upnp-org:service:RenderingControl:1", 
             "urn:upnp-org:serviceId:RenderingControl",
+            "RenderingControl",
             "urn:schemas-upnp-org:metadata-1-0/RCS/");
         NPT_CHECK_FATAL(service->SetSCPDXML((const char*) RDR_RenderingControlSCPD));
-        NPT_CHECK_FATAL(service->InitURLs("RenderingControl", data.GetUUID()));
-        NPT_CHECK_FATAL(data.AddService(service));
+        NPT_CHECK_FATAL(AddService(service));
 
         service->SetStateVariableRate("LastChange", NPT_TimeInterval(0.2f));
 
         service->SetStateVariable("Mute", "0");
-        service->SetStateVariableExtraAttribute("Mute", "Channel", "Master");
+        service->SetStateVariableExtraAttribute("Mute", "channel", "Master");
         service->SetStateVariable("Volume", "100");
-        service->SetStateVariableExtraAttribute("Volume", "Channel", "Master");
+        service->SetStateVariableExtraAttribute("Volume", "channel", "Master");
         service->SetStateVariable("VolumeDB", "0");
-        service->SetStateVariableExtraAttribute("VolumeDB", "Channel", "Master");
+        service->SetStateVariableExtraAttribute("VolumeDB", "channel", "Master");
 
         service->SetStateVariable("PresetNameList", "FactoryDefaults");
     }
@@ -245,10 +252,10 @@ PLT_MediaRenderer::OnAction(PLT_ActionReference&          action,
         return OnSetPlayMode(action);
     }
 
-		/* Is it a RendererControl Service Action ? */
-		if (name.Compare("SetVolume", true) == 0) {
-			  return OnSetVolume(action);
-		}
+    /* Is it a RendererControl Service Action ? */
+    if (name.Compare("SetVolume", true) == 0) {
+          return OnSetVolume(action);
+    }
 	if (name.Compare("SetVolumeDB", true) == 0) {
 		return OnSetVolumeDB(action);
     }
@@ -256,9 +263,9 @@ PLT_MediaRenderer::OnAction(PLT_ActionReference&          action,
 		return OnGetVolumeDBRange(action);
 
 	}
-		if (name.Compare("SetMute", true) == 0) {
-			  return OnSetMute(action);
-		}
+    if (name.Compare("SetMute", true) == 0) {
+          return OnSetMute(action);
+    }
 
     // other actions rely on state variables
     NPT_CHECK_LABEL_WARNING(action->SetArgumentsOutFromStateVariable(), failure);
@@ -275,6 +282,10 @@ failure:
 NPT_Result
 PLT_MediaRenderer::OnGetCurrentConnectionInfo(PLT_ActionReference& action)
 {
+    if (m_Delegate) {
+        return m_Delegate->OnGetCurrentConnectionInfo(action);
+    }
+    
     if (NPT_FAILED(action->VerifyArgumentValue("ConnectionID", "0"))) {
         action->SetError(706,"No Such Connection.");
         return NPT_FAILURE;
@@ -309,54 +320,72 @@ PLT_MediaRenderer::OnGetCurrentConnectionInfo(PLT_ActionReference& action)
 |   PLT_MediaRenderer::OnNext
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaRenderer::OnNext(PLT_ActionReference& /* action */)
+PLT_MediaRenderer::OnNext(PLT_ActionReference& action)
 {
-    return NPT_SUCCESS;
+    if (m_Delegate) {
+        return m_Delegate->OnNext(action);
+    }
+    return NPT_ERROR_NOT_IMPLEMENTED;
 }
 
 /*----------------------------------------------------------------------
 |   PLT_MediaRenderer::OnPause
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaRenderer::OnPause(PLT_ActionReference& /* action */)
+PLT_MediaRenderer::OnPause(PLT_ActionReference& action)
 {
-    return NPT_SUCCESS;
+    if (m_Delegate) {
+        return m_Delegate->OnPause(action);
+    }
+    return NPT_ERROR_NOT_IMPLEMENTED;
 }
 
 /*----------------------------------------------------------------------
 |   PLT_MediaRenderer::OnPlay
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaRenderer::OnPlay(PLT_ActionReference& /* action */)
+PLT_MediaRenderer::OnPlay(PLT_ActionReference& action)
 {
-    return NPT_SUCCESS;
+    if (m_Delegate) {
+        return m_Delegate->OnPlay(action);
+    }
+    return NPT_ERROR_NOT_IMPLEMENTED;
 }
 
 /*----------------------------------------------------------------------
 |   PLT_MediaRenderer::OnPrevious
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaRenderer::OnPrevious(PLT_ActionReference& /* action */)
+PLT_MediaRenderer::OnPrevious(PLT_ActionReference& action)
 {
-    return NPT_SUCCESS;
+    if (m_Delegate) {
+        return m_Delegate->OnPrevious(action);
+    }
+    return NPT_ERROR_NOT_IMPLEMENTED;
 }
 
 /*----------------------------------------------------------------------
 |   PLT_MediaRenderer::OnSeek
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaRenderer::OnSeek(PLT_ActionReference& /* action */)
+PLT_MediaRenderer::OnSeek(PLT_ActionReference& action)
 {
-    return NPT_SUCCESS;
+    if (m_Delegate) {
+        return m_Delegate->OnSeek(action);
+    }
+    return NPT_ERROR_NOT_IMPLEMENTED;
 }
 
 /*----------------------------------------------------------------------
 |   PLT_MediaRenderer::OnStop
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaRenderer::OnStop(PLT_ActionReference& /* action */)
+PLT_MediaRenderer::OnStop(PLT_ActionReference& action)
 {
-    return NPT_SUCCESS;
+    if (m_Delegate) {
+        return m_Delegate->OnStop(action);
+    }
+    return NPT_ERROR_NOT_IMPLEMENTED;
 }
 
 /*----------------------------------------------------------------------
@@ -365,6 +394,11 @@ PLT_MediaRenderer::OnStop(PLT_ActionReference& /* action */)
 NPT_Result
 PLT_MediaRenderer::OnSetAVTransportURI(PLT_ActionReference& action)
 {
+    if (m_Delegate) {
+        return m_Delegate->OnSetAVTransportURI(action);
+    }
+    
+    // default implementation is using state variable
     NPT_String uri;
     NPT_CHECK_WARNING(action->GetArgumentValue("CurrentURI", uri));
 
@@ -385,43 +419,58 @@ PLT_MediaRenderer::OnSetAVTransportURI(PLT_ActionReference& action)
 |   PLT_MediaRenderer::OnSetPlayMode
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaRenderer::OnSetPlayMode(PLT_ActionReference& /* action */)
+PLT_MediaRenderer::OnSetPlayMode(PLT_ActionReference& action)
 {
-    return NPT_SUCCESS;
+    if (m_Delegate) {
+        return m_Delegate->OnSetPlayMode(action);
+    }
+    return NPT_ERROR_NOT_IMPLEMENTED;
 }
 
 /*----------------------------------------------------------------------
 |   PLT_MediaRenderer::OnSetVolume
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaRenderer::OnSetVolume(PLT_ActionReference& /* action */)
+PLT_MediaRenderer::OnSetVolume(PLT_ActionReference& action)
 {
-    return NPT_SUCCESS;
+    if (m_Delegate) {
+        return m_Delegate->OnSetVolume(action);
+    }
+    return NPT_ERROR_NOT_IMPLEMENTED;
 }
 
 /*----------------------------------------------------------------------
 |   PLT_MediaRenderer::OnSetVolumeDB
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaRenderer::OnSetVolumeDB(PLT_ActionReference& /* action */)
+PLT_MediaRenderer::OnSetVolumeDB(PLT_ActionReference& action)
 {
-    return NPT_SUCCESS;
+    if (m_Delegate) {
+        return m_Delegate->OnSetVolumeDB(action);
+    }
+    return NPT_ERROR_NOT_IMPLEMENTED;
 }
 
 /*----------------------------------------------------------------------
 |   PLT_MediaRenderer::OnGetVolumeDBRange
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaRenderer::OnGetVolumeDBRange(PLT_ActionReference& /* action */)
+PLT_MediaRenderer::OnGetVolumeDBRange(PLT_ActionReference& action)
 {
-    return NPT_SUCCESS;
+    if (m_Delegate) {
+        return m_Delegate->OnGetVolumeDBRange(action);
+    }
+    return NPT_ERROR_NOT_IMPLEMENTED;
 }
 
 /*----------------------------------------------------------------------
 |   PLT_MediaRenderer::OnSetMute
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaRenderer::OnSetMute(PLT_ActionReference& /* action */)
+PLT_MediaRenderer::OnSetMute(PLT_ActionReference& action)
 {
-    return NPT_SUCCESS;
+    if (m_Delegate) {
+        return m_Delegate->OnSetMute(action);
+    }
+    return NPT_ERROR_NOT_IMPLEMENTED;
 }

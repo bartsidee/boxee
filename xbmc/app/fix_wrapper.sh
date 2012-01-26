@@ -1,5 +1,5 @@
 #/bin/sh
-cat mc_wrap.cxx | sed '
+cat $1 | sed '
 /#include <Python.h>/  a\
 #if (defined HAVE_CONFIG_H) && (!defined WIN32)\
   #include "config.h"\
@@ -28,4 +28,4 @@ return _SWIG_This();
 }' | sed '/#define SWIGPYTHON/ {
 a\
 #include "system.h"
-}' | sed 's/#include <Python.h>//' > App_Python_Wrapper.cpp
+}' | sed 's/#include <Python.h>//' > $2

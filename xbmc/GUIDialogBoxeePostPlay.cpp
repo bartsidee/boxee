@@ -86,7 +86,7 @@ bool CGUIDialogBoxeePostPlay::OnMessage(CGUIMessage &message)
     case PLAY_NEXT_BTN:
     {
       HandleClickOnPlayNextButton();
-    }
+  }
     break;
     case REMOVE_FROM_QUEUE_BTN:
     {
@@ -105,7 +105,7 @@ void CGUIDialogBoxeePostPlay::OnInitWindow()
   SET_CONTROL_SELECTED(GetID(), SHOW_POPUP_SETTING_CHECKBOX, g_guiSettings.GetBool("boxee.showpostplay"));
 
   CGUIDialog::OnInitWindow();
-
+  
   // Send the items to the special containers to allow skin access
   CFileItemPtr itemPtr(new CFileItem(m_item));
   CGUIMessage winmsg(GUI_MSG_LABEL_ADD, GetID(), HIDDEN_CURR_ITEM_LIST, 0, 0, itemPtr);
@@ -118,7 +118,7 @@ void CGUIDialogBoxeePostPlay::OnInitWindow()
   bool isInQueue = BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().IsInQueue(m_item.GetProperty("boxeeid"),m_item.m_strPath);
   SetProperty("in-queue",isInQueue);
 
-  CLog::Log(LOGDEBUG,"CGUIDialogBoxeePostPlay::OnInitWindow - [isInQueue=%d] (postp)",isInQueue);  
+  CLog::Log(LOGDEBUG,"CGUIDialogBoxeePostPlay::OnInitWindow - [isInQueue=%d] (postp)",isInQueue);
 }
 
 void CGUIDialogBoxeePostPlay::SetItem(CFileItem *pItem)
@@ -185,7 +185,7 @@ bool CGUIDialogBoxeePostPlay::HandleClickOnRemoveFromQueueButton()
 
     SetProperty("in-queue",0);
 
-    g_application.m_guiDialogKaiToast.QueueNotification(g_localizeStrings.Get(53781), "", g_localizeStrings.Get(53732), 3000);
+    g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_MINUS, "", g_localizeStrings.Get(53732), 3000 , KAI_GREEN_COLOR, KAI_GREEN_COLOR);
 
     CGUIMessage refreshQueueWinMsg(GUI_MSG_UPDATE, WINDOW_BOXEE_BROWSE_QUEUE, 0);
     g_windowManager.SendThreadMessage(refreshQueueWinMsg);

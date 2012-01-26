@@ -108,7 +108,8 @@ void CGUIMultiImage::Render()
   if (!m_files.empty())
   {
     // Set a viewport so that we don't render outside the defined area
-    g_graphicsContext.SetClipRegion(m_posX, m_posY, m_width, m_height);
+    if(!g_graphicsContext.SetClipRegion(m_posX, m_posY, m_width, m_height))
+		return;
 
     unsigned int nextImage = m_currentImage + 1;
     if (nextImage >= m_files.size())
@@ -123,16 +124,23 @@ void CGUIMultiImage::Render()
       if (m_imageTimer.IsRunning() && m_imageTimer.GetElapsedMilliseconds() > timeToShow)
       {
         // grab a new image
-        m_currentImage = nextImage;
+          m_currentImage = nextImage;
         m_image.SetFileName(m_files[m_currentImage]);
-        m_imageTimer.StartZero();
-      }
+          m_imageTimer.StartZero();
+        }
     }
     m_image.SetColorDiffuse(m_diffuseColor);
     m_image.Render();
     g_graphicsContext.RestoreClipRegion();
   }
   CGUIControl::Render();
+}
+
+void CGUIMultiImage::SetPosition(float posX, float posY)
+{
+  CGUIControl::SetPosition(posX,posY);
+
+  m_image.SetPosition(posX,posY);
 }
 
 bool CGUIMultiImage::OnAction(const CAction &action)
@@ -162,21 +170,21 @@ void CGUIMultiImage::AllocResources()
   // Load in the current image, and reset our timer
   m_currentImage = 0;
   m_imageTimer.StartZero();
-  
+
   // and re-randomize if our control has been reallocated
   if (m_randomized)
     random_shuffle(m_files.begin(), m_files.end());
   else 
     sort(m_files.begin(), m_files.end());
-  
+
   m_image.SetFileName(m_files.size() ? m_files[0] : "");
 }
 
-void CGUIMultiImage::FreeResources()
+void CGUIMultiImage::FreeResources(bool immediately)
 {
-  m_image.FreeResources();
+  m_image.FreeResources(immediately);
   m_currentImage = 0;
-  CGUIControl::FreeResources();
+  CGUIControl::FreeResources(immediately);
 }
 
 void CGUIMultiImage::DynamicResourceAlloc(bool bOnOff)
@@ -217,22 +225,26 @@ void CGUIMultiImage::LoadDirectory()
       random_shuffle(m_files.begin(), m_files.end());
     else
       sort(m_files.begin(), m_files.end());
-    
+
    
     // Load in our images from the directory specified
     // m_currentPath is relative (as are all skin paths)
     CStdString realPath = g_TextureManager.GetTexturePath(m_currentPath, true);
     if (realPath.IsEmpty())
-      return;
-
-    CUtil::AddSlashAtEnd(realPath);
-    CFileItemList items;
-    CDirectory::GetDirectory(realPath, items);
-    for (int i=0; i < items.Size(); i++)
     {
-      CFileItemPtr pItem = items[i];
-      if (pItem->IsPicture())
-        m_files.push_back(pItem->m_strPath);
+      g_TextureManager.GetBundledTexturesFromPath(m_currentPath, m_files);
+    }
+    else
+    {
+      CUtil::AddSlashAtEnd(realPath);
+      CFileItemList items;
+      CDirectory::GetDirectory(realPath, items);
+      for (int i=0; i < items.Size(); i++)
+      {
+        CFileItemPtr pItem = items[i];
+        if (pItem->IsPicture())
+          m_files.push_back(pItem->m_strPath);
+      }
     }
   }
 
@@ -241,7 +253,7 @@ void CGUIMultiImage::LoadDirectory()
     random_shuffle(m_files.begin(), m_files.end());
   else
     sort(m_files.begin(), m_files.end());
-  
+
   // flag as loaded - no point in constantly reloading them
   m_directoryLoaded = true;
   m_imageTimer.StartZero();

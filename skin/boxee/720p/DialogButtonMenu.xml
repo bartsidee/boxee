@@ -1,134 +1,129 @@
-﻿<?xml version="1.0"?>
+<?xml version="1.0"?>
+<!-- Shutdown dialog -->
 <window type="buttonMenu" id="111">
 	<defaultcontrol always="true">10</defaultcontrol>
 	<controls>
-		<control type="image">
-			<description>background image overlay</description>
-			<animation type="WindowOpen">
-				<effect type="fade" start="0" end="100" time="200" delay="0"/>
-			</animation>
-			<animation type="WindowClose">
-				<effect type="fade" start="100" end="0" time="200" delay="0"/>
-			</animation>
-			<posx>0</posx>
-			<posy>0</posy>
-			<width>1280</width>
-			<height>720</height>
-			<texture>black.png</texture>
-			<colordiffuse>80FFFFFF</colordiffuse>
-		</control>
-		<control type="image">
-			<description>background image overlay</description>
-			<animation type="WindowOpen">
-				<effect type="fade" start="0" end="100" time="2000" delay="0"/>
-			</animation>
-			<animation type="WindowClose">
-				<effect type="fade" start="100" end="0" time="200" delay="0"/>
-			</animation>
-			<posx>0</posx>
-			<posy>0</posy>
-			<width>1280</width>
-			<height>720</height>
-			<texture>black.png</texture>
-			<colordiffuse>B4FFFFFF</colordiffuse>
-		</control>
+		<include>Dialog_Popup_Background</include>
 		<control type="group">
 			<include>Dialog_Popup_Animation</include>
-			<posx>340</posx>
-			<posy>182</posy>
+			<posx>370</posx>
+			<posy>174</posy>
 			<control type="image">
+				<visible>stringcompare(Container(10).NumItems,2)</visible>
 				<posx>0</posx>
 				<posy>0</posy>
-				<width>600</width>
-				<height>302</height>
-				<texture border="64">dialog_background.png</texture>
+				<width>420</width>
+				<height>142</height>
+				<texture srcborder="30" border="20">button_16_pixel.png</texture>
+				<colordiffuse>dialogbg</colordiffuse>
 			</control>
-			<control type="label">
-				<posx>26</posx>
-				<posy>34</posy>
-				<width>550</width>
-				<height>28</height>
-				<font>title26b</font>
-				<align>left</align>
-				<aligny>center</aligny>
-				<label>[UPPERCASE]$LOCALIZE[53440][/UPPERCASE]</label>
-				<textcolor>FF3B2D06</textcolor>
+			<control type="image">
+				<visible>stringcompare(Container(10).NumItems,3)</visible>
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>539</width>
+				<height>228</height>
+				<texture srcborder="51" border="34">dialog_bg.png</texture>
+			</control>
+			<control type="image">
+				<visible>stringcompare(Container(10).NumItems,4)</visible>
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>420</width>
+				<height>262</height>
+				<texture srcborder="30" border="20">button_16_pixel.png</texture>
+				<colordiffuse>dialogbg</colordiffuse>
 			</control>
 			<control type="list" id="10">
-				<posx>96</posx>
-				<posy>114</posy>
-				<width>600</width>
-				<height>250</height>
-				<onleft>-</onleft>
-				<onright>-</onright>
-				<onup>-</onup>
-				<ondown>-</ondown>
+				<posx>72</posx>
+				<posy>46</posy>
+				<width>500</width>
+				<height>240</height>
+				<onleft>1000</onleft>
+				<onright>1000</onright>
+				<onup>1000</onup>
+				<ondown>1000</ondown>
 				<scrolltime>200</scrolltime>
 				<pagecontrol>60</pagecontrol>
 				<orientation>horizontal</orientation>
-				<itemlayout width="130" height="160">
+				<itemlayout width="150">
 					<control type="image">
-						<posx>25</posx>
-						<posy>12</posy>
+						<posx>8</posx>
+						<posy>8</posy>
 						<width>80</width>
 						<height>80</height>
-						<colordiffuse>80FFFFFF</colordiffuse>
+						<colordiffuse>mediumgreyheidi</colordiffuse>
 						<texture>$INFO[ListItem.Thumb]</texture>
 					</control>
 					<control type="label">
-						<posx>65</posx>
-						<posy>100</posy>
+						<posx>50</posx>
+						<posy>87</posy>
 						<width>150</width>
 						<height>60</height>
-						<font>title20b</font>
+						<font>font20b</font>
 						<align>center</align>
-						<aligny>top</aligny>
-						<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
-						<textcolor>grey</textcolor>
+						<aligny>center</aligny>
+						<textcolor>mediumgreyheidi</textcolor>
+						<label>[B][UPPERCASE]$INFO[ListItem.Label][/UPPERCASE][/B]</label>
 					</control>
 				</itemlayout>
-				<focusedlayout width="130" height="150">
+				<focusedlayout width="150">
 					<control type="image">
-						<posx>13</posx>
+						<posx>0</posx>
 						<posy>0</posy>
-						<width>104</width>
-						<height>104</height>
-						<texture border="30">button_action_menu_source_on.png</texture>
+						<width>96</width>
+						<height>96</height>
+						<texture srcborder="24" border="16">button-focused.png</texture>
 					</control>
 					<control type="image">
-						<posx>25</posx>
-						<posy>12</posy>
+						<posx>8</posx>
+						<posy>8</posy>
 						<width>80</width>
 						<height>80</height>
+						<colordiffuse>whiteheidi</colordiffuse>
 						<texture>$INFO[ListItem.Thumb]</texture>
 					</control>
 					<control type="label">
-						<posx>65</posx>
-						<posy>100</posy>
+						<posx>50</posx>
+						<posy>87</posy>
 						<width>150</width>
 						<height>60</height>
-						<font>title20b</font>
+						<font>font20b</font>
 						<align>center</align>
-						<aligny>top</aligny>
-						<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
-						<textcolor>white</textcolor>
+						<aligny>center</aligny>
+						<textcolor>whiteheidi</textcolor>
+						<label>[B][UPPERCASE]$INFO[ListItem.Label][/UPPERCASE][/B]</label>
 					</control>
 				</focusedlayout>
 				<content>
-					<item id="11">
-						<label>54060</label>
-						<onclick>XBMC.ShutDown()</onclick>
-						<thumb>icons/icon_dialog_exit.png</thumb>
-					</item>
-					<item id="12">
-						<label>54061</label>
-						<onclick>XBMC.Logout()</onclick>
-						<thumb>icons/icon_dialog_change_user.png</thumb>
-					</item>
 					<item id="13">
 						<label>54062</label>
 						<onclick>XBMC.Suspend()</onclick>
-						<thumb>icons/icon_dialog_suspend.png</thumb>
+						<thumb>icons/icon-shutdown-sleep.png</thumb>
+					</item>
+                    <item id="15">
+                        <visible>system.platform.windows | system.platform.osx</visible>
+                        <label>13012</label>
+                        <onclick>XBMC.Quit()</onclick>
+                        <thumb>icons/icon-shutdown-shutdown.png</thumb>
+                    </item>
+					<item id="11">
+						<visible>true + !boxee.newversionforce + !system.platform.osx + !system.platform.windows</visible>
+						<label>54060</label>
+						<onclick>-</onclick>
+						<thumb>icons/icon-shutdown-shutdown.png</thumb>
+					</item>
+					<item id="14">
+						<visible>boxee.newversionforce</visible>
+						<label>53251</label>
+						<onclick>-</onclick>
+						<thumb>icons/icon-shutdown-update.png</thumb>
+					</item>					
+					<item id="12">
+						<visible>!boxee.newversionforce</visible>
+						<label>54061</label>
+						<onclick>XBMC.Logout()</onclick>
+						<thumb>icons/icon-shutdown-logout.png</thumb>
 					</item>
 				</content>
 			</control>

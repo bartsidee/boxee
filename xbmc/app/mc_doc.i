@@ -1,7 +1,19 @@
 
 // File: index.xml
 
-// File: class_x_a_p_p_1_1_app.xml
+// File: classXAPP_1_1ActionEvent.xml
+%feature("docstring") XAPP::ActionEvent "";
+
+
+// File: classXAPP_1_1ActionListener.xml
+%feature("docstring") XAPP::ActionListener "";
+
+%feature("docstring")  XAPP::ActionListener::ActionPerformed "";
+
+%feature("docstring")  XAPP::ActionListener::~ActionListener "";
+
+
+// File: classXAPP_1_1App.xml
 %feature("docstring") XAPP::App "
 
 Main class for working with an application.
@@ -83,8 +95,21 @@ scriptName:  script name
 parameters:  parameters that will be passed to the application script
 ";
 
+%feature("docstring")  XAPP::App::SendMessage "
 
-// File: class_x_a_p_p_1_1_app_exception.xml
+Send a message to an application The mesage will be passed to a global
+handler.
+
+Parameters:
+-----------
+
+handler:  allows to specify which handler should eventually handle the
+message
+
+parameter:  additional string parameter ";
+
+
+// File: classXAPP_1_1AppException.xml
 %feature("docstring") XAPP::AppException "
 
 Exception thrown by the app API. ";
@@ -94,7 +119,7 @@ Exception thrown by the app API. ";
 Get the message associated with the exception. ";
 
 
-// File: class_x_a_p_p_1_1_button.xml
+// File: classXAPP_1_1Button.xml
 %feature("docstring") XAPP::Button "
 
 Represents a button control in the user interface.
@@ -117,12 +142,20 @@ Parameters:
 label:  the label of the button ";
 
 
-// File: class_x_a_p_p_1_1_control.xml
+// File: classXAPP_1_1Control.xml
 %feature("docstring") XAPP::Control "
 
 Represents a control in the user interface.
 
 Get the Control object by calling GetControl() on the Window. ";
+
+%feature("docstring")  XAPP::Control::GetControlId "
+
+Get window id. ";
+
+%feature("docstring")  XAPP::Control::GetWindowId "
+
+Get window id. ";
 
 %feature("docstring")  XAPP::Control::HasFocus "
 
@@ -161,7 +194,23 @@ Parameters:
 visible:  true to make the control visible. false otherwise. ";
 
 
-// File: class_x_a_p_p_1_1_edit.xml
+// File: classDllSkinNativeApp.xml
+%feature("docstring") DllSkinNativeApp "";
+
+
+// File: classDllSkinNativeAppInterface.xml
+%feature("docstring") DllSkinNativeAppInterface "";
+
+%feature("docstring")
+DllSkinNativeAppInterface::DllSkinNativeAppInterface "";
+
+%feature("docstring")  DllSkinNativeAppInterface::xapp_initialize "";
+
+%feature("docstring")
+DllSkinNativeAppInterface::~DllSkinNativeAppInterface "";
+
+
+// File: classXAPP_1_1Edit.xml
 %feature("docstring") XAPP::Edit "
 
 Represents an edit control in the user interface.
@@ -182,7 +231,7 @@ Parameters:
 text:  the text of the edit control ";
 
 
-// File: class_x_a_p_p_1_1_http.xml
+// File: classXAPP_1_1Http.xml
 %feature("docstring") XAPP::Http "
 
 This class represents the Http object. ";
@@ -271,7 +320,7 @@ strUserAgent:  the user-agent value to use ";
 %feature("docstring")  XAPP::Http::~Http "";
 
 
-// File: class_x_a_p_p_1_1_image.xml
+// File: classXAPP_1_1Image.xml
 %feature("docstring") XAPP::Image "
 
 Represents an image control in the user interface.
@@ -289,7 +338,19 @@ imagePath:  the full path where the image resides. Should be a local
 file only. Supported formats: PNG, GIF, JPG. ";
 
 
-// File: class_x_a_p_p_1_1_label.xml
+// File: classXAPP_1_1KeyEvent.xml
+%feature("docstring") XAPP::KeyEvent "";
+
+
+// File: classXAPP_1_1KeyListener.xml
+%feature("docstring") XAPP::KeyListener "";
+
+%feature("docstring")  XAPP::KeyListener::KeyPressed "";
+
+%feature("docstring")  XAPP::KeyListener::~KeyListener "";
+
+
+// File: classXAPP_1_1Label.xml
 %feature("docstring") XAPP::Label "
 
 Represents a label control in the user interface.
@@ -310,7 +371,7 @@ Parameters:
 label:  the text of the label ";
 
 
-// File: class_x_a_p_p_1_1_list.xml
+// File: classXAPP_1_1List.xml
 %feature("docstring") XAPP::List "
 
 Represents a list control in the user interface.
@@ -422,8 +483,17 @@ selected:  true to select the item, false to unselect ";
 
 Unselect all the items in the list. ";
 
+%feature("docstring")  XAPP::List::UpdateItem "
 
-// File: class_x_a_p_p_1_1_list_item.xml
+Updates an existing item.
+
+Parameters:
+-----------
+
+item:  to be set in the list. ";
+
+
+// File: classXAPP_1_1ListItem.xml
 %feature("docstring") XAPP::ListItem "
 
 This class represents an item that is displayed in a user interface
@@ -466,6 +536,15 @@ Adds a cast with role to the list of cast. ";
 %feature("docstring")  XAPP::ListItem::ClearCastAndRole "
 
 Clears the list of cast. ";
+
+%feature("docstring")  XAPP::ListItem::ClearProperty "
+
+Clears custom properties from item.
+
+Parameters:
+-----------
+
+key:  the key name for the property ";
 
 %feature("docstring")  XAPP::ListItem::Dump "
 
@@ -685,6 +764,10 @@ Sets the arist name. ";
 
 Sets the author. ";
 
+%feature("docstring")  XAPP::ListItem::SetCanRepeat "";
+
+%feature("docstring")  XAPP::ListItem::SetCanShuffle "";
+
 %feature("docstring")  XAPP::ListItem::SetComment "
 
 Sets the comment. ";
@@ -774,12 +857,18 @@ Sets the key words. ";
 
 Sets the label. ";
 
+%feature("docstring")  XAPP::ListItem::SetLabel2 "
+
+Sets label2. ";
+
 %feature("docstring")  XAPP::ListItem::SetPath "
 
 Sets the path.
 
 It could be either a local file or a URL with the protocols:http://,
 mms:// or flash:// (flash is described in the RSS specification). ";
+
+%feature("docstring")  XAPP::ListItem::SetPauseOnSeek "";
 
 %feature("docstring")  XAPP::ListItem::SetProperty "
 
@@ -854,7 +943,7 @@ Sets the track number for audio CDs. ";
 %feature("docstring")  XAPP::ListItem::SetTVShowTitle "
 
 Sets the TV show title (different than the title which is the episode
-title). ";
+title) ";
 
 %feature("docstring")  XAPP::ListItem::SetViewCount "
 
@@ -869,7 +958,7 @@ Sets the writer. ";
 Sets the release year. ";
 
 
-// File: class_x_a_p_p_1_1_list_items.xml
+// File: classXAPP_1_1ListItems.xml
 %feature("docstring") XAPP::ListItems "
 
 This class represents a list of ListItem.
@@ -877,7 +966,7 @@ This class represents a list of ListItem.
 Should be used as a python array. Use append(), remove() etc. ";
 
 
-// File: class_x_a_p_p_1_1_local_config.xml
+// File: classXAPP_1_1LocalConfig.xml
 %feature("docstring") XAPP::LocalConfig "
 
 Represents the storage of local configuration for an application.
@@ -969,7 +1058,7 @@ key:  the key identifier of the value to store
 value:  the actual value to store ";
 
 
-// File: class_x_a_p_p_1_1_m_c.xml
+// File: classXAPP_1_1MC.xml
 %feature("docstring") XAPP::MC "
 
 Main class for interfacing with BOXEE. ";
@@ -1010,6 +1099,10 @@ Parameters:
 
 strPath:  - path of the video ";
 
+%feature("docstring")  XAPP::MC::GetDeviceId "
+
+Returns device id. ";
+
 %feature("docstring")  XAPP::MC::GetDirectory "
 
 Returns contents of specified path.
@@ -1034,6 +1127,22 @@ listId:  - id of the list ";
 
 Returns geo location of the current user. ";
 
+%feature("docstring")  XAPP::MC::GetHardwareModel "
+
+Returns box model name. ";
+
+%feature("docstring")  XAPP::MC::GetHardwareRevision "
+
+Returns box revision number. ";
+
+%feature("docstring")  XAPP::MC::GetHardwareSerialNumber "
+
+Returns box revision number. ";
+
+%feature("docstring")  XAPP::MC::GetHardwareVendor "
+
+Returns box vendor name. ";
+
 %feature("docstring")  XAPP::MC::GetInfoString "
 
 Returns information about the user interface.
@@ -1056,15 +1165,47 @@ Parameters:
 id:  id of the string. could be either a system wide id or an
 application specific id. ";
 
+%feature("docstring")  XAPP::MC::GetPlatform "
+
+Returns platform id. ";
+
 %feature("docstring")  XAPP::MC::GetPlayer "
 
 Returns a reference to a media player that can be used for playing
 media. ";
 
+%feature("docstring")  XAPP::MC::GetSystemLanguage "
+
+Returns the system language. ";
+
 %feature("docstring")  XAPP::MC::GetTempDir "
 
 Returns the full path of a directory where temporary files can be
 placed. ";
+
+%feature("docstring")  XAPP::MC::GetTemperatureScale "
+
+Return the current temperature scale.
+
+Either 'C' or 'F'. ";
+
+%feature("docstring")  XAPP::MC::GetTimezoneCity "
+
+Return the current timezone city setting location. ";
+
+%feature("docstring")  XAPP::MC::GetTimezoneCountry "
+
+Return the current timezone country setting location. ";
+
+%feature("docstring")  XAPP::MC::GetUniqueId "
+
+Returns unique box id. ";
+
+%feature("docstring")  XAPP::MC::GetWeatherLocation "
+
+Return the current weather setting location.
+
+For example: \"USNY0996 - New York, NY\" ";
 
 %feature("docstring")  XAPP::MC::GetWindow "
 
@@ -1078,6 +1219,14 @@ id:  the id of the window ";
 %feature("docstring")  XAPP::MC::HideDialogWait "
 
 Hides the wait dialog. ";
+
+%feature("docstring")  XAPP::MC::IsConnectedToInternet "
+
+Returns true if has internet connection. ";
+
+%feature("docstring")  XAPP::MC::IsEmbedded "
+
+Returns true if running on embedded platform and false otherwise. ";
 
 %feature("docstring")  XAPP::MC::LogDebug "
 
@@ -1120,6 +1269,30 @@ controlId:  - control id
 items:  - item list
 
 selectedItem:  - selected item ";
+
+%feature("docstring")  XAPP::MC::SetTemperatureScale "
+
+Set the temperature scale.
+
+Input should be either 'C' or 'F'. ";
+
+%feature("docstring")  XAPP::MC::SetWeatherLocation "
+
+Return the current weather setting location.
+
+For example: \"USNY0996 - New York, NY\" ";
+
+%feature("docstring")  XAPP::MC::SetWeatherLocation2 "
+
+Set the current weather setting location.
+
+Parameters:
+-----------
+
+cityName:  - the city name
+
+countryCode:  - the city country code Returns true on success and
+false on failure ";
 
 %feature("docstring")  XAPP::MC::ShowDialogConfirm "
 
@@ -1202,7 +1375,21 @@ Displays a wait dialog.
 This should be displayed during long operations. ";
 
 
-// File: class_x_a_p_p_1_1_parameters.xml
+// File: classXAPP_1_1NativeApp.xml
+%feature("docstring") XAPP::NativeApp "";
+
+%feature("docstring")  XAPP::NativeApp::Call "";
+
+%feature("docstring")  XAPP::NativeApp::NativeApp "";
+
+%feature("docstring")  XAPP::NativeApp::Process "";
+
+%feature("docstring")  XAPP::NativeApp::Start "";
+
+%feature("docstring")  XAPP::NativeApp::~NativeApp "";
+
+
+// File: classXAPP_1_1Parameters.xml
 %feature("docstring") XAPP::Parameters "
 
 This class represents parameters that are passed to application
@@ -1216,11 +1403,15 @@ Converts the parameters in a URL query to a string:
 key=value&key2=value. ";
 
 
-// File: class_x_a_p_p_1_1_player.xml
+// File: classXAPP_1_1Player.xml
 %feature("docstring") XAPP::Player "
 
 This class represents the Player object used for playing all kinds of
 media items. ";
+
+%feature("docstring")  XAPP::Player::FeedRaw "";
+
+%feature("docstring")  XAPP::Player::FlushRaw "";
 
 %feature("docstring")  XAPP::Player::GetLastPlayerAction "
 
@@ -1233,6 +1424,24 @@ Returns the last event that occured in the player. ";
 %feature("docstring")  XAPP::Player::GetPlayingItem "
 
 Returns the currently playing item. ";
+
+%feature("docstring")  XAPP::Player::GetPlaylistTimecode "
+
+Returns the current time (EXT-X-PROGRAM-DATE-TIME) in seconds of the
+currently playing HTTP live stream. ";
+
+%feature("docstring")  XAPP::Player::GetRepeatState "
+
+Return true if the current playlist is repeat. ";
+
+%feature("docstring")  XAPP::Player::GetSeekRequestTime "
+
+Get lst player seek time.
+
+Parameters:
+-----------
+
+action:  player action ";
 
 %feature("docstring")  XAPP::Player::GetTime "
 
@@ -1284,6 +1493,10 @@ Returns true if Boxee is currently playing video, false otherwise. ";
 
 Returns true if the player is currently perfroming rewind operation.
 ";
+
+%feature("docstring")  XAPP::Player::IsShuffle "
+
+Return true if the current playlist is shuffle. ";
 
 %feature("docstring")  XAPP::Player::LockPlayerAction "
 
@@ -1337,6 +1550,15 @@ Skip to next item in the playlist. ";
 
 Skip to the previous item in the playlist. ";
 
+%feature("docstring")  XAPP::Player::PlayRaw "
+
+Plays the specified list item.
+
+Parameters:
+-----------
+
+item:  item to play ";
+
 %feature("docstring")  XAPP::Player::PlaySelected "
 
 Play item with specified index from the current playlist.
@@ -1377,6 +1599,18 @@ Parameters:
 
 item:  item to play ";
 
+%feature("docstring")  XAPP::Player::QueueNextItem "";
+
+%feature("docstring")  XAPP::Player::QueueNextRaw "";
+
+%feature("docstring")  XAPP::Player::RawClose "";
+
+%feature("docstring")  XAPP::Player::RawIsEmpty "";
+
+%feature("docstring")  XAPP::Player::RawSetEOF "";
+
+%feature("docstring")  XAPP::Player::ResumeAudio "";
+
 %feature("docstring")  XAPP::Player::SeekTime "
 
 Sets the current position of the currently playing media to the
@@ -1410,6 +1644,17 @@ Parameters:
 
 event:  player event ";
 
+%feature("docstring")  XAPP::Player::SetOsdExtAmount "";
+
+%feature("docstring")  XAPP::Player::SetSeekRequestTime "
+
+Set lst player seek time.
+
+Parameters:
+-----------
+
+action:  player action ";
+
 %feature("docstring")  XAPP::Player::SetVolume "
 
 Set Boxee volume.
@@ -1427,10 +1672,12 @@ Stops playback. ";
 
 Mute Boxee. ";
 
+%feature("docstring")  XAPP::Player::UpdateItem "";
+
 %feature("docstring")  XAPP::Player::~Player "";
 
 
-// File: class_x_a_p_p_1_1_play_list.xml
+// File: classXAPP_1_1PlayList.xml
 %feature("docstring") XAPP::PlayList "
 
 Represents a play list. ";
@@ -1465,13 +1712,17 @@ Returns the item with the specified index from the playlist. ";
 
 Returns the position of the current item in the playlist. ";
 
+%feature("docstring")  XAPP::PlayList::IsShuffle "
+
+Return true if the playlist is shuffle. ";
+
 %feature("docstring")  XAPP::PlayList::Play "
 
 Plays the specified item from the playlist. ";
 
 %feature("docstring")  XAPP::PlayList::PlayList "
 
-Create playlist of the specifed type (music or video). ";
+Create playlist of the specifed type (music or video) ";
 
 %feature("docstring")  XAPP::PlayList::Size "
 
@@ -1480,7 +1731,13 @@ Returns the size of the playlist. ";
 %feature("docstring")  XAPP::PlayList::~PlayList "";
 
 
-// File: class_x_a_p_p_1_1_toggle_button.xml
+// File: classXAPP_1_1Textbox.xml
+%feature("docstring") XAPP::Textbox "";
+
+%feature("docstring")  XAPP::Textbox::SetText "";
+
+
+// File: classXAPP_1_1ToggleButton.xml
 %feature("docstring") XAPP::ToggleButton "
 
 Represents a toggle button control in the user interface.
@@ -1511,7 +1768,7 @@ Parameters:
 selected:  true to select the toggle button, false for unselected ";
 
 
-// File: class_x_a_p_p_1_1_window.xml
+// File: classXAPP_1_1Window.xml
 %feature("docstring") XAPP::Window "
 
 Represents a toggle button control in the user interface.
@@ -1558,9 +1815,17 @@ Returns a label control in the window. ";
 
 Returns a list control in the window. ";
 
+%feature("docstring")  XAPP::Window::GetTextbox "
+
+Returns a textbox control in the window. ";
+
 %feature("docstring")  XAPP::Window::GetToggleButton "
 
 Returns a toggle button control in the window. ";
+
+%feature("docstring")  XAPP::Window::GetWindowId "
+
+Get window id. ";
 
 %feature("docstring")  XAPP::Window::PopState "
 
@@ -1592,58 +1857,92 @@ it will pop the state and return it. The state includes contents of
 lists and the selected items in lists. This is useful if you want to
 support \"drill down\" navigation in a window. ";
 
+%feature("docstring")  XAPP::Window::SetProperty "";
 
-// File: namespace_x_a_p_p.xml
+
+// File: classXAPP_1_1WindowEvent.xml
+%feature("docstring") XAPP::WindowEvent "";
 
 
-// File: _app_exception_8h.xml
+// File: classXAPP_1_1WindowListener.xml
+%feature("docstring") XAPP::WindowListener "";
+
+%feature("docstring")  XAPP::WindowListener::WindowClosed "";
+
+%feature("docstring")  XAPP::WindowListener::WindowClosing "";
+
+%feature("docstring")  XAPP::WindowListener::WindowOpened "";
+
+%feature("docstring")  XAPP::WindowListener::WindowOpening "";
+
+%feature("docstring")  XAPP::WindowListener::WindowRender "";
+
+%feature("docstring")  XAPP::WindowListener::~WindowListener "";
+
+
+// File: namespacePLAYLIST.xml
+
+
+// File: namespaceXAPP.xml
+
+
+// File: AppException_8h.xml
+
+
+// File: DllSkinNativeApp_8h.xml
 
 
 // File: doxygen2boxeedoc_8php.xml
 %feature("docstring")  printMethods "";
 
 
-// File: _x_a_p_p___app_8h.xml
+// File: XAPP__App_8h.xml
 
 
-// File: _x_a_p_p___button_8h.xml
+// File: XAPP__Button_8h.xml
 
 
-// File: _x_a_p_p___control_8h.xml
+// File: XAPP__Control_8h.xml
 
 
-// File: _x_a_p_p___edit_8h.xml
+// File: XAPP__Edit_8h.xml
 
 
-// File: _x_a_p_p___http_8h.xml
+// File: XAPP__Http_8h.xml
 
 
-// File: _x_a_p_p___image_8h.xml
+// File: XAPP__Image_8h.xml
 
 
-// File: _x_a_p_p___label_8h.xml
+// File: XAPP__Label_8h.xml
 
 
-// File: _x_a_p_p___list_8h.xml
+// File: XAPP__List_8h.xml
 
 
-// File: _x_a_p_p___list_item_8h.xml
+// File: XAPP__ListItem_8h.xml
 
 
-// File: _x_a_p_p___local_config_8h.xml
+// File: XAPP__LocalConfig_8h.xml
 
 
-// File: _x_a_p_p___m_c_8h.xml
+// File: XAPP__MC_8h.xml
 
 
-// File: _x_a_p_p___player_8h.xml
+// File: XAPP__Native_8h.xml
 
 
-// File: _x_a_p_p___play_list_8h.xml
+// File: XAPP__Player_8h.xml
 
 
-// File: _x_a_p_p___toggle_button_8h.xml
+// File: XAPP__PlayList_8h.xml
 
 
-// File: _x_a_p_p___window_8h.xml
+// File: XAPP__Textbox_8h.xml
+
+
+// File: XAPP__ToggleButton_8h.xml
+
+
+// File: XAPP__Window_8h.xml
 

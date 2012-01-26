@@ -816,6 +816,15 @@ protected:
 	CxImage**			ppLayers; //generic layers
 	CxImage**			ppFrames;
 //@}
+
+
+//DDS stuff
+
+private:
+  unsigned int DDS_GetDXT5StorageRequirements() const;
+
+public:
+  bool DDS_SaveAsDXT5(const char *fileName);
 };
 
 ////////////////////////////////////////////////////////////////////////////

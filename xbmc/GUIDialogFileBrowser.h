@@ -34,6 +34,8 @@ class CGUIDialogFileBrowser : public CGUIDialog, public IBackgroundLoaderObserve
 {
 public:
   CGUIDialogFileBrowser(void);
+  CGUIDialogFileBrowser(int id, const CStdString &xmlFile);
+  void InitializeFileBrowser();
   virtual ~CGUIDialogFileBrowser(void);
   virtual bool OnMessage(CGUIMessage& message);
   virtual bool OnAction(const CAction &action);
@@ -42,10 +44,11 @@ public:
   virtual void OnWindowUnload();
   bool IsConfirmed() { return m_bConfirmed; };
   void SetHeading(const CStdString &heading);
+  void SetPathLabel(const CStdString &heading);
 
   static bool ShowAndGetDirectory(const VECSOURCES &shares, const CStdString &heading, CStdString &path, bool bWriteOnly=false);
-  static bool ShowAndGetFile(const VECSOURCES &shares, const CStdString &mask, const CStdString &heading, CStdString &path, bool useThumbs = false, bool useFileDirectories = false);
-  static bool ShowAndGetFile(const CStdString &directory, const CStdString &mask, const CStdString &heading, CStdString &path, bool useThumbs = false, bool useFileDirectories = false);
+  static bool ShowAndGetFile(const VECSOURCES &shares, const CStdString &mask, const CStdString &heading, CStdString &path, bool useThumbs = false, bool useFileDirectories = false, bool allowNonLocalSources = true);
+  static bool ShowAndGetFile(const CStdString &directory, const CStdString &mask, const CStdString &heading, CStdString &path, bool useThumbs = false, bool useFileDirectories = false, bool allowNonLocalSources = true);
   static bool ShowAndGetSource(CStdString &path, bool allowNetworkShares, VECSOURCES* additionalShare = NULL, const CStdString& strType="");
   static bool ShowAndGetImage(const VECSOURCES &shares, const CStdString &heading, CStdString &path);
   static bool ShowAndGetImage(const CFileItemList &items, VECSOURCES &shares, const CStdString &heading, CStdString &path, bool* flip=NULL);

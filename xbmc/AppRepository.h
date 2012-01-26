@@ -39,15 +39,15 @@ public:
   const CStdString& GetID() const;
   const CStdString& GetThumbnail() const;
   bool IsValid();
-  bool ReloadAppDescriptors(bool bDontWait = false);
-  CAppDescriptor::AppDescriptorsMap GetAvailableApps();
+  bool ReloadAppDescriptors(bool bDontWait = false , const CStdString& category="");
+  CAppDescriptor::AppDescriptorsMap GetAvailableApps(const CStdString& category="");
   
   static CAppRepository LoadRepositoryFromXML(const TiXmlNode* rootElement);
   
 private:
   bool LoadRepositoryFromURL(const CStdString& url);
   
-  bool GetBoxeeApplications(CAppDescriptor::AppDescriptorsMap& result);
+  bool GetBoxeeApplications(CAppDescriptor::AppDescriptorsMap& result , const CStdString& category="");
   bool Get3rdPartyApplications(CAppDescriptor::AppDescriptorsMap& result, bool bDontWait);
   bool GetApps(CAppDescriptor::AppDescriptorsMap& result, TiXmlElement* rootElement, const CStdString& repositoryType);
 

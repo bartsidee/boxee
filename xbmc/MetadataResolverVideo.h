@@ -5,6 +5,7 @@
 #include "lib/libBoxee/bxmetadata.h" 
 #include "utils/IMDB.h"
 #include <vector>
+#include "Util.h"
 
 class CVideoFolderContext
 {
@@ -28,7 +29,6 @@ public:
 
   int iSeason;
   int iEpisode;
-
 };
 
 /*
@@ -50,9 +50,13 @@ public:
   }
 
   void Load(const CStdString& _strPath = "");
+  void LoadWithTag( const CVideoInfoTag* vTag );
+  void LoadNameFromTag( const CVideoInfoTag* vTag );
   void LoadNameFromPath();
   void LoadFileData();
   void LoadFileHash();
+  void LoadFileNfo();
+  bool LoadVideoInfoTag(const std::vector<CStdString>& strFilePaths, CVideoInfoTag& nfoDetails);
 
   void GetFileOptionsMap(std::map<CStdString, CStdString>& mapOptions);
   void GetFolderOptionsMap(std::map<CStdString, CStdString>& mapOptions);
@@ -66,10 +70,20 @@ public:
   CStdString strName; // extracted title of the movie or tv show
   CStdString strYear; // extracted year
   CStdString strIMDBId; // IMDB id of the video
+  CStdString strTVDBId; // tTVDB id of the episode
   CStdString strBoxeeId; // boxee id of the video
 
   CStdString strExternalIdName;
   CStdString strExternalIdValue;
+
+  CVideoInfoTag m_nfoVideoDetails;
+  bool          m_bVideoDetailsFromNFO; //used for movie / episode
+
+  CVideoInfoTag m_nfoShowDetails;
+  bool          m_bShowDetailsFromNFO;
+
+  CStdString m_userVideoCoverPath;
+  CStdString m_strNFOPath;
 
   CStdString strAdditionalInfo; // string that remains to the right of the season tag in tv shows
 
@@ -81,18 +95,29 @@ public:
 
   int iModificationDate; // modification date of the file
 
-  bool bMovie; // flag that indicates whethe the item was recognized as a movie or tv show
+  bool bMovie; // flag that indicates whether the item was recognized as a movie or tv show
+  bool bMovieChanged; //indicates if there was a change
 
   bool bUseHash;
+
+  CPlayableFolderType::PlayableFolderEnums m_playableFolderType;
+  bool m_bIsManualResolve;
 
   int iSeason;
   int iEpisode;
   CStdString strEpisodeDate;   // used to daily shows series
 
   bool bResolvedByFolder; // internal indication of whether the video was resolved by folder name
+  bool m_bNFOParseFailed;
 
   void Reset()
   {
+    m_playableFolderType = CPlayableFolderType::PF_NO;
+    m_bIsManualResolve = false;
+    m_bVideoDetailsFromNFO = false;
+    m_bShowDetailsFromNFO = false;
+    m_bNFOParseFailed = false;
+
     strName = "";
     strYear = "";
     strIMDBId = "";
@@ -104,6 +129,9 @@ public:
     bResolvedByFolder = false;
     bMovie = true;
     bUseHash = true;
+    bMovieChanged = false;
+    m_bVideoDetailsFromNFO = false;
+    m_bShowDetailsFromNFO = false;
 
     iSize = 0;
     uiHash = 0;
@@ -113,6 +141,10 @@ public:
     strEpisodeDate = "";
   }
 
+private:
+
+  bool GetNfoFilePaths(std::vector<CStdString>& nfoFilePathsVec);
+
 };
 
 class CMetadataResolverVideo
@@ -121,6 +153,7 @@ public:
 
   // Initializes static lists used by the video resolver
   static void InitializeVideoResolver();
+  static void DeinitializeVideoResolver();
   static void SetBadWords(const std::vector<std::string>& vecBadWords);
 
   // Resolves video metadata using boxee server
@@ -142,9 +175,15 @@ public:
 
   // Auxiliary functions
   static bool IsSample(const CStdString& strName);
+  static bool IsTrailer(const CStdString& strName1);
   static bool IsDVDFolder(const CFileItemList& items);
   static bool IsDVDFilename(const CStdString& strPath);
   static bool IsDVDExtension(const CStdString& strPath);
+
+  static bool IsBlurayFolder(const CFileItemList& items);
+  static bool IsBlurayExtension(const CStdString& strPath);
+  static bool IsOnBlurayFolder(const CStdString& strPath);
+
   static bool CheckPart(const CStdString& strFilename, int & iPart);
 
   static bool GetFileData(const std::string& strFilePath, int64_t& iLength, int& iModDate);
@@ -156,6 +195,22 @@ public:
 
   static bool LoadMovieInfo(const CFileItemList& list, CVideoFileContext& context, BOXEE::BXMetadata* pMetadata);
   static bool LoadEpisodeInfo(const CFileItemList& list, CVideoFileContext& context, BOXEE::BXMetadata* pMetadata);
+
+  static bool AddLocalShowsGenres(const std::string& strGenre);
+  static bool AddLocalMoviesGenres(const std::string& strGenre);
+  static bool InitializeGenres();
+
+  static void GetLocalShowsGenres(std::set<std::string>& outShowGenres);
+  static void GetLocalMoviesGenres(std::set<std::string>& outMovieGenres);
+
+  static void LockLocalShowsGenres();
+  static void UnlockLocalShowsGenres();
+
+  static void LockLocalMoviesGenres();
+  static void UnlockLocalMoviesGenres();
+
+  static bool LoadTVShowItem(const CFileItemPtr& tvshowItem, CVideoFileContext& context, BOXEE::BXSeries* pSeries, BOXEE::BXSeason* pSeason , BOXEE::BXVideo* pVideo);
+  static bool LoadTVEpisodeItem(const CFileItemPtr& episodeItem, CVideoFileContext& context, BOXEE::BXVideo* pVideo);
 
 private:
 
@@ -177,6 +232,12 @@ private:
 
   static std::vector<std::string> m_badWords;
   static std::vector<CStdString> m_commonWords;
+  static std::set<std::string> m_localMoviesGenres;
+  static std::set<std::string> m_localShowsGenres;
+
+  static SDL_mutex* m_localMoviesGenresGuard;
+  static SDL_mutex* m_localShowsGenresGuard;
+
   static bool m_bInitialized;
 };
 

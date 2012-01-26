@@ -24,6 +24,8 @@
 #include "FileSystem/File.h"
 #include "utils/log.h"
 
+#include "FileSystem/FileCurl.h"
+
 using namespace XFILE;
 
 CDVDInputStreamFile::CDVDInputStreamFile(DVDStreamType streamType) : CDVDInputStream(streamType)
@@ -54,7 +56,7 @@ bool CDVDInputStreamFile::Open(const char* strFile, const std::string& content)
 {
   CStdString stdFile = strFile;
   
-  CURL url(stdFile);
+  CURI url(stdFile);
   if (!CDVDInputStream::Open(strFile, content)) return false;
 
   m_pFile = new CFile();
@@ -65,8 +67,35 @@ bool CDVDInputStreamFile::Open(const char* strFile, const std::string& content)
   if( CFileItem(stdFile, false).IsInternetStream() )
     flags |= READ_CACHED;
 
+  bool bOpen = false;
+  
+  // This is a workaround for HTML5 video content. we need to pass a user agent string from
+  // the file item into the resulting file, but can only do this if we open ourselves
+  if( m_item.m_strPath.Left(7).Equals("http://") ||
+       m_item.m_strPath.Left(8).Equals("https://"))
+  {
+    CStdString extraInfo = m_item.GetExtraInfo();
+    if( extraInfo && extraInfo.Left(11).Equals("User-Agent:") )
+    {
+      CFileCurl* curl = new CFileCurl();
+      curl->SetUserAgent(extraInfo.substr(11, extraInfo.length()-1));
+      if( !curl->Open(stdFile) )
+      {
+        delete m_pFile;
+        m_pFile = NULL;
+        return false;
+      }
+
+      // success - atttach to m_pfile
+      m_pFile->Attach( curl, flags );
+      curl = NULL;
+      bOpen = true;
+    }
+  }
+       
+  
   // open file in binary mode
-  if (!m_pFile->Open(stdFile, flags))
+  if( !bOpen && !m_pFile->Open(stdFile, flags))
   {
     delete m_pFile;
     m_pFile = NULL;
@@ -75,7 +104,7 @@ bool CDVDInputStreamFile::Open(const char* strFile, const std::string& content)
   
   if (m_pFile->GetImplemenation() && (content.empty() || content == "application/octet-stream"))
     m_content = m_pFile->GetImplemenation()->GetContent();
-
+  
   m_eof = true;
   return true;
 }
@@ -147,11 +176,14 @@ DWORD CDVDInputStreamFile::GetReadAhead()
 
 bool CDVDInputStreamFile::Skip(int skipActionType)
 {
-  CLog::Log(LOGERROR,"CDVDInputStreamFile::Skip - Skip action isn't handle in this CDVDInputStream [type=%d]",m_streamType);
-  return false;
+    CLog::Log(LOGERROR,"CDVDInputStreamFile::Skip - Skip action isn't handle in this CDVDInputStream [type=%d]",m_streamType);
+    return false;
 }
 
+void CDVDInputStreamFile::Abort()
+{
+  if (!m_pFile || !m_pFile->GetImplemenation())
+    return;
 
-
-
-
+  return m_pFile->GetImplemenation()->Close();
+}

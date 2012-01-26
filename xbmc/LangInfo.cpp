@@ -257,6 +257,14 @@ bool CLangInfo::LoadInternal(const CStdString& strFileName)
     return false;
   }
 
+  m_strLanguageCode = pRootElement->Attribute("code");
+
+  if (m_strLanguageCode.IsEmpty())
+  {
+    CLog::Log(LOGERROR, "%s <language> element doesn't contain language code attribute", strFileName.c_str());
+    return false;
+  }
+
   const TiXmlNode *pCharSets = pRootElement->FirstChild("charsets");
   if (pCharSets && !pCharSets->NoChildren())
   {
@@ -322,7 +330,7 @@ bool CLangInfo::LoadInternal(const CStdString& strFileName)
         {
           m_strMeridiemSymbols[MERIDIEM_SYMBOL_AM]=pTime->Attribute("symbolAM");
           m_strMeridiemSymbols[MERIDIEM_SYMBOL_PM]=pTime->Attribute("symbolPM");
-        }
+      }
       }
 
       const TiXmlNode *pTempUnit=pRegion->FirstChild("tempunit");
@@ -351,7 +359,7 @@ bool CLangInfo::LoadInternal(const CStdString& strFileName)
     if (pattern.Left(2) == "12")
     {
   	  m_strTimeFormat =  "h:mm:ss xx";
-    }
+  }
     else
     {
       m_strTimeFormat = "H:mm:ss";
@@ -465,6 +473,11 @@ const CStdString& CLangInfo::GetTimeZone() const
   return m_currentRegion->m_strTimeZone;
 }
 
+const CStdString& CLangInfo::GetLanguageCode() const
+{
+  return m_strLanguageCode;
+}
+
 // Returns the AM/PM symbol of the current language
 const CStdString& CLangInfo::GetMeridiemSymbol(MERIDIEM_SYMBOL symbol) const
 {
@@ -548,10 +561,17 @@ CLangInfo::TEMP_UNIT CLangInfo::GetTempUnit() const
 }
 
 // Returns the temperature unit string for the current language
-const CStdString& CLangInfo::GetTempUnitString() const
+const CStdString& CLangInfo::GetTempUnitString(bool withUnitLabel) const
 {
-//	  return g_localizeStrings.Get(TEMP_UNIT_STRINGS+m_currentRegion->m_tempUnit);
-	  return g_localizeStrings.Get(TEMP_UNIT_STRINGS+m_tempUnit);
+  //return g_localizeStrings.Get(TEMP_UNIT_STRINGS+m_currentRegion->m_tempUnit);
+  if (withUnitLabel)
+  {
+    return g_localizeStrings.Get(TEMP_UNIT_STRINGS+m_tempUnit);
+  }
+  else
+  {
+    return g_localizeStrings.Get(20035);
+  }
 }
 
 CLangInfo::SPEED_UNIT CLangInfo::GetSpeedUnit() const

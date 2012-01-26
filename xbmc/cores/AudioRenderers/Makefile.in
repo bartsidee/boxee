@@ -1,17 +1,22 @@
 ARCH=@ARCH@
 
-INCLUDES=-I. -I../../ -I../../linux -I../../../guilib -I../../utils -I../dvdplayer -I..
+INCLUDES=-I. -I../../ -I../../linux -I../../../guilib -I../../utils -I../dvdplayer -I.. -I../dvdplayer/Codecs -I../dvdplayer/Codecs/ffmpeg
 
 ifeq ($(findstring osx,$(ARCH)), osx)
 SRCS = \
 	NullDirectSound.cpp \
 	AudioRendererFactory.cpp \
-	CoreAudioRenderer.cpp
+	CoreAudioRenderer.cpp \
+	AudioUtilsHelperApple.cpp \
+	AudioUtils.cpp
 else
 SRCS = \
 	NullDirectSound.cpp \
 	AudioRendererFactory.cpp \
-	ALSADirectSound.cpp
+	IntelSMDAudioRenderer.cpp \
+	ALSADirectSound.cpp \
+	AudioUtilsHelperLinux.cpp \
+	AudioUtils.cpp
 endif
 
 LIB=audiorenderers.a

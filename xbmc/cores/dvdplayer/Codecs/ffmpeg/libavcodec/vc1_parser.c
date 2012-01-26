@@ -21,7 +21,7 @@
  */
 
 /**
- * @file libavcodec/vc1_parser.c
+ * @file
  * VC-1 and WMV3 parser
  */
 
@@ -169,7 +169,7 @@ static int vc1_split(AVCodecContext *avctx,
     return 0;
 }
 
-AVCodecParser vc1_parser = {
+AVCodecParser ff_vc1_parser = {
     { CODEC_ID_VC1 },
     sizeof(VC1ParseContext),
     NULL,

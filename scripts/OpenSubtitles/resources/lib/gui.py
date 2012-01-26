@@ -24,7 +24,7 @@ LOADING_IMAGE = 110
 SUBTITLES_LIST = 120
 
 class GUI( xbmcgui.WindowXMLDialog ):
-    socket.setdefaulttimeout(5.0) #seconds
+    socket.setdefaulttimeout(10.0) #seconds
 	
     def __init__( self, *args, **kwargs ):
         pass
@@ -168,8 +168,8 @@ class GUI( xbmcgui.WindowXMLDialog ):
             sub_filename = os.path.basename( self.file_path )
             sub_filename = sub_filename[0:sub_filename.rfind(".")] + "." + self.osdb_server.subtitles_list[pos]["language_id"] + "." + self.osdb_server.subtitles_list[pos]["format"]
             
-            local_path = "special://home/subtitles" #xbmcplugin.getSetting( "subtitles.custompath" )
-            
+            local_path = xbmc.translatePath("special://home/subtitles")
+    
             ok = xbmcgui.Dialog().yesno( __scriptname__, _( 242 ), ( _( 243 ) % ( filename, ) ), "", _( 260 ), _( 259 ) )
             if not ok:
                 self.getControl( STATUS_LABEL ).setLabel( _( 645 ) )
@@ -187,7 +187,7 @@ class GUI( xbmcgui.WindowXMLDialog ):
 
     def extract_subtitles(self, filename, sub_filename, subtitle_format, zip_filename, local_path ):
         LOG( LOG_INFO, "extract_subtitles" )
-        
+        subtitle_set = False 
         try:
             un = unzip.unzip()
             #if os.path.exists( zip_filename ):
@@ -243,5 +243,8 @@ class GUI( xbmcgui.WindowXMLDialog ):
         self.controlId = controlId
 
     def onAction( self, action ):
-        if ( action.getButtonCode() in CANCEL_DIALOG ):
-            self.exit_script()
+        try:
+                if ( action.getButtonCode() in CANCEL_DIALOG ):
+                    self.exit_script()
+        except:
+                self.exit_script()

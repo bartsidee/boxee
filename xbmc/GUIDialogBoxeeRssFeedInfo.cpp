@@ -86,9 +86,9 @@ bool CGUIDialogBoxeeRssFeedInfo::OnMessage(CGUIMessage& message)
           source.path = s;
         }
         
-        CURL url(source.path);
+        CURI url(source.path);
         GetRSSInfoBG* job = new GetRSSInfoBG(source.path);
-        if (CUtil::RunInBG(job) && job->m_bResult)
+        if (CUtil::RunInBG(job,false) == JOB_SUCCEEDED)
         {
           source.name = job->m_title;
           source.thumbPath = job->m_thumbnail;
@@ -97,6 +97,8 @@ bool CGUIDialogBoxeeRssFeedInfo::OnMessage(CGUIMessage& message)
           CBoxeeMediaSourceList sourceList;
           sourceList.addSource(source);
           
+          delete job;
+
           CGUIDialogOK2::ShowAndGetInput(g_localizeStrings.Get(52039), g_localizeStrings.Get(52140));
         }  
         else

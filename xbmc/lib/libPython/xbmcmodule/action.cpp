@@ -23,6 +23,8 @@
 #include "Key.h"
 #include "pyutil.h"
 
+#include "../../../placement_new.h"
+
 using namespace std;
 
 #ifndef __GNUC__
@@ -44,7 +46,7 @@ namespace PYXBMC
 
     self = (Action*)type->tp_alloc(type, 0);
     if (!self) return NULL;
-    new(&self->strAction) string(); 
+   PLACEMENT_NEW(&self->strAction) string(); 
     
     //if (!PyArg_ParseTuple(args, "l", &self->action)) return NULL;
     //self->action = -1;
@@ -62,7 +64,7 @@ namespace PYXBMC
   PyObject* Action_FromAction(const CAction& action)
   {
     Action* pyAction = (Action*)Action_Type.tp_alloc(&Action_Type, 0);
-    new(&pyAction->strAction) string(); 
+   PLACEMENT_NEW(&pyAction->strAction) string(); 
     
     if (pyAction)
     {

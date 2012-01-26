@@ -5,8 +5,7 @@
 #include <arpa/inet.h>
 #include <sys/time.h>
 #else
-#define bzero(a) memset(a,0,sizeof(a))
-typedef int socklen_t;
+#include "../../win32/c_defs.h"
 #include <WinSock2.h>
 #endif
 #include <stdlib.h>
@@ -26,7 +25,7 @@ int is_in_list(struct list* lst, unsigned long content);
 extern "C"
 #endif
 int inet_aton(const char *cp, struct in_addr *addr);
-int send_query(int sock, struct in_addr dest_addr, uint32_t rtt_base);
+int send_query( int sock, struct in_addr dest_addr, uint32_t rtt_base, const char* name, int iponly);
 
 #ifdef _WIN32
 /* replacement gettimeofday implementation, copy from dvdnav_internal.h */
@@ -116,7 +115,7 @@ int scan_network( const char* target_string, share_host_info* host_info ) {
     {
       CLOSE_SOCKET(sock);
       err_die("Failed to bind", quiet);
-    }
+  }
   }
   
   fdsr=(fd_set*)malloc(sizeof(fd_set));
@@ -197,7 +196,7 @@ int scan_network( const char* target_string, share_host_info* host_info ) {
         if( !hostinfo || !hostinfo->names || !hostinfo->names->ascii_name) {
           err_print("parse_response returned NULL", quiet);
           if (hostinfo)
-            free(hostinfo);
+            free_hostinfo(hostinfo);
           continue;
         };
 				/* If this packet isn't a duplicate */
@@ -218,7 +217,7 @@ int scan_network( const char* target_string, share_host_info* host_info ) {
           ++host_info;
         };
         
-        free(hostinfo);
+        free_hostinfo(hostinfo);
       };
       
       FD_ZERO(fdsr);
@@ -246,7 +245,7 @@ int scan_network( const char* target_string, share_host_info* host_info ) {
               {
                 send_query(sock, *next_in_addr, rtt_base);
                 sentQueries++;
-              }
+            }
             }
           } else {
             if(feof(targetlist)) {
@@ -259,6 +258,11 @@ int scan_network( const char* target_string, share_host_info* host_info ) {
             } else {
               snprintf(errmsg, 80, "Read failed from file %s", filename);
               CLOSE_SOCKET(sock);
+			  delete_list(scanned);
+			  free(buff);
+			  free(next_in_addr);
+			  free(fdsw);
+			  free(fdsr);
               err_die(errmsg, quiet);
             }
           }
@@ -306,9 +310,12 @@ int scan_network( const char* target_string, share_host_info* host_info ) {
   };
 
   delete_list(scanned);
-
+  
   CLOSE_SOCKET(sock);
   free(buff);
+  free(next_in_addr);
+  free(fdsw);
+  free(fdsr);
   
   return active_hosts;
 };

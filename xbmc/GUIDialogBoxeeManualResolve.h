@@ -10,6 +10,31 @@
 #include "FileSystem/FileCurl.h"
 #include "MetadataResolverVideo.h"
 
+class CLoadVideoFileContext : public IRunnable
+{
+public:
+  CLoadVideoFileContext (CVideoFileContext& videoFileContext,CFileItemPtr& videoItem,CFileItemList& videoParts);
+  virtual ~CLoadVideoFileContext() {}
+  virtual void Run();
+
+  CVideoFileContext& m_videoFileContext;
+  CFileItemPtr&     m_videoItem;
+  CFileItemList&    m_videoParts;
+};
+
+class CAddVideoBG : public IRunnable
+{
+public:
+  CAddVideoBG (const BOXEE::BXMetadata& resolvedVideoMetadata,const CVideoFileContext& videoFileContext,const CFileItemList& videoParts);
+  virtual ~CAddVideoBG() {}
+  virtual void Run();
+  bool         AddVideo();
+
+  BOXEE::BXMetadata m_resolvedVideoMetadata;
+  CVideoFileContext m_videoFileContext;
+  CFileItemList     m_videoParts;
+};
+
 class CGetResultListBG : public IRunnable
 {
 public:
@@ -18,7 +43,7 @@ public:
   virtual void Run();
   bool ParseResultListXml(const CStdString& strHtml, CFileItemList& items);
   CStdString m_strTitle;
-
+  
   CFileItemList& m_items;
   XFILE::CFileCurl m_http;
 };
@@ -56,34 +81,42 @@ public:
   static bool Show(CFileItemPtr pItem);
   
   virtual bool OnMessage(CGUIMessage &message);
+  virtual bool OnAction(const CAction &action);
   
 protected:
   void Reset();
+
   virtual void OnInitWindow();
   virtual void OnDeinitWindow(int nextWindowID);
-
+  
   bool GetList();
 
-  bool AddVideo(CVideoFileContext& context, BOXEE::BXMetadata& metadata);
+
 
 private:
-
+  bool IdentifyWithNFO();
+  bool ResolveVideo();
+  
   CFileItemPtr m_unresolvedVideoItem;
   CFileItemPtr m_resolvedVideoItem;
-
+  
   BOXEE::BXMetadata m_resovedVideoMetadata;
+  BOXEE::BXMetadata m_episodeResolvedVideoMetadata;
 
   CVideoFileContext m_videoFileContext;
+  CVideoFileContext m_episodeVideoFileContext;
 
   // Items returned as a result list from the server
   CFileItemList m_resultListItems;
-
+  
   // Item that the user has selected
   CFileItemPtr m_selectedItem;
-
+  
   CFileItemList m_videoParts;
-
+  
   bool m_bConfirmed;
+  bool m_bUseNFO;
+  bool m_bSearched;
 
 };
 

@@ -303,13 +303,13 @@ NPT_XbmcFile::Open(NPT_File::OpenMode mode)
         }
 
         bool result;
-        CURL* url = new CURL(name);
+        CURI* url = new CURI(name);
         /* path is not fully qualified so assume it's relative to home dir */
         if (url->GetFileName().IsEmpty()) {
             delete url;
             CStdString homepath;
             CUtil::GetHomePath(homepath);
-            url = new CURL(homepath + "/" + name);
+            url = new CURI(homepath + "/" + name);
         }
 
         // compute mode

@@ -24,6 +24,8 @@
 #include "ReplayGain.h"
 #include "StdString.h"
 #include "FileSystem/File.h"
+#include "PCMRemap.h"  // PCMChannels
+#include "cores/AudioRenderers/IAudioRenderer.h" // AudioMediaFormat
 
 #define READ_EOF      -1
 #define READ_SUCCESS   0
@@ -34,6 +36,7 @@ class ICodec
 public:
   ICodec()
   {
+    m_Time = 0;
     m_TotalTime = 0;
     m_SampleRate = 0;
     m_BitsPerSample = 0;
@@ -74,6 +77,11 @@ public:
   // the data has been exhausted, and READ_ERROR on error.
   virtual int ReadPCM(BYTE *pBuffer, int size, int *actualsize)=0;
 
+  // ReadData()
+  // passes back passthrough or encoded audio data to be bitstreamed or decoded in hw
+  // READ_SUCCESS on success. READ_EOF when exhausted. READ_ERROR on error
+  virtual int ReadData(BYTE* pBuffer, int size, int* actualsize) { return READ_ERROR; };
+
   // ReadSamples()
   // Decodes audio into floats (normalized to 1) into pBuffer up to numsamples samples.
   // The actual amount of returned samples is given in actualsamples.  Samples are
@@ -97,6 +105,19 @@ public:
   // true if we can retrieve normalized float data immediately
   virtual bool HasFloatData() const { return false; }
 
+  // true if ReadData gives back passthrough data
+  virtual bool UsePassthrough() const { return false; }
+
+  // true if ReadData gives back encoded data
+  virtual bool UseHWDecoding()  const { return false; }
+
+  // channel map if available
+  virtual enum PCMChannels* GetChannelMap() { return NULL; }
+
+  // data format
+  virtual AudioMediaFormat GetDataFormat() { return AUDIO_MEDIA_FMT_PCM; }
+
+  __int64 m_Time;       // elapsed; only valid if GetDataFormat() != ..PCM
   __int64 m_TotalTime;  // time in ms
   int m_SampleRate;
   int m_BitsPerSample;

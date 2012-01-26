@@ -22,6 +22,7 @@
  */
 
 #include "GUIDialogSettings.h"
+#include "FileItem.h"
 
 class CGUIDialogAudioSubtitleSettings :
       public CGUIDialogSettings
@@ -37,10 +38,20 @@ public:
 protected:
   virtual void CreateSettings();
   virtual void OnSettingChanged(SettingInfo &setting);
+  virtual void SetAudioTitle();
+  void SetSubtitleVisibility();
+  void SetItemSelected(int controlList, int item);
+  void OnBrowseSubtitleSelect();
 
   void AddAudioStreams(unsigned int id);
+  void AddSubtitleStreams(unsigned int id);
 
+  CFileItemList m_audioStreamsList;
+  CFileItemList m_subtitleStreamsList;
   float m_volume;
   int m_audioStream;
+  int m_subtitleStream;
+  int m_browseSubtitleIndex;
   int m_outputmode;
+  bool m_subtitleVisible;
 };

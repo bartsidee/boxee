@@ -19,10 +19,12 @@
  *
  */
 
-
 #include "DVDCodecs/DVDCodecs.h"
 #include "DVDInputStreams/DVDInputStream.h"
 #include "DVDInputStreams/DVDInputStreamHTSP.h"
+
+#ifdef HAS_FILESYSTEM_HTSP
+
 #include "DVDDemuxHTSP.h"
 #include "DVDDemuxUtils.h"
 #include "DVDClock.h"
@@ -311,3 +313,5 @@ void CDVDDemuxHTSP::Abort()
   if(m_Input)
     return m_Input->Abort();
 }
+
+#endif

@@ -56,7 +56,9 @@
 #include "utils/TimeUtils.h"
 
 using namespace std;
+#ifdef HAS_DVD_DRIVE
 using namespace AUTOPTR;
+#endif
 using namespace XFILE;
 using namespace DIRECTORY;
 using namespace MUSICDATABASEDIRECTORY;
@@ -825,7 +827,7 @@ bool CMusicDatabase::GetSongByFileName(const CStdString& strFileName, CSong& son
   try
   {
     song.Clear();
-    CURL url(strFileName);
+    CURI url(strFileName);
     
     if (url.GetProtocol()=="musicdb")
     {
@@ -2248,7 +2250,7 @@ void CMusicDatabase::DeleteAlbumInfo()
     }
     catch(...)
     {
-      CLog::Log(LOGERROR,"error deleting albuminfo of album %ld.", album.idAlbum);
+      CLog::Log(LOGERROR,"error deleting albuminfo of album %d.", album.idAlbum);
       return;
     }
 
@@ -2825,7 +2827,7 @@ bool CMusicDatabase::GetAlbumFromSong(const CSong &song, CAlbum &album)
   return false;
 }
 
-bool CMusicDatabase::GetAlbumsNav(const CStdString& strBaseDir, CFileItemList& items, int idGenre, int idArtist)
+bool CMusicDatabase::GetAlbumsNav(const CStdString& strBaseDir, CFileItemList& items, int idGenre, int idArtist, int start, int end)
 {
   // where clause
   CStdString strWhere;
@@ -3972,7 +3974,7 @@ bool CMusicDatabase::SetSongRating(const CStdString &filePath, char rating)
 int CMusicDatabase::GetSongIDFromPath(const CStdString &filePath)
 {
   // grab the where string to identify the song id
-  CURL url(filePath);
+  CURI url(filePath);
   if (url.GetProtocol()=="musicdb")
   {
     CStdString strFile=CUtil::GetFileName(filePath);

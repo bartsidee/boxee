@@ -145,6 +145,7 @@ extern const ff_asf_guid ff_asf_audio_stream;
 extern const ff_asf_guid ff_asf_audio_conceal_none;
 extern const ff_asf_guid ff_asf_audio_conceal_spread;
 extern const ff_asf_guid ff_asf_video_stream;
+extern const ff_asf_guid ff_asf_jfif_media;
 extern const ff_asf_guid ff_asf_video_conceal_none;
 extern const ff_asf_guid ff_asf_command_stream;
 extern const ff_asf_guid ff_asf_comment_header;
@@ -158,8 +159,12 @@ extern const ff_asf_guid ff_asf_simple_index_header;
 extern const ff_asf_guid ff_asf_ext_stream_embed_stream_header;
 extern const ff_asf_guid ff_asf_ext_stream_audio_stream;
 extern const ff_asf_guid ff_asf_metadata_header;
+extern const ff_asf_guid ff_asf_marker_header;
 extern const ff_asf_guid ff_asf_my_guid;
 extern const ff_asf_guid ff_asf_language_guid;
+extern const ff_asf_guid ff_asf_content_encryption;
+extern const ff_asf_guid ff_asf_ext_content_encryption;
+extern const ff_asf_guid ff_asf_digital_signature;
 
 extern const AVMetadataConv ff_asf_metadata_conv[];
 
@@ -224,6 +229,8 @@ extern const AVMetadataConv ff_asf_metadata_conv[];
 
 #define ASF_PL_FLAG_KEY_FRAME 0x80 //1000 0000
 
-extern AVInputFormat asf_demuxer;
+extern AVInputFormat ff_asf_demuxer;
+int ff_guidcmp(const void *g1, const void *g2);
+void ff_get_guid(ByteIOContext *s, ff_asf_guid *g);
 
 #endif /* AVFORMAT_ASF_H */

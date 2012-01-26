@@ -49,6 +49,36 @@ enum VSYNC {
   VSYNC_DRIVER = 3
 };
 
+enum GAMMA {
+  GAMMA_LINEAR = 0,
+  GAMMA_2_2 = 1,
+  GAMMA_2_8 = 2
+};
+
+enum COLOR_SPACE {
+  COLOR_SPACE_BT601 = 0,
+  COLOR_SPACE_BT709 = 1,
+  COLOR_SPACE_RGB = 2
+};
+
+enum HDMIOutputType
+{
+  HDMI_OUTPUT_RGB_LOW = 0,
+  HDMI_OUTPUT_RGB_HI,
+  HDMI_OUTPUT_YUV_422,
+  HDMI_OUTPUT_YUV_444,
+  HDMI_OUTPUT_COUNT
+};
+
+enum HDMIPixelDepth
+{
+  HDMI_PIXEL_DEPTH_24 = 0,
+  HDMI_PIXEL_DEPTH_30,
+  HDMI_PIXEL_DEPTH_36,
+  HDMI_PIXEL_DEPTH_COUNT
+};
+
+
 struct OVERSCAN
 {
   int left;
@@ -64,6 +94,10 @@ public:
   {
     left = os.left; top = os.top;
     right = os.right; bottom = os.bottom;
+  }
+  bool operator==(const OVERSCAN &overscan) const
+  {
+    return(left == overscan.left && top == overscan.top && right == overscan.right && bottom == overscan.bottom);
   }
 };
 
@@ -96,4 +130,18 @@ struct RESOLUTION_INFO
     fPixelRatio = res.fPixelRatio; fRefreshRate = res.fRefreshRate;
     strMode = res.strMode; strOutput = res.strOutput; strId = res.strId;
   }
+
+  bool operator==(const RESOLUTION_INFO &res) const
+  {
+    return(Overscan == res.Overscan &&
+        bFullScreen == res.bFullScreen &&
+        iScreen == res.iScreen &&
+        iWidth == res.iWidth &&
+        iHeight == res.iHeight &&
+        iSubtitles == res.iSubtitles &&
+        dwFlags == res.dwFlags &&
+        fPixelRatio == res.fPixelRatio &&
+        fRefreshRate == res.fRefreshRate);
+  }
+
 };

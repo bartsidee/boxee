@@ -176,6 +176,7 @@ protected:
   // clear colour for "black" bars
   DWORD m_clearColour;
 
+  DllAvCore     m_dllAvCore;
   DllSwScale	m_dllSwScale;
   DllAvCodec	m_dllAvCodec;
   DllAvUtil	m_dllAvUtil;

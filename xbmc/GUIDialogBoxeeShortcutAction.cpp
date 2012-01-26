@@ -65,7 +65,7 @@ bool CGUIDialogBoxeeShortcutAction::OnMessage(CGUIMessage & message)
       {
         SET_CONTROL_VISIBLE(CONTROL_REMOVE_SHORTCUT);
       }
-
+      
       return result;
       
       break;

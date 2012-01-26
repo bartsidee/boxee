@@ -25,7 +25,7 @@
 ** Commercial non-GPL licensing of this software is possible.
 ** For more info contact Nero AG through Mpeg4AAClicense@nero.com.
 **
-** $Id: specrec.c,v 1.60 2007/11/01 12:33:36 menno Exp $
+** $Id: specrec.c,v 1.62 2009/01/26 23:51:15 menno Exp $
 **/
 
 /*
@@ -58,7 +58,7 @@
 
 
 /* static function declarations */
-static uint8_t quant_to_spec(NeAACDecHandle hDecoder,
+static uint8_t quant_to_spec(NeAACDecStruct *hDecoder,
                              ic_stream *ics, int16_t *quant_data,
                              real_t *spec_data, uint16_t frame_len);
 
@@ -300,7 +300,7 @@ ALIGN static const  uint16_t *swb_offset_128_window[] =
     in section named section. This offset depends on window_sequence and
     scale_factor_grouping and is needed to decode the spectral_data().
 */
-uint8_t window_grouping_info(NeAACDecHandle hDecoder, ic_stream *ics)
+uint8_t window_grouping_info(NeAACDecStruct *hDecoder, ic_stream *ics)
 {
     uint8_t i, g;
 
@@ -546,7 +546,7 @@ ALIGN static const real_t pow2sf_tab[] = {
   - Within a scalefactor window band, the coefficients are in ascending
     spectral order.
 */
-static uint8_t quant_to_spec(NeAACDecHandle hDecoder,
+static uint8_t quant_to_spec(NeAACDecStruct *hDecoder,
                              ic_stream *ics, int16_t *quant_data,
                              real_t *spec_data, uint16_t frame_len)
 {
@@ -680,7 +680,7 @@ static uint8_t quant_to_spec(NeAACDecHandle hDecoder,
     return error;
 }
 
-static uint8_t allocate_single_channel(NeAACDecHandle hDecoder, uint8_t channel,
+static uint8_t allocate_single_channel(NeAACDecStruct *hDecoder, uint8_t channel,
                                        uint8_t output_channels)
 {
     int mul = 1;
@@ -781,7 +781,7 @@ static uint8_t allocate_single_channel(NeAACDecHandle hDecoder, uint8_t channel,
     return 0;
 }
 
-static uint8_t allocate_channel_pair(NeAACDecHandle hDecoder,
+static uint8_t allocate_channel_pair(NeAACDecStruct *hDecoder,
                                      uint8_t channel, uint8_t paired_channel)
 {
     int mul = 1;
@@ -886,7 +886,7 @@ static uint8_t allocate_channel_pair(NeAACDecHandle hDecoder,
     return 0;
 }
 
-uint8_t reconstruct_single_channel(NeAACDecHandle hDecoder, ic_stream *ics,
+uint8_t reconstruct_single_channel(NeAACDecStruct *hDecoder, ic_stream *ics,
                                    element *sce, int16_t *spec_data)
 {
     uint8_t retval;
@@ -958,6 +958,9 @@ uint8_t reconstruct_single_channel(NeAACDecHandle hDecoder, ic_stream *ics,
     /* MAIN object type prediction */
     if (hDecoder->object_type == MAIN)
     {
+		if (!hDecoder->pred_stat[sce->channel])
+			return 33;
+
         /* intra channel prediction */
         ic_prediction(ics, spec_coef, hDecoder->pred_stat[sce->channel], hDecoder->frameLength,
             hDecoder->sf_index);
@@ -1096,7 +1099,7 @@ uint8_t reconstruct_single_channel(NeAACDecHandle hDecoder, ic_stream *ics,
     return 0;
 }
 
-uint8_t reconstruct_channel_pair(NeAACDecHandle hDecoder, ic_stream *ics1, ic_stream *ics2,
+uint8_t reconstruct_channel_pair(NeAACDecStruct *hDecoder, ic_stream *ics1, ic_stream *ics2,
                                  element *cpe, int16_t *spec_data1, int16_t *spec_data2)
 {
     uint8_t retval;

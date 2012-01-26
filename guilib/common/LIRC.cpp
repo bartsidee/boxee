@@ -1,3 +1,7 @@
+#include "system.h"
+
+#ifdef HAS_LIRC
+
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -14,6 +18,7 @@
 #include "utils/TimeUtils.h"
 
 #define LIRC_DEVICE "/dev/lircd"
+#define LIRC_DEVICE2 "/var/run/lirc/lircd"
 
 CRemoteControl g_RemoteControl;
 
@@ -92,30 +97,42 @@ void CRemoteControl::setDeviceName(const CStdString& value)
 
 void CRemoteControl::Initialize()
 {
-  struct sockaddr_un addr;
   int now = CTimeUtils::GetTimeMS();
 
   if (!m_used || now < m_lastInitAttempt + m_initRetryPeriod)
     return;
-  
+
   m_lastInitAttempt = now;
+
+  InitializeInternal(m_deviceName);
+
+  if (!m_bInitialized)
+    InitializeInternal(LIRC_DEVICE);
+
+  if (!m_bInitialized)
+    InitializeInternal(LIRC_DEVICE2);
+}
+
+void CRemoteControl::InitializeInternal(CStdString deviceName)
+{
+  struct sockaddr_un addr;
   addr.sun_family = AF_UNIX;
-    strcpy(addr.sun_path, m_deviceName.c_str());
+  strcpy(addr.sun_path, deviceName.c_str());
  
   // Open the socket from which we will receive the remote commands 
   if ((m_fd = socket(AF_UNIX, SOCK_STREAM, 0)) != -1)
   {
-  // Connect to the socket
+    // Connect to the socket
     if (connect(m_fd, (struct sockaddr *)&addr, sizeof(addr)) != -1)
-  {
+    {
       int opts;
       m_bLogConnectFailure = true;
       if ((opts = fcntl(m_fd,F_GETFL)) != -1)
       {
-  // Set the socket to non-blocking
+        // Set the socket to non-blocking
         opts = (opts | O_NONBLOCK);
         if (fcntl(m_fd,F_SETFL,opts) != -1)
-  {
+        {
           if ((m_file = fdopen(m_fd, "r")) != NULL)
           {
             // Setup inotify so we can disconnect if lircd is restarted
@@ -128,11 +145,11 @@ void CRemoteControl::Initialize()
                 if (fcntl(m_inotify_fd, F_SETFL, opts) != -1)
                 {
                   // Set an inotify watch on the lirc device
-                  if ((m_inotify_wd = inotify_add_watch(m_inotify_fd, m_deviceName.c_str(), IN_DELETE_SELF)) != -1)
+                  if ((m_inotify_wd = inotify_add_watch(m_inotify_fd, deviceName.c_str(), IN_DELETE_SELF)) != -1)
                   {
                     m_bInitialized = true;
                     CLog::Log(LOGINFO, "LIRC %s: sucessfully started on: %s", __FUNCTION__, addr.sun_path);
-  }
+                  }
                   else
                     CLog::Log(LOGDEBUG, "LIRC: Failed to initialize Inotify. LIRC device will not be monitored.");
                 }
@@ -143,13 +160,13 @@ void CRemoteControl::Initialize()
             CLog::Log(LOGERROR, "LIRC %s: fdopen failed: %s", __FUNCTION__, strerror(errno));
         }
         else
-    CLog::Log(LOGERROR, "LIRC %s: fcntl(F_SETFL) failed: %s", __FUNCTION__, strerror(errno));
-  }
+          CLog::Log(LOGERROR, "LIRC %s: fcntl(F_SETFL) failed: %s", __FUNCTION__, strerror(errno));
+      }
       else
         CLog::Log(LOGERROR, "LIRC %s: fcntl(F_GETFL) failed: %s", __FUNCTION__, strerror(errno));
     }
     else
-  {
+    {
       if (m_bLogConnectFailure)
       {
         if (errno == ENOENT)
@@ -157,7 +174,7 @@ void CRemoteControl::Initialize()
         else
            CLog::Log(LOGERROR, "LIRC %s: connect failed: %s", __FUNCTION__, strerror(errno));
         m_bLogConnectFailure = false;
-  }
+      }
     }
   }
   else
@@ -170,14 +187,14 @@ void CRemoteControl::Initialize()
     {
       m_used = false;
       CLog::Log(LOGDEBUG, "Failed to connect to LIRC. Giving up.");
-}
+    }
     else
       CLog::Log(LOGDEBUG, "Failed to connect to LIRC. Retry in %ds.", m_initRetryPeriod/1000);
   }
   else
     m_initRetryPeriod = 5000;
 }
-  
+
 bool CRemoteControl::CheckDevice() {
   if (m_inotify_fd < 0 || m_inotify_wd < 0)
     return true; // inotify wasn't setup for some reason, assume all is well
@@ -190,7 +207,7 @@ bool CRemoteControl::CheckDevice() {
       CLog::Log(LOGDEBUG, "LIRC device removed, disconnecting...");
       Disconnect();
       return false;
-}
+    }
     i += sizeof(struct inotify_event)+e->len;
   }
   return true;
@@ -214,7 +231,7 @@ void CRemoteControl::Update()
 
     // Parse the result. Sample line:
     // 000000037ff07bdd 00 OK mceusb
-    char scanCode[128];  
+    char scanCode[128];
     char buttonName[128];
     char repeatStr[4];
     char deviceName[128];
@@ -233,7 +250,10 @@ void CRemoteControl::Update()
 
     m_button = CButtonTranslator::GetInstance().TranslateLircRemoteString(deviceName, buttonName);
 
-    if (strcmp(repeatStr, "00") == 0)
+    char *end = NULL;
+    long repeat = strtol(repeatStr, &end, 16);
+
+    if (repeat == 0)
     {
       CLog::Log(LOGDEBUG, "LIRC: %s - NEW at %d:%s (%s)", __FUNCTION__, now, m_buf, buttonName);
       m_firstClickTime = now;
@@ -241,7 +261,7 @@ void CRemoteControl::Update()
       m_skipHold = true;
       return;
     }
-    else if (now - m_firstClickTime >= (uint32_t) g_advancedSettings.m_remoteRepeat && !m_skipHold)
+    else if (repeat > g_advancedSettings.m_remoteDelay)
     {
       m_isHolding = true;
     }
@@ -265,3 +285,5 @@ bool CRemoteControl::IsHolding()
 {
   return m_isHolding;
 }
+
+#endif

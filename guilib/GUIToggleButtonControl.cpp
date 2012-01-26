@@ -27,9 +27,9 @@
 
 using namespace std;
 
-CGUIToggleButtonControl::CGUIToggleButtonControl(int parentID, int controlID, float posX, float posY, float width, float height, const CTextureInfo& textureFocus, const CTextureInfo& textureNoFocus, const CTextureInfo& altTextureFocus, const CTextureInfo& altTextureNoFocus, const CLabelInfo &labelInfo)
+CGUIToggleButtonControl::CGUIToggleButtonControl(int parentID, int controlID, float posX, float posY, float width, float height, const CTextureInfo& textureFocus, const CTextureInfo& textureNoFocus, const CTextureInfo& altTextureFocus, const CTextureInfo& altTextureNoFocus, const CLabelInfo &labelInfo, const CLabelInfo &altLabelInfo)
     : CGUIButtonControl(parentID, controlID, posX, posY, width, height, textureFocus, textureNoFocus, labelInfo)
-    , m_selectButton(parentID, controlID, posX, posY, width, height, altTextureFocus, altTextureNoFocus, labelInfo)
+    , m_selectButton(parentID, controlID, posX, posY, width, height, altTextureFocus, altTextureNoFocus, altLabelInfo)
 {
   m_toggleSelect = 0;
   ControlType = GUICONTROL_TOGGLEBUTTON;
@@ -66,7 +66,7 @@ bool CGUIToggleButtonControl::OnAction(const CAction &action)
   if (action.id == ACTION_SELECT_ITEM)
   {
     if (!m_imgClick && !HasAnimation(ANIM_TYPE_CLICK))
-      m_bSelected = !m_bSelected;
+    m_bSelected = !m_bSelected;
   }
   else if (action.id == ACTION_POST_ANIM_CLICK)
   {
@@ -81,10 +81,10 @@ void CGUIToggleButtonControl::AllocResources()
   m_selectButton.AllocResources();
 }
 
-void CGUIToggleButtonControl::FreeResources()
+void CGUIToggleButtonControl::FreeResources(bool immediately)
 {
-  CGUIButtonControl::FreeResources();
-  m_selectButton.FreeResources();
+  CGUIButtonControl::FreeResources(immediately);
+  m_selectButton.FreeResources(immediately);
 }
 
 void CGUIToggleButtonControl::DynamicResourceAlloc(bool bOnOff)
@@ -115,6 +115,12 @@ void CGUIToggleButtonControl::SetHeight(float height)
 {
   CGUIButtonControl::SetHeight(height);
   m_selectButton.SetHeight(height);
+}
+
+void CGUIToggleButtonControl::SetColorDiffuse(const CGUIInfoColor &color)
+{
+  CGUIButtonControl::SetColorDiffuse(color);
+  m_selectButton.SetColorDiffuse(color);
 }
 
 void CGUIToggleButtonControl::UpdateColors()

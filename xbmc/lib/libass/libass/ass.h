@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License along
  * with libass; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-*/
+ */
 
 #ifndef LIBASS_ASS_H
 #define LIBASS_ASS_H
@@ -25,13 +25,7 @@
 #include <stdarg.h>
 #include "ass_types.h"
 
-#ifdef WIN32
-#define EXPORT __declspec (dllexport)
-#else
-#define EXPORT
-#endif 
-
-#define LIBASS_VERSION 0x00907000
+#define LIBASS_VERSION 0x00911000
 
 /*
  * A linked list of images produced by an ass renderer.
@@ -45,17 +39,17 @@
 typedef struct ass_image {
     int w, h;                   // Bitmap width/height
     int stride;                 // Bitmap stride
-	unsigned char* bitmap; // 1bpp stride*h alpha buffer
+    unsigned char *bitmap;      // 1bpp stride*h alpha buffer
                                 // Note: the last row may not be padded to
                                 // bitmap stride!
     uint32_t color;             // Bitmap color and alpha, RGBA
     int dst_x, dst_y;           // Bitmap placement inside the video frame
 
     struct ass_image *next;   // Next image, or NULL
-} ass_image_t;
+} ASS_Image;
 
 /*
- * Hintint type. (see ass_set_hinting below)
+ * Hinting type. (see ass_set_hinting below)
  *
  * FreeType's native hinter is still buggy sometimes and it is recommended
  * to use the light autohinter, ASS_HINTING_LIGHT, instead.  For best
@@ -63,38 +57,40 @@ typedef struct ass_image {
  */
 typedef enum {
     ASS_HINTING_NONE = 0,
-	      ASS_HINTING_LIGHT,
-	      ASS_HINTING_NORMAL,
-	      ASS_HINTING_NATIVE
-} ass_hinting_t;
+    ASS_HINTING_LIGHT,
+    ASS_HINTING_NORMAL,
+    ASS_HINTING_NATIVE
+} ASS_Hinting;
 
 /**
  * \brief Initialize the library.
  * \return library handle or NULL if failed
  */
-EXPORT ass_library_t* ass_library_init(void);
+ASS_Library *ass_library_init(void);
 
 /**
  * \brief Finalize the library
  * \param priv library handle
  */
-EXPORT void ass_library_done(ass_library_t*);
+void ass_library_done(ASS_Library *priv);
 
 /**
- * \brief Set private font directory.
- * It is used for saving embedded fonts and also in font lookup.
+ * \brief Set additional fonts directory.
+ * Optional directory that will be scanned for fonts recursively.  The fonts
+ * found are used for font lookup.
+ * NOTE: A valid font directory is not needed to support embedded fonts.
  *
  * \param priv library handle
- * \param fonts_dir private directory for font extraction
+ * \param fonts_dir directory with additional fonts
  */
-EXPORT void ass_set_fonts_dir(ass_library_t* priv, const char* fonts_dir);
+void ass_set_fonts_dir(ASS_Library *priv, const char *fonts_dir);
 
 /**
  * \brief Whether fonts should be extracted from track data.
  * \param priv library handle
  * \param extract whether to extract fonts
  */
-EXPORT void ass_set_extract_fonts(ass_library_t* priv, int extract);
+void ass_set_extract_fonts(ASS_Library *priv, int extract);
 
 /**
  * \brief Register style overrides with a library instance.
@@ -105,13 +101,13 @@ EXPORT void ass_set_extract_fonts(ass_library_t* priv, int extract);
  * \param priv library handle
  * \param list NULL-terminated list of strings
  */
-EXPORT void ass_set_style_overrides(ass_library_t* priv, char** list);
+void ass_set_style_overrides(ASS_Library *priv, char **list);
 
 /**
  * \brief Explicitly process style overrides for a track.
  * \param track track handle
  */
-EXPORT void ass_process_force_style(ass_track_t *track);
+void ass_process_force_style(ASS_Track *track);
 
 /**
  * \brief Register a callback for debug/info messages.
@@ -127,7 +123,7 @@ EXPORT void ass_process_force_style(ass_track_t *track);
  * \param msg_cb pointer to callback function
  * \param data additional data, will be passed to callback
  */
-EXPORT void ass_set_message_cb(ass_library_t *priv, void (*msg_cb)
+void ass_set_message_cb(ASS_Library *priv, void (*msg_cb)
                         (int level, const char *fmt, va_list args, void *data),
                         void *data);
 
@@ -136,13 +132,13 @@ EXPORT void ass_set_message_cb(ass_library_t *priv, void (*msg_cb)
  * \param priv library handle
  * \return renderer handle or NULL if failed
  */
-EXPORT ass_renderer_t* ass_renderer_init(ass_library_t*);
+ASS_Renderer *ass_renderer_init(ASS_Library *);
 
 /**
  * \brief Finalize the renderer.
  * \param priv renderer handle
  */
-EXPORT void ass_renderer_done(ass_renderer_t* priv);
+void ass_renderer_done(ASS_Renderer *priv);
 
 /**
  * \brief Set the frame size in pixels, including margins.
@@ -150,7 +146,7 @@ EXPORT void ass_renderer_done(ass_renderer_t* priv);
  * \param w width
  * \param h height
  */
-EXPORT void ass_set_frame_size(ass_renderer_t* priv, int w, int h);
+void ass_set_frame_size(ASS_Renderer *priv, int w, int h);
 
 /**
  * \brief Set frame margins.  These values may be negative if pan-and-scan
@@ -161,53 +157,58 @@ EXPORT void ass_set_frame_size(ass_renderer_t* priv, int w, int h);
  * \param l left margin
  * \param r right margin
  */
-EXPORT void ass_set_margins(ass_renderer_t* priv, int t, int b, int l, int r);
+void ass_set_margins(ASS_Renderer *priv, int t, int b, int l, int r);
 
 /**
  * \brief Whether margins should be used for placing regular events.
  * \param priv renderer handle
  * \param use whether to use the margins
  */
-EXPORT void ass_set_use_margins(ass_renderer_t* priv, int use);
+void ass_set_use_margins(ASS_Renderer *priv, int use);
 
 /**
  * \brief Set aspect ratio parameters.
  * \param priv renderer handle
- * \param ar physical aspect ratio
- * \param par pixel ratio, e.g. width / height of the video
+ * \param dar display aspect ratio (DAR), prescaled for output PAR
+ * \param sar storage aspect ratio (SAR)
  */
-EXPORT void ass_set_aspect_ratio(ass_renderer_t *priv, double ar, double par);
+void ass_set_aspect_ratio(ASS_Renderer *priv, double dar, double sar);
 
 /**
  * \brief Set a fixed font scaling factor.
  * \param priv renderer handle
  * \param font_scale scaling factor, default is 1.0
  */
-EXPORT void ass_set_font_scale(ass_renderer_t* priv, double font_scale);
+void ass_set_font_scale(ASS_Renderer *priv, double font_scale);
 
 /**
  * \brief Set font hinting method.
  * \param priv renderer handle
  * \param ht hinting method
  */
-EXPORT void ass_set_hinting(ass_renderer_t* priv, ass_hinting_t ht);
+void ass_set_hinting(ASS_Renderer *priv, ASS_Hinting ht);
 
 /**
  * \brief Set line spacing. Will not be scaled with frame size.
  * \param priv renderer handle
  * \param line_spacing line spacing in pixels
  */
-EXPORT void ass_set_line_spacing(ass_renderer_t* priv, double line_spacing);
+void ass_set_line_spacing(ASS_Renderer *priv, double line_spacing);
 
 /**
  * \brief Set font lookup defaults.
+ * \param default_font path to default font to use. Must be supplied if
+ * fontconfig is disabled or unavailable.
+ * \param default_family fallback font family for fontconfig, or NULL
  * \param fc whether to use fontconfig
  * \param config path to fontconfig configuration file, or NULL.  Only relevant
  * if fontconfig is used.
  * \param update whether fontconfig cache should be built/updated now.  Only
  * relevant if fontconfig is used.
+ *
+ * NOTE: font lookup must be configured before an ASS_Renderer can be used.
  */
-EXPORT void ass_set_fonts(ass_renderer_t *priv, const char *default_font,
+void ass_set_fonts(ASS_Renderer *priv, const char *default_font,
                    const char *default_family, int fc, const char *config,
                    int update);
 
@@ -218,7 +219,7 @@ EXPORT void ass_set_fonts(ass_renderer_t *priv, const char *default_font,
  * \param priv renderer handle
  * \return success
  */
-EXPORT int ass_fonts_update(ass_renderer_t *priv);
+int ass_fonts_update(ASS_Renderer *priv);
 
 /**
  * \brief Set hard cache limits.  Do not set, or set to zero, for reasonable
@@ -228,19 +229,19 @@ EXPORT int ass_fonts_update(ass_renderer_t *priv);
  * \param glyph_max maximum number of cached glyphs
  * \param bitmap_max_size maximum bitmap cache size (in MB)
  */
-EXPORT void ass_set_cache_limits(ass_renderer_t *priv, int glyph_max,
+void ass_set_cache_limits(ASS_Renderer *priv, int glyph_max,
                           int bitmap_max_size);
 
 /**
- * \brief Render a frame, producing a list of ass_image_t.
+ * \brief Render a frame, producing a list of ASS_Image.
  * \param priv renderer handle
  * \param track subtitle track
  * \param now video timestamp in milliseconds
  * \param detect_change will be set to 1 if a change occured compared
  * to the last invocation
  */
-EXPORT ass_image_t *ass_render_frame(ass_renderer_t *priv, ass_track_t *track,
-                              long long now, int *detect_change);
+ASS_Image *ass_render_frame(ASS_Renderer *priv, ASS_Track *track,
+                            long long now, int *detect_change);
 
 
 /*
@@ -253,27 +254,27 @@ EXPORT ass_image_t *ass_render_frame(ass_renderer_t *priv, ass_track_t *track,
  * \param library handle
  * \return pointer to empty track
  */
-EXPORT ass_track_t* ass_new_track(ass_library_t*);
+ASS_Track *ass_new_track(ASS_Library *);
 
 /**
  * \brief Deallocate track and all its child objects (styles and events).
  * \param track track to deallocate
  */
-EXPORT void ass_free_track(ass_track_t* track);
+void ass_free_track(ASS_Track *track);
 
 /**
  * \brief Allocate new style.
  * \param track track
  * \return newly allocated style id
  */
-EXPORT int ass_alloc_style(ass_track_t* track);
+int ass_alloc_style(ASS_Track *track);
 
 /**
  * \brief Allocate new event.
  * \param track track
  * \return newly allocated event id
  */
-EXPORT int ass_alloc_event(ass_track_t* track);
+int ass_alloc_event(ASS_Track *track);
 
 /**
  * \brief Delete a style.
@@ -281,7 +282,7 @@ EXPORT int ass_alloc_event(ass_track_t* track);
  * \param sid style id
  * Deallocates style data. Does not modify track->n_styles.
  */
-EXPORT void ass_free_style(ass_track_t* track, int sid);
+void ass_free_style(ASS_Track *track, int sid);
 
 /**
  * \brief Delete an event.
@@ -289,7 +290,7 @@ EXPORT void ass_free_style(ass_track_t* track, int sid);
  * \param eid event id
  * Deallocates event data. Does not modify track->n_events.
  */
-EXPORT void ass_free_event(ass_track_t* track, int eid);
+void ass_free_event(ASS_Track *track, int eid);
 
 /**
  * \brief Parse a chunk of subtitle stream data.
@@ -297,27 +298,34 @@ EXPORT void ass_free_event(ass_track_t* track, int eid);
  * \param data string to parse
  * \param size length of data
  */
-EXPORT void ass_process_data(ass_track_t* track, char* data, int size);
+void ass_process_data(ASS_Track *track, char *data, int size);
 
 /**
- * \brief Parse Codec Private section of subtitle stream.
+ * \brief Parse Codec Private section of the subtitle stream, in Matroska
+ * format.  See the Matroska specification for details.
  * \param track target track
  * \param data string to parse
  * \param size length of data
  */
-EXPORT void ass_process_codec_private(ass_track_t* track, char *data, int size);
+void ass_process_codec_private(ASS_Track *track, char *data, int size);
 
 /**
- * \brief Parse a chunk of subtitle stream data. In Matroska,
- * this contains exactly 1 event (or a commentary).
+ * \brief Parse a chunk of subtitle stream data. A chunk contains exactly one
+ * event in Matroska format.  See the Matroska specification for details.
  * \param track track
  * \param data string to parse
  * \param size length of data
  * \param timecode starting time of the event (milliseconds)
  * \param duration duration of the event (milliseconds)
-*/
-EXPORT void ass_process_chunk(ass_track_t *track, char *data, int size,
+ */
+void ass_process_chunk(ASS_Track *track, char *data, int size,
                        long long timecode, long long duration);
+
+/**
+ * \brief Flush buffered events.
+ * \param track track
+*/
+void ass_flush_events(ASS_Track *track);
 
 /**
  * \brief Read subtitles from file.
@@ -326,8 +334,8 @@ EXPORT void ass_process_chunk(ass_track_t *track, char *data, int size,
  * \param codepage encoding (iconv format)
  * \return newly allocated track
 */
-EXPORT ass_track_t *ass_read_file(ass_library_t *library, char *fname,
-                           char *codepage);
+ASS_Track *ass_read_file(ASS_Library *library, char *fname,
+                         char *codepage);
 
 /**
  * \brief Read subtitles from memory.
@@ -336,16 +344,16 @@ EXPORT ass_track_t *ass_read_file(ass_library_t *library, char *fname,
  * \param bufsize size of buffer
  * \param codepage encoding (iconv format)
  * \return newly allocated track
-*/ 
-EXPORT ass_track_t *ass_read_memory(ass_library_t *library, char *buf,
-                             size_t bufsize, char *codepage);
+*/
+ASS_Track *ass_read_memory(ASS_Library *library, char *buf,
+                           size_t bufsize, char *codepage);
 /**
  * \brief Read styles from file into already initialized track.
  * \param fname file name
  * \param codepage encoding (iconv format)
  * \return 0 on success
  */
-EXPORT int ass_read_styles(ass_track_t* track, char* fname, char* codepage);
+int ass_read_styles(ASS_Track *track, char *fname, char *codepage);
 
 /**
  * \brief Add a memory font.
@@ -354,14 +362,14 @@ EXPORT int ass_read_styles(ass_track_t* track, char* fname, char* codepage);
  * \param data binary font data
  * \param data_size data size
 */
-EXPORT void ass_add_font(ass_library_t *library, char *name, char *data,
+void ass_add_font(ASS_Library *library, char *name, char *data,
                   int data_size);
 
 /**
  * \brief Remove all fonts stored in an ass_library object.
  * \param library library handle
  */
-EXPORT void ass_clear_fonts(ass_library_t* library);
+void ass_clear_fonts(ASS_Library *library);
 
 /**
  * \brief Calculates timeshift from now to the start of some other subtitle
@@ -372,6 +380,6 @@ EXPORT void ass_clear_fonts(ass_library_t* library);
  * +2 means "the one after the next", -1 means "previous"
  * \return timeshift in milliseconds
  */
-EXPORT long long ass_step_sub(ass_track_t* track, long long now, int movement);
+long long ass_step_sub(ASS_Track *track, long long now, int movement);
 
 #endif /* LIBASS_ASS_H */

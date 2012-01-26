@@ -39,7 +39,7 @@
 #include "SystemInfo.h"
 #endif
 #include "ZipManager.h"
-#include "GUIWindowBoxeeBrowse.h"
+#include "GUIWindowBoxeeBrowseSimpleApp.h"
 #include "lib/libPython/XBPython.h"
 #include "File.h"
 #include "IPlayer.h"
@@ -52,12 +52,43 @@
 #include "utils/SingleLock.h"
 #include "VideoInfoTag.h"
 #include "lib/libBoxee/bxutils.h"
+#include "AdvancedSettings.h"
 #include "RenderSystem.h"
+#include "cores/DllLoader/DllLoaderContainer.h"
+#ifdef HAS_EMBEDDED
+#include "AppSecurity.h"
+#endif
+
+#ifdef DEVICE_PLATFORM
+#include "bxoemconfiguration.h"
+#endif
+
+class CloseAppJob : public IGUIThreadTask
+{
+public:
+  CloseAppJob(const CStdString& strAppId) : m_strAppId(strAppId) { }
+  virtual void DoWork()
+  {
+    // Activate home window
+    //g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_APPS,"apps://all");
+
+    // To avoid deadlock if the app waits on GUI message 
+    g_application.getApplicationMessenger().SetSwallowMessages(true);
+    g_pythonParser.RemoveContext(m_strAppId);
+    g_application.getApplicationMessenger().SetSwallowMessages(false);
+
+    CAppManager::GetInstance().ReleaseAppWindows(m_strAppId);
+  }
+
+  CStdString m_strAppId;
+};
 
 CAppManager::CAppManager()
 {
   m_nLastWinId = WINDOW_APPS_START + 500;
   m_iWindowIdCounter = WINDOW_APPS_START + 501;
+  m_bVerifyAppStatus = true;
+  m_nativeApp = NULL;
 }
 
 CAppManager::~CAppManager()
@@ -73,6 +104,13 @@ CAppManager& CAppManager::GetInstance()
 bool CAppManager::Launch(const CFileItem& item, bool bReportInstall)
 {
   m_launchedItem = item;
+
+  if (item.GetPropertyBOOL("testapp") == true)
+  {
+    item.Dump();
+    CUtil::CopyDirRecursive(item.GetProperty("actual-path"),_P(item.GetProperty("app-localpath")));
+  }
+
   return Launch(item.m_strPath, bReportInstall);
 }
 
@@ -86,15 +124,17 @@ bool CAppManager::Launch(const CStdString& urlStr, bool bReportInstall)
   {
     CLog::Log(LOGINFO, "Unable to load descriptor for app: %s, trying to install", urlStr.c_str());
 
-    CURL url(urlStr);
+    CURI url(urlStr);
     
     InstallOrUpgradeAppBG* job = new InstallOrUpgradeAppBG(url.GetHostName(), true, false, bReportInstall);
-    if (!CUtil::RunInBG(job))
+    if (CUtil::RunInBG(job) != JOB_SUCCEEDED)
     {
       return false;
     }
-  }
 
+    m_bVerifyAppStatus = false;
+  }
+ 
   // Load the descriptor
   CAppDescriptor desc;
   desc.Load(urlStr);
@@ -108,7 +148,7 @@ bool CAppManager::Launch(const CStdString& urlStr, bool bReportInstall)
   if (!desc.IsTestApp()) // removed: desc.IsBoxeeApp() && 
   {
     InstallOrUpgradeAppBG* job = new InstallOrUpgradeAppBG(desc.GetId(), true, true, bReportInstall);
-    if (CUtil::RunInBG(job))
+    if (CUtil::RunInBG(job) == JOB_SUCCEEDED)
     {
       // Reload the descriptor after upgrade
       desc.Load(urlStr);
@@ -118,20 +158,17 @@ bool CAppManager::Launch(const CStdString& urlStr, bool bReportInstall)
       return false;
     }
   }
-
+  
   //soon to be unleashed
   UpdateAppStat(desc.GetId());
-#ifdef APPS_DIR_MAX_SIZE
-  LimitAppsDirSize(APPS_DIR_MAX_SIZE);
-#endif
-
+  LimitAppsDirSize(uint32_t(g_advancedSettings.m_appsMaxSize / 1024));
 
   // Report to the server about the launch app
   BoxeeUtils::ReportLaunchApp(desc.GetId(), &m_launchedItem);
 
   if (desc.GetType() == "skin")
   {
-    LaunchSkinApp(desc, urlStr);
+    LaunchSkinApp(desc, urlStr, false);
   }
   else if (desc.GetType() == "url")
   {
@@ -146,22 +183,95 @@ bool CAppManager::Launch(const CStdString& urlStr, bool bReportInstall)
     LaunchPluginApp(desc);
   }
 #ifdef HAS_NATIVE_APPS
-  else if (desc.GetType() == "native")
+  else if (desc.GetType() == "native" && (desc.GetRepositoryId() == "" || desc.GetRepositoryId() == "tv.boxee"))
   {
     LaunchNativeApp(desc, urlStr);
   }
+  else if (desc.GetType() == "skin-native" && (desc.GetRepositoryId() == "" || desc.GetRepositoryId() == "tv.boxee"))
+  {
+    LaunchSkinApp(desc, urlStr, true);
+  }
 #endif
-  
+
   return true;
 }
 
-void CAppManager::LaunchSkinApp(const CAppDescriptor& desc, const CStdString& urlStr)
+void CAppManager::LaunchSkinApp(const CAppDescriptor& desc, const CStdString& urlStr, bool isNative)
 {
-  CLog::Log(LOGDEBUG, "CAppManager::LaunchSkinApp, id = %s, url = %s (applaunch)", desc.GetId().c_str(), urlStr.c_str());
+  CLog::Log(LOGDEBUG, "CAppManager::LaunchSkinApp, id = %s, url = %s (applaunch), isNative = %d", desc.GetId().c_str(), urlStr.c_str(), isNative);
 
-  CURL url(urlStr);
+  /*
+   * Load all the skin files
+   */
+  CURI url(urlStr);
   if (desc.GetId() != m_lastLaunchedAppId)
   {
+    if (isNative && m_nativeApp == NULL)
+    {
+      CStdString path = desc.GetLocalPath();
+      CStdString appPath;
+
+    #ifdef __APPLE__
+      CUtil::AddFileToFolder(path, "boxeeapp-x86-osx.so", appPath);
+    #elif defined (CANMORE)
+      CUtil::AddFileToFolder(path, "boxeeapp-i686-cm-linux.so", appPath);
+    #elif defined (_LINUX) && defined (__x86_64__)
+      CUtil::AddFileToFolder(path, "boxeeapp-x86_64-linux.so", appPath);
+    #elif defined (_LINUX)
+      CUtil::AddFileToFolder(path, "boxeeapp-x86-linux.so", appPath);
+    #else
+      CUtil::AddFileToFolder(path, "boxeeapp.dll", appPath);
+    #endif
+
+#ifdef HAS_EMBEDDED
+      if (!CUtil::CheckFileSignature(appPath, desc.GetSignature()))
+      {
+        CLog::Log(LOGERROR,"application can not be verified. aborting.");
+        return;
+      }
+#endif
+      
+      // Unload previous libs
+      for (size_t i = 0; i < m_sharedLibs.size(); i++)
+      {
+        m_sharedLibs[i]->Unload();
+        delete m_sharedLibs[i];
+      }
+      m_sharedLibs.clear();
+
+      const std::vector<CStdString>& libs = desc.GetAdditionalSharedLibraries();
+      for (size_t i = 0; i < libs.size(); i++)
+      {
+        CStdString libPath;
+        CUtil::AddFileToFolder(path, libs[i], libPath);
+
+        LibraryLoader* lib = DllLoaderContainer::LoadModule(libPath);
+        if (!lib)
+        {
+          CLog::Log(LOGERROR, "NativeApp::Launch: could not load additional app dll: %s", libPath.c_str());
+          return;
+        }
+
+        m_sharedLibs.push_back(lib);
+      }
+
+      m_dll.SetFile(appPath);
+      m_dll.EnableDelayedUnload(false);
+
+      if (!m_dll.Load())
+      {
+        CLog::Log(LOGERROR, "NativeApp::Launch: could not load app dll");
+        return;
+      }
+
+      if (!m_dll.xapp_initialize(&m_nativeApp))
+      {
+        CLog::Log(LOGERROR, "NativeApp::Launch: could not initialize app dll");
+        return;
+      }
+      m_bNativeAppStarted = false;
+    }
+
     CStdString mediaPath = desc.GetMediaPath();
 
     CStdString xmlFile = "";
@@ -225,19 +335,19 @@ void CAppManager::LaunchSkinApp(const CAppDescriptor& desc, const CStdString& ur
         CLog::Log(LOGDEBUG, "Found existing window for id = %d, translated id = %d, app id = %s (applaunch)", windowId, realWindowId, desc.GetId().c_str());
       }
 
-//      // If a window with the same id exists, delete it
-//      if (g_windowManager.GetWindow(realWindowId) != NULL)
-//      {
-//        // we can do this because this is for sure a window of this specific application
-//        g_windowManager.Delete(realWindowId);
-//      }
+      //      // If a window with the same id exists, delete it
+      //      if (g_windowManager.GetWindow(realWindowId) != NULL)
+      //      {
+      //        // we can do this because this is for sure a window of this specific application
+      //        g_windowManager.Delete(realWindowId);
+      //      }
 
     }
 
     // Load the app strings      
     ClearPluginStrings();
     LoadPluginStrings(desc);
-    
+
     // Load the registry of the application
     m_registry.Load(desc);
 
@@ -274,22 +384,37 @@ void CAppManager::LaunchSkinApp(const CAppDescriptor& desc, const CStdString& ur
       m_params[windowId] = url.GetOptionsAsMap();
     }
   }
-  
+
+  if (desc.IsTestApp())
+  {
+    // if TestApp -> remove its context
+    //CloseAppJob* j = new CloseAppJob(desc.GetId());
+    //g_application.getApplicationMessenger().ExecuteOnMainThread(j, false, true);
+  }
+
+  if (m_nativeApp && !m_bNativeAppStarted)
+  {
+    m_nativeApp->Start(0, NULL);
+    m_bNativeAppStarted = true;
+  }
+
+  g_windowManager.CloseDialogs(true);
+
   if (windowId != 0)
   {
     // Activate the window of the application... we're good to go!
     CGUIWindowApp* pAppWindow = (CGUIWindowApp*) g_windowManager.GetWindow(realWindowId);
     if (pAppWindow) 
     {
-        pAppWindow->ClearStateStack();
-        g_windowManager.ActivateWindow(GetWindowId(desc.GetId(), windowId));
+      pAppWindow->ClearStateStack();
+      g_windowManager.ActivateWindow(GetWindowId(desc.GetId(), windowId));
     }
     else
     {
       CLog::Log(LOGERROR, "Unable to retrieve window with id = %d", windowId);
     }
   }
-  else
+  else if (!isNative)
   {
     CStdString python = desc.GetLocalPath();
     if (url.GetFileName().size() > 0)
@@ -297,7 +422,7 @@ void CAppManager::LaunchSkinApp(const CAppDescriptor& desc, const CStdString& ur
     else
       python = CUtil::AddFileToFolder(python, desc.GetStartWindow());
     python += ".py";
-    
+
     CStdString actualPython = python;
     if (!XFILE::CFile::Exists(actualPython))
     {
@@ -313,23 +438,42 @@ void CAppManager::LaunchSkinApp(const CAppDescriptor& desc, const CStdString& ur
         }
       }
     }
-      
+
     // Remove ? at the beginning of the options, if it exists
     CStdString options = url.GetOptions();
     if (options.Left(1) == "?")
     {
       options = options.Right(options.size() - 1);
     }
-    
+
     const char* args[2];
     args[0] = python.c_str();
     args[1] = options.c_str();
-    
+
     CLog::Log(LOGINFO, "Launch python file: %s (python)", python.c_str());
     CStdString strAppId = url.GetHostName();
     CLog::Log(LOGINFO, "Application id is: %s (python)", strAppId.c_str());
-    g_pythonParser.evalFileInContext(actualPython, strAppId, 2, args);
-  } 
+    g_pythonParser.evalFileInContext(actualPython, strAppId, desc.GetPartnerId(), 2, args);
+  }
+  else if (isNative)
+  {
+    // app://spotify/next?x=y&z=x
+    if (url.GetFileName().size() > 0)
+    {
+      std::map<CStdString, CStdString> urlOptions = url.GetOptionsAsMap();
+      std::map<std::string, std::string> options;
+
+      std::map<CStdString, CStdString>::const_iterator itr;
+      for(itr = urlOptions.begin(); itr != urlOptions.end(); ++itr)
+      {
+        std::string key = (*itr).first;
+        std::string value = (*itr).second;
+
+        options[key] = value;
+      }
+      m_nativeApp->Call(url.GetFileName(), options);
+    }
+  }
 }
 
 void CAppManager::LoadPluginStrings(const CAppDescriptor& desc)
@@ -356,7 +500,7 @@ void CAppManager::ClearPluginStrings()
 
 bool CAppManager::IsPlayable(const CStdString& urlStr)
 {
-  CURL url(urlStr);
+  CURI url(urlStr);
   if (url.GetFileName() == "")
     return false;
   
@@ -396,9 +540,9 @@ void CAppManager::SetLauchedAppParameter(const DWORD windowId, const CStdString&
 void CAppManager::LaunchUrlApp(const CAppDescriptor& desc)
 {
   CLog::Log(LOGDEBUG, "CAppManager::LaunchUrlApp, id = %s (applaunch)", desc.GetId().c_str());
-  if (g_windowManager.GetActiveWindow() != WINDOW_BOXEE_BROWSE)
+  if (g_windowManager.GetActiveWindow() != WINDOW_BOXEE_BROWSE_SIMPLE_APP)
   {
-    CGUIWindowBoxeeBrowse::Show(desc.GetURL(), "other", desc.GetName(), desc.GetBackgroundImageURL(), true, desc.GetId());
+    CGUIWindowBoxeeBrowseSimpleApp::Show(desc.GetURL(), desc.GetName(), desc.GetBackgroundImageURL(), true, desc.GetId());
   }
   else
   {
@@ -408,7 +552,7 @@ void CAppManager::LaunchUrlApp(const CAppDescriptor& desc)
     pItem->SetProperty("isrss", true);
     pItem->SetProperty("appid", desc.GetId());
     pItem->SetProperty("BrowseBackgroundImage", desc.GetBackgroundImageURL().c_str());
-    CGUIMessage message(GUI_MSG_SET_CONTAINER_PATH, WINDOW_BOXEE_BROWSE, 0);
+    CGUIMessage message(GUI_MSG_SET_CONTAINER_PATH, WINDOW_BOXEE_BROWSE_SIMPLE_APP, 0);
     message.SetPointer(pItem);
     g_windowManager.SendMessage(message);    
   }
@@ -443,7 +587,7 @@ void CAppManager::LaunchPluginApp(const CAppDescriptor& desc)
 
   CStdString url = "plugin://";
   url += desc.GetMediaType() + "/" + desc.GetId(); // We pass here the id and not the fq id since PluginDirectory will fix
-  CGUIWindowBoxeeBrowse::Show(url,"other", desc.GetName(), desc.GetBackgroundImageURL(), false);
+  CGUIWindowBoxeeBrowseSimpleApp::Show(url, desc.GetName(), desc.GetBackgroundImageURL(), false);
 }
 
 void CAppManager::LaunchNativeApp(const CAppDescriptor& desc, const CStdString &path)
@@ -455,7 +599,7 @@ void CAppManager::LaunchNativeApp(const CAppDescriptor& desc, const CStdString &
   CSingleLock lock(m_lock);
   m_lastLaunchedAppId = desc.GetId();
   m_lastLaunchedDescriptor = desc;
-  
+
   // must unlock for the duration of the "launch" 
   lock.Leave();
   BOXEE::NativeApplication *app = new BOXEE::NativeApplication;
@@ -475,6 +619,7 @@ void CAppManager::RemoveNativeApp(CStdString id)
   CSingleLock lock(m_lock);
   delete m_mapNativeApps[id];
   m_mapNativeApps.erase(id);
+  m_lastLaunchedAppId = "";
 #endif
 }
 
@@ -486,6 +631,7 @@ void CAppManager::PingNativeApps()
   while (i != m_mapNativeApps.end())
   {
     i->second->ExecuteRenderOperations();
+    i->second->SetScreensaverState();
     i++;
   }
 #endif  
@@ -583,7 +729,7 @@ void CAppManager::OnPlayBackStopped()
 
 void CAppManager::OnQueueNextItem()
 {
-  CLog::Log(LOGDEBUG, "CAppManager::OnQueueNextItem (flow)");
+  CLog::Log(LOGINFO, "CAppManager::OnQueueNextItem (flow)");
   
   /*
   // Run over all registered applications and call their functions in matching context
@@ -596,10 +742,22 @@ void CAppManager::OnQueueNextItem()
   */
   std::vector<IEventCallback* >::iterator it1 = m_eventCallbacks.begin();
   while (it1 != m_eventCallbacks.end()) {
+    CLog::Log(LOGINFO, "CAppManager::OnQueueNextItem (flow)");
     (*it1)->OnQueueNextItem();
     it1++;
   }
 }
+
+void CAppManager::OnPlaybackSeek(int iTime)
+{
+  std::vector<IActionCallback* >::iterator it1 = m_actionCallbacks.begin();
+  while (it1 != m_actionCallbacks.end()) {
+    CLog::Log(LOGINFO, "CAppManager::OnPlaybackSeek (flow)");
+    (*it1)->OnActionSeek(iTime);
+    it1++;
+  }
+}
+
 
 void CAppManager::RegisterEventCallback(IEventCallback* eventCallback) 
 {
@@ -649,12 +807,32 @@ void CAppManager::OnActionNext()
   }
 }
 
+void CAppManager::OnActionPrev()
+{
+  // Run over all registered applications and call their functions in matching context
+  std::vector<IActionCallback* >::iterator it = m_actionCallbacks.begin();
+  while (it != m_actionCallbacks.end()) {
+    (*it)->OnActionPrevItem();
+    it++;
+  }
+}
+
 void CAppManager::OnActionStop()
 {
   // Run over all registered applications and call their functions in matching context
   std::vector<IActionCallback* >::iterator it = m_actionCallbacks.begin();
   while (it != m_actionCallbacks.end()) {
     (*it)->OnActionStop();
+    it++;
+  }
+}
+
+void CAppManager::OnOsdExt(int amount)
+{
+  // Run over all registered applications and call their functions in matching context
+  std::vector<IActionCallback* >::iterator it = m_actionCallbacks.begin();
+  while (it != m_actionCallbacks.end()) {
+    (*it)->OnActionOsdExt(amount);
     it++;
   }
 }
@@ -756,12 +934,18 @@ bool CAppManager::InstallApp(const CStdString& appId, bool reportInstall)
   downloadURL += appDesc.GetId();
   downloadURL += "-";
   downloadURL += appDesc.GetVersion();
-  
-  if (appDesc.GetType() == "native")
+
+  bool bIsNative = (appDesc.GetType() == "native");
+
+  if (bIsNative)
   {
     downloadURL += "-";
-    #if defined(BOXEE_DEVICE)
-      downloadURL += BOXEE_DEVICE;
+
+    #if defined(DEVICE_PLATFORM)
+    if (BOXEE::BXOEMConfiguration::GetInstance().HasParam("Boxee.Device.Name"))
+      downloadURL += BOXEE::BXOEMConfiguration::GetInstance().GetStringParam("Boxee.Device.Name");
+    else
+      downloadURL += DEVICE_PLATFORM;
     #elif defined(__APPLE__)
       if (CSysInfo::IsAppleTV())
         downloadURL += "atv";
@@ -779,35 +963,59 @@ bool CAppManager::InstallApp(const CStdString& appId, bool reportInstall)
   CLog::Log(LOGINFO, "Installing app. Downloading from URL: %s.", downloadURL.c_str());
 
   CStdString dlMessage;
-  dlMessage.Format(g_localizeStrings.Get(53840), appDesc.GetName().c_str());
-  g_application.m_guiDialogKaiToast.QueueNotification("", "", dlMessage, 10000);  
+  CStdString sigDownloadURL = downloadURL + ".xml";
+  CStdString sigTempFile = tempFile + ".xml";
+
+  dlMessage.Format(g_localizeStrings.Get(53848));
+  g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_ARROWDOWN, dlMessage,"", 10000 , KAI_GREY_COLOR , KAI_GREY_COLOR);
 
   BOXEE::BXCurl curl;
   try
   {
     if (!curl.HttpDownloadFile(downloadURL, tempFile, ""))
     {
-      CLog::Log(LOGERROR, "Error downloading application.");
-      g_application.m_guiDialogKaiToast.QueueNotification("", g_localizeStrings.Get(53841));  
+      CLog::Log(LOGERROR,"Error downloading application. [downloadURL=%s]",downloadURL.c_str());
+      g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_EXCLAMATION, g_localizeStrings.Get(53841) ,"" , TOAST_DISPLAY_TIME , KAI_RED_COLOR, KAI_RED_COLOR);
       return false;
     }
+
+    if (!bIsNative && !curl.HttpDownloadFile(sigDownloadURL, sigTempFile, ""))
+    {
+      CLog::Log(LOGERROR,"Error downloading signature file. [sigDownloadURL=%s]",sigDownloadURL.c_str());
+      g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_EXCLAMATION, g_localizeStrings.Get(53841) ,"" , TOAST_DISPLAY_TIME , KAI_RED_COLOR, KAI_RED_COLOR);
+      return false;
+    }
+
   }
   catch (...)
   {
-    CLog::Log(LOGERROR, "Error downloading application.");
-    g_application.m_guiDialogKaiToast.QueueNotification("", g_localizeStrings.Get(53841));
+    CLog::Log(LOGERROR,"Error downloading application - catch - [downloadURL=%s]",downloadURL.c_str());
+    g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_EXCLAMATION, g_localizeStrings.Get(53841) ,"" , TOAST_DISPLAY_TIME , KAI_RED_COLOR, KAI_RED_COLOR);
     return false;
   }
+  
+#ifdef HAS_EMBEDDED
+  if(!bIsNative)
+  {
+    CAppSecurity appSecurity(tempFile, sigTempFile, appDesc.GetId(), appDesc.GetVersion());
+    if(appSecurity.VerifySignature() == false)
+    {
+      dlMessage.Format(g_localizeStrings.Get(53846), appDesc.GetName().c_str());
+      g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_EXCLAMATION, dlMessage, "", 10000, KAI_RED_COLOR, KAI_RED_COLOR);
+      return false;
+    }
+  }
+#endif
 
   CStdString targetDir = _P("special://home/apps/");
   
   CZipManager zip;
   try
   {
-    g_application.m_guiDialogKaiToast.QueueNotification("", g_localizeStrings.Get(53842));
+    g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_ARROWUP, g_localizeStrings.Get(53842),"" , TOAST_DISPLAY_TIME , KAI_ORANGE_COLOR, KAI_ORANGE_COLOR);
     if (!zip.ExtractArchive(tempFile, targetDir, false))
     {
-      g_application.m_guiDialogKaiToast.QueueNotification("", g_localizeStrings.Get(53843));
+      g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_EXCLAMATION, g_localizeStrings.Get(53843) ,"" , TOAST_DISPLAY_TIME , KAI_RED_COLOR, KAI_RED_COLOR);
       CLog::Log(LOGERROR, "Error extracting application.");
       return false;
     }
@@ -818,14 +1026,28 @@ bool CAppManager::InstallApp(const CStdString& appId, bool reportInstall)
     return false;
   }
   ::DeleteFile(tempFile.c_str());
-
+  
   // Create directory to store registry.xml
   CStdString fileName = _P(g_settings.GetProfileUserDataFolder());
   CUtil::AddFileToFolder(fileName, "apps", fileName);
   ::CreateDirectory(fileName, NULL);
   CUtil::AddFileToFolder(fileName, appDesc.GetId(), fileName);
   ::CreateDirectory(fileName, NULL);
-  
+
+#ifdef HAS_EMBEDDED
+  if(!bIsNative)
+  {
+    CStdString sigFile = targetDir;
+    CUtil::AddFileToFolder(sigFile, appDesc.GetId(), sigFile);
+    CUtil::AddFileToFolder(sigFile, "signature.xml", sigFile);
+
+    if(!XFILE::CFile::Cache(sigTempFile, sigFile))
+    {
+      CLog::Log(LOGERROR, "Error copying signature file [%s]", sigTempFile.c_str());
+    }
+    ::DeleteFile(sigTempFile.c_str());
+  }
+#endif
   // If we are upgrading, delete the source from sources.xml as it 
   // may no longer be accurate
   CBoxeeMediaSourceList sourceList;
@@ -843,7 +1065,7 @@ bool CAppManager::InstallApp(const CStdString& appId, bool reportInstall)
     BoxeeUtils::ReportInstallApp(appDesc);
   }
 
-  g_application.m_guiDialogKaiToast.QueueNotification("", g_localizeStrings.Get(53844));
+ // g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_CHECK, g_localizeStrings.Get(53844) ,"" , TOAST_DISPLAY_TIME , KAI_GREEN_COLOR, KAI_GREEN_COLOR);
 
   return true;
 }
@@ -869,7 +1091,7 @@ bool CAppManager::InstallOrUpgradeAppIfNeeded(const CStdString& appId, bool bRep
   if (installedAppsDesc.find(appId) == installedAppsDesc.end())
   {
     InstallOrUpgradeAppBG* job = new InstallOrUpgradeAppBG(appId, true, false, bReportInstall);
-    return CUtil::RunInBG(job);
+    return (CUtil::RunInBG(job)==JOB_SUCCEEDED);
   }
 
   CAppDescriptor& appDesc = installedAppsDesc[appId];
@@ -884,10 +1106,32 @@ bool CAppManager::InstallOrUpgradeAppIfNeeded(const CStdString& appId, bool bRep
   if (CUtil::VersionCompare(installedAppsDesc[appId].GetVersion(), availableAppsDesc[appId].GetVersion()) < 0)
   {
     InstallOrUpgradeAppBG* job = new InstallOrUpgradeAppBG(appId, false, true, bReportInstall);
-    return CUtil::RunInBG(job);
+    return (CUtil::RunInBG(job)==JOB_SUCCEEDED);
   }
   
-	return true;
+#ifdef HAS_EMBEDDED
+  if(m_bVerifyAppStatus && appDesc.GetType() != "native")
+  {
+    CStdString sigFile = _P("special://home/apps/");
+    CUtil::AddFileToFolder(sigFile, appDesc.GetId(), sigFile);
+    CUtil::AddFileToFolder(sigFile, "signature.xml", sigFile);
+ 
+    CAppSecurity appSecurity("", sigFile, appDesc.GetId(), appDesc.GetVersion());
+  
+    if(appSecurity.VerifySignature(FLAG_VERIFY_APP_STATUS_ONLY) == false)
+    {
+      CStdString dlMessage;
+   
+      dlMessage.Format(g_localizeStrings.Get(53846), appDesc.GetName().c_str());
+      g_application.m_guiDialogKaiToast.QueueNotification("", "", dlMessage, 10000);
+    
+      return false;
+    }
+  }
+  m_bVerifyAppStatus = true;
+#endif
+
+  return true;
 }
 
 bool CAppManager::UpgradeApp(const CStdString& appId)
@@ -907,6 +1151,17 @@ const CStdString& CAppManager::GetLastLaunchedId()
 
 CAppDescriptor& CAppManager::GetLastLaunchedDescriptor()
 {
+  return m_lastLaunchedDescriptor;
+}
+
+CAppDescriptor& CAppManager::GetDescriptor(const CStdString& strAppId)
+{
+  CAppDescriptor::AppDescriptorsMap::iterator it = m_installedApplications.find(strAppId);
+  if (it != m_installedApplications.end())
+  {
+    return it->second;
+  }
+
   return m_lastLaunchedDescriptor;
 }
 
@@ -988,8 +1243,8 @@ int CAppManager::GetWindowId(const CStdString& strAppId, int iWindowId)
     }
   }
   
-  return WINDOW_INVALID;
-}
+    return WINDOW_INVALID;
+  }
 
 bool CAppManager::GetAppByWindowId(int iWindowId, CStdString& strAppId)
 {
@@ -1017,7 +1272,7 @@ bool CAppManager::GetAppByWindowId(int iWindowId, CStdString& strAppId)
   return false;
 }
 
-void CAppManager::GetAppWindows(const CStdString& strAppId, std::vector<int> vecAppWindows)
+void CAppManager::GetAppWindows(const CStdString& strAppId, std::vector<int>& vecAppWindows)
 {
   vecAppWindows.clear();
   std::map<int,int> windowMap = m_mapAppWindows[strAppId];
@@ -1028,10 +1283,28 @@ void CAppManager::GetAppWindows(const CStdString& strAppId, std::vector<int> vec
     int realId = it->first;
     int windowId = it->second;
 
-    CLog::Log(LOGERROR,"%s - window for app id = %s, real id = %d, mapped id = %d", __FUNCTION__, strAppId.c_str(), realId, windowId);
+    CLog::Log(LOGDEBUG,"%s - window for app id = %s, real id = %d, mapped id = %d", __FUNCTION__, strAppId.c_str(), realId, windowId);
     vecAppWindows.push_back(windowId);
     it++;
   }
+}
+
+void CAppManager::ReleaseAppWindows(const CStdString& strAppId)
+{
+  std::map<int,int> windowMap = m_mapAppWindows[strAppId];
+  
+  std::map<int,int>::iterator it = windowMap.begin();
+  while(it != windowMap.end())
+  {
+    CGUIWindow *pWindow = g_windowManager.GetWindow(it->second);
+    g_windowManager.RemoveCustomWindow(pWindow);
+    
+    delete pWindow;
+    
+    it++;
+  }
+
+  m_mapAppWindows[strAppId].clear();
 }
 
 int  CAppManager::AcquireWindowID()
@@ -1062,44 +1335,60 @@ void CAppManager::ReleaseWindowID(int nID)
   m_windowIdPool.push_back(nID);
 }
 
-class CloseAppJob : public IGUIThreadTask
+void CAppManager::Close(const CStdString& strAppId)
 {
-public:
-  CloseAppJob(const CStdString& strAppId) : m_strAppId(strAppId) { }
-  virtual void DoWork()
+  CLog::Log(LOGDEBUG,"%s - close application, id = %s", __FUNCTION__, strAppId.c_str());
+  
+  bool bCloseApp = true;
+
+  std::map<int,int> windowMap = m_mapAppWindows[strAppId];
+  if(windowMap.size() > 1)
   {
-    // Activate home window
-    g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_APPS,"apps://all");
-
-    g_pythonParser.RemoveContext(m_strAppId);
-
-    // Get all windows that belong to the applicaton
-    std::vector<int> vecAppWindows;
-    CAppManager::GetInstance().GetAppWindows(m_strAppId, vecAppWindows);
-
-    // Delete all windows
-    for (size_t i = 0; i < vecAppWindows.size(); i++)
+    std::map<int,int>::iterator it = windowMap.begin();
+    while(it != windowMap.end())
     {
-      g_windowManager.Delete(vecAppWindows[i]);
+      int iWindowId = it->second;
+
+      if(g_windowManager.GetActiveWindow() != iWindowId && g_windowManager.IsWindowInHistory(iWindowId))
+      {
+        bCloseApp = false;
+        break;
+      } 
+     
+      it++;
     }
   }
 
-  CStdString m_strAppId;
-};
+  CAppDescriptor& desc = GetDescriptor(strAppId);
 
-void CAppManager::Close(const CStdString& strAppId)
-{
-  CLog::Log(LOGERROR,"%s - close application, id = %s", __FUNCTION__, strAppId.c_str());
+  if(bCloseApp && desc.IsPersistent() == false)
+  {
+    CloseAppJob* j = new CloseAppJob(strAppId);
+    g_application.getApplicationMessenger().ExecuteOnMainThread(j, false, true);
+    m_lastLaunchedAppId = "";
+  }
 
-  CloseAppJob* j = new CloseAppJob(strAppId);
-  g_application.getApplicationMessenger().ExecuteOnMainThread(j, false, true);
-
+//  if(bCloseApp && desc.IsTestApp())
+//  {
+//    CUtil::WipeDir(_P(m_launchedItem.GetProperty("app-localpath")));
+//  }
 }
 
 void CAppManager::LimitAppsDirSize(uint32_t appsDirMAxSize)
 {
+
+  CStdString appsDir = _P("special://home/apps/");
+
+  // if dir is small enough, break
+  if (CUtil::GetDirSize(appsDir) < appsDirMAxSize)
+  {
+    return;
+  }
+
   typedef std::multimap<int, CStdString> appsMmapT;
   appsMmapT appsMmap;
+  std::set<int>  appsMSortedKeys;
+
 
   CStdString fileName = _P("special://profile/apps/apps.xml");
   CStdString strValue, appName;
@@ -1134,28 +1423,31 @@ void CAppManager::LimitAppsDirSize(uint32_t appsDirMAxSize)
     pLastOpenedDateNode = pAppNode->FirstChild("lastopeneddate");
     int lastOpenedTime = atoi(pLastOpenedDateNode->FirstChild()->Value());
     appsMmap.insert(std::make_pair(lastOpenedTime, appName));
+    appsMSortedKeys.insert(lastOpenedTime);
     appIdToXmlNodeMap.insert(std::make_pair(appName, pAppNode));
     pAppNode = pAppNode->NextSiblingElement("app");
   }
 
-  CStdString appsDir = _P("special://home/apps/");
+
+  std::set<int>::iterator  sortKeyIt = appsMSortedKeys.begin();
 
   CLog::Log(LOGDEBUG, "check apps dir size and change it if needed");
-  //delete oldest applications if size of special://home/apps/ is bigger than allowed
-  appsMmapT::iterator it = appsMmap.begin();
-  for (;it != appsMmap.end(); it++)
+  while ((CUtil::GetDirSize(appsDir) > appsDirMAxSize) && sortKeyIt != appsMSortedKeys.end())
   {
-    // if dir is small enough, break
-    if (CUtil::GetDirSize(appsDir) < appsDirMAxSize)
-    {
-      break;
-    }
+    appsMmapT::iterator appsIt = appsMmap.find(*sortKeyIt);
 
+    while ((CUtil::GetDirSize(appsDir) > appsDirMAxSize) && appsIt != appsMmap.end() )
+    {
     // get the least recently used app
-    CStdString appName = (*it).second;
+      CStdString appName = (*appsIt).second;
     CLog::Log(LOGINFO, "delete application %s", appName.c_str());
-    pRootElement->RemoveChild(appIdToXmlNodeMap[appName]);
+
     CAppManager::UninstallApp(appName);
+      appsMmap.erase(appsIt);
+      appsIt = appsMmap.find(*sortKeyIt);
+  }
+
+    sortKeyIt ++;
   }
 
   //file have been changed, save
@@ -1175,7 +1467,7 @@ void CAppManager::UpdateAppStat(const std::string& AppId)
   TiXmlDocument xmlDoc;
   TiXmlElement *pRootElement = NULL;
   TiXmlNode *pTempNode = NULL;
-  bool fixDoc = true, deleteNode = false;
+  bool fixDoc = true;
 
   CLog::Log(LOGINFO, "updating %s's information in apps.xml", AppId.c_str());
 
@@ -1256,29 +1548,10 @@ void CAppManager::UpdateAppStat(const std::string& AppId)
         pAppNode->LinkEndChild(lastOpenedElement);
       }
 
-      //intersect installed applications and the ones that apps.xml knows about
-
-      if (installedAppsDesc.find(currAppStr) == installedAppsDesc.end())
-      {
-        CLog::Log(LOGINFO, "deleting %s from app.xml file\n", currAppStr.c_str());
-        pTempNode = pAppNode;
-        deleteNode = true;
-      }
-      else
-      {
-        deleteNode = false;
-      }
-
-
       CLog::Log(LOGDEBUG, "deleting %s from apps map\n", currAppStr.c_str());
       installedAppsDesc.erase(currAppStr);
     }
     pAppNode = pAppNode->NextSiblingElement("app");
-
-    if (deleteNode)
-    {
-      pRootElement->RemoveChild(pTempNode);
-    }
 
   }
 
@@ -1385,4 +1658,47 @@ void CAppManager::StopAllApps()
     g_pythonParser.RemoveContextAll();
     m_lastLaunchedAppId = "";
   }
+}
+
+const char* CAppManager::GetCurrentContextAppId()
+{
+#ifdef NO_SPOTIFY
+  if (Py_IsInitialized())
+  {
+    PyObject *app = PySys_GetObject((char*)"app-id");
+    if (app)
+    {
+      return PyString_AsString(app);
+    }
+  }
+#endif
+
+  if (m_lastLaunchedAppId.length() > 0)
+  {
+    return m_lastLaunchedAppId.c_str();
+  }
+
+  return NULL;
+}
+
+bool CAppManager::HasPartnerThreadRunning(const CStdString& partnerId, const ThreadIdentifier& threadId)
+{
+   return g_pythonParser.HasPartnerThreadRunning(partnerId, threadId);
+}
+
+bool BoxeeValidatePartner(const char* partnerId, const int developer_indication)
+{
+#if defined(_LINUX) && !defined(__APPLE__)
+  CAppManager& appManager = CAppManager::GetInstance();
+  CAppDescriptor& lastLaunchedDescriptor = appManager.GetLastLaunchedDescriptor();
+
+  if(developer_indication && lastLaunchedDescriptor.IsTestApp() &&
+     !lastLaunchedDescriptor.GetPartnerId().IsEmpty() &&
+     CStdString(partnerId) == lastLaunchedDescriptor.GetPartnerId())
+    return true;
+
+  return CAppManager::GetInstance().HasPartnerThreadRunning(partnerId,gettid());
+#endif
+
+  return false;
 }

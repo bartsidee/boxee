@@ -110,16 +110,21 @@ bool CVirtualDirectory::GetDirectory(const CStdString& strPath, CFileItemList &i
       || strPath.Left(9).Equals("plugin://")
       || strPath.Left(7).Equals("apps://")
       || strPath.Left(14).Equals("musicsearch://")
-      || strPath.Left(6).Equals("smb://"))
+      || strPath.Left(6).Equals("smb://")
+      || strPath.Left(6).Equals("afp://")
+      || strPath.Left(6).Equals("bms://")
+      || strPath.Left(6).Equals("nfs://"))
     {
       // Only cache directory we are getting now
       if (!strPath.Left(7).Equals("lastfm:") && !strPath.Left(8).Equals("shout://") && !strPath.Left(9).Equals("tuxbox://") && 
     		  !strPath.Left(6).Equals("rss://") && !strPath.Left(9).Equals("plugin://") && !strPath.Left(7).Equals("feed://") && 
-    		  !strPath.Left(10).Equals("boxeedb://") && !strPath.Left(6).Equals("smb://")) 
+    		  !strPath.Left(10).Equals("boxeedb://") && !strPath.Left(6).Equals("smb://") && !strPath.Left(6).Equals("afp://") &&
+    		  !strPath.Left(6).Equals("bms://") && !strPath.Left(6).Equals("nfs://"))
       {
         g_directoryCache.Clear();
       }
-      return CDirectory::GetDirectory(strPath, items, m_strFileMask, bUseFileDirectories, m_allowPrompting, m_cacheDirectory);
+      bool bRetVal = CDirectory::GetDirectory(strPath, items, m_strFileMask, bUseFileDirectories, m_allowPrompting, m_cacheDirectory);
+      return bRetVal;
     }
 
     // what do with an invalid path?

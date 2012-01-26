@@ -21,7 +21,11 @@ namespace BOXEE
 class GenreItem
 {
 public:
-  GenreItem(){};
+  GenreItem()
+  {
+    m_genreId = "all";
+    m_genreText = m_genreId;
+  };
   virtual ~GenreItem(){};
 
   std::string m_genreId;

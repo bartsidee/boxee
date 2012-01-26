@@ -35,8 +35,20 @@
 /*----------------------------------------------------------------------
 |   includes
 +---------------------------------------------------------------------*/
-#include <stdlib.h>
-#include <time.h>
+#if defined(WIN32)
+#include <windows.h>
+#include <malloc.h>
+typedef UINT8 uint8_t;
+typedef INT8 int8_t;
+typedef UINT16 uint16_t;
+typedef INT16 int16_t;
+typedef UINT32 uint32_t;
+typedef INT32 int32_t;
+typedef UINT64 uint64_t;
+typedef INT64 int64_t;
+#else
+#include <stdint.h>
+#endif
 
 /*----------------------------------------------------------------------
 |   types
@@ -48,6 +60,18 @@ struct SSL_SOCKET {
     int (*Write)(SSL_SOCKET* self, const void* buffer, unsigned int size);
 };
 
+typedef struct {
+    uint32_t year;        /* year                      */
+    uint32_t month;       /* month of the year (1-12)  */
+    uint32_t day;         /* day of the month (1-31)   */
+    uint32_t hours;       /* hours (0-23)              */
+    uint32_t minutes;     /* minutes (0-59)            */
+    uint32_t seconds;     /* seconds (0-59)            */
+} SSL_DateTime;
+int SSL_DateTime_Before(const SSL_DateTime* t1, const SSL_DateTime* t2);
+void SSL_DateTime_Now(SSL_DateTime* now);
+uint64_t SSL_GetRandomSeed();
+
 #define STDCALL
 #define EXP_FUNC
 
@@ -56,7 +80,7 @@ struct SSL_SOCKET {
 #define SSL_CTX_LOCK(A)
 #define SSL_CTX_UNLOCK(A)
 
-#define TTY_FLUSH(X)
+#define TTY_FLUSH()
 #define SOCKET_BLOCK(X)
 #define SOCKET_READ(s,b,z) (s)->Read((s), (b), (z))
 #define SOCKET_WRITE(s,b,z) (s)->Write((s), (b), (z))

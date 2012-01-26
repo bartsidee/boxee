@@ -25,7 +25,7 @@
 #include "libavutil/common.h"
 
 #if   ARCH_ARM
-#include "arm/mathops.h"
+#   include "arm/mathops.h"
 #elif ARCH_AVR32
 #   include "avr32/mathops.h"
 #elif ARCH_BFIN
@@ -33,7 +33,7 @@
 #elif ARCH_MIPS
 #   include "mips/mathops.h"
 #elif ARCH_PPC
-#include "ppc/mathops.h"
+#   include "ppc/mathops.h"
 #elif ARCH_X86
 #   include "x86/mathops.h"
 #endif
@@ -50,6 +50,12 @@
 
 static av_always_inline int MULH(int a, int b){
     return ((int64_t)(a) * (int64_t)(b))>>32;
+}
+#endif
+
+#ifndef UMULH
+static av_always_inline unsigned UMULH(unsigned a, unsigned b){
+    return ((uint64_t)(a) * (uint64_t)(b))>>32;
 }
 #endif
 
@@ -112,8 +118,64 @@ static inline av_const int mid_pred(int a, int b, int c)
 #ifndef sign_extend
 static inline av_const int sign_extend(int val, unsigned bits)
 {
-    return (val << (INT_BIT - bits)) >> (INT_BIT - bits);
+    return (val << ((8 * sizeof(int)) - bits)) >> ((8 * sizeof(int)) - bits);
 }
+#endif
+
+#ifndef zero_extend
+static inline av_const unsigned zero_extend(unsigned val, unsigned bits)
+{
+    return (val << ((8 * sizeof(int)) - bits)) >> ((8 * sizeof(int)) - bits);
+}
+#endif
+
+#ifndef COPY3_IF_LT
+#define COPY3_IF_LT(x, y, a, b, c, d)\
+if ((y) < (x)) {\
+    (x) = (y);\
+    (a) = (b);\
+    (c) = (d);\
+}
+#endif
+
+#ifndef NEG_SSR32
+#   define NEG_SSR32(a,s) ((( int32_t)(a))>>(32-(s)))
+#endif
+
+#ifndef NEG_USR32
+#   define NEG_USR32(a,s) (((uint32_t)(a))>>(32-(s)))
+#endif
+
+#if HAVE_BIGENDIAN
+# ifndef PACK_2U8
+#   define PACK_2U8(a,b)     (((a) <<  8) | (b))
+# endif
+# ifndef PACK_4U8
+#   define PACK_4U8(a,b,c,d) (((a) << 24) | ((b) << 16) | ((c) << 8) | (d))
+# endif
+# ifndef PACK_2U16
+#   define PACK_2U16(a,b)    (((a) << 16) | (b))
+# endif
+#else
+# ifndef PACK_2U8
+#   define PACK_2U8(a,b)     (((b) <<  8) | (a))
+# endif
+# ifndef PACK_4U2
+#   define PACK_4U8(a,b,c,d) (((d) << 24) | ((c) << 16) | ((b) << 8) | (a))
+# endif
+# ifndef PACK_2U16
+#   define PACK_2U16(a,b)    (((b) << 16) | (a))
+# endif
+#endif
+
+#ifndef PACK_2S8
+#   define PACK_2S8(a,b)     PACK_2U8((a)&255, (b)&255)
+#endif
+#ifndef PACK_4S8
+#   define PACK_4S8(a,b,c,d) PACK_4U8((a)&255, (b)&255, (c)&255, (d)&255)
+#endif
+#ifndef PACK_2S16
+#   define PACK_2S16(a,b)    PACK_2U16((a)&0xffff, (b)&0xffff)
 #endif
 
 #endif /* AVCODEC_MATHOPS_H */

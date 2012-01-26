@@ -13,7 +13,6 @@
 #include "Application.h"
 #include "FileSystem/Directory.h"
 #include "lib/libBoxee/bxutils.h"
-#include "BrowseWindowConfiguration.h"
 #include "GUIWindowBoxeeBrowse.h"
 #include "GUIDialogBoxeeMediaAction.h"
 #include "GUIImage.h"

@@ -6,8 +6,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #else
-#define bzero(a) memset(a,0,sizeof(a))
-typedef int socklen_t;
+#include "../../win32/c_defs.h"
 #include <WinSock2.h>
 #endif
 #include "range.h"

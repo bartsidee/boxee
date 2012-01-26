@@ -188,7 +188,7 @@ enum {
 //--------------------------------------------------------------------------
 static void ErrNonfatal(const char* const msg, int a1, int a2)
 {
-  printf("ExifParse - Nonfatal Error : %s %d %d", msg, a1, a2);
+  //printf("ExifParse - Nonfatal Error : %s %d %d", msg, a1, a2);
 }
 
 //--------------------------------------------------------------------------
@@ -706,7 +706,7 @@ bool CExifParse::Process (const unsigned char* const ExifSection, const unsigned
 
   if (memcmp(pos, ExifHeader,6))
   {
-    printf("ExifParse: incorrect Exif header");
+    //printf("ExifParse: incorrect Exif header");
     return false;
   }
   pos += 6;
@@ -721,7 +721,7 @@ bool CExifParse::Process (const unsigned char* const ExifSection, const unsigned
   }
   else
   {
-    printf("ExifParse: invalid Exif alignment marker");
+    //printf("ExifParse: invalid Exif alignment marker");
     return false;
   }
   pos += strlen(ExifAlignment0);
@@ -729,7 +729,7 @@ bool CExifParse::Process (const unsigned char* const ExifSection, const unsigned
   // Check the next value for correctness.
   if (Get16((void*)(pos), m_MotorolaOrder) != ExifExtra)
   {
-    printf("ExifParse: invalid Exif start (1)");
+    //printf("ExifParse: invalid Exif start (1)");
     return false;
   }
   pos += sizeof(short);

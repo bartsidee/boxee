@@ -44,7 +44,7 @@ CWINFileSMB::~CWINFileSMB()
   if (m_hFile != INVALID_HANDLE_VALUE) Close();
 }
 //*********************************************************************************************
-CStdString CWINFileSMB::GetLocal(const CURL &url)
+CStdString CWINFileSMB::GetLocal(const CURI &url)
 {
   CStdString path( url.GetFileName() );
 
@@ -64,7 +64,7 @@ CStdString CWINFileSMB::GetLocal(const CURL &url)
 }
 
 //*********************************************************************************************
-bool CWINFileSMB::Open(const CURL& url)
+bool CWINFileSMB::Open(const CURI& url)
 {
   CStdString strFile = GetLocal(url);
 
@@ -84,7 +84,7 @@ bool CWINFileSMB::Open(const CURL& url)
   return true;
 }
 
-bool CWINFileSMB::Exists(const CURL& url)
+bool CWINFileSMB::Exists(const CURI& url)
 {
   struct __stat64 buffer;
   if(url.GetFileName() == url.GetShareName())
@@ -106,7 +106,7 @@ int CWINFileSMB::Stat(struct __stat64* buffer)
   return _fstat64(fd, buffer);
 }
 
-int CWINFileSMB::Stat(const CURL& url, struct __stat64* buffer)
+int CWINFileSMB::Stat(const CURI& url, struct __stat64* buffer)
 {
   CStdString strFile = GetLocal(url);
 
@@ -117,7 +117,7 @@ int CWINFileSMB::Stat(const CURL& url, struct __stat64* buffer)
 
 
 //*********************************************************************************************
-bool CWINFileSMB::OpenForWrite(const CURL& url, bool bOverWrite)
+bool CWINFileSMB::OpenForWrite(const CURI& url, bool bOverWrite)
 {
   CStdString strPath = GetLocal(url);
 
@@ -224,7 +224,7 @@ int64_t CWINFileSMB::GetPosition()
   return m_i64FilePos;
 }
 
-bool CWINFileSMB::Delete(const CURL& url)
+bool CWINFileSMB::Delete(const CURI& url)
 {
   CStdString strFile=GetLocal(url);
 
@@ -233,7 +233,7 @@ bool CWINFileSMB::Delete(const CURL& url)
   return ::DeleteFileW(strWFile.c_str()) ? true : false;
 }
 
-bool CWINFileSMB::Rename(const CURL& url, const CURL& urlnew)
+bool CWINFileSMB::Rename(const CURI& url, const CURI& urlnew)
 {
   CStdString strFile=GetLocal(url);
   CStdString strNewFile=GetLocal(urlnew);

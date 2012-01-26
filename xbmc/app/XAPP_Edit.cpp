@@ -26,7 +26,7 @@ Edit::Edit(int windowId, int controlId) throw (AppException) : Control(windowId,
 //      throw AppException("Control is not an Edit");
 //    }
 //  }
-}
+    }
 
 void Edit::SetText(const std::string& text)
 {
@@ -43,7 +43,7 @@ void Edit::SetText(const std::string& text)
 //      ((CGUIEditControl*)control)->SetLabel2(text);
 //    }
 //  }
-}
+    }
 
 std::string Edit::GetText()
 {
@@ -62,6 +62,6 @@ std::string Edit::GetText()
 //    }
 //  }
 //  return "";
-}
+    }
 
 }

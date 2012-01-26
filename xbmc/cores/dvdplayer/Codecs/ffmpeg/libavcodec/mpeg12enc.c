@@ -21,7 +21,7 @@
  */
 
 /**
- * @file libavcodec/mpeg12enc.c
+ * @file
  * MPEG1/2 encoder
  */
 
@@ -119,7 +119,7 @@ static int find_frame_rate_index(MpegEncContext *s){
     for(i=1;i<14;i++) {
         int64_t n0= 1001LL/ff_frame_rate_tab[i].den*ff_frame_rate_tab[i].num*s->avctx->time_base.num;
         int64_t n1= 1001LL*s->avctx->time_base.den;
-        if(s->avctx->strict_std_compliance > FF_COMPLIANCE_INOFFICIAL && i>=9) break;
+        if(s->avctx->strict_std_compliance > FF_COMPLIANCE_UNOFFICIAL && i>=9) break;
 
         d = FFABS(n0 - n1);
         if(d < dmin){
@@ -331,7 +331,7 @@ void ff_mpeg1_encode_slice_header(MpegEncContext *s){
         put_header(s, SLICE_MIN_START_CODE + (s->mb_y & 127));
         put_bits(&s->pb, 3, s->mb_y >> 7);  /* slice_vertical_position_extension */
     } else {
-    put_header(s, SLICE_MIN_START_CODE + s->mb_y);
+        put_header(s, SLICE_MIN_START_CODE + s->mb_y);
     }
     put_qscale(s);
     put_bits(&s->pb, 1, 0); /* slice extra information */
@@ -890,7 +890,7 @@ static void mpeg1_encode_block(MpegEncContext *s,
     next_coef:
 #if 0
         if (level != 0)
-            dprintf(s->avctx, "level[%d]=%d\n", i, level);
+            av_dlog(s->avctx, "level[%d]=%d\n", i, level);
 #endif
         /* encode using VLC */
         if (level != 0) {
@@ -930,9 +930,9 @@ static void mpeg1_encode_block(MpegEncContext *s,
     put_bits(&s->pb, table_vlc[112][1], table_vlc[112][0]);
 }
 
-AVCodec mpeg1video_encoder = {
+AVCodec ff_mpeg1video_encoder = {
     "mpeg1video",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_MPEG1VIDEO,
     sizeof(MpegEncContext),
     encode_init,
@@ -944,9 +944,9 @@ AVCodec mpeg1video_encoder = {
     .long_name= NULL_IF_CONFIG_SMALL("MPEG-1 video"),
 };
 
-AVCodec mpeg2video_encoder = {
+AVCodec ff_mpeg2video_encoder = {
     "mpeg2video",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_MPEG2VIDEO,
     sizeof(MpegEncContext),
     encode_init,

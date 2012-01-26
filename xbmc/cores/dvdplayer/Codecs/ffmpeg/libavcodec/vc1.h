@@ -160,7 +160,8 @@ typedef struct VC1Context{
 
     /** Simple/Main Profile sequence header */
     //@{
-    int res_sm;           ///< reserved, 2b
+    int res_sprite;       ///< reserved, sprite mode
+    int res_y411;         ///< reserved, old interlaced mode
     int res_x8;           ///< reserved
     int multires;         ///< frame-level RESPIC syntax element present
     int res_fasttx;       ///< reserved, always 1
@@ -313,9 +314,7 @@ typedef struct VC1Context{
 
     int parse_only;             ///< Context is used within parser
 
-    // ==> Start patch MPC
-    int allow_interlaced;
-    // <== End patch MPC
+    int warn_interlaced;
 } VC1Context;
 
 /** Find VC-1 marker in buffer

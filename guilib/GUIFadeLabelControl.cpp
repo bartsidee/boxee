@@ -153,7 +153,7 @@ void CGUIFadeLabelControl::Render()
   TransformMatrix matrix;
   m_fadeAnim->Animate(m_renderTime, true);
   m_fadeAnim->RenderAnimation(matrix);
-  g_graphicsContext.AddTransform(matrix);
+  g_graphicsContext.PushTransform(matrix);
 
   if (m_fadeAnim->GetState() == ANIM_STATE_APPLIED)
     m_fadeAnim->ResetAnimation();
@@ -190,7 +190,7 @@ void CGUIFadeLabelControl::Render()
     }
   }
 
-  g_graphicsContext.RemoveTransform();
+  g_graphicsContext.PopTransform();
 
   CGUIControl::Render();
 }

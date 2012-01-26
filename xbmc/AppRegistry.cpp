@@ -147,7 +147,7 @@ bool CAppRegistry::Has(const CStdString& key)
   return true;
 }
 
-const CStdString &CAppRegistry::Get(const CStdString& key)
+const CStdString& CAppRegistry::Get(const CStdString& key)
 {
   CSingleLock lock(m_lock);
 

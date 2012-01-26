@@ -25,14 +25,12 @@
 ** Commercial non-GPL licensing of this software is possible.
 ** For more info contact Nero AG through Mpeg4AAClicense@nero.com.
 **
-** $Id: mp4ff.c,v 1.20 2007/11/01 12:33:29 menno Exp $
+** $Id: mp4ff.c,v 1.22 2009/01/26 23:01:40 menno Exp $
 **/
 
 #include <stdlib.h>
 #include <string.h>
 #include "mp4ffint.h"
-
-#include "drms.h"
 
 mp4ff_t *mp4ff_open_read(mp4ff_callback_t *f)
 {
@@ -103,7 +101,7 @@ void mp4ff_close(mp4ff_t *ff)
     if (ff) free(ff);
 }
 
-static void mp4ff_track_add(mp4ff_t *f)
+void mp4ff_track_add(mp4ff_t *f)
 {
     f->total_tracks++;
 

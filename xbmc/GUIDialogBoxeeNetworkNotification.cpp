@@ -16,7 +16,7 @@ CGUIDialogBoxeeNetworkNotification::~CGUIDialogBoxeeNetworkNotification(void)
 
 bool CGUIDialogBoxeeNetworkNotification::OnMessage(CGUIMessage& message)
 {
-  switch ( message.GetMessage() )
+  switch (message.GetMessage())
   {
   case GUI_MSG_CLICKED:
   {
@@ -35,9 +35,7 @@ bool CGUIDialogBoxeeNetworkNotification::OnMessage(CGUIMessage& message)
     {
       m_bConfirmed = true;
       Close();
-
       g_windowManager.ActivateWindow(WINDOW_SETTINGS_NETWORK);
-
       return true;
     }
     break;
@@ -56,9 +54,6 @@ void CGUIDialogBoxeeNetworkNotification::ShowAndGetInput(int heading, int line)
   {
     return;
   }
-
-  dialog->SetHeading( heading );
-  dialog->SetLine( 0, line );
   dialog->DoModal();
 }
 
@@ -69,9 +64,6 @@ void CGUIDialogBoxeeNetworkNotification::ShowAndGetInput(const CStdString&  head
   {
     return;
   }
-
-  dialog->SetHeading( heading );
-  dialog->SetLine( 0, line );
   dialog->DoModal();
 }
 

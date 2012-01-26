@@ -72,10 +72,18 @@ void CHttpHeader::Parse(const CStdString &strData)
       
       m_params[strParam] = strValue;
     }
-    else if (m_protoLine.IsEmpty())
-      m_protoLine = strData;
-    
-    
+    else
+    {
+      strParam = strData.substr(iIter, iValueEnd);
+      strParam.Trim();
+
+      if (strParam.Left(7) == "HTTP/1.")
+      {
+        m_protoLine = strData;
+        m_params.clear();
+      }
+    }
+
     iIter = iValueEnd + 2;
   }
 }

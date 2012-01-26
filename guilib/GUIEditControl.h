@@ -1,6 +1,6 @@
 /*!
 \file GUIEditControl.h
-\brief
+\brief 
 */
 
 #ifndef GUILIB_GUIEditControl_H
@@ -34,7 +34,7 @@
 
 /*!
  \ingroup controls
- \brief
+ \brief 
  */
 
 class CGUIEditControl : public CGUIButtonControl
@@ -53,7 +53,7 @@ public:
 
   CGUIEditControl(int parentID, int controlID, float posX, float posY,
                   float width, float height, const CTextureInfo &textureFocus, const CTextureInfo &textureNoFocus,
-                  const CLabelInfo& labelInfo, const std::string &text);
+                  const CLabelInfo& labelInfo, const std::string &text, const CLabelInfo& emptylabelInfo, const std::string &emptyText, int maxTextSize = -1);
   CGUIEditControl(const CGUIButtonControl &button);
   virtual ~CGUIEditControl(void);
   virtual CGUIEditControl *Clone() const { return new CGUIEditControl(*this); };
@@ -67,29 +67,37 @@ public:
 
   virtual CStdString GetLabel2() const;
   virtual CStdStringW GetUnicodeLabel() const;
-
+  
   unsigned int GetCursorPosition() const;
   void SetCursorPosition(unsigned int iPosition);
 
   void SetInputType(INPUT_TYPE type, int heading);
-  
+  INPUT_TYPE GetInputType() { return m_inputType; }
   void SetTextChangeActions(const std::vector<CGUIActionDescriptor>& textChangeActions) { m_textChangeActions = textChangeActions; };
   
   bool HasTextChangeActions() { return m_textChangeActions.size() > 0; };
   
+  bool SetHighlighted(bool highlighted);
+
+  int GetMaxInputSize();
+
 protected:
   virtual void RenderText();
-  CStdStringW GetDisplayedText() const;
+  CStdStringW GetDisplayedText();
   void RecalcLabelPosition();
   void ValidateCursor();
   void UpdateText(bool sendUpdate = true);
   void OnPasteClipboard();
   void OnSMSCharacter(unsigned int key);
 
+  bool CanAddToLabel2(int textToAddSize = 1);
+  std::string GetAllowedText(const std::string& text);
+
   CStdStringW m_text2;
   CStdString  m_text;
   float m_textOffset;
   float m_textWidth;
+  float m_textHeight;
 
   static const int spaceWidth = 5;
 
@@ -108,5 +116,13 @@ protected:
   
   static const char*        smsLetters[10];
   static const unsigned int smsDelay;
+
+  CGUITextLayout m_emptyLayout;
+  CLabelInfo m_emptyLabelInfo;
+
+  int m_maxTextSize;
+  int m_addToText2Counter;
+
+  bool m_highlighted;
 };
 #endif

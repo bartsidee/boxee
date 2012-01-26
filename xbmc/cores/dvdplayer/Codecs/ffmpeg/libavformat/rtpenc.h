@@ -50,6 +50,12 @@ struct RTPMuxContext {
     uint8_t *buf_ptr;
 
     int max_frames_per_packet;
+
+    /**
+     * Number of bytes used for H.264 NAL length, if the MP4 syntax is used
+     * (1, 2 or 4)
+     */
+    int nal_length_size;
 };
 
 typedef struct RTPMuxContext RTPMuxContext;
@@ -61,5 +67,7 @@ void ff_rtp_send_h263(AVFormatContext *s1, const uint8_t *buf1, int size);
 void ff_rtp_send_aac(AVFormatContext *s1, const uint8_t *buff, int size);
 void ff_rtp_send_amr(AVFormatContext *s1, const uint8_t *buff, int size);
 void ff_rtp_send_mpegvideo(AVFormatContext *s1, const uint8_t *buf1, int size);
+void ff_rtp_send_xiph(AVFormatContext *s1, const uint8_t *buff, int size);
+void ff_rtp_send_vp8(AVFormatContext *s1, const uint8_t *buff, int size);
 
 #endif /* AVFORMAT_RTPENC_H */

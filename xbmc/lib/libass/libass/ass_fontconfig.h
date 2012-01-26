@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License along
  * with libass; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-*/
+ */
 
 #ifndef LIBASS_FONTCONFIG_H
 #define LIBASS_FONTCONFIG_H
@@ -31,17 +31,17 @@
 #include <fontconfig/fontconfig.h>
 #endif
 
-typedef struct fc_instance fc_instance_t;
+typedef struct fc_instance FCInstance;
 
-fc_instance_t *fontconfig_init(ass_library_t *library,
-                               FT_Library ftlibrary, const char *family,
-                               const char *path, int fc, const char *config,
-                               int update);
-char *fontconfig_select(ass_library_t *library, fc_instance_t *priv,
+FCInstance *fontconfig_init(ASS_Library *library,
+                            FT_Library ftlibrary, const char *family,
+                            const char *path, int fc, const char *config,
+                            int update);
+char *fontconfig_select(ASS_Library *library, FCInstance *priv,
                         const char *family, int treat_family_as_pattern,
                         unsigned bold, unsigned italic, int *index,
                         uint32_t code);
-void fontconfig_done(fc_instance_t* priv);
-int fontconfig_update(fc_instance_t *priv);
+void fontconfig_done(FCInstance *priv);
+int fontconfig_update(FCInstance *priv);
 
-#endif /* LIBASS_FONTCONFIG_H */
+#endif                          /* LIBASS_FONTCONFIG_H */

@@ -29,13 +29,13 @@ BXFeaturedManager::BXFeaturedManager()
 BXFeaturedManager::~BXFeaturedManager()
 {
   SDL_DestroyMutex(m_featuredListGuard);
-  
+
 }
 
 bool BXFeaturedManager::Initialize()
 {
   m_featuredList.Clear();
-  
+
   return true;
 }
 
@@ -47,16 +47,16 @@ bool BXFeaturedManager::UpdateFeaturedList(unsigned long executionDelayInMS, boo
   {
     if(executionDelayInMS == 0)
     {
-      // In case the request is for immediate execution -> Set the status of the list to NOT LOADED in order 
+      // In case the request is for immediate execution -> Set the status of the list to NOT LOADED in order
       // for get function to wait for update
 
       LockFeaturedList();
 
       m_featuredList.SetLoaded(false);
-      
-      UnLockFeaturedList();      
+
+      UnLockFeaturedList();
     }
-    
+
     Boxee::GetInstance().GetBoxeeScheduleTaskManager().AddScheduleTask(reqFeaturedListTask);
     return true;
   }
@@ -80,10 +80,12 @@ void BXFeaturedManager::UnLockFeaturedList()
 void BXFeaturedManager::CopyFeaturedList(const BXBoxeeFeed& featuredList)
 {
   LockFeaturedList();
-  
+
+  LOG(LOG_LEVEL_DEBUG,"BXFeaturedManager::CopyFeaturedList - going to copy featuredList [size=%d]. [currSize=%d] (feat)",featuredList.GetNumOfActions(),m_featuredList.GetNumOfActions());
+
   m_featuredList = featuredList;
   m_featuredList.SetLoaded(true);
-  
+
   UnLockFeaturedList();
 }
 
@@ -107,15 +109,15 @@ bool BXFeaturedManager::GetFeaturedList(BXBoxeeFeed& featuredList)
   }
 
   bool featuredListWasLoaded = false;
-  
+
   LockFeaturedList();
 
   featuredListWasLoaded = m_featuredList.IsLoaded();
-  
+
   while (!featuredListWasLoaded)
   {
     // FeaturedList ISN'T loaded yet -> UnLock the FeaturedList and wait for it to load
-    
+
     UnLockFeaturedList();
 
     LOG(LOG_LEVEL_DEBUG,"BXFeaturedManager::GetFeaturedList - FeaturedList is not loaded yet. Going to try again in [%dms] (feat)",DELAY_FOR_CHECK_FEED_LOADED);
@@ -123,8 +125,8 @@ bool BXFeaturedManager::GetFeaturedList(BXBoxeeFeed& featuredList)
     SDL_Delay(DELAY_FOR_CHECK_FEED_LOADED);
 
     LockFeaturedList();
-      
-    featuredListWasLoaded = m_featuredList.IsLoaded();      
+
+    featuredListWasLoaded = m_featuredList.IsLoaded();
   }
 
   featuredList = m_featuredList;
@@ -147,28 +149,24 @@ BXFeaturedManager::RequestFeaturedListFromServerTask::RequestFeaturedListFromSer
 
 BXFeaturedManager::RequestFeaturedListFromServerTask::~RequestFeaturedListFromServerTask()
 {
-  
+
 }
 
 void BXFeaturedManager::RequestFeaturedListFromServerTask::DoWork()
 {
   LOG(LOG_LEVEL_DEBUG,"RequestFeaturedListFromServerTask::DoWork - Enter function (feat)");
-  
-  bool isLoaded = m_taskHandler->m_featuredList.IsLoaded();
-  int activeWindowId = g_windowManager.GetActiveWindow();
-  bool isConnectedToInternet = g_application.IsConnectedToInternet();
 
-  if (!isConnectedToInternet || (isLoaded && activeWindowId != WINDOW_HOME))
+  if (!CanExecute())
   {
     // set loaded to true so Get() functions won't wait forever
     m_taskHandler->SetFeaturedListIsLoaded(true);
 
-    LOG(LOG_LEVEL_DEBUG,"BXFeaturedManager::RequestFeaturedListFromServerTask::DoWork - [isConnectedToInternet=%d] or [activeWindowId=%d] which isn't WINDOW_HOME -> Exit function (feat)",isConnectedToInternet,activeWindowId);
+    LOG(LOG_LEVEL_DEBUG,"RequestFeaturedListFromServerTask::DoWork - CanExecute() returned FALSE -> Exit function (feat)");
     return;
   }
 
   BXBoxeeFeed featuredList;
-  
+
   featuredList.SetCredentials(BOXEE::Boxee::GetInstance().GetCredentials());
   featuredList.SetVerbose(BOXEE::Boxee::GetInstance().IsVerbose());
 
@@ -176,26 +174,26 @@ void BXFeaturedManager::RequestFeaturedListFromServerTask::DoWork()
 
   featuredList.LoadFromURL(strUrl);
 
+  bool isLoaded = m_taskHandler->m_featuredList.IsLoaded();
   long lastRetCode = featuredList.GetLastRetCode();
 
-  LOG(LOG_LEVEL_DEBUG,"RequestFeaturedListFromServerTask::DoWork - After LoadFromURL. [lastRetCode=%d][isLoaded=%d] (feat)",lastRetCode,isLoaded);
+  LOG(LOG_LEVEL_DEBUG,"RequestFeaturedListFromServerTask::DoWork - After LoadFromURL. [lastRetCode=%d][isLoaded=%d][size=%d][currSize=%d] (feat)",lastRetCode,isLoaded,featuredList.GetNumOfActions(),m_taskHandler->m_featuredList.GetNumOfActions());
 
   if (!isLoaded || lastRetCode == 200)
   {
     ////////////////////////////////////////////
     // copy return result from the server if: //
-    // a)  featuredList isn't loaded          //
+    // a) featuredList isn't loaded           //
     // b) the server returned 200             //
     ////////////////////////////////////////////
 
     m_taskHandler->CopyFeaturedList(featuredList);
 
-    LOG(LOG_LEVEL_DEBUG,"RequestFeaturedListFromServerTask::DoWork - After copy going to send GUI_MSG_UPDATE to LIST_FEATURES (feat)");
-
-    int activeWindow = g_windowManager.GetActiveWindow();
-
-    if (activeWindow == WINDOW_HOME)
+    int activeWindowId = g_windowManager.GetActiveWindow();
+    if (!isLoaded && activeWindowId == WINDOW_HOME)
     {
+      LOG(LOG_LEVEL_DEBUG,"RequestFeaturedListFromServerTask::DoWork - since [isLoaded=%d=FALSE] and [activeWindowId=%d=WINDOW_HOME] sending GUI_MSG_UPDATE to LIST_FEATURES in WINDOW_HOME (feat)",isLoaded,activeWindowId);
+
       CGUIMessage refreshHomeFeaturedList(GUI_MSG_UPDATE, WINDOW_HOME, LIST_FEATURES);
       g_windowManager.SendThreadMessage(refreshHomeFeaturedList);
     }
@@ -204,6 +202,29 @@ void BXFeaturedManager::RequestFeaturedListFromServerTask::DoWork()
   LOG(LOG_LEVEL_DEBUG,"RequestFeaturedListFromServerTask::DoWork - Exit function (feat)");
 
   return;
+}
+
+bool BXFeaturedManager::RequestFeaturedListFromServerTask::CanExecute()
+{
+  bool isLoaded = m_taskHandler->m_featuredList.IsLoaded();
+  int activeWindowId = g_windowManager.GetActiveWindow();
+
+  LOG(LOG_LEVEL_DEBUG,"RequestFeaturedListFromServerTask::CanExecute - Enter function.[isLoaded=%d] (feat)",isLoaded);
+
+  if (!g_application.ShouldConnectToInternet())
+  {
+    LOG(LOG_LEVEL_DEBUG,"RequestFeaturedListFromServerTask::CanExecute - [ShouldConnectToInternet=FALSE] -> return FALSE (feat)");
+    return false;
+  }
+
+  if (!isLoaded)
+  {
+    LOG(LOG_LEVEL_DEBUG,"RequestFeaturedListFromServerTask::CanExecute - [isLoaded=%d] -> return TRUE (feat)",isLoaded);
+    return true;
+  }
+
+  LOG(LOG_LEVEL_DEBUG,"RequestFeaturedListFromServerTask::CanExecute - return TRUE. [ActiveWindowId=%d] (feat)",activeWindowId);
+  return true;
 }
 
 }

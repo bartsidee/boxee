@@ -16,8 +16,9 @@
 
 #include "HttpCacheManager.h"
 #include "bxcredentials.h"
+#include "FileSystem/DllLibCurl.h"
 
-struct curl_slist;
+//struct curl_slist;
 
 namespace BOXEE {
 
@@ -89,23 +90,23 @@ public:
 	static bool Initialize();
 	static void DeInitialize();
   static void SetDefaultVerbose(bool bVerbose);
-  
+
 	// in order to keep cookies across requests we need a file - cookie jar.
 	// this method will return the file used by boxee.
 	static std::string GetCookieJar();
 	
 	// set the default user agent for requests
-	static const void SetGlobalUserAgent(const std::string &strAgent);
+	static void SetGlobalUserAgent(const std::string &strAgent);
 	static const std::string& GetGlobalUserAgent();
 	
 	// Delete CookieJar file
-	static void DeleteCookieJarFile();
-
+	static void DeleteCookieJarFile(const std::string& userName = "");
+	
 protected:
 
 	// setup for HTTP request
-  void* InitHttpTransfer(const char *szUrl, bool bUseCache=true);
-  void FinalizeTransfer(void* curlHandle, bool bSuccess=false);
+    void* InitHttpTransfer(const char *szUrl, bool bUseCache=true);
+    void FinalizeTransfer(void* curlHandle, bool bSuccess=false);
 
 	// ProcessStringData is a callback function, called by curl whenever a chunk of data is read from the
 	// response.
@@ -124,6 +125,7 @@ protected:
 	std::string 		m_strUserAgent;
 	BXCredentials		m_credentials;
 	std::string			m_strCredString;
+	std::string     m_strProxyCred;
 	bool				    m_bVerbose;
 	struct curl_slist 	*m_headers;
 	long				    m_nLastRetCode;

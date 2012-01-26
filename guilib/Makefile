@@ -1,6 +1,8 @@
-INCLUDES=-I. -I../ -Icommon -I../xbmc -I../xbmc/cores -I../xbmc/linux -I../xbmc/utils -I/usr/include/freetype2 -I/usr/include/SDL -ItinyXML -I../xbmc/lib/libsquish
+INCLUDES=-I. -I../ -Icommon -I../xbmc -I../xbmc/cores -I../xbmc/linux -I../xbmc/utils -ItinyXML -I../xbmc/lib/libsquish -I../xbmc/cores/dvdplayer/Codecs -I../xbmc/cores/dvdplayer/Codecs/ffmpeg
 
-SRCS=AnimatedGif.cpp \
+CXXFLAGS+= -D__STDC_CONSTANT_MACROS
+
+SRCS=SDL_anigif.c \
      AudioContext.cpp \
      DirectXGraphics.cpp \
      DDSImage.cpp \
@@ -16,6 +18,7 @@ SRCS=AnimatedGif.cpp \
      GUIControlGroupList.cpp \
      GUIDialog.cpp \
      GUIEditControl.cpp \
+     GUIMultilineEditControl.cpp \
      GUIFadeLabelControl.cpp \
      GUIFixedListContainer.cpp \
      GUIFont.cpp \
@@ -80,6 +83,7 @@ SRCS=AnimatedGif.cpp \
      GUIKeyboardControl.cpp \
      XBTF.cpp \
      XBTFReader.cpp \
+     GUIWebControl.cpp
 
 LIB=guilib.a
 

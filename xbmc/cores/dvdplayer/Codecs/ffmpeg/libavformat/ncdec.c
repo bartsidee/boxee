@@ -50,7 +50,7 @@ static int nc_read_header(AVFormatContext *s, AVFormatParameters *ap)
     if (!st)
         return AVERROR(ENOMEM);
 
-    st->codec->codec_type = CODEC_TYPE_VIDEO;
+    st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
     st->codec->codec_id   = CODEC_ID_MPEG4;
     st->need_parsing      = AVSTREAM_PARSE_FULL;
 
@@ -90,7 +90,7 @@ static int nc_read_packet(AVFormatContext *s, AVPacket *pkt)
     return size;
 }
 
-AVInputFormat nc_demuxer = {
+AVInputFormat ff_nc_demuxer = {
     "nc",
     NULL_IF_CONFIG_SMALL("NC camera feed format"),
     0,

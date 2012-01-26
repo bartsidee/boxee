@@ -65,6 +65,15 @@ public:
   static void RunScript(const std::string& scriptName, const Parameters& parameters);
 
   /**
+   * Send a message to an application
+   * The mesage will be passed to a global handler
+   *
+   * @param handler allows to specify which handler should eventually handle the message
+   * @param parameter additional string parameter
+   */
+  static void SendMessage(const std::string& handler, const std::string& parameter);
+
+  /**
    * Returns the parameters of the executed script using RunScript. You can also access
    * those parameters with sys.arv[1].
    */

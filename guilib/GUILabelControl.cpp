@@ -36,6 +36,7 @@ CGUILabelControl::CGUILabelControl(int dwParentID, int dwControlId, float posX, 
   m_ScrollInsteadOfTruncate = false;
   m_startHighlight = m_endHighlight = 0;
   m_minWidth = 0;
+  m_minHeight = 0;
 }
 
 CGUILabelControl::~CGUILabelControl(void)
@@ -58,6 +59,11 @@ void CGUILabelControl::SetCursorPos(int iPos)
 void CGUILabelControl::SetInfo(const CGUIInfoLabel &infoLabel)
 {
   m_infoLabel = infoLabel;
+}
+
+CGUIInfoLabel& CGUILabelControl::GetInfo()
+{
+  return m_infoLabel;
 }
 
 void CGUILabelControl::UpdateColors()
@@ -132,7 +138,7 @@ void CGUILabelControl::Render()
     float fPosY = m_posY;
     if (m_label.align & XBFONT_CENTER_Y)
       fPosY += m_height * 0.5f;
-
+      
     if (IsDisabled())
       m_textLayout.Render(fPosX, fPosY, m_label.angle, m_label.disabledColor, m_label.shadowColor, m_label.align | XBFONT_TRUNCATED, m_width, true);
     else
@@ -167,6 +173,11 @@ void CGUILabelControl::SetWidthControl(float minWidth, bool bScroll, int scrollS
   m_ScrollInfo.Reset();
 }
 
+void CGUILabelControl::SetHeightControl(float minHeight)
+{
+  m_minHeight = minHeight;
+}
+
 void CGUILabelControl::SetAlignment(uint32_t align)
 {
   m_label.align = align;
@@ -179,6 +190,13 @@ float CGUILabelControl::GetWidth() const
   if (m_minWidth && m_minWidth != m_width)
     return CLAMP(m_textLayout.GetTextWidth(), m_minWidth, m_width);
   return m_width;
+}
+
+float CGUILabelControl::GetHeight() const
+{
+  if (m_minHeight && m_minHeight != m_height)
+    return CLAMP(m_textLayout.GetTextHeight(), m_minHeight, m_height);
+  return m_height;
 }
 
 bool CGUILabelControl::OnMessage(CGUIMessage& message)
@@ -194,7 +212,7 @@ bool CGUILabelControl::OnMessage(CGUIMessage& message)
     {
       message.SetLabel(GetLabel());
       return true;
-    }
+  }
   }
 
   return CGUIControl::OnMessage(message);

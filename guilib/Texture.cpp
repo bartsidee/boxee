@@ -27,15 +27,26 @@
 #include "DDSImage.h"
 #include "Util.h"
 
+#ifndef NO_XBMC_FILESYSTEM
+#include "FileSystem/File.h"
+using namespace XFILE;
+#else
+#include "SimpleFS.h"
+#endif
+
 /************************************************************************/
 /*                                                                      */
 /************************************************************************/
 CBaseTexture::CBaseTexture(unsigned int width, unsigned int height, unsigned int format)
 {
-  m_texture = NULL;
+#ifndef HAS_DX 
+  m_texture = 0; 
+#endif
   m_textureOwner = true;
   m_pixels = NULL;
   m_loadedToGPU = false;
+  m_imageInitialWidth = 0;
+  m_imageInitialHeight = 0;
 
   if (width > 0 && height > 0)
   {
@@ -45,6 +56,7 @@ CBaseTexture::CBaseTexture(unsigned int width, unsigned int height, unsigned int
 
 bool CBaseTexture::LoadFromTexture(unsigned int width, unsigned int height, unsigned int format, XBMC::TexturePtr texture)
 {
+#ifndef HAS_DX
   if (m_pixels)
   {
     delete [] m_pixels;
@@ -56,6 +68,7 @@ bool CBaseTexture::LoadFromTexture(unsigned int width, unsigned int height, unsi
   m_imageWidth = m_textureWidth = width;
   m_imageHeight = m_textureHeight = height;
   m_orientation = 0;
+#endif
   
   return true;
 }
@@ -65,6 +78,7 @@ CBaseTexture::~CBaseTexture()
   if (m_pixels)
   {
     delete[] m_pixels;
+    m_pixels = NULL;
   }
 }
   
@@ -101,6 +115,7 @@ void CBaseTexture::Allocate(unsigned int width, unsigned int height, unsigned in
   if (m_pixels)
   {
     delete[] m_pixels;
+    m_pixels = NULL;
   }
 
   m_pixels = new unsigned char[GetPitch() * GetRows()];
@@ -123,10 +138,10 @@ void CBaseTexture::Update(unsigned int width, unsigned int height, unsigned int 
     memcpy(m_pixels, pixels, srcPitch * std::min(srcRows, dstRows));
   else
   {
-  const unsigned char *src = pixels;
+    const unsigned char *src = pixels;
     unsigned char* dst = m_pixels;
     for (unsigned int y = 0; y < srcRows && y < dstRows; y++)
-  {
+    {
       memcpy(dst, src, std::min(srcPitch, dstPitch));
       src += srcPitch;
       dst += dstPitch;
@@ -169,9 +184,27 @@ void CBaseTexture::ClampToEdge()
 }
 
 bool CBaseTexture::LoadFromFile(const CStdString& texturePath, unsigned int maxWidth, unsigned int maxHeight,
-                                bool autoRotate, unsigned int *originalWidth, unsigned int *originalHeight)
+                                bool autoRotate, unsigned int *originalWidth, unsigned int *originalHeight,
+                                unsigned int dstWidth, unsigned int dstHeight)
 {
-  if (CUtil::GetExtension(texturePath).Equals(".dds"))
+  //Quick and dirty check if the file is DDS file...
+
+  CFile file;
+  if (!file.Open(texturePath))
+  {  
+    CLog::Log(LOGERROR, "%s - Error opening texture file: %s", __FUNCTION__, texturePath.c_str());
+    return false;
+  }
+
+  // read the header
+  uint32_t magic;
+  if (file.Read(&magic, 4) != 4)
+  {
+    CLog::Log(LOGERROR, "%s - Can't read signature from file: %s", __FUNCTION__, texturePath.c_str());
+    return false;
+  }
+
+  if (strncmp((const char *)&magic, "DDS ", 4) == 0 || CUtil::GetExtension(texturePath).Equals(".dds"))
   { // special case for DDS images
     CDDSImage image;
     CLog::Log(LOGDEBUG, "%s - loading dds file: %s", __FUNCTION__, texturePath.c_str());
@@ -186,6 +219,8 @@ bool CBaseTexture::LoadFromFile(const CStdString& texturePath, unsigned int maxW
 
   ImageInfo image;
   memset(&image, 0, sizeof(image));
+  //image.width = dstWidth;
+  //image.height = dstHeight;
 
   unsigned int width = maxWidth ? std::min(maxWidth, g_Windowing.GetMaxTextureSize()) : g_Windowing.GetMaxTextureSize();
   unsigned int height = maxHeight ? std::min(maxHeight, g_Windowing.GetMaxTextureSize()) : g_Windowing.GetMaxTextureSize();
@@ -207,6 +242,11 @@ bool CBaseTexture::LoadFromFile(const CStdString& texturePath, unsigned int maxW
   unsigned int destPitch = GetPitch();
   unsigned int srcPitch = ((image.width + 1)* 3 / 4) * 4; // bitmap row length is aligned to 4 bytes
 
+  // test background color for alpha blending
+  long  nBkgndIndex;
+  RGBQUAD nBkgndColor;
+  dll.GetBackgroundColor(&image, &nBkgndColor, &nBkgndIndex);
+
   for (unsigned int y = 0; y < m_imageHeight; y++)
   {
     unsigned char *dst = m_pixels + y * destPitch;
@@ -221,6 +261,26 @@ bool CBaseTexture::LoadFromFile(const CStdString& texturePath, unsigned int maxW
     }
   }
 
+  if (nBkgndIndex != -1)
+  {
+    for (unsigned int y = 0; y < m_imageHeight; y++)
+    {
+      unsigned char *dst = m_pixels + y * destPitch;
+      //unsigned char *src = image.texture + (m_imageHeight - 1 - y) * srcPitch;
+      //unsigned char *alpha = image.alpha + (m_imageHeight - 1 - y) * m_imageWidth;
+      for (unsigned int x = 0; x < m_imageWidth; x++)
+      {
+        if (*dst == nBkgndColor.rgbBlue
+            && *(dst + 1) == nBkgndColor.rgbGreen
+            && *(dst + 2) == nBkgndColor.rgbRed)
+        {
+          *(dst + 3) = 0x00;
+        }
+        dst += 4;
+      }
+    }
+  }
+
   dll.ReleaseImage(&image);
 
   ClampToEdge();
@@ -228,10 +288,12 @@ bool CBaseTexture::LoadFromFile(const CStdString& texturePath, unsigned int maxW
   return true;
 }
 
-bool CBaseTexture::LoadFromMemory(unsigned int width, unsigned int height, unsigned int pitch, unsigned int format, unsigned char* pixels)
+bool CBaseTexture::LoadFromMemory(unsigned int width, unsigned int initialWidth, unsigned int height, unsigned int initialHeight, unsigned int pitch, unsigned int format, unsigned char* pixels)
 {
   m_imageWidth = width;
+  m_imageInitialWidth = initialWidth;
   m_imageHeight = height;
+  m_imageInitialHeight = initialHeight;
   m_format = format;
   Update(width, height, pitch, format, pixels, false);
   return true;
@@ -284,6 +346,10 @@ unsigned int CBaseTexture::GetPitch(unsigned int width) const
     return ((width + 3) / 4) * 16;
   case XB_FMT_A8:
     return width;
+  case XB_FMT_PVR2:
+    return width / 4;
+  case XB_FMT_PVR4:
+    return width / 2;
   case XB_FMT_B8G8R8A8:
   default:
     return width*4;
@@ -317,6 +383,10 @@ unsigned int CBaseTexture::GetBlockSize() const
     return 16;
   case XB_FMT_A8:
     return 1;
+  case XB_FMT_PVR2:
+    return 2;
+  case XB_FMT_PVR4:
+    return 4;
   default:
     return 4;
   }

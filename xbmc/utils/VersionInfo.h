@@ -4,7 +4,12 @@
 #include "../lib/libBoxee/bxversion.h"
 
 #ifdef _WIN32
-#include "svn_rev.h"
+//#include "svn_rev.h"
+#include "../linux/svn_rev.h"
+#endif
+
+#ifdef _LINUX 
+#include "xbmc/linux/svn_rev.h"
 #endif
 
 #ifdef SVN_REV

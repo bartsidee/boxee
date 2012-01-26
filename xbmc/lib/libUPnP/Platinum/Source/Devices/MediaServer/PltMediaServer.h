@@ -2,7 +2,7 @@
 |
 |   Platinum - AV Media Server Device
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -29,7 +29,11 @@
 | 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 | http://www.gnu.org/licenses/gpl-2.0.html
 |
- ****************************************************************/
+****************************************************************/
+
+/** @file
+ UPnP AV Media Server.
+ */
 
 #ifndef _PLT_MEDIA_SERVER_H_
 #define _PLT_MEDIA_SERVER_H_
@@ -46,40 +50,94 @@
 +---------------------------------------------------------------------*/
 #define MAX_PATH_LENGTH 1024
 
-/* BrowseFlags */
-enum BrowseFlags {
-    BROWSEMETADATA,
-    BROWSEDIRECTCHILDREN
+/*----------------------------------------------------------------------
+|   PLT_MediaServerDelegate
++---------------------------------------------------------------------*/
+/** 
+ The PLT_MediaServerDelegate class is an interface for delegating the handling 
+ of the required UPnP AV ContentDirectory service actions. It also handles 
+ resource HTTP requests (downloading).
+ */
+class PLT_MediaServerDelegate
+{
+public:
+    PLT_MediaServerDelegate() {}
+    virtual ~PLT_MediaServerDelegate() {}
+    
+    virtual NPT_Result OnBrowseMetadata(PLT_ActionReference&          /*action*/, 
+                                        const char*                   /*object_id*/, 
+                                        const char*                   /*filter*/,
+                                        NPT_UInt32                    /*starting_index*/,
+                                        NPT_UInt32                    /*requested_count*/,
+                                        const char*                   /*sort_criteria*/,
+                                        const PLT_HttpRequestContext& /*context*/) = 0;
+    virtual NPT_Result OnBrowseDirectChildren(PLT_ActionReference&          /*action*/, 
+                                              const char*                   /*object_id*/, 
+                                              const char*                   /*filter*/,
+                                              NPT_UInt32                    /*starting_index*/,
+                                              NPT_UInt32                    /*requested_count*/,
+                                              const char*                   /*sort_criteria*/, 
+                                              const PLT_HttpRequestContext& /*context*/) = 0;
+    virtual NPT_Result OnSearchContainer(PLT_ActionReference&          /*action*/, 
+                                         const char*                   /*container_id*/, 
+                                         const char*                   /*search_criteria*/,
+ 										 const char*                   /*filter*/,
+                                         NPT_UInt32                    /*starting_index*/,
+                                         NPT_UInt32                    /*requested_count*/,
+                                         const char*                   /*sort_criteria*/, 
+                                         const PLT_HttpRequestContext& /*context*/) = 0;
+    virtual NPT_Result ProcessFileRequest(NPT_HttpRequest&              /*request*/,
+                                          const NPT_HttpRequestContext& /*context*/,
+                                          NPT_HttpResponse&             /*response*/) = 0;
 };
 
 /*----------------------------------------------------------------------
-|   forward declarations
+|   PLT_MediaServer
 +---------------------------------------------------------------------*/
-extern const char* BrowseFlagsStr[];
-class PLT_HttpFileServerHandler;
-
-/*----------------------------------------------------------------------
-|   PLT_MediaServer class
-+---------------------------------------------------------------------*/
+/**
+ The PLT_MediaServer class implements the base class for a UPnP AV 
+ Media Server device.
+ */
 class PLT_MediaServer : public PLT_DeviceHost
 {
 public:
+    /* BrowseFlags */
+    enum BrowseFlags {
+        BROWSEMETADATA,
+        BROWSEDIRECTCHILDREN
+    };
+    
+    // class methods
+    static NPT_Result ParseBrowseFlag(const char* str, BrowseFlags& flag);
+    static NPT_Result ParseSort(const NPT_String& sort, NPT_List<NPT_String>& list);
+
+    // constructor
     PLT_MediaServer(const char*  friendly_name,
                     bool         show_ip = false,
                     const char*  uuid = NULL,
                     NPT_UInt16   port = 0,
                     bool         port_rebind = false);
+    
+    // methods
+    virtual void SetDelegate(PLT_MediaServerDelegate* delegate) { m_Delegate = delegate; }
+    PLT_MediaServerDelegate* GetDelegate() { return m_Delegate; }
+    virtual void UpdateSystemUpdateID(NPT_UInt32 update);
+    virtual void UpdateContainerUpdateID(const char* id, NPT_UInt32 update);
+    
+protected:
     virtual ~PLT_MediaServer();
-
+    
     // PLT_DeviceHost methods
-    virtual NPT_Result SetupServices(PLT_DeviceData& data);
+    virtual NPT_Result SetupServices();
     virtual NPT_Result OnAction(PLT_ActionReference&          action, 
                                 const PLT_HttpRequestContext& context);
-
-    // class methods
-    static NPT_Result  GetBrowseFlag(const char* str, BrowseFlags& flag);
-
-protected:
+    virtual NPT_Result ProcessGetDescription(NPT_HttpRequest&              request,
+                                             const NPT_HttpRequestContext& context,
+                                             NPT_HttpResponse&             response);
+    virtual NPT_Result ProcessHttpGetRequest(NPT_HttpRequest&              request, 
+                                             const NPT_HttpRequestContext& context,
+                                             NPT_HttpResponse&             response);
+    
     // ConnectionManager
     virtual NPT_Result OnGetCurrentConnectionIDs(PLT_ActionReference&          action, 
                                                  const PLT_HttpRequestContext& context);
@@ -106,14 +164,14 @@ protected:
                                         const char*                   filter,
                                         NPT_UInt32                    starting_index,
                                         NPT_UInt32                    requested_count,
-                                        const NPT_List<NPT_String>&   sort_criteria,
+                                        const char*                   sort_criteria,
                                         const PLT_HttpRequestContext& context);
     virtual NPT_Result OnBrowseDirectChildren(PLT_ActionReference&          action, 
                                               const char*                   object_id, 
                                               const char*                   filter,
                                               NPT_UInt32                    starting_index,
                                               NPT_UInt32                    requested_count,
-                                              const NPT_List<NPT_String>&   sort_criteria, 
+                                              const char*                   sort_criteria, 
                                               const PLT_HttpRequestContext& context);
     virtual NPT_Result OnSearchContainer(PLT_ActionReference&          action, 
                                          const char*                   container_id, 
@@ -121,11 +179,12 @@ protected:
  										 const char*                   filter,
                                          NPT_UInt32                    starting_index,
                                          NPT_UInt32                    requested_count,
-                                         const NPT_List<NPT_String>&   sort_criteria, 
+                                         const char*                   sort_criteria, 
                                          const PLT_HttpRequestContext& context);
-                                
-    // methods
-    virtual NPT_Result ParseSort(const NPT_String& sort, NPT_List<NPT_String>& list);
+    
+private:
+    PLT_MediaServerDelegate* m_Delegate;
+    //NPT_Map<NPT_String, NPT_UInt32> 
 };
 
 #endif /* _PLT_MEDIA_SERVER_H_ */

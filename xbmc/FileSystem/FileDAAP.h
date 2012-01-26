@@ -21,6 +21,10 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#include "system.h"
+
+#ifdef HAS_FILESYSTEM_DAAP
+
 #if !defined(AFX_FILEDAAP_H___INCLUDED_)
 #define AFX_FILEDAAP_H___INCLUDED_
 
@@ -70,9 +74,9 @@ public:
   virtual ~CFileDAAP();
   virtual int64_t GetPosition();
   virtual int64_t GetLength();
-  virtual bool Open(const CURL& url);
-  virtual bool Exists(const CURL& url);
-  virtual int Stat(const CURL& url, struct __stat64* buffer);
+  virtual bool Open(const CURI& url);
+  virtual bool Exists(const CURI& url);
+  virtual int Stat(const CURI& url, struct __stat64* buffer);
   virtual unsigned int Read(void* lpBuf, int64_t uiBufSize);
   virtual int64_t Seek(int64_t iFilePosition, int iWhence = SEEK_SET);
   virtual void Close();
@@ -93,11 +97,11 @@ protected:
   bool m_bOpened;
   
   CStdString m_hashurl; // the url that should be used in hash calculation
-  CURL       m_url;     // the complete url we have connected too
+  CURI       m_url;     // the complete url we have connected too
   CFileCurl  m_curl;
 };
 }
 
 #endif // !defined(AFX_FILEDAAP_H___INCLUDED_)
 
-
+#endif

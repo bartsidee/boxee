@@ -644,7 +644,7 @@ void CAnimation::Create(const TiXmlElement *node, const CRect &rect)
   {
     if (!m_condition)
     {
-      CLog::Log(LOGERROR, "Control has invalid animation type (no condition or no type)");
+      CLog::Log(LOGERROR, "Control has invalid animation type (no condition or unrecognized type %s)", type.c_str());
       return;
     }
 

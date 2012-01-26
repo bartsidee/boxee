@@ -120,8 +120,7 @@ public:
   virtual void ClearAll();
   virtual void AllocResources() { AllocResources(false); }
   virtual void AllocResources(bool forceLoad);
-  virtual void FreeResources()  { FreeResources(false); }
-  virtual void FreeResources(bool forceUnLoad);
+  virtual void FreeResources(bool forceUnLoad = false);
   virtual void DynamicResourceAlloc(bool bOnOff);
   virtual bool IsDialog() const { return false; };
   virtual bool IsDialogRunning() const { return false; };
@@ -153,26 +152,13 @@ public:
   void       RunLoadActions();
   void       RunUnloadActions();
   
-  bool HasProperty(const CStdString &strKey) const;
-  void SetProperty(const CStdString &strKey, const char *strValue);
-  void SetProperty(const CStdString &strKey, const CStdString &strValue);
-  void SetProperty(const CStdString &strKey, int nVal);
-  void SetProperty(const CStdString &strKey, bool bVal);
-  void SetProperty(const CStdString &strKey, double dVal);
-
-  CStdString GetProperty(const CStdString &strKey) const;
-  int        GetPropertyInt(const CStdString &strKey) const;
-  bool       GetPropertyBOOL(const CStdString &strKey) const;
-  double     GetPropertyDouble(const CStdString &strKey) const;
-
-  void ClearProperties();
-  void ClearProperty(const CStdString &strKey);
-  
 #ifdef _DEBUG
   void DumpTextureUse();
 #endif
 
-  bool HasSaveLastControl() const { return !m_defaultAlways; };
+  bool HasSaveLastControl() const { return !m_defaultAlways; }
+  bool HasDynamicContents() const { return m_isDynamicContents; }
+  bool HasColorBufferActive() const { return m_bColorbufferactive; }
 
 protected:
   virtual bool LoadXML(const CStdString& strPath, const CStdString &strLowerPath);  ///< Loads from the given file
@@ -235,22 +221,14 @@ protected:
   int m_previousWindow;
   
   bool m_animationsEnabled;
-
-  struct icompare
-  {
-	  bool operator()(const CStdString &s1, const CStdString &s2) const
-	  {
-		  return s1.CompareNoCase(s2) < 0;
-	  }
-  };
   
-  std::map<CStdString, CStdString, icompare> m_mapProperties;
-
   std::vector<CGUIActionDescriptor> m_loadActions;
   std::vector<CGUIActionDescriptor> m_unloadActions;
   std::vector<CWindowTimer> m_timerActions;
   
   bool m_manualRunActions;
+  bool m_isDynamicContents; // when this flag is on, all color buffers optimizations for this dialog is off
+  bool m_bColorbufferactive; // when this flag is off, all color buffers optimizations for windows below this dialog is off
 };
 
 #endif

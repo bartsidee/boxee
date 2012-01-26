@@ -12,6 +12,7 @@
 #include "SystemInfo.h"
 #include "utils/log.h"
 #include "LocalizeStrings.h"
+#include "GUIDialogButtonMenu.h"
 
 #ifdef _LINUX
 #include <unistd.h>
@@ -25,6 +26,7 @@
 #define CONTROL_CANCEL                      210
 #define CONTROL_MORE_INFO                   220
 #define CONTROL_INSTALL_OR_OK               230
+#define CONTROL_UPDATE_MESSAGE_LABEL        330
 
 using namespace std;
 
@@ -40,22 +42,22 @@ CGUIDialogBoxeeUpdateMessage::~CGUIDialogBoxeeUpdateMessage(void)
 }
 
 bool CGUIDialogBoxeeUpdateMessage::OnAction(const CAction &action)
-{  
+{
   if ((action.id == ACTION_PREVIOUS_MENU) || (action.id == ACTION_PARENT_DIR))
   {
     CLog::Log(LOGDEBUG,"CGUIDialogBoxeeUpdateMessage::OnAction - Enter function with [wID=%d]. [ACTION_PREVIOUS_MENU=%d || ACTION_PARENT_DIR=%d] (update)",action.id,ACTION_PREVIOUS_MENU,ACTION_PARENT_DIR);
-    
-    if (GetControl(CONTROL_MORE_INFO_BACKGROUND)->IsVisible())
+
+    const CGUIControl* pInfoCtrl = GetControl(CONTROL_MORE_INFO_BACKGROUND);
+    const CGUIControl* pCancelButton = GetControl(CONTROL_CANCEL);
+
+    if (pInfoCtrl && pInfoCtrl->IsVisible())
     {
       SET_CONTROL_HIDDEN(CONTROL_MORE_INFO_BACKGROUND);
       SET_CONTROL_FOCUS(CONTROL_MORE_INFO, 0);
     }
-    else
+    else if (pCancelButton && pCancelButton->IsVisible())
     {
-      if (g_windowManager.GetActiveWindow() == WINDOW_HOME)
-      {
-        Close();
-      }
+      Close();
     }
 
     return true;
@@ -124,9 +126,9 @@ bool CGUIDialogBoxeeUpdateMessage::OnMessage(CGUIMessage &message)
           
           char readBuf[256] = "";
           FILE* readPipe = (FILE*)popen(checkUserPasswordCommand.c_str(),"r");
-
+                
           if (!readPipe)
-          {
+          { 
             CLog::Log(LOGERROR,"CGUIDialogBoxeeUpdateMessage::OnMessage - FAILED to create pipe for execute [%s]. [errno=%d] (update)",checkUserPasswordCommand.c_str(),errno);
             return true;
           }
@@ -182,7 +184,7 @@ bool CGUIDialogBoxeeUpdateMessage::OnMessage(CGUIMessage &message)
       // Under No Apple we close the dialog //
       ////////////////////////////////////////
 
-      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeUpdateMessage::OnMessage - Not under OSX ->Going to close the dialog (update)",iControl);
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeUpdateMessage::OnMessage - Not under OSX ->Going to close the dialog (update)");
       
       m_bConfirmed = true;
       Close();
@@ -217,7 +219,7 @@ void CGUIDialogBoxeeUpdateMessage::OnInitWindow()
   CGUIDialogBoxBase::OnInitWindow();
 
   m_bConfirmed = false;
-
+  
   CVersionUpdateInfo VersionUpdateInfo = ((g_boxeeVersionUpdateManager.GetBoxeeVerUpdateJob())).GetVersionUpdateInfo();
   
   //////////////////////////////////////
@@ -231,7 +233,6 @@ void CGUIDialogBoxeeUpdateMessage::OnInitWindow()
   //////////////////////////
   
   CStdString textboxStr = VersionUpdateInfo.m_UpdateNotesFileText;
-  
   if(textboxStr.IsEmpty())
   {
     CLog::Log(LOGDEBUG,"CGUIDialogBoxeeUpdateMessage::OnInitWindow - The releaseNotesText parameter is empty (update)");
@@ -250,7 +251,9 @@ void CGUIDialogBoxeeUpdateMessage::InLoginScreen(bool inLoginScreen)
 }
 
 void CGUIDialogBoxeeUpdateMessage::SetDialogUpdateLabelAndButtons(bool inLoginScreen,VERSION_UPDATE_FORCE isVersionUpdateForce)
-{  
+{
+  CStdString updateButtonLabel = "";
+
   if(m_inLoginScreen)
   {
     ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -258,9 +261,19 @@ void CGUIDialogBoxeeUpdateMessage::SetDialogUpdateLabelAndButtons(bool inLoginSc
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     SET_CONTROL_HIDDEN(CONTROL_CANCEL);
-    SET_CONTROL_HIDDEN(CONTROL_UPDATE_FORCE_NOTIFICATION);
     SET_CONTROL_LABEL(CONTROL_UPDATE_LABEL,g_localizeStrings.Get(53247));
+
+    if(isVersionUpdateForce == VUF_YES)
+    {
+      SET_CONTROL_LABEL(CONTROL_UPDATE_FORCE_NOTIFICATION,g_localizeStrings.Get(53221));
+    }
+    else
+    {
+      SET_CONTROL_LABEL(CONTROL_UPDATE_FORCE_NOTIFICATION,g_localizeStrings.Get(53219));
+    }
+
     SET_CONTROL_LABEL(CONTROL_INSTALL_OR_OK,53260);
+    updateButtonLabel = g_localizeStrings.Get(53260);
   }
   else
   {
@@ -280,9 +293,34 @@ void CGUIDialogBoxeeUpdateMessage::SetDialogUpdateLabelAndButtons(bool inLoginSc
     // LINUX section //
     ///////////////////
 
+#ifdef HAS_EMBEDDED
+    SET_CONTROL_LABEL(CONTROL_INSTALL_OR_OK,53260);
+    updateButtonLabel = g_localizeStrings.Get(53260);
+    SET_CONTROL_LABEL(CONTROL_UPDATE_LABEL,g_localizeStrings.Get(53248));
+
+    if(isVersionUpdateForce == VUF_YES)
+    {
+      CStdString forceNotificationText = g_localizeStrings.Get(53220);
+      if (g_windowManager.IsWindowActive(WINDOW_DIALOG_BUTTON_MENU))
+      {
+        // was open from shutdown dialog
+        forceNotificationText = g_localizeStrings.Get(53221);
+      }
+
+      SET_CONTROL_LABEL(CONTROL_UPDATE_FORCE_NOTIFICATION,forceNotificationText);
+      SET_CONTROL_VISIBLE(CONTROL_UPDATE_FORCE_NOTIFICATION);
+    }
+    else
+    {
+      SET_CONTROL_LABEL(CONTROL_UPDATE_FORCE_NOTIFICATION,g_localizeStrings.Get(53219));
+      SET_CONTROL_VISIBLE(CONTROL_UPDATE_FORCE_NOTIFICATION);
+    }
+#else
     SET_CONTROL_LABEL(CONTROL_INSTALL_OR_OK,186);
+    updateButtonLabel = g_localizeStrings.Get(186);
     SET_CONTROL_LABEL(CONTROL_UPDATE_LABEL,g_localizeStrings.Get(53245));
     SET_CONTROL_HIDDEN(CONTROL_UPDATE_FORCE_NOTIFICATION);
+#endif
 
 #elif defined(__APPLE__)
     
@@ -293,12 +331,14 @@ void CGUIDialogBoxeeUpdateMessage::SetDialogUpdateLabelAndButtons(bool inLoginSc
     if(CSysInfo::IsAppleTV())
     {
       SET_CONTROL_LABEL(CONTROL_INSTALL_OR_OK,186);
+      updateButtonLabel = g_localizeStrings.Get(53260);
       SET_CONTROL_LABEL(CONTROL_UPDATE_LABEL,g_localizeStrings.Get(53246));
       SET_CONTROL_HIDDEN(CONTROL_UPDATE_FORCE_NOTIFICATION);
     }
     else
     {
       SET_CONTROL_LABEL(CONTROL_INSTALL_OR_OK,53260);
+      updateButtonLabel = g_localizeStrings.Get(53260);
       SET_CONTROL_LABEL(CONTROL_UPDATE_LABEL,g_localizeStrings.Get(53243));    
       
       if(isVersionUpdateForce == VUF_YES)
@@ -308,7 +348,7 @@ void CGUIDialogBoxeeUpdateMessage::SetDialogUpdateLabelAndButtons(bool inLoginSc
       }
       else
       {
-        SET_CONTROL_HIDDEN(CONTROL_UPDATE_FORCE_NOTIFICATION);
+        SET_CONTROL_HIDDEN(CONTROL_UPDATE_FORCE_NOTIFICATION);        
       }
     }
 
@@ -321,6 +361,7 @@ void CGUIDialogBoxeeUpdateMessage::SetDialogUpdateLabelAndButtons(bool inLoginSc
     /////////////////////
 
     SET_CONTROL_LABEL(CONTROL_INSTALL_OR_OK,53260);
+    updateButtonLabel = g_localizeStrings.Get(53260);
     SET_CONTROL_LABEL(CONTROL_UPDATE_LABEL,g_localizeStrings.Get(53243));        
     
     if(isVersionUpdateForce == VUF_YES)
@@ -340,6 +381,10 @@ void CGUIDialogBoxeeUpdateMessage::SetDialogUpdateLabelAndButtons(bool inLoginSc
   
   SET_CONTROL_VISIBLE(CONTROL_MORE_INFO);
   SET_CONTROL_VISIBLE(CONTROL_INSTALL_OR_OK);
-  SET_CONTROL_FOCUS(CONTROL_MORE_INFO, 0);
+  SET_CONTROL_FOCUS(CONTROL_INSTALL_OR_OK, 0);
+
+  CStdString message = "";
+  message.Format(g_localizeStrings.Get(53256).c_str(),updateButtonLabel);
+  SET_CONTROL_LABEL(CONTROL_UPDATE_MESSAGE_LABEL,message);
 }
 

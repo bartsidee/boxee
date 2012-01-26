@@ -1,5 +1,3 @@
-#ifdef __linux__
-
 /*
  *      Copyright (C) 2005-2009 Team XBMC
  *      http://www.xbmc.org
@@ -23,7 +21,6 @@
 
  (c) Copyright 2001-2009  The world wide DirectFB Open Source Community (directfb.org)
  (c) Copyright 2000-2004  Convergence (integrated media) GmbH
-
  All rights reserved.
 
  Written by Denis Oliver Kropp <dok@directfb.org>,
@@ -105,6 +102,8 @@ typedef unsigned long kernel_ulong_t;
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <GraphicContext.h>
+
 #include "XBMC_keysym.h"
 #include "LinuxInputDevices.h"
 #include "MouseStat.h"
@@ -129,10 +128,10 @@ typedef unsigned long kernel_ulong_t;
 static const
 XBMCKey basic_keycodes[] = { XBMCK_UNKNOWN, XBMCK_ESCAPE, XBMCK_1, XBMCK_2, XBMCK_3,
     XBMCK_4, XBMCK_5, XBMCK_6, XBMCK_7, XBMCK_8, XBMCK_9, XBMCK_0, XBMCK_MINUS,
-    XBMCK_EQUALS, XBMCK_BACKSPACE,
+    XBMCK_EQUALS, XBMCK_BACKSPACE, //15
 
     XBMCK_TAB, XBMCK_q, XBMCK_w, XBMCK_e, XBMCK_r, XBMCK_t, XBMCK_y, XBMCK_u, XBMCK_i,
-    XBMCK_o, XBMCK_p, XBMCK_LEFTBRACKET, XBMCK_RIGHTBRACKET, XBMCK_RETURN,
+    XBMCK_o, XBMCK_p, XBMCK_LEFTBRACKET, XBMCK_RIGHTBRACKET, XBMCK_RETURN, //30
 
     XBMCK_LCTRL, XBMCK_a, XBMCK_s, XBMCK_d, XBMCK_f, XBMCK_g, XBMCK_h, XBMCK_j,
     XBMCK_k, XBMCK_l, XBMCK_SEMICOLON, XBMCK_QUOTE, XBMCK_BACKQUOTE,
@@ -205,7 +204,7 @@ XBMCKey basic_keycodes[] = { XBMCK_UNKNOWN, XBMCK_ESCAPE, XBMCK_1, XBMCK_2, XBMC
     XBMCK_UNKNOWN, XBMCK_UNKNOWN,
 
     /*DIKS_BACK, DIKS_FORWARD,*/
-    XBMCK_UNKNOWN, XBMCK_UNKNOWN,
+    XBMCK_BACK, XBMCK_UNKNOWN,
 
     /*KEY_CLOSECD, KEY_EJECTCD, KEY_EJECTCLOSECD,*/
     XBMCK_EJECT, XBMCK_EJECT, XBMCK_EJECT,
@@ -215,7 +214,7 @@ XBMCKey basic_keycodes[] = { XBMCK_UNKNOWN, XBMCK_ESCAPE, XBMCK_1, XBMCK_2, XBMC
 
     /*KEY_ISO,*/XBMCK_UNKNOWN,
     /*KEY_CONFIG,*/XBMCK_UNKNOWN,
-    /*KEY_HOMEPAGE, KEY_REFRESH,*/XBMCK_UNKNOWN, XBMCK_SHUFFLE,
+    /*KEY_HOMEPAGE, KEY_REFRESH,*/XBMCK_HOME_WINDOW, XBMCK_SHUFFLE,
 
     /*DIKS_EXIT*/XBMCK_UNKNOWN, /*KEY_MOVE,*/XBMCK_UNKNOWN, /*DIKS_EDITOR*/XBMCK_UNKNOWN,
 
@@ -233,7 +232,7 @@ XBMCKey basic_keycodes[] = { XBMCK_UNKNOWN, XBMCK_ESCAPE, XBMCK_1, XBMCK_2, XBMC
     DFB_FUNCTION_KEY(19), DFB_FUNCTION_KEY(20), DFB_FUNCTION_KEY(21),
     DFB_FUNCTION_KEY(22), DFB_FUNCTION_KEY(23), DFB_FUNCTION_KEY(24),
 */
-    XBMCK_UNKNOWN, XBMCK_UNKNOWN, XBMCK_UNKNOWN,
+    XBMCK_F13, XBMCK_F14, XBMCK_F15,
     XBMCK_UNKNOWN, XBMCK_UNKNOWN, XBMCK_UNKNOWN,
     XBMCK_UNKNOWN, XBMCK_UNKNOWN, XBMCK_UNKNOWN,
     XBMCK_UNKNOWN, XBMCK_UNKNOWN, XBMCK_UNKNOWN,
@@ -315,6 +314,8 @@ typedef enum
   LI_CAPS_AXES    = 4,
 } LinuxInputCapsType;
 
+static char remoteStatus = 0xFF; // paired, battery OK
+
 CLinuxInputDevice::CLinuxInputDevice(const std::string fileName, int index)
 {
   m_fd = -1;
@@ -336,8 +337,14 @@ CLinuxInputDevice::CLinuxInputDevice(const std::string fileName, int index)
   m_deviceMinKeyCode = 0;
   m_deviceMaxKeyCode = 0;
   m_deviceMaxAxis = 0;
+  m_repeatTime = 80;
 
   Open();
+}
+
+CLinuxInputDevice::~CLinuxInputDevice()
+{
+  Close();
 }
 
 /*
@@ -345,6 +352,7 @@ CLinuxInputDevice::CLinuxInputDevice(const std::string fileName, int index)
  */
 XBMCKey CLinuxInputDevice::TranslateKey(unsigned short code)
 {
+
   if (code < D_ARRAY_SIZE(basic_keycodes))
     return basic_keycodes[code];
 
@@ -452,7 +460,10 @@ XBMCMod CLinuxInputDevice::UpdateModifiers(XBMC_Event& devt)
     case XBMCK_LALT: modifier = XBMCKMOD_LALT; break;
     case XBMCK_RALT: modifier = XBMCKMOD_RALT; break;
     case XBMCK_LMETA: modifier = XBMCKMOD_LMETA; break;
+#ifndef HAS_INTELCE
+    // for YouTube leanback - we'll use this key to switch between keyboard and mouse modes
     case XBMCK_RMETA: modifier = XBMCKMOD_RMETA; break;
+#endif
     default: break;
   }
 
@@ -552,12 +563,24 @@ bool CLinuxInputDevice::KeyEvent(const struct input_event& levt, XBMC_Event& dev
     devt.key.keysym.mod = UpdateModifiers(devt);
     devt.key.keysym.unicode = 0;
 
+    if (devt.type == XBMC_KEYDOWN)
+    {
+      m_repeatTime = (float)m_repeatTime * 0.97 < 25 ? 25 : (float)m_repeatTime * 0.97;
+    }
+    else
+    {
+      m_repeatTime = 80;
+    }
+
+    int kbdrep[2] = { 400, m_repeatTime };
+    ioctl(m_fd, EVIOCSREP, kbdrep);
+
     KeymapEntry entry;
     entry.code = code;
     if (GetKeymapEntry(entry))
     {
       int keyMapValue;
-      if (devt.key.keysym.mod & XBMCKMOD_SHIFT) keyMapValue = entry.shift;
+      if (devt.key.keysym.mod & (XBMCKMOD_SHIFT | XBMCKMOD_CAPS)) keyMapValue = entry.shift;
       else if (devt.key.keysym.mod & XBMCKMOD_ALT) keyMapValue = entry.alt;
       else if (devt.key.keysym.mod & XBMCKMOD_META) keyMapValue = entry.altShift;
       else keyMapValue = entry.base;
@@ -602,12 +625,22 @@ bool CLinuxInputDevice::RelEvent(const struct input_event& levt, XBMC_Event& dev
     return false;
   }
 
+  // limit the mouse to the screen width
+  m_mouseX = std::min(g_graphicsContext.GetWidth(), m_mouseX);
+  m_mouseX = std::max(0, m_mouseX);
+
+  // limit the mouse to the screen height
+  m_mouseY = std::min(g_graphicsContext.GetHeight(), m_mouseY);
+  m_mouseY = std::max(0, m_mouseY);
+
+
   devt.type = XBMC_MOUSEMOTION;
   devt.motion.type = XBMC_MOUSEMOTION;
   devt.motion.x = m_mouseX;
   devt.motion.y = m_mouseY;
   devt.motion.state = 0;
   devt.motion.which = m_deviceIndex;
+
 
   return true;
 }
@@ -626,7 +659,7 @@ bool CLinuxInputDevice::AbsEvent(const struct input_event& levt, XBMC_Event& dev
   case ABS_Y:
     m_mouseY = levt.value;
     break;
-
+  
   case ABS_Z:
   default:
     return false;
@@ -647,8 +680,7 @@ bool CLinuxInputDevice::AbsEvent(const struct input_event& levt, XBMC_Event& dev
 /*
  * Translates a Linux input event into a DirectFB input event.
  */
-bool CLinuxInputDevice::TranslateEvent(const struct input_event& levt,
-    XBMC_Event& devt)
+bool CLinuxInputDevice::TranslateEvent(const struct input_event& levt, XBMC_Event& devt)
 {
   switch (levt.type)
   {
@@ -656,10 +688,29 @@ bool CLinuxInputDevice::TranslateEvent(const struct input_event& levt,
     return KeyEvent(levt, devt);
 
   case EV_REL:
+    if (m_bSkipNonKeyEvents)
+    {
+      CLog::Log(LOGINFO, "read a relative event which will be ignored (device name %s) (file name %s)", m_deviceName, m_fileName.c_str());
+      return false;
+    }
+
     return RelEvent(levt, devt);
 
   case EV_ABS:
+    if (m_bSkipNonKeyEvents)
+    {
+      CLog::Log(LOGINFO, "read an absolute event which will be ignored (device name %s) (file name %s)", m_deviceName, m_fileName.c_str());
+      return false;
+    }
+
     return AbsEvent(levt, devt);
+
+  case EV_LED:
+    if(levt.code == LED_MISC)
+    {
+      remoteStatus = levt.value & 0xFF;
+    }
+    return false;
 
   default:
     ;
@@ -700,6 +751,7 @@ XBMC_Event CLinuxInputDevice::ReadEvent()
     if (readlen <= 0)
       break;
 
+    //printf("read event readlen = %d device name %s m_fileName %s\n", readlen, m_deviceName, m_fileName.c_str());
     if (!TranslateEvent(levt, devt))
       continue;
 
@@ -744,6 +796,16 @@ void CLinuxInputDevice::GetInfo(int fd)
   bzero(m_deviceName, sizeof(m_deviceName));
   ioctl(fd, EVIOCGNAME(sizeof(m_deviceName)-1), m_deviceName);
 
+  if (strncmp(m_deviceName, "D-Link Boxee D-Link Boxee Receiver", strlen("D-Link Boxee D-Link Boxee Receiver")) == 0)
+  {
+    m_bSkipNonKeyEvents = true;
+  }
+  else
+  {
+    m_bSkipNonKeyEvents = false;
+  }
+  CLog::Log(LOGINFO, "opened device '%s' (file name %s), m_bSkipNonKeyEvents %d\n", m_deviceName, m_fileName.c_str(), m_bSkipNonKeyEvents);
+
   /* get event type bits */
   ioctl(fd, EVIOCGBIT(0, sizeof(evbit)), evbit);
 
@@ -768,6 +830,7 @@ void CLinuxInputDevice::GetInfo(int fd)
         num_buttons++;
   }
 
+#ifndef HAS_INTELCE
   if (test_bit( EV_REL, evbit ))
   {
     int i;
@@ -799,6 +862,7 @@ void CLinuxInputDevice::GetInfo(int fd)
     m_deviceType |= LI_DEVICE_MOUSE;
   else if (num_abs && num_buttons) /* Or a Joystick? */
     m_deviceType |= LI_DEVICE_JOYSTICK;
+#endif
 
   /* A Keyboard, do we have at least some letters? */
   if (num_keys > 20)
@@ -852,7 +916,7 @@ bool CLinuxInputDevices::CheckDevice(const char *device)
 {
   int fd;
 
-  printf("checking: %s\n", device);
+  CLog::Log(LOGDEBUG, "Checking device: %s\n", device);
   /* Check if we are able to open the device */
   fd = open(device, O_RDWR);
   if (fd < 0)
@@ -879,18 +943,26 @@ bool CLinuxInputDevices::CheckDevice(const char *device)
  */
 void CLinuxInputDevices::InitAvailable()
 {
-  int i;
+  CSingleLock lock(m_devicesListLock);
+
+  /* Close any devices that may have been initialized previously */
+  for (size_t i = 0; i < m_devices.size(); i++)
+  {
+    delete m_devices[i];
+  }
+  m_devices.clear();
+
   int deviceId;
 
   /* No devices specified. Try to guess some. */
-  for (i = 0; i < MAX_LINUX_INPUT_DEVICES; i++)
+  for (int i = 0; i < MAX_LINUX_INPUT_DEVICES; i++)
   {
     char buf[32];
 
     snprintf(buf, 32, "/dev/input/event%d", i);
     if (CheckDevice(buf))
     {
-      printf("Found device %s\n", buf);
+      CLog::Log(LOGINFO, "Found input device %s", buf);
       m_devices.push_back(new CLinuxInputDevice(buf, deviceId));
       ++deviceId;
     }
@@ -922,6 +994,9 @@ bool CLinuxInputDevice::Open()
     close(fd);
     return false;
   }
+
+  int kbdrep[2] = { 400, 80 };
+  ioctl(fd, EVIOCSREP, kbdrep);
 
   // Set the socket to non-blocking
   int opts = 0;
@@ -1009,7 +1084,7 @@ bool CLinuxInputDevice::GetKeymapEntry(KeymapEntry& entry)
 
   /* fetch the base level */
   value = KeyboardGetSymbol(KeyboardReadValue(K_NORMTAB, code));
-  //printf("base=%d\n", KVAL(value));
+  //printf("base=%d typ=%d code %d\n", KVAL(value), KTYP(value), code);
 
   /* write base level symbol to entry */
   entry.base = value; //KeyboardGetSymbol(code, value, LI_KEYLEVEL_BASE);
@@ -1055,6 +1130,8 @@ void CLinuxInputDevice::Close()
 
 XBMC_Event CLinuxInputDevices::ReadEvent()
 {
+  CSingleLock lock(m_devicesListLock);
+
   XBMC_Event event;
   event.type = XBMC_NOEVENT;
 
@@ -1069,6 +1146,25 @@ XBMC_Event CLinuxInputDevices::ReadEvent()
 
   return event;
 }
+
+/*
+   - 0x7F -> if not paired, battery OK
+   - 0xFF -> if paired, battery OK
+   - 0x00 -> if not paired, battery low
+   - 0x80 -> if paired, battery low
+*/
+bool CLinuxInputDevices::IsRemoteLowBattery()
+{
+  bool bLowBattery = !(remoteStatus & 0xF);
+  return bLowBattery;
+}
+
+bool CLinuxInputDevices::IsRemoteNotPaired()
+{
+  bool bRemoteNotPaired = !(remoteStatus & 0x70) || !(remoteStatus & 0x80);
+  return bRemoteNotPaired;
+}
+
 /*
 int main()
 {
@@ -1086,5 +1182,3 @@ int main()
 
 }
 */
-
-#endif

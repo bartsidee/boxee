@@ -23,8 +23,16 @@
 #include "GUIFont.h"
 #include "GUIControl.h"
 #include "GUIColorManager.h"
+#include "GUIFontTTF.h"
 #include "utils/CharsetConverter.h"
 #include "StringUtils.h"
+
+#if defined(_LINUX) && !defined(__APPLE__)
+#include <glib.h>
+#endif
+
+//elis
+#include "utils/log.h"
 
 using namespace std;
 
@@ -52,6 +60,16 @@ CGUITextLayout::CGUITextLayout(CGUIFont *font, bool wrap, float fHeight)
   m_maxHeight = fHeight;
   m_textWidth = 0;
   m_textHeight = 0;
+  m_bRebuildVertices = true;
+  m_fAlpha = -1;
+  m_eResolution = RES_INVALID;
+
+  // we use this to track font texture changes
+  m_fontTextureHeight = 0;
+  // in case the font object was changed
+  m_fontLineHeight = 0;
+  m_faceLoadTime = 0;
+
 }
 
 void CGUITextLayout::SetWrap(bool bWrap)
@@ -59,20 +77,49 @@ void CGUITextLayout::SetWrap(bool bWrap)
   m_wrap = bWrap;
 }
 
-void CGUITextLayout::Render(float x, float y, float angle, color_t color, color_t shadowColor, uint32_t alignment, float maxWidth, bool solid)
+void CGUITextLayout::Render(float x, float y, float angle, color_t color, color_t shadowColor, uint32_t alignment, float maxWidth, bool solid, bool clip)
 {
   if (!m_font)
     return;
 
+  // our font texture might have grown
+  if(m_font->GetFontTextureHeight() != (unsigned int) m_fontTextureHeight)
+  {
+    m_fontTextureHeight = m_font->GetFontTextureHeight();
+    m_bRebuildVertices = true;
+    //printf("REBUILD REASON: LINE TEXTURE HEIGHT\n");
+  }
+
+  if(fabs(m_font->GetLineHeight() - m_fontLineHeight) < 0.1)
+  {
+    m_fontLineHeight = m_font->GetLineHeight();
+    m_bRebuildVertices = true;
+    //printf("REBUILD REASON: FONT HEIGHT\n");
+  }
+
+  if(m_font->GetFont()->GetFaceLoadTime() != m_faceLoadTime)
+  {
+    m_faceLoadTime = m_font->GetFont()->GetFaceLoadTime();
+    m_bRebuildVertices = true;
+    //printf("REBUILD REASON: FACE\n");
+  }
+
   // set the main text color
   if (m_colors.size())
+  {
+    if(m_colors[0] != color)
+    {
+      m_bRebuildVertices = true;
+      //printf("REBUILD REASON: COLOR\n");
+    }
     m_colors[0] = color;
+  }   
 
   // render the text at the required location, angle, and size
   if (angle)
   {
     static const float degrees_to_radians = 0.01745329252f;
-    g_graphicsContext.AddTransform(TransformMatrix::CreateZRotation(angle * degrees_to_radians, x, y, g_graphicsContext.GetScalingPixelRatio()));
+    g_graphicsContext.PushTransform(TransformMatrix::CreateZRotation(angle * degrees_to_radians, x, y, g_graphicsContext.GetScalingPixelRatio()));
   }
   // center our text vertically
   if (alignment & XBFONT_CENTER_Y)
@@ -80,22 +127,74 @@ void CGUITextLayout::Render(float x, float y, float angle, color_t color, color_
     y -= m_font->GetTextHeight(m_lines.size()) * 0.5f;;
     alignment &= ~XBFONT_CENTER_Y;
   }
-  m_font->Begin();
+
+  // check if we actually managed to output any text
+  bool bTextOutput = false;
+  bool textcoordsCreated = false;
+
   for (vector<CGUIString>::iterator i = m_lines.begin(); i != m_lines.end(); i++)
   {
-    const CGUIString &string = *i;
+    CGUIString &string = *i;
+
     uint32_t align = alignment;
     if (align & XBFONT_JUSTIFIED && string.m_carriageReturn)
       align &= ~XBFONT_JUSTIFIED;
-    if (solid)
-      m_font->DrawText(x, y, m_colors[0], shadowColor, string.m_text, align, maxWidth);
-    else
-      m_font->DrawText(x, y, m_colors, shadowColor, string.m_text, align, maxWidth);
+
+    if(m_fAlpha != g_graphicsContext.GetFinalTransformAlpha())
+    {
+      m_fAlpha = g_graphicsContext.GetFinalTransformAlpha();
+      m_bRebuildVertices = true;
+      //printf("REBUILD REASON: ALPHA\n");
+    }
+
+    if(m_eResolution != g_graphicsContext.GetVideoResolution())
+    {
+      m_eResolution = g_graphicsContext.GetVideoResolution();
+      m_bRebuildVertices = true;
+      //printf("REBUILD REASON: RESOLUTION\n");
+    }
+
+    if(m_bRebuildVertices)
+    {
+      //printf("REBUILD: %s\n", string.GetAsString().c_str());
+      string.m_pCharCoords.m_pCoord.clear();
+      string.m_pCharCoords.m_nIndices.clear();
+
+      if (solid)
+        textcoordsCreated |= m_font->BuildTextCoords(x, y, m_colors[0], shadowColor, string.m_text, align, maxWidth, string.m_pCharCoords, clip);
+      else
+        textcoordsCreated |= m_font->BuildTextCoords(x, y, m_colors, shadowColor, string.m_text, align, maxWidth, string.m_pCharCoords, clip);
+    }
+   
+    if (!string.m_pCharCoords.m_pCoord.size())
+    {
+      y += m_font->GetLineHeight();
+      continue;
+    }
+
+    bTextOutput = true;
+
+    TransformMatrix trans = TransformMatrix::CreateTranslation(x, y);
+
+    g_graphicsContext.PushTransform(trans);
+    m_font->RenderText(string.m_pCharCoords);
+    g_graphicsContext.PopTransform();
+
     y += m_font->GetLineHeight();
   }
-  m_font->End();
+
+  if(bTextOutput)
+  {
+    m_bRebuildVertices = false;
+  }
+  else
+  {
+    m_bRebuildVertices = true;
+    //printf("REBUILD REASON: NO OUTPUT\n");
+  }
+
   if (angle)
-    g_graphicsContext.RemoveTransform();
+    g_graphicsContext.PopTransform();
 }
 
 
@@ -112,7 +211,7 @@ void CGUITextLayout::RenderScrolling(float x, float y, float angle, color_t colo
   if (angle)
   {
     static const float degrees_to_radians = 0.01745329252f;
-    g_graphicsContext.AddTransform(TransformMatrix::CreateZRotation(angle * degrees_to_radians, x, y, g_graphicsContext.GetScalingPixelRatio()));
+    g_graphicsContext.PushTransform(TransformMatrix::CreateZRotation(angle * degrees_to_radians, x, y, g_graphicsContext.GetScalingPixelRatio()));
   }
   // center our text vertically
   if (alignment & XBFONT_CENTER_Y)
@@ -120,7 +219,7 @@ void CGUITextLayout::RenderScrolling(float x, float y, float angle, color_t colo
     y -= m_font->GetTextHeight(m_lines.size()) * 0.5f;;
     alignment &= ~XBFONT_CENTER_Y;
   }
-  m_font->Begin();
+ 
   // NOTE: This workaround is needed as otherwise multi-line text that scrolls
   //       will scroll in proportion to the number of lines.  Ideally we should
   //       do the DrawScrollingText calculation here.  This probably won't make
@@ -130,15 +229,27 @@ void CGUITextLayout::RenderScrolling(float x, float y, float angle, color_t colo
   float speed = scrollInfo.pixelSpeed;
   for (vector<CGUIString>::iterator i = m_lines.begin(); i != m_lines.end(); i++)
   {
-    const CGUIString &string = *i;
-    m_font->DrawScrollingText(x, y, m_colors, shadowColor, string.m_text, alignment, maxWidth, scrollInfo);
+    CGUIString &string = *i;
+
+    string.m_pCharCoords.m_pCoord.clear();
+    string.m_pCharCoords.m_nIndices.clear();
+
+    m_font->BuildScrollingTextCoords(x, y, m_colors, shadowColor, string.m_text, alignment, maxWidth, scrollInfo, string.m_pCharCoords);
+   
+    TransformMatrix trans = TransformMatrix::CreateTranslation(x, y);
+
+    g_graphicsContext.PushTransform(trans);
+    m_font->RenderText(string.m_pCharCoords);
+    g_graphicsContext.PopTransform();
+ 
     y += m_font->GetLineHeight();
     scrollInfo.pixelSpeed = 0;
+    g_graphicsContext.RestoreClipRegion();
   }
   scrollInfo.pixelSpeed = speed;
-  m_font->End();
+ 
   if (angle)
-    g_graphicsContext.RemoveTransform();
+    g_graphicsContext.PopTransform();
 }
 
 void CGUITextLayout::RenderOutline(float x, float y, color_t color, color_t outlineColor, uint32_t outlineWidth, uint32_t alignment, float maxWidth)
@@ -156,7 +267,7 @@ void CGUITextLayout::RenderOutline(float x, float y, color_t color, color_t outl
     y -= m_font->GetTextHeight(m_lines.size()) * 0.5f;;
     alignment &= ~XBFONT_CENTER_Y;
   }
-  m_font->Begin();
+
   for (vector<CGUIString>::iterator i = m_lines.begin(); i != m_lines.end(); i++)
   {
     const CGUIString &string = *i;
@@ -165,9 +276,8 @@ void CGUITextLayout::RenderOutline(float x, float y, color_t color, color_t outl
       align &= ~XBFONT_JUSTIFIED;
 
     DrawOutlineText(m_font, x, y, m_colors, outlineColor, outlineWidth, string.m_text, align, maxWidth);
-    y += m_font->GetLineHeight();
+    y += m_font->GetLineHeight() * (1 / g_graphicsContext.GetGUIScaleY());
   }
-  m_font->End();
 }
 
 bool CGUITextLayout::Update(const CStdString &text, float maxWidth, bool forceUpdate /*= false*/, bool forceLTRReadingOrder /*= false*/)
@@ -216,6 +326,8 @@ void CGUITextLayout::SetText(const CStdStringW &text, float maxWidth, bool force
   
   // and cache the width and height for later reading
   CalcTextExtent();
+
+  m_bRebuildVertices = true;
 }
 
 // BidiTransform is used to handle RTL text flipping in the string
@@ -301,8 +413,8 @@ void CGUITextLayout::ParseText(const CStdStringW &text, uint32_t defaultStyle, v
   // [COLOR ffab007f] or [/COLOR] -> toggle color on and off
   // [CAPS <option>] or [/CAPS] -> toggle capatilization on and off
 
-  uint32_t currentStyle = defaultStyle; // start with the default font's style
-  color_t currentColor = 0;
+//  uint32_t currentStyle = defaultStyle; // start with the default font's style
+//  color_t currentColor = 0;
 
   stack<color_t> colorStack;
   colorStack.push(0);
@@ -313,100 +425,147 @@ void CGUITextLayout::ParseText(const CStdStringW &text, uint32_t defaultStyle, v
 #define FONT_STYLE_UPPERCASE 4
 #define FONT_STYLE_LOWERCASE 8
 
+  int boldCounter = 0;
+  int italicsCoutner = 0;
+  int upperCounter = 0;
+  int lowerCounter = 0;
+  color_t color = 0;
+
   int startPos = 0;
   size_t pos = text.Find(L'[');
   while (pos != CStdString::npos && pos + 1 < text.size())
   {
-    uint32_t newStyle = 0;
-    color_t newColor = currentColor;
-    bool newLine = false;
+    int style = 0;
+
+    if (pos - startPos > 0)
+    {
+      if (boldCounter)
+        style |= FONT_STYLE_BOLD;
+
+      if (italicsCoutner)
+        style |= FONT_STYLE_ITALICS;
+
+      CStdStringW subText = text.Mid(startPos, pos - startPos);
+
+      if (upperCounter)
+      {
+#if defined(_LINUX) && !defined(__APPLE__)
+        std::transform(subText.begin(), subText.end(), subText.begin(),
+                       (gunichar(*)(gunichar)) g_unichar_toupper);
+#else
+        subText.ToUpper();
+#endif
+      }
+
+      if (lowerCounter)
+      {
+#if defined(_LINUX) && !defined(__APPLE__)
+        std::transform(subText.begin(), subText.end(), subText.begin(),
+                       (gunichar(*)(gunichar)) g_unichar_tolower);
+#else
+        subText.ToLower();
+#endif
+      }
+
+      AppendToUTF32(subText, ((style & 3) << 24) | (color << 16), parsedText);
+
+      startPos = pos;
+    }
+
     // have a [ - check if it's an ON or OFF switch
-    bool on(true);
-    int endPos = pos++; // finish of string
+    bool ignoreTag = false;
+    ++pos;
+
+    bool on = true;
     if (text[pos] == L'/')
     {
       on = false;
       pos++;
     }
+
     // check for each type
     if (text.Mid(pos,2) == L"B]")
     { // bold - finish the current text block and assign the bold state
       pos += 2;
-      if ((on && text.Find(L"[/B]",pos) >= 0) ||          // check for a matching end point
-         (!on && (currentStyle & FONT_STYLE_BOLD)))       // or matching start point
-      newStyle = FONT_STYLE_BOLD;
+      on ? ++boldCounter : --boldCounter;
     }
     else if (text.Mid(pos,2) == L"I]")
     { // italics
       pos += 2;
-      if ((on && text.Find(L"[/I]",pos) >= 0) ||          // check for a matching end point
-         (!on && (currentStyle & FONT_STYLE_ITALICS)))    // or matching start point
-      newStyle = FONT_STYLE_ITALICS;
+      on ? ++italicsCoutner : --italicsCoutner;
     }
     else if (text.Mid(pos,10) == L"UPPERCASE]")
     {
       pos += 10;
-      if ((on && text.Find(L"[/UPPERCASE]",pos) >= 0) ||  // check for a matching end point
-         (!on && (currentStyle & FONT_STYLE_UPPERCASE)))  // or matching start point
-      newStyle = FONT_STYLE_UPPERCASE;
+      on ? ++upperCounter : --upperCounter;
     }
     else if (text.Mid(pos,10) == L"LOWERCASE]")
     {
       pos += 10;
-      if ((on && text.Find(L"[/LOWERCASE]",pos) >= 0) ||  // check for a matching end point
-         (!on && (currentStyle & FONT_STYLE_LOWERCASE)))  // or matching start point
-      newStyle = FONT_STYLE_LOWERCASE;
+      on ? ++lowerCounter : --lowerCounter;
     }
     else if (text.Mid(pos,3) == L"CR]" && on)
     {
-      newLine = true;
       pos += 3;
+      parsedText.push_back(L'\n');
     }
     else if (text.Mid(pos,5) == L"COLOR")
     { // color
       size_t finish = text.Find(L']', pos + 5);
       if (on && finish != CStdString::npos && (size_t) text.Find(L"[/COLOR]",finish) != CStdString::npos)
       { // create new color
-        newColor = colors.size();
+        color = colors.size();
         colors.push_back(g_colorManager.GetColor(text.Mid(pos + 5, finish - pos - 5)));
-        colorStack.push(newColor);
+        colorStack.push(color);
       }
       else if (!on && finish == pos + 5 && colorStack.size() > 1)
       { // revert to previous color
-          colorStack.pop();
-        newColor = colorStack.top();
+        colorStack.pop();
+        color = colorStack.top();
       }
       pos = finish + 1;
     }
-
-    if (newStyle || newColor != currentColor || newLine)
-    { // we have a new style or a new color, so format up the previous segment
-      CStdStringW subText = text.Mid(startPos, endPos - startPos);
-      if (currentStyle & FONT_STYLE_UPPERCASE)
-        subText.ToUpper();
-      if (currentStyle & FONT_STYLE_LOWERCASE)
-        subText.ToLower();
-      AppendToUTF32(subText, ((currentStyle & 3) << 24) | (currentColor << 16), parsedText);
-      if (newLine)
-        parsedText.push_back(L'\n');
-
-      // and switch to the new style
-      startPos = pos;
-      currentColor = newColor;
-      if (on)
-        currentStyle |= newStyle;
-      else
-        currentStyle &= ~newStyle;
+    else
+    {
+      ignoreTag = true;
     }
+
+    if (!ignoreTag)
+    {
+      startPos = pos;
+    }
+
     pos = text.Find(L'[',pos);
   }
+
   // now grab the remainder of the string
   CStdStringW subText = text.Mid(startPos, text.GetLength() - startPos);
-  if (currentStyle & FONT_STYLE_UPPERCASE)
-    subText.ToUpper();
-  if (currentStyle & FONT_STYLE_LOWERCASE)
+  int style = 0;
+  if (upperCounter)
+  {
+#if defined(_LINUX) && !defined(__APPLE__)
+        std::transform(subText.begin(), subText.end(), subText.begin(),
+                       (gunichar(*)(gunichar)) g_unichar_toupper);
+#else
+        subText.ToUpper();
+#endif
+  }
+
+  if (lowerCounter)
+  {
+#if defined(_LINUX) && !defined(__APPLE__)
+    std::transform(subText.begin(), subText.end(), subText.begin(),
+                   (gunichar(*)(gunichar)) g_unichar_tolower);
+#else
     subText.ToLower();
-  AppendToUTF32(subText, ((currentStyle & 3) << 24) | (currentColor << 16), parsedText);
+#endif
+  }
+
+  if (boldCounter)
+    style |= FONT_STYLE_BOLD;
+  if (italicsCoutner)
+    style |= FONT_STYLE_ITALICS;
+  AppendToUTF32(subText, ((style & 3) << 24) | (color << 16), parsedText);
 }
 
 void CGUITextLayout::SetMaxHeight(float fHeight)
@@ -421,14 +580,17 @@ void CGUITextLayout::WrapText(const vecText &text, float maxWidth)
 
   int nMaxLines = (m_maxHeight > 0 && m_font->GetLineHeight() > 0)?(int)(m_maxHeight / m_font->GetLineHeight()):-1;
 
+  //clear the output
   m_lines.clear();
 
   vector<CGUIString> lines;
+
+  //breaks the text according to \n
   LineBreakText(text, lines);
 
   for (unsigned int i = 0; i < lines.size(); i++)
   {
-    const CGUIString &line = lines[i];
+    CGUIString &line = lines[i];
     vecText::const_iterator lastSpace = line.m_text.begin();
     vecText::const_iterator pos = line.m_text.begin();
     unsigned int lastSpaceInLine = 0;
@@ -438,13 +600,17 @@ void CGUITextLayout::WrapText(const vecText &text, float maxWidth)
       // Get the current letter in the string
       character_t letter = *pos;
       // check for a space
-      if (CanWrapAtLetter(letter))
+
+      float width = m_font->GetTextWidth(curLine);
+
+      if (CanWrapAtLetter(letter) || width > maxWidth)
       {
-        float width = m_font->GetTextWidth(curLine);
+        //exceeded the width, push what we have into m_lines and continue with the next line
         if (width > maxWidth)
         {
           if (lastSpace != line.m_text.begin() && lastSpaceInLine > 0)
           {
+            //push the current line, until the last space
             CGUIString string(curLine.begin(), curLine.begin() + lastSpaceInLine, false);
             m_lines.push_back(string);
             if (IsSpace(letter))
@@ -465,37 +631,46 @@ void CGUITextLayout::WrapText(const vecText &text, float maxWidth)
         }
       }
       else
+      {
         curLine.push_back(letter);
+      }
       pos++;
     }
     // now add whatever we have left to the string
     float width = m_font->GetTextWidth(curLine);
+
     if (width > maxWidth)
     {
       // too long - put up to the last space on if we can + remove it from what's left.
       if (lastSpace != line.m_text.begin() && lastSpaceInLine > 0)
       {
+        //take the begining of the string until the space and push it in the lines
         CGUIString string(curLine.begin(), curLine.begin() + lastSpaceInLine, false);
         m_lines.push_back(string);
+
+        //remove everything before the last space, we will push it later if possible
         curLine.erase(curLine.begin(), curLine.begin() + lastSpaceInLine);
+
         while (curLine.size() && IsSpace(curLine.at(0)))
           curLine.erase(curLine.begin());
       }
     }
-    
+
     // if at this point we already have all the lines we need do not add another one
-    if (m_lines.size() < nMaxLines)
+    if (m_lines.size() < (size_t) nMaxLines)
     {
       CGUIString string(curLine.begin(), curLine.end(), true);
       m_lines.push_back(string);
     }
-    else if (m_lines.size())
+    else if (m_lines.size() && !m_wrap)
     {
       CGUIString &str=m_lines[m_lines.size()-1];
       for (int i=0; i<3; i++)
         str.m_text.push_back(L'.'); // add ellipsis in case there are hidden lines
     }
   }
+
+  m_bRebuildVertices = true;
 }
 
 void CGUITextLayout::LineBreakText(const vecText &text, vector<CGUIString> &lines)
@@ -569,12 +744,24 @@ float CGUITextLayout::GetTextWidth(const CStdStringW &text) const
   return m_font->GetTextWidth(utf32);
 }
 
+float CGUITextLayout::GetTextHeight(int numLines) const
+{
+  // NOTE: Assumes a single line of text
+  if (!m_font) return 0;
+  if (numLines == 1)
+    return m_font->GetLineHeight();
+  else
+    return m_font->GetTextHeight(numLines);
+}
+
 void CGUITextLayout::DrawText(CGUIFont *font, float x, float y, color_t color, color_t shadowColor, const CStdString &text, uint32_t align)
 {
+  /* elis
   if (!font) return;
   vecText utf32;
   AppendToUTF32(text, 0, utf32);
   font->DrawText(x, y, color, shadowColor, utf32, align, 0);
+  */
 }
 
 void CGUITextLayout::DrawOutlineText(CGUIFont *font, float x, float y, color_t color, color_t outlineColor, uint32_t outlineWidth, const CStdString &text)
@@ -594,13 +781,47 @@ void CGUITextLayout::DrawOutlineText(CGUIFont *font, float x, float y, const vec
     unsigned int ymax = (unsigned int)(sqrt((float)outlineWidth*outlineWidth - i*i) + 0.5f);
     for (unsigned int j = 1; j < ymax; j++)
     {
-      font->DrawText(x - i, y + j, outlineColor, 0, text, align, maxWidth);
-      font->DrawText(x - i, y - j, outlineColor, 0, text, align, maxWidth);
-      font->DrawText(x + i, y + j, outlineColor, 0, text, align, maxWidth);
-      font->DrawText(x + i, y - j, outlineColor, 0, text, align, maxWidth);
+      BuildAndRenderScreenText(font, x - i, y + j, outlineColor, 0, outlineWidth, text, align, maxWidth);
+      BuildAndRenderScreenText(font, x - i, y - j, outlineColor, 0, outlineWidth, text, align, maxWidth);
+      BuildAndRenderScreenText(font, x + i, y + j, outlineColor, 0, outlineWidth, text, align, maxWidth);
+      BuildAndRenderScreenText(font, x + i, y - j, outlineColor, 0, outlineWidth, text, align, maxWidth);
     }
   }
-  font->DrawText(x, y, colors, 0, text, align, maxWidth);
+
+  BuildAndRenderScreenText(font, x, y, colors[0], 0, outlineWidth, text, align, maxWidth);
+}
+
+void CGUITextLayout::BuildAndRenderScreenText(CGUIFont *font, float x, float y, const color_t &color, color_t outlineColor, 
+                                          uint32_t outlineWidth, const vecText &text, uint32_t align, float maxWidth)
+{
+  FontCoordsIndiced fontCoords;
+  TransformMatrix trans, scale;
+
+  float scalex = g_graphicsContext.GetGUIScaleX();
+  float scaley = g_graphicsContext.GetGUIScaleY();
+
+  ASSERT(scalex != 0);
+  ASSERT(scaley != 0);
+
+  font->BuildTextCoords(x, y, color, 0, text, align, maxWidth, fontCoords, false);
+
+  // Our x,y location is in screen coordinate
+  // so load an identity matrix.
+  g_graphicsContext.PushTransform(TransformMatrix(), true);
+
+  trans = TransformMatrix::CreateTranslation(x, y);
+  scale = TransformMatrix::CreateScaler(1/scalex, 1/scaley);
+  g_graphicsContext.PushTransform(trans);
+  g_graphicsContext.PushTransform(scale);
+
+  font->RenderText(fontCoords);
+
+  // scale
+  g_graphicsContext.PopTransform();
+  // trans
+  g_graphicsContext.PopTransform();
+  // pop identity
+  g_graphicsContext.PopTransform();
 }
 
 void CGUITextLayout::AppendToUTF32(const CStdStringW &utf16, character_t colStyle, vecText &utf32)
@@ -646,6 +867,8 @@ void CGUITextLayout::Reset()
   m_lines.clear();
   m_lastText.Empty();
   m_textWidth = m_textHeight = 0;
+
+  m_bRebuildVertices = true;
 }
 
 

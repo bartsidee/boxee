@@ -29,8 +29,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #else
-#define bzero(a) memset(a,0,sizeof(a))
-typedef int socklen_t;
+#include "../../win32/c_defs.h"
 #include <WinSock2.h>
 #include <stdint.h>
 #endif
@@ -120,25 +119,25 @@ int do_name_mangle( char *In, char *Out, char name_type ) {
 
 
 int send_query(int sock, struct in_addr dest_addr, uint32_t rtt_base, const char* name, int iponly) {
-  struct nbname_request request;
+        struct nbname_request request;
 	struct sockaddr_in dest_sockaddr;
 	int status;
 	struct timeval tv;
 
-  bzero((void*)&dest_sockaddr, sizeof(dest_sockaddr));
+        bzero((void*)&dest_sockaddr, sizeof(dest_sockaddr));
   bzero((void*)&request, sizeof(request));
-  dest_sockaddr.sin_family = AF_INET;
-  dest_sockaddr.sin_port = htons(NB_DGRAM);
-  dest_sockaddr.sin_addr = dest_addr;
+        dest_sockaddr.sin_family = AF_INET;
+        dest_sockaddr.sin_port = htons(NB_DGRAM);
+        dest_sockaddr.sin_addr = dest_addr;
  
-  request.flags = htons(FL_BROADCAST);
-  request.question_count = htons(1);
-  request.answer_count = 0;
-  request.name_service_count = 0;
-  request.additional_record_count = 0;
+        request.flags = htons(FL_BROADCAST);
+        request.question_count = htons(1);
+        request.answer_count = 0;
+        request.name_service_count = 0;
+        request.additional_record_count = 0;
   do_name_mangle( (name ? name : "*"), request.question_name,0);
   request.question_type = htons( (iponly?0x20:0x21) );
-  request.question_class = htons( 0x01 );
+        request.question_class = htons(0x01);
 
 	gettimeofday(&tv, NULL);
   /* build a transaction id */
@@ -148,7 +147,7 @@ int send_query(int sock, struct in_addr dest_addr, uint32_t rtt_base, const char
                 (struct sockaddr *)&dest_sockaddr, sizeof(dest_sockaddr));
 
   return status;
-};
+        };
 
 uint32_t get32(void* data) {
 	union {

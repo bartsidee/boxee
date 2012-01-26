@@ -21,20 +21,32 @@
  *
  */
 
-#include "system.h"
-
-#if defined (HAS_GL) || defined (HAS_GLES)
-  #include "LinuxRendererGL.h"
+#include <list>
+#include "Geometry.h"
+#if defined(HAS_INTEL_SMD)
+#include "IntelSMDRenderer.h"
+#elif defined(HAS_NULL_RENDERER)
+#include "NullRenderer.h"
+#elif defined (HAS_GL2)
+#include "LinuxRendererGL.h"
 #elif defined(HAS_DX)
-  #include "WinRenderer.h"
+#include "WinRenderer.h"
 #elif defined(HAS_SDL)
-  #include "LinuxRenderer.h"
+#include "LinuxRenderer.h"
 #endif
 
 #include "utils/SharedSection.h"
 #include "utils/Thread.h"
 #include "settings/VideoSettings.h"
 #include "OverlayRenderer.h"
+
+class CRenderCapture;
+
+namespace DXVA { class CProcessor; }
+namespace VAAPI { class CSurfaceHolder; }
+class CVDPAU;
+
+#define ERRORBUFFSIZE 30
 
 class CXBMCRenderManager
 {
@@ -45,26 +57,28 @@ public:
   // Functions called from the GUI
   void GetVideoRect(CRect &source, CRect &dest) { CSharedLock lock(m_sharedSection); if (m_pRenderer) m_pRenderer->GetVideoRect(source, dest); };
   float GetAspectRatio() { CSharedLock lock(m_sharedSection); if (m_pRenderer) return m_pRenderer->GetAspectRatio(); else return 1.0f; };
-  void AutoCrop(bool bCrop = true) { CSharedLock lock(m_sharedSection); if (m_pRenderer) m_pRenderer->AutoCrop(bCrop); };
   void Update(bool bPauseDrawing);
   void RenderUpdate(bool clear, DWORD flags = 0, DWORD alpha = 255);
   void SetupScreenshot();
 
-  void CreateThumbnail(CBaseTexture *texture, unsigned int width, unsigned int height);
+  CRenderCapture* AllocRenderCapture();
+  void ReleaseRenderCapture(CRenderCapture* capture);
+  void Capture(CRenderCapture *capture, unsigned int width, unsigned int height, int flags);
+  void ManageCaptures();
 
   void SetViewMode(int iViewMode) { CSharedLock lock(m_sharedSection); if (m_pRenderer) m_pRenderer->SetViewMode(iViewMode); };
 
   // Functions called from mplayer
-  bool Configure(unsigned int width, unsigned int height, unsigned int d_width, unsigned int d_height, float fps, unsigned flags);
+  bool Configure(unsigned int width, unsigned int height, unsigned int d_width, unsigned int d_height, float fps, unsigned flags, CRect browserRect = CRect());
   bool IsConfigured();
 
   // a call to GetImage must be followed by a call to releaseimage if getimage was successfull
   // failure to do so will result in deadlock
-  inline int GetImage(YV12Image *image, int source = AUTOSOURCE, bool readonly = false)
+  inline int GetImage(YV12Image *image, double pts, int source = AUTOSOURCE, bool readonly = false)
   {
     CSharedLock lock(m_sharedSection);
     if (m_pRenderer)
-      return m_pRenderer->GetImage(image, source, readonly);
+      return m_pRenderer->GetImage(image, pts, source, readonly);
     return -1;
   }
   inline void ReleaseImage(int source = AUTOSOURCE, bool preserve = false)
@@ -73,25 +87,65 @@ public:
     if (m_pRenderer)
       m_pRenderer->ReleaseImage(source, preserve);
   }
-
+  
   inline void SetRGB32Image(char *image, int nHeight, int nWidth, int nPitch)
   {
     CSharedLock lock(m_sharedSection);
-    if (m_pRenderer)
-      m_pRenderer->SetRGB32Image(image, nHeight, nWidth, nPitch);    
-  }
-
-  inline unsigned int DrawSlice(unsigned char *src[], int stride[], int w, int h, int x, int y)
-  {
-    CSharedLock lock(m_sharedSection);
-    if (m_pRenderer)
-      return m_pRenderer->DrawSlice(src, stride, w, h, x, y);
-    return 0;
+    if (m_pBrowserRenderer)
+      m_pBrowserRenderer->SetRGB32Image(image, nHeight, nWidth, nPitch);
   }
 
   void FlipPage(volatile bool& bStop, double timestamp = 0.0, int source = -1, EFIELDSYNC sync = FS_NONE);
   unsigned int PreInit();
+  unsigned int PreInitBrowser();
+
   void UnInit();
+  void UnInitBrowser();
+
+#ifdef HAS_DX
+  void AddProcessor(DXVA::CProcessor* processor, int64_t id)
+  {
+    CSharedLock lock(m_sharedSection);
+    if (m_pRenderer)
+      m_pRenderer->AddProcessor(processor, id);
+  }
+#endif
+
+#ifdef HAVE_LIBVDPAU
+  void AddProcessor(CVDPAU* vdpau)
+  {
+    CSharedLock lock(m_sharedSection);
+    if (m_pRenderer)
+      m_pRenderer->AddProcessor(vdpau);
+  }
+#endif
+
+#ifdef HAVE_LIBOPENMAX
+  void AddProcessor(COpenMax *openmax, DVDVideoPicture *picture)
+  {
+    CSharedLock lock(m_sharedSection);
+    if (m_pRenderer)
+      m_pRenderer->AddProcessor(openmax, picture);
+  }
+#endif
+
+#ifdef HAVE_LIBVA
+  void AddProcessor(VAAPI::CHolder& holder)
+  {
+    CSharedLock lock(m_sharedSection);
+    if (m_pRenderer)
+      m_pRenderer->AddProcessor(holder);
+  }
+#endif
+
+#ifdef HAVE_VIDEOTOOLBOXDECODER
+  void AddProcessor(CDVDVideoCodecVideoToolBox* vtb, DVDVideoPicture *picture)
+  {
+    CSharedLock lock(m_sharedSection);
+    if (m_pRenderer)
+      m_pRenderer->AddProcessor(vtb, picture);
+  }
+#endif
 
   void AddOverlay(CDVDOverlay* o, double pts)
   {
@@ -123,9 +177,15 @@ public:
   float GetMaximumFPS();
   inline bool Paused() { return m_bPauseDrawing; };
   inline bool IsStarted() { return m_bIsStarted;}
-  bool SupportsBrightness();
-  bool SupportsContrast();
-  bool SupportsGamma();
+
+  bool Supports(ERENDERFEATURE feature)
+  {
+    CSharedLock lock(m_sharedSection);
+    if (m_pRenderer)
+      return m_pRenderer->Supports(feature);
+    else
+      return false;
+  }
 
   bool Supports(EINTERLACEMETHOD method)
   {
@@ -149,20 +209,21 @@ public:
   void  WaitPresentTime(double presenttime);
 
   CStdString GetVSyncState();
-  
+
   void UpdateResolution();
 
-#if defined(HAS_GL) 
-  CLinuxRendererGL *m_pRenderer;
-#elif defined(HAS_GLES)    
-  CBaseRenderer *m_pRenderer;
+#ifdef HAS_INTEL_SMD
+  CIntelSMDRenderer *m_pRenderer, *m_pBrowserRenderer;
+#elif defined(HAS_NULL_RENDERER)
+  CNullRenderer *m_pRenderer, *m_pBrowserRenderer;
+#elif defined(HAS_GL2)
+  CLinuxRendererGL *m_pRenderer, *m_pBrowserRenderer;
 #elif defined(HAS_DX)
-  CWinRenderer *m_pRenderer;
+  CWinRenderer *m_pRenderer, *m_pBrowserRenderer;	// TODO: Currently, m_pBrowserRenderer is only a stub.
 #elif defined(HAS_SDL)
   CLinuxRenderer *m_pRenderer;
 #elif defined(HAS_XBOX_D3D)
   CXBoxRenderer *m_pRenderer;
-  
 #endif
 
   void Present();
@@ -170,9 +231,10 @@ public:
 
   CSharedSection& GetSection() { return m_sharedSection; };
 
+  void SetSpeed(int speed);
+  void Flush();
+
 protected:
-  unsigned int PreInit_internal();
-  void UnInit_internal();
 
   void PresentSingle();
   void PresentWeave();
@@ -185,22 +247,39 @@ protected:
   CSharedSection m_sharedSection;
 
   bool m_bReconfigured;
-  
+
   int m_rendermethod;
+
+  enum EPRESENTSTEP
+  {
+    PRESENT_IDLE     = 0
+  , PRESENT_FLIP
+  , PRESENT_FRAME
+  , PRESENT_FRAME2
+  };
 
   double     m_presenttime;
   double     m_presentcorr;
   double     m_presenterr;
+  double     m_errorbuff[ERRORBUFFSIZE];
+  int        m_errorindex;
   EFIELDSYNC m_presentfield;
   EINTERLACEMETHOD m_presentmethod;
-  int        m_presentstep;
+  EPRESENTSTEP     m_presentstep;
+  int        m_presentsource;
   CEvent     m_presentevent;
 
 
   OVERLAY::CRenderer m_overlays;
+
+  void RenderCapture(CRenderCapture* capture);
+  void RemoveCapture(CRenderCapture* capture);
+  CCriticalSection           m_captCritSect;
+  std::list<CRenderCapture*> m_captures;
+  //set to true when adding something to m_captures, set to false when m_captures is made empty
+  //std::list::empty() isn't thread safe, using an extra bool will save a lock per render when no captures are requested
+  bool                       m_hasCaptures;
+  int                        m_flags;
 };
 
 extern CXBMCRenderManager g_renderManager;
-
-
-

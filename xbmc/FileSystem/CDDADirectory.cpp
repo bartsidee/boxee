@@ -65,7 +65,7 @@ bool CCDDADirectory::GetDirectory(const CStdString& strPath, CFileItemList &item
     return false;
 
   // Generate fileitems
-  for( int i = 1;i <= nTracks; ++i )
+  for (int i = 1;i <= nTracks;++i)
   {
     // Skip Datatracks for display,
     // but needed to query cddb
@@ -75,7 +75,7 @@ bool CCDDADirectory::GetDirectory(const CStdString& strPath, CFileItemList &item
     CFileItemPtr pItem( new CFileItem() );
 
     pItem->m_bIsFolder = false;
-    pItem->m_strPath.Format( "cdda://local/%02.2i.cdda", i );
+    pItem->m_strPath.Format("cdda://local/%02.2i.cdda", i);
 
     // load tag from file
     std::auto_ptr< MUSIC_INFO::IMusicInfoTagLoader > pLoader( 

@@ -351,6 +351,33 @@ void CGUIWindowSettingsScreenCalibration::UpdateFromControl(int iControl)
   CStdString strText;
   strText.Format("%s | %s", g_settings.m_ResInfo[m_Res[m_iCurRes]].strMode.c_str(), strStatus.c_str());
   SET_CONTROL_LABEL(CONTROL_LABEL_ROW1, strText);
+
+  CopyOverscan();
+}
+
+
+// We need to copy the calibration to all matching resolutions
+void CGUIWindowSettingsScreenCalibration::CopyOverscan()
+{
+  RESOLUTION_INFO curInfo = g_settings.m_ResInfo[m_Res[m_iCurRes]];
+
+  for(unsigned int i = 0; i < m_Res.size(); i++)
+  {
+    RESOLUTION_INFO info = g_settings.m_ResInfo[m_Res[i]];
+
+    //printf("i = %d m_iCurRes = %d\n", i, m_iCurRes);
+
+    if(i == m_iCurRes)
+      continue;
+
+    if(info.iWidth == curInfo.iWidth && info.iHeight == curInfo.iHeight && info.dwFlags == curInfo.dwFlags)
+    {
+      //printf("For res %d %s Found matching %d %s\n", m_iCurRes, curInfo.strMode.c_str(), i, info.strMode.c_str());
+      g_settings.m_ResInfo[m_Res[i]].Overscan = curInfo.Overscan;
+      g_settings.m_ResInfo[m_Res[i]].iSubtitles = curInfo.iSubtitles;
+      g_settings.m_ResInfo[m_Res[i]].fPixelRatio = curInfo.fPixelRatio;
+    }
+  }
 }
 
 void CGUIWindowSettingsScreenCalibration::Render()
@@ -374,12 +401,15 @@ void CGUIWindowSettingsScreenCalibration::Render()
 
   m_needsScaling = true;
   CGUIWindow::Render();
-  g_graphicsContext.SetRenderingResolution(m_coordsRes, 0, 0, false);
+
 
   SET_CONTROL_VISIBLE(CONTROL_TOP_LEFT);
   SET_CONTROL_VISIBLE(CONTROL_BOTTOM_RIGHT);
   SET_CONTROL_VISIBLE(CONTROL_SUBTITLES);
   SET_CONTROL_VISIBLE(CONTROL_PIXEL_RATIO);
+
+  TransformMatrix newMat;
+  g_graphicsContext.PushTransform(newMat, true);
 
   // render the movers etc.
   for (int i = CONTROL_TOP_LEFT; i <= CONTROL_PIXEL_RATIO; i++)
@@ -388,6 +418,8 @@ void CGUIWindowSettingsScreenCalibration::Render()
     if (control)
       control->Render();
   }
+
+  g_graphicsContext.PopTransform();
 
 }
 

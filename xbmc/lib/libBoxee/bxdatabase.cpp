@@ -83,7 +83,7 @@ bool BXDatabase::CreateTables()
   const char* temp = "CREATE TABLE version (id integer primary key autoincrement, iVersion integer)\n";
   bResult &= Create(temp);
 
-  Insert("insert into version (id, iVersion) values (NULL, 7)");
+  Insert("insert into version (id, iVersion) values (NULL, 0)");
 
   return bResult;
 }
@@ -112,7 +112,7 @@ dbiplus::Dataset* BXDatabase::QuotedQuery(bool shouldQuote, const char* query,  
   
   std::string strQuery = query;
   if (shouldQuote)
-    BXUtils::StringReplace(strQuery, "%s", "%q");
+  BXUtils::StringReplace(strQuery, "%s", "%q");
   BXUtils::StringReplace(strQuery, "%I64", "%ll");
 
   va_list args;
@@ -129,14 +129,15 @@ dbiplus::Dataset* BXDatabase::QuotedQuery(bool shouldQuote, const char* query,  
   Dataset* pDataset = m_pDatabase->CreateDataset();
   if (pDataset == NULL)
   {
-    LOG(LOG_LEVEL_ERROR, "Could not create dataset, query %s not executed", strResult.c_str());
+    LOG(LOG_LEVEL_ERROR,"BXDatabase::QuotedQuery - could not create dataset. query [%s] will not be executed",strResult.c_str());
     return NULL;
   }
 
   int iRetries = MEDIA_DATABSE_LOCK_RETRIES;  
   while (iRetries > 0)
   {
-    try {
+    try
+    {
       pDataset->query(strResult.c_str());
       return pDataset;
     }
@@ -144,21 +145,23 @@ dbiplus::Dataset* BXDatabase::QuotedQuery(bool shouldQuote, const char* query,  
     {
       if (GetLastErrorCode() == SQLITE_LOCKED || GetLastErrorCode() == SQLITE_BUSY || GetLastErrorCode() == SQLITE_CANTOPEN)
       {
-        LOG(LOG_LEVEL_DEBUG, "Database was locked, retry. Error = %s, msg= %s", GetLastErrorMessage(), e.getMsg());
+        LOG(LOG_LEVEL_DEBUG,"BXDatabase::QuotedQuery - Database was locked, retry. [error=%s][msg=%s]",GetLastErrorMessage(),e.getMsg());
 
         SDL_Delay(BXUtils::GetRandInt(10) + 10);
         iRetries--;
 
         // log the last attempt as error
         if (iRetries == 0)
-          LOG(LOG_LEVEL_ERROR, "Exception caught, could not execute query. Error = %s, msg= %s", GetLastErrorMessage(), e.getMsg());
+        {
+          LOG(LOG_LEVEL_ERROR,"BXDatabase::QuotedQuery - Exception caught, could not execute query [%s]. [error=%s][msg=%s]",strResult.c_str(),GetLastErrorMessage(),e.getMsg());
+        }
 
         continue;
       }
       else
       {
         // Some other error
-        LOG(LOG_LEVEL_ERROR, "Exception caught, could not execute query. Error = %s, msg= %s", GetLastErrorMessage(), e.getMsg());
+        LOG(LOG_LEVEL_ERROR,"BXDatabase::QuotedQuery - Exception caught, could not execute query [%s]. [error=%s][msg=%s]",strResult.c_str(),GetLastErrorMessage(),e.getMsg());
         iRetries = 0;
       }
     }
@@ -170,7 +173,8 @@ dbiplus::Dataset* BXDatabase::QuotedQuery(bool shouldQuote, const char* query,  
 
 int BXDatabase::Insert(const char* query, ...)
 {
-  if (!IsOpen()) {
+  if (!IsOpen())
+  {
     return MEDIA_DATABASE_ERROR;
   }
   
@@ -186,7 +190,8 @@ int BXDatabase::Insert(const char* query, ...)
   va_end(args);
 
   std::string strResult;
-  if (szSql) {
+  if (szSql)
+  {
     strResult = szSql;
     sqlite3_free(szSql);
   }
@@ -206,17 +211,16 @@ int BXDatabase::Insert(const char* query, ...)
 
   while (iRetries > 0)
   {
-    try {
-
+    try
+    {
       // In case of the error, exception will be thrown
       pDataset->exec(strResult.c_str());
 
-
       iID = (int)sqlite3_last_insert_rowid(m_pDatabase->getHandle());
       iRetries = 0;
-
     }
-    catch(dbiplus::DbErrors& e) {
+    catch(dbiplus::DbErrors& e)
+    {
       if (GetLastErrorCode() == SQLITE_LOCKED || GetLastErrorCode() == SQLITE_BUSY || GetLastErrorCode() == SQLITE_CANTOPEN)
       {
         LOG(LOG_LEVEL_DEBUG, "Database was locked, retry. Error = %s, msg= %s", GetLastErrorMessage(), e.getMsg());

@@ -2,7 +2,7 @@
 |
 |   Platinum - Task Manager
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -29,7 +29,7 @@
 | 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 | http://www.gnu.org/licenses/gpl-2.0.html
 |
- ****************************************************************/
+****************************************************************/
 
 /*----------------------------------------------------------------------
 |   includes
@@ -43,7 +43,9 @@ NPT_SET_LOCAL_LOGGER("platinum.core.taskmanager")
 |   PLT_TaskManager::PLT_TaskManager
 +---------------------------------------------------------------------*/
 PLT_TaskManager::PLT_TaskManager(NPT_Cardinal max_items /* = 0 */) :
-    m_Queue(max_items?new NPT_Queue<int>(max_items):NULL)
+    m_Queue(max_items?new NPT_Queue<int>(max_items):NULL),
+    m_MaxTasks(max_items),
+    m_RunningTasks(0)
 {
 }
 
@@ -63,6 +65,7 @@ PLT_TaskManager::StartTask(PLT_ThreadTask*   task,
                            NPT_TimeInterval* delay /* = NULL*/,
                            bool              auto_destroy /* = true */)
 {
+    NPT_CHECK_POINTER_SEVERE(task);
     return task->Start(this, delay, auto_destroy);
 }
 
@@ -79,7 +82,7 @@ PLT_TaskManager::StopAllTasks()
         delete queue;
     }  
 
-    // stop all tasks first but don't block
+    // first instruct all tasks to stop but without waiting
     // otherwise when RemoveTask is called by PLT_ThreadTask::Run
     // it will deadlock with m_TasksLock
     {      
@@ -100,7 +103,7 @@ PLT_TaskManager::StopAllTasks()
                 return NPT_SUCCESS;
         }
 
-        NPT_System::Sleep(NPT_TimeInterval(0, 10000));
+        NPT_System::Sleep(NPT_TimeInterval(0.05));
     }
 
     return NPT_SUCCESS;
@@ -118,6 +121,7 @@ PLT_TaskManager::AddTask(PLT_ThreadTask* task)
 
     {
         NPT_AutoLock lock(m_TasksLock);
+        NPT_LOG_FINER_3("[TaskManager 0x%08x] %d/%d running tasks", this, ++m_RunningTasks, m_MaxTasks);
         return m_Tasks.Add(task);
     }
 }
@@ -137,10 +141,13 @@ PLT_TaskManager::RemoveTask(PLT_ThreadTask* task)
 
     {
         NPT_AutoLock lock(m_TasksLock);
+        NPT_LOG_FINER_3("[TaskManager 0x%08x] %d/%d running tasks", this, --m_RunningTasks, m_MaxTasks);
         m_Tasks.Remove(task);
     }
     
     // cleanup task only if auto-destroy flag was set
+    // otherwise it's the owner's responsability to
+    // clean it up
     if (task->m_AutoDestroy) delete task;
 
     return NPT_SUCCESS;

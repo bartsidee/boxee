@@ -56,8 +56,6 @@
       <rightanalogtrigger>ScrollDown</rightanalogtrigger>
       <rightthumbstickleft>AnalogSeekBack</rightthumbstickleft>
       <rightthumbstickright>AnalogSeekForward</rightthumbstickright>
-      <rightthumbstickup>VolumeUp</rightthumbstickup>
-      <rightthumbstickdown>VolumeDown</rightthumbstickdown>
     </gamepad>
   </global>
   <Home>
@@ -108,8 +106,6 @@
       <rightanalogtrigger>AnalogFastForward</rightanalogtrigger>
       <dpadleft>StepBack</dpadleft>
       <dpadright>StepForward</dpadright>
-      <dpadup>BigStepForward</dpadup>
-      <dpaddown>Stop</dpaddown>
     </gamepad>
   </FullscreenVideo>
   <FullscreenInfo>
@@ -356,21 +352,11 @@
       <B>PreviousMenu</B>
     </gamepad>
   </MyWeatherSettings>
-  <MyMusicSettings>
-    <gamepad>
-      <B>PreviousMenu</B>
-    </gamepad>
-  </MyMusicSettings>
   <SystemSettings>
     <gamepad>
       <B>PreviousMenu</B>
     </gamepad>
   </SystemSettings>
-  <MyVideosSettings>
-    <gamepad>
-      <B>PreviousMenu</B>
-    </gamepad>
-  </MyVideosSettings>
   <NetworkSettings>
     <gamepad>
       <B>PreviousMenu</B>

@@ -219,7 +219,32 @@ int AG_NormalizeSurfacesToDisplayFormat( AG_Frame* frames, int nFrames )
 
 	if ( nFrames > 0 && frames && frames[0].surface )
 	{
-		SDL_Surface* mainSurface = (frames[0].surface->flags & SDL_SRCCOLORKEY) ? SDL_DisplayFormatAlpha(frames[0].surface) : SDL_DisplayFormat(frames[0].surface);
+	  SDL_PixelFormat argbFormat;
+	  memset(&argbFormat, 0, sizeof(SDL_PixelFormat));
+	  argbFormat.BitsPerPixel = 32;
+	  argbFormat.BytesPerPixel = 4;
+#if SDL_BYTEORDER == SDL_LIL_ENDIAN
+    argbFormat.Amask = 0xff000000;
+    argbFormat.Ashift = 24;
+    argbFormat.Rmask = 0x00ff0000;
+    argbFormat.Rshift = 16;
+    argbFormat.Gmask = 0x0000ff00;
+    argbFormat.Gshift = 8;
+    argbFormat.Bmask = 0x000000ff;
+    argbFormat.Bshift = 0;
+#else
+    argbFormat.Amask = 0x000000ff;
+    argbFormat.Ashift = 0;
+    argbFormat.Rmask = 0x0000ff00;
+    argbFormat.Rshift = 8;
+    argbFormat.Gmask = 0x00ff0000;
+    argbFormat.Gshift = 16;
+    argbFormat.Bmask = 0xff000000;
+    argbFormat.Bshift = 24;
+#endif
+
+    SDL_Surface *mainSurface = SDL_ConvertSurface(frames[0].surface, &argbFormat, 0);
+		//SDL_Surface* mainSurface = (frames[0].surface->flags & SDL_SRCCOLORKEY) ? SDL_DisplayFormatAlpha(frames[0].surface) : SDL_DisplayFormat(frames[0].surface);
 		const int newDispose = (frames[0].surface->flags & SDL_SRCCOLORKEY) ? AG_DISPOSE_RESTORE_BACKGROUND : AG_DISPOSE_NONE;
 
 		if ( mainSurface )
@@ -290,7 +315,7 @@ int AG_LoadGIF_RW( SDL_RWops* src, AG_Frame* frames, int maxFrames )
 	if ( src == NULL )
 		return 0;
 
-	gd = malloc( sizeof(*gd) );
+	gd = (gifdata*)malloc( sizeof(*gd) );
 	memset( gd, 0, sizeof(*gd) );
 	gd->src = src;
 

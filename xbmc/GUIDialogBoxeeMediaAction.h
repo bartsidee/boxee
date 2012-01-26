@@ -55,8 +55,10 @@ public:
     BTN_EJECT=11,
     BTN_BROWSE=12,
     BTN_RESOLVE=13,
-    NUM_OF_BUTTONS=14,
-    BTN_UNKNOWN=15
+    BTN_ADD_TO_FAVORITE=14,
+    BTN_REMOVE_FROM_FAVORITE=15,
+    NUM_OF_BUTTONS=16,
+    BTN_UNKNOWN=17
   };
 };
 
@@ -121,6 +123,7 @@ protected:
 
   bool HandleClickOnItemList();
   bool HandleClickOnButtonList(bool& needToCloseDialog);
+  bool HandleClickOnMovieAdditinalButtonList();
   bool HandleClickOnReadMore();
   bool HandleClickOnTrailer();
   bool HandleClickOnShare();
@@ -135,6 +138,8 @@ protected:
   bool HandleClickOnEject();
   bool HandleClickOnBrowse();
   bool HandleClickOnResolve();
+  bool HandleClickOnAddToFavorite(CStdString& newLabelToUpdate, CStdString& newThumbToUpdate);
+  bool HandleClickOnRemoveFromFavorite(CStdString& newLabelToUpdate, CStdString& newThumbToUpdate);
 
   bool AddShortcut(const CBoxeeShortcut& shortcut);
   bool RemoveShortcut(const CBoxeeShortcut& shortcut);
@@ -142,6 +147,10 @@ protected:
   void AddDequeueButton(CFileItemList& buttonsList, const CStdString& referral);
 
   int FillDialogButtons(bool itemHasLinks);
+  int FillMovieAdditionalDialogButtons();
+
+  bool NeedToSubscribe();
+  bool OnSubscription();
 
   void UpdateItemWithLinkData(const CFileItemPtr linkItem);
   static void CopyItemContnetProperties(CFileItem &dstItem, const CFileItemPtr linkItem);
@@ -149,17 +158,26 @@ protected:
   static CDialogButtons::DialogButtonsEnums GetButtonAsEnum(const CStdString& buttonLabel);
   static CDialogButtons::DialogButtonsEnums GetButtonActionPropertyAsEnum(const CStdString& buttonActionProperty);
 
+  bool SetupTrailer(int& linksAddedCounter);
+
+  void InitCastPanel();
+
+  int GetVisibleButtonListControlId();
+
   bool m_bConfirmed;
   CFileItem m_item;
-  CFileItemPtr m_trailerItem;
+  CFileItemPtr m_trailerLinkItem;
 
-  //CFileItemList* m_linksFileItemList;
   std::vector<CFileItemPtr> m_linksFileItemList;
   bool m_listContainServerLinks;
 
-  int m_playButtonItemIndex;
+  bool m_tarilerWasAddedToLinkList;
 
   int m_numOfButtons;
+
+  int m_visibleButtonsListId;
+
+  bool m_refreshActiveWindow;
 };
 
 #endif /* CGUIDIALOGBOXEEMEDIAACTION_H_ */

@@ -2,7 +2,7 @@
 |
 |   Platinum - Control Point Tasks
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -29,7 +29,7 @@
 | 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 | http://www.gnu.org/licenses/gpl-2.0.html
 |
- ****************************************************************/
+****************************************************************/
 
 /*----------------------------------------------------------------------
 |    includes
@@ -63,22 +63,25 @@ PLT_CtrlPointGetDescriptionTask::~PLT_CtrlPointGetDescriptionTask()
 +---------------------------------------------------------------------*/
 NPT_Result 
 PLT_CtrlPointGetDescriptionTask::ProcessResponse(NPT_Result                    res, 
-                                                 NPT_HttpRequest*              request, 
+                                                 const NPT_HttpRequest&        request, 
                                                  const NPT_HttpRequestContext& context, 
                                                  NPT_HttpResponse*             response)
 {
     NPT_COMPILER_UNUSED(request);
-    return m_CtrlPoint->ProcessGetDescriptionResponse(res, context, response, m_RootDevice);
+    return m_CtrlPoint->ProcessGetDescriptionResponse(
+        res, 
+        request, 
+        context, 
+        response, 
+        m_RootDevice);
 }
 
 /*----------------------------------------------------------------------
 |    PLT_CtrlPointGetSCPDTask::PLT_CtrlPointGetSCPDTask
 +---------------------------------------------------------------------*/
-PLT_CtrlPointGetSCPDTask::PLT_CtrlPointGetSCPDTask(PLT_CtrlPoint*           ctrl_point, 
-                                                   PLT_DeviceDataReference& root_device) :  
+PLT_CtrlPointGetSCPDTask::PLT_CtrlPointGetSCPDTask(PLT_CtrlPoint* ctrl_point) :  
     PLT_HttpClientSocketTask(), 
-    m_CtrlPoint(ctrl_point), 
-    m_RootDevice(root_device) 
+    m_CtrlPoint(ctrl_point)
 {
 }
 
@@ -94,13 +97,17 @@ PLT_CtrlPointGetSCPDTask::~PLT_CtrlPointGetSCPDTask()
 +---------------------------------------------------------------------*/
 NPT_Result 
 PLT_CtrlPointGetSCPDTask::ProcessResponse(NPT_Result                    res, 
-                                          NPT_HttpRequest*              request, 
+                                          const NPT_HttpRequest&        request, 
                                           const NPT_HttpRequestContext& context, 
                                           NPT_HttpResponse*             response)
 {
     NPT_COMPILER_UNUSED(context);
     return m_CtrlPoint->ProcessGetSCPDResponse(
-        res, (PLT_CtrlPointGetSCPDRequest*)request, response, m_RootDevice);
+        res, 
+        request, 
+        context, 
+        response,
+        ((PLT_CtrlPointGetSCPDRequest&)request).m_Device);
 }
 
 /*----------------------------------------------------------------------
@@ -129,7 +136,7 @@ PLT_CtrlPointInvokeActionTask::~PLT_CtrlPointInvokeActionTask()
 +---------------------------------------------------------------------*/
 NPT_Result 
 PLT_CtrlPointInvokeActionTask::ProcessResponse(NPT_Result                    res, 
-                                               NPT_HttpRequest*              request, 
+                                               const NPT_HttpRequest&        request, 
                                                const NPT_HttpRequestContext& context, 
                                                NPT_HttpResponse*             response)
 {
@@ -155,7 +162,7 @@ PLT_CtrlPointHouseKeepingTask::PLT_CtrlPointHouseKeepingTask(PLT_CtrlPoint*   ct
 void  
 PLT_CtrlPointHouseKeepingTask::DoRun() 
 {
-    while (!IsAborting(m_Timer.m_Seconds*1000)) {
+    while (!IsAborting((NPT_Timeout)m_Timer.ToSeconds()*1000)) {
         if (m_CtrlPoint) {
             m_CtrlPoint->DoHouseKeeping();
         }
@@ -165,11 +172,11 @@ PLT_CtrlPointHouseKeepingTask::DoRun()
 /*----------------------------------------------------------------------
 |    PLT_CtrlPointSubscribeEventTask::PLT_CtrlPointSubscribeEventTask
 +---------------------------------------------------------------------*/
-PLT_CtrlPointSubscribeEventTask::PLT_CtrlPointSubscribeEventTask(NPT_HttpRequest* request,
-                                                                 PLT_CtrlPoint*   ctrl_point, 
+PLT_CtrlPointSubscribeEventTask::PLT_CtrlPointSubscribeEventTask(NPT_HttpRequest*        request,
+                                                                 PLT_CtrlPoint*          ctrl_point, 
 																 PLT_DeviceDataReference &device,
-                                                                 PLT_Service*     service,
-                                                                 void*            userdata) : 
+                                                                 PLT_Service*            service,
+                                                                 void*                   userdata) : 
     PLT_HttpClientSocketTask(request), 
     m_CtrlPoint(ctrl_point), 
     m_Service(service), 
@@ -190,12 +197,18 @@ PLT_CtrlPointSubscribeEventTask::~PLT_CtrlPointSubscribeEventTask()
 +---------------------------------------------------------------------*/
 NPT_Result 
 PLT_CtrlPointSubscribeEventTask::ProcessResponse(NPT_Result                    res, 
-                                                 NPT_HttpRequest*              request, 
+                                                 const NPT_HttpRequest&        request, 
                                                  const NPT_HttpRequestContext& context, 
                                                  NPT_HttpResponse*             response)
 {
     NPT_COMPILER_UNUSED(request);
     NPT_COMPILER_UNUSED(context);
 
-    return m_CtrlPoint->ProcessSubscribeResponse(res, response, m_Service, m_Userdata);
+    return m_CtrlPoint->ProcessSubscribeResponse(
+        res, 
+        request, 
+        context, 
+        response, 
+        m_Service, 
+        m_Userdata);
 }

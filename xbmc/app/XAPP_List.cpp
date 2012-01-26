@@ -23,8 +23,8 @@ List::List(int windowId, int controlId) throw (AppException) : Control(windowId,
   CGUIControl::GUICONTROLTYPES type = (CGUIControl::GUICONTROLTYPES)msg.GetParam1();
 
   if (!(type == CGUIControl::GUICONTAINER_LIST || type == CGUIControl::GUICONTAINER_FIXEDLIST || type == CGUIControl::GUICONTAINER_WRAPLIST || type == CGUIControl::GUICONTAINER_PANEL))
-    throw AppException("Control is not a List");
-}
+        throw AppException("Control is not a List");
+      }
 
 void List::ScrollPageUp()
 {
@@ -89,7 +89,7 @@ void List::JumpToLetter(char letter)
   strLabel.Format("%c", letter);
   message.SetLabel(strLabel);
   g_application.getApplicationMessenger().SendGUIMessageToWindow(message, m_windowId, false);
-}
+    }
 
 ListItems List::GetSelected()
 {
@@ -105,9 +105,9 @@ ListItems List::GetSelected()
     for (size_t i = 0; i < guiListItems->size(); i++)
     {
       result.push_back(ListItem(boost::static_pointer_cast<CFileItem>((*guiListItems)[i])));
-    }
+      }
     delete guiListItems;
-  }
+    }
 
   return result;
 }
@@ -141,7 +141,7 @@ int List::GetFocusedItem() throw (XAPP::AppException)
   CGUIMessage msg(GUI_MSG_ITEM_SELECTED, m_windowId, m_controlId);
   g_application.getApplicationMessenger().SendGUIMessageToWindow(msg, m_windowId, true);
   return msg.GetParam1();
-}
+    }
 
 ListItems List::GetItems()
 {
@@ -157,8 +157,8 @@ ListItems List::GetItems()
     for (size_t i = 0; i < guiListItems->size(); i++)
     {
       result.push_back(ListItem(boost::static_pointer_cast<CFileItem>((*guiListItems)[i])));
-    }
-    delete guiListItems;
+      }
+  delete guiListItems;
   }
   return result;	
 }
@@ -169,7 +169,7 @@ ListItem List::GetItem(int item) throw (XAPP::AppException)
   g_application.getApplicationMessenger().SendGUIMessageToWindow(msg, m_windowId, true);
 
   ListItem result = ListItem(boost::static_pointer_cast<CFileItem>(msg.GetItem()));
-  return result;
+        return result;
 
   throw AppException("List::GetItem unable to get item from list");
 }
@@ -177,12 +177,23 @@ ListItem List::GetItem(int item) throw (XAPP::AppException)
 void List::SetItems(ListItems list, int iSelectedItem)
 {
   CFileItemList fileItems;
-  
+
+  {
+    CGUIMessage clearmsg(GUI_MSG_LABEL_RESET, m_windowId, m_controlId, 0, 0);
+    g_windowManager.SendThreadMessage(clearmsg);
+  }
+
   for (size_t i = 0; i < list.size(); i++)
   {
     CFileItem* pItem =  list[i].GetFileItem().get();
+    pItem->Select(i == (size_t) iSelectedItem);
     CFileItemPtr fileItem(new CFileItem(*pItem));
     fileItems.Add(fileItem);
+
+    {
+      CGUIMessage addMsg(GUI_MSG_LABEL_ADD, m_windowId, m_controlId, 0, 0, fileItem);
+      g_windowManager.SendThreadMessage(addMsg);
+    }
   }
   
   if (fileItems.Size() > 0)
@@ -200,6 +211,15 @@ void List::Refresh()
 {
   CGUIMessage clearmsg(GUI_MSG_RELOAD_CONTENT, m_windowId, m_controlId, 0, 0);
   g_windowManager.SendThreadMessage(clearmsg);
+}
+
+void List::UpdateItem(int index, ListItem item)
+{
+  CFileItem* pItem =  item.GetFileItem().get();
+  CFileItemPtr fileItem(new CFileItem(*pItem));
+
+  CGUIMessage updatemsg(GUI_MSG_LABEL_SET, m_windowId, m_controlId, index, 0, fileItem);
+  g_windowManager.SendThreadMessage(updatemsg);
 }
 
 }

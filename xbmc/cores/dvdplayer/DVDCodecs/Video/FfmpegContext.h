@@ -44,7 +44,7 @@ BOOL			FFH264IsRefFrameInUse (int nFrameNum, struct AVCodecContext* pAVCtx);
 void			FF264UpdateRefFrameSliceLong(DXVA_PicParams_H264* pDXVAPicParams, DXVA_Slice_H264_Long* pSlice, struct AVCodecContext* pAVCtx);
 void			FFH264SetDxvaSliceLong (struct AVCodecContext* pAVCtx, void* pSliceLong);
 void			FFH264GetMBSize(struct AVCodecContext* pAVCtx, int* mbWidth, int* mbHeight);
-  
+
 // === VC1 functions
 HRESULT		FFVC1UpdatePictureParam (DXVA_PictureParameters* pPicParams, struct AVCodecContext* pAVCtx, int* nFieldType, int* nSliceType, BYTE* pBuffer, UINT nSize);
 int				FFIsSkipped(struct AVCodecContext* pAVCtx);

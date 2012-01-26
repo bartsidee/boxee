@@ -63,7 +63,7 @@ public:
   const CStdString& GetLocalURL() const;
   const CStdString& GetBackgroundImageURL() const;
   const CStdString& GetController() const;
-  const CStdString& GetSecurityLevel() const;
+  const CStdString& GetPartnerId() const;
   const CStdString& GetGlobalHandler() const;
   const CStdString& GetSignature() const;
   bool IsAdult() const;
@@ -74,6 +74,8 @@ public:
   bool IsBoxeeApp() const;
   bool MatchesPlatform();
   bool GenerateSignature();
+  bool IsPersistent() const;
+  const std::vector<CStdString>& GetAdditionalSharedLibraries() const;
 
 protected:
   bool LoadDescriptorFile(void);
@@ -107,10 +109,12 @@ protected:
   bool       m_countriesAllow;
   bool       m_adult;
   bool       m_testApp;
-  CStdString m_securityLevel;
+  CStdString m_partnerId;
   CStdString m_signature;
   CStdString m_globalHandler;
   CStdString m_boxeeSig;
+  bool       m_persistent;
+  std::vector<CStdString> m_additionalSharedLibraries;
 };
 
 #endif /*APP_DESCRIPTOR_H_*/

@@ -50,14 +50,18 @@
 #include "FileSystem/File.h"
 #include "StdString.h"
 #include "Settings.h"
+#include "GUISettings.h"
 #include "AdvancedSettings.h"
 #include "Util.h"
 #include "Thread.h"
-
-XFILE::CFile*  CLog::m_file     = NULL;
-int            CLog::m_logSize  = 0;
+XFILE::CFile* CLog::m_file = NULL;
+int           CLog::m_logSize = 0;
 int            CLog::m_logLevel = LOGINFO;
 bool           CLog::m_showLogLine = false;
+int            CLog::m_syslogFd = -1;
+#ifndef _WIN32
+struct sockaddr_in CLog::m_syslogAddr;
+#endif
 
 static CCriticalSection critSec;
 
@@ -94,6 +98,8 @@ bool DTEMP1        = true;
 bool DTEMP2        = true;
 bool DTEMP3        = true;
 
+#define SYSLOG_PORT 514
+char syslogStr[16384];
 
 void DbgInit() {
 #ifdef _LINUX  
@@ -108,6 +114,11 @@ bool CLog::RotateLog(void) {
     // g_stSettings.m_logFolder is initialized in the CSettings constructor
     // and changed in CApplication::Create()
     CStdString strLogFile, strLogFileOld;
+
+    // avoid log file name with "(null)..."
+    if (g_stSettings.m_logFolder.c_str() == NULL)
+      return false;
+
     strLogFile.Format("%sboxee.log", g_stSettings.m_logFolder.c_str());
     strLogFileOld.Format("%sboxee.old.log", g_stSettings.m_logFolder.c_str());
 
@@ -144,6 +155,14 @@ void CLog::Close()
     delete m_file;
     m_file = NULL;
   }
+
+#ifndef _WIN32
+  if (m_syslogFd != -1)
+  {
+    close(m_syslogFd);
+    m_syslogFd = -1;
+}
+#endif
 }
 
 
@@ -152,8 +171,10 @@ void CLog::Log(int loglevel, const char *format, ... )
   if (loglevel >= m_logLevel)
   {
     CSingleLock waitLock(critSec);
-	if (!m_file && !CLog::RotateLog())
+    if (!m_file && !CLog::RotateLog())
+    {
       return;
+    }
 
     SYSTEMTIME time;
     GetLocalTime(&time);
@@ -163,14 +184,21 @@ void CLog::Log(int loglevel, const char *format, ... )
 
     CStdString strPrefix, strData;
 
-    strPrefix.Format("%02.2d:%02.2d:%02.2d T:%"PRIu64" M:%9"PRIu64" %7s: ", time.wHour, time.wMinute, time.wSecond, (uint64_t)CThread::GetCurrentThreadId(), (uint64_t)stat.dwAvailPhys, levelNames[loglevel]);
+    strPrefix.Format("%02.2d:%02.2d:%02.2d.%03.3d T:%"PRIu64" M:%9"PRIu64" %7s: ", time.wHour, time.wMinute, time.wSecond, time.wMilliseconds, (uint64_t)CThread::GetCurrentThreadId(), (uint64_t)stat.dwAvailPhys, levelNames[loglevel]);
 
     strData.reserve(16384);
+
+#ifdef _WIN32
+	// Replace all %z with %I, since VS CRT is not C99 complaint:
+	CStdString format_str(format);
+	format_str.Replace("%z", "%I");
+	format = format_str.c_str();
+#endif
     va_list va;
     va_start(va, format);
     strData.FormatV(format,va);    
     va_end(va);
-    
+
 
     unsigned int length = 0;
     while ( length != strData.length() )
@@ -192,18 +220,47 @@ void CLog::Log(int loglevel, const char *format, ... )
     OutputDebugString("\n");
 #endif
 
+#if defined(_LINUX)
+    // temporary to ease debugging
+    printf("%2.2d:%2.2d:%2.2d.%3.3d %7s: %s\n", time.wHour, time.wMinute, time.wSecond, time.wMilliseconds, levelNames[loglevel], strData.c_str());
+#endif
+
     /* fixup newline alignment, number of spaces should equal prefix length */
     strData.Replace("\n", LINE_ENDING"                                            ");
     strData += LINE_ENDING;
-       
+
     m_logSize = m_logSize + strPrefix.size() + strData.size();
     if (m_logSize > g_advancedSettings.m_logFileSize) 
-	{
-    	if (!CLog::RotateLog())
-    		return;
+    {
+      if (!CLog::RotateLog())
+        return;
     }
     m_file->Write(strPrefix.c_str(), strPrefix.size());
     m_file->Write(strData.c_str(), strData.size());
+
+#ifndef _WIN32
+    if (m_syslogFd != -1)
+    {
+      int level = 0;
+      switch (loglevel)
+      {
+      case LOGNONE:     level = 6; break;
+      case LOGDEBUG:    level = 7; break;
+      case LOGINFO:     level = 6; break;
+      case LOGNOTICE:   level = 5; break;
+      case LOGWARNING:  level = 4; break;
+      case LOGERROR:    level = 3; break;
+      case LOGSEVERE:   level = 2; break;
+      case LOGFATAL:    level = 0; break;
+      }
+
+      level += 8 * 16 /* LOCAL0 */;
+
+      static const char* MONTHS[12] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+      sprintf(syslogStr, "<%d>%s %d %02d:%02d:%02d boxee %s", level, MONTHS[time.wMonth - 1], time.wDay, time.wHour, time.wMinute, time.wSecond, strData.c_str());
+      sendto(m_syslogFd, syslogStr, strlen(syslogStr), 0, (struct sockaddr *)&m_syslogAddr, sizeof(m_syslogAddr));
+    }
+#endif
   }
 }
 
@@ -275,76 +332,42 @@ void CLog::MemDump(char *pData, int length)
   }
 }
 
+void CLog::ResetSyslogServer()
+{
+#ifndef _WIN32
+  if (m_syslogFd != -1)
+  {
+    close(m_syslogFd);
+    m_syslogFd = -1;    
+  }
 
-void _VerifyGLState(const char* szfile, const char* szfunction, int lineno){
-#if defined(HAS_GL) && defined(_DEBUG)
-#define printMatrix(matrix)                                             \
-  {                                                                     \
-    for (int ixx = 0 ; ixx<4 ; ixx++)                                   \
-      {                                                                 \
-        CLog::Log(LOGDEBUG, "% 3.3f % 3.3f % 3.3f % 3.3f ",             \
-                  matrix[ixx*4], matrix[ixx*4+1], matrix[ixx*4+2],      \
-                  matrix[ixx*4+3]);                                     \
-      }                                                                 \
-  } 
-  if (CLog::m_logLevel > LOGDEBUG)
+  if (!g_guiSettings.GetBool("debug.syslogenabled"))
+  {
+    CLog::Log(LOGINFO, "Writing to syslog disabled");
+    m_syslogFd = -1;
     return;
-  GLenum err = glGetError();
-  if (err==GL_NO_ERROR)
+  }
+
+  if (g_guiSettings.GetString("debug.syslogaddr").length() == 0)
+  {
+    CLog::Log(LOGINFO, "Writing to syslog disabled");
     return;
-  CLog::Log(LOGERROR, "GL ERROR: %s\n", gluErrorString(err));
-  if (szfile && szfunction)
-      CLog::Log(LOGERROR, "In file:%s function:%s line:%d", szfile, szfunction, lineno);
-  GLboolean bools[16];
-  GLfloat matrix[16];
-  glGetFloatv(GL_SCISSOR_BOX, matrix);
-  CLog::Log(LOGDEBUG, "Scissor box: %f, %f, %f, %f", matrix[0], matrix[1], matrix[2], matrix[3]);
-  glGetBooleanv(GL_SCISSOR_TEST, bools);
-  CLog::Log(LOGDEBUG, "Scissor test enabled: %d", (int)bools[0]);
-  glGetFloatv(GL_VIEWPORT, matrix);
-  CLog::Log(LOGDEBUG, "Viewport: %f, %f, %f, %f", matrix[0], matrix[1], matrix[2], matrix[3]);
-  glGetFloatv(GL_PROJECTION_MATRIX, matrix);
-  CLog::Log(LOGDEBUG, "Projection Matrix:");
-  printMatrix(matrix);
-  glGetFloatv(GL_MODELVIEW_MATRIX, matrix);
-  CLog::Log(LOGDEBUG, "Modelview Matrix:");
-  printMatrix(matrix);
-//  abort();
+  }  
+      
+  struct hostent *hp;
+  if ((hp = gethostbyname(g_guiSettings.GetString("debug.syslogaddr").c_str())) == 0) 
+  {
+    CLog::Log(LOGNOTICE, "Could not determine syslog server name");
+    return;
+  }
+    
+  memset(&m_syslogAddr, 0, sizeof(m_syslogAddr));
+  m_syslogAddr.sin_family = AF_INET;
+  m_syslogAddr.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
+  m_syslogAddr.sin_port = htons(SYSLOG_PORT);
+  
+  m_syslogFd = socket(AF_INET, SOCK_DGRAM, 0);
+
+  CLog::Log(LOGINFO, "Writing to syslog enabled");
 #endif
 }
-
-void LogGraphicsInfo()
-{
-#ifdef HAS_GL
-  const GLubyte *s;
-
-  s = glGetString(GL_VENDOR);
-  if (s)
-    CLog::Log(LOGNOTICE, "GL_VENDOR = %s", s);
-  else
-    CLog::Log(LOGNOTICE, "GL_VENDOR = NULL");
-
-  s = glGetString(GL_RENDERER);
-  if (s)
-    CLog::Log(LOGNOTICE, "GL_RENDERER = %s", s);
-  else
-    CLog::Log(LOGNOTICE, "GL_RENDERER = NULL");
-
-  s = glGetString(GL_VERSION);
-  if (s)
-    CLog::Log(LOGNOTICE, "GL_VERSION = %s", s);
-  else
-    CLog::Log(LOGNOTICE, "GL_VERSION = NULL");
-
-  s = glGetString(GL_EXTENSIONS);
-  if (s)
-    CLog::Log(LOGNOTICE, "GL_EXTENSIONS = %s", s);
-  else
-    CLog::Log(LOGNOTICE, "GL_EXTENSIONS = NULL");
-#else /* !HAS_GL */
-  CLog::Log(LOGNOTICE,
-            "Please define LogGraphicsInfo for your chosen graphics libary");
-#endif /* !HAS_GL */
-}
-
-

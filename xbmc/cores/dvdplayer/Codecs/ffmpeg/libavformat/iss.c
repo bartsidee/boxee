@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavformat/iss.c
+ * @file
  * Funcom ISS file demuxer
  * @author Jaikrishnan Menon
  * for more information on the .iss file format, visit:
@@ -92,7 +92,7 @@ static av_cold int iss_read_header(AVFormatContext *s, AVFormatParameters *ap)
     st = av_new_stream(s, 0);
     if (!st)
         return AVERROR(ENOMEM);
-    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
     st->codec->codec_id = CODEC_ID_ADPCM_IMA_ISS;
     st->codec->channels = stereo ? 2 : 1;
     st->codec->sample_rate = 44100;
@@ -122,7 +122,7 @@ static int iss_read_packet(AVFormatContext *s, AVPacket *pkt)
     return 0;
 }
 
-AVInputFormat iss_demuxer = {
+AVInputFormat ff_iss_demuxer = {
     "ISS",
     NULL_IF_CONFIG_SMALL("Funcom ISS format"),
     sizeof(IssDemuxContext),

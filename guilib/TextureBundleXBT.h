@@ -40,7 +40,7 @@ public:
   static CStdString Normalize(const CStdString &name);
 
   bool LoadTexture(const CStdString& Filename, CBaseTexture** ppTexture,
-                       int &width, int &height);
+                       int &width, int &initialWidth, int &height, int &initialHeight);
 
   int LoadAnim(const CStdString& Filename, CBaseTexture*** ppTextures,
                 int &width, int &height, int& nLoops, int** ppDelays);

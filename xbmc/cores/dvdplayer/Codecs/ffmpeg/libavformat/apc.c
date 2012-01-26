@@ -43,7 +43,7 @@ static int apc_read_header(AVFormatContext *s, AVFormatParameters *ap)
     if (!st)
         return AVERROR(ENOMEM);
 
-    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
     st->codec->codec_id = CODEC_ID_ADPCM_IMA_WS;
 
     get_le32(pb); /* number of samples */
@@ -80,7 +80,7 @@ static int apc_read_packet(AVFormatContext *s, AVPacket *pkt)
     return 0;
 }
 
-AVInputFormat apc_demuxer = {
+AVInputFormat ff_apc_demuxer = {
     "apc",
     NULL_IF_CONFIG_SMALL("CRYO APC format"),
     0,

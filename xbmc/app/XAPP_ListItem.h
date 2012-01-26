@@ -1,11 +1,18 @@
 #ifndef XAPP_LISTITEM_H_
 #define XAPP_LISTITEM_H_
 
-
-#include "FileItem.h"
 #include "AppException.h"
 #include <string>
 #include <vector>
+#include "boost/shared_ptr.hpp"
+
+class CFileItem;
+
+/*!
+  \brief A shared pointer to CFileItem
+  \sa CFileItem
+  */
+typedef boost::shared_ptr<CFileItem> CFileItemPtr;
 
 namespace XAPP
 {
@@ -75,7 +82,7 @@ public:
     /**
      * General file 
      */
-    MEDIA_FILE
+    MEDIA_FILE,
   };
   
   /**
@@ -95,6 +102,11 @@ public:
   void SetLabel(const std::string& label);
   
   /**
+   * Sets label2.
+   */
+  void SetLabel2(const std::string& label2);
+
+  /**
    * Sets the path. It could be either a local file or a URL with the protocols: http://, mms:// or flash:// (flash is
    * described in the RSS specification).
    */
@@ -105,6 +117,8 @@ public:
    */
   void SetContentType(const std::string& contentType);
   
+  void SetPauseOnSeek(bool pauseOnSeek);
+
   /**
    * Sets the title.
    */
@@ -282,6 +296,13 @@ public:
   void SetProperty(const std::string& key, const std::string& value);
   
   /**
+   * Clears custom properties from item
+   *
+   * @param key the key name for the property
+   */
+
+  void ClearProperty(const std::string &strKey);
+  /**
    * Boolean flag that defines whether boxee will report to the server that this item was played. By default every 
    * played content is reported to boxee. If the played content is inappropriate, it should not be reported to boxee.
    */
@@ -319,6 +340,9 @@ public:
    */
   void SetExternalItem(ListItem externalItem);
 
+  void SetCanShuffle(bool canShuffle);
+  void SetCanRepeat(bool canRepeat);
+
   /**
    * Marks item state as selected, this flag is usually used by the UI to highlight marked items in the list
    */
@@ -353,7 +377,7 @@ public:
    * Returns the thumbnail.
    */
   std::string GetThumbnail() const;
-  
+
   /**
    * Returns the icon.
    */
@@ -547,9 +571,17 @@ public:
    */
   void Dump();
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS  
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+  void SetMusicOSDButton(int id, const std::string thumbFocus, const std::string thumbNoFocus);
+
+  void DeleteMusicOSDButton(int id);
+
   CFileItemPtr GetFileItem();
   
+  void SetArbitratyProperty(const std::string& key, void* value);
+
+  void* GetArbitratyProperty(const std::string& key);
+
 protected:
   /**
    * Set the media type. This hints boxee which media will be played.

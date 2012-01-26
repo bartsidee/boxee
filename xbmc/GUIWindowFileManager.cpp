@@ -373,7 +373,7 @@ void CGUIWindowFileManager::UpdateButtons()
   */
   // update our current directory labels
   CStdString strDir;
-  CURL(m_Directory[0]->m_strPath).GetURLWithoutUserDetails(strDir);
+  strDir = CURI(m_Directory[0]->m_strPath).GetWithoutUserDetails();
   if (strDir.IsEmpty())
   {
     SET_CONTROL_LABEL(CONTROL_CURRENTDIRLABEL_LEFT,g_localizeStrings.Get(20108));
@@ -382,7 +382,7 @@ void CGUIWindowFileManager::UpdateButtons()
   {
     SET_CONTROL_LABEL(CONTROL_CURRENTDIRLABEL_LEFT, strDir);
   }
-  CURL(m_Directory[1]->m_strPath).GetURLWithoutUserDetails(strDir);
+  strDir = CURI(m_Directory[1]->m_strPath).GetWithoutUserDetails();
   if (strDir.IsEmpty())
   {
     SET_CONTROL_LABEL(CONTROL_CURRENTDIRLABEL_RIGHT,g_localizeStrings.Get(20108));
@@ -672,15 +672,15 @@ bool CGUIWindowFileManager::DoProcessFile(int iAction, const CStdString& strFile
 {
   CStdString strShortSourceFile;
   CStdString strShortDestFile;
-  CURL(strFile).GetURLWithoutUserDetails(strShortSourceFile);
-  CURL(strDestFile).GetURLWithoutUserDetails(strShortDestFile);
+  strShortSourceFile = CURI(strFile).GetWithoutUserDetails();
+  strShortDestFile = CURI(strDestFile).GetWithoutUserDetails();
   switch (iAction)
   {
   case ACTION_COPY:
     {
       CLog::Log(LOGDEBUG,"FileManager: copy %s->%s\n", strFile.c_str(), strDestFile.c_str());
 
-      CURL url(strFile);
+      CURI url(strFile);
       if (url.GetProtocol() == "rar")
       {
         g_RarManager.SetWipeAtWill(false);
@@ -1045,7 +1045,7 @@ int CGUIWindowFileManager::GetSelectedItem(int iControl)
 
 void CGUIWindowFileManager::GoParentFolder(int iList)
 {
-  CURL url(m_Directory[iList]->m_strPath);
+  CURI url(m_Directory[iList]->m_strPath);
   if ((url.GetProtocol() == "rar") || (url.GetProtocol() == "zip"))
   {
     // check for step-below, if, unmount rar
@@ -1536,7 +1536,7 @@ void CGUIWindowFileManager::ShowShareErrorMessage(CFileItem* pItem)
   if (pItem->m_bIsShareOrDrive)
   {
     int idMessageText=0;
-    CURL url(pItem->m_strPath);
+    CURI url(pItem->m_strPath);
     const CStdString& strHostName=url.GetHostName();
 
     if (pItem->m_iDriveType!=CMediaSource::SOURCE_TYPE_REMOTE) //  Local shares incl. dvd drive

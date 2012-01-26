@@ -99,7 +99,7 @@ bool WAVCodec::Init(const CStdString &strFile, unsigned int filecache)
 
       //  Is it an extensible wav file
       if ((Endian_SwapLE16(wfx.Format.wFormatTag) == WAVE_FORMAT_EXTENSIBLE) && (Endian_SwapLE16(wfx.Format.cbSize) >= 22))
-      {        
+      {
         m_file.Read(&(wfx.Samples), sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX));
         m_ChannelMask = Endian_SwapLE32(wfx.dwChannelMask);
       } else {

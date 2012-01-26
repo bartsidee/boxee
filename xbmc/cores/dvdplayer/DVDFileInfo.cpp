@@ -75,17 +75,22 @@ bool CDVDFileInfo::GetFileDuration(const CStdString &path, int& duration)
 
 bool CDVDFileInfo::ExtractThumb(const CStdString &strPath, const CStdString &strTarget, CStreamDetails *pStreamDetails)
 {
+  int nFrameNum = 50;
+
   CStdString strExt = CUtil::GetExtension(strPath);
   strExt.ToLower();
   if ( strExt == ".vob") // some vobs crash us especially now when not decrypting dvds
     return false;
   
+  if( strExt == ".m2ts")
+    nFrameNum = 200;
+
   CStdString strFile;
   if (CUtil::IsStack(strPath))
     strFile = DIRECTORY::CStackDirectory::GetFirstStackedFile(strPath);
   else
     strFile = strPath;
-  
+
   int nTime = CTimeUtils::GetTimeMS();
   CDVDInputStream *pInputStream = CDVDFactoryInputStream::CreateInputStream(NULL, strFile, "");
   if (!pInputStream)
@@ -93,14 +98,14 @@ bool CDVDFileInfo::ExtractThumb(const CStdString &strPath, const CStdString &str
     CLog::Log(LOGERROR, "InputStream: Error creating stream for %s", strFile.c_str());
     return false;
   }
-  
+
   if (pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD))
   {
     CLog::Log(LOGERROR, "InputStream: dvd streams not supported for thumb extraction, file: %s", strFile.c_str());
     delete pInputStream;
     return false;
   }
-  
+
   if (!pInputStream->Open(strFile.c_str(), ""))
   {
     CLog::Log(LOGERROR, "InputStream: Error opening, %s", strFile.c_str());
@@ -108,9 +113,9 @@ bool CDVDFileInfo::ExtractThumb(const CStdString &strPath, const CStdString &str
       delete pInputStream;
     return false;
   }
-  
+
   CDVDDemuxFFmpeg *pDemuxer = new CDVDDemuxFFmpeg();
-  
+
   try
   {
     if(!pDemuxer->Open(pInputStream))
@@ -124,14 +129,14 @@ bool CDVDFileInfo::ExtractThumb(const CStdString &strPath, const CStdString &str
   {
     CLog::Log(LOGERROR, "%s - Exception thrown when opening demuxer", __FUNCTION__);
     if (pDemuxer)
-      delete pDemuxer;
+    delete pDemuxer;
     delete pInputStream;
     return false;
   }
-  
+
   if (pStreamDetails)
     DemuxerToStreamDetails(pDemuxer, *pStreamDetails);
-  
+
   CDemuxStream* pStream = NULL;
   int nVideoStream = -1;
   for (int i = 0; i < pDemuxer->GetNrOfStreams(); i++)
@@ -140,12 +145,12 @@ bool CDVDFileInfo::ExtractThumb(const CStdString &strPath, const CStdString &str
     if (pStream)
     {
       if(pStream->type == STREAM_VIDEO)
-        nVideoStream = i;
+      nVideoStream = i;
       else
         pStream->SetDiscard(AVDISCARD_ALL);
     }
   }
-  
+
   bool bOk = false;
   if (nVideoStream != -1)
   {
@@ -156,46 +161,52 @@ bool CDVDFileInfo::ExtractThumb(const CStdString &strPath, const CStdString &str
     
     if (hint.codec == CODEC_ID_MPEG2VIDEO || hint.codec == CODEC_ID_MPEG1VIDEO)
     {
-      // libmpeg2 is not thread safe so use ffmepg for mpeg2/mpeg1 thumb extraction
+      // libmpeg2 is not thread safe so use ffmepg for mpeg2/mpeg1 thumb extraction 
       CDVDCodecOptions dvdOptions;
       pVideoCodec = CDVDFactoryCodec::OpenCodec(new CDVDVideoCodecFFmpeg(), hint, dvdOptions);
     }
+    // disable thumbs for rm files
+#ifdef HAS_EMBEDDED
+    else if(hint.codec == CODEC_ID_RV10 || hint.codec == CODEC_ID_RV20 || hint.codec == CODEC_ID_RV30 || hint.codec == CODEC_ID_RV40)
+    {
+      pVideoCodec = NULL;
+    }
+#endif
     else
     {
       pVideoCodec = CDVDFactoryCodec::CreateVideoCodec( hint );
     }
-    
+
     if (pVideoCodec)
     {
       int nTotalLen = pDemuxer->GetStreamLength();
       int nSeekTo = nTotalLen / 3;
-      
+
       CLog::Log(LOGDEBUG,"%s - seeking to pos %dms (total: %dms) in %s", __FUNCTION__, nSeekTo, nTotalLen, strFile.c_str());
       if (pDemuxer->SeekTime(nSeekTo, true))
       {
         DemuxPacket* pPacket = NULL;
         int iDecoderState = VC_ERROR;
         DVDVideoPicture picture;
-        
-        // num streams * 50 frames, should get a valid frame, if not abort.
-        int abort_index = pDemuxer->GetNrOfStreams() * 50;
+  
+        int abort_index = pDemuxer->GetNrOfStreams() * nFrameNum;
         bool bHasFrame = false;
-        do
-        {
-          pPacket = pDemuxer->Read();
+          do
+          {
+            pPacket = pDemuxer->Read();
           if (!pPacket)
             break;
           
           if (pPacket->iStreamId != nVideoStream)
-          {
+            {
             CDVDDemuxUtils::FreeDemuxPacket(pPacket);
             continue;
           }
           
-          iDecoderState = pVideoCodec->Decode(pPacket->pData, pPacket->iSize, pPacket->pts);
-          CDVDDemuxUtils::FreeDemuxPacket(pPacket);
+              iDecoderState = pVideoCodec->Decode(pPacket->pData, pPacket->iSize, pPacket->pts, pPacket->dts);
+              CDVDDemuxUtils::FreeDemuxPacket(pPacket);
           
-          if (iDecoderState & VC_PICTURE)
+              if (iDecoderState & VC_PICTURE)
           {
             memset(&picture, 0, sizeof(DVDVideoPicture));
             if (pVideoCodec->GetPicture(&picture))
@@ -204,53 +215,53 @@ bool CDVDFileInfo::ExtractThumb(const CStdString &strPath, const CStdString &str
               if(!(picture.iFlags & DVP_FLAG_DROPPED) && picture.iFrameType == FRAME_TYPE_I)
                 break;
             }
-          }
+            }
           
         } while (abort_index--);
-        
+
         if (bHasFrame)
-        {
-          int nWidth = g_advancedSettings.m_thumbSize;
-          double aspect = (double)picture.iWidth / (double)picture.iHeight;
-          int nHeight = (int)((double)g_advancedSettings.m_thumbSize / aspect);
-          
-          DllSwScale dllSwScale;
-          dllSwScale.Load();
-          
-          BYTE *pOutBuf = new BYTE[nWidth * nHeight * 4];
-          struct SwsContext *context = dllSwScale.sws_getContext(picture.iWidth, picture.iHeight,
-                                                                 PIX_FMT_YUV420P, nWidth, nHeight, PIX_FMT_BGRA, SWS_FAST_BILINEAR, NULL, NULL, NULL);
-          uint8_t *src[] = { picture.data[0], picture.data[1], picture.data[2], 0 };
-          int     srcStride[] = { picture.iLineSize[0], picture.iLineSize[1], picture.iLineSize[2], 0 };
-          uint8_t *dst[] = { pOutBuf, 0, 0, 0 };
-          int     dstStride[] = { nWidth*4, 0, 0, 0 };
-          
-          if (context)
-          {
-            dllSwScale.sws_scale(context, src, srcStride, 0, picture.iHeight, dst, dstStride);
-            dllSwScale.sws_freeContext(context);
-            
-            CPicture::CreateThumbnailFromSurface(pOutBuf, nWidth, nHeight, nWidth * 4, strTarget);
-            bOk = true;
-          }
-          
-          dllSwScale.Unload();
-          delete [] pOutBuf;
-        }
-        else
-        {
+            {
+                int nWidth = g_advancedSettings.m_thumbSize;
+                double aspect = (double)picture.iWidth / (double)picture.iHeight;
+                int nHeight = (int)((double)g_advancedSettings.m_thumbSize / aspect);
+
+                DllSwScale dllSwScale;
+                dllSwScale.Load();
+
+            BYTE *pOutBuf = new BYTE[nWidth * nHeight * 4];
+                struct SwsContext *context = dllSwScale.sws_getContext(picture.iWidth, picture.iHeight, 
+                      PIX_FMT_YUV420P, nWidth, nHeight, PIX_FMT_BGRA, SWS_FAST_BILINEAR, NULL, NULL, NULL);
+            uint8_t *src[] = { picture.data[0], picture.data[1], picture.data[2], 0 };
+            int     srcStride[] = { picture.iLineSize[0], picture.iLineSize[1], picture.iLineSize[2], 0 };
+            uint8_t *dst[] = { pOutBuf, 0, 0, 0 };
+            int     dstStride[] = { nWidth*4, 0, 0, 0 };
+
+                if (context)
+                {
+                  dllSwScale.sws_scale(context, src, srcStride, 0, picture.iHeight, dst, dstStride);  
+                  dllSwScale.sws_freeContext(context);
+
+                  CPicture::CreateThumbnailFromSurface(pOutBuf, nWidth, nHeight, nWidth * 4, strTarget);
+                  bOk = true; 
+                }
+
+                dllSwScale.Unload();                
+                delete [] pOutBuf;
+              }
+              else 
+              {
           CLog::Log(LOGDEBUG,"%s - decode failed in %s", __FUNCTION__, strFile.c_str());
+          }
         }
-      }
       delete pVideoCodec;
     }
   }
-  
+
   if (pDemuxer)
     delete pDemuxer;
-  
+
   delete pInputStream;
-  
+
   if(!bOk)
     CPicture::CreateThumbnail("special://xbmc/skin/boxee/media/defaultvideothumb.png", strTarget, true);
   
@@ -299,7 +310,7 @@ void CDVDFileInfo::GetFileMetaData(const CStdString &strPath, CFileItem *pItem)
     return ;
   }
 
-  AVFormatContext *pContext = pDemuxer->m_pFormatContext;
+  AVFormatContext *pContext = pDemuxer->m_pFormatContext; 
   if (pContext)
   {
     int nLenMsec = pDemuxer->GetStreamLength();
@@ -311,6 +322,18 @@ void CDVDFileInfo::GetFileMetaData(const CStdString &strPath, CFileItem *pItem)
     pItem->SetProperty("duration-msec", strDuration);
     strDuration.Format("%02d:%02d:%02d", nHours, nMinutes, nSec);
     pItem->SetProperty("duration-str", strDuration);
+#if LIBAVFORMAT_VERSION_INT >= AV_VERSION_INT(52,83,0)
+    const char * tags[] = {"title", "author", "copyright", "comment",
+                           "album", "year", "track", "genre" };
+
+    for (unsigned int i=0; i<sizeof(tags)/sizeof(tags[0]); i++)
+    {
+      AVMetadataTag *tag = pDemuxer->AvGetMetaData(pContext->metadata, tags[i], NULL, 0);
+
+      if (tag)
+        pItem->SetProperty(tags[i], tag->value);
+    }
+#else
     pItem->SetProperty("title", pContext->title);
     pItem->SetProperty("author", pContext->author);
     pItem->SetProperty("copyright", pContext->copyright);
@@ -321,7 +344,8 @@ void CDVDFileInfo::GetFileMetaData(const CStdString &strPath, CFileItem *pItem)
     strDuration.Format("%d", pContext->track);
     pItem->SetProperty("track", strDuration);
     pItem->SetProperty("genre", pContext->genre);
-  }
+#endif
+        }
 
   delete pDemuxer;
   pInputStream->Close();

@@ -2,14 +2,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "FileSystem/curl/curl.h"
 #include "bxcurl.h"
 #include "logger.h"
 #include "bxexceptions.h"
 #include "boxee.h"
-
+#include "bxutils.h"
+#include "../../GUISettings.h"
+#include "../../BoxeeHalServices.h"
+#include "utils/Network.h"
 #include "StdString.h"
 #include "CharsetConverter.h"
+#include "Application.h"
+
+#ifdef HAS_EMBEDDED
+#include <openssl/ssl.h>
+#endif
 
 #ifdef _LINUX
 #include "linux/XFileUtils.h"
@@ -31,6 +38,13 @@ extern "C" FILE *fopen_utf8(const char *_Filename, const char *_Mode);
 #define fopen_utf8 fopen
 #endif
 
+
+#ifdef _WIN32
+#define GET_ENV(a,b,c) GetEnvironmentVariable((a),(b),(c))
+#else
+#define GET_ENV getenv
+#endif
+
 namespace BOXEE {
 
 class CurlHandleWrapper
@@ -38,12 +52,12 @@ class CurlHandleWrapper
 public:
   CurlHandleWrapper()
   {
-    handle = curl_easy_init();
+    handle = g_curlInterface.easy_init();
   }
   
   ~CurlHandleWrapper() 
   {
-    curl_easy_cleanup(handle);
+    g_curlInterface.easy_cleanup(handle);
   }
   void *handle;
 };
@@ -53,6 +67,8 @@ static CPoolMngr<CurlHandleWrapper> sHttpConnectionPool(3);
 bool BXCurl::m_bInitialized = false;
 bool BXCurl::m_bDefaultVerbose = false;
 std::string BXCurl::m_globalUserAgent = "boxee (alpha/dev)";
+
+#define COOKIE_FILE_NAME_POSTFIX    "boxee-cookies.dat"
 
 BXCurl::BXCurl() : m_bVerbose(m_bDefaultVerbose), m_headers(0)
 {
@@ -90,13 +106,16 @@ bool BXCurl::Initialize()
 {
   if (m_bInitialized)
     return true;
-  
-  bool bOk = (curl_global_init(CURL_GLOBAL_ALL) == 0);
+
+  bool bOk = true;
+  if (!g_curlInterface.IsLoaded())
+	  bOk = g_curlInterface.Load();
+  //bOk = (g_curlInterface.global_init(CURL_GLOBAL_ALL) == 0);
   if (bOk) {
-    curl_version_info_data *pData = curl_version_info(CURLVERSION_NOW);
-    if (pData) {
-      LOG(LOG_LEVEL_DEBUG,"curl initialized. version <%s>\n",pData->version);
-    }
+    //g_curlInterface.version_info_data *pData = g_curlInterface.version_info(CURLVERSION_NOW);
+    //if (pData) {
+      LOG(LOG_LEVEL_DEBUG,"curl initialized. version <%s>\n","???");
+    //}
   }
   else {
     LOG(LOG_LEVEL_ERROR,"failed to initialize curl!");
@@ -119,7 +138,8 @@ void BXCurl::DeInitialize()
   if (!m_bInitialized)
     return;
 
-  curl_global_cleanup();
+  if (g_curlInterface.IsLoaded())
+	g_curlInterface.Unload();
   
   m_bInitialized = false;  
 }
@@ -134,7 +154,7 @@ void BXCurl::FinalizeTransfer(void* curlHandle, bool bSuccess)
   if (curlHandle)
   {
     char *ip = NULL;
-    curl_easy_getinfo(curlHandle, CURLINFO_PRIMARY_IP, &ip);
+    g_curlInterface.easy_getinfo(curlHandle, CURLINFO_PRIMARY_IP, &ip);
     if (ip && *ip)
       m_strServerIP = ip;
   }
@@ -168,13 +188,13 @@ void BXCurl::FinalizeTransfer(void* curlHandle, bool bSuccess)
   m_usingCacheUrl = false;
   
   if (  m_headers )
-    curl_slist_free_all(m_headers);
+    g_curlInterface.slist_free_all(m_headers);
   
   m_headers = NULL;
   
   if (curlHandle)
   {
-    curl_easy_cleanup(curlHandle);
+    g_curlInterface.easy_cleanup(curlHandle);
   }
 
   curlHandle = NULL;
@@ -205,14 +225,14 @@ void* BXCurl::InitHttpTransfer(const char *szUrl, bool bUseCache) {
       
       if (ret == XBMC::HTTP_CACHE_ALREADY_EXISTS)
       {
-        char *local = curl_escape(m_strLocalCacheName.c_str(), m_strLocalCacheName.size());
+        char *local = g_curlInterface.escape(m_strLocalCacheName.c_str(), m_strLocalCacheName.size());
         if (local)
         {
           strUrl = "file://";
           strUrl += local;
-          curl_free(local);
+          g_curlInterface.free_curl(local);
         }
-        else
+        else  
         {
           strUrl = "file://"+m_strLocalCacheName;
         }
@@ -236,19 +256,19 @@ void* BXCurl::InitHttpTransfer(const char *szUrl, bool bUseCache) {
     }
   }
     
-  void* curlHandle = curl_easy_init();
+  void* curlHandle = g_curlInterface.easy_init();
 
-  if ( curl_easy_setopt(curlHandle, CURLOPT_URL, strUrl.c_str()) != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for url <%s> failed!", strUrl.c_str());
+  if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_URL, strUrl.c_str()) != CURLE_OK ) {
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for url <%s> failed!", strUrl.c_str());
     FinalizeTransfer(curlHandle);
     return NULL;
   }
 
   if (m_bVerbose)
-    curl_easy_setopt(curlHandle, CURLOPT_VERBOSE, 1);
+    g_curlInterface.easy_setopt(curlHandle, CURLOPT_VERBOSE, 1);
 
-  if ( curl_easy_setopt(curlHandle, CURLOPT_HEADERFUNCTION, ProcessResponseHeaders) != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for header function failed!");
+  if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_HEADERFUNCTION, ProcessResponseHeaders) != CURLE_OK ) {
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for header function failed!");
     FinalizeTransfer(curlHandle);
     return NULL;
   }
@@ -259,8 +279,8 @@ void* BXCurl::InitHttpTransfer(const char *szUrl, bool bUseCache) {
   m_parseContext.m_respHeaders.clear();
 
   // private data pointer for the handle headers function would be the respHeaders array
-  if ( curl_easy_setopt(curlHandle, CURLOPT_WRITEHEADER, &m_parseContext) != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for header function (data) failed!");
+  if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_WRITEHEADER, &m_parseContext) != CURLE_OK ) {
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for header function (data) failed!");
     FinalizeTransfer(curlHandle);
     return NULL;
   }
@@ -269,85 +289,148 @@ void* BXCurl::InitHttpTransfer(const char *szUrl, bool bUseCache) {
   if (!m_credentials.GetUserName().empty()) {
     // set user/pass
     m_strCredString = m_credentials.GetUserName() + ":" + m_credentials.GetPassword();
-    LOG(LOG_LEVEL_DEBUG,"setting creds to: <%s>", m_strCredString.c_str());
-    if ( curl_easy_setopt(curlHandle, CURLOPT_USERPWD, m_strCredString.c_str()) != CURLE_OK ) {
-      LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for CURLOPT_USERPWD failed!");
+    //LOG(LOG_LEVEL_DEBUG,"setting creds to: <%s>", m_strCredString.c_str());
+    if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_USERPWD, m_strCredString.c_str()) != CURLE_OK ) {
+      LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for CURLOPT_USERPWD failed!");
     }
 
-    if ( curl_easy_setopt(curlHandle, CURLOPT_HTTPAUTH, CURLAUTH_ANY) != CURLE_OK ) {
-      LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for CURLOPT_HTTPAUTH failed!");
+    if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_HTTPAUTH, CURLAUTH_ANY) != CURLE_OK ) {
+      LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for CURLOPT_HTTPAUTH failed!");
     }
 
   }
-  
+
   //m_strUserAgent = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.0.4) Gecko/2008102920 Firefox/3.0.4";
   if (m_strUserAgent.empty())    
   {
-    curl_easy_setopt(curlHandle, CURLOPT_USERAGENT, m_globalUserAgent.c_str());
+    g_curlInterface.easy_setopt(curlHandle, CURLOPT_USERAGENT, m_globalUserAgent.c_str());
   }
   else
-    curl_easy_setopt(curlHandle, CURLOPT_USERAGENT, m_strUserAgent.c_str());
+    g_curlInterface.easy_setopt(curlHandle, CURLOPT_USERAGENT, m_strUserAgent.c_str());
   
   //m_credentials.SetProxy("127.0.0.1:8080");
   if (!m_credentials.GetProxyAddress().empty())
   {
-    curl_easy_setopt(curlHandle, CURLOPT_PROXY, m_credentials.GetProxyAddress().c_str());
+    if (g_curlInterface.easy_setopt(curlHandle, CURLOPT_PROXY, m_credentials.GetProxyAddress().c_str()) == CURLE_OK)
+    {
+      m_strProxyCred = m_credentials.GetProxyUsername() + ":"+ m_credentials.GetProxyPassword();
+      if (!m_credentials.GetProxyUsername().empty() && g_curlInterface.easy_setopt(curlHandle, CURLOPT_PROXYUSERPWD, m_strProxyCred.c_str()) == CURLE_OK)
+      {
+        LOG(LOG_LEVEL_DEBUG,"g_curlInterface.easy_setopt for CURLOPT_PROXY and CURLOPT_PROXYUSERPWD succeeded! [%s]", m_credentials.GetProxyAddress().c_str());
+      }
+      else
+      {
+        LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for CURLOPT_PROXYUSERPWD failed! or there's no username defined.");
+      }
+    }
+    else
+    {
+      LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for CURLOPT_PROXY failed!");
+    }
   }
   
-  curl_easy_setopt(curlHandle, CURLOPT_SSL_VERIFYPEER, 0);
-  curl_easy_setopt(curlHandle, CURLOPT_SSL_VERIFYHOST, 0);
+#ifdef _WIN32 //windows hack for proxy
+  char credentials[500];
+  if (GET_ENV("http_proxy",credentials,500))
+  {
+    g_curlInterface.easy_setopt(curlHandle, CURLOPT_PROXY, credentials);
+  }
+#endif
   
-  curl_easy_setopt(curlHandle, CURLOPT_NOSIGNAL , 1);
-  curl_easy_setopt(curlHandle, CURLOPT_DNS_CACHE_TIMEOUT , 0);
-  curl_easy_setopt(curlHandle, CURLOPT_FAILONERROR, 1);
+  g_curlInterface.easy_setopt(curlHandle, CURLOPT_SSL_VERIFYPEER, 0);
+  g_curlInterface.easy_setopt(curlHandle, CURLOPT_SSL_VERIFYHOST, 0);
+  
+  g_curlInterface.easy_setopt(curlHandle, CURLOPT_NOSIGNAL , 1);
+  g_curlInterface.easy_setopt(curlHandle, CURLOPT_DNS_CACHE_TIMEOUT , 0);
+  g_curlInterface.easy_setopt(curlHandle, CURLOPT_FAILONERROR, 1);
 
-  curl_easy_setopt(curlHandle, CURLOPT_CONNECTTIMEOUT, 10);
-  
+  g_curlInterface.easy_setopt(curlHandle, CURLOPT_CONNECTTIMEOUT, 10);
+  //g_curlInterface.easy_setopt(curlHandle, CURLOPT_TIMEOUT, 10);
   /*  
-  curl_easy_setopt(curlHandle, CURLOPT_LOW_SPEED_LIMIT, 1);
-  curl_easy_setopt(curlHandle, CURLOPT_LOW_SPEED_TIME, 10);
+  g_curlInterface.easy_setopt(curlHandle, CURLOPT_LOW_SPEED_LIMIT, 1);
+  g_curlInterface.easy_setopt(curlHandle, CURLOPT_LOW_SPEED_TIME, 10);
   */
   
   std::string strCookieJar = GetCookieJar();
-  curl_easy_setopt(curlHandle, CURLOPT_AUTOREFERER, 1);
-  curl_easy_setopt(curlHandle, CURLOPT_FOLLOWLOCATION, 1);
-  curl_easy_setopt(curlHandle, CURLOPT_MAXREDIRS, 8);
-  curl_easy_setopt(curlHandle, CURLOPT_COOKIEFILE, strCookieJar.c_str()); // enable cookie usage
-  curl_easy_setopt(curlHandle, CURLOPT_COOKIEJAR, strCookieJar.c_str()); // enable cookie usage
+  g_curlInterface.easy_setopt(curlHandle, CURLOPT_AUTOREFERER, 1);
+  g_curlInterface.easy_setopt(curlHandle, CURLOPT_FOLLOWLOCATION, 1);
+  g_curlInterface.easy_setopt(curlHandle, CURLOPT_MAXREDIRS, 8);
+  g_curlInterface.easy_setopt(curlHandle, CURLOPT_COOKIEFILE, strCookieJar.c_str()); // enable cookie usage
+  g_curlInterface.easy_setopt(curlHandle, CURLOPT_COOKIEJAR, strCookieJar.c_str()); // enable cookie usage
 
   // allow zipped responses
-  curl_easy_setopt(curlHandle, CURLOPT_ENCODING, "");
+  g_curlInterface.easy_setopt(curlHandle, CURLOPT_ENCODING, "");
 
-  m_headers = curl_slist_append(m_headers, "Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7");
-  m_headers = curl_slist_append(m_headers, "Accept-Language: en-us,en;q=0.5");
-  m_headers = curl_slist_append(m_headers, "Keep-Alive: 300");
-  m_headers = curl_slist_append(m_headers, "Connection: keep-alive");
+  m_headers = g_curlInterface.slist_append(m_headers, "Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7");
+  m_headers = g_curlInterface.slist_append(m_headers, "Accept-Language: en-us,en;q=0.5");
+  m_headers = g_curlInterface.slist_append(m_headers, "Keep-Alive: 300");
+  m_headers = g_curlInterface.slist_append(m_headers, "Connection: keep-alive");
   
+  std::string strBoxeeClientId = "X-Boxee-Client-Id: ";
+
+#ifdef HAS_EMBEDDED
+  CHalHardwareInfo info;
+  if (CHalServicesFactory::GetInstance().GetHardwareInfo(info))
+  {
+    strBoxeeClientId += BXUtils::GetMD5Hex(info.serialNumber);
+  }
+  else
+  {
+    CStdString strMac;
+    CNetworkInterfacePtr net = g_application.getNetwork().GetInterfaceByName("eth0");
+    if (!net.get())
+      net = g_application.getNetwork().GetInterfaceByName("en0");
+
+    if (net.get())
+    {
+      strMac = net->GetMacAddress();
+      strMac.Replace(":","");
+    }
+
+    strBoxeeClientId += BXUtils::GetMD5Hex(strMac);
+  }
+#elif defined(_LINUX)
+  CStdString strMac;
+  CNetworkInterfacePtr net = g_application.getNetwork().GetInterfaceByName("eth0");
+  if (!net.get())
+    net = g_application.getNetwork().GetInterfaceByName("en0");
+
+  if (net.get())
+  {
+    strMac = net->GetMacAddress();
+    strMac.Replace(":","");
+  }
+
+  strBoxeeClientId += BXUtils::GetMD5Hex(strMac);
+#endif
+
+  m_headers = g_curlInterface.slist_append(m_headers, strBoxeeClientId.c_str());
+
   if (!strEtag.empty())
   {
-    m_headers = curl_slist_append(m_headers, std::string("If-None-Match: "+strEtag).c_str());
+    m_headers = g_curlInterface.slist_append(m_headers, std::string("If-None-Match: "+strEtag).c_str());
   }
   else if (httpTime > 0)
   {
-    curl_easy_setopt(curlHandle, CURLOPT_TIMEVALUE, httpTime);
-    curl_easy_setopt(curlHandle, CURLOPT_TIMECONDITION, CURL_TIMECOND_IFMODSINCE);
+    g_curlInterface.easy_setopt(curlHandle, CURLOPT_TIMEVALUE, httpTime);
+    g_curlInterface.easy_setopt(curlHandle, CURLOPT_TIMECONDITION, CURL_TIMECOND_IFMODSINCE);
   }
     
-  curl_easy_setopt (curlHandle, CURLOPT_HTTPHEADER, m_headers);
+  g_curlInterface.easy_setopt (curlHandle, CURLOPT_HTTPHEADER, m_headers);
   
   return curlHandle;
 }
 
 void BXCurl::HttpResetHeaders() {
   if (m_headers)
-    curl_slist_free_all(m_headers);
+    g_curlInterface.slist_free_all(m_headers);
 
   m_headers = 0;
 }
 
 void BXCurl::HttpSetHeaders(const ListHttpHeaders &listHeaders) {
   for (size_t i=0; i< listHeaders.size(); i++) {
-    m_headers = curl_slist_append(m_headers, listHeaders[i].c_str());
+    m_headers = g_curlInterface.slist_append(m_headers, listHeaders[i].c_str());
   }
 }
 
@@ -366,39 +449,47 @@ std::string BXCurl::HttpDelete(const char *szUrl)
     return "";
   }
   
-  if ( curl_easy_setopt(curlHandle, CURLOPT_CUSTOMREQUEST, "DELETE") != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for DELETE failed!");
+  if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_CUSTOMREQUEST, "DELETE") != CURLE_OK ) {
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for DELETE failed!");
     FinalizeTransfer(curlHandle);
     return "";
   }
   
-  if ( curl_easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, ProcessStringData) != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for write function failed!");
+  if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, ProcessStringData) != CURLE_OK ) {
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for write function failed!");
     FinalizeTransfer(curlHandle);
     return "";
   }
   
   string strResult;
-  if ( curl_easy_setopt(curlHandle, CURLOPT_WRITEDATA, &strResult) != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for write function (data) failed!");
+  if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_WRITEDATA, &strResult) != CURLE_OK ) {
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for write function (data) failed!");
     FinalizeTransfer(curlHandle);
     return "";
   }
-  
-  CURLcode retCode = curl_easy_perform(curlHandle);
-  
-  curl_easy_setopt(curlHandle, CURLOPT_CUSTOMREQUEST, NULL);
-  
-  curl_easy_getinfo(curlHandle, CURLINFO_RESPONSE_CODE, &m_nLastRetCode);
+
   char strCode[1024];
   memset(strCode, 0, 1024);
+  g_curlInterface.easy_setopt(curlHandle, CURLOPT_ERRORBUFFER, strCode);
+
+  CURLcode retCode = g_curlInterface.easy_perform(curlHandle);
+#ifdef HAS_EMBEDDED
+  if(retCode == CURLE_OUT_OF_MEMORY)
+  {
+    LOG(LOG_LEVEL_DEBUG,"g_curlInterface.easy_preform failed - got CURLE_OUT_OF_MEMORY, retrying...");
+    SSL_library_init();
+    retCode = g_curlInterface.easy_perform(curlHandle);   
+  } 
+#endif
+  g_curlInterface.easy_setopt(curlHandle, CURLOPT_CUSTOMREQUEST, NULL);
   
-  curl_easy_setopt(curlHandle, CURLOPT_ERRORBUFFER, strCode);
+  g_curlInterface.easy_getinfo(curlHandle, CURLINFO_RESPONSE_CODE, &m_nLastRetCode);
+
   if (strCode[0] != '\0')
     m_parseContext.m_strLastRetCode = strCode;
   
   if ( retCode != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_perform failed (%s)!", strCode);
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_perform failed (%s)!", strCode);
     FinalizeTransfer(curlHandle);
     return "";
   }
@@ -421,16 +512,16 @@ std::string BXCurl::HttpGetString(const char *szUrl, bool bUseCache)
 
   bool usingCacheUrl = m_usingCacheUrl;
 
-  if ( curl_easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, ProcessStringData) != CURLE_OK ) 
+  if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, ProcessStringData) != CURLE_OK ) 
   {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for write function failed!");
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for write function failed!");
     FinalizeTransfer(curlHandle);
     return "";
   }
 
   string strResult;
-  if ( curl_easy_setopt(curlHandle, CURLOPT_WRITEDATA, &strResult) != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for write function (data) failed!");
+  if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_WRITEDATA, &strResult) != CURLE_OK ) {
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for write function (data) failed!");
         FinalizeTransfer(curlHandle);
     return "";
   }
@@ -438,25 +529,32 @@ std::string BXCurl::HttpGetString(const char *szUrl, bool bUseCache)
   // make sure we have no BODY (GET), and that the request type is GET.
   // this is important in the case of handle re-use (first POST and then GET with the
   // same object).
-  if ( curl_easy_setopt(curlHandle, CURLOPT_NOBODY, 1) != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for CURLOPT_NOBODY failed!");
+  if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_NOBODY, 1) != CURLE_OK ) {
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for CURLOPT_NOBODY failed!");
         FinalizeTransfer(curlHandle);
     return "";
   }
 
   long useGet=1;
-  if ( curl_easy_setopt(curlHandle, CURLOPT_HTTPGET, &useGet) != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for CURLOPT_HTTPGET failed!");
+  if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_HTTPGET, &useGet) != CURLE_OK ) {
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for CURLOPT_HTTPGET failed!");
         FinalizeTransfer(curlHandle);
     return "";
   }
 
   char strCode[1024];
   memset(strCode, 0, 1024);
-  
-  curl_easy_setopt(curlHandle, CURLOPT_ERRORBUFFER, strCode);
-  
-  CURLcode retCode = curl_easy_perform(curlHandle);
+  g_curlInterface.easy_setopt(curlHandle, CURLOPT_ERRORBUFFER, strCode);
+
+  CURLcode retCode = g_curlInterface.easy_perform(curlHandle);
+#ifdef HAS_EMBEDDED
+  if(retCode == CURLE_OUT_OF_MEMORY)
+  {
+    LOG(LOG_LEVEL_DEBUG,"g_curlInterface.easy_preform failed - got CURLE_OUT_OF_MEMORY, retrying...");
+    SSL_library_init();
+    retCode = g_curlInterface.easy_perform(curlHandle);   
+  }
+#endif
   if (retCode == CURLE_COULDNT_RESOLVE_HOST || retCode == CURLE_COULDNT_CONNECT)
   {
     FinalizeTransfer(curlHandle);
@@ -465,13 +563,13 @@ std::string BXCurl::HttpGetString(const char *szUrl, bool bUseCache)
   }
   if (retCode == CURLE_OPERATION_TIMEDOUT )
   {
-    LOG(LOG_LEVEL_DEBUG,"curl_easy_preform failed - got TIMEOUT!");
+    LOG(LOG_LEVEL_DEBUG,"g_curlInterface.easy_preform failed - got TIMEOUT!");
     FinalizeTransfer(curlHandle);
     m_nLastRetCode = 408;
     return "";
   }
 
-  curl_easy_getinfo(curlHandle, CURLINFO_RESPONSE_CODE, &m_nLastRetCode);
+  g_curlInterface.easy_getinfo(curlHandle, CURLINFO_RESPONSE_CODE, &m_nLastRetCode);
 
   if(m_nLastRetCode == 401)
   {
@@ -483,7 +581,7 @@ std::string BXCurl::HttpGetString(const char *szUrl, bool bUseCache)
     m_parseContext.m_strLastRetCode = strCode;
 
   if ( retCode != CURLE_OK ) {
-    LOG(m_nLastRetCode == 404?LOG_LEVEL_DEBUG:LOG_LEVEL_ERROR,"curl_easy_perform failed (%s)!", strCode);
+    LOG(m_nLastRetCode == 404?LOG_LEVEL_DEBUG:LOG_LEVEL_ERROR,"g_curlInterface.easy_perform failed (%s)!", strCode);
     FinalizeTransfer(curlHandle);
     return "";
   }
@@ -543,7 +641,7 @@ std::string BXCurl::HttpGetString(const char *szUrl, bool bUseCache)
 
     fclose(fout);
   }
-
+  
   FinalizeTransfer(curlHandle, true);
 
   if ((m_nLastRetCode == 0) && usingCacheUrl)
@@ -566,38 +664,46 @@ bool BXCurl::HttpHEAD(const char *szUrl) {
     return "";
   }
 
-  if ( curl_easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, ProcessStringData) != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for write function failed!");
+  if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, ProcessStringData) != CURLE_OK ) {
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for write function failed!");
     FinalizeTransfer(curlHandle);
     return false;
   }
 
   string strResult;
-  if ( curl_easy_setopt(curlHandle, CURLOPT_WRITEDATA, &strResult) != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for write function (data) failed!");
+  if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_WRITEDATA, &strResult) != CURLE_OK ) {
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for write function (data) failed!");
     FinalizeTransfer(curlHandle);
     return false;
   }
 
   // send a HEAD request
-  if ( curl_easy_setopt(curlHandle, CURLOPT_NOBODY, 1) != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for CURLOPT_NOBODY failed!");
+  if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_NOBODY, 1) != CURLE_OK ) {
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for CURLOPT_NOBODY failed!");
     FinalizeTransfer(curlHandle);
     return false;
   }
 
-  CURLcode retCode = curl_easy_perform(curlHandle);
-
-  curl_easy_getinfo(curlHandle, CURLINFO_RESPONSE_CODE, &m_nLastRetCode);
   char strCode[1024];
   memset(strCode, 0, 1024);
+  g_curlInterface.easy_setopt(curlHandle, CURLOPT_ERRORBUFFER, strCode);
 
-  curl_easy_setopt(curlHandle, CURLOPT_ERRORBUFFER, strCode);
+  CURLcode retCode = g_curlInterface.easy_perform(curlHandle);
+#ifdef HAS_EMBEDDED
+  if(retCode == CURLE_OUT_OF_MEMORY)
+  {
+    LOG(LOG_LEVEL_DEBUG,"g_curlInterface.easy_preform failed - got CURLE_OUT_OF_MEMORY, retrying...");
+    SSL_library_init();
+    retCode = g_curlInterface.easy_perform(curlHandle);   
+  }
+#endif
+  g_curlInterface.easy_getinfo(curlHandle, CURLINFO_RESPONSE_CODE, &m_nLastRetCode);
+
   if (strCode[0] != '\0')
     m_parseContext.m_strLastRetCode = strCode;
 
   if ( retCode != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_perform failed (%s)!", strCode);
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_perform failed (%s)!", strCode);
     FinalizeTransfer(curlHandle);
     return false;
   }
@@ -655,35 +761,35 @@ bool BXCurl::HttpDownloadFile(const char *szUrl, const char *szTargetFile, const
     // make sure we have no BODY (GET), and that the request type is GET.
     // this is important in the case of handle re-use (first POST and then GET with the
     // same object).
-    if ( curl_easy_setopt(curlHandle, CURLOPT_NOBODY, 1) != CURLE_OK ) {
-      LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for CURLOPT_NOBODY failed!");
+    if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_NOBODY, 1) != CURLE_OK ) {
+      LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for CURLOPT_NOBODY failed!");
       FinalizeTransfer(curlHandle);
       return false;
     }
 
     long useGet=1;
-    if ( curl_easy_setopt(curlHandle, CURLOPT_HTTPGET, &useGet) != CURLE_OK ) {
-      LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for CURLOPT_HTTPGET failed!");
+    if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_HTTPGET, &useGet) != CURLE_OK ) {
+      LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for CURLOPT_HTTPGET failed!");
       FinalizeTransfer(curlHandle);
       return false;
     }
   }
   else
   {
-    if ( curl_easy_setopt(curlHandle, CURLOPT_POST, 1) != CURLE_OK ) {
-      LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for POST failed!");
+    if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_POST, 1) != CURLE_OK ) {
+      LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for POST failed!");
       FinalizeTransfer(curlHandle);
       return false;
     }
 
-    if ( curl_easy_setopt(curlHandle, CURLOPT_POSTFIELDS, strPostData.c_str()) != CURLE_OK ) {
-      LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for POSTFIELDS failed!");
+    if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_POSTFIELDS, strPostData.c_str()) != CURLE_OK ) {
+      LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for POSTFIELDS failed!");
       FinalizeTransfer(curlHandle);
       return false;
     }
 
-    if ( curl_easy_setopt(curlHandle, CURLOPT_POSTFIELDSIZE, strPostData.length()) != CURLE_OK ) {
-      LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for POSTFIELDSIZE failed!");
+    if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_POSTFIELDSIZE, strPostData.length()) != CURLE_OK ) {
+      LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for POSTFIELDSIZE failed!");
       FinalizeTransfer(curlHandle);
       return false;
     }
@@ -696,14 +802,14 @@ bool BXCurl::HttpDownloadFile(const char *szUrl, const char *szTargetFile, const
       return false;
     }
 
-  if ( curl_easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, ProcessFileDesc) != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for write function failed!");
+  if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, ProcessFileDesc) != CURLE_OK ) {
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for write function failed!");
         FinalizeTransfer(curlHandle);
     return "";
   }
 
-  if ( curl_easy_setopt(curlHandle, CURLOPT_WRITEDATA, fOut) != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for write function (data) failed!");
+  if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_WRITEDATA, fOut) != CURLE_OK ) {
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for write function (data) failed!");
     fclose(fOut);
     FinalizeTransfer(curlHandle);
     return false;
@@ -711,16 +817,17 @@ bool BXCurl::HttpDownloadFile(const char *szUrl, const char *szTargetFile, const
 
   char strCode[1024];
   memset(strCode, 0, 1024);
-  curl_easy_setopt(curlHandle, CURLOPT_ERRORBUFFER, strCode);
+  g_curlInterface.easy_setopt(curlHandle, CURLOPT_ERRORBUFFER, strCode);
 
-  CURLcode retCode = curl_easy_perform(curlHandle);
+  CURLcode retCode = g_curlInterface.easy_perform(curlHandle);
 
-  curl_easy_getinfo(curlHandle, CURLINFO_RESPONSE_CODE, &m_nLastRetCode);
+  g_curlInterface.easy_getinfo(curlHandle, CURLINFO_RESPONSE_CODE, &m_nLastRetCode);
+
   if (strCode[0] != '\0')
     m_parseContext.m_strLastRetCode = strCode;
 
   if ( retCode != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_perform failed (%s)!", strCode);
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_perform failed (%s)!", strCode);
     fclose(fOut);
     FinalizeTransfer(curlHandle);
     return false;
@@ -759,49 +866,50 @@ std::string BXCurl::HttpPostString(const char *szUrl, const std::string &strPost
     return "";
   }
 
-  if ( curl_easy_setopt(curlHandle, CURLOPT_POST, 1) != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for POST failed!");
+  if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_POST, 1) != CURLE_OK ) {
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for POST failed!");
     FinalizeTransfer(curlHandle);
     return "";
   }
 
-  if ( curl_easy_setopt(curlHandle, CURLOPT_POSTFIELDS, strPostData.c_str()) != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for POSTFIELDS failed!");
+  if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_POSTFIELDS, strPostData.c_str()) != CURLE_OK ) {
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for POSTFIELDS failed!");
     FinalizeTransfer(curlHandle);
     return "";
   }
 
-  if ( curl_easy_setopt(curlHandle, CURLOPT_POSTFIELDSIZE, strPostData.length()) != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for POSTFIELDSIZE failed!");
+  if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_POSTFIELDSIZE, strPostData.length()) != CURLE_OK ) {
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for POSTFIELDSIZE failed!");
     FinalizeTransfer(curlHandle);
     return "";
   }
 
-  if ( curl_easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, ProcessStringData) != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for write function failed!");
+  if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, ProcessStringData) != CURLE_OK ) {
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for write function failed!");
     FinalizeTransfer(curlHandle);
     return "";
   }
 
   string strResult;
-  if ( curl_easy_setopt(curlHandle, CURLOPT_WRITEDATA, &strResult) != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_setopt for write function (data) failed!");
+  if ( g_curlInterface.easy_setopt(curlHandle, CURLOPT_WRITEDATA, &strResult) != CURLE_OK ) {
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_setopt for write function (data) failed!");
     FinalizeTransfer(curlHandle);
     return "";
   }
 
-  CURLcode retCode = curl_easy_perform(curlHandle);
-
-  curl_easy_getinfo(curlHandle, CURLINFO_RESPONSE_CODE, &m_nLastRetCode);
   char strCode[1024];
   memset(strCode, 0, 1024);
+  g_curlInterface.easy_setopt(curlHandle, CURLOPT_ERRORBUFFER, strCode);
 
-  curl_easy_setopt(curlHandle, CURLOPT_ERRORBUFFER, strCode);
+  CURLcode retCode = g_curlInterface.easy_perform(curlHandle);
+
+  g_curlInterface.easy_getinfo(curlHandle, CURLINFO_RESPONSE_CODE, &m_nLastRetCode);
+
   if (strCode[0] != '\0')
     m_parseContext.m_strLastRetCode = strCode;
 
   if ( retCode != CURLE_OK ) {
-    LOG(LOG_LEVEL_ERROR,"curl_easy_perform failed (%s)!", strCode);
+    LOG(LOG_LEVEL_ERROR,"g_curlInterface.easy_perform failed (%s)!", strCode);
     FinalizeTransfer(curlHandle);
     return "";
   }
@@ -835,7 +943,7 @@ size_t BXCurl::ProcessFileDesc(void *pBuffer, size_t nSize, size_t nmemb, void *
     return 0;
 
   FILE *fd = (FILE *)userp;
-  int nCount = fwrite(pBuffer, nSize, nmemb, fd);
+  size_t nCount = fwrite(pBuffer, nSize, nmemb, fd);
   if (nCount == nmemb)
     return nSize * nmemb;
 
@@ -940,12 +1048,12 @@ std::string BXCurl::GetCookieJar()
     cookieJarPath += "-";
   }
 
-  cookieJarPath += "boxee-cookies.dat";
+  cookieJarPath += COOKIE_FILE_NAME_POSTFIX;
 
   return cookieJarPath;
 }
   
-const void BXCurl::SetGlobalUserAgent(const std::string &strAgent)
+void BXCurl::SetGlobalUserAgent(const std::string &strAgent)
 {
   m_globalUserAgent = strAgent;  
 }
@@ -955,15 +1063,27 @@ const std::string& BXCurl::GetGlobalUserAgent()
   return m_globalUserAgent;
 }
 
-void BXCurl::DeleteCookieJarFile()
+void BXCurl::DeleteCookieJarFile(const std::string& userName)
 {
-  std::string strCookieJar = GetCookieJar();
+  std::string strCookieJar;
+
+  if (!userName.empty())
+  {
+    strCookieJar = Boxee::GetInstance().GetTempFolderPath();
+    strCookieJar += userName;
+    strCookieJar += "-";
+    strCookieJar += COOKIE_FILE_NAME_POSTFIX;
+  }
+  else
+  {
+    strCookieJar = GetCookieJar();
+  }
 
   if(!strCookieJar.empty())
   {
-    remove(strCookieJar.c_str());
+    remove(strCookieJar.c_str());    
   }  
 }
-
+  
 } // namespace BOXEE
 

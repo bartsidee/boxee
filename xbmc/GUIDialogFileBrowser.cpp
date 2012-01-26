@@ -58,6 +58,23 @@ using namespace DIRECTORY;
 CGUIDialogFileBrowser::CGUIDialogFileBrowser()
     : CGUIDialog(WINDOW_DIALOG_FILE_BROWSER, "FileBrowser.xml")
 {
+  InitializeFileBrowser();
+}
+
+CGUIDialogFileBrowser::CGUIDialogFileBrowser(int id, const CStdString &xmlFile)
+    : CGUIDialog(id, xmlFile)
+{
+  InitializeFileBrowser();
+}
+
+CGUIDialogFileBrowser::~CGUIDialogFileBrowser()
+{
+  delete m_Directory;
+  delete m_vecItems;
+}
+
+void CGUIDialogFileBrowser::InitializeFileBrowser()
+{
   m_Directory = new CFileItem;
   m_vecItems = new CFileItemList;
   m_bConfirmed = false;
@@ -69,12 +86,6 @@ CGUIDialogFileBrowser::CGUIDialogFileBrowser()
   m_singleList = false;
   m_thumbLoader.SetObserver(this);
   m_flipEnabled = false;
-}
-
-CGUIDialogFileBrowser::~CGUIDialogFileBrowser()
-{
-  delete m_Directory;
-  delete m_vecItems;
 }
 
 bool CGUIDialogFileBrowser::OnAction(const CAction &action)
@@ -131,24 +142,37 @@ bool CGUIDialogFileBrowser::OnMessage(CGUIMessage& message)
       bool bIsDir = false;
       // this code allows two different selection modes for directories
       // end the path with a slash to start inside the directory
+      //CLog::Log(LOGDEBUG,"CGUIDialogFileBrowser, init dialog with path: %s (haim)",m_selectedPath.c_str());
       if (CUtil::HasSlashAtEnd(m_selectedPath))
       {
+        //CLog::Log(LOGDEBUG,"CGUIDialogFileBrowser, init dialog with path: %s HAS SLASH AT END(haim)",m_selectedPath.c_str());
         bIsDir = true;
         bool bFool;
         int iSource = CUtil::GetMatchingSource(m_selectedPath,m_shares,bFool);
+
+        //CLog::Log(LOGDEBUG,"CGUIDialogFileBrowser, init dialog with path: %s looking up source revealed: %d (haim)",m_selectedPath.c_str(), iSource);
+
         bFool = true;
         if (iSource > -1 && iSource < (int)m_shares.size())
         {
           if (m_shares[iSource].strPath.Equals(m_selectedPath))
             bFool = false;
         }
-      
-        if (bFool && !CDirectory::Exists(m_selectedPath))
+        bool bExists = CDirectory::Exists(m_selectedPath);
+
+        //CLog::Log(LOGDEBUG,"CGUIDialogFileBrowser, init dialog with path: %s bFool: %d , bExists: %d (haim)",m_selectedPath.c_str(), bFool, bExists);
+
+        if (bFool && !bExists)
           m_selectedPath.Empty();
       }
       else
       {
-        if (!CFile::Exists(m_selectedPath) && !CDirectory::Exists(m_selectedPath))
+        bool bFileExists = CFile::Exists(m_selectedPath);
+        bool bDirectoryExists = CDirectory::Exists(m_selectedPath);
+
+        //CLog::Log(LOGDEBUG,"CGUIDialogFileBrowser, init dialog with path: %s bFileExists: %d , bDirectoryExists: %d (haim)",m_selectedPath.c_str(), bFileExists, bDirectoryExists);
+
+        if (!bFileExists && !bDirectoryExists)
             m_selectedPath.Empty();
       }
 
@@ -156,6 +180,9 @@ bool CGUIDialogFileBrowser::OnMessage(CGUIMessage& message)
       m_Directory->m_strPath = m_selectedPath;
       if (!m_browsingForFolders && !bIsDir)
         CUtil::GetParentPath(m_selectedPath, m_Directory->m_strPath);
+
+      //CLog::Log(LOGDEBUG,"CGUIDialogFileBrowser, init dialog with path: %s, dirpath: %s (getparent)(haim)",m_selectedPath.c_str(), m_Directory->m_strPath.c_str());
+
       Update(m_Directory->m_strPath);
       m_viewControl.SetSelectedItem(m_selectedPath);
       return CGUIDialog::OnMessage(message);
@@ -329,27 +356,20 @@ void CGUIDialogFileBrowser::Update(const CStdString &strDirectory)
     CStdString strParentPath;
     bool bParentExists = CUtil::GetParentPath(strDirectory, strParentPath);
 
-    // check if current directory is a root share
-/*    if (!g_guiSettings.GetBool("filelists.hideparentdiritems"))
-    {*/
-      if ( !m_rootDir.IsSource(strDirectory))
+    if (m_rootDir.IsInSource(strDirectory)) //if its one of the sources
+    {
+      if (bParentExists && m_rootDir.IsInSource(strParentPath)) //if its inside one of our sources
       {
-        // no, do we got a parent dir?
-        if (bParentExists)
-        {
-          // yes
-          CFileItemPtr pItem(new CFileItem(".."));
-          pItem->m_strPath = strParentPath;
-          pItem->m_bIsFolder = true;
-          pItem->m_bIsShareOrDrive = false;
-          m_vecItems->Add(pItem);
-          m_strParentPath = strParentPath;
-        }
+        CFileItemPtr pItem(new CFileItem(".."));
+        pItem->m_strPath = strParentPath;
+        pItem->m_bIsFolder = true;
+        pItem->m_bIsShareOrDrive = false;
+        m_vecItems->Add(pItem);
+        m_strParentPath = strParentPath;
       }
       else
       {
-        // yes, this is the root of a share
-        // add parent path to the virtual directory
+        // should enter here if the parent folder does not exist or we can not access it
         CFileItemPtr pItem(new CFileItem(".."));
         pItem->m_strPath = "";
         pItem->m_bIsShareOrDrive = false;
@@ -357,8 +377,9 @@ void CGUIDialogFileBrowser::Update(const CStdString &strDirectory)
         m_vecItems->Add(pItem);
         m_strParentPath = "";
       }
-    //}
+    }
     m_Directory->m_strPath = strDirectory;
+
     if (!m_rootDir.GetDirectory(strDirectory, *m_vecItems,m_useFileDirectories))
     {
       CLog::Log(LOGERROR,"CGUIDialogFileBrowser::GetDirectory(%s) failed", strDirectory.c_str());
@@ -369,7 +390,7 @@ void CGUIDialogFileBrowser::Update(const CStdString &strDirectory)
       m_history.RemoveParentPath();
       Update(strParentPath);
       return;
-  }
+    }
   }
 
   // if we're getting the root source listing
@@ -460,16 +481,19 @@ void CGUIDialogFileBrowser::Render()
       m_selectedPath = (*m_vecItems)[item]->m_strPath;
     if (m_selectedPath == "net://")
     {
-      SET_CONTROL_LABEL(CONTROL_LABEL_PATH, g_localizeStrings.Get(1032)); // "Add Network Location..."
+      SetPathLabel(g_localizeStrings.Get(1032));
     }
     else
     {
       // Update the current path label
-      CURL url(m_selectedPath);
+      CURI url(m_selectedPath);
       CStdString safePath;
-      url.GetURLWithoutUserDetails(safePath);
+      safePath = url.GetWithoutUserDetails();
       safePath = _P(safePath);
-      SET_CONTROL_LABEL(CONTROL_LABEL_PATH, safePath);
+      if (CUtil::IsHD(safePath))
+        CUtil::HideExternalHDPath(safePath, safePath);
+
+      SetPathLabel(safePath);
     }
     if ((!m_browsingForFolders && (*m_vecItems)[item]->m_bIsFolder) || ((*m_vecItems)[item]->m_strPath == "image://Browse"))
     {
@@ -651,7 +675,7 @@ bool CGUIDialogFileBrowser::ShowAndGetDirectory(const VECSOURCES &shares, const 
   return ShowAndGetFile(shares, "/", heading, path);
 }
 
-bool CGUIDialogFileBrowser::ShowAndGetFile(const VECSOURCES &shares, const CStdString &mask, const CStdString &heading, CStdString &path, bool useThumbs /* = false */, bool useFileDirectories /* = false */)
+bool CGUIDialogFileBrowser::ShowAndGetFile(const VECSOURCES &shares, const CStdString &mask, const CStdString &heading, CStdString &path, bool useThumbs /* = false */, bool useFileDirectories /* = false */, bool allowNonLocalSources /* = true */)
 {
   CGUIDialogFileBrowser *browser = new CGUIDialogFileBrowser();
   if (!browser)
@@ -678,6 +702,7 @@ bool CGUIDialogFileBrowser::ShowAndGetFile(const VECSOURCES &shares, const CStdS
   browser->m_rootDir.SetMask(strMask);
   browser->m_selectedPath = path;
   browser->m_addNetworkShareEnabled = false;
+  browser->m_rootDir.AllowNonLocalSources(allowNonLocalSources);
   browser->DoModal();
   bool confirmed(browser->IsConfirmed());
   if (confirmed)
@@ -688,7 +713,7 @@ bool CGUIDialogFileBrowser::ShowAndGetFile(const VECSOURCES &shares, const CStdS
 }
 
 // same as above, starting in a single directory
-bool CGUIDialogFileBrowser::ShowAndGetFile(const CStdString &directory, const CStdString &mask, const CStdString &heading, CStdString &path, bool useThumbs /* = false */, bool useFileDirectories /* = false */)
+bool CGUIDialogFileBrowser::ShowAndGetFile(const CStdString &directory, const CStdString &mask, const CStdString &heading, CStdString &path, bool useThumbs /* = false */, bool useFileDirectories /* = false */, bool allowNonLocalSources /* = true */)
 {
   CGUIDialogFileBrowser *browser = new CGUIDialogFileBrowser();
   if (!browser)
@@ -721,6 +746,7 @@ bool CGUIDialogFileBrowser::ShowAndGetFile(const CStdString &directory, const CS
   browser->m_rootDir.SetMask(strMask);
   browser->m_selectedPath = directory;
   browser->m_addNetworkShareEnabled = false;
+  browser->m_rootDir.AllowNonLocalSources(allowNonLocalSources);
   browser->DoModal();
   bool confirmed(browser->IsConfirmed());
   if (confirmed)
@@ -734,6 +760,32 @@ void CGUIDialogFileBrowser::SetHeading(const CStdString &heading)
 {
   Initialize();
   SET_CONTROL_LABEL(CONTROL_HEADING_LABEL, heading);
+}
+
+void CGUIDialogFileBrowser::SetPathLabel(const CStdString &path)
+{
+  CStdString newPath = path;
+  if(newPath == "network://protocols/")
+  {
+    newPath = "network://";
+  }
+  if(newPath.Find("bms://") != -1)
+  {
+    newPath.Replace("bms://","bmm://");
+  }
+  if(newPath == "upnp://all/")
+  {
+    newPath = "upnp://";
+  }
+  if(newPath == "smb://computers/")
+  {
+    newPath = "smb://";
+  }
+  if(newPath.Find("smb://computers/?name=") != -1)
+  {
+    newPath.Replace("smb://computers/?name=","smb://");
+  }
+  SET_CONTROL_LABEL(CONTROL_LABEL_PATH, newPath);
 }
 
 bool CGUIDialogFileBrowser::ShowAndGetSource(CStdString &path, bool allowNetworkShares, VECSOURCES* additionalShare /* = NULL */, const CStdString& strType /* = "" */)
@@ -827,8 +879,8 @@ void CGUIDialogFileBrowser::OnAddNetworkLocation()
     { // add the network location to the shares list
       CMediaSource share;
       share.strPath = path; //setPath(path);
-      CURL url(path);
-      url.GetURLWithoutUserDetails(share.strName);
+      CURI url(path);
+      share.strName = url.GetWithoutUserDetails();
       m_shares.push_back(share);
       // add to our location manager...
       g_mediaManager.AddNetworkLocation(path);

@@ -22,12 +22,9 @@
  */
 
 #include "StdString.h"
-
+#include "GUIFont.h"
+#include "Resolution.h"
 #include <vector>
-
-#ifdef XBMC_FORCE_INLINE
-#undef XBMC_FORCE_INLINE
-#endif
 
 #ifdef __GNUC__
 // under gcc, inline will only take place if optimizations are applied (-O). this will force inline even without optimizations.
@@ -36,7 +33,6 @@
 #define XBMC_FORCE_INLINE
 #endif
 
-class CGUIFont;
 class CScrollInfo;
 
 // Process will be:
@@ -64,6 +60,8 @@ public:
 
   vecText m_text;
   bool m_carriageReturn; // true if we have a carriage return here
+
+  FontCoordsIndiced m_pCharCoords;
 };
 
 class CGUITextLayout
@@ -72,14 +70,19 @@ public:
   CGUITextLayout(CGUIFont *font, bool wrap, float fHeight=0.0f);  // this may need changing - we may just use this class to replace CLabelInfo completely
 
   // main function to render strings
-  void Render(float x, float y, float angle, color_t color, color_t shadowColor, uint32_t alignment, float maxWidth, bool solid = false);
+  void Render(float x, float y, float angle, color_t color, color_t shadowColor, uint32_t alignment, float maxWidth, bool solid = false, bool clip = false);
   void RenderScrolling(float x, float y, float angle, color_t color, color_t shadowColor, uint32_t alignment, float maxWidth, CScrollInfo &scrollInfo);
   void RenderOutline(float x, float y, color_t color, color_t outlineColor, uint32_t outlineWidth, uint32_t alignment, float maxWidth);
   void GetTextExtent(float &width, float &height) const;
   float GetTextWidth() const { return m_textWidth; };
   float GetTextWidth(const CStdStringW &text) const;
+  float GetTextHeight() const { return m_textHeight; };
+  float GetTextHeight(const int numLines) const;
   bool Update(const CStdString &text, float maxWidth = 0, bool forceUpdate = false, bool forceLTRReadingOrder = false);
   void SetText(const CStdStringW &text, float maxWidth = 0, bool forceLTRReadingOrder = false);
+
+  // set this flag to force the control to recalculate its vertices
+  void SetNeedRebuilding(bool needRebuilding) { m_bRebuildVertices = needRebuilding; }
 
   unsigned int GetTextLength() const;
   void GetFirstText(vecText &text) const;
@@ -92,6 +95,11 @@ public:
   static void DrawText(CGUIFont *font, float x, float y, color_t color, color_t shadowColor, const CStdString &text, uint32_t align);
   static void DrawOutlineText(CGUIFont *font, float x, float y, color_t color, color_t outlineColor, uint32_t outlineWidth, const CStdString &text);
   static void Filter(CStdString &text);
+  static void BuildAndRenderScreenText(CGUIFont *font, float x, float y, const color_t &color, color_t outlineColor, 
+    uint32_t outlineWidth, const vecText &text, uint32_t align, float maxWidth);
+
+  unsigned int GetCountLines(){ return m_lines.size(); }
+  unsigned int GetLineSize(unsigned int index){ return m_lines[index].m_text.size(); }
 
 protected:
   void ParseText(const CStdStringW &text, vecText &parsedText);
@@ -100,7 +108,7 @@ protected:
   void BidiTransform(std::vector<CGUIString> &lines, bool forceLTRReadingOrder);
   CStdStringW BidiFlip(const CStdStringW &text, bool forceLTRReadingOrder);
   void CalcTextExtent();
-
+  
   // our text to render
   vecColors m_colors;
   std::vector<CGUIString> m_lines;
@@ -116,6 +124,17 @@ protected:
   CStdString m_lastText;
   float m_textWidth;
   float m_textHeight;
+
+  bool m_bRebuildVertices;
+  float m_fAlpha;
+  RESOLUTION m_eResolution;
+
+  // we use this to track font texture changes
+  int m_fontTextureHeight;
+  // in case the font object was changed
+  float m_fontLineHeight;
+  time_t m_faceLoadTime;
+
 private:
   inline bool IsSpace(character_t letter) const XBMC_FORCE_INLINE
   {

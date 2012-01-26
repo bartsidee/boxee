@@ -1,3 +1,5 @@
+ARCH=@ARCH@
+
 SRCS= Platinum/Source/Core/PltAction.cpp \
       Platinum/Source/Core/PltArgument.cpp \
       Platinum/Source/Core/PltConstants.cpp \
@@ -6,25 +8,20 @@ SRCS= Platinum/Source/Core/PltAction.cpp \
       Platinum/Source/Core/PltDatagramStream.cpp \
       Platinum/Source/Core/PltDeviceData.cpp \
       Platinum/Source/Core/PltDeviceHost.cpp \
-      Platinum/Source/Core/PltDownloader.cpp \
       Platinum/Source/Core/PltEvent.cpp \
       Platinum/Source/Core/PltHttp.cpp \
       Platinum/Source/Core/PltHttpClientTask.cpp \
       Platinum/Source/Core/PltHttpServer.cpp \
       Platinum/Source/Core/PltHttpServerTask.cpp \
-      Platinum/Source/Core/PltIconsData.cpp \
-      Platinum/Source/Core/PltLeaks.cpp \
-      Platinum/Source/Core/PltMetadataHandler.cpp \
       Platinum/Source/Core/PltService.cpp \
       Platinum/Source/Core/PltSsdp.cpp \
       Platinum/Source/Core/PltStateVariable.cpp \
-      Platinum/Source/Core/PltStreamPump.cpp \
       Platinum/Source/Core/PltTaskManager.cpp \
       Platinum/Source/Core/PltThreadTask.cpp \
       Platinum/Source/Core/PltUPnP.cpp \
-      Platinum/Source/Core/PltTime.cpp \
       Platinum/Source/Devices/MediaServer/PltDidl.cpp \
       Platinum/Source/Devices/MediaServer/PltFileMediaServer.cpp \
+      Platinum/Source/Devices/MediaServer/PltProtocolInfo.cpp \
       Platinum/Source/Devices/MediaServer/PltMediaBrowser.cpp \
       Platinum/Source/Devices/MediaServer/PltMediaCache.cpp \
       Platinum/Source/Devices/MediaServer/PltMediaItem.cpp \
@@ -32,6 +29,7 @@ SRCS= Platinum/Source/Core/PltAction.cpp \
       Platinum/Source/Devices/MediaServer/ContentDirectorywSearchSCPD.cpp \
       Platinum/Source/Devices/MediaServer/ConnectionManagerSCPD.cpp \
       Platinum/Source/Devices/MediaServer/PltSyncMediaBrowser.cpp \
+      Platinum/Source/Devices/MediaServer/PltMimeType.cpp \
       Neptune/Source/Core/Neptune.cpp \
       Neptune/Source/Core/NptBase64.cpp \
       Neptune/Source/Core/NptBufferedStreams.cpp \
@@ -59,13 +57,12 @@ SRCS= Platinum/Source/Core/PltAction.cpp \
       Neptune/Source/Core/NptResults.cpp \
       Neptune/Source/System/Bsd/NptBsdSockets.cpp \
       Neptune/Source/System/Bsd/NptBsdNetwork.cpp \
-      Neptune/Source/System/Linux/NptLinuxNetwork.cpp \
       Neptune/Source/System/Posix/NptPosixSystem.cpp \
       Neptune/Source/System/Posix/NptSelectableMessageQueue.cpp \
       Neptune/Source/System/Posix/NptPosixQueue.cpp \
       Neptune/Source/System/Posix/NptPosixThreads.cpp \
       Neptune/Source/System/Posix/NptPosixFile.cpp \
-      Neptune/Source/System/StdC/NptStdCTime.cpp \
+      Neptune/Source/System/Posix/NptPosixTime.cpp \
       Neptune/Source/System/StdC/NptStdcDebug.cpp \
       Neptune/Source/System/StdC/NptStdcEnvironment.cpp \
       Platinum/Source/Devices/MediaRenderer/PltMediaRenderer.cpp \
@@ -75,7 +72,12 @@ SRCS= Platinum/Source/Core/PltAction.cpp \
       Platinum/Source/Devices/MediaRenderer/RenderingControlSCPD.cpp \
       Platinum/Source/Devices/MediaConnect/X_MS_MediaReceiverRegistrarSCPD.cpp \
       Platinum/Source/Devices/MediaConnect/PltMediaConnect.cpp \
+      Platinum/Source/Devices/MediaServer/ContentDirectorySCPD.cpp
 
+ifeq ($(findstring osx,$(ARCH)), osx)
+.SUFFIXES : .m .mm
+SRCS += Neptune/Source/System/Cocoa/NptCocoaSystem.mm
+endif
 
 INCLUDES=-I./Neptune/Source/Core -I./Platinum/Source/Core -I./Platinum/Source/Platinum -I./Platinum/Source/Devices/MediaServer -I./Neptune/Source/System/Posix
 

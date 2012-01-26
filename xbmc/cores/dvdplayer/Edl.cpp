@@ -75,23 +75,24 @@ bool CEdl::ReadEditDecisionLists(const CStdString& strMovie, const float fFrames
   ||  CUtil::IsSmb(strMovie))
   {
     CLog::Log(LOGDEBUG, "%s - checking for any edit decision lists (EDL) on local drive or remote share for: %s", __FUNCTION__,
-              strMovie.c_str());
+            strMovie.c_str());
 
-    /*
+  /*
      * Read any available file format until a valid EDL related file is found.
-     */
-    if (!bFound)
-      bFound = ReadVideoReDo(strMovie);
+   */
+  if (!bFound)
+    bFound = ReadVideoReDo(strMovie);
 
-    if (!bFound)
-      bFound = ReadEdl(strMovie);
+  if (!bFound)
+    bFound = ReadEdl(strMovie);
 
-    if (!bFound)
-      bFound = ReadComskip(strMovie, fFramesPerSecond);
+  if (!bFound)
+    bFound = ReadComskip(strMovie, fFramesPerSecond);
 
-    if (!bFound)
-      bFound = ReadBeyondTV(strMovie);
+  if (!bFound)
+    bFound = ReadBeyondTV(strMovie);
   }
+#ifdef HAS_FILESYSTEM_MYTH
   /*
    * Or if the movie points to MythTV and isn't live TV.
    */
@@ -102,6 +103,7 @@ bool CEdl::ReadEditDecisionLists(const CStdString& strMovie, const float fFrames
               strMovie.c_str());
     bFound = ReadMythCommBreaks(strMovie, fFramesPerSecond);
   }
+#endif
 
   if (bFound)
   {
@@ -181,7 +183,7 @@ bool CEdl::ReadEdl(const CStdString& strMovie)
   }
   else if (HasCut() || HasSceneMarker())
   {
-    CLog::Log(LOGDEBUG, "%s - Read %i cuts and %i scene markers in EDL file: %s", __FUNCTION__,
+    CLog::Log(LOGDEBUG, "%s - Read %zu cuts and %zu scene markers in EDL file: %s", __FUNCTION__,
               m_vecCuts.size(), m_vecSceneMarkers.size(), edlFilename.c_str());
     return true;
   }
@@ -263,7 +265,7 @@ bool CEdl::ReadComskip(const CStdString& strMovie, const float fFramesPerSecond)
   }
   else if (HasCut())
   {
-    CLog::Log(LOGDEBUG, "%s - Read %i commercial breaks from Comskip file: %s", __FUNCTION__, m_vecCuts.size(),
+    CLog::Log(LOGDEBUG, "%s - Read %zu commercial breaks from Comskip file: %s", __FUNCTION__, m_vecCuts.size(),
               comskipFilename.c_str());
     return true;
   }
@@ -354,7 +356,7 @@ bool CEdl::ReadVideoReDo(const CStdString& strMovie)
   }
   else if (HasCut() || HasSceneMarker())
   {
-    CLog::Log(LOGDEBUG, "%s - Read %i cuts and %i scene markers in VideoReDo file: %s", __FUNCTION__,
+    CLog::Log(LOGDEBUG, "%s - Read %zu cuts and %zu scene markers in VideoReDo file: %s", __FUNCTION__,
               m_vecCuts.size(), m_vecSceneMarkers.size(), videoReDoFilename.c_str());
     return true;
   }
@@ -438,7 +440,7 @@ bool CEdl::ReadBeyondTV(const CStdString& strMovie)
   }
   else if (HasCut())
   {
-    CLog::Log(LOGDEBUG, "%s - Read %i commercial breaks from Beyond TV file: %s", __FUNCTION__, m_vecCuts.size(),
+    CLog::Log(LOGDEBUG, "%s - Read %zu commercial breaks from Beyond TV file: %s", __FUNCTION__, m_vecCuts.size(),
               beyondTVFilename.c_str());
     return true;
   }
@@ -743,13 +745,14 @@ CStdString CEdl::MillisecondsToTimeString(const int64_t iMilliseconds)
 
 bool CEdl::ReadMythCommBreaks(const CStdString& strMovie, const float fFramesPerSecond)
 {
+#ifdef HAS_FILESYSTEM_MYTH
   Clear();
 
   /*
    * Exists() sets up all the internal bits needed for GetCommBreakList().
    */
   CCMythFile mythFile;
-  CURL url(strMovie);
+  CURI url(strMovie);
   if (!mythFile.Exists(url))
     return false;
 
@@ -793,7 +796,7 @@ bool CEdl::ReadMythCommBreaks(const CStdString& strMovie, const float fFramesPer
 
   if (HasCut())
   {
-    CLog::Log(LOGDEBUG, "%s - Added %i commercial breaks from MythTV for: %s. Used detected frame rate of %.3f fps to calculate times from the frame markers.",
+    CLog::Log(LOGDEBUG, "%s - Added %lu commercial breaks from MythTV for: %s. Used detected frame rate of %.3f fps to calculate times from the frame markers.",
               __FUNCTION__, m_vecCuts.size(), url.GetFileName().c_str(), fFramesPerSecond);
     return true;
   }
@@ -803,6 +806,9 @@ bool CEdl::ReadMythCommBreaks(const CStdString& strMovie, const float fFramesPer
               url.GetFileName().c_str());
     return false;
   }
+#else
+  return false;
+#endif
 }
 
 void CEdl::MergeShortCommBreaks()

@@ -68,7 +68,7 @@
         </source>        
     </video>
     <music>
-        <source>
+	<source>
             <name>Boxee Downloads</name>
             <path>special://userhome/Downloads/Boxee</path>
         </source>

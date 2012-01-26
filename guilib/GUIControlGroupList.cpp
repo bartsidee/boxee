@@ -31,7 +31,7 @@ CGUIControlGroupList::CGUIControlGroupList(int parentID, int controlID, float po
   m_itemGap = itemGap;
   m_pageControl = pageControl;
   m_offset = 0;
-  m_totalSize = 10;
+  m_totalSize = 0;
   m_orientation = orientation;
   m_alignment = alignment;
   m_scrollOffset = 0;
@@ -40,6 +40,7 @@ CGUIControlGroupList::CGUIControlGroupList(int parentID, int controlID, float po
   m_renderTime = 0;
   m_useControlPositions = useControlPositions;
   ControlType = GUICONTROL_GROUPLIST;
+  m_minSize = 0;
 }
 
 CGUIControlGroupList::~CGUIControlGroupList(void)
@@ -79,7 +80,49 @@ void CGUIControlGroupList::Render()
     SendWindowMessage(message2);
   }
   // we run through the controls, rendering as we go
-  bool render(g_graphicsContext.SetClipRegion(m_posX, m_posY, m_width, m_height));
+
+  //if we were set to auto resize, calculate the height of the children
+  if (GetAutoResize())
+  {
+    int cumulativeSize = GetAlignOffset();
+    int widestControl = m_width;
+    int highestControl = m_height;
+
+    for (iControls it = m_children.begin(); it != m_children.end(); ++it)
+    {
+      CGUIControl *control = *it;
+      cumulativeSize += Size(control) + m_itemGap;
+
+      if (widestControl < control->GetWidth())
+        widestControl = control->GetWidth();
+
+      if (highestControl < control->GetHeight())
+        highestControl = control->GetHeight();
+
+    }
+
+    if (m_orientation == VERTICAL)
+    {
+      if (cumulativeSize > m_height)
+      {
+        m_height = cumulativeSize;
+        m_width = widestControl;
+      }
+    }
+    else
+    {
+      if (cumulativeSize > m_width)
+      {
+        m_width = cumulativeSize;
+        m_height = highestControl;
+      }
+    }
+  }
+
+  bool clip = false;
+  if(GetClipChildren())
+    clip = g_graphicsContext.SetClipRegion(m_posX, m_posY, m_width, m_height);
+
   float pos = GetAlignOffset();
   float focusedPos = 0;
   CGUIControl *focusedControl = NULL;
@@ -96,24 +139,24 @@ void CGUIControlGroupList::Render()
     else
     {
       if (m_orientation == VERTICAL)
-        g_graphicsContext.SetOrigin(m_posX, m_posY + pos - m_offset);
+        g_graphicsContext.PushTransform(TransformMatrix::CreateTranslation(m_posX, m_posY + pos - m_offset));
       else
-        g_graphicsContext.SetOrigin(m_posX + pos - m_offset, m_posY);
+        g_graphicsContext.PushTransform(TransformMatrix::CreateTranslation(m_posX + pos - m_offset, m_posY));
       control->DoRender(m_renderTime);
     }
     if (control->IsVisible())
       pos += Size(control) + m_itemGap;
-    g_graphicsContext.RestoreOrigin();
+    g_graphicsContext.PopTransform();
   }
   if (focusedControl)
   {
     if (m_orientation == VERTICAL)
-      g_graphicsContext.SetOrigin(m_posX, m_posY + focusedPos - m_offset);
+      g_graphicsContext.PushTransform(TransformMatrix::CreateTranslation(m_posX, m_posY + focusedPos - m_offset));
     else
-      g_graphicsContext.SetOrigin(m_posX + focusedPos - m_offset, m_posY);
+      g_graphicsContext.PushTransform(TransformMatrix::CreateTranslation(m_posX + focusedPos - m_offset, m_posY));
     focusedControl->DoRender(m_renderTime);
   }
-  if (render) g_graphicsContext.RestoreClipRegion();
+  if (clip) g_graphicsContext.RestoreClipRegion();
   CGUIControl::Render();
 }
 
@@ -279,14 +322,39 @@ void CGUIControlGroupList::AddControl(CGUIControl *control, int position /*= -1*
 
     if (!m_useControlPositions)
       control->SetPosition(0,0);
+    m_totalSize += (m_children.size() > 0 ? m_itemGap : 0) + Size(control);
     CGUIControlGroup::AddControl(control, position);
   }
 }
 
-void CGUIControlGroupList::ClearAll()
+void CGUIControlGroupList::ClearAll(bool bDelete)
 {
-  CGUIControlGroup::ClearAll();
+  m_totalSize = 0;
+  CGUIControlGroup::ClearAll(bDelete);
   m_offset = 0;
+}
+
+#define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
+float CGUIControlGroupList::GetWidth() const
+{
+  if (m_orientation == HORIZONTAL)
+    return CLAMP(m_totalSize, m_minSize, m_width);
+  return CGUIControlGroup::GetWidth();
+}
+
+float CGUIControlGroupList::GetHeight() const
+{
+  if (m_orientation == VERTICAL)
+    return CLAMP(m_totalSize, m_minSize, m_height);
+  return CGUIControlGroup::GetHeight();
+}
+
+void CGUIControlGroupList::SetMinSize(float minWidth, float minHeight)
+{
+  if (m_orientation == VERTICAL)
+    m_minSize = minHeight;
+  else
+    m_minSize = minWidth;
 }
 
 inline float CGUIControlGroupList::Size(const CGUIControl *control) const

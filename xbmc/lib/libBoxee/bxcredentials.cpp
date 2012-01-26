@@ -34,12 +34,20 @@ void BXCredentials::SetPassword(const std::string &strPassword) {
 	m_strPassword = strPassword;
 }
 
+void BXCredentials::SetProxyUserName(const std::string &strName) {
+  m_strProxyUsername = strName;
+}
+
+void BXCredentials::SetProxyPassword(const std::string &strPassword) {
+  m_strProxyPassword = strPassword;
+
+}
 void BXCredentials::SetAuthKey(const std::string &strKey) {
 	m_strAuthKey = strKey;
 }
 
 void BXCredentials::SetProxy(const std::string &strProxy) {
-    m_strProxyAddress = strProxy;
+  m_strProxyAddress = strProxy;
 }
   
 void BXCredentials::Clear()
@@ -62,8 +70,17 @@ std::string BXCredentials::GetAuthKey() {
 }
 
 std::string BXCredentials::GetProxyAddress() {
-    return m_strProxyAddress;
+  return m_strProxyAddress;
 }
   
+std::string BXCredentials::GetProxyUsername()
+{
+  return m_strProxyUsername;
+}
+
+std::string BXCredentials::GetProxyPassword()
+{
+  return m_strProxyPassword;
+}
 
 }

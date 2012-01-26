@@ -21,6 +21,8 @@
  *
  */
 
+#define BOXEE_APP 1
+
 /*****************
  * All platforms
  *****************/
@@ -31,7 +33,9 @@
 #define HAS_DVD_DRIVE
 #define HAS_DVD_SWSCALE
 #define HAS_DVDPLAYER
+#ifndef _WIN32
 #define HAS_EVENT_SERVER
+#endif
 #define HAS_KARAOKE
 #define HAS_RAR
 #define HAS_SCREENSAVER
@@ -44,7 +48,9 @@
 #define HAS_WEB_SERVER
 
 #define HAS_AC3_CODEC
+#ifdef  HAS_DVD_LIBDTS_CODEC
 #define HAS_DTS_CODEC
+#endif
 #define HAS_CDDA_RIPPER
 
 #define HAS_FILESYSTEM
@@ -59,16 +65,32 @@
 #define HAS_CCXSTREAM
 #define HAS_NATIVE_APPS
 #define HAS_LOCAL_MEDIA
+#define HAS_FILESYSTEM_MYTH
+#define HAS_FILESYSTEM_HDHOMERUN
+#define HAS_FILESYSTEM_TUXBOX
+
+#define _BOXEE_
 
 /*****************
  * Win32 Specific
  *****************/
 
 #ifdef _WIN32
+#define HAS_DVD_DRIVE
 #define HAS_SDL_JOYSTICK
 #define HAS_WIN32_NETWORK
 #define HAS_IRSERVERSUITE
 #define HAS_AUDIO
+#define HAVE_LIBCRYSTALHD 0
+#define HAS_WEB_SERVER
+#define HAS_WEB_INTERFACE
+#define HAVE_LIBSSH
+#define HAS_LIBRTMP
+#define HAVE_LIBBLURAY
+#define HAS_ASAP_CODEC
+
+//#undef HAS_PYTHON // crash win32
+
 #endif
 
 /*****************
@@ -76,20 +98,32 @@
  *****************/
 
 #ifdef __APPLE__
+//#define HAS_EMBEDDED
+//#define HAS_BOXEE_HAL
+//#define HAS_DVB
 #define HAS_ZEROCONF
+#define HAS_AIRPLAY
+#define HAS_AIRTUNES
 #define HAS_GL
+#define HAS_GL2
+#define HAS_GLEW
 #define HAS_LINUX_NETWORK
 #define HAS_SDL_AUDIO
 #define HAS_SDL_OPENGL
 #define HAS_SDL_WIN_EVENTS
 #define HAVE_LIBVDADECODER
+#define HAS_JSONRPC
+#undef  HAS_EXTERNAL_SAMBA
+#define HAS_HARFBUZZ_NG
+#define HAS_FRAMELIMITER
+#define HAVE_LIBBLURAY
 #endif
 
 /*****************
  * Linux Specific
  *****************/
 
-#if defined(_LINUX) && !defined(__APPLE__)
+#if defined(_LINUX) && !defined(__APPLE__) && !defined(EMPOWER) && !defined(CANMORE)
 #ifndef HAS_SDL_OPENGL
 #define HAS_SDL_OPENGL
 #endif
@@ -100,22 +134,114 @@
 #define HAS_HAL
 #define HAS_DBUS
 #define HAS_DBUS_SERVER
+#define HAS_GL2
 #define HAS_GL
+#define HAS_GLEW
 #define HAS_GLX
 #define HAS_LINUX_NETWORK
 #define HAS_SDL_AUDIO
 #define HAS_LIRC
 #define HAS_SDL_WIN_EVENTS
+#undef  HAS_EXTERNAL_SAMBA
+#define HAS_ALSA
+#define HAS_AIRPLAY
+#define HAS_AIRTUNES
+//#define HAS_DVB
+#endif
+
+/*****************
+ * Tegra2 Specific
+ *****************/
+
+#if defined(EMPOWER)
+// HAS_X11 or HAS_OPENKODE is passed in CFLAGS by configure
+#ifdef HAS_X11
+#define HAS_XCOMPOSITE
+#define HAS_X11_EVENTS
+#endif
+#ifdef HAS_OPENKODE
+#define HAS_LINUX_EVENTS
+#endif
+#define HAS_EGL
+#define HAS_GLES 2
+#define HAS_OPENMAX
+#define HAS_LINUX_NETWORK
+#define HAS_LIRC
+#define HAS_EMBEDDED
+#define HAS_EXTERNAL_SAMBA
+#define HAS_ALSA
+#undef HAS_DVD_DRIVE
+#undef HAS_ZEROCONF
+#undef HAS_AVAHI
+#undef HAS_SDL_JOYSTICK
+#undef HAS_DBUS
+#undef HAS_DBUS_SERVER
+#undef HAS_CDDA_RIPPER
+#undef HAS_RTORRENT
 #undef HAS_NATIVE_APPS
+#endif
+
+/********************
+ * Canmore Specific *
+ ********************/
+
+#if defined(CANMORE)
+#define DEVICE_PLATFORM "intel.ce4100"
+#define EXTERNAL_PYTHON_HOME   "/opt/local"
+#define EXTERNAL_PYTHON_PREFIX "/opt/local/lib/python2.4"
+#define EXTERNAL_PYTHON_ZIP    "/opt/local/lib/python2.4/python24.zip"
+#define HAS_EGL
+#define HAS_GLES 2
+#define HAS_GDL
+//#define USE_EGL_IMAGE //disabled, creates artifacts on textures
+#define HAS_LINUX_NETWORK
+#define HAS_EMBEDDED
+#define HAS_LINUX_EVENTS
+#define HAS_EXTERNAL_SAMBA
+#define HAS_INTEL_SMD
+#define HAS_INTEL_SMD_DD_DECODER
+#define HAS_INTEL_SMD_DDPLUS_DECODER
+#define HAS_INTEL_SMD_TRUEHD_DECODER
+#define HAS_INTEL_SMD_DTS_DECODER
+#define HAS_AUDIO_HDMI
+#define HAS_INTELCE
+#define HAS_LIRC
+#define HAS_AIRPLAY
+#define HAS_AIRTUNES
+#define HAS_JSONRPC
+#define HAS_HARFBUZZ_NG
+#ifdef HAS_AVAHI
+#define HAS_ZEROCONF
+#endif
+#undef HAS_REMOTECONTROL
+#undef HAS_DVD_DRIVE
+#undef HAS_SDL_JOYSTICK
+#undef HAS_DBUS
+#undef HAS_DBUS_SERVER
+#undef HAS_CDDA_RIPPER
+#undef HAS_RTORRENT
+#define HAS_NFS
+#define HAS_AFP
+#define HAS_CIFS
+#define HAS_BMS
+#define HAS_UPNP_AV
+#undef HAS_FILESYSTEM_CDDA
+#undef HAS_FILESYSTEM_RTV
+#undef HAS_FILESYSTEM_DAAP
+#undef HAS_FILESYSTEM_SAP
+#undef HAS_FILESYSTEM_VTP
+#undef HAS_FILESYSTEM_HTSP
+#undef HAS_CCXSTREAM
+#undef HAS_FILESYSTEM_MYTH
+#define HAS_FILESYSTEM_HDHOMERUN
+#undef HAS_FILESYSTEM_TUXBOX
+#define HAS_DVB
+#define HAS_SERVER_OTA
 #endif
 
 /*****************
  * SVN revision
  *****************/
-
-#ifdef __APPLE__
-#include "../svn_revision.h"
-#endif
 
 #ifndef SVN_REV
 #define SVN_REV "Unknown"
@@ -130,9 +256,6 @@
  ****************************************/
 
 #ifdef _WIN32
-#if !(defined(_WINSOCKAPI_) || defined(_WINSOCK_H))
-#include <winsock2.h>
-#endif
 #include <windows.h>
 #define DIRECTINPUT_VERSION 0x0800
 #include "mmsystem.h"
@@ -162,16 +285,16 @@
 #include "PlatformInclude.h"
 #endif
 
-#ifdef HAS_GL
+#if defined(HAS_GL) || defined(HAS_GL2)
 #ifdef _WIN32
 #include "GL/glew.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
-//#include <GL/wglext.h>
+#include <GL/wglew.h>
 #elif defined(__APPLE__)
 #include <GL/glew.h>
 #include <OpenGL/gl.h>
-#elif defined(_LINUX)
+#elif defined(_LINUX) && !defined(EMPOWER)
 #include <GL/glew.h>
 #include <GL/gl.h>
 #endif
@@ -181,6 +304,7 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #endif
+
 
 #define SAFE_DELETE(p)       { delete (p);     (p)=NULL; }
 #define SAFE_DELETE_ARRAY(p) { delete[] (p);   (p)=NULL; }

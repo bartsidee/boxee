@@ -10,11 +10,45 @@
 #include "XAPP_ToggleButton.h"
 #include "XAPP_Image.h"
 #include "XAPP_Edit.h"
-#include "GUIWindow.h"
+#include "XAPP_Textbox.h"
 #include "AppException.h"
+
+class CGUIWindow;
 
 namespace XAPP
 {
+
+class WindowEvent
+{
+public:
+  int windowId;
+};
+
+class WindowListener
+{
+public:
+  virtual ~WindowListener();
+  virtual void WindowOpening(WindowEvent e) = 0;
+  virtual void WindowOpened(WindowEvent e) = 0;
+  virtual void WindowClosing(WindowEvent e) = 0;
+  virtual void WindowClosed(WindowEvent e) = 0;
+  virtual void WindowRender(WindowEvent e) = 0;
+};
+
+class KeyEvent
+{
+public:
+  int windowId;
+  enum { XAPP_KEY_SELECT, XAPP_KEY_BACK, XAPP_KEY_LEFT, XAPP_KEY_RIGHT, XAPP_KEY_UP, XAPP_KEY_DOWN, XAPP_KEY_UNICODE } key;
+  int unicode;
+};
+
+class KeyListener
+{
+public:
+  virtual ~KeyListener() {};
+  virtual bool KeyPressed(KeyEvent e) = 0;
+};
 
 /**
  * Represents a toggle button control in the user interface. Get the Window object by calling GetActiveWindow() 
@@ -65,6 +99,11 @@ public:
   Edit GetEdit(int id) throw (XAPP::AppException);
   
   /**
+   * Returns a textbox control in the window
+   */
+  Textbox GetTextbox(int id) throw (XAPP::AppException);
+
+  /**
    * Saves the state of the window and pushes it to the top of the window state stack. By default, if
    * user hits ESC or Back, instead of closing the window, it will pop the state and return it.
    * The state includes contents of lists and the selected items in lists. This is useful if you want 
@@ -93,9 +132,24 @@ public:
    */  
   void ClearStateStack(bool restoreState = true);  
   
+  void SetProperty(const std::string &strKey, const std::string &strValue);
+
+  /**
+   * Get window id
+   */
+  int GetWindowId();
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+  void AddWindowListener(WindowListener* listener);
+  void RemoveWindowListener(WindowListener* listener);
+
+  void AddKeyListener(KeyListener* listener);
+  void RemoveKeyListener(KeyListener* listener);
+
 private:
   int m_id;
   CGUIWindow* m_window;
+#endif
 };
 
 }

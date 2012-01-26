@@ -2,7 +2,7 @@
 |
 |   Platinum - Action Argument
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -29,7 +29,11 @@
 | 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 | http://www.gnu.org/licenses/gpl-2.0.html
 |
- ****************************************************************/
+****************************************************************/
+
+/** @file
+ UPnP Service Action Argument
+ */
 
 #ifndef _PLT_ARGUMENT_H_
 #define _PLT_ARGUMENT_H_
@@ -50,6 +54,12 @@ typedef NPT_Array<PLT_Argument*> PLT_Arguments;
 /*----------------------------------------------------------------------
 |   PLT_ArgumentDesc
 +---------------------------------------------------------------------*/
+/**
+ The PLT_ArgumentDesc class provides information about a given argument of a 
+ UPnP Service given action.
+ It has a name, a position, a direction (in/out), a PLT_StateVariable state 
+ variable association and whether it is the return value of the action or not.
+ */
 class PLT_ArgumentDesc
 {
 public:
@@ -61,11 +71,11 @@ public:
 
     // accessor methods
     NPT_Result         GetSCPDXML(NPT_XmlElementNode* node);
-    const NPT_String&  GetName() const {return m_Name;}
-    const NPT_String&  GetDirection() const {return m_Direction;}
+    const NPT_String&  GetName() const { return m_Name; }
+    const NPT_String&  GetDirection() const { return m_Direction; }
     NPT_Ordinal        GetPosition() { return m_Position; }
-    PLT_StateVariable* GetRelatedStateVariable() {return m_RelatedStateVariable;}
-    bool               HasRetValue() {return m_HasReturnValue;}
+    PLT_StateVariable* GetRelatedStateVariable() { return m_RelatedStateVariable; }
+    bool               HasReturnValue() { return m_HasReturnValue; }
 
 protected:
     NPT_String         m_Name;
@@ -78,6 +88,13 @@ protected:
 /*----------------------------------------------------------------------
 |   PLT_Argument
 +---------------------------------------------------------------------*/
+/** 
+ The PLT_Argument class provides a mechanism to set or verify the validity of a
+ specific UPNP service action argument.
+ Typically, only a PLT_Action uses this class. Since an argument can be
+ associated to a state variable, the argument is automatically updated when
+ the associated state variable is changed 
+ */
 class PLT_Argument
 {
 public:
@@ -106,6 +123,10 @@ protected:
 /*----------------------------------------------------------------------
 |   PLT_ArgumentNameFinder
 +---------------------------------------------------------------------*/
+/** 
+ The PLT_ArgumentNameFinder class provides a mechanism to find a PLT_Argument given
+ an argument name.
+ */
 class PLT_ArgumentNameFinder
 {
 public:
@@ -124,6 +145,10 @@ private:
 /*----------------------------------------------------------------------
 |   PLT_ArgumentDescNameFinder
 +---------------------------------------------------------------------*/
+/** 
+ The PLT_ArgumentDescNameFinder class provides a mechanism to find a PLT_ArgumentDesc given
+ an argument name.
+ */
 class PLT_ArgumentDescNameFinder
 {
 public:

@@ -155,10 +155,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\config.h"
-				>
-			</File>
-			<File
 				RelativePath="..\hts_strtab.h"
 				>
 			</File>
@@ -204,10 +200,6 @@
 			</File>
 			<File
 				RelativePath="..\htsstr.h"
-				>
-			</File>
-			<File
-				RelativePath="..\htsthreads.h"
 				>
 			</File>
 			<File

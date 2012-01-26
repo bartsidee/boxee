@@ -28,22 +28,49 @@
 #define TOAST_DISPLAY_TIME   5000L  // default 5 seconds
 #define TOAST_MESSAGE_TIME   1000L  // minimal message time 1 second
 
+#define DEFAULT_BGCOLOR  "FFFFFFFF"
+#define DEFAULT_ICON    "kaidialog/kai-star.png"
+
+#define KAI_GREEN_COLOR   "FF8CC641"
+#define KAI_RED_COLOR     "FFDA534A"
+#define KAI_ORANGE_COLOR  "FFF9A41A"
+#define KAI_GREY_COLOR    "FF6A7279"
+#define KAI_YELLOW_COLOR  "FFEADA17"
+
+
 class CGUIDialogKaiToast: public CGUIDialog
 {
 public:
   CGUIDialogKaiToast(void);
   virtual ~CGUIDialogKaiToast(void);
 
+  enum PopupIconEnums
+  {
+    ICON_CHECK,
+    ICON_EXCLAMATION,
+    ICON_SEARCH,
+    ICON_ARROWDOWN,
+    ICON_ARROWUP,
+    ICON_MINUS,
+    ICON_PLUS,
+    ICON_STAR,
+    ICON_SCAN,
+    ICON_HEART
+  };
+
   struct Notification
   {
     CStdString caption;
     CStdString description;
     CStdString imagefile;
+    CStdString bgColor;
+    CStdString iconColor;
     unsigned int displayTime;
   };
 
   void QueueNotification(const CStdString& aCaption, const CStdString& aDescription);
-  void QueueNotification(const CStdString& aImageFile, const CStdString& aCaption, const CStdString& aDescription, unsigned int displayTime = TOAST_DISPLAY_TIME);
+  void QueueNotification(const CStdString& aImageFile, const CStdString& aCaption, const CStdString& aDescription, unsigned int displayTime = TOAST_DISPLAY_TIME, const CStdString& iconColor = "", const CStdString& bgColor = "");
+  void QueueNotification(const CGUIDialogKaiToast::PopupIconEnums& icon , const CStdString& aCaption, const CStdString& aDescription, unsigned int displayTime = TOAST_DISPLAY_TIME, const CStdString& iconColor = "", const CStdString& bgColor = "");
   bool DoWork();
 
   virtual bool OnMessage(CGUIMessage& message);
@@ -61,11 +88,10 @@ protected:
 
   unsigned int m_toastDisplayTime;
 
-  CStdString m_defaultIcon;
-
-  bool m_showImage;
-
   typedef std::queue<Notification> TOASTQUEUE;
   TOASTQUEUE m_notifications;
   CCriticalSection m_critical;
+
+private:
+  std::map<PopupIconEnums, CStdString> m_mapIconToImage;
 };

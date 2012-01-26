@@ -41,7 +41,7 @@
 #include "wincrypt.h"
 #endif
 
-#ifndef WIN32
+#if !defined(WIN32) && defined(CONFIG_USE_DEV_URANDOM)
 static int rng_fd = -1;
 #elif defined(CONFIG_WIN32_USE_CRYPTO_LIB)
 static HCRYPTPROV gCryptProv;
@@ -54,6 +54,7 @@ static uint64_t rng_num;
 static int rng_ref_count;
 const char * const unsupported_str = "Error: Feature not supported\n";
 
+#if 0 /* GBG */
 #ifndef CONFIG_SSL_SKELETON_MODE
 /** 
  * Retrieve a file and put it into memory
@@ -90,6 +91,7 @@ int get_file(const char *filename, uint8_t **buf)
     return filesize;
 }
 #endif
+#endif 
 
 /**
  * Initialise the Random Number Generator engine.
@@ -114,8 +116,8 @@ EXP_FUNC void STDCALL RNG_initialize(const uint8_t *seed_buf, int size)
                            PROV_RSA_FULL, 
                            CRYPT_NEWKEYSET))
             {
-                printf("CryptoLib: %x\n", unsupported_str, GetLastError());
-                exit(1);
+                /*printf("CryptoLib: %x\n", unsupported_str, GetLastError());
+                exit(1);*/
             }
         }
 #else   
@@ -141,7 +143,7 @@ EXP_FUNC void STDCALL RNG_terminate(void)
 {
     if (--rng_ref_count == 0)
     {
-#ifndef WIN32
+#if !defined(WIN32) && defined(CONFIG_USE_DEV_URANDOM)
         close(rng_fd);
 #elif defined(CONFIG_WIN32_USE_CRYPTO_LIB)
         CryptReleaseContext(gCryptProv, 0);
@@ -164,14 +166,11 @@ EXP_FUNC void STDCALL get_random(unsigned int num_rand_bytes, uint8_t *rand_data
     /* The method we use when we've got nothing better. Use RC4, time 
        and a couple of random seeds to generate a random sequence */
     RC4_CTX rng_ctx;
-    struct timeval tv;
     uint64_t big_num1, big_num2;
-
-    gettimeofday(&tv, NULL);    /* yes I know we shouldn't do this */
 
     /* all numbers by themselves are pretty simple, but combined should 
      * be a challenge */
-    big_num1 = (uint64_t)tv.tv_sec*(tv.tv_usec+1); 
+    big_num1 = SSL_GetRandomSeed(); 
     big_num2 = (uint64_t)rand()*big_num1;
     big_num1 ^= rng_num;
 

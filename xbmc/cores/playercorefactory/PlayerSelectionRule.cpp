@@ -108,13 +108,13 @@ void CPlayerSelectionRule::GetPlayers(const CFileItem& item, VECPLAYERCORES &vec
     if (CompileRegExp(m_videoCodec, regExp) && !MatchesRegExp(streamDetails.GetVideoCodec(), regExp)) return;
 
     if (CompileRegExp(m_videoResolution, regExp) &&
-        !MatchesRegExp(CStreamDetails::VideoWidthToResolutionDescription(streamDetails.GetVideoWidth()), regExp)) return;
+        !MatchesRegExp(CStreamDetails::VideoDimsToResolutionDescription(streamDetails.GetVideoWidth(), streamDetails.GetVideoHeight()), regExp)) return;
 
     if (CompileRegExp(m_videoAspect, regExp) &&
         !MatchesRegExp(CStreamDetails::VideoAspectToAspectDescription(streamDetails.GetVideoAspect()),  regExp)) return;
   }
 
-  CURL url(item.m_strPath);
+  CURI url(item.m_strPath);
 
   if (CompileRegExp(m_fileTypes, regExp) && !MatchesRegExp(url.GetFileType(), regExp)) return;
   

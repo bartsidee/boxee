@@ -50,7 +50,7 @@ public:
 
 	void ClearViewTypes();
 	void ClearSortMethods();
-	
+
 	CStdString m_strType;
 	CStdString m_strTitle;
 	CStdString m_strPath;

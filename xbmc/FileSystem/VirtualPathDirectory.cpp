@@ -73,9 +73,8 @@ bool CVirtualPathDirectory::GetDirectory(const CStdString& strPath, CFileItemLis
     }
     if (dlgProgress)
     {
-      CURL url(share.vecPaths[i]);
-      CStdString strStripped;
-      url.GetURLWithoutUserDetails(strStripped);
+      CURI url(share.vecPaths[i]);
+      CStdString strStripped = url.GetWithoutUserDetails();
       dlgProgress->SetLine(1, strStripped);
       dlgProgress->SetProgressAdvance();
       dlgProgress->Progress();

@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/wmadec.c
+ * @file
  * WMA compatible decoder.
  * This decoder handles Microsoft Windows Media Audio data, versions 1 & 2.
  * WMA v1 is identified by audio format 0x160 in Microsoft media files
@@ -116,14 +116,14 @@ static int wma_decode_init(AVCodecContext * avctx)
     }
 
     if (s->use_exp_vlc) {
-        init_vlc(&s->exp_vlc, EXPVLCBITS, sizeof(ff_wma_scale_huffbits), //FIXME move out of context
-                 ff_wma_scale_huffbits, 1, 1,
-                 ff_wma_scale_huffcodes, 4, 4, 0);
+        init_vlc(&s->exp_vlc, EXPVLCBITS, sizeof(ff_aac_scalefactor_bits), //FIXME move out of context
+                 ff_aac_scalefactor_bits, 1, 1,
+                 ff_aac_scalefactor_code, 4, 4, 0);
     } else {
         wma_lsp_to_curve_init(s, s->frame_len);
     }
 
-    avctx->sample_fmt = SAMPLE_FMT_S16;
+    avctx->sample_fmt = AV_SAMPLE_FMT_S16;
     return 0;
 }
 
@@ -240,8 +240,8 @@ static void decode_exp_lsp(WMACodecContext *s, int ch)
                      s->block_len, lsp_coefs);
 }
 
-/** pow(10, i / 16.0) for i in -60..67 */
-static const float pow_tab[128] = {
+/** pow(10, i / 16.0) for i in -60..95 */
+static const float pow_tab[] = {
     1.7782794100389e-04, 2.0535250264571e-04,
     2.3713737056617e-04, 2.7384196342644e-04,
     3.1622776601684e-04, 3.6517412725484e-04,
@@ -306,6 +306,20 @@ static const float pow_tab[128] = {
     7.4989420933246e+03, 8.6596432336007e+03,
     1.0000000000000e+04, 1.1547819846895e+04,
     1.3335214321633e+04, 1.5399265260595e+04,
+    1.7782794100389e+04, 2.0535250264571e+04,
+    2.3713737056617e+04, 2.7384196342644e+04,
+    3.1622776601684e+04, 3.6517412725484e+04,
+    4.2169650342858e+04, 4.8696752516586e+04,
+    5.6234132519035e+04, 6.4938163157621e+04,
+    7.4989420933246e+04, 8.6596432336007e+04,
+    1.0000000000000e+05, 1.1547819846895e+05,
+    1.3335214321633e+05, 1.5399265260595e+05,
+    1.7782794100389e+05, 2.0535250264571e+05,
+    2.3713737056617e+05, 2.7384196342644e+05,
+    3.1622776601684e+05, 3.6517412725484e+05,
+    4.2169650342858e+05, 4.8696752516586e+05,
+    5.6234132519035e+05, 6.4938163157621e+05,
+    7.4989420933246e+05, 8.6596432336007e+05,
 };
 
 /**
@@ -341,12 +355,17 @@ static int decode_exp_vlc(WMACodecContext *s, int ch)
 
     while (q < q_end) {
         code = get_vlc2(&s->gb, s->exp_vlc.table, EXPVLCBITS, EXPMAX);
-        if (code < 0)
+        if (code < 0){
+            av_log(s->avctx, AV_LOG_ERROR, "Exponent vlc invalid\n");
             return -1;
+        }
         /* NOTE: this offset is the same as MPEG4 AAC ! */
         last_exp += code - 60;
-        if ((unsigned)last_exp + 60 > FF_ARRAY_ELEMS(pow_tab))
+        if ((unsigned)last_exp + 60 > FF_ARRAY_ELEMS(pow_tab)) {
+            av_log(s->avctx, AV_LOG_ERROR, "Exponent out of range: %d\n",
+                   last_exp);
             return -1;
+        }
         v = ptab[last_exp];
         iv = iptab[last_exp];
         if (v > max_scale)
@@ -440,12 +459,16 @@ static int wma_decode_block(WMACodecContext *s)
         if (s->reset_block_lengths) {
             s->reset_block_lengths = 0;
             v = get_bits(&s->gb, n);
-            if (v >= s->nb_block_sizes)
+            if (v >= s->nb_block_sizes){
+                av_log(s->avctx, AV_LOG_ERROR, "prev_block_len_bits %d out of range\n", s->frame_len_bits - v);
                 return -1;
+            }
             s->prev_block_len_bits = s->frame_len_bits - v;
             v = get_bits(&s->gb, n);
-            if (v >= s->nb_block_sizes)
+            if (v >= s->nb_block_sizes){
+                av_log(s->avctx, AV_LOG_ERROR, "block_len_bits %d out of range\n", s->frame_len_bits - v);
                 return -1;
+            }
             s->block_len_bits = s->frame_len_bits - v;
         } else {
             /* update block lengths */
@@ -453,8 +476,10 @@ static int wma_decode_block(WMACodecContext *s)
             s->block_len_bits = s->next_block_len_bits;
         }
         v = get_bits(&s->gb, n);
-        if (v >= s->nb_block_sizes)
+        if (v >= s->nb_block_sizes){
+            av_log(s->avctx, AV_LOG_ERROR, "next_block_len_bits %d out of range\n", s->frame_len_bits - v);
             return -1;
+        }
         s->next_block_len_bits = s->frame_len_bits - v;
     } else {
         /* fixed block len */
@@ -465,8 +490,10 @@ static int wma_decode_block(WMACodecContext *s)
 
     /* now check if the block length is coherent with the frame length */
     s->block_len = 1 << s->block_len_bits;
-    if ((s->block_pos + s->block_len) > s->frame_len)
+    if ((s->block_pos + s->block_len) > s->frame_len){
+        av_log(s->avctx, AV_LOG_ERROR, "frame_len overflow\n");
         return -1;
+    }
 
     if (s->nb_channels == 2) {
         s->ms_stereo = get_bits1(&s->gb);
@@ -530,8 +557,10 @@ static int wma_decode_block(WMACodecContext *s)
                             val = get_bits(&s->gb, 7) - 19;
                         } else {
                             code = get_vlc2(&s->gb, s->hgain_vlc.table, HGAINVLCBITS, HGAINMAX);
-                            if (code < 0)
+                            if (code < 0){
+                                av_log(s->avctx, AV_LOG_ERROR, "hgain vlc invalid\n");
                                 return -1;
+                            }
                             val += code - 18;
                         }
                         s->high_band_values[ch][i] = val;
@@ -571,7 +600,7 @@ static int wma_decode_block(WMACodecContext *s)
                   s->level_table[tindex], s->run_table[tindex],
                   0, ptr, 0, nb_coefs[ch],
                   s->block_len, s->frame_len_bits, coef_nb_bits);
-                }
+        }
         if (s->version == 1 && s->nb_channels >= 2) {
             align_get_bits(&s->gb);
         }
@@ -613,7 +642,7 @@ static int wma_decode_block(WMACodecContext *s)
 
                 /* compute power of high bands */
                 exponents = s->exponents[ch] +
-                    (s->high_band_start[bsize]<<bsize);
+                    (s->high_band_start[bsize]<<bsize>>esize);
                 last_high_band = 0; /* avoid warning */
                 for(j=0;j<n1;j++) {
                     n = s->exponent_high_bands[s->frame_len_bits -
@@ -629,11 +658,11 @@ static int wma_decode_block(WMACodecContext *s)
                         last_high_band = j;
                         tprintf(s->avctx, "%d: power=%f (%d)\n", j, exp_power[j], n);
                     }
-                    exponents += n<<bsize;
+                    exponents += n<<bsize>>esize;
                 }
 
                 /* main freqs and high freqs */
-                exponents = s->exponents[ch] + (s->coefs_start<<bsize);
+                exponents = s->exponents[ch] + (s->coefs_start<<bsize>>esize);
                 for(j=-1;j<n1;j++) {
                     if (j < 0) {
                         n = s->high_band_start[bsize] -
@@ -655,7 +684,7 @@ static int wma_decode_block(WMACodecContext *s)
                             *coefs++ =  noise *
                                 exponents[i<<bsize>>esize] * mult1;
                         }
-                        exponents += n<<bsize;
+                        exponents += n<<bsize>>esize;
                     } else {
                         /* coded values + small noise */
                         for(i = 0;i < n; i++) {
@@ -664,7 +693,7 @@ static int wma_decode_block(WMACodecContext *s)
                             *coefs++ = ((*coefs1++) + noise) *
                                 exponents[i<<bsize>>esize] * mult;
                         }
-                        exponents += n<<bsize;
+                        exponents += n<<bsize>>esize;
                     }
                 }
 
@@ -710,7 +739,7 @@ static int wma_decode_block(WMACodecContext *s)
         }
 
         s->dsp.butterflies_float(s->coefs[0], s->coefs[1], s->block_len);
-        }
+    }
 
 next:
     for(ch = 0; ch < s->nb_channels; ch++) {
@@ -739,9 +768,8 @@ next:
 /* decode a frame of frame_len samples */
 static int wma_decode_frame(WMACodecContext *s, int16_t *samples)
 {
-    int ret, i, n, ch, incr;
-    int16_t *ptr;
-    float *iptr;
+    int ret, n, ch, incr;
+    const float *output[MAX_CHANNELS];
 
 #ifdef TRACE
     tprintf(s->avctx, "***decode_frame: %d size=%d\n", s->frame_count++, s->frame_len);
@@ -761,17 +789,12 @@ static int wma_decode_frame(WMACodecContext *s, int16_t *samples)
     /* convert frame to integer */
     n = s->frame_len;
     incr = s->nb_channels;
-    for(ch = 0; ch < s->nb_channels; ch++) {
-        ptr = samples + ch;
-        iptr = s->frame_out[ch];
-
-        for(i=0;i<n;i++) {
-            *ptr = av_clip_int16(lrintf(*iptr++));
-            ptr += incr;
-        }
+    for (ch = 0; ch < MAX_CHANNELS; ch++)
+        output[ch] = s->frame_out[ch];
+    s->fmt_conv.float_to_int16_interleave(samples, output, n, incr);
+    for (ch = 0; ch < incr; ch++) {
         /* prepare for next block */
-        memmove(&s->frame_out[ch][0], &s->frame_out[ch][s->frame_len],
-                s->frame_len * sizeof(float));
+        memmove(&s->frame_out[ch][0], &s->frame_out[ch][n], n * sizeof(float));
     }
 
 #ifdef TRACE
@@ -865,6 +888,7 @@ static int wma_decode_superframe(AVCodecContext *avctx,
         pos >>= 3;
         len = buf_size - pos;
         if (len > MAX_CODED_SUPERFRAME_SIZE || len < 0) {
+            av_log(s->avctx, AV_LOG_ERROR, "len %d invalid\n", len);
             goto fail;
         }
         s->last_superframe_len = len;
@@ -890,28 +914,38 @@ static int wma_decode_superframe(AVCodecContext *avctx,
     return -1;
 }
 
-AVCodec wmav1_decoder =
+static av_cold void flush(AVCodecContext *avctx)
+{
+    WMACodecContext *s = avctx->priv_data;
+
+    s->last_bitoffset=
+    s->last_superframe_len= 0;
+}
+
+AVCodec ff_wmav1_decoder =
 {
     "wmav1",
-    CODEC_TYPE_AUDIO,
+    AVMEDIA_TYPE_AUDIO,
     CODEC_ID_WMAV1,
     sizeof(WMACodecContext),
     wma_decode_init,
     NULL,
     ff_wma_end,
     wma_decode_superframe,
+    .flush=flush,
     .long_name = NULL_IF_CONFIG_SMALL("Windows Media Audio 1"),
 };
 
-AVCodec wmav2_decoder =
+AVCodec ff_wmav2_decoder =
 {
     "wmav2",
-    CODEC_TYPE_AUDIO,
+    AVMEDIA_TYPE_AUDIO,
     CODEC_ID_WMAV2,
     sizeof(WMACodecContext),
     wma_decode_init,
     NULL,
     ff_wma_end,
     wma_decode_superframe,
+    .flush=flush,
     .long_name = NULL_IF_CONFIG_SMALL("Windows Media Audio 2"),
 };

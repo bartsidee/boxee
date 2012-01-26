@@ -31,12 +31,16 @@
 #include "GUIDialogVideoScan.h"
 #include "GUIUserMessages.h"
 #include "GUIWindowVideoBase.h"
+#ifdef HAS_LASTFM
 #include "LastFmManager.h"
+#endif
 #include "LCD.h"
 #include "log.h"
 #include "MediaManager.h"
 #include "RssReader.h"
+#ifndef _BOXEE_
 #include "PartyModeManager.h"
+#endif
 #include "Settings.h"
 #include "StringUtils.h"
 #include "Util.h"
@@ -53,7 +57,9 @@
 #include "GUIWindowManager.h"
 #include "LocalizeStrings.h"
 #include "system.h"
-
+#ifdef _WIN32
+#include "GUISettings.h"
+#endif
 
 #ifdef HAS_LIRC
 #include "common/LIRC.h"
@@ -145,9 +151,11 @@ const BUILT_IN commands[] = {
   { "Skin.SetFile",               true,   "Prompts and sets a file" },
   { "Skin.SetBool",               true,   "Sets a skin setting on" },
   { "Skin.Reset",                 true,   "Resets a skin setting to default" },
-  { "Skin.ResetSettings",         false,  "Resets all skin settings" },
+  { "Skin.ResetSettings",         false,  "Resets all sMute the playerkin settings" },
   { "Mute",                       false,  "Mute the player" },
   { "SetVolume",                  true,   "Set the current volume" },
+  { "VolumeUp",                   false,  "Volume up" },
+  { "VolumeDown",                 false,  "Volume down" },
   { "Dialog.Close",               true,   "Close a dialog" },
   { "System.LogOff",              false,  "Log off current user" },
   { "System.Exec",                true,   "Execute shell commands" },
@@ -161,9 +169,11 @@ const BUILT_IN commands[] = {
   { "CleanLibrary",               true,   "Clean the video library" },
   { "PageDown",                   true,   "Send a page down event to the pagecontrol with given id" },
   { "PageUp",                     true,   "Send a page up event to the pagecontrol with given id" },
+#ifdef HAS_LASTFM
   { "LastFM.Love",                false,  "Add the current playing last.fm radio track to the last.fm loved tracks" },
   { "LastFM.Ban",                 false,  "Ban the current playing last.fm radio track" },
   { "LastFM.Settings",            false,  "show the lastfm settings dialog" },
+#endif
   { "Container.Refresh",          false,  "Refresh current listing" },
   { "Container.Update",           false,  "Update current listing. Send Container.Update(path,replace) to reset the path history" },
   { "Container.NextViewMode",     false,  "Move to the next view type (and refresh the listing)" },
@@ -221,6 +231,23 @@ const BUILT_IN commands[] = {
   { "LCD.Resume",                 false,  "Resumes LCDproc" },
 #endif
   { "ToggleKeyboard",             false,  "Toggle keyboard" },
+  { "BrowserFullScreen",          true,   "Toggle browser full screen" },
+  { "BrowserBack",                false,  "Browser navigation - back" },
+  { "BrowserForward",             false,  "Browser navigation - forward" },
+  { "BrowserPlaybackPlay",        false,  "Browser playback - play" },
+  { "BrowserPlaybackPause",       false,  "Browser playback - pause" },
+  { "BrowserPlaybackSkip",        false,  "Browser playback - skip" },
+  { "BrowserPlaybackBigSkip",     false,  "Browser playback - big skip" },
+  { "BrowserPlaybackBack",        false,  "Browser playback - seek back" },
+  { "BrowserPlaybackBigBack",     false,  "Browser playback - big seek back" },
+  { "BrowserActivateExt",         true,   "Browser activate extension" },
+  { "BrowserPlaybackTogglePause", false,  "Browser playback - pause/play" },
+  { "BrowserChangeMode",          true,   "Browser change mode (cursor/keyboard/player)" },
+  { "BrowserNavigate",            true,   "Browser navigate (url/search term)" },
+  { "BrowserToggleMode",          true,   "Browser toggle between keyboard and mouse mode" },
+  { "BrowserToggleQuality",       false,  "Browser toggle between keyboard and mouse mode" },
+  { "OpenSearchDialog",           false,  "Open search dialog" },
+  { "OsdExtClick",                true,   "Click on extended OSD button" },
 };
 
 bool CBuiltins::HasCommand(const CStdString& execString)
@@ -234,6 +261,15 @@ bool CBuiltins::HasCommand(const CStdString& execString)
       return true;
   }
   return false;
+}
+
+void BrowserToggleQualityFunc(void)
+{
+  CAction action;
+  action.id = ACTION_BROWSER_TOGGLE_QUALITY;
+  //action.strAction = params[0];
+  if (g_application.m_pPlayer)
+    g_application.m_pPlayer->OnAction(action);
 }
 
 void CBuiltins::GetHelp(CStdString &help)
@@ -368,21 +404,29 @@ int CBuiltins::Execute(const CStdString& execString)
       return false;
     }
   }
+  else if (execute.Equals("opensearchdialog"))
+  {
+    std::vector<CStdString> params;
+    params.push_back("openinsearch");
+    g_windowManager.ActivateWindow(WINDOW_DIALOG_BOXEE_BROWSE_MENU,params);
+    return true;
+  }
   else if ((execute.Equals("setfocus") || execute.Equals("control.setfocus")) && params.size())
   {
     int controlID = atol(params[0].c_str());
     int subItem = (params.size() > 1) ? atol(params[1].c_str())+1 : 0;
-    CGUIMessage msg(GUI_MSG_SETFOCUS, g_windowManager.GetActiveWindow(), controlID, subItem);
+
+    CGUIMessage msg(GUI_MSG_SETFOCUS, GetRealActiveWindow(), controlID, subItem);
     g_windowManager.SendMessage(msg);
   }
   else if (execute.Equals("setvisible"))
   {
-    CGUIMessage msg(GUI_MSG_VISIBLE, g_windowManager.GetActiveWindow(), atol(parameter.c_str()));
+    CGUIMessage msg(GUI_MSG_VISIBLE, GetRealActiveWindow(), atol(parameter.c_str()));
     g_windowManager.SendMessage(msg);
   }
   else if (execute.Equals("sethidden"))
   {
-    CGUIMessage msg(GUI_MSG_HIDDEN, g_windowManager.GetActiveWindow(), atol(parameter.c_str()));
+    CGUIMessage msg(GUI_MSG_HIDDEN, GetRealActiveWindow(), atol(parameter.c_str()));
     g_windowManager.SendMessage(msg);
   }
   else if (execute.Equals("showactionmenu"))
@@ -487,7 +531,27 @@ int CBuiltins::Execute(const CStdString& execString)
   {
     if (!strParameterCaseIntact.IsEmpty())
     {
-      CAppManager::GetInstance().Launch(strParameterCaseIntact);
+      CURI appUrl(strParameterCaseIntact);
+
+      if (appUrl.GetHostName() == CAppManager::GetInstance().GetLastLaunchedId())
+      {
+        CLog::Log(LOGINFO, "CUtil::ExecBuiltIn, runapp asked to run the currently running app.");
+      }
+      else
+      {
+        if (g_application.IsPlaying())
+        {
+          g_application.StopPlaying();
+        }
+
+        g_windowManager.CloseDialogs(true);
+        while (g_windowManager.GetActiveWindow() >= WINDOW_APPS_START && g_windowManager.GetActiveWindow() < WINDOW_APPS_END)
+        {
+          g_windowManager.PreviousWindow();
+        }
+
+        CAppManager::GetInstance().Launch(strParameterCaseIntact);
+      }
     }
     else
     {
@@ -518,6 +582,7 @@ int CBuiltins::Execute(const CStdString& execString)
     if (params.size() >= 2 && params[1] == "1")
       g_stSettings.m_bStartVideoWindowed = true;
 
+#ifndef _BOXEE_
     // ask if we need to check guisettings to resume
     bool askToResume = true;
     if ((params.size() == 2 && params[1].Equals("resume")) || (params.size() == 3 && params[2].Equals("resume")))
@@ -538,6 +603,7 @@ int CBuiltins::Execute(const CStdString& execString)
       if ( CGUIWindowVideoBase::OnResumeShowMenu(item) == false )
         return false;
     }
+#endif 
     // play media
     if (!g_application.PlayMedia(item, item.IsAudio() ? PLAYLIST_MUSIC : PLAYLIST_VIDEO))
     {
@@ -599,20 +665,20 @@ int CBuiltins::Execute(const CStdString& execString)
       if (g_application.IsPlaying())
       {
         if (g_application.GetPlaySpeed() != 1)
-          g_application.SetPlaySpeed(1);        
+           g_application.SetPlaySpeed(1);        
         else
-          g_application.m_pPlayer->Pause();
-        
+           g_application.m_pPlayer->Pause();
+
         if (!g_application.m_pPlayer->IsPaused())
         {
           CGUIDialogBoxeeVideoCtx* pDlgInfo = (CGUIDialogBoxeeVideoCtx*)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_VIDEO_CTX);
           if (pDlgInfo)
             pDlgInfo->Close();
-          
+
           CGUIDialogBoxeeMusicCtx* pDlgMusicInfo = (CGUIDialogBoxeeMusicCtx*)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_MUSIC_CTX);
           if (pDlgMusicInfo)
             pDlgMusicInfo->Close();
-          
+
           CGUIDialogBoxeePictureCtx* pDlgPicInfo = (CGUIDialogBoxeePictureCtx*)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_PICTURE_CTX);
           if (pDlgPicInfo)
             pDlgPicInfo->Close();
@@ -700,6 +766,7 @@ int CBuiltins::Execute(const CStdString& execString)
         g_application.m_pPlayer->Record(!g_application.m_pPlayer->IsRecording());
       }
     }
+#ifndef _BOXEE_
     else if (parameter.Left(9).Equals("partymode"))
     {
       CStdString strXspPath = "";
@@ -720,6 +787,7 @@ int CBuiltins::Execute(const CStdString& execString)
       else
         g_partyModeManager.Enable(context, strXspPath);
     }
+#endif
     else if (parameter.Equals("random")    ||
              parameter.Equals("randomoff") ||
              parameter.Equals("randomon"))
@@ -802,6 +870,22 @@ int CBuiltins::Execute(const CStdString& execString)
   else if (execute.Equals("setvolume"))
   {
     g_application.SetVolume(atoi(parameter.c_str()));
+  }
+  else if (execute.Equals("volumeup"))
+  {
+    CAction action;
+    action.id = ACTION_VOLUME_UP;
+    action.amount1 = 1;
+    action.amount2 = false; //false - not originating from cond ACTION_VOLUME_UP_COND
+    g_application.OnAction(action);
+  }
+  else if (execute.Equals("volumedown"))
+  {
+    CAction action;
+    action.id = ACTION_VOLUME_DOWN;
+    action.amount1 = 1;
+    action.amount2 = false; //false - not originating from cond ACTION_VOLUME_UP_COND
+    g_application.OnAction(action);
   }
   else if (execute.Equals("playlist.playoffset"))
   {
@@ -985,7 +1069,7 @@ int CBuiltins::Execute(const CStdString& execString)
         CLog::Log(LOGDEBUG, "Setting image, path = %s (backg)", value.c_str());
         g_settings.SetSkinString(string, value);
         g_settings.SetSkinBool(g_settings.TranslateSkinBool("EnableCustomBG"), true);
-      }
+    }
       else
       {
         //value = g_settings.GetSkinString("CustomBG");
@@ -1092,13 +1176,15 @@ int CBuiltins::Execute(const CStdString& execString)
     {
       CGUIDialogVideoScan *scanner = (CGUIDialogVideoScan *)g_windowManager.GetWindow(WINDOW_DIALOG_VIDEO_SCAN);
       SScraperInfo info;
-      VIDEO::SScanSettings settings;
+      //VIDEO::SScanSettings settings;
       if (scanner)
       {
         if (scanner->IsScanning())
           scanner->StopScanning();
+#ifndef _BOXEE_
         else
           CGUIWindowVideoBase::OnScan(params.size() > 1 ? params[1] : "",info,settings);
+#endif
       }
     }
   }
@@ -1118,6 +1204,7 @@ int CBuiltins::Execute(const CStdString& execString)
         CLog::Log(LOGERROR, "XBMC.CleanLibrary is not possible while scanning for media info");
     }
   }
+#ifdef HAS_LASTFM
   else if (execute.Equals("lastfm.love"))
   {
     CLastFmManager::GetInstance()->Love(parameter.Equals("false") ? false : true);
@@ -1130,6 +1217,7 @@ int CBuiltins::Execute(const CStdString& execString)
   {
     CLastFmManager::GetInstance()->ShowLastFMSettings();
   }    
+#endif
   else if (execute.Equals("control.move") && params.size() > 1)
   {
     CGUIMessage message(GUI_MSG_MOVE_OFFSET, g_windowManager.GetFocusedWindow(), atoi(params[0].c_str()), atoi(params[1].c_str()));
@@ -1307,7 +1395,7 @@ int CBuiltins::Execute(const CStdString& execString)
   {
     CLog::Log(LOGDEBUG,"CUtil::ExecBuiltIn - [CleanOldThumbnails] -> Going to call g_application.RemoveOldThumbnails with [force=TRUE] (rot)");
     g_application.RemoveOldThumbnails(true,true);
-  }  
+    }
   else if (execute.Equals("container.sortdirection"))
   {
     CGUIMessage message(GUI_MSG_CHANGE_SORT_DIRECTION, g_windowManager.GetActiveWindow(), 0, 0);
@@ -1488,19 +1576,19 @@ int CBuiltins::Execute(const CStdString& execString)
   }    
   else if (execute.Equals("log.debug"))
   {
-    CLog::Log(LOGDEBUG, strParameterCaseIntact);
+    CLog::Log(LOGDEBUG, "%s", strParameterCaseIntact.c_str());
   }
   else if (execute.Equals("log.error"))
   {
-    CLog::Log(LOGERROR, strParameterCaseIntact);
+    CLog::Log(LOGERROR, "%s", strParameterCaseIntact.c_str());
   }
   else if (execute.Equals("log.warning"))
   {
-    CLog::Log(LOGWARNING, strParameterCaseIntact);
+    CLog::Log(LOGWARNING, "%s", strParameterCaseIntact.c_str());
   }
   else if (execute.Equals("log.info"))
   {
-    CLog::Log(LOGINFO, strParameterCaseIntact);
+    CLog::Log(LOGINFO, "%s", strParameterCaseIntact.c_str());
   }
   else if (execute.Equals("action") && params.size())
   {
@@ -1554,8 +1642,134 @@ int CBuiltins::Execute(const CStdString& execString)
   {
     g_application.GetKeyboards().ToggleKeyboards();
   }
+  else if (execute.Equals("BrowserFullScreen"))
+  {
+    bool bFull = (params[0] == "true");
+    CAction action;
+    action.id = bFull?ACTION_BROWSER_FULL_SCREEN_ON:ACTION_BROWSER_FULL_SCREEN_OFF;
+    if (g_application.m_pPlayer)
+      g_application.m_pPlayer->OnAction(action);
+  }
+  else if (execute.Equals("BrowserBack"))
+  {
+    CAction action;
+    action.id = ACTION_BROWSER_BACK;
+    if (g_application.m_pPlayer)
+      g_application.m_pPlayer->OnAction(action);
+  }
+  else if (execute.Equals("BrowserForward"))
+  {
+    CAction action;
+    action.id = ACTION_BROWSER_FORWARD;
+    if (g_application.m_pPlayer)
+      g_application.m_pPlayer->OnAction(action);
+  }
+  else if (execute.Equals("BrowserPlaybackPlay"))
+  {
+    if (g_application.m_pPlayer && g_application.m_pPlayer->IsPaused())
+      g_application.m_pPlayer->Pause();
+  }
+  else if (execute.Equals("BrowserPlaybackPause"))
+  {
+    if (g_application.m_pPlayer && !g_application.m_pPlayer->IsPaused())
+      g_application.m_pPlayer->Pause();
+  }
+  else if (execute.Equals("BrowserPlaybackTogglePause"))
+  {
+    g_application.m_pPlayer->Pause();
+  }
+  else if (execute.Equals("BrowserPlaybackSkip"))
+  {
+    CAction action;
+    action.id = ACTION_BROWSER_PLAYBACK_SKIP;
+    action.amount1 = 1;
+    if (g_application.m_pPlayer)
+      g_application.m_pPlayer->OnAction(action);
+  }
+  else if (execute.Equals("BrowserPlaybackBigSkip"))
+  {
+    CAction action;
+    action.id = ACTION_BROWSER_PLAYBACK_SKIP;
+    action.amount1 = 2;
+    if (g_application.m_pPlayer)
+      g_application.m_pPlayer->OnAction(action);
+  }
+  else if (execute.Equals("BrowserPlaybackBack"))
+  {
+    CAction action;
+    action.id = ACTION_BROWSER_PLAYBACK_SKIP;
+    action.amount1 = -1;
+    if (g_application.m_pPlayer)
+      g_application.m_pPlayer->OnAction(action);
+  }
+  else if (execute.Equals("BrowserPlaybackBigBack"))
+  {
+    CAction action;
+    action.id = ACTION_BROWSER_PLAYBACK_SKIP;
+    action.amount1 = -2;
+    if (g_application.m_pPlayer)
+      g_application.m_pPlayer->OnAction(action);
+  }
+  else if (execute.Equals("BrowserActivateExt"))
+  {
+    int nExt = atoi(params[0].c_str());
+    CAction action;
+    action.id = ACTION_BROWSER_EXT;
+    action.amount1 = nExt;
+    if (g_application.m_pPlayer)
+      g_application.m_pPlayer->OnAction(action);
+  }
+  else if (execute.Equals("BrowserChangeMode"))
+  {
+    CStdString strMode = params[0];
+    strMode.ToLower();
+    CAction action;
+    action.id = ACTION_BROWSER_SET_MODE;
+    action.strAction = strMode;
+    if (g_application.m_pPlayer)
+      g_application.m_pPlayer->OnAction(action);
+  }
+  else if (execute.Equals("BrowserNavigate"))
+  {
+    CAction action;
+    action.id = ACTION_BROWSER_NAVIGATE;
+    action.strAction = params[0];
+    if (g_application.m_pPlayer)
+      g_application.m_pPlayer->OnAction(action);
+  }
+  else if (execute.Equals("BrowserToggleMode"))
+  {
+    CAction action;
+    action.id = ACTION_BROWSER_TOGGLE_MODE;
+    if (g_application.m_pPlayer)
+      g_application.m_pPlayer->OnAction(action);
+  }
+  else if (execute.Equals("BrowserToggleQuality"))
+  {
+    BrowserToggleQualityFunc(); // Deals with the " fatal error C1061: compiler limit : blocks nested too deeply" error in MSVSC.
+  }
+  else if (execute.Equals("OsdExtClick"))
+  {
+    int nExt = atoi(params[0].c_str());
+    CAction action;
+    action.id = ACTION_OSD_EXT_CLICK;
+    action.amount1 = nExt;
+    g_application.OnAction(action);
+  }
   else
     return -1;
+
   return 0;
 }
 
+int CBuiltins::GetRealActiveWindow()
+{
+  int activeWindow = g_windowManager.GetActiveWindow();
+  if (g_windowManager.HasModalDialog())
+  {
+    // in case of open dialog -> send the action to the dialog
+    activeWindow = g_windowManager.GetTopMostModalDialogID();
+  }
+
+  return activeWindow;
+}

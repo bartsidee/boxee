@@ -2,7 +2,7 @@
 |
 |   Platinum - AV Media Server Device
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -41,7 +41,6 @@
 #include "PltTaskManager.h"
 #include "PltHttpServer.h"
 #include "PltDidl.h"
-#include "PltMetadataHandler.h"
 
 NPT_SET_LOCAL_LOGGER("platinum.media.server")
 
@@ -49,7 +48,6 @@ NPT_SET_LOCAL_LOGGER("platinum.media.server")
 |   forward references
 +---------------------------------------------------------------------*/
 extern NPT_UInt8 MS_ConnectionManagerSCPD[];
-extern NPT_UInt8 MS_ContentDirectorySCPD[];
 extern NPT_UInt8 MS_ContentDirectorywSearchSCPD[];
 
 const char* BrowseFlagsStr[] = {
@@ -71,12 +69,13 @@ PLT_MediaServer::PLT_MediaServer(const char*  friendly_name,
                    friendly_name, 
                    show_ip, 
                    port,
-                   port_rebind)
+                   port_rebind),
+    m_Delegate(NULL)
 {
     m_ModelDescription = "Plutinosoft AV Media Server Device";
     m_ModelName        = "AV Media Server Device";
     m_ModelNumber      = "1.0";
-    m_ModelURL         = "http://www.plutinosoft.com/blog/projects/platinum";
+    m_ModelURL         = "http://www.plutinosoft.com/platinum";
     m_DlnaDoc          = "DMS-1.50";
 }
 
@@ -91,35 +90,35 @@ PLT_MediaServer::~PLT_MediaServer()
 |   PLT_MediaServer::SetupServices
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaServer::SetupServices(PLT_DeviceData& data)
+PLT_MediaServer::SetupServices()
 {
     PLT_Service* service;
 
     {
         service = new PLT_Service(
-            &data,
-                              "urn:schemas-upnp-org:service:ContentDirectory:1", 
-            "urn:upnp-org:serviceId:ContentDirectory");
+            this,
+            "urn:schemas-upnp-org:service:ContentDirectory:1", 
+            "urn:upnp-org:serviceId:ContentDirectory",
+            "ContentDirectory");
         NPT_CHECK_FATAL(service->SetSCPDXML((const char*) MS_ContentDirectorywSearchSCPD));
-        NPT_CHECK_FATAL(service->InitURLs("ContentDirectory", data.GetUUID()));
-        NPT_CHECK_FATAL(data.AddService(service));
+        NPT_CHECK_FATAL(AddService(service));
         
-        service->SetStateVariable("ContainerUpdateIDs", "0");
-        service->SetStateVariableRate("ContainerUpdateIDs", NPT_TimeInterval(2, 0));
+        service->SetStateVariable("ContainerUpdateIDs", "");
+        service->SetStateVariableRate("ContainerUpdateIDs", NPT_TimeInterval(2.));
         service->SetStateVariable("SystemUpdateID", "0");
-        service->SetStateVariableRate("SystemUpdateID", NPT_TimeInterval(2, 0));
+        service->SetStateVariableRate("SystemUpdateID", NPT_TimeInterval(2.));
         service->SetStateVariable("SearchCapability", "upnp:class");
         service->SetStateVariable("SortCapability", "");
     }
 
     {
         service = new PLT_Service(
-            &data,
-                              "urn:schemas-upnp-org:service:ConnectionManager:1", 
-            "urn:upnp-org:serviceId:ConnectionManager");
+            this,
+            "urn:schemas-upnp-org:service:ConnectionManager:1", 
+            "urn:upnp-org:serviceId:ConnectionManager",
+            "ConnectionManager");
         NPT_CHECK_FATAL(service->SetSCPDXML((const char*) MS_ConnectionManagerSCPD));
-        NPT_CHECK_FATAL(service->InitURLs("ConnectionManager", data.GetUUID()));
-        NPT_CHECK_FATAL(data.AddService(service));
+        NPT_CHECK_FATAL(AddService(service));
         
         service->SetStateVariable("CurrentConnectionIDs", "0");
         service->SetStateVariable("SinkProtocolInfo", "");
@@ -127,6 +126,24 @@ PLT_MediaServer::SetupServices(PLT_DeviceData& data)
     }
 
     return NPT_SUCCESS;
+}
+
+/*----------------------------------------------------------------------
+|   PLT_MediaServer::UpdateSystemUpdateID
++---------------------------------------------------------------------*/
+void 
+PLT_MediaServer::UpdateSystemUpdateID(NPT_UInt32 update)
+{
+    NPT_COMPILER_UNUSED(update);
+}
+
+/*----------------------------------------------------------------------
+|   PLT_MediaServer::UpdateContainerUpdateID
++---------------------------------------------------------------------*/
+void PLT_MediaServer::UpdateContainerUpdateID(const char* id, NPT_UInt32 update)
+{
+    NPT_COMPILER_UNUSED(id);
+    NPT_COMPILER_UNUSED(update);
 }
 
 /*----------------------------------------------------------------------
@@ -138,7 +155,7 @@ PLT_MediaServer::OnAction(PLT_ActionReference&          action,
 {
     /* parse the action name */
     NPT_String name = action->GetActionDesc().GetName();
-
+                   
     // ContentDirectory
     if (name.Compare("Browse", true) == 0) {
         return OnBrowse(action, context);
@@ -172,28 +189,70 @@ PLT_MediaServer::OnAction(PLT_ActionReference&          action,
 }
 
 /*----------------------------------------------------------------------
+ |   PLT_MediaServer::ProcessGetDescription
+ +---------------------------------------------------------------------*/
+NPT_Result 
+PLT_MediaServer::ProcessGetDescription(NPT_HttpRequest&              request,
+                                       const NPT_HttpRequestContext& context,
+                                       NPT_HttpResponse&             response)
+{
+    NPT_String m_OldModelName   = m_ModelName;
+    NPT_String m_OldModelNumber = m_ModelNumber;
+    
+    /* change some things based on User-Agent header */
+    NPT_HttpHeader* user_agent = request.GetHeaders().GetHeader(NPT_HTTP_HEADER_USER_AGENT);
+    if (user_agent && user_agent->GetValue().Find("Sonos", 0, true)>=0) {
+        /* Force "Rhapsody" so that Sonos doesn't reject us */
+        m_ModelName   = "Rhapsody";
+        m_ModelNumber = "3.0";
+    }
+    
+    NPT_Result res = PLT_DeviceHost::ProcessGetDescription(request, context, response);
+    
+    /* reset back to old values now */
+    m_ModelName   = m_OldModelName;
+    m_ModelNumber = m_OldModelNumber;
+    
+    return res;
+}
+
+/*----------------------------------------------------------------------
+|   PLT_FileMediaServer::ProcessHttpGetRequest
++---------------------------------------------------------------------*/
+NPT_Result 
+PLT_MediaServer::ProcessHttpGetRequest(NPT_HttpRequest&              request, 
+                                       const NPT_HttpRequestContext& context,
+                                       NPT_HttpResponse&             response)
+{
+    /* Try to handle file request */
+    if (m_Delegate) return m_Delegate->ProcessFileRequest(request, context, response);
+    
+    return NPT_ERROR_NO_SUCH_FILE;
+}
+
+/*----------------------------------------------------------------------
 |   PLT_MediaServer::OnGetCurrentConnectionIDs
 +---------------------------------------------------------------------*/
-NPT_Result
-PLT_MediaServer::OnGetCurrentConnectionIDs(PLT_ActionReference&          action, 
+NPT_Result 
+PLT_MediaServer::OnGetCurrentConnectionIDs(PLT_ActionReference&          action,
                                            const PLT_HttpRequestContext& context)
 {
     NPT_COMPILER_UNUSED(context);
 
     return action->SetArgumentsOutFromStateVariable();
-    }
+}
 
 /*----------------------------------------------------------------------
 |   PLT_MediaServer::OnGetProtocolInfo
 +---------------------------------------------------------------------*/
-NPT_Result
-PLT_MediaServer::OnGetProtocolInfo(PLT_ActionReference&          action, 
+NPT_Result 
+PLT_MediaServer::OnGetProtocolInfo(PLT_ActionReference&          action,
                                    const PLT_HttpRequestContext& context)
 {
     NPT_COMPILER_UNUSED(context);
 
     return action->SetArgumentsOutFromStateVariable();
-    }
+}
 
 /*----------------------------------------------------------------------
 |   PLT_MediaServer::OnGetCurrentConnectionInfo
@@ -237,19 +296,19 @@ PLT_MediaServer::OnGetCurrentConnectionInfo(PLT_ActionReference&          action
 /*----------------------------------------------------------------------
 |   PLT_MediaServer::OnGetSortCapabilities
 +---------------------------------------------------------------------*/
-NPT_Result
+NPT_Result 
 PLT_MediaServer::OnGetSortCapabilities(PLT_ActionReference&          action,
                                        const PLT_HttpRequestContext& context)
 {
     NPT_COMPILER_UNUSED(context);
 
     return action->SetArgumentsOutFromStateVariable();
-    }
+}
 
 /*----------------------------------------------------------------------
 |   PLT_MediaServer::OnGetSearchCapabilities
 +---------------------------------------------------------------------*/
-NPT_Result
+NPT_Result 
 PLT_MediaServer::OnGetSearchCapabilities(PLT_ActionReference&          action, 
                                          const PLT_HttpRequestContext& context)
 {
@@ -261,7 +320,7 @@ PLT_MediaServer::OnGetSearchCapabilities(PLT_ActionReference&          action,
 /*----------------------------------------------------------------------
 |   PLT_MediaServer::OnGetSystemUpdateID
 +---------------------------------------------------------------------*/
-NPT_Result
+NPT_Result 
 PLT_MediaServer::OnGetSystemUpdateID(PLT_ActionReference&          action, 
                                      const PLT_HttpRequestContext& context)
 {
@@ -271,10 +330,10 @@ PLT_MediaServer::OnGetSystemUpdateID(PLT_ActionReference&          action,
 }
 
 /*----------------------------------------------------------------------
-|   PLT_MediaServer::GetBrowseFlag
+|   PLT_MediaServer::ParseBrowseFlag
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaServer::GetBrowseFlag(const char* str, BrowseFlags& flag) 
+PLT_MediaServer::ParseBrowseFlag(const char* str, BrowseFlags& flag) 
 {
     if (NPT_String::Compare(str, BrowseFlagsStr[0], true) == 0) {
         flag = BROWSEMETADATA;
@@ -325,7 +384,7 @@ PLT_MediaServer::OnBrowse(PLT_ActionReference&          action,
 {
     NPT_Result res;
     NPT_String object_id;
-    NPT_String browse_flag_val;
+    NPT_String browse_flag_val;    
     NPT_String filter;
     NPT_String start;
     NPT_String count;
@@ -345,13 +404,13 @@ PLT_MediaServer::OnBrowse(PLT_ActionReference&          action,
 
     /* extract flag */
     BrowseFlags flag;
-    if (NPT_FAILED(GetBrowseFlag(browse_flag_val, flag))) {
+    if (NPT_FAILED(ParseBrowseFlag(browse_flag_val, flag))) {
         /* error */
         NPT_LOG_WARNING_1("BrowseFlag value not allowed (%s)", (const char*)browse_flag_val);
         action->SetError(402, "Invalid args");
         return NPT_SUCCESS;
     }
-
+    
     /* convert index and counts to int */
     NPT_UInt32 starting_index, requested_count;
     if (NPT_FAILED(start.ToInteger(starting_index)) ||
@@ -363,7 +422,7 @@ PLT_MediaServer::OnBrowse(PLT_ActionReference&          action,
         return NPT_FAILURE;
     }
     
-    /* parse sort criteria */
+    /* parse sort criteria for validation */
     if (NPT_FAILED(ParseSort(sort, sort_list))) {
         NPT_LOG_WARNING_1("Unsupported or invalid sort criteria error (%s)", 
             sort.GetChars());
@@ -371,7 +430,7 @@ PLT_MediaServer::OnBrowse(PLT_ActionReference&          action,
         return NPT_FAILURE;
     }
     
-    NPT_LOG_INFO_6("Received %s from %s for id = %s with filter = %s, start = %d, count = %d", 
+    NPT_LOG_INFO_6("Processing %s from %s with id=\"%s\", filter=\"%s\", start=%d, count=%d", 
                    (const char*)browse_flag_val, 
                    (const char*)context.GetRemoteAddress().GetIpAddress().ToString(),
                    (const char*)object_id,
@@ -387,7 +446,7 @@ PLT_MediaServer::OnBrowse(PLT_ActionReference&          action,
             filter, 
             starting_index, 
             requested_count, 
-            sort_list, 
+            sort, 
             context);
     } else {
         res = OnBrowseDirectChildren(
@@ -396,7 +455,7 @@ PLT_MediaServer::OnBrowse(PLT_ActionReference&          action,
             filter, 
             starting_index, 
             requested_count, 
-            sort_list, 
+            sort, 
             context);
     }
 
@@ -435,7 +494,7 @@ PLT_MediaServer::OnSearch(PLT_ActionReference&          action,
         action->SetError(402, "Invalid args");
         return NPT_SUCCESS;
     }
-
+    
     /* convert index and counts to int */
     NPT_UInt32 starting_index, requested_count;
     if (NPT_FAILED(start.ToInteger(starting_index)) ||
@@ -454,7 +513,7 @@ PLT_MediaServer::OnSearch(PLT_ActionReference&          action,
         return NPT_FAILURE;
     }
     
-    NPT_LOG_INFO_5("Received Search from %s for id = %s with search = %s, start = %d, count = %d", 
+    NPT_LOG_INFO_5("Processing Search from %s with id=\"%s\", search=\"%s\", start=%d, count=%d", 
                    (const char*)context.GetRemoteAddress().GetIpAddress().ToString(),
                    (const char*)container_id,
                    (const char*)search,
@@ -464,11 +523,11 @@ PLT_MediaServer::OnSearch(PLT_ActionReference&          action,
     if (search.IsEmpty() || search == "*") {
         res = OnBrowseDirectChildren(
             action, 
-            container_id, 
+            container_id,
 			filter,
             starting_index, 
             requested_count, 
-            sort_list, 
+            sort, 
             context);
     } else {
         res = OnSearchContainer(
@@ -478,7 +537,7 @@ PLT_MediaServer::OnSearch(PLT_ActionReference&          action,
 			filter,
             starting_index, 
             requested_count, 
-            sort_list,
+            sort,
             context);
     }
 
@@ -493,14 +552,23 @@ PLT_MediaServer::OnSearch(PLT_ActionReference&          action,
 |   PLT_MediaServer::OnBrowseMetadata
 +---------------------------------------------------------------------*/
 NPT_Result 
-PLT_MediaServer::OnBrowseMetadata(PLT_ActionReference&          /* action */, 
-                                  const char*                   /* object_id */, 
-                                  const char*                   /* filter */,
-                                  NPT_UInt32                    /* starting_index */,
-                                  NPT_UInt32                    /* requested_count */,
-                                  const NPT_List<NPT_String>&   /* sort_criteria */,
-                                  const PLT_HttpRequestContext& /* context */)
+PLT_MediaServer::OnBrowseMetadata(PLT_ActionReference&          action, 
+                                  const char*                   object_id, 
+                                  const char*                   filter,
+                                  NPT_UInt32                    starting_index,
+                                  NPT_UInt32                    requested_count,
+                                  const char*                   sort_criteria,
+                                  const PLT_HttpRequestContext& context)
 { 
+    if (m_Delegate) {
+        return m_Delegate->OnBrowseMetadata(action,
+                                            object_id, 
+                                            filter, 
+                                            starting_index, 
+                                            requested_count, 
+                                            sort_criteria, 
+                                            context);
+    }
     return NPT_ERROR_NOT_IMPLEMENTED; 
 }
 
@@ -508,14 +576,23 @@ PLT_MediaServer::OnBrowseMetadata(PLT_ActionReference&          /* action */,
 |   PLT_MediaServer::OnBrowseDirectChildren
 +---------------------------------------------------------------------*/
 NPT_Result 
-PLT_MediaServer::OnBrowseDirectChildren(PLT_ActionReference&          /* action */, 
-                                        const char*                   /* object_id */, 
-                                        const char*                   /* filter */,
-                                        NPT_UInt32                    /* starting_index */,
-                                        NPT_UInt32                    /* requested_count */,
-                                        const NPT_List<NPT_String>&   /* sort_criteria */,
-                                        const PLT_HttpRequestContext& /* context */) 
+PLT_MediaServer::OnBrowseDirectChildren(PLT_ActionReference&          action, 
+                                        const char*                   object_id, 
+                                        const char*                   filter,
+                                        NPT_UInt32                    starting_index,
+                                        NPT_UInt32                    requested_count,
+                                        const char*                   sort_criteria,
+                                        const PLT_HttpRequestContext& context) 
 { 
+    if (m_Delegate) {
+        return m_Delegate->OnBrowseDirectChildren(action,
+                                                  object_id, 
+                                                  filter, 
+                                                  starting_index, 
+                                                  requested_count, 
+                                                  sort_criteria, 
+                                                  context);
+    }
     return NPT_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -523,14 +600,24 @@ PLT_MediaServer::OnBrowseDirectChildren(PLT_ActionReference&          /* action 
 |   PLT_MediaServer::OnSearchContainer
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaServer::OnSearchContainer(PLT_ActionReference&          /* action */, 
-                                   const char*                   /* object_id */, 
-                                   const char*                   /* search_criteria */,
-								   const char*                   /* filter */,
-                                   NPT_UInt32                    /* starting_index */,
-                                   NPT_UInt32                    /* requested_count */,
-                                   const NPT_List<NPT_String>&   /* sort_criteria */,
-                                   const PLT_HttpRequestContext& /* context */)
+PLT_MediaServer::OnSearchContainer(PLT_ActionReference&          action, 
+                                   const char*                   object_id, 
+                                   const char*                   search_criteria,
+								   const char*                   filter,
+                                   NPT_UInt32                    starting_index,
+                                   NPT_UInt32                    requested_count,
+                                   const char*                   sort_criteria,
+                                   const PLT_HttpRequestContext& context)
 {
+    if (m_Delegate) {
+        return m_Delegate->OnSearchContainer(action,
+                                             object_id, 
+                                             search_criteria,
+                                             filter, 
+                                             starting_index, 
+                                             requested_count, 
+                                             sort_criteria, 
+                                             context);
+    }
     return NPT_ERROR_NOT_IMPLEMENTED;
 }

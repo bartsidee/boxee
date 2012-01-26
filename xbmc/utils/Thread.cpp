@@ -86,7 +86,7 @@ CThread::CThread()
 
   m_bStop = false;
   m_bDone = false;
-  
+
   m_bAutoDelete = false;
   m_ThreadHandle = NULL;
   m_ThreadId = 0;
@@ -138,7 +138,7 @@ __thread CThread* pLocalThread = NULL;
 #endif
 void CThread::term_handler (int signum)
 {
-  CLog::Log(LOGERROR,"thread 0x%lx (%lu) got signal %d. calling OnException and terminating thread abnormally.", pthread_self(), pthread_self(), signum);
+  CLog::Log(LOGERROR,"thread 0x%p got signal %d. calling OnException and terminating thread abnormally.", (void*) pthread_self(), signum);
   if (LOCAL_THREAD)
   {
     LOCAL_THREAD->m_bStop = TRUE;
@@ -231,6 +231,10 @@ DWORD WINAPI CThread::staticThread(LPVOID* data)
     e.writelog(__FUNCTION__);
   }
 #endif
+  catch(std::exception& e)
+  {
+    CLog::Log(LOGERROR, "%s - Unhandled exception caught in thread process, attemping cleanup in OnExit: %s", __FUNCTION__, e.what());
+  }
   catch(...)
   {
     CLog::Log(LOGERROR, "%s - Unhandled exception caught in thread process, attemping cleanup in OnExit", __FUNCTION__); 
@@ -268,7 +272,7 @@ DWORD WINAPI CThread::staticThread(LPVOID* data)
   }
   
   pThread->m_bDone = true;
-
+  
   if ( pThread->IsAutoDelete() )
   {
     ::LeaveCriticalSection(pThread->m_lock);
@@ -276,6 +280,7 @@ DWORD WINAPI CThread::staticThread(LPVOID* data)
     CLog::Log(LOGDEBUG,"Thread %"PRIu64" terminating (autodelete)", (uint64_t)CThread::GetCurrentThreadId());
 
     if (pThread->m_pRunnable) {
+
       delete pThread->m_pRunnable;
     }
 
@@ -287,7 +292,7 @@ DWORD WINAPI CThread::staticThread(LPVOID* data)
     ::LeaveCriticalSection(pThread->m_lock);
     CLog::Log(LOGDEBUG,"Thread %"PRIu64" terminating", (uint64_t)CThread::GetCurrentThreadId());  
   }
-  
+
 #ifndef _LINUX
   _endthreadex(123);
 #endif
@@ -430,9 +435,9 @@ bool CThread::WaitForThreadExit(unsigned int milliseconds)
 
   lock.Leave();
   if (::WaitForSingleObject(m_ThreadHandle, milliseconds) != WAIT_TIMEOUT)
-    return true;  
+    return true;
   lock.Enter();
-  
+
   // restore thread priority if thread hasn't exited
   if(caller > callee && m_ThreadHandle)
     SetThreadPriority(m_ThreadHandle, callee);
@@ -524,7 +529,7 @@ bool CThread::IsCurrentThread(const ThreadIdentifier tid)
 }
 
 
-DWORD CThread::WaitForSingleObject(HANDLE hHandle, unsigned int milliseconds)
+DWORD CThread::WaitForSingleObject(HANDLE hHandle, unsigned int milliseconds) const
 {
   if(milliseconds > 10 && IsCurrentThread())
   {
@@ -543,7 +548,7 @@ DWORD CThread::WaitForSingleObject(HANDLE hHandle, unsigned int milliseconds)
     return ::WaitForSingleObject(hHandle, milliseconds);
 }
 
-DWORD CThread::WaitForMultipleObjects(DWORD nCount, HANDLE *lpHandles, BOOL bWaitAll, unsigned int milliseconds)
+DWORD CThread::WaitForMultipleObjects(DWORD nCount, HANDLE *lpHandles, BOOL bWaitAll, unsigned int milliseconds) const
 {
   // for now not implemented
   return ::WaitForMultipleObjects(nCount, lpHandles, bWaitAll, milliseconds);

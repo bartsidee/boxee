@@ -140,11 +140,21 @@ void CNetwork::StartServices()
 #ifdef HAS_UPNP
       g_application.StartUPnP();
 #endif
+#ifdef HAS_EMBEDED
+      CLog::Log(LOGNOTICE,"CNetwork::StartServices - Going to start SmbServer (smbs)");
+      g_application.StartSmbServer();
+#endif
 #ifdef HAS_EVENT_SERVER
       g_application.StartEventServer();
 #endif
 #ifdef HAS_DBUS_SERVER
       g_application.StartDbusServer();
+#endif
+#ifdef HAS_JSONRPC
+  g_application.StartJSONRPCServer();
+#endif
+#ifdef HAS_AIRPLAY
+  g_application.StartAirplayServer();
 #endif
 #ifdef HAS_ZEROCONF
       g_application.StartZeroconf();
@@ -179,6 +189,10 @@ void CNetwork::StopServices(bool bWait)
 
 #ifdef HAS_WEB_SERVER
   g_application.StopWebServer(bWait);
+#endif
+#ifdef HAS_EMBEDED
+  CLog::Log(LOGNOTICE,"CNetwork::StopServices - Going to stop SmbServer (smbs)");
+  g_application.StopSmbServer();
 #endif
 #ifdef HAS_EVENT_SERVER
   g_application.StopEventServer(bWait, false);

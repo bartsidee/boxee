@@ -22,7 +22,7 @@ bool BOXEE::BXMediaDatabase::m_bHasNewFiles = false;
 
 BXMediaDatabase::BXMediaDatabase()
 {
-	Open();
+  Open();
 }
 
 BXMediaDatabase::~BXMediaDatabase()
@@ -69,30 +69,15 @@ bool BXMediaDatabase::CleanTables()
     delete pDS;
   }
 
-  pDS = Query("select 'DELETE FROM ' || name || ';' from sqlite_master where type = 'index';");
-
-  if (pDS)
-  {
-    if (pDS->num_rows() != 0)
-    {
-      while (!pDS->eof())
-      {
-        std::string strQuery = pDS->fv(0).get_asString();
-        vecQueries.push_back(strQuery);
-        pDS->next();
-      }
-    }
-    delete pDS;
-  }
-
   Create("BEGIN TRANSACTION;");
 
-  for (int i = 0; i < vecQueries.size(); i++)
+  for (unsigned int i = 0; i < vecQueries.size(); i++)
   {
     Create(vecQueries[i].c_str());
   }
 
   Create("COMMIT;");
+  Create("REINDEX;");
 
   return true;
 }
@@ -112,7 +97,7 @@ bool BXMediaDatabase::CreateTables()
     result &= Create("CREATE INDEX media_folders_strStatus_idx ON media_folders(strStatus);\n");
 
     // Creating tables for watched feature
-    LOG(LOG_LEVEL_DEBUG, "LIBRARY: Creating watched table (watched)");
+    LOG(LOG_LEVEL_DEBUG, "LIBRARY: Creating watched table (wchd)");
     result &= Create("CREATE TABLE watched ( idWatched integer primary key autoincrement, strPath text, strBoxeeId text, iPlayCount integer, iLastPlayed integer, fPositionInSeconds double);");
     result &= Create("CREATE INDEX watched_srtPath_idx ON watched(strPath);\n");
     result &= Create("CREATE INDEX watched_strBoxeeId_idx ON watched(strBoxeeId);\n");
@@ -179,7 +164,8 @@ bool BXMediaDatabase::CreateTables()
         "iDuration integer, strType text, strSeriesId text, iSeason integer, iEpisode integer, strDescription text, strExtDescription text, strIMDBKey text, strMPAARating text, "
         "strCredits text, strStudio text, strTagLine text, strCover text, strLanguage text, "
         "strGenre text, iReleaseDate integer, iYear integer, strTrailerUrl text, strShowTitle text, "
-        "iDateAdded integer, iHasMetadata integer, iRating integer, iPopularity integer, iDateModified integer, iDropped integer);\n");
+        "iDateAdded integer, iHasMetadata integer, iRating integer, iPopularity integer, iDateModified integer, iDropped integer, strNfoPath text, iNfoAccessTime integer, iNfoModifiedTime integer, strOriginalCover text, "
+        "iRTCriticsScore integer, strRTCriticsRating text, iRTAudienceScore integer, strRTAudienceRating text);\n");
 
     result &= Create("CREATE INDEX video_files_strPath_idx ON video_files(strPath);\n");
     result &= Create("CREATE INDEX video_files_strTitle_idx ON video_files(strTitle);\n");
@@ -192,7 +178,7 @@ bool BXMediaDatabase::CreateTables()
     result &= Create("CREATE unique INDEX video_parts_strPath_idx ON video_parts(strPath);\n");
 
     LOG(LOG_LEVEL_DEBUG, "LIBRARY: Creating unresolved_video_files table");
-    result &= Create("CREATE TABLE unresolved_video_files ( idVideoFile integer primary key autoincrement, strPath text, strSharePath text, idFolder integer, iStatus integer, idVideo integer, iSize integer);");
+    result &= Create("CREATE TABLE unresolved_video_files ( idVideoFile integer primary key autoincrement, strPath text, strSharePath text, idFolder integer, iStatus integer, idVideo integer, iSize integer, iDateAdded integer);");
 
     LOG(LOG_LEVEL_DEBUG, "LIBRARY: Creating unresolved_video_files index");
     result &= Create("CREATE unique INDEX unresolved_videos_strPath_idx ON unresolved_video_files(strPath);\n");
@@ -233,13 +219,24 @@ bool BXMediaDatabase::CreateTables()
     LOG(LOG_LEVEL_DEBUG, "LIBRARY: Creating provider_preferences table index");
     result &= Create("CREATE unique INDEX provider_preferences_idx ON provider_preferences(iProvider);\n");
 
+    LOG(LOG_LEVEL_DEBUG, "LIBRARY: Creating playable_folders");
+    result &= Create("CREATE TABLE playable_folders (idFolder integer primary key autoincrement, iFolder text);");
+
+    LOG(LOG_LEVEL_DEBUG, "LIBRARY: Creating playable_folders table index");
+    result &= Create("CREATE unique INDEX playable_folders_strPath_idx ON playable_folders(iFolder);\n");
+
     LOG(LOG_LEVEL_DEBUG, "LIBRARY: Creating series table");
     result &= Create("CREATE TABLE series ( idSeries integer primary key autoincrement, strTitle text, strPath text, strBoxeeId text, "
         "strCover text, strDescription text, strLanguage text, "
-        "strGenre text, iYear integer, iVirtual integer);\n");
+        "strGenre text, iYear integer, iVirtual integer, strNfoPath text, iNfoAccessTime integer, iNfoModifiedTime integer, iLatestLocalEpisodeDate integer);\n");
+
+    //delete the series when all its episodes are deleted
+    result &= Create("CREATE TRIGGER delete_series_video_trigger AFTER DELETE ON video_files "
+        "BEGIN "
+        "DELETE FROM series WHERE length(OLD.strSeriesId)>0 AND series.strBoxeeId = OLD.strSeriesId AND (SELECT COUNT(*) from video_files where strSeriesId=OLD.strSeriesId)=0; "
+        "END;");
 
     LOG(LOG_LEVEL_DEBUG, "LIBRARY: Creating series index");
-    result &= Create("CREATE unique INDEX series_strTitle_idx ON series(strTitle);\n");
     result &= Create("CREATE unique INDEX series_strBoxeeId_idx ON series(strBoxeeId);\n");
 
     LOG(LOG_LEVEL_DEBUG, "LIBRARY: Creating seasons table");
@@ -288,8 +285,23 @@ bool BXMediaDatabase::CreateTables()
     LOG(LOG_LEVEL_DEBUG, "LIBRARY: Creating pictures table");
     result &= Create("CREATE TABLE pictures ( idPicture integer primary key autoincrement, idFile integer, strPath text, iDate integer, iDateAdded integer, iHasMetadata integer, iDateModified integer);\n");
 
+    LOG(LOG_LEVEL_DEBUG, "LIBRARY: Creating video_links table");
+    result &= Create("CREATE TABLE video_links ( idLink integer primary key autoincrement, strBoxeeId text, strURL text, strProvider text , strProviderName text, strProviderThumb text, strTitle text, strQuality text, strQualityLabel text, bIsHD integer, strType text, strBoxeeType text, strCountryCodes text, strCountryRel text, strOffer text, UNIQUE(strBoxeeId,strURL));\n");
+
+    // Trigger to automatically remove video_links if there are no more related video_files
+    result &= Create("CREATE TRIGGER delete_video_links_trigger AFTER DELETE ON video_files "
+        "BEGIN "
+        "DELETE FROM video_links WHERE strBoxeeId=OLD.strBoxeeId AND (SELECT COUNT(*) from video_files where strBoxeeId=OLD.strBoxeeId)=0; "
+        "END;");
+
     LOG(LOG_LEVEL_DEBUG, "LIBRARY: Finished creating media database");
 
+    //update the version of db
+    Dataset* pDS = Exec("update version set iVersion=17");
+    if (pDS)
+    {
+      delete pDS;
+    }
   }
   catch(dbiplus::DbErrors& e) {
     LOG(LOG_LEVEL_ERROR, e.getMsg());
@@ -308,7 +320,8 @@ bool BXMediaDatabase::UpdateTables()
 
   bool bResult = true;
 
-  if (pDS) {
+  if (pDS)
+  {
     if (pDS->num_rows() != 0)
     {
       int iVersion = pDS->fv("iVersion").get_asInt();
@@ -417,6 +430,7 @@ bool BXMediaDatabase::UpdateTables()
 
         bResult &= true;
       }
+
       if (iVersion <= 5)
       {
         LOG(LOG_LEVEL_ERROR, "BOXEE DATABASE, Older database version (5) detected, updating indexes");
@@ -428,7 +442,6 @@ bool BXMediaDatabase::UpdateTables()
 
         Create("CREATE TABLE provider_preferences (iPrefId integer primary key autoincrement, iProvider text, iSelectedQuality integer);");
         Create("CREATE unique INDEX provider_preferences_idx ON provider_preferences(iProvider);\n");
-
 
         Dataset* pDS = Exec("update version set iVersion=6");
         if (pDS)
@@ -465,25 +478,208 @@ bool BXMediaDatabase::UpdateTables()
             Dataset* pDS = Exec("update version set iVersion=7");
             if (pDS)
               delete pDS;
-            bResult &= true;
+        bResult &= true;
 
       }
-      if (iVersion == 7 )
+
+      if (iVersion <= 7)
       {
-          LOG(LOG_LEVEL_DEBUG, "BOXEE DATABASE, Database version is up to date (7)");
-          bResult &= true;
+        Create("CREATE TABLE playable_folder (idFolder integer primary key autoincrement, iFolder text);");
+        Create("CREATE unique INDEX playable_folders_strPath_idx ON playable_folders(iFolder);\n");
 
+        Dataset* pDS = Exec("update version set iVersion=8");
+            if (pDS)
+              delete pDS;
+
+        bResult &= true;
       }
 
+      if (iVersion <= 8 )
+      {
+        Create("DROP TABLE playable_folder;");
+        Create("DROP INDEX playable_folders_strPath_idx;");
+
+        Create("CREATE TABLE playable_folders (idFolder integer primary key autoincrement, iFolder text);");
+        Create("CREATE unique INDEX playable_folders_strPath_idx ON playable_folders(iFolder);\n");
+
+        Dataset* pDS = Exec("update version set iVersion=9");
+            if (pDS)
+              delete pDS;
+
+        bResult &= true;
+      }
+
+      if (iVersion <= 9)
+      {
+        Create("alter table series add column strNfoPath text;");
+        Create("alter table series add column iNfoAccessTime integer;");
+        Create("alter table series add column iNfoModifiedTime integer;");
+
+        Create("alter table video_files add column strNfoPath text;");
+        Create("alter table video_files add column iNfoAccessTime integer;");
+        Create("alter table video_files add column iNfoModifiedTime integer;");
+
+        Dataset* pDS = Exec("update version set iVersion=10");
+            if (pDS)
+              delete pDS;
+
+        bResult &= true;
+      }
+
+      if (iVersion <= 10)
+      {
+        Create("CREATE TABLE video_links ( idLink integer primary key autoincrement, strBoxeeId text, strURL text, strProvider text , strProviderName text, strProviderThumb text, strTitle text, strQuality text, strQualityLabel text, bIsHD integer, strType text, strBoxeeType text, strCountryCodes text, strCountryRel text, strOffer text, UNIQUE(strBoxeeId,strURL));");
+
+        // Trigger to automatically remove video_links if there are no more related video_files
+        Create("CREATE TRIGGER delete_video_links_trigger AFTER DELETE ON video_files "
+            "BEGIN "
+            "DELETE FROM video_links WHERE strBoxeeId=OLD.strBoxeeId AND (SELECT COUNT(*) from video_files where strBoxeeId=OLD.strBoxeeId)=0; "
+            "END;");
+
+        Dataset* pDS = Exec("update version set iVersion=11");
+            if (pDS)
+              delete pDS;
+
+        bResult &= true;
+      }
+
+      if (iVersion <= 11)
+      {
+        Create("alter table unresolved_video_files add column iDateAdded integer;");
+
+        Dataset* pDS = Exec("update version set iVersion=12");
+            if (pDS)
+              delete pDS;
+
+        bResult &= true;
+      }
+
+      if (iVersion <= 12)
+      {
+        Create("DROP INDEX series_strTitle_idx;\n");
+
+        Dataset* pDS = Exec("update version set iVersion=13");
+            if (pDS)
+              delete pDS;
+
+        bResult &= true;
+      }
+
+      if (iVersion <= 13)
+      {
+        Create("alter table video_files add column strOriginalCover text;\n");
+
+        Dataset* pDS = Exec("update version set iVersion=14");
+            if (pDS)
+              delete pDS;
+
+        bResult &= true;
+      }
+
+      if (iVersion <= 14)
+      {
+        Create("alter table series add column iLatestLocalEpisodeDate integer;\n");
+
+        //delete the series when all its episodes are deleted
+        Create("CREATE TRIGGER delete_series_video_trigger AFTER DELETE ON video_files "
+               "BEGIN "
+               "DELETE FROM series WHERE length(OLD.strSeriesId)>0 AND series.strBoxeeId = OLD.strSeriesId AND (SELECT COUNT(*) from video_files where strSeriesId=OLD.strSeriesId)=0; "
+               "END;");
+
+        Dataset* pDS = Exec("update version set iVersion=15");
+            if (pDS)
+              delete pDS;
+
+        bResult &= true;
+      }
+      if (iVersion <= 15)
+      {
+        //migrate the latest episode date to the tv show
+        Dataset* pDS = Query("select strBoxeeId,iLatestLocalEpisodeDate from series where iLatestLocalEpisodeDate is null");
+
+        if (pDS)
+        {
+          try
+          {
+            if (pDS->num_rows() != 0)
+            {
+              LOG(LOG_LEVEL_DEBUG,"Migrating db to version 16, updating column iLatestLocalEpisodeDate in series for %d rows. (dbupdate)",pDS->num_rows());
+              while (!pDS->eof())
+              {
+                Dataset* pDSb = Query("select iDateAdded from video_files where strSeriesId='%s' and iDropped=0 order by iDateAdded desc limit 1",pDS->fv("strBoxeeId").get_asString().c_str());
+                if (pDSb)
+                {
+                  try
+                  {
+                    if (pDSb->num_rows() != 0)
+                    {
+                      unsigned int latestEpisode = pDSb->fv("iDateAdded").get_asUInt();
+
+                      LOG(LOG_LEVEL_DEBUG, "Latest episode for Series id=%s is %d (dbupdate)",pDS->fv("strBoxeeId").get_asString().c_str(),latestEpisode);
+
+                      Dataset* pDSc = Exec("update series set iVirtual=0 , iLatestLocalEpisodeDate=%i where strBoxeeId='%s'", latestEpisode, pDS->fv("strBoxeeId").get_asString().c_str());
+                      if (pDSc)
+                      {
+                        delete pDSc;
+                      }
+                    }
+                  }
+                  catch(dbiplus::DbErrors& e)
+                  {
+                    LOG(LOG_LEVEL_ERROR, "Exception caught. Error = %s, msg= %s", GetLastErrorMessage(), e.getMsg());
+                  }
+                  delete pDSb;
+                }
+                else
+                {
+                  LOG(LOG_LEVEL_DEBUG, "Couldn't find episodes for the Series (id=%s), this show will soon be deleted from the db automatically.. (dbupdate)",pDS->fv("strBoxeeId").get_asString().c_str());
+                }
+                pDS->next();
+              }
+            }
+          }
+          catch(dbiplus::DbErrors& e)
+          {
+            LOG(LOG_LEVEL_ERROR, "Exception caught. Error = %s, msg= %s", GetLastErrorMessage(), e.getMsg());
+            bResult = false;
+          }
+          delete pDS;
+        }
+
+        Dataset* pDSa = Exec("update version set iVersion=16");
+             if (pDSa)
+               delete pDSa;
+
+        bResult &= true;
+      }
+      if (iVersion <= 16)
+      {
+        Create("alter table video_files add column iRTCriticsScore integer;\n");
+        Create("alter table video_files add column strRTCriticsRating text;\n");
+        Create("alter table video_files add column iRTAudienceScore integer;\n");
+        Create("alter table video_files add column strRTAudienceRating text;\n");
+
+        Dataset* pDS = Exec("update version set iVersion=17");
+                   if (pDS)
+                     delete pDS;
+
+        bResult &= true;
+      }
+      if (iVersion == 17)
+      {
+        LOG(LOG_LEVEL_DEBUG, "BOXEE DATABASE, Database version is up to date (16)");
+        bResult &= true;
+      }
     }
+
     delete pDS;
   }
   else
   {
     LOG(LOG_LEVEL_ERROR, "Could not check database version");
   }
-  return bResult;
 
+  return bResult;
 }
 
 int BXMediaDatabase::AddMediaFolder(const std::string& strPath, const std::string& strType, int iDateModified)
@@ -502,8 +698,8 @@ int BXMediaDatabase::AddMediaFolder(const std::string& strPath, const std::strin
       {
         // The directory changed and should be rescanned
 
-
-        Dataset* pDS2 = Exec("update media_folders set strStatus='new', iDateStatus=%i, iMetadataId=0, iHasMetadata=0, "
+        // TODO: Check if this is necessary
+        Dataset* pDS2 = Exec("update media_folders set strStatus='scanned', iDateStatus=%i, iMetadataId=0, iHasMetadata=0, "
             "iDateModified=%i where idFolder=%i", now, iDateModified, iFolderId);
         if (pDS2)
         {
@@ -514,16 +710,21 @@ int BXMediaDatabase::AddMediaFolder(const std::string& strPath, const std::strin
       delete pDS;
       return iFolderId;
     }
+
     delete pDS;
   }
 
   //LOG(LOG_LEVEL_DEBUG, "BXMediaDatabase::AddMediaFolder, QUERY WRITE, insert into media_folders");
   int iResult = Insert("insert into media_folders (idFolder, strPath, strType, iMetadataId, strStatus, iDateStatus, iHasMetadata, iDateAdded, iDateModified, iNeedsRescan) "
-      "values (NULL, '%s', '%s', %i, '%s', %i, %i, %i, %i, %i)", strPath.c_str(), strType.c_str(), -1, MEDIA_FILE_STATUS_NEW, now, 0, now, iDateModified, FOLDER_RETRY);
+      "values (NULL, '%s', '%s', %i, '%s', %i, %i, %i, %i, %i)", strPath.c_str(), strType.c_str(), -1, "scanned", now, 0, now, iDateModified, FOLDER_RETRY);
+
+  if (iResult == MEDIA_DATABASE_ERROR)
+  {
+    LOG(LOG_LEVEL_ERROR,"BXMediaDatabase::AddMediaFolder - FAILED to insert folder [path=%s][type=%s][dateModified=%d] into media_folders",strPath.c_str(),strType.c_str(),iDateModified);
+  }
 
   return GetMediaFolderId(strPath,strType);
 }
-
 
 int BXMediaDatabase::GetMediaFolderId(const std::string& strPath, const std::string& strType)
 {
@@ -539,6 +740,7 @@ int BXMediaDatabase::GetMediaFolderId(const std::string& strPath, const std::str
       delete pDS;
       return iFolderId;
     }
+
     delete pDS;
   }
 
@@ -823,6 +1025,22 @@ int BXMediaDatabase::UpdateFolderNew(const std::string& strPath)
   return MEDIA_DATABASE_ERROR;
 }
 
+bool BXMediaDatabase::IsFolderBeingResolved(const std::string& strPath)
+{
+  Dataset* pDS = Query("select 1 from media_folders where strPath='%s' and (strStatus='resolving' or strStatus='pending' or strStatus='new' or strStatus='scanned')",strPath.c_str());
+
+  if (pDS)
+  {
+    if (pDS->num_rows() != 0)
+    {
+      delete pDS;
+      return true;
+    }
+  }
+
+  return false;
+}
+
 int BXMediaDatabase::UpdateFolderTreeNew(const std::string& strPath)
 {
   time_t now = time(NULL);
@@ -851,12 +1069,13 @@ int BXMediaDatabase::UpdateFolderResolving(const BXFolder* pFolder)
   return MEDIA_DATABASE_ERROR;
 }
 
-int BXMediaDatabase::UpdateFolderUnresolved(const std::string& strPath)
+int BXMediaDatabase::UpdateFolderUnresolved(const std::string& strPath , bool bDecreaseNeedsRescan /* = true */)
 {
+  std::string strDecreaseRescan = ", iNeedsRescan=iNeedsRescan-1";
   time_t now = time(NULL);
 
   //LOG(LOG_LEVEL_DEBUG, "BXMediaDatabase::UpdateFolderUnresolved, QUERY WRITE, update media_folders");
-  Dataset* pDS = Exec("update media_folders set strStatus='unresolved', iDateStatus=%i, iNeedsRescan=iNeedsRescan-1 where strPath='%s'", now, strPath.c_str());
+  Dataset* pDS = Exec("update media_folders set strStatus='unresolved', iDateStatus=%i %s where strPath='%s'", now, (bDecreaseNeedsRescan?strDecreaseRescan.c_str():""), strPath.c_str());
   if (pDS)
   {
     delete pDS;
@@ -1027,10 +1246,10 @@ bool BXMediaDatabase::AddQueueItem(const std::string& strLabel, const std::strin
   {
     if ((pDS->num_rows() > 0))
     {
-      LOG(LOG_LEVEL_ERROR, "BXMediaDatabase::AddQueueItem - Item already exists [rows=%d]. [path=%s][clientId=%s] (queue)", pDS->num_rows(), strPath.c_str(), strClientId.c_str());
-      delete pDS;
-      return false;
-    }
+    LOG(LOG_LEVEL_ERROR, "BXMediaDatabase::AddQueueItem - Item already exists [rows=%d]. [path=%s][clientId=%s] (queue)", pDS->num_rows(), strPath.c_str(), strClientId.c_str());
+    delete pDS;
+    return false;
+  }
     delete pDS;
   }
 
@@ -1121,6 +1340,7 @@ bool BXMediaDatabase::AddMediaShare(const std::string& strLabel, const std::stri
       delete pDS;
       return false;
     }
+
     delete pDS;
   }
 
@@ -1135,10 +1355,10 @@ bool BXMediaDatabase::AddMediaShare(const std::string& strLabel, const std::stri
   return true;
 }
 
-bool BXMediaDatabase::UpdateMediaShare(const std::string& strLabel, const std::string& strPath, const std::string& strType, int iScanType)
+bool BXMediaDatabase::UpdateMediaShare(const std::string& strOrgLabel, const std::string& strOrgType, const std::string& strLabel, const std::string& strPath, const std::string& strType, int iScanType)
 {
-  Dataset* pDS = Exec("update media_shares set strPath='%s', strType='%s',iScanType=%i where strLabel='%s'",
-      strPath.c_str(), strType.c_str(), iScanType, strLabel.c_str());
+  Dataset* pDS = Exec("update media_shares set strLabel='%s', strPath='%s', strType='%s',iScanType=%i where strLabel='%s' and strType='%s'",
+      strLabel.c_str(), strPath.c_str(), strType.c_str(), iScanType, strOrgLabel.c_str(), strOrgType.c_str());
 
   if (pDS)
   {
@@ -1242,7 +1462,7 @@ int BXMediaDatabase::UpdateProviderPerf(const std::string& strProvider, int qual
     if (pDS->num_rows() != 0)
     {
       bShouldUpdate = true;
-    }
+  }
     delete pDS;
   }
 
@@ -1252,7 +1472,7 @@ int BXMediaDatabase::UpdateProviderPerf(const std::string& strProvider, int qual
 	if (pDS1)
 	{
 	 delete pDS1;
-	}
+}
 	 iID = MEDIA_DATABASE_ERROR;
   }
   else
@@ -1280,5 +1500,36 @@ int BXMediaDatabase::GetProviderPerfQuality(const std::string& strProvider)
   return MEDIA_DATABASE_ERROR;
 }
 
+int BXMediaDatabase::AddPlayableFolder(const std::string& strPath)
+{
+  LOG(LOG_LEVEL_DEBUG, "BXMediaDatabase::AddPlayableFolder path [%s]", strPath.c_str());
+
+  int iID = Insert("insert into playable_folders values( NULL,'%s' )", strPath.c_str());
+  if (iID == MEDIA_DATABASE_ERROR) {
+    LOG(LOG_LEVEL_ERROR, "Could not add playable folder : [%s]", strPath.c_str());
+  }
+  return iID;
+}
+
+bool BXMediaDatabase::IsPlayableFolder(const std::string& strPath)
+{
+  Dataset* pDS = Query("select iFolder from playable_folders where iFolder = '%s'", strPath.c_str());
+
+  bool bSuccedded = false;
+
+  if (pDS)
+  {
+    if (pDS->num_rows() == 1 )
+    {
+      CStdString strFolder = pDS->fv(0).get_asString();
+  
+      if(strPath == strFolder)
+       bSuccedded = true;
+
+      delete pDS;
+    }
+  }
+  return bSuccedded;
+  }
 } // namespace BOXEE
 

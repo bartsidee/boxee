@@ -31,8 +31,8 @@
 class CAudioRendererFactory
 {
 public:
-static IAudioRenderer *Create(IAudioCallback* pCallback, int iChannels, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec, bool bIsMusic, bool bPassthrough);
+static IAudioRenderer *Create(IAudioCallback* pCallback, int iChannels, enum PCMChannels* channelMap, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec, bool bIsMusic, bool bPassthrough, bool bTimed = AUDIO_NOT_TIMED, AudioMediaFormat audioMediaFormat = AUDIO_MEDIA_FMT_PCM);
 private:
-static IAudioRenderer *CreateAudioRenderer(IAudioCallback* pCallback, int iChannels, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec, bool bIsMusic, bool bPassthrough);
+static IAudioRenderer *CreateAudioRenderer(IAudioCallback* pCallback, int iChannels, enum PCMChannels* channelMap, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec, bool bIsMusic, bool bPassthrough, bool bTimed = AUDIO_NOT_TIMED, AudioMediaFormat audioMediaFormat = AUDIO_MEDIA_FMT_PCM);
 };
 #endif

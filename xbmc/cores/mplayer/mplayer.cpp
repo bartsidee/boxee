@@ -819,7 +819,7 @@ bool CMPlayer::OpenFile(const CFileItem& file, const CPlayerOptions& initoptions
 
 
 
-  CURL url(strFile);
+  CURI url(strFile);
   if ( file.IsHD() ) bFileOnHD = true;
   else if ( file.IsISO9660() ) bFileOnISO = true;
   else if ( file.IsOnDVD() ) bFileOnUDF = true;

@@ -12,6 +12,7 @@
 #include "XAPP_Edit.h"
 #include "XAPP_Image.h"
 #include "XAPP_Label.h"
+#include "XAPP_Textbox.h"
 #include "XAPP_List.h"
 #include "XAPP_ListItem.h"
 #include "XAPP_LocalConfig.h"
@@ -58,6 +59,7 @@ static void PlayerCallBack(int event, void *clientdata)
 %include "XAPP_Edit.h"
 %include "XAPP_Image.h"
 %include "XAPP_Label.h"
+%include "XAPP_Textbox.h"
 %include "XAPP_List.h"
 %include "XAPP_LocalConfig.h"
 %include "XAPP_ToggleButton.h"
@@ -140,7 +142,7 @@ def ShowDialogKeyboard(heading, value, hiddenInput):
   return MC.ShowDialogKeyboard(heading, value, hiddenInput);
   
 def ShowDialogSelect(heading, choices):
-  ShowDialogSelect(heading, choices)
+  return MC.ShowDialogSelect(heading, choices)
   
 def ShowCustomDialog(id):
   return MC.ShowCustomDialog(id)
@@ -152,10 +154,10 @@ def LogDebug(msg):
   MC.LogDebug(msg)
 
 def LogInfo(msg):
-  MC.LogDebug(msg)
+  MC.LogInfo(msg)
 
 def LogError(msg):
-  MC.LogDebug(msg)
+  MC.LogError(msg)
 
 def GetActiveWindow():
   return MC.GetActiveWindow()
@@ -190,8 +192,59 @@ def GetFocusedItem(windowId, listId):
 def GetGeoLocation() :
   return MC.GetGeoLocation()
   
+def GetDeviceId() :
+  return MC.GetDeviceId()
+  
+def GetPlatform() :
+  return MC.GetPlatform()
+  
+def IsEmbedded():
+  return MC.IsEmbedded()
+  
 def GetCurrentPositionInSec(strPath):
   return MC.GetCurrentPositionInSec(strPath)
+
+def GetTimezoneCity():
+  return MC.GetTimezoneCity()
+
+def GetTimezoneCounty():
+  return MC.GetTimezoneCounty()
+
+def GetWeatherLocation():
+  return MC.GetWeatherLocation()
+
+def SetWeatherLocation(location):
+  return MC.SetWeatherLocation(location)
+
+def SetWeatherLocation2(cityName, countryCode):
+  return MC.SetWeatherLocation2(cityName, countryCode)
+
+def GetTemperatureScale():
+  return MC.GetTemperatureScale()
+
+def SetTemperatureScale(scale):
+  return MC.SetTemperatureScale(scale)
+
+def IsConnectedToInternet():
+  return MC.IsConnectedToInternet()
+
+def GetUniqueId():
+  return MC.GetUniqueId()
+
+def GetSystemLanguage():
+  return MC.GetSystemLanguage()
+
+def GetHardwareVendor():
+  return MC.GetHardwareVendor()
+ 
+def GetHardwareModel():
+  return MC.GetHardwareModel()
+ 
+def GetHardwareRevision():
+  return MC.GetHardwareRevision()
+ 
+def GetHardwareSerialNumber():
+  return MC.GetHardwareSerialNumber()
 
 %}
 

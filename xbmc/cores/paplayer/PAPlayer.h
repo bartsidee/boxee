@@ -26,6 +26,7 @@
 #include "AudioDecoder.h"
 #include "cores/ssrc.h"
 #include "cores/AudioRenderers/IAudioRenderer.h"
+#include "PCMRemap.h"
 
 class CFileItem;
 #ifndef _LINUX
@@ -65,7 +66,9 @@ public:
   virtual bool IsPaused() const { return m_bPaused; }
   virtual bool HasVideo() const { return false; }
   virtual bool HasAudio() const { return true; }
+  virtual bool IsPassthrough() const; 
   virtual bool CanSeek();
+  virtual bool CanSeekToTime();
   virtual void Seek(bool bPlus = true, bool bLargeStep = false);
   virtual void SeekPercentage(float fPercent = 0.0f);
   virtual float GetPercentage();
@@ -100,6 +103,10 @@ public:
 
   static bool HandlesType(const CStdString &type);
   virtual void DoAudioWork();
+
+  virtual bool CanSkip() const;
+  virtual bool CanPause() const;
+
 
 protected:
 
@@ -147,7 +154,7 @@ private:
 #if defined(_LINUX) || defined(_WIN32)
   void DrainStream(int stream);
 #endif
-  bool CreateStream(int stream, unsigned int channels, unsigned int samplerate, unsigned int bitspersample, CStdString codec = "");
+  bool CreateStream(int stream, unsigned int channels, unsigned int samplerate, unsigned int bitspersample, AudioMediaFormat format=AUDIO_MEDIA_FMT_PCM, bool passthrough=false,CStdString codec = "");
   void FlushStreams();
   void WaitForStream();
   void SetStreamVolume(int stream, long nVolume);
@@ -178,10 +185,13 @@ private:
   __int64          m_bytesSentOut;
 
   // format (this should be stored/retrieved from the audio device object probably)
-  unsigned int     m_channelCount[2];
-  unsigned int     m_sampleRate[2];
-  unsigned int     m_bitsPerSample[2];
-  unsigned int     m_BytesPerSecond;
+  unsigned int      m_channelCount[2];
+  enum PCMChannels* m_channelMap[2];
+  unsigned int      m_sampleRate[2];
+  unsigned int      m_bitsPerSample[2];
+  bool              m_passthrough[2];
+  AudioMediaFormat  m_format[2];
+  unsigned int      m_BytesPerSecond;
 
   unsigned int     m_CacheLevel;
   unsigned int     m_LastCacheLevelCheck;
@@ -198,5 +208,6 @@ private:
   unsigned int     m_visBufferLength;
   short            m_visBuffer[PACKET_SIZE+2];
 
+  bool m_bPauseOnSeek;
 };
 

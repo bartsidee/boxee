@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/ulti.c
+ * @file
  * IBM Ultimotion Video Decoder.
  */
 
@@ -51,6 +51,16 @@ static av_cold int ulti_decode_init(AVCodecContext *avctx)
     avctx->pix_fmt = PIX_FMT_YUV410P;
     avctx->coded_frame = (AVFrame*) &s->frame;
     s->ulti_codebook = ulti_codebook;
+
+    return 0;
+}
+
+static av_cold int ulti_decode_end(AVCodecContext *avctx){
+    UltimotionDecodeContext *s = avctx->priv_data;
+    AVFrame *pic = &s->frame;
+
+    if (pic->data[0])
+        avctx->release_buffer(avctx, pic);
 
     return 0;
 }
@@ -394,14 +404,14 @@ static int ulti_decode_frame(AVCodecContext *avctx,
     return buf_size;
 }
 
-AVCodec ulti_decoder = {
+AVCodec ff_ulti_decoder = {
     "ultimotion",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_ULTI,
     sizeof(UltimotionDecodeContext),
     ulti_decode_init,
     NULL,
-    NULL,
+    ulti_decode_end,
     ulti_decode_frame,
     CODEC_CAP_DR1,
     NULL,

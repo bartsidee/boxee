@@ -19,6 +19,11 @@
  *
  */
 
+#ifdef _WIN32
+#include <WinSock2.h>
+#include <Windows.h>
+#endif
+
 #include "system.h"
 #include "DllLibCurl.h"
 #include "utils/SingleLock.h"
@@ -27,11 +32,10 @@
 
 #include <assert.h>
 
-using namespace XCURL;
-
 /* okey this is damn ugly. our dll loader doesn't allow for postload, preunload functions */
 static long g_curlReferences = 0;
 DllLibCurlGlobal g_curlInterface;
+static unsigned int g_curlTimeout = 0;
 
 
 
@@ -41,12 +45,24 @@ bool DllLibCurlGlobal::Load()
   if(++g_curlReferences > 1)
     return true;
 
+#ifdef _WIN32
+  WSADATA dummy;
+  int ws_ret_val = WSAStartup(MAKEWORD(2, 2), &dummy);
+  if(0 != ws_ret_val)
+	  CLog::Log(LOGERROR, "WSAStartup failed. Error code= %d", ws_ret_val);
+#endif
+
+  if (!CURL_LIB_BASE_CLASS::Load())
+    return false;
   if (global_init(CURL_GLOBAL_ALL))
   {
+    CURL_LIB_BASE_CLASS::Unload();
     CLog::Log(LOGERROR, "Error inializing libcurl");
     g_curlReferences = 0;
     return false;
   }
+  /* check idle will clean up the last one */
+  g_curlReferences = 2;
 
   return true;
 }
@@ -56,14 +72,27 @@ void DllLibCurlGlobal::Unload()
   CSingleLock lock(m_critSection);
   if (--g_curlReferences == 0)
   {
+    if (!IsLoaded())
+      return;
     // close libcurl
     global_cleanup();
 
+    CURL_LIB_BASE_CLASS::Unload();
+
+#ifdef _WIN32
+  WSACleanup();
+#endif
   }
+  /* CheckIdle will clear this one up */
+  if(g_curlReferences == 1)
+    g_curlTimeout = CTimeUtils::GetTimeMS();
 }
 
 void DllLibCurlGlobal::CheckIdle()
 {
+  /* avoid locking section here, to avoid stalling gfx thread on loads*/
+  if(g_curlReferences == 0)
+    return;
   CSingleLock lock(m_critSection);
   /* 20 seconds idle time before closing handle */
   const unsigned int idletime = 30000;
@@ -89,6 +118,9 @@ void DllLibCurlGlobal::CheckIdle()
     }
     it++;
   }
+  /* check if we should unload the dll */
+  if(g_curlReferences == 1 && CTimeUtils::GetTimeMS() - g_curlTimeout > idletime)
+    Unload();
 }
 
 void DllLibCurlGlobal::easy_aquire(const char *protocol, const char *hostname, CURL_HANDLE** easy_handle, CURLM** multi_handle)
@@ -129,9 +161,11 @@ void DllLibCurlGlobal::easy_aquire(const char *protocol, const char *hostname, C
   }
 
   SSession session = {};
+  session.m_idletimestamp = 0;
   session.m_busy = true;
   session.m_protocol = protocol;
   session.m_hostname = hostname;
+  session.m_multi = session.m_easy = NULL;
 
   /* count up global interface counter */
   Load();

@@ -23,8 +23,12 @@
 #include "ICodec.h"
 #include "FileSystem/File.h"
 #include "CachingCodec.h"
+#ifndef WIN32
+#include <config.h>
+#endif
+#ifdef HAS_ADPCM_CODEC
 #include "ADPCMCodec.h"
-
+#endif
 class WAVCodec : public CachingCodec
 {
 public:

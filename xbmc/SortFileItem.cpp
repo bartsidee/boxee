@@ -27,8 +27,10 @@
 #include "FileItem.h"
 #include "URL.h"
 #include "utils/log.h"
+#include "lib/libBoxee/bxutils.h"
 
 #define RETURN_IF_NULL(x,y) if ((x) == NULL) { CLog::Log(LOGWARNING, "%s, sort item is null", __FUNCTION__); return y; }
+#define IGNORE_PREFIX_CHARACTERS "'("
 
 inline int StartsWithToken(const CStdString& strLabel)
 {
@@ -89,6 +91,47 @@ bool SSortFileItem::IgnoreFoldersDescending(const CFileItemPtr &left, const CFil
   return StringUtils::AlphaNumericCompare(left->GetSortLabel().c_str(),right->GetSortLabel().c_str()) > 0;
 }
 
+
+bool SSortFileItem::ReleaseDateAscending(const CFileItemPtr &left, const CFileItemPtr &right)
+{
+  // sanity
+  RETURN_IF_NULL(left,false); RETURN_IF_NULL(right,false);
+
+  if (!left->HasProperty("releasedateVal") || !right->HasProperty("releasedateVal"))
+    return false;
+
+  CStdString releaseDateEpochLeft = left->GetProperty("releasedateVal");
+  CStdString releaseDateEpochRight = right->GetProperty("releasedateVal");
+
+  long leftDate  = (long) BOXEE::BXUtils::StringToUnsignedLong(releaseDateEpochLeft);
+  long rightDate = (long) BOXEE::BXUtils::StringToUnsignedLong(releaseDateEpochRight);
+
+  if (leftDate < rightDate)
+    return true;
+  else
+    return false;
+}
+
+bool SSortFileItem::ReleaseDateDescending(const CFileItemPtr &left, const CFileItemPtr &right)
+{
+  // sanity
+  RETURN_IF_NULL(left,false); RETURN_IF_NULL(right,false);
+
+  if (!left->HasProperty("releasedateVal") || !right->HasProperty("releasedateVal"))
+    return false;
+
+  CStdString releaseDateEpochLeft = left->GetProperty("releasedateVal");
+  CStdString releaseDateEpochRight = right->GetProperty("releasedateVal");
+
+  long leftDate  = (long) BOXEE::BXUtils::StringToUnsignedLong(releaseDateEpochLeft);
+  long rightDate = (long) BOXEE::BXUtils::StringToUnsignedLong(releaseDateEpochRight);
+
+  if (leftDate > rightDate)
+    return true;
+  else
+    return false;
+}
+
 void SSortFileItem::ByLabel(CFileItemPtr &item)
 {
   if (!item) return;
@@ -98,14 +141,21 @@ void SSortFileItem::ByLabel(CFileItemPtr &item)
 void SSortFileItem::ByLabelNoThe(CFileItemPtr &item)
 {
   if (!item) return;
-  item->SetSortLabel(item->GetLabel().Mid(StartsWithToken(item->GetLabel())));
+
+  CStdString itemLabel = item->GetLabel();
+  size_t itemLabelPos = itemLabel.find_first_not_of(IGNORE_PREFIX_CHARACTERS);
+
+  if (itemLabelPos > 0)
+    itemLabel = itemLabel.Mid(itemLabelPos);
+
+  item->SetSortLabel(itemLabel.Mid(StartsWithToken(itemLabel)));
 }
 
 void SSortFileItem::ByFile(CFileItemPtr &item)
 {
   if (!item) return;
 
-  CURL url(item->m_strPath);
+  CURI url(item->m_strPath);
   CStdString label;
   label.Format("%s %d", url.GetFileNameWithoutPath().c_str(), item->m_lStartOffset);
   item->SetSortLabel(label);
@@ -181,6 +231,12 @@ void SSortFileItem::BySongAlbum(CFileItemPtr &item)
     label.AppendFormat(" %i", item->GetMusicInfoTag()->GetTrackAndDiskNumber());
 
   item->SetSortLabel(label);
+}
+
+void SSortFileItem::ByLinkTitle(CFileItemPtr& item)
+{
+  if (!item) return;
+  item->SetSortLabel(item->GetProperty("link-title"));
 }
 
 void SSortFileItem::BySongAlbumNoThe(CFileItemPtr &item)
@@ -424,7 +480,7 @@ void SSortFileItem::ByEpisodeNum(CFileItemPtr &item)
     num = (tag->m_iSeason<<24)+(tag->m_iEpisode<<8);
 
   // check filename as there can be duplicates now
-  CURL file(tag->m_strFileNameAndPath);
+  CURI file(tag->m_strFileNameAndPath);
   CStdString label;
   label.Format("%u %s", num, file.GetFileName().c_str());
   item->SetSortLabel(label);
@@ -499,6 +555,20 @@ void SSortFileItem::ByVideoQuality(CFileItemPtr& item)
   item->SetSortLabel(item->GetProperty("quality"));
 }
 
+void SSortFileItem::ByReleaseDate(CFileItemPtr& item)
+{
+  if (!item)
+  {
+    return;
+  }
+
+  long releaseDateEpoch = (long) item->GetPropertyULong("releasedateVal");
+
+  CStdString strReleaseDateEpoch = BOXEE::BXUtils::LongToString(releaseDateEpoch);
+
+  item->SetSortLabel(strReleaseDateEpoch);
+}
+
 bool SSortFileItem::RssItems(const CFileItemPtr &left, const CFileItemPtr &right)
 {
 	// sanity
@@ -526,6 +596,117 @@ bool SSortFileItem::RssItems(const CFileItemPtr &left, const CFileItemPtr &right
 	return left->m_bIsFolder;
 	
 }
+
+bool SSortFileItem::SearchResultPopularity(const CFileItemPtr &left, const CFileItemPtr &right)
+{
+  // sanity
+  RETURN_IF_NULL(left,false); RETURN_IF_NULL(right,false);
+
+  return (left->GetPropertyInt("searchCount") > right->GetPropertyInt("searchCount"));
+  /*
+  CStdString leftLabel;
+  CStdString rightLabel;
+
+  leftLabel.Format("%d", left->GetPropertyInt("searchCount"), left->GetLabel().c_str());
+  rightLabel.Format("%d", right->GetPropertyInt("searchCount"), right->GetLabel().c_str());
+
+  bool result = StringUtils::AlphaNumericCompare(leftLabel.c_str(), rightLabel.c_str()) > 0;
+
+  CLog::Log(LOGDEBUG,"left: %s, right: %s, result: %d",leftLabel.c_str(),rightLabel.c_str(), result);
+
+  return result;*/
+}
+
+bool SSortFileItem::EpisodesDateAscending(const CFileItemPtr &left, const CFileItemPtr &right)
+{
+  // sanity
+  RETURN_IF_NULL(left,false); RETURN_IF_NULL(right,false);
+
+  if (!left->HasVideoInfoTag() && !right->HasVideoInfoTag())
+  {
+    if ( left->m_dateTime < right->m_dateTime ) return true;
+    if ( left->m_dateTime > right->m_dateTime ) return false;
+  }
+
+  const CVideoInfoTag *tagLeft = left->GetVideoInfoTag();
+  const CVideoInfoTag *tagRight = right->GetVideoInfoTag();
+
+  // we calculate an offset number based on the episode's
+  // sort season and episode values. in addition
+  // we include specials 'episode' numbers to get proper
+  // sorting of multiple specials in a row. each
+  // of these are given their particular ranges to semi-ensure uniqueness.
+  // theoretical problem: if a show has > 128 specials and two of these are placed
+  // after each other they will sort backwards. if a show has > 2^8-1 seasons
+  // or if a season has > 2^16-1 episodes strange things will happen (overflow)
+  unsigned int numLeft=0, numRight=0;
+  if (tagLeft->m_iSpecialSortEpisode > 0 || tagRight->m_iSpecialSortEpisode > 0)
+  {
+    numLeft = (tagLeft->m_iSpecialSortSeason<<24)+(tagLeft->m_iSpecialSortEpisode<<8)-(128-tagLeft->m_iEpisode);
+    numRight = (tagRight->m_iSpecialSortSeason<<24)+(tagRight->m_iSpecialSortEpisode<<8)-(128-tagRight->m_iEpisode);
+  }
+  else if ((tagLeft->m_iSeason < 0 && tagLeft->m_iEpisode < 0) || (tagRight->m_iSeason < 0 && tagRight->m_iEpisode < 0))
+  {
+    if ( left->m_dateTime < right->m_dateTime ) return true;
+    if ( left->m_dateTime > right->m_dateTime ) return false;
+  }
+  else
+  {
+    numLeft = (tagLeft->m_iSeason<<24)+(tagLeft->m_iEpisode<<8);
+    numRight = (tagRight->m_iSeason<<24)+(tagRight->m_iEpisode<<8);
+  }
+
+  if ( numLeft < numRight )
+    return true;
+  else
+    return false;
+}
+
+bool SSortFileItem::EpisodesDateDescending(const CFileItemPtr &left, const CFileItemPtr &right)
+{
+  // sanity
+  RETURN_IF_NULL(left,false); RETURN_IF_NULL(right,false);
+
+  if (!left->HasVideoInfoTag() && !right->HasVideoInfoTag())
+  {
+    if ( left->m_dateTime < right->m_dateTime ) return false;
+    if ( left->m_dateTime > right->m_dateTime ) return true;
+  }
+
+  const CVideoInfoTag *tagLeft = left->GetVideoInfoTag();
+  const CVideoInfoTag *tagRight = right->GetVideoInfoTag();
+
+  // we calculate an offset number based on the episode's
+  // sort season and episode values. in addition
+  // we include specials 'episode' numbers to get proper
+  // sorting of multiple specials in a row. each
+  // of these are given their particular ranges to semi-ensure uniqueness.
+  // theoretical problem: if a show has > 128 specials and two of these are placed
+  // after each other they will sort backwards. if a show has > 2^8-1 seasons
+  // or if a season has > 2^16-1 episodes strange things will happen (overflow)
+  unsigned int numLeft=0, numRight=0;
+  if (tagLeft->m_iSpecialSortEpisode > 0 || tagRight->m_iSpecialSortEpisode > 0)
+  {
+    numLeft = (tagLeft->m_iSpecialSortSeason<<24)+(tagLeft->m_iSpecialSortEpisode<<8)-(128-tagLeft->m_iEpisode);
+    numRight = (tagRight->m_iSpecialSortSeason<<24)+(tagRight->m_iSpecialSortEpisode<<8)-(128-tagRight->m_iEpisode);
+  }
+  else if ((tagLeft->m_iSeason < 0 && tagLeft->m_iEpisode < 0) || (tagRight->m_iSeason < 0 && tagRight->m_iEpisode < 0))
+  {
+    if ( left->m_dateTime < right->m_dateTime ) return false;
+    if ( left->m_dateTime > right->m_dateTime ) return true;
+  }
+  else
+  {
+    numLeft = (tagLeft->m_iSeason<<24)+(tagLeft->m_iEpisode<<8);
+    numRight = (tagRight->m_iSeason<<24)+(tagRight->m_iEpisode<<8);
+  }
+
+  if ( numLeft < numRight )
+    return false;
+  else
+    return true;
+}
+
 
 bool SSortFileItem::DateAscendingWithShares(const CFileItemPtr &left, const CFileItemPtr &right)
 {
@@ -708,6 +889,24 @@ bool SSortFileItem::LabelAscendingExact(const CFileItemPtr &left, const CFileIte
 	return StringUtils::AlphaNumericCompare(left->GetLabel().c_str(),right->GetLabel().c_str()) < 0;
 }
 
+bool SSortFileItem::LabelAscendingExactNoCase(const CFileItemPtr &left, const CFileItemPtr &right)
+{
+  // sanity
+  RETURN_IF_NULL(left,false); RETURN_IF_NULL(right,false);
+
+  // special items
+  if (left->IsParentFolder()) return true;
+  if (right->IsParentFolder()) return false;
+
+  CStdString strLeft = left->GetLabel();
+  CStdString strRight = right->GetLabel();
+
+  strLeft = strLeft.ToLower();
+  strRight = strRight.ToLower();
+
+  return StringUtils::AlphaNumericCompare(strLeft.c_str(),strRight.c_str()) < 0;
+}
+
 bool SSortFileItem::LabelAscendingWithShares(const CFileItemPtr &left, const CFileItemPtr &right)
 {
 	// sanity
@@ -787,6 +986,24 @@ bool SSortFileItem::LabelDescendingExact(const CFileItemPtr &left, const CFileIt
 	if (right->IsParentFolder()) return false;
 	
 	return StringUtils::AlphaNumericCompare(left->GetLabel().c_str(),right->GetLabel().c_str()) > 0;
+}
+
+bool SSortFileItem::LabelDescendingExactNoCase(const CFileItemPtr &left, const CFileItemPtr &right)
+{
+  // sanity
+  RETURN_IF_NULL(left,false); RETURN_IF_NULL(right,false);
+
+  // special items
+  if (left->IsParentFolder()) return true;
+  if (right->IsParentFolder()) return false;
+
+  CStdString strLeft = left->GetLabel();
+  CStdString strRight = right->GetLabel();
+
+  strLeft = strLeft.ToLower();
+  strRight = strRight.ToLower();
+
+  return StringUtils::AlphaNumericCompare(strLeft.c_str(),strRight.c_str()) > 0;
 }
 
 bool SSortFileItem::LabelDescendingNoTheExact(const CFileItemPtr &left, const CFileItemPtr &right)

@@ -19,8 +19,11 @@
  *
  */
 
-
 #include "DirectoryTuxBox.h"
+#include "system.h"
+
+#ifdef HAS_FILESYSTEM_TUXBOX
+
 #include "DirectoryCache.h"
 #include "Util.h"
 #include "FileCurl.h"
@@ -60,7 +63,7 @@ bool CDirectoryTuxBox::GetDirectory(const CStdString& strPath, CFileItemList &it
     return false;
   
   //Set url Protocol
-  CURL url(strRoot);
+  CURI url(strRoot);
   CStdString strFilter;
   CStdString protocol = url.GetProtocol();
   CStdString strOptions = url.GetOptions();
@@ -281,3 +284,5 @@ bool CDirectoryTuxBox::GetRootAndChildString(const CStdString strPath, CStdStrin
   else
     return true;
 }
+
+#endif

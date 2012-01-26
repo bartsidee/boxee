@@ -28,6 +28,8 @@
 #include "PlatformDefs.h" //for PRIdS, PRId64
 #endif
 
+#include "log.h"
+
 #define READ_STR(str, size, file) fread(str, size, 1, file)
 #define READ_U32(i, file) fread(&i, 4, 1, file); i = Endian_SwapLE32(i);
 #define READ_U64(i, file) fread(&i, 8, 1, file); i = Endian_SwapLE64(i);
@@ -107,7 +109,10 @@ bool CXBTFReader::Open(const CStdString& fileName)
       frame.SetDuration(u32);
       READ_U64(u64, m_file);
       frame.SetOffset(u64);
-      
+      READ_U32(u32, m_file);
+      frame.SetInitialWidth(u32);
+      READ_U32(u32, m_file);
+      frame.SetInitialHeight(u32);
       file.GetFrames().push_back(frame);
     }
     
@@ -118,9 +123,9 @@ bool CXBTFReader::Open(const CStdString& fileName)
   
   // Sanity check
   int64_t pos = ftell(m_file);
-  if (pos != m_xbtf.GetHeaderSize())
+  if (pos != (int64_t) m_xbtf.GetHeaderSize())
   {
-    printf("Expected header size (%"PRId64") != actual size (%"PRId64")\n", m_xbtf.GetHeaderSize(), pos);
+    CLog::Log(LOGWARNING, "Expected header size (%"PRId64") != actual size (%"PRId64")", m_xbtf.GetHeaderSize(), pos);
     return false;
   }  
   

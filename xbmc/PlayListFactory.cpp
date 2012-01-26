@@ -27,12 +27,17 @@
 #include "PlayListURL.h"
 #include "PlayListXML.h"
 #include "Util.h"
+#include "Application.h"
 
 using namespace PLAYLIST;
 
 CPlayList* CPlayListFactory::Create(const CStdString& filename)
 {
   CFileItem item(filename,false);
+
+  CFileItem currentItem = g_application.CurrentFileItem();
+  item.SetContentType(currentItem.GetContentType());
+
   return Create(item);
 }
 
@@ -53,7 +58,6 @@ CPlayList* CPlayListFactory::Create(const CFileItem& item)
     || strContentType == "video/x-ms-wfs"
     || strContentType == "video/x-ms-wvx"
     || strContentType == "video/x-ms-wax"
-    || strContentType == "text/html"  // damn castup
       )
       return new CPlayListASX();
 

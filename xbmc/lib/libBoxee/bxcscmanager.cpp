@@ -16,17 +16,22 @@
 namespace BOXEE
 {
 
-#define RECOMMENDATION_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS    30000 // 0.5 minutes
-#define QUEUE_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS             30000 // 0.5 minutes
+#define RECOMMENDATION_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS    600000 // 10 minutes
+#define QUEUE_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS             600000 // 10 minutes
 #define FRIENDS_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS           600000 // 10 minutes
 #define APPLICATIONS_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS      600000 // 10 minutes
 #define SUBSCRIPTIONS_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS     600000 // 10 minutes
+#define WEB_FAVORITES_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS     600000 // 10 minutes
 #define SERVICES_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS          600000 // 10 minutes
+#define ENTITLEMENTS_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS      600000 // 10 minutes
 #define SOURCES_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS           600000 // 10 minutes
-#define FEATURED_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS          30000 // 0.5 minutes
+#define FEATURED_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS          21600000 // 6h
 #define APPBOX_APPS_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS       600000 // 10 minutes
 #define APPBOX_POPU_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS       600000 // 10 minutes
 #define APPBOX_REPOS_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS      600000 // 10 minutes
+#define APPBOX_CATEGORY_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS   600000 // 10 minutes
+#define TRAILERS_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS          86400000 // 24h
+
 
 CBoxeeClientServerComManager::CBoxeeClientServerComManager()
 {
@@ -48,10 +53,12 @@ bool CBoxeeClientServerComManager::Initialize()
   m_userApplicationsManager.Initialize();
   m_subscriptionsManager.Initialize();
   m_servicesManager.Initialize();
+  m_entitlementsManager.Initialize();
   m_sourcesManager.Initialize();
   m_featuredManager.Initialize();
   m_appBoxApplicationsManager.Initialize();
   m_genresManager.Initialize();
+  m_webFavoritesManager.Initialize();
 
   //////////////////////////////////////
   // Add tasks to ScheduleTaskManager //
@@ -100,10 +107,16 @@ bool CBoxeeClientServerComManager::InitializeUserLists()
   LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::InitializeUserListsNow - Going to initialize SUBSCRIPTION (bcscm)(subs)");
   m_subscriptionsManager.UpdateSubscriptionsList(0,false);
 
+  LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::InitializeUserListsNow - Going to initialize WEBFAVORITES (bcscm)(subs)");
+  m_webFavoritesManager.UpdateWebFavoritesList(0,false);
+
   LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::InitializeUserListsNow - Going to initialize SERVICES (bcscm)(serv)");
   m_servicesManager.UpdateServicesList(0,false);
-  
-  LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::InitializeUserListsNow - Going to initialize SOURCES (bcscm)(entitle)");
+
+  //LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::InitializeUserListsNow - Going to initialize ENTITLEMENTS (bcscm)(entitle)");
+  //m_entitlementsManager.UpdateEntitlementsList(0,false);
+
+  LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::InitializeUserListsNow - Going to initialize SOURCES (bcscm)(source)");
   m_sourcesManager.UpdateSourcesList(0,false);
 
   LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::InitializeUserListsNow - Going to initialize FEATURED (bcscm)(feat)");
@@ -118,8 +131,17 @@ bool CBoxeeClientServerComManager::InitializeUserLists()
   LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::InitializeUserListsNow - Going to initialize APPBOX-REPOS_LIST (bcscm)(repos)");
   m_appBoxApplicationsManager.UpdateAppBoxRepositoriesList(0,false);
 
+  LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::InitializeUserListsNow - Going to initialize APPBOX-CATEGORIES_LIST (bcscm)(appcategories)");
+  m_appBoxApplicationsManager.UpdateAppsCategoriesList(0,false);
+
   LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::InitializeUserListsNow - Going to initialize APPBOX-REPOS_LIST (bcscm)(genres)");
   m_genresManager.UpdateGenres(0,false);
+
+  LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::InitializeUserListsNow - Going to initialize MOVIE_TRAILER_LIST (bcscm)(trailers)");
+  m_trailerSectionsManager.UpdateTrailerSections(0,false);
+
+  LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::InitializeUserListsNow - Going to initialize EXCLUDED SOURCES (bcscm)(cf)");
+  m_sourcesManager.UpdateExcludedSources(0,false);
 
   LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::InitializeUserListsNow - Exit function. Going to return TRUE (bcscm)");
 
@@ -152,17 +174,25 @@ bool CBoxeeClientServerComManager::AddUserListsToScheduleTaskManager()
   interval = BOXEE::BXConfiguration::GetInstance().GetIntParam("Boxee.SubscriptionsListFreqInMs",SUBSCRIPTIONS_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS);
   m_subscriptionsManager.UpdateSubscriptionsList(interval,true);
 
+  LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::AddUserListsToScheduleTaskManager - Going to add WEBFAVORITES (bcscm)(subs)");
+  interval = BOXEE::BXConfiguration::GetInstance().GetIntParam("Boxee.SubscriptionsListFreqInMs",WEB_FAVORITES_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS);
+  m_webFavoritesManager.UpdateWebFavoritesList(interval,true);
+
   LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::AddUserListsToScheduleTaskManager - Going to add SERVICES (bcscm)(serv)");
   interval = BOXEE::BXConfiguration::GetInstance().GetIntParam("Boxee.ServicesListFreqInMs",SERVICES_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS);
   m_servicesManager.UpdateServicesList(interval,true);
 
-  LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::AddUserListsToScheduleTaskManager - Going to add FEATURED (bcscm)(feat)");
-  interval = BOXEE::BXConfiguration::GetInstance().GetIntParam("Boxee.FeaturedListFreqInMs",FEATURED_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS);
-  m_featuredManager.UpdateFeaturedList(interval,true);
-  
+  //LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::AddUserListsToScheduleTaskManager - Going to add ENTITLEMENTS (bcscm)(entitle)");
+  //interval = BOXEE::BXConfiguration::GetInstance().GetIntParam("Boxee.EntitlementsListFreqInMs",ENTITLEMENTS_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS);
+  //m_entitlementsManager.UpdateEntitlementsList(interval,true);
+
   LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::AddUserListsToScheduleTaskManager - Going to add SOURCES (bcscm)(entitle)");
   interval = BOXEE::BXConfiguration::GetInstance().GetIntParam("Boxee.SourcesListFreqInMs",SOURCES_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS);
   m_sourcesManager.UpdateSourcesList(interval,true);
+
+  LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::AddUserListsToScheduleTaskManager - Going to add FEATURED (bcscm)(feat)");
+  interval = BOXEE::BXConfiguration::GetInstance().GetIntParam("Boxee.FeaturedListFreqInMs",FEATURED_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS);
+  m_featuredManager.UpdateFeaturedList(interval,true);
 
   LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::AddUserListsToScheduleTaskManager - Going to add APPBOX-APPS_LIST (bcscm)(appbox)");
   interval = BOXEE::BXConfiguration::GetInstance().GetIntParam("Boxee.AppBoxApplicationsListFreqInMs",APPBOX_APPS_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS);
@@ -175,6 +205,14 @@ bool CBoxeeClientServerComManager::AddUserListsToScheduleTaskManager()
   LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::AddUserListsToScheduleTaskManager - Going to add APPBOX-REPOS_LIST (bcscm)(repos)");
   interval = BOXEE::BXConfiguration::GetInstance().GetIntParam("Boxee.AppBoxRepositoriesListFreqInMs",APPBOX_REPOS_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS);
   m_appBoxApplicationsManager.UpdateAppBoxRepositoriesList(interval,true);
+
+  LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::AddUserListsToScheduleTaskManager - Going to add APPBOX-CATEGORIES (bcscm)(appcategories)");
+  interval = BOXEE::BXConfiguration::GetInstance().GetIntParam("Boxee.AppBoxCategoryListFreqInMs",APPBOX_CATEGORY_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS);
+  m_appBoxApplicationsManager.UpdateAppsCategoriesList(interval,true);
+
+  LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::AddUserListsToScheduleTaskManager - Going to add MOVIE_TRAILERS_LIST (bcscm)(trailers)");
+  interval = BOXEE::BXConfiguration::GetInstance().GetIntParam("Boxee.MovieTrailersListFreqInMs",TRAILERS_LIST_REQUEST_FROM_SERVER_FREQ_IN_MS);
+  m_trailerSectionsManager.UpdateTrailerSections(interval,true);
 
   LOG(LOG_LEVEL_DEBUG,"CBoxeeClientServerComManager::AddUserListsToScheduleTaskManager - Exit function. Going to return TRUE (bcscm)");
 
@@ -202,18 +240,23 @@ bool CBoxeeClientServerComManager::GetRecommendations(BXBoxeeFeed& recommendatio
   return m_recommendationsManager.GetRecommendationsList(recommendationsList);
 }
 
+int CBoxeeClientServerComManager::GetRecommendationsSize()
+{
+  return m_recommendationsManager.GetRecommendationsListSize();
+}
+
 ///////////
 // Queue //
 ///////////
 
-bool CBoxeeClientServerComManager::GetQueue(BXBoxeeFeed& queueList)
+bool CBoxeeClientServerComManager::GetQueue(BXBoxeeFeed& queueList, CQueueItemsType::QueueItemsTypeEnums queueType)
 {
-  return m_queueManager.GetQueueList(queueList); 
+  return m_queueManager.GetQueueList(queueList,queueType);
 }
 
-int CBoxeeClientServerComManager::GetQueueSize()
+int CBoxeeClientServerComManager::GetQueueSize(CQueueItemsType::QueueItemsTypeEnums queueType)
 {
-  return m_queueManager.GetQueueSize();
+  return m_queueManager.GetQueueSize(queueType);
 }
 
 void CBoxeeClientServerComManager::SetValidQueueSize(int validQueueSize)
@@ -280,6 +323,12 @@ bool CBoxeeClientServerComManager::UpdateUserApplicationsListNow()
   return UpdateUserApplicationsList(0,false);
 }
 
+bool CBoxeeClientServerComManager::UpdateGenresListNow()
+{
+  return m_genresManager.UpdateGenres(0,false);
+}
+
+
 bool CBoxeeClientServerComManager::UpdateUserApplicationsList(unsigned long executionDelayInMS, bool repeat)
 {
   return m_userApplicationsManager.UpdateApplicationsList(executionDelayInMS,repeat);
@@ -320,6 +369,35 @@ bool CBoxeeClientServerComManager::IsInSubscriptions(const std::string& src)
   return m_subscriptionsManager.IsInSubscriptions(src);
 }
 
+//////////////////
+// WebFavorites //
+//////////////////
+
+bool CBoxeeClientServerComManager::GetWebFavorites(BXBoxeeWebFavorites& WebFavoritesList)
+{
+  return m_webFavoritesManager.GetWebFavorites(WebFavoritesList);
+}
+
+bool CBoxeeClientServerComManager::GetWebFavorites(std::vector<BXObject>& webFavoritesVec)
+{
+  return m_webFavoritesManager.GetWebFavorites(webFavoritesVec);
+}
+
+bool CBoxeeClientServerComManager::UpdateWebFavoritesListNow()
+{
+  return m_webFavoritesManager.UpdateWebFavoritesList(0,false);
+}
+
+bool CBoxeeClientServerComManager::UpdateWebFavoritesList(unsigned long executionDelayInMS, bool repeat)
+{
+  return m_webFavoritesManager.UpdateWebFavoritesList(executionDelayInMS,repeat);
+}
+
+bool CBoxeeClientServerComManager::IsInWebFavorites(const std::string& src)
+{
+  return m_webFavoritesManager.IsInWebFavorites(src);
+}
+
 //////////////
 // Services //
 //////////////
@@ -342,6 +420,40 @@ bool CBoxeeClientServerComManager::GetServicesIds(std::vector<std::string>& serv
 bool CBoxeeClientServerComManager::IsRegisterToServices(const std::string& serviceIdentifier, CServiceIdentifierType::ServiceIdentifierTypeEnums identifierTypeEnum)
 {
   return m_servicesManager.IsRegisterToServices(serviceIdentifier,identifierTypeEnum);
+}
+
+//////////////////
+// Entitlements //
+//////////////////
+
+bool CBoxeeClientServerComManager::GetEntitlements(BXBoxeeEntitlements& entitlementsList)
+{
+  return m_entitlementsManager.GetEntitlements(entitlementsList);
+}
+
+bool CBoxeeClientServerComManager::GetEntitlements(std::vector<BXEntitlementsItem>& entitlementsVec)
+{
+  return m_entitlementsManager.GetEntitlements(entitlementsVec);
+}
+
+bool CBoxeeClientServerComManager::GetEntitlementsIds(std::vector<std::string>& entitlementsIdsVec)
+{
+  return m_entitlementsManager.GetEntitlementsIds(entitlementsIdsVec);
+}
+
+bool CBoxeeClientServerComManager::IsInEntitlements(const std::string& productsList)
+{
+  return m_entitlementsManager.IsInEntitlements(productsList);
+}
+
+bool CBoxeeClientServerComManager::UpdateUserEntitlementsNow()
+{
+  return UpdateUserEntitlements(0,false);
+}
+
+bool CBoxeeClientServerComManager::UpdateUserEntitlements(unsigned long executionDelayInMS, bool repeat)
+{
+  return m_entitlementsManager.UpdateEntitlementsList(executionDelayInMS,repeat);
 }
 
 //////////////////
@@ -378,6 +490,26 @@ bool CBoxeeClientServerComManager::IsInSources(const std::string& productsList)
   return m_sourcesManager.IsInSources(productsList);
 }
 
+bool CBoxeeClientServerComManager::UpdateExcludedSourcesNow()
+{
+  return UpdateExcludedSources(0,false);
+}
+
+bool CBoxeeClientServerComManager::UpdateExcludedSources(unsigned long executionDelayInMS, bool repeat)
+{
+  return m_sourcesManager.UpdateExcludedSources(executionDelayInMS,repeat);
+}
+
+void CBoxeeClientServerComManager::SetExcludedSources(const std::string& excludedSources)
+{
+  return m_sourcesManager.SetExcludedSources(excludedSources);
+}
+
+std::string CBoxeeClientServerComManager::GetExcludedSources()
+{
+  return m_sourcesManager.GetExcludedSources();
+}
+
 //////////////
 // Featured //
 //////////////
@@ -394,6 +526,11 @@ bool CBoxeeClientServerComManager::GetFeatured(BXBoxeeFeed& featuredList)
 bool CBoxeeClientServerComManager::GetAppBoxApplications(TiXmlDocument& applicationsList)
 {
   return m_appBoxApplicationsManager.GetAppBoxBoxeeApplications(applicationsList);
+}
+
+bool CBoxeeClientServerComManager::IsAppIdInAppBoxApplicationsList(const std::string& id)
+{
+  return m_appBoxApplicationsManager.IsAppIdInAppBoxApplicationsList(id);
 }
 
 bool CBoxeeClientServerComManager::UpdateAppBoxApplicationsListNow()
@@ -462,6 +599,32 @@ bool CBoxeeClientServerComManager::GetTvGenres(std::vector<GenreItem>& tvGenresV
 bool CBoxeeClientServerComManager::GetBadWords(std::vector<std::string>& badWordsVec)
 {
   return m_genresManager.GetBadWords(badWordsVec);
+}
+
+//////////////
+// Trailers //
+//////////////
+bool CBoxeeClientServerComManager::GetMovieTrailerSections(std::vector<TrailerSectionItem>& movieTrailersVec)
+{
+  return m_trailerSectionsManager.GetMovieTrailerSections(movieTrailersVec);
+}
+
+////////////////////
+// App Categories //
+////////////////////
+bool CBoxeeClientServerComManager::UpdateAppsCategoriesListNow()
+{
+  return m_appBoxApplicationsManager.UpdateAppsCategoriesList(0,false);
+}
+
+bool CBoxeeClientServerComManager::GetAppsCategories(std::vector<AppCategoryItem>& vecAppCategories)
+{
+  return m_appBoxApplicationsManager.GetAppsCategories(vecAppCategories);
+}
+
+std::string CBoxeeClientServerComManager::GetAppCategoryLabel(const std::string& id)
+{
+  return m_appBoxApplicationsManager.GetAppsCategoryLabel(id);
 }
 
 }

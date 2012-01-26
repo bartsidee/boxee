@@ -3,6 +3,7 @@
 
 #include "IDirectory.h"
 #include "AppDescriptor.h"
+#include "URL.h"
 
 namespace DIRECTORY
 {
@@ -15,8 +16,8 @@ namespace DIRECTORY
 
   private:
 
-    bool HandleAppBoxRequest(const CURL& url, CFileItemList &items);
-    bool GetAppBoxDirectoryByType(const CAppDescriptor::AppDescriptorsMap& availableAppsDesc, const CURL& url, CFileItemList &items);
+    bool HandleAppBoxRequest(const CURI& url, CFileItemList &items);
+    bool GetAppBoxDirectoryByType(const CAppDescriptor::AppDescriptorsMap& availableAppsDesc, const CURI& url, CFileItemList &items);
   };
 }
 

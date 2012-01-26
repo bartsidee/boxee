@@ -20,6 +20,9 @@
  */
 
 #include "system.h"
+#ifdef _WIN32
+#include "GUISettings.h"
+#endif
 #include "GUIWindow.h"
 #include "GUIWindowManager.h"
 #include "Key.h"
@@ -68,6 +71,8 @@ CGUIWindow::CGUIWindow(int id, const CStdString &xmlFile)
   m_previousWindow = WINDOW_INVALID;
   m_animationsEnabled = true;
   m_manualRunActions = false;
+  m_isDynamicContents = false;
+  m_bColorbufferactive = true;
 }
 
 CGUIWindow::~CGUIWindow(void)
@@ -147,7 +152,7 @@ bool CGUIWindow::Load(TiXmlDocument &xmlDoc)
 
   // set the scaling resolution so that any control creation or initialisation can
   // be done with respect to the correct aspect ratio
-  g_graphicsContext.SetScalingResolution(m_coordsRes, 0, 0, m_needsScaling);
+  
 
   // Resolve any includes that may be present
   g_SkinInfo.ResolveIncludes(pRootElement);
@@ -236,12 +241,6 @@ bool CGUIWindow::Load(TiXmlDocument &xmlDoc)
         originElement = originElement->NextSiblingElement("origin");
       }
     }
-    else if (strValue == "camera")
-    { // z is fixed
-      g_SkinInfo.ResolveConstant(pChild->Attribute("x"), m_camera.x);
-      g_SkinInfo.ResolveConstant(pChild->Attribute("y"), m_camera.y);
-      m_hasCamera = true;
-    }
     else if (strValue == "controls")
     {
       // resolve any includes within controls tag (such as whole <control> includes)
@@ -262,6 +261,18 @@ bool CGUIWindow::Load(TiXmlDocument &xmlDoc)
       bool overlay = false;
       if (XMLUtils::GetBoolean(pRootElement, "allowoverlay", overlay))
         m_overlayState = overlay ? OVERLAY_STATE_SHOWN : OVERLAY_STATE_HIDDEN;
+    }
+    else if (strValue == "dynamiccontents")
+    {
+      bool dynamic = false;
+      if (XMLUtils::GetBoolean(pRootElement, "dynamiccontents", dynamic))
+        m_isDynamicContents = dynamic;
+    }
+    else if (strValue == "colorbufferactive")
+    {
+      bool colorbufferactive = false;
+      if(XMLUtils::GetBoolean(pRootElement, "colorbufferactive", colorbufferactive))
+        m_bColorbufferactive = colorbufferactive;
     }
 
     pChild = pChild->NextSiblingElement();
@@ -339,7 +350,7 @@ void CGUIWindow::LoadControl(TiXmlElement* pControl, CGUIControlGroup *pGroup)
 void CGUIWindow::OnWindowLoaded() 
 {
   DynamicResourceAlloc(true);
-        }
+}
 
 void CGUIWindow::CenterWindow()
 {
@@ -371,15 +382,17 @@ void CGUIWindow::Render()
       break;
     }
   }
-  g_graphicsContext.SetRenderingResolution(m_coordsRes, posX, posY, m_needsScaling);
-  if (m_hasCamera)
-    g_graphicsContext.SetCameraPosition(m_camera);
 
   unsigned int currentTime = CTimeUtils::GetFrameTime();
   // render our window animation - returns false if it needs to stop rendering
   if (!RenderAnimation(currentTime))
     return;
 
+  if(posX != 0 || posY != 0)
+    g_graphicsContext.PushTransform(TransformMatrix::CreateTranslation(posX, posY));
+
+  g_graphicsContext.PushTransform(m_transform);
+  
   for (iControls i = m_children.begin(); i != m_children.end(); ++i)
   {
     CGUIControl *pControl = *i;
@@ -391,6 +404,11 @@ void CGUIWindow::Render()
       pControl->DoRender(currentTime);
     }
   }
+
+  g_graphicsContext.PopTransform();
+
+  if(posX != 0 || posY != 0)
+    g_graphicsContext.PopTransform();
 
   if (CGUIControlProfiler::IsRunning()) CGUIControlProfiler::Instance().EndFrame();
   m_hasRendered = true;
@@ -408,7 +426,9 @@ bool CGUIWindow::OnAction(const CAction &action)
 
   CGUIControl *focusedControl = GetFocusedControl();
   if (focusedControl)
+  {
     return focusedControl->OnAction(action);
+  }
 
   // no control has focus?
   // set focus to the default control then
@@ -433,9 +453,17 @@ bool CGUIWindow::OnMouseAction()
       break;
     }
   }
-  g_graphicsContext.SetScalingResolution(m_coordsRes, posX, posY, m_needsScaling);
+  
   CPoint mousePoint(g_Mouse.GetLocation());
-  g_graphicsContext.InvertFinalCoords(mousePoint.x, mousePoint.y);
+  TransformMatrix transMat;
+  TransformMatrix guiTrans = g_graphicsContext.GetGuiTransform();
+  if(posX != 0 || posY != 0)
+  {
+    TransformMatrix transMat = TransformMatrix::CreateTranslation(posX, posY);
+    guiTrans *= transMat;
+  }
+
+  guiTrans.InverseTransformPosition(mousePoint.x, mousePoint.y);
   m_transform.InverseTransformPosition(mousePoint.x, mousePoint.y);
 
   bool bHandled = false;
@@ -683,6 +711,12 @@ bool CGUIWindow::OnMessage(CGUIMessage& message)
 //      CLog::Log(LOGDEBUG,"set focus to control:%i window:%i (%i)\n", message.GetControlId(),message.GetSenderId(), GetID());
       if ( message.GetControlId() )
       {
+        // get the control to focus
+        CGUIControl* pFocusedControl = GetFirstFocusableControl(message.GetControlId());
+        if (!pFocusedControl) pFocusedControl = (CGUIControl *)GetControl(message.GetControlId());
+
+        if (pFocusedControl)
+        {
           // first unfocus the current control
           CGUIControl *control = GetFocusedControl();
           if (control)
@@ -691,16 +725,13 @@ bool CGUIWindow::OnMessage(CGUIMessage& message)
             control->OnMessage(msgLostFocus);
           }
 
-        // get the control to focus
-        CGUIControl* pFocusedControl = GetFirstFocusableControl(message.GetControlId());
-        if (!pFocusedControl) pFocusedControl = (CGUIControl *)GetControl(message.GetControlId());
-
-        // and focus it
-        if (pFocusedControl)
-        {
           return pFocusedControl->OnMessage(message);
         }
+        else
+        {
+          CLog::Log(LOGWARNING,"CGUIWindow::OnMessage - GUI_MSG_SETFOCUS - FAILED to get the control to focus for [id=%d]. [WinId=%d]\n",message.GetControlId(),GetID());
         }
+      }
       return true;
     }
     break;
@@ -723,6 +754,7 @@ bool CGUIWindow::OnMessage(CGUIMessage& message)
         if (message.GetParam1() == GUI_MSG_WINDOW_RESIZE)
         {
           SetInvalid();
+          g_graphicsContext.ResetAllTransforms();
           return true;
       }
     }
@@ -784,7 +816,7 @@ void CGUIWindow::DynamicResourceAlloc(bool bOnOff)
 {
   m_dynamicResourceAlloc = bOnOff;
   CGUIControlGroup::DynamicResourceAlloc(bOnOff);
-  }
+}
 
 void CGUIWindow::ClearAll()
 {
@@ -830,10 +862,10 @@ bool CGUIWindow::CheckAnimation(ANIMATION_TYPE animType)
 bool CGUIWindow::IsAnimating(ANIMATION_TYPE animType)
 {
   if (!m_animationsEnabled)
-  return false;
+    return false;
 
   if(animType != ANIM_TYPE_ANY)
-  return CGUIControlGroup::IsAnimating(animType);
+    return CGUIControlGroup::IsAnimating(animType);
   else
   {
     for(int i = ANIM_TYPE_START; i < ANIM_TYPE_ANY; i++)
@@ -845,7 +877,6 @@ bool CGUIWindow::IsAnimating(ANIMATION_TYPE animType)
 
 bool CGUIWindow::RenderAnimation(unsigned int time)
 {
-  g_graphicsContext.ResetWindowTransform();
   if (m_animationsEnabled)
     CGUIControlGroup::Animate(time);
   else
@@ -969,15 +1000,14 @@ void CGUIWindow::SetDefaults()
   m_previousWindow = WINDOW_INVALID;
   m_animations.clear();
   m_origins.clear();
-  m_hasCamera = false;
   m_animationsEnabled = true;
 }
 
 CRect CGUIWindow::GetScaledBounds() const
 {
   CSingleLock lock(g_graphicsContext);
-  g_graphicsContext.SetScalingResolution(m_coordsRes, m_posX, m_posY, m_needsScaling);
-  CRect rect(0, 0, m_width, m_height);
+
+  CRect rect(m_posX, m_posY, m_width, m_height);
   float z = 0;
   g_graphicsContext.ScaleFinalCoords(rect.x1, rect.y1, z);
   g_graphicsContext.ScaleFinalCoords(rect.x2, rect.y2, z);
@@ -989,7 +1019,7 @@ void CGUIWindow::OnEditChanged(int id, CStdString &text)
   CGUIMessage msg(GUI_MSG_ITEM_SELECTED, GetID(), id);
   OnMessage(msg);
   text = msg.GetLabel();
-  }
+}
 
 bool CGUIWindow::SendMessage(int message, int id, int param1 /* = 0*/, int param2 /* = 0*/)
 {
@@ -1023,80 +1053,6 @@ void CGUIWindow::ChangeButtonToEdit(int id, bool singleLabel /* = false*/)
     }
   }
 #endif
-}
-
-void CGUIWindow::SetProperty(const CStdString &strKey, const char *strValue)
-{
-  m_mapProperties[strKey] = strValue;
-}
-
-void CGUIWindow::SetProperty(const CStdString &strKey, const CStdString &strValue)
-{
-  m_mapProperties[strKey] = strValue;
-}
-
-void CGUIWindow::SetProperty(const CStdString &strKey, int nVal)
-{
-  CStdString strVal;
-  strVal.Format("%d",nVal);
-  SetProperty(strKey, strVal);
-}
-
-void CGUIWindow::SetProperty(const CStdString &strKey, bool bVal)
-{
-  SetProperty(strKey, bVal?"1":"0");
-}
-
-void CGUIWindow::SetProperty(const CStdString &strKey, double dVal)
-{
-  CStdString strVal;
-  strVal.Format("%f",dVal);
-  SetProperty(strKey, strVal);
-}
-
-CStdString CGUIWindow::GetProperty(const CStdString &strKey) const
-{
-  std::map<CStdString,CStdString,icompare>::const_iterator iter = m_mapProperties.find(strKey);
-  if (iter == m_mapProperties.end())
-    return "";
-
-  return iter->second;
-}
-
-int CGUIWindow::GetPropertyInt(const CStdString &strKey) const
-{
-  return atoi(GetProperty(strKey).c_str()) ;
-}
-
-bool CGUIWindow::GetPropertyBOOL(const CStdString &strKey) const
-{
-  return GetProperty(strKey) == "1";
-}
-
-double CGUIWindow::GetPropertyDouble(const CStdString &strKey) const
-{
-  return atof(GetProperty(strKey).c_str()) ;
-}
-
-bool CGUIWindow::HasProperty(const CStdString &strKey) const
-{
-  std::map<CStdString,CStdString,icompare>::const_iterator iter = m_mapProperties.find(strKey);
-  if (iter == m_mapProperties.end())
-    return FALSE;
-
-  return TRUE;
-  }
-
-void CGUIWindow::ClearProperty(const CStdString &strKey)
-{
-  std::map<CStdString,CStdString,icompare>::iterator iter = m_mapProperties.find(strKey);
-  if (iter != m_mapProperties.end())
-    m_mapProperties.erase(iter);
-    }
-
-void CGUIWindow::ClearProperties()
-{
-  m_mapProperties.clear();
 }
 
 void CGUIWindow::RunActions(std::vector<CGUIActionDescriptor>& actions)

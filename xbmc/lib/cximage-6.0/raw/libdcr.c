@@ -122,9 +122,11 @@ static dcr_stream_ops dcr_stream_fileops = {
 #include <unistd.h>
 #include <utime.h>
 #include <netinet/in.h>
+        #define __int64		long long
+        #define _swab swab
+        #define _getcwd getcwd
 	typedef long long INT64;
 	typedef unsigned long long UINT64;
-	#define __int64		long long
 #endif
 
 #ifdef LJPEG_DECODE
@@ -2172,7 +2174,7 @@ void DCR_CLASS dcr_kodak_radc_load_raw(DCRAW* p)
 #undef FORYX
 #undef PREDICTOR
 
-#ifdef NO_JPEG
+#if 1
 void DCR_CLASS dcr_kodak_jpeg_load_raw(DCRAW* p) {}
 #else
 
@@ -5357,15 +5359,10 @@ void DCR_CLASS dcr_parse_tiff (DCRAW* p, int base)
 		p->tiff_ifd[raw].phint == 1) p->is_raw = 0;
 	if (p->tiff_bps == 8 && p->tiff_samples == 4) p->is_raw = 0;
 	for (i=0; i < (int)p->tiff_nifds; i++)
-        {
-           int n1 = SQR(p->tiff_ifd[i].bps+1);
-           int n2 = SQR(p->thumb_misc+1);
-           if (n1 == 0 || n2 == 0)
-             continue;
-
-	   if (i != raw && p->tiff_ifd[i].samples == max_samp &&
-			p->tiff_ifd[i].width * p->tiff_ifd[i].height / n1 >
-			(int)(p->thumb_width *       p->thumb_height / n2)) {
+		if (p->tiff_ifd[i].width > 0 && p->tiff_ifd[i].height > 0 && SQR(p->tiff_ifd[i].bps+1) > 0
+		    && i != raw && p->tiff_ifd[i].samples == max_samp &&
+			p->tiff_ifd[i].width * p->tiff_ifd[i].height / SQR(p->tiff_ifd[i].bps+1) >
+			(int)(p->thumb_width *       p->thumb_height / SQR(p->thumb_misc+1))) {
 			p->thumb_width  = p->tiff_ifd[i].width;
 			p->thumb_height = p->tiff_ifd[i].height;
 			p->thumb_offset = p->tiff_ifd[i].offset;
@@ -5373,7 +5370,6 @@ void DCR_CLASS dcr_parse_tiff (DCRAW* p, int base)
 			p->thumb_misc   = p->tiff_ifd[i].bps;
 			thm = i;
 		}
-        }
 	if (thm >= 0) {
 		p->thumb_misc |= p->tiff_ifd[thm].samples << 5;
 		switch (p->tiff_ifd[thm].comp) {
@@ -7405,8 +7401,6 @@ konica_400z:
 		}
 	} else if (!strcmp(p->make,"LEICA") || !strcmp(p->make,"Panasonic")) {
 		p->maximum = 0xfff0;
-		if (p->width == 0)
-		  goto notraw;
 		if ((fsize-p->data_offset) / (p->width*8/7) == p->height)
 			p->load_raw = &DCR_CLASS dcr_panasonic_load_raw;
 		if (!p->load_raw) p->load_raw = &DCR_CLASS dcr_unpacked_load_raw;
@@ -7956,7 +7950,7 @@ void DCR_CLASS dcr_convert_to_rgb(DCRAW* p)
 			strcpy ((char *)p->oprof+pbody[5]+12, name[p->opt.output_color-1]);
 			for (i=0; i < 3; i++)
 				for (j=0; j < p->colors; j++)
-					for (out_cam[i][j] = (float)(k=0); k < 3; k++)
+					for ( out_cam[i][j] = k = 0; k < 3; k++)
 						out_cam[i][j] += (float)out_rgb[p->opt.output_color-1][i][k] * p->rgb_cam[k][j];
 	}
 	if (p->opt.verbose)

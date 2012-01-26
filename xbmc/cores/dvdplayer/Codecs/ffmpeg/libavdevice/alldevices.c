@@ -22,17 +22,12 @@
 #include "libavformat/avformat.h"
 #include "avdevice.h"
 
-unsigned avdevice_version(void)
-{
-    return LIBAVDEVICE_VERSION_INT;
-}
-
 #define REGISTER_OUTDEV(X,x) { \
-          extern AVOutputFormat x##_muxer; \
-          if(CONFIG_##X##_OUTDEV)  av_register_output_format(&x##_muxer); }
+          extern AVOutputFormat ff_##x##_muxer; \
+          if(CONFIG_##X##_OUTDEV)  av_register_output_format(&ff_##x##_muxer); }
 #define REGISTER_INDEV(X,x) { \
-          extern AVInputFormat x##_demuxer; \
-          if(CONFIG_##X##_INDEV)   av_register_input_format(&x##_demuxer); }
+          extern AVInputFormat ff_##x##_demuxer; \
+          if(CONFIG_##X##_INDEV)   av_register_input_format(&ff_##x##_demuxer); }
 #define REGISTER_INOUTDEV(X,x)  REGISTER_OUTDEV(X,x); REGISTER_INDEV(X,x)
 
 void avdevice_register_all(void)
@@ -45,7 +40,6 @@ void avdevice_register_all(void)
 
     /* devices */
     REGISTER_INOUTDEV (ALSA, alsa);
-    REGISTER_INOUTDEV (AUDIO_BEOS, audio_beos);
     REGISTER_INDEV    (BKTR, bktr);
     REGISTER_INDEV    (DV1394, dv1394);
     REGISTER_INDEV    (JACK, jack);

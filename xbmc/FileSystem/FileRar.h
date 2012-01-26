@@ -69,16 +69,16 @@ namespace XFILE
 		virtual ~CFileRar();
     virtual int64_t        GetPosition();
     virtual int64_t        GetLength();
-    virtual bool          Open(const CURL& url);
-		virtual bool					Exists(const CURL& url);
-		virtual int						Stat(const CURL& url, struct __stat64* buffer);
+    virtual bool          Open(const CURI& url);
+		virtual bool					Exists(const CURI& url);
+		virtual int						Stat(const CURI& url, struct __stat64* buffer);
     virtual unsigned int  Read(void* lpBuf, int64_t uiBufSize);
     virtual int            Write(const void* lpBuf, int64_t uiBufSize);
     virtual int64_t        Seek(int64_t iFilePosition, int iWhence=SEEK_SET);
     virtual void					Close();
 		virtual void          Flush();
 
-    virtual bool          OpenForWrite(const CURL& url);
+    virtual bool          OpenForWrite(const CURI& url);
     unsigned int          Write(void *lpBuf, int64_t uiBufSize);
 		
 	protected:
@@ -90,7 +90,7 @@ namespace XFILE
 		BYTE m_bRarOptions;
 		BYTE m_bFileOptions;
     void Init();
-		void InitFromUrl(const CURL& url);
+		void InitFromUrl(const CURI& url);
     bool OpenInArchive();
     void CleanUp();
     

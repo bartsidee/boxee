@@ -28,6 +28,10 @@
 #include <GUIUserMessages.h>
 #include <avahi-common/malloc.h>
 #include <avahi-common/error.h>
+
+#ifdef HAS_EMBEDDED
+#include "HalServices.h"
+#endif
 namespace
 {
 ///helper RAII-struct to block event loop for modifications
@@ -91,9 +95,11 @@ CZeroconfBrowserAvahi::~CZeroconfBrowserAvahi()
                                          this);
     }
 
-    //now wait for the thread to stop
-    assert(m_thread_id);
-    pthread_join(m_thread_id, NULL);
+    if(m_thread_id)
+    {
+      //now wait for the thread to stop
+      pthread_join(m_thread_id, NULL);
+    }
     avahi_threaded_poll_get(mp_poll)->timeout_free(lp_timeout);
   }
   //free the client (frees all browsers, groups, ...)
@@ -129,6 +135,17 @@ bool CZeroconfBrowserAvahi::doAddServiceType ( const CStdString& fcr_service_typ
   }
   else
   {
+#ifdef HAS_EMBEDDED
+    AvahiClientState state = mp_client ? avahi_client_get_state ( mp_client ) : AVAHI_CLIENT_FAILURE ;
+    if (state !=  AVAHI_CLIENT_S_RUNNING)
+    {
+      IHalServices& client = CHalServicesFactory::GetInstance();
+      client.AvahiDaemonRestart();
+
+      CLog::Log ( LOGINFO, "CZeroconfBrowserAvahi::doAddServiceType client status [%d], restarting avahi daemon", state);
+      return true;
+    }
+#endif
     CLog::Log ( LOGINFO, "CZeroconfBrowserAvahi::doAddServiceType client not available. service browsing queued" );
     return true;
   }
@@ -192,7 +209,7 @@ bool CZeroconfBrowserAvahi::doResolveService ( CZeroconfBrowser::ZeroconfService
   } // end of this block releases lock of eventloop
 
   //wait for resolve to return or timeout
-  m_resolved_event.WaitMSec(f_timeout*1000);
+  m_resolved_event.WaitMSec((unsigned int) (f_timeout*1000));
   {
     ScopedEventLoopBlock lock ( mp_poll );
     fr_service = m_resolving_service;
@@ -334,6 +351,7 @@ void CZeroconfBrowserAvahi::resolveCallback(
       avahi_address_snprint ( a, sizeof ( a ), address );
       p_instance->m_resolving_service.SetIP(a);
       p_instance->m_resolving_service.SetPort(port);
+      p_instance->m_resolving_service.SetHostName(host_name);
       break;
     }
   }

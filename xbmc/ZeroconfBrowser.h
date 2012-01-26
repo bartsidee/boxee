@@ -26,6 +26,8 @@
 #include <vector>
 #include "URL.h"
 
+#define BOXEE_SERVICE_NAME "_boxee_mediamgr._tcp."
+
 //forwards
 class CCriticalSection;
 
@@ -57,6 +59,10 @@ public:
       const CStdString& GetDomain() const {return m_domain;}
       ///@}
 
+      void SetHostName(const CStdString& fcr_hostname);
+      const CStdString& GetHostName() const {return m_hostname;}
+      ///@}
+
       /// access methods needed during resolve
       ///@{
       void SetIP(const CStdString& fcr_ip);
@@ -70,6 +76,7 @@ public:
       CStdString m_name;
       CStdString m_type;
       CStdString m_domain;
+      CStdString m_hostname;
 
       //2 entries below store 1 ip:port pair for this service
       CStdString m_ip;

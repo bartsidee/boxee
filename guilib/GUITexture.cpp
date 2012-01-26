@@ -23,11 +23,18 @@
 #include "GraphicContext.h"
 #include "TextureManager.h"
 #include "GUILargeTextureManager.h"
+#include "GUIWindowManager.h"
 #include "MathUtils.h"
+#include "log.h"
+#ifdef HAS_OPENMAX
 #include "Application.h"
+#endif
 #include "utils/SingleLock.h"
+#include "Texture.h"
 
 using namespace std;
+
+#define MIX_ALPHA(a,c) (((a * (c >> 24)) / 255) << 24) | (c & 0x00ffffff)
 
 CTextureInfo::CTextureInfo()
 {
@@ -49,6 +56,7 @@ CTextureInfo::CTextureInfo(const CStdString &file)
 void CTextureInfo::operator=(const CTextureInfo &right)
 {
   border = right.border;
+  srcBorder = right.srcBorder;
   orientation = right.orientation;
   diffuse = right.diffuse;
   filename = right.filename;
@@ -68,7 +76,9 @@ CGUITextureBase::CGUITextureBase(float posX, float posY, float width, float heig
   // defaults
   m_visible = true;
   m_diffuseColor = 0xffffffff;
+  m_diffuseColorBlended = 0xffffffff;
   m_alpha = 0xff;
+  m_bNeedBlending = false;
 
   m_vertex.SetRect(m_posX, m_posY, m_posX + m_width, m_posY + m_height);
 
@@ -91,6 +101,19 @@ CGUITextureBase::CGUITextureBase(float posX, float posY, float width, float heig
   m_isAllocated = NO;
   m_invalid = true;
   m_renderBorderOnly = false;
+
+  if (textureData != NULL)
+  {
+    m_texture.Add(textureData, 0);
+    m_isAllocated = NORMAL;
+    m_frameWidth = width;
+    m_frameHeight = height;
+    CalculateSize();
+  }
+
+  m_loadingAnimation = "";
+
+  BuildColorData();
 }
 
 CGUITextureBase::CGUITextureBase(const CGUITextureBase &right)
@@ -128,6 +151,8 @@ CGUITextureBase::CGUITextureBase(const CGUITextureBase &right)
 
   m_isAllocated = NO;
   m_invalid = true;
+
+  BuildColorData();
 }
 
 CGUITextureBase::~CGUITextureBase(void)
@@ -152,8 +177,84 @@ void CGUITextureBase::AllocateOnDemand()
   }
 }
 
+// Draw all the elements of the frame including left and right parts
+void CGUITextureBase::DrawRectangleElements()
+{
+  unsigned char alpha = GET_A(m_diffuseColorBlended);
+
+  bool bEnableBorderBlend = m_info.blendBorder || alpha != 255;
+  bool bEnableCenterBlend = m_info.blendCenter || alpha != 255;
+
+  // first draw borders
+  m_bNeedBlending = bEnableBorderBlend;
+  g_Windowing.EnableBlending(m_bNeedBlending);
+
+  if(!LoadShaders())
+    return;
+
+  if(!SelectShader())
+    return;
+
+  if(m_diffuse.size() > 0)
+    m_diffuse.m_textures[0]->LoadToGPU();
+
+  Begin();
+
+  // left segment (0,0,u1,v3)
+  if (m_info.border.x1)
+  {
+    if (m_info.border.y1)
+      Draw(m_vertexCoords[0]);
+    Draw(m_vertexCoords[1]);
+    if (m_info.border.y2)
+      Draw(m_vertexCoords[2]);
+  }
+
+  // middle segment (u1,0,u2,v3)
+  if (m_info.border.y1)
+  {
+    Draw(m_vertexCoords[3]);
+  }
+
+  if (m_info.border.y2)
+  {
+    Draw(m_vertexCoords[5]);
+  }
+
+  // right segment
+  if (m_info.border.x2)
+  { // have a left border
+    if (m_info.border.y1)
+      Draw(m_vertexCoords[6]);
+    Draw(m_vertexCoords[7]);
+    if (m_info.border.y2)
+      Draw(m_vertexCoords[8]);
+  } 
+
+  // now draw the center
+  if(bEnableBorderBlend != bEnableCenterBlend)
+  {
+    m_bNeedBlending = bEnableCenterBlend;
+    g_Windowing.EnableBlending(m_bNeedBlending);
+    if(!SelectShader())
+        return;
+    Begin();
+  }
+
+  if (!m_renderBorderOnly)
+  {
+    Draw(m_vertexCoords[4]);
+  }
+
+  g_Windowing.EnableBlending(false);
+  g_Windowing.EnableTexture(false);
+ 
+  End();
+}
+
 void CGUITextureBase::Render()
 {
+  bool bClippingUsed = false;
   // check if we need to allocate our resources
   AllocateOnDemand();
 
@@ -163,80 +264,90 @@ void CGUITextureBase::Render()
   if (m_texture.size() > 1)
     UpdateAnimFrame();
 
-  if (m_invalid)
-    CalculateSize();
-
   // see if we need to clip the image
   if (m_vertex.Width() > m_width || m_vertex.Height() > m_height)
   {
     if (!g_graphicsContext.SetClipRegion(m_posX, m_posY, m_width, m_height))
       return;
+    bClippingUsed = true;
   }
 
-  // setup our renderer
-  Begin();
+  BuildColorData();
 
-  // compute the texture coordinates
-  float u1, u2, u3, v1, v2, v3;
-  u1 = m_info.border.x1;
-  u2 = m_frameWidth - m_info.border.x2;
-  u3 = m_frameWidth;
-  v1 = m_info.border.y1;
-  v2 = m_frameHeight - m_info.border.y2;
-  v3 = m_frameHeight;
-
-  if (!m_texture.m_texCoordsArePixels)
+  // if nothing changed, just render and return
+  if (m_invalid)
   {
-    u1 *= m_texCoordsScaleU;
-    u2 *= m_texCoordsScaleU;
-    u3 *= m_texCoordsScaleU;
-    v1 *= m_texCoordsScaleV;
-    v2 *= m_texCoordsScaleV;
-    v3 *= m_texCoordsScaleV;
+    CalculateSize();
+  
+    // compute the texture coordinates
+    float u1, u2, u3, v1, v2, v3;
+    u1 = m_info.srcBorder.x1;
+    u2 = m_frameWidth - m_info.srcBorder.x2;
+    u3 = m_frameWidth;
+    v1 = m_info.srcBorder.y1;
+    v2 = m_frameHeight - m_info.srcBorder.y2;
+    v3 = m_frameHeight;
+
+    if (!m_texture.m_texCoordsArePixels)
+    {
+      // for twiddled images (twiddled at texture.xbt creation time), we'll need to multiply u1,u2...v3 by
+      // m_imageInitialHeight/m_imageHeight or m_imageInitialWidth/m_imageWidth to achieve the initial image size
+      u1 *= m_texCoordsScaleU;
+      u2 *= m_texCoordsScaleU;
+      u3 *= m_texCoordsScaleU;
+      v1 *= m_texCoordsScaleV;
+      v2 *= m_texCoordsScaleV;
+      v3 *= m_texCoordsScaleV;
+    }
+
+    // TODO: The diffuse coloring applies to all vertices, which will
+    //       look weird for stuff with borders, as will the -ve height/width
+    //       for flipping
+    memset(m_vertexCoords, 0, sizeof(ImageCoords) * 9);
+
+    // left segment (0,0,u1,v3)
+    BuildVertexCoords(m_vertexCoords[0], m_vertex.x1, m_vertex.y1, 
+      m_vertex.x1 + m_info.border.x1, m_vertex.y1 + m_info.border.y1, 0, 0, u1, v1, u3, v3);
+    BuildVertexCoords(m_vertexCoords[1], m_vertex.x1, m_vertex.y1 + m_info.border.y1, 
+      m_vertex.x1 + m_info.border.x1, m_vertex.y2 - m_info.border.y2, 0, v1, u1, v2, u3, v3);
+    BuildVertexCoords(m_vertexCoords[2], m_vertex.x1, m_vertex.y2 - m_info.border.y2, 
+      m_vertex.x1 + m_info.border.x1, m_vertex.y2, 0, v2, u1, v3, u3, v3); 
+  
+    // middle segment (u1,0,u2,v3)
+    BuildVertexCoords(m_vertexCoords[3], m_vertex.x1 + m_info.border.x1, m_vertex.y1, 
+      m_vertex.x2 - m_info.border.x2, m_vertex.y1 + m_info.border.y1, u1, 0, u2, v1, u3, v3);
+    BuildVertexCoords(m_vertexCoords[4], m_vertex.x1 + m_info.border.x1, m_vertex.y1 + m_info.border.y1, 
+      m_vertex.x2 - m_info.border.x2, m_vertex.y2 - m_info.border.y2, u1, v1, u2, v2, u3, v3);
+    BuildVertexCoords(m_vertexCoords[5], m_vertex.x1 + m_info.border.x1, m_vertex.y2 - m_info.border.y2, m_vertex.x2 - m_info.border.x2, m_vertex.y2, u1, v2, u2, v3, u3, v3); 
+
+    // right segment (u2,0,u3,v3)
+    BuildVertexCoords(m_vertexCoords[6], m_vertex.x2 - m_info.border.x2, m_vertex.y1, m_vertex.x2, 
+      m_vertex.y1 + m_info.border.y1, u2, 0, u3, v1, u3, v3);
+    BuildVertexCoords(m_vertexCoords[7], m_vertex.x2 - m_info.border.x2, m_vertex.y1 + m_info.border.y1, 
+      m_vertex.x2, m_vertex.y2 - m_info.border.y2, u2, v1, u3, v2, u3, v3);
+    BuildVertexCoords(m_vertexCoords[8], m_vertex.x2 - m_info.border.x2, m_vertex.y2 - m_info.border.y2, 
+      m_vertex.x2, m_vertex.y2, u2, v2, u3, v3, u3, v3); 
   }
 
-  // TODO: The diffuse coloring applies to all vertices, which will
-  //       look weird for stuff with borders, as will the -ve height/width
-  //       for flipping
+  DrawRectangleElements();
 
-  // left segment (0,0,u1,v3)
-  if (m_info.border.x1)
-  {
-    if (m_info.border.y1)
-      Render(m_vertex.x1, m_vertex.y1, m_vertex.x1 + m_info.border.x1, m_vertex.y1 + m_info.border.y1, 0, 0, u1, v1, u3, v3);
-    Render(m_vertex.x1, m_vertex.y1 + m_info.border.y1, m_vertex.x1 + m_info.border.x1, m_vertex.y2 - m_info.border.y2, 0, v1, u1, v2, u3, v3);
-    if (m_info.border.y2)
-      Render(m_vertex.x1, m_vertex.y2 - m_info.border.y2, m_vertex.x1 + m_info.border.x1, m_vertex.y2, 0, v2, u1, v3, u3, v3); 
-  }
-  // middle segment (u1,0,u2,v3)
-  if (m_info.border.y1)
-    Render(m_vertex.x1 + m_info.border.x1, m_vertex.y1, m_vertex.x2 - m_info.border.x2, m_vertex.y1 + m_info.border.y1, u1, 0, u2, v1, u3, v3);
-  Render(m_vertex.x1 + m_info.border.x1, m_vertex.y1 + m_info.border.y1, m_vertex.x2 - m_info.border.x2, m_vertex.y2 - m_info.border.y2, u1, v1, u2, v2, u3, v3);
-  if (m_info.border.y2)
-    Render(m_vertex.x1 + m_info.border.x1, m_vertex.y2 - m_info.border.y2, m_vertex.x2 - m_info.border.x2, m_vertex.y2, u1, v2, u2, v3, u3, v3); 
-  // right segment
-  if (m_info.border.x2)
-  { // have a left border
-    if (m_info.border.y1)
-      Render(m_vertex.x2 - m_info.border.x2, m_vertex.y1, m_vertex.x2, m_vertex.y1 + m_info.border.y1, u2, 0, u3, v1, u3, v3);
-    Render(m_vertex.x2 - m_info.border.x2, m_vertex.y1 + m_info.border.y1, m_vertex.x2, m_vertex.y2 - m_info.border.y2, u2, v1, u3, v2, u3, v3);
-    if (m_info.border.y2)
-      Render(m_vertex.x2 - m_info.border.x2, m_vertex.y2 - m_info.border.y2, m_vertex.x2, m_vertex.y2, u2, v2, u3, v3, u3, v3); 
-  } 
-
-  // close off our renderer
-  End();
-
-  if (m_vertex.Width() > m_width || m_vertex.Height() > m_height)
+  if (bClippingUsed)
     g_graphicsContext.RestoreClipRegion();
+
+  m_invalid = false;
 }
 
-void CGUITextureBase::Render(float left, float top, float right, float bottom, float u1, float v1, float u2, float v2, float u3, float v3)
+void CGUITextureBase::BuildVertexCoords(ImageCoords& coords, float left, float top, float right, 
+                                        float bottom, float u1, float v1, float u2, float v2, float u3, float v3)
 {
+  /*
+  static int count = 0;
+  CLog::Log(LOGINFO, "GUITextureBase::BuildVertexCoords %d", count++);
+  */
+
   CRect diffuse(u1, v1, u2, v2);
   CRect texture(u1, v1, u2, v2);
   CRect vertex(left, top, right, bottom);
-  g_graphicsContext.ClipRect(vertex, texture, m_diffuse.size() ? &diffuse : NULL);
 
   if (vertex.IsEmpty())
     return; // nothing to render
@@ -258,49 +369,111 @@ void CGUITextureBase::Render(float left, float top, float right, float bottom, f
 
 #define ROUND_TO_PIXEL(x) (float)(MathUtils::round_int(x))
 
-  x[0] = ROUND_TO_PIXEL(g_graphicsContext.ScaleFinalXCoord(vertex.x1, vertex.y1));
-  y[0] = ROUND_TO_PIXEL(g_graphicsContext.ScaleFinalYCoord(vertex.x1, vertex.y1));
-  z[0] = ROUND_TO_PIXEL(g_graphicsContext.ScaleFinalZCoord(vertex.x1, vertex.y1));
-  x[1] = ROUND_TO_PIXEL(g_graphicsContext.ScaleFinalXCoord(vertex.x2, vertex.y1));
-  y[1] = ROUND_TO_PIXEL(g_graphicsContext.ScaleFinalYCoord(vertex.x2, vertex.y1));
-  z[1] = ROUND_TO_PIXEL(g_graphicsContext.ScaleFinalZCoord(vertex.x2, vertex.y1));
-  x[2] = ROUND_TO_PIXEL(g_graphicsContext.ScaleFinalXCoord(vertex.x2, vertex.y2));
-  y[2] = ROUND_TO_PIXEL(g_graphicsContext.ScaleFinalYCoord(vertex.x2, vertex.y2));
-  z[2] = ROUND_TO_PIXEL(g_graphicsContext.ScaleFinalZCoord(vertex.x2, vertex.y2));
-  x[3] = ROUND_TO_PIXEL(g_graphicsContext.ScaleFinalXCoord(vertex.x1, vertex.y2));
-  y[3] = ROUND_TO_PIXEL(g_graphicsContext.ScaleFinalYCoord(vertex.x1, vertex.y2));
-  z[3] = ROUND_TO_PIXEL(g_graphicsContext.ScaleFinalZCoord(vertex.x1, vertex.y2));
+  x[0] = vertex.x1;
+  y[0] = vertex.y1;
+  z[0] = 0;
+
+  x[1] = vertex.x2;
+  y[1] = vertex.y1;
+  z[1] = 0;
+
+  x[2] = vertex.x2;
+  y[2] = vertex.y2;
+  z[2] = 0;
+
+  x[3] = vertex.x1;
+  y[3] = vertex.y2;
+  z[3] = 0;
   
   if (y[2] == y[0]) y[2] += 1.0f; if (x[2] == x[0]) x[2] += 1.0f;
   if (y[3] == y[1]) y[3] += 1.0f; if (x[3] == x[1]) x[3] += 1.0f;
 
-#define MIX_ALPHA(a,c) (((a * (c >> 24)) / 255) << 24) | (c & 0x00ffffff)
+  ImageVertex* v = coords.m_pCoords;
 
-  color_t color = m_diffuseColor;
-  if (m_alpha != 0xFF) color = MIX_ALPHA(m_alpha, m_diffuseColor);
-  color = g_graphicsContext.MergeAlpha(color);
+  for(int i = 0; i < 4; i++)
+  {
+    v[i].x = x[i];
+    v[i].y = y[i];
+    v[i].z = z[i];
+  }
 
-  Draw(x, y, z, texture, diffuse, color, orientation);
+  v[0].u1 = texture.x1;
+  v[0].v1 = texture.y1;
+  v[0].u2 = diffuse.x1;
+  v[0].v2 = diffuse.y1;
+
+  if (orientation & 4)
+  {
+    v[1].u1 = texture.x1;
+    v[1].v1 = texture.y2;
+  }
+  else
+  {
+    v[1].u1 = texture.x2;
+    v[1].v1 = texture.y1;
+  }
+  if (m_info.orientation & 4)
+  {
+    v[1].u2 = diffuse.x1;
+    v[1].v2 = diffuse.y2;
+  }
+  else
+  {
+    v[1].u2 = diffuse.x2;
+    v[1].v2 = diffuse.y1;
+  }
+  
+  v[2].u1 = texture.x2;
+  v[2].v1 = texture.y2;
+  v[2].u2 = diffuse.x2;
+  v[2].v2 = diffuse.y2;
+
+  if (orientation & 4)
+  {
+    v[3].u1 = texture.x2;
+    v[3].v1 = texture.y1;
+  }
+  else
+  {
+    v[3].u1 = texture.x1;
+    v[3].v1 = texture.y2;
+  }
+  if (m_info.orientation & 4)
+  {
+    v[3].u2 = diffuse.x2;
+    v[3].v2 = diffuse.y1;
+  }
+  else
+  {
+    v[3].u2 = diffuse.x1;
+    v[3].v2 = diffuse.y2;
+  }
+}
+
+void CGUITextureBase::BuildColorData()
+{
+  m_diffuseColorBlended = MIX_ALPHA(m_alpha, m_diffuseColor);
+  m_diffuseColorBlended = g_graphicsContext.MergeAlpha(m_diffuseColorBlended);
 }
 
 void CGUITextureBase::AllocResources()
 {
   if (m_info.filename.IsEmpty())
     return;
-  
+
   if (m_texture.size() && IsAllocated())
     return; // already have our texture
-  
+
   // reset our animstate
   m_frameCounter = 0;
   m_currentFrame = 0;
   m_currentLoop = 0;
-  
+
   if (m_info.useLarge)
   { // we want to use the large image loader, but we first check for bundled textures
     if (!IsAllocated())
     {
-      int images = g_TextureManager.Load(m_info.filename, true);
+      int images = g_TextureManager.Load(m_info.filename, true, m_loadingAnimation);
       if (images)
       {
         CSingleLock lock(g_TextureManager.GetLock());
@@ -313,27 +486,27 @@ void CGUITextureBase::AllocResources()
       CTextureArray texture;
       if (g_largeTextureManager.GetImage(m_info.filename, texture, !IsAllocated()))
       {
-        m_isAllocated = LARGE;
-        
-        if (!texture.size()) // not ready as yet
-          return;
-        
-        m_texture = texture;
+      m_isAllocated = LARGE;
+
+      if (!texture.size()) // not ready as yet
+        return;
+
+      m_texture = texture;
       }
       else
         m_isAllocated = LARGE_FAILED;
     }
-  }
+  } 
   else if (!IsAllocated())
   {
-    int images = g_TextureManager.Load(m_info.filename);
-    
+    int images = g_TextureManager.Load(m_info.filename, false, m_loadingAnimation);
+
     // set allocated to true even if we couldn't load the image to save
     // us hitting the disk every frame
     m_isAllocated = images ? NORMAL : NORMAL_FAILED;
     if (!images)
       return;
-    
+
     CSingleLock lock(g_TextureManager.GetLock());
     m_texture = g_TextureManager.GetTexture(m_info.filename);
     if (m_texture.m_bPlaceHolder)
@@ -341,18 +514,20 @@ void CGUITextureBase::AllocResources()
   }
   m_frameWidth = (float)m_texture.m_width;
   m_frameHeight = (float)m_texture.m_height;
-  
+
   // load the diffuse texture (if necessary)
   if (!m_info.diffuse.IsEmpty())
   {
-    g_TextureManager.Load(m_info.diffuse);
+    g_TextureManager.Load(m_info.diffuse, false, m_loadingAnimation);
     
     CSingleLock lock(g_TextureManager.GetLock());
     m_diffuse = g_TextureManager.GetTexture(m_info.diffuse);
   }
-  
+
   CalculateSize();
-  
+
+  m_invalid = true;
+
   // call our implementation
   Allocate();
 }
@@ -446,44 +621,33 @@ void CGUITextureBase::CalculateSize()
       m_diffuseOffset = CPoint((m_vertex.x1 - m_posX) / m_vertex.Width() * m_diffuseScaleU, (m_vertex.y1 - m_posY) / m_vertex.Height() * m_diffuseScaleV);
     }
   }
-  m_invalid = false;
 }
 
 void CGUITextureBase::FreeResources(bool immediately /* = false */)
 {
-  if (!g_application.IsCurrentThread())
-  {
-    // make sure graphics lock is not held
-    int nCount = ExitCriticalSection(g_graphicsContext);
-    ThreadMessage tMsg = {TMSG_FREE_TEXTURE};
-    tMsg.lpVoid = this;
-    tMsg.dwParam1 = immediately;
-    g_application.getApplicationMessenger().SendMessage(tMsg, true);  
-    RestoreCriticalSection(g_graphicsContext, nCount);
-  }
-  else
+  if (m_info.filename.size() > 0)
   {
     if (m_isAllocated == LARGE || m_isAllocated == LARGE_FAILED)
       g_largeTextureManager.ReleaseImage(m_info.filename, immediately);
     else if (m_isAllocated == NORMAL && m_texture.size())
       g_TextureManager.ReleaseTexture(m_info.filename);
-
-    if (m_diffuse.size())
-      g_TextureManager.ReleaseTexture(m_info.diffuse);
-    m_diffuse.Reset();
-
-    m_texture.Reset();
-
-    m_currentFrame = 0;
-    m_currentLoop = 0;
-    m_texCoordsScaleU = 1.0f;
-    m_texCoordsScaleV = 1.0f;
-
-    // call our implementation
-    Free();
-
-    m_isAllocated = NO;
   }
+
+  if (m_diffuse.size())
+    g_TextureManager.ReleaseTexture(m_info.diffuse);
+  m_diffuse.Reset();
+
+  m_texture.Reset();
+
+  m_currentFrame = 0;
+  m_currentLoop = 0;
+  m_texCoordsScaleU = 1.0f;
+  m_texCoordsScaleV = 1.0f;
+
+  // call our implementation
+  Free();
+
+  m_isAllocated = NO;
 }
 
 void CGUITextureBase::DynamicResourceAlloc(bool allocateDynamically)
@@ -530,11 +694,15 @@ void CGUITextureBase::SetVisible(bool visible)
 void CGUITextureBase::SetAlpha(unsigned char alpha)
 {
   m_alpha = alpha;
+
+  BuildColorData();
 }
 
 void CGUITextureBase::SetDiffuseColor(color_t color)
 {
   m_diffuseColor = color;
+
+  BuildColorData();
 }
 
 bool CGUITextureBase::ReadyToRender() const

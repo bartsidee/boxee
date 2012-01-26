@@ -229,7 +229,7 @@
 		</Filter>
 		<Filter
 			Name="Sources"
-			>
+				>
 			<File
 				RelativePath="..\libass\ass.c"
 				>

@@ -26,7 +26,7 @@ bool CBoxeeShortcutsDirectory::GetDirectory(const CStdString & strPath, CFileIte
     }
     
     CFileItemPtr pItem(new CFileItem(item));
-    pItem->Dump();
+    //pItem->Dump();
     items.Add(pItem);
   }
   

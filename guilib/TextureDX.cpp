@@ -44,16 +44,16 @@ void CDXTexture::CreateTextureObject()
 
   switch (m_format)
   {
-  case XB_FMT_DXT1: 
+  case XB_FMT_DXT1:
     format = D3DFMT_DXT1;
-    break; 
-  case XB_FMT_DXT3: 
+    break;
+  case XB_FMT_DXT3:
     format = D3DFMT_DXT3;
-    break;     
-  case XB_FMT_DXT5: 
+    break;
+  case XB_FMT_DXT5:
   case XB_FMT_DXT5_YCoCg:
     format = D3DFMT_DXT5;
-    break; 
+    break;
   case XB_FMT_B8G8R8A8:
     format = D3DFMT_A8R8G8B8;
     break;
@@ -64,15 +64,13 @@ void CDXTexture::CreateTextureObject()
     return;
   }
 
-  SAFE_RELEASE(m_texture);
-
-  D3DXCreateTexture(g_Windowing.Get3DDevice(), m_textureWidth, m_textureHeight, 1, 0, format, D3DPOOL_MANAGED , &m_texture);
+  m_texture.Create(m_textureWidth, m_textureHeight, 1, g_Windowing.DefaultD3DUsage(), format, g_Windowing.DefaultD3DPool());
 }
 
 void CDXTexture::DestroyTextureObject()
 {
-  SAFE_RELEASE(m_texture);
-  }
+  m_texture.Release();
+}
 
 void CDXTexture::LoadToGPU()
 {
@@ -82,38 +80,50 @@ void CDXTexture::LoadToGPU()
     return;
   }
 
-  if (m_texture == NULL)
-{
+  if (m_texture.Get() == NULL)
+  {
     CreateTextureObject();
-    if (m_texture == NULL)
-{
+    if (m_texture.Get() == NULL)
+    {
       CLog::Log(LOGDEBUG, "CDXTexture::CDXTexture: Error creating new texture for size %d x %d", m_textureWidth, m_textureHeight);
       return;
+    }
   }
-}
 
   D3DLOCKED_RECT lr;
-  if ( D3D_OK == m_texture->LockRect( 0, &lr, NULL, 0 ))
-{
+  if (m_texture.LockRect( 0, &lr, NULL, D3DLOCK_DISCARD ))
+  {
     unsigned char *dst = (unsigned char *)lr.pBits;
     unsigned char *src = m_pixels;
     unsigned int dstPitch = lr.Pitch;
     unsigned int srcPitch = GetPitch();
+    unsigned int minPitch = std::min(srcPitch, dstPitch);
 
     unsigned int rows = GetRows();
-    for (unsigned int y = 0; y < rows; y++)
+    if (srcPitch == dstPitch)
     {
-      memcpy(dst, src, std::min(srcPitch, dstPitch));
-      src += srcPitch;
-      dst += dstPitch;
+      memcpy(dst, src, srcPitch * rows);
+    }
+    else
+    {
+      for (unsigned int y = 0; y < rows; y++)
+      {
+        memcpy(dst, src, minPitch);
+        src += srcPitch;
+        dst += dstPitch;
+      }
+    }
   }
-}
-  m_texture->UnlockRect(0);
+  else
+  {
+    CLog::Log(LOGERROR, __FUNCTION__" - failed to lock texture");
+  }
+  m_texture.UnlockRect(0);
 
   delete [] m_pixels;
   m_pixels = NULL;
 
-  m_loadedToGPU = true;   
+  m_loadedToGPU = true;
 }
 
 #endif

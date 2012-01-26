@@ -60,7 +60,7 @@ static int send_raw_packet(SSL *ssl, uint8_t protocol);
 const uint8_t ssl_prot_prefs[NUM_PROTOCOLS] = 
 { SSL_RC4_128_SHA };
 #else
-static void session_free(SSL_SESS *ssl_sessions[], int sess_index);
+static void session_free(SSL_SESSION *ssl_sessions[], int sess_index);
 
 const uint8_t ssl_prot_prefs[NUM_PROTOCOLS] = 
 #ifdef CONFIG_SSL_PROT_LOW                  /* low security, fast speed */
@@ -156,7 +156,12 @@ static void add_hmac_digest(SSL *ssl, int snd, uint8_t *hmac_header,
 /*#if defined(WIN32) && !defined(CONFIG_SSL_FULL_MODE)*/
 #if 1
 void DISPLAY_BYTES(SSL *ssl, const char *format, 
-        const uint8_t *data, int size, ...) {}
+        const uint8_t *data, int size, ...) {
+    (void)ssl;
+    (void)format;
+    (void)data;
+    (void)size;
+}
 #endif
 
 /**
@@ -167,11 +172,13 @@ EXP_FUNC SSL_CTX *STDCALL ssl_ctx_new(uint32_t options, int num_sessions)
     SSL_CTX *ssl_ctx = (SSL_CTX *)calloc(1, sizeof (SSL_CTX));
     ssl_ctx->options = options;
 
+#if 0 /* GBG: no automatic cert loading */
     if (load_key_certs(ssl_ctx) < 0)
     {
         free(ssl_ctx);  /* can't load our key/certificate pair, so die */
         return NULL;
     }
+#endif
 
 #ifndef CONFIG_SSL_SKELETON_MODE
     ssl_ctx->num_sessions = num_sessions;
@@ -182,8 +189,8 @@ EXP_FUNC SSL_CTX *STDCALL ssl_ctx_new(uint32_t options, int num_sessions)
 #ifndef CONFIG_SSL_SKELETON_MODE
     if (num_sessions)
     {
-        ssl_ctx->ssl_sessions = (SSL_SESS **)
-                        calloc(1, num_sessions*sizeof(SSL_SESS *));
+        ssl_ctx->ssl_sessions = (SSL_SESSION **)
+                        calloc(1, num_sessions*sizeof(SSL_SESSION *));
     }
 #endif
 
@@ -389,7 +396,6 @@ int add_cert_auth(SSL_CTX *ssl_ctx, const uint8_t *buf, int len)
     int ret = SSL_ERROR_NO_CERT_DEFINED;
     int i = 0;
     int offset;
-    X509_CTX *cert = NULL;
     CA_CERT_CTX *ca_cert_ctx;
 
     if (ssl_ctx->ca_cert_ctx == NULL)
@@ -400,7 +406,7 @@ int add_cert_auth(SSL_CTX *ssl_ctx, const uint8_t *buf, int len)
     while (i < CONFIG_X509_MAX_CA_CERTS && ca_cert_ctx->cert[i]) 
         i++;
 
-    if (i > CONFIG_X509_MAX_CA_CERTS)
+    if (i >= CONFIG_X509_MAX_CA_CERTS)
     {
 #ifdef CONFIG_SSL_FULL_MODE
         printf("Error: maximum number of CA certs added - change of "
@@ -409,25 +415,11 @@ int add_cert_auth(SSL_CTX *ssl_ctx, const uint8_t *buf, int len)
         goto error;
     }
 
-    if ((ret = x509_new(buf, &offset, &ca_cert_ctx->cert[i])))
-        goto error;
-
-    /* make sure the cert is valid */
-    cert = ca_cert_ctx->cert[i];
-    SSL_CTX_LOCK(ssl_ctx->mutex);
-
-    if ((ret = x509_verify(ca_cert_ctx, cert)) != X509_VFY_ERROR_SELF_SIGNED)
-    {
-        SSL_CTX_UNLOCK(ssl_ctx->mutex);
-        x509_free(cert);        /* get rid of it */
-        ca_cert_ctx->cert[i] = NULL;
-#ifdef CONFIG_SSL_FULL_MODE
-        printf("Error: %s\n", x509_display_error(ret)); TTY_FLUSH();
-#endif
+    if ((ret = x509_new(buf, &offset, &ca_cert_ctx->cert[i]))) {
+        ret = SSL_X509_ERROR(ret); /* GBG */
         goto error;
     }
 
-    SSL_CTX_UNLOCK(ssl_ctx->mutex);
     len -= offset;
     ret = SSL_OK;           /* ok so far */
 
@@ -438,6 +430,7 @@ int add_cert_auth(SSL_CTX *ssl_ctx, const uint8_t *buf, int len)
 error:
     return ret;
 }
+
 
 /*
  * Retrieve an X.509 distinguished name component
@@ -472,6 +465,26 @@ EXP_FUNC const char * STDCALL ssl_get_cert_dn(const SSL *ssl, int component)
     }
 }
 
+/*
+ * Retrieve a "Subject Alternative Name" from a v3 certificate
+ */
+EXP_FUNC const char * STDCALL ssl_get_cert_subject_alt_dnsname(const SSL *ssl,
+        int dnsindex)
+{
+    int i;
+
+    if (ssl->x509_ctx == NULL || ssl->x509_ctx->subject_alt_dnsnames == NULL)
+        return NULL;
+
+    for (i = 0; i < dnsindex; ++i)
+    {
+        if (ssl->x509_ctx->subject_alt_dnsnames[i] == NULL)
+            return NULL;
+    }
+
+    return ssl->x509_ctx->subject_alt_dnsnames[dnsindex];
+}
+
 /* GBG added */
 EXP_FUNC void ssl_get_cert_fingerprints(const SSL* ssl, unsigned char* md5, unsigned char* sha1)
 {
@@ -484,9 +497,19 @@ EXP_FUNC void ssl_get_cert_fingerprints(const SSL* ssl, unsigned char* md5, unsi
     memcpy(sha1, ssl->x509_ctx->fingerprint.sha1, SHA1_SIZE);
 }
 
+EXP_FUNC void ssl_get_cert_validity_dates(const SSL* ssl, SSL_DateTime* not_before, SSL_DateTime* not_after)
+{
+    if (ssl->x509_ctx == NULL) {
+        memset(not_before, 0, sizeof(SSL_DateTime));
+        memset(not_after, 0, sizeof(SSL_DateTime));
+        return;
+    }
+    *not_before = ssl->x509_ctx->not_before;
+    *not_after  = ssl->x509_ctx->not_after;
+}
 /* /GBG added */
 
-#endif
+#endif /* CONFIG_SSL_CERT_VERIFICATION */
 
 /*
  * Find an ssl object based on the client's file descriptor.
@@ -819,7 +842,7 @@ static void prf(const uint8_t *sec, int sec_len, uint8_t *seed, int seed_len,
 void generate_master_secret(SSL *ssl, const uint8_t *premaster_secret)
 {
     uint8_t buf[128];   /* needs to be > 13+32+32 in size */
-    strcpy((char *)buf, "master secret");
+    memcpy(buf, "master secret", 13);
     memcpy(&buf[13], ssl->dc->client_random, SSL_RANDOM_SIZE);
     memcpy(&buf[45], ssl->dc->server_random, SSL_RANDOM_SIZE);
     prf(premaster_secret, SSL_SECRET_SIZE, buf, 77, ssl->dc->master_secret,
@@ -833,7 +856,7 @@ static void generate_key_block(uint8_t *client_random, uint8_t *server_random,
         uint8_t *master_secret, uint8_t *key_block, int key_block_size)
 {
     uint8_t buf[128];
-    strcpy((char *)buf, "key expansion");
+    memcpy(buf, "key expansion", 13);
     memcpy(&buf[13], server_random, SSL_RANDOM_SIZE);
     memcpy(&buf[45], client_random, SSL_RANDOM_SIZE);
     prf(master_secret, SSL_SECRET_SIZE, buf, 77, key_block, key_block_size);
@@ -852,7 +875,7 @@ void finished_digest(SSL *ssl, const char *label, uint8_t *digest)
 
     if (label)
     {
-        strcpy((char *)q, label);
+        memcpy(q, label, (int)strlen(label));
         q += strlen(label);
     }
 
@@ -913,7 +936,6 @@ static void *crypt_new(SSL *ssl, uint8_t *key, uint8_t *iv, int is_decrypt)
 
                 return (void *)aes_ctx;
             }
-            break;
 
         case SSL_RC4_128_MD5:
 #endif
@@ -923,7 +945,6 @@ static void *crypt_new(SSL *ssl, uint8_t *key, uint8_t *iv, int is_decrypt)
                 RC4_setup(rc4_ctx, key, 16);
                 return (void *)rc4_ctx;
             }
-            break;
     }
 
     return NULL;    /* its all gone wrong */
@@ -1231,8 +1252,16 @@ int basic_read(SSL *ssl, uint8_t **in_data)
     switch (ssl->record_type)
     {
         case PT_HANDSHAKE_PROTOCOL:
-            ssl->dc->bm_proc_index = 0;
-            ret = do_handshake(ssl, buf, read_len);
+            if (ssl->dc != NULL)
+            {
+                ssl->dc->bm_proc_index = 0;
+                ret = do_handshake(ssl, buf, read_len);
+            }
+            else /* no client renogiation allowed */
+            {
+                ret = SSL_ERROR_NO_CLIENT_RENOG;              
+                goto error;
+            }
             break;
 
         case PT_CHANGE_CIPHER_SPEC:
@@ -1403,6 +1432,7 @@ int send_alert(SSL *ssl, int error_code)
 
         case SSL_ERROR_INVALID_HANDSHAKE:
         case SSL_ERROR_INVALID_PROT_MSG:
+        case SSL_ERROR_NO_CLIENT_RENOG:
             alert_num = SSL_ALERT_HANDSHAKE_FAILURE;
             break;
 
@@ -1448,7 +1478,8 @@ int process_finished(SSL *ssl, int hs_len)
     int ret = SSL_OK;
     int is_client = IS_SET_SSL_FLAG(SSL_IS_CLIENT);
     int resume = IS_SET_SSL_FLAG(SSL_SESSION_RESUME);
-
+    (void)hs_len;
+    
     PARANOIA_CHECK(ssl->bm_index, SSL_FINISHED_HASH_SIZE+4);
 
     /* check that we all work before we continue */
@@ -1525,7 +1556,7 @@ void disposable_free(SSL *ssl)
 {
     if (ssl->dc)
     {
-	    free(ssl->dc->key_block);
+        free(ssl->dc->key_block);
         memset(ssl->dc, 0, sizeof(DISPOSABLE_CTX));
         free(ssl->dc);
         ssl->dc = NULL;
@@ -1538,12 +1569,12 @@ void disposable_free(SSL *ssl)
  * Find if an existing session has the same session id. If so, use the
  * master secret from this session for session resumption.
  */
-SSL_SESS *ssl_session_update(int max_sessions, SSL_SESS *ssl_sessions[], 
+SSL_SESSION *ssl_session_update(int max_sessions, SSL_SESSION *ssl_sessions[], 
         SSL *ssl, const uint8_t *session_id)
 {
     time_t tm = time(NULL);
     time_t oldest_sess_time = tm;
-    SSL_SESS *oldest_sess = NULL;
+    SSL_SESSION *oldest_sess = NULL;
     int i;
 
     /* no sessions? Then bail */
@@ -1586,7 +1617,7 @@ SSL_SESS *ssl_session_update(int max_sessions, SSL_SESS *ssl_sessions[],
         if (ssl_sessions[i] == NULL)
         {
             /* perfect, this will do */
-            ssl_sessions[i] = (SSL_SESS *)calloc(1, sizeof(SSL_SESS));
+            ssl_sessions[i] = (SSL_SESSION *)calloc(1, sizeof(SSL_SESSION));
             ssl_sessions[i]->conn_time = tm;
             ssl->session_index = i;
             SSL_CTX_UNLOCK(ssl->ssl_ctx->mutex);
@@ -1612,7 +1643,7 @@ SSL_SESS *ssl_session_update(int max_sessions, SSL_SESS *ssl_sessions[],
 /**
  * Free an existing session.
  */
-static void session_free(SSL_SESS *ssl_sessions[], int sess_index)
+static void session_free(SSL_SESSION *ssl_sessions[], int sess_index)
 {
     if (ssl_sessions[sess_index])
     {
@@ -1624,7 +1655,7 @@ static void session_free(SSL_SESS *ssl_sessions[], int sess_index)
 /**
  * This ssl object doesn't want this session anymore.
  */
-void kill_ssl_session(SSL_SESS **ssl_sessions, SSL *ssl)
+void kill_ssl_session(SSL_SESSION **ssl_sessions, SSL *ssl)
 {
     SSL_CTX_LOCK(ssl->ssl_ctx->mutex);
 
@@ -1715,7 +1746,7 @@ EXP_FUNC int STDCALL ssl_verify_cert(const SSL *ssl)
 {
     int ret;
     SSL_CTX_LOCK(ssl->ssl_ctx->mutex);
-    ret = x509_verify(ssl->ssl_ctx->ca_cert_ctx, ssl->x509_ctx);
+    ret = x509_verify(ssl->ssl_ctx->ca_cert_ctx, ssl->x509_ctx, NULL);
     SSL_CTX_UNLOCK(ssl->ssl_ctx->mutex);
 
     if (ret)        /* modify into an SSL error type */
@@ -1754,19 +1785,19 @@ int process_certificate(SSL *ssl, X509_CTX **x509_ctx)
             goto error;
         }
 
+        /* DISPLAY_CERT(ssl, *chain); */
         chain = &((*chain)->next);
         offset += cert_size;
     }
 
     PARANOIA_CHECK(pkt_size, offset);
 
-    /* if we are client we can do the verify now or later */
-    if (is_client && !IS_SET_SSL_FLAG(SSL_SERVER_VERIFY_LATER))
+    /* GBG: modif: verify for server and client (was: if we are client we can do the verify now or later) */
+    if (!IS_SET_SSL_FLAG(SSL_SERVER_VERIFY_LATER))
     {
         ret = ssl_verify_cert(ssl);
     }
 
-    DISPLAY_CERT(ssl, *x509_ctx);
     ssl->next_state = is_client ? HS_SERVER_HELLO_DONE : HS_CLIENT_KEY_XCHG;
     ssl->dc->bm_proc_index += offset;
 error:
@@ -1959,6 +1990,10 @@ EXP_FUNC void STDCALL ssl_display_error(int error_code)
             printf("no certificate defined");
             break;
 
+        case SSL_ERROR_NO_CLIENT_RENOG:
+            printf("client renegotiation not supported");
+            break;
+            
         case SSL_ERROR_NOT_SUPPORTED:
             printf("Option not supported");
             break;
@@ -2040,12 +2075,17 @@ EXP_FUNC const char  * STDCALL ssl_version()
     return axtls_version;
 }
 
+EXP_FUNC void ssl_mem_free(void* mem) /* GBG */
+{
+    if (mem) free(mem);
+}
+
 /**
  * Enable the various language bindings to work regardless of the
  * configuration - they just return an error statement and a bad return code.
  */
 #if !defined(CONFIG_SSL_FULL_MODE)
-EXP_FUNC void STDCALL ssl_display_error(int error_code) {}
+EXP_FUNC void STDCALL ssl_display_error(int error_code) { (void)error_code; }
 #endif
 
 #ifdef CONFIG_BINDINGS
@@ -2065,7 +2105,14 @@ EXP_FUNC int STDCALL ssl_verify_cert(const SSL *ssl)
     return -1;
 }
 
+
 EXP_FUNC const char * STDCALL ssl_get_cert_dn(const SSL *ssl, int component)
+{
+    printf(unsupported_str);
+    return NULL;
+}
+
+EXP_FUNC const char * STDCALL ssl_get_cert_subject_alt_dnsname(const SSL *ssl, int index)
 {
     printf(unsupported_str);
     return NULL;

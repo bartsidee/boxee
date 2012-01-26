@@ -29,13 +29,14 @@
 #include "../xbmc/cores/AudioRenderers/AudioRendererFactory.h"
 #include "utils/SingleLock.h"
 
+#pragma pack(1)
 typedef struct
 {
   char chunk_id[4];
-  long chunksize;
+  int32_t chunksize;
 } WAVE_CHUNK;
 
-//#pragma pack(1)
+#pragma pack(1)
 typedef struct
 {
   char riff[4];
@@ -63,8 +64,8 @@ bool CGUISound::Load(const CStdString& strFile)
   WAVEFORMATEX wfx;
   DBG(DAUDIO,5,"Load %d wave data", m_soundBufferLen);
 
-#if defined(_LINUX) && !defined(__APPLE__) 
-  Stop();  // This makes us more responsive. 
+#if defined(_LINUX) && !defined(__APPLE__) && !defined(HAS_INTEL_SMD)
+  Stop();  // This makes us more responsive.
 #endif 
 
   if (m_soundBuffer)
@@ -199,10 +200,10 @@ void CGUISoundPlayer::Initialize()
 {
   CSingleLock locker(*this);
   if (!m_audioRenderer)
-    m_audioRenderer = CAudioRendererFactory::Create(NULL, 2, 44100, 16, false, "gui", true, false);
+    m_audioRenderer = CAudioRendererFactory::Create(NULL, 2, NULL, 44100, 16, false, "gui", true, false);
   else
-    m_audioRenderer->Initialize(NULL, 2, 44100, 16, false, "gui", true, false);
-  
+    m_audioRenderer->Initialize(NULL, 2, NULL, 44100, 16, false, "gui", true, false);
+
   if (m_audioRenderer)
   {
     m_audioRenderer->SetCurrentVolume(m_volume);
@@ -248,7 +249,7 @@ void CGUISoundPlayer::Stop()
   CSingleLock locker(*this);
   m_queue.clear();
   if (m_audioRenderer)
-    m_audioRenderer->Stop();
+  m_audioRenderer->Stop();
 }
 
 void CGUISoundPlayer::SetVolume(int level)
@@ -278,15 +279,22 @@ void CGUISoundPlayer::Process()
 {
   while (!m_bStop)
   {
+#ifndef _WIN32
     if (WaitForSingleObject(m_hWorkerEvent, 2000) == WAIT_TIMEOUT)
     {
       if (m_bStop)
         break;
       
+#ifndef HAS_INTEL_SMD
       CLog::Log(LOGDEBUG,"no gui sound for 2 seconds. pausing device");
       m_audioRenderer->Pause();
+#endif
       WaitForSingleObject(m_hWorkerEvent, INFINITE);
     }
+    
+#else
+    WaitForSingleObject(m_hWorkerEvent, INFINITE);
+#endif
     
     m_stopped = false;
     if (m_bStop)
@@ -298,8 +306,9 @@ void CGUISoundPlayer::Process()
     ::EnterCriticalSection( this );
 
     ::ResetEvent(m_hWorkerEvent);
-
+#ifndef HAS_INTEL_SMD
     m_audioRenderer->Resume();
+#endif
 
     while (!m_bStop && m_queue.size())
     {
@@ -309,6 +318,9 @@ void CGUISoundPlayer::Process()
       unsigned char* current = audioData.data;
       int nChunkLen = m_audioRenderer->GetChunkLen();
       ::LeaveCriticalSection(this);
+
+      if(nChunkLen == 0)
+        nChunkLen = audioData.len;
 
       while (!m_bStop && remaining >= nChunkLen && !m_stopped)
       {

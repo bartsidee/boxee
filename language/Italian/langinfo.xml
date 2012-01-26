@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<language>
+<language code="it">
   <charsets>
     <gui>CP1252</gui>
     <subtitle>CP1252</subtitle>
@@ -31,5 +31,6 @@
     <token>Uno</token>
     <token>Una</token>
     <token>The</token>
+    <token>A</token>
   </sorttokens>
 </language>

@@ -31,6 +31,7 @@ public:
   
   bool UpdateRecommendationsList(unsigned long executionDelayInMS, bool repeat);
   bool GetRecommendationsList(BXBoxeeFeed& recommendationsList);
+  int GetRecommendationsListSize();
 
 private:
 
@@ -41,7 +42,7 @@ private:
 
   SDL_mutex* m_recommendationsListGuard;
   BXBoxeeFeed m_recommendationsList;
-
+  
   class RequestRecommendationsListFromServerTask : public BoxeeScheduleTask
   {
   public:
@@ -49,9 +50,9 @@ private:
     RequestRecommendationsListFromServerTask(BXRecommendationsManager* taskHandler, unsigned long executionDelayInMS, bool repeat);
     virtual ~RequestRecommendationsListFromServerTask();
     virtual void DoWork();
-
+    
   private:
-
+    
     bool CanExecute();
 
     BXRecommendationsManager* m_taskHandler;

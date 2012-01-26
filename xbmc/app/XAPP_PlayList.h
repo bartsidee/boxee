@@ -2,7 +2,11 @@
 #define XAPP_PLAYLIST_H_
 
 #include "XAPP_ListItem.h"
-#include "PlayList.h"
+
+namespace PLAYLIST
+{
+  class CPlayList;
+}
 
 namespace XAPP
 {
@@ -75,7 +79,11 @@ public:
    */
   virtual int Size();
 
-  
+  /**
+   * Return true if the playlist is shuffle
+   */
+  virtual bool IsShuffle();
+
 private:
   PLAYLIST::CPlayList *m_playList;
   PlayListType iPlayList;

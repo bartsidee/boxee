@@ -19,6 +19,9 @@
 */
 
 #include "FileDAAP.h"
+
+#ifdef HAS_FILESYSTEM_DAAP
+
 #include "SectionLoader.h"
 #include <sys/stat.h>
 
@@ -152,7 +155,7 @@ CFileDAAP::~CFileDAAP()
 
 
 //*********************************************************************************************
-bool CFileDAAP::Open(const CURL& url)
+bool CFileDAAP::Open(const CURI& url)
 {
   CSingleLock lock(g_DaapClient);
 
@@ -239,12 +242,14 @@ int64_t CFileDAAP::GetPosition()
   return m_curl.GetPosition();
 }
 
-bool CFileDAAP::Exists(const CURL& url)
+bool CFileDAAP::Exists(const CURI& url)
 {
   return false;
 }
 
-int CFileDAAP::Stat(const CURL& url, struct __stat64* buffer)
+int CFileDAAP::Stat(const CURI& url, struct __stat64* buffer)
 {
   return -1;
 }
+
+#endif

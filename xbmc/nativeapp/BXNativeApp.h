@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define BOXEE_API_VERSION    1    /* Calls from app to boxee */
+#define BOXEE_API_VERSION    2    /* Calls from app to boxee */
 #define APP_API_VERSION      1    /* Calls from boxee to app (mainly events) */
 
 #ifdef __cplusplus
@@ -273,6 +273,35 @@ extern "C"
     int bottom;
     int right;
   } BX_Overscan;
+
+  typedef enum
+  {
+    BX_MODE_3D_NONE           = 0x0,
+    BX_MODE_3D_FRAME_PACKED   = 0x1,
+    BX_MODE_3D_SIDE_BY_SIDE   = 0x2,
+    BX_MODE_3D_TOP_AND_BOTTOM = 0x4,
+  } BX_Mode3D;
+
+  typedef enum
+  {
+    BX_AUDIO_CAPS_DISABLED = -1,
+    BX_AUDIO_CAPS_NONE     = 0x00,
+    BX_AUDIO_CAPS_PCM      = 0x01,
+    BX_AUDIO_CAPS_LPCM71   = 0x02,
+    BX_AUDIO_CAPS_DD       = 0x04,
+    BX_AUDIO_CAPS_DDP      = 0x08,
+    BX_AUDIO_CAPS_TRUEHD   = 0x10,
+    BX_AUDIO_CAPS_DTS      = 0x20,
+    BX_AUDIO_CAPS_DTSMA    = 0x40,
+  } BX_AudioOutputCaps;
+
+  typedef enum
+  {
+    BX_AUDIO_OUTPUT_HDMI    = 0x1,
+    BX_AUDIO_OUTPUT_SPDIF   = 0x2,
+    BX_AUDIO_OUTPUT_I2S0    = 0x4,
+    BX_AUDIO_OUTPUT_I2S1    = 0x8,
+  } BX_AudioOutputPort;
 
   /**
    * Create a window. The dimensions of the window are the same as the boxee skin.
@@ -536,7 +565,17 @@ extern "C"
    */
   typedef BX_MessageBoxResult (*BX_MessageBox_FuncType) (const char *title, const char *text, BX_MessageBoxType type);
 
+  typedef void (*BX_ShowTip_FuncType) (const char *text, int durationSeconds);
+
   typedef void (*BX_GetDisplayOverscan_FuncType) (BX_Overscan* overscan);
+
+  typedef void (*BX_BoxeeRenderingEnabled_FuncType) (bool enabled);
+
+  typedef BX_Mode3D (*BX_DimensionalityGetSupportedModes) (void);
+  typedef void (*BX_DimensionalitySetMode) (BX_Mode3D mode);
+  typedef BX_Mode3D (*BX_DimensionalityGetMode) (void);
+
+  typedef void (*BX_AudioGetSettings_FuncType) (BX_AudioOutputPort* output, BX_AudioOutputCaps* caps);
 
   //
   // Initialization
@@ -608,6 +647,17 @@ extern "C"
     BX_PersistentPushBack_FuncType     persistentPushBack;
     BX_PersistentPushFront_FuncType    persistentPushFront;
     BX_PersistentClear_FuncType        persistentClear;
+
+    BX_BoxeeRenderingEnabled_FuncType  boxeeRenderingEnabled;
+
+    // 3D
+    BX_DimensionalityGetSupportedModes dimensionalityGetSupportedModes;
+    BX_DimensionalitySetMode           dimensionalitySetMode;
+    BX_DimensionalityGetMode           dimensionalityGetMode;
+
+    BX_ShowTip_FuncType                showTip;
+
+    BX_AudioGetSettings_FuncType       audioGetOutputPortCaps;
   } BX_Callbacks; 
   
   //////////////////////////////////////////////////////////////////////////////////////
@@ -708,6 +758,16 @@ extern "C"
     BX_MB_WHEENDOWN 
   } BX_MouseButton;
   
+  typedef enum
+  {
+    BX_PLAYERSTATE_UNKNOWN = -1,
+    BX_PLAYERSTATE_STOPPED,
+    BX_PLAYERSTATE_BUFFERING,
+    BX_PLAYERSTATE_SEEKING,
+    BX_PLAYERSTATE_PAUSED,
+    BX_PLAYERSTATE_PLAYING,
+  } BX_PlayerState;
+
   /**
    * Called whenever a key was pressed
    * 
@@ -756,8 +816,20 @@ extern "C"
   // 
   typedef void (*BX_App_OnPLaybackEnded_FuncType)    ( BX_PlayerHandle hPlayer );
   typedef void (*BX_App_OnPLaybackUnderrun_FuncType) ( BX_PlayerHandle hPlayer );
+
+  //
+  // Windowing events
+  //
+  typedef void (*BX_App_DisplayRevealed_FuncType)  ( void );
+  typedef void (*BX_App_DisplayHidden_FuncType) ( void );
+  typedef void (*BX_App_ReduceSurfaceMemoryNow_FuncType) ( unsigned int );
+  typedef void (*BX_App_DisplayRender_FuncType) ( BX_WindowHandle hWindow );
  
+  typedef void (*BX_App_ScreensaverStateShown_FuncType) ( BX_Handle hApp );
+  typedef void (*BX_App_ScreensaverStateHidden_FuncType) ( BX_Handle hApp );
   
+  typedef BX_PlayerState (*BX_App_GetPlayerState_FuncType) ( BX_Handle hApp );
+
   typedef struct
   {
     unsigned int                 appApiVersion;
@@ -774,7 +846,20 @@ extern "C"
     // playback
     BX_App_OnPLaybackEnded_FuncType    onPlaybackEnded;
     BX_App_OnPLaybackUnderrun_FuncType onPlaybackUnderrun;
+
+    // Windowing
+    BX_App_DisplayRevealed_FuncType onDisplayRevealed;
+    BX_App_DisplayHidden_FuncType onDisplayHidden;
+    BX_App_ReduceSurfaceMemoryNow_FuncType onReduceSurfaceMemoryNow;
+    BX_App_DisplayRender_FuncType onDisplayRender;
     
+    // Screensaver
+    BX_App_ScreensaverStateShown_FuncType onScreensaverShown;
+    BX_App_ScreensaverStateHidden_FuncType onScreensaverHidden;
+
+    // Video
+    BX_App_GetPlayerState_FuncType getPlayerState;
+
   } BX_App_Methods;
 
   

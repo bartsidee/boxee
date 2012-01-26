@@ -21,7 +21,7 @@
  */
 
 /**
- * @file libavformat/cafdec.c
+ * @file
  * Core Audio Format demuxer
  */
 
@@ -61,10 +61,10 @@ static int read_desc_chunk(AVFormatContext *s)
     /* new audio stream */
     st = av_new_stream(s, 0);
     if (!st)
-        return AVERROR_NOMEM;
+        return AVERROR(ENOMEM);
 
     /* parse format description */
-    st->codec->codec_type  = CODEC_TYPE_AUDIO;
+    st->codec->codec_type  = AVMEDIA_TYPE_AUDIO;
     st->codec->sample_rate = av_int2dbl(get_be64(pb));
     st->codec->codec_tag   = get_be32(pb);
     flags = get_be32(pb);
@@ -115,6 +115,21 @@ static int read_kuki_chunk(AVFormatContext *s, int64_t size)
             return AVERROR_INVALIDDATA;
         }
         url_fskip(pb, skip);
+    } else if (st->codec->codec_id == CODEC_ID_ALAC) {
+#define ALAC_PREAMBLE 12
+#define ALAC_HEADER   36
+        if (size < ALAC_PREAMBLE + ALAC_HEADER) {
+            av_log(s, AV_LOG_ERROR, "invalid ALAC magic cookie\n");
+            url_fskip(pb, size);
+            return AVERROR_INVALIDDATA;
+        }
+        url_fskip(pb, ALAC_PREAMBLE);
+        st->codec->extradata = av_mallocz(ALAC_HEADER + FF_INPUT_BUFFER_PADDING_SIZE);
+        if (!st->codec->extradata)
+            return AVERROR(ENOMEM);
+        get_buffer(pb, st->codec->extradata, ALAC_HEADER);
+        st->codec->extradata_size = ALAC_HEADER;
+        url_fskip(pb, size - ALAC_PREAMBLE - ALAC_HEADER);
     } else {
         st->codec->extradata = av_mallocz(size + FF_INPUT_BUFFER_PADDING_SIZE);
         if (!st->codec->extradata)
@@ -172,7 +187,7 @@ static void read_info_chunk(AVFormatContext *s, int64_t size)
         char value[1024];
         get_strz(pb, key, sizeof(key));
         get_strz(pb, value, sizeof(value));
-        av_metadata_set(&s->metadata, key, value);
+        av_metadata_set2(&s->metadata, key, value, 0);
     }
 }
 
@@ -293,13 +308,13 @@ static int read_packet(AVFormatContext *s, AVPacket *pkt)
     int64_t left      = CAF_MAX_PKT_SIZE;
 
     if (url_feof(pb))
-        return AVERROR_IO;
+        return AVERROR(EIO);
 
     /* don't read past end of data chunk */
     if (caf->data_size > 0) {
         left = (caf->data_start + caf->data_size) - url_ftell(pb);
         if (left <= 0)
-            return AVERROR_IO;
+            return AVERROR(EIO);
     }
 
     pkt_frames = caf->frames_per_packet;
@@ -317,12 +332,12 @@ static int read_packet(AVFormatContext *s, AVPacket *pkt)
             pkt_size   = caf->num_bytes - st->index_entries[caf->packet_cnt].pos;
             pkt_frames = st->duration   - st->index_entries[caf->packet_cnt].timestamp;
         } else {
-            return AVERROR_IO;
+            return AVERROR(EIO);
         }
     }
 
     if (pkt_size == 0 || pkt_frames == 0 || pkt_size > left)
-        return AVERROR_IO;
+        return AVERROR(EIO);
 
     res = av_get_packet(pb, pkt, pkt_size);
     if (res < 0)
@@ -366,7 +381,7 @@ static int read_seek(AVFormatContext *s, int stream_index,
     return 0;
 }
 
-AVInputFormat caf_demuxer = {
+AVInputFormat ff_caf_demuxer = {
     "caf",
     NULL_IF_CONFIG_SMALL("Apple Core Audio Format"),
     sizeof(CaffContext),

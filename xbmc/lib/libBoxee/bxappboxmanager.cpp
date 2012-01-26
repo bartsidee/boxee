@@ -18,6 +18,14 @@
 #include "../../GUISettings.h"
 #include "../../Application.h"
 #include "../../BoxeeUtils.h"
+#include "../../LangInfo.h"
+
+#include "GUIUserMessages.h"
+#include "../../guilib/GUIWindowManager.h"
+
+#ifdef HAS_EMBEDDED
+#include "HalServices.h"
+#endif
 
 #define NUM_OF_ITER_TO_WAIT_FOR_REPO_MAP_LOAD 1
 
@@ -64,6 +72,8 @@ void BXAppBoxManager::UnLockAppBoxBoxeeApplicationsList()
 void BXAppBoxManager::CopyAppBoxBoxeeApplicationsList(const BXAppBoxApplications& appBoxBoxeeApplicationsList)
 {
   LockAppBoxBoxeeApplicationsList();
+
+  LOG(LOG_LEVEL_DEBUG,"BXAppBoxManager::CopyAppBoxBoxeeApplicationsList - going to copy appBoxBoxeeApplicationsList [size=%d]. [currSize=%d] (appbox)",appBoxBoxeeApplicationsList.GetNumOfApplication(),m_appBoxBoxeeApplicationsList.GetNumOfApplication());
 
   m_appBoxBoxeeApplicationsList = appBoxBoxeeApplicationsList;
   m_appBoxBoxeeApplicationsList.SetLoaded(true);
@@ -146,6 +156,25 @@ bool BXAppBoxManager::GetAppBoxBoxeeApplications(TiXmlDocument& appBoxBoxeeAppli
   LOG(LOG_LEVEL_DEBUG,"BXAppBoxManager::GetAppBoxBoxeeApplications - Exit function (appbox)");
 
   return true;
+}
+
+bool BXAppBoxManager::IsAppIdInAppBoxApplicationsList(const std::string& id)
+{
+  LockAppBoxBoxeeApplicationsList();
+
+  bool boxeeApplicationsListWasLoaded = m_appBoxBoxeeApplicationsList.IsLoaded();
+
+  if (!boxeeApplicationsListWasLoaded)
+  {
+    UnLockAppBoxBoxeeApplicationsList();
+    return false;
+  }
+
+  bool isInAppBoxApplicationsList = m_appBoxBoxeeApplicationsList.IsApplicationIdExist(id);
+
+  UnLockAppBoxBoxeeApplicationsList();
+
+  return isInAppBoxApplicationsList;
 }
 
 ///////////////////////////
@@ -270,6 +299,8 @@ void BXAppBoxManager::CopyAppBoxPopularitiesList(const BXAppBoxPopularities& app
 {
   LockAppBoxPopularitiesList();
 
+  LOG(LOG_LEVEL_DEBUG,"BXAppBoxManager::CopyAppBoxPopularitiesList - going to copy appBoxPopularitiesList [size=%d]. [currSize=%d] (appbox)(popu)",appBoxPopularitiesList.GetNumOfPopularities(),m_appBoxPopularitiesList.GetNumOfPopularities());
+
   m_appBoxPopularitiesList = appBoxPopularitiesList;
   m_appBoxPopularitiesList.SetLoaded(true);
 
@@ -315,13 +346,13 @@ bool BXAppBoxManager::UpdateAppBoxPopularitiesList(unsigned long executionDelayI
 
 std::string BXAppBoxManager::GetAppBoxPopularityById(const std::string& id)
 {
-  LOG(LOG_LEVEL_DEBUG,"BXAppBoxManager::GetAppBoxPopularitiesById - Enter function with [id=%s] (appbox)",id.c_str());
+  //LOG(LOG_LEVEL_DEBUG,"BXAppBoxManager::GetAppBoxPopularitiesById - Enter function with [id=%s] (appbox)",id.c_str());
 
   std::string popularity = "0";
 
   if(BOXEE::Boxee::GetInstance().IsInOfflineMode())
   {
-    LOG(LOG_LEVEL_DEBUG,"BXAppBoxManager::GetAppBoxPopularitiesById - In offline mode. Going to return [0] (appbox)");
+    //LOG(LOG_LEVEL_DEBUG,"BXAppBoxManager::GetAppBoxPopularitiesById - In offline mode. Going to return [0] (appbox)");
     return popularity;
   }
 
@@ -337,7 +368,7 @@ std::string BXAppBoxManager::GetAppBoxPopularityById(const std::string& id)
 
     UnLockAppBoxPopularitiesList();
 
-    LOG(LOG_LEVEL_DEBUG,"BXAppBoxManager::GetAppBoxPopularitiesById - AppBoxPopularitiesList is not loaded yet. Going to try again in [%dms] (appbox)",DELAY_FOR_CHECK_FEED_LOADED);
+    //LOG(LOG_LEVEL_DEBUG,"BXAppBoxManager::GetAppBoxPopularitiesById - AppBoxPopularitiesList is not loaded yet. Going to try again in [%dms] (appbox)",DELAY_FOR_CHECK_FEED_LOADED);
 
     SDL_Delay(DELAY_FOR_CHECK_FEED_LOADED);
 
@@ -350,7 +381,7 @@ std::string BXAppBoxManager::GetAppBoxPopularityById(const std::string& id)
 
   UnLockAppBoxPopularitiesList();
 
-  LOG(LOG_LEVEL_DEBUG,"BXAppBoxManager::GetAppBoxPopularitiesById - Exit function (appbox)");
+  //LOG(LOG_LEVEL_DEBUG,"BXAppBoxManager::GetAppBoxPopularitiesById - Exit function (appbox)");
 
   return popularity;
 }
@@ -372,6 +403,8 @@ void BXAppBoxManager::UnLockAppBoxRepositoriesList()
 void BXAppBoxManager::CopyAppBoxRepositoriesList(const BXAppBoxRepositories& appBoxRepositoriesList)
 {
   LockAppBoxRepositoriesList();
+
+  LOG(LOG_LEVEL_DEBUG,"BXAppBoxManager::CopyAppBoxRepositoriesList - going to copy appBoxRepositoriesList [size=%d]. [currSize=%d] (repos)",appBoxRepositoriesList.GetNumOfRepositories(),m_appBoxRepositoriesList.GetNumOfRepositories());
 
   m_appBoxRepositoriesList = appBoxRepositoriesList;
   m_appBoxRepositoriesList.SetLoaded(true);
@@ -475,12 +508,13 @@ void BXAppBoxManager::RequestAppBoxBoxeeApplicationsListFromServerTask::DoWork()
 {
   LOG(LOG_LEVEL_DEBUG,"RequestAppBoxBoxeeApplicationsListFromServerTask::DoWork - Enter function (appbox)");
   
-  if (!g_application.IsConnectedToInternet())
+
+  if (!g_application.ShouldConnectToInternet())
   {
     // set loaded to true so Get() functions won't wait forever
     m_taskHandler->SetAppBoxBoxeeApplicationsListIsLoaded(true);
 
-    LOG(LOG_LEVEL_DEBUG,"RequestAppBoxBoxeeApplicationsListFromServerTask::DoWork - [IsConnectedToInternet=FALSE] -> Exit function (appbox)");
+    LOG(LOG_LEVEL_DEBUG,"RequestAppBoxBoxeeApplicationsListFromServerTask::DoWork - [ShouldConnectToInternet=FALSE]-> Exit function (appbox)");
     return;
   }
 
@@ -503,7 +537,7 @@ void BXAppBoxManager::RequestAppBoxBoxeeApplicationsListFromServerTask::DoWork()
     mapRemoteOptions["adult"] = "no";
   }
 
-  if (g_guiSettings.GetBool("filelists.filtergeoip"))
+  if (g_guiSettings.GetBool("filelists.filtergeoip2"))
   {
     CStdString countryCode = g_application.GetCountryCode();
 
@@ -513,23 +547,43 @@ void BXAppBoxManager::RequestAppBoxBoxeeApplicationsListFromServerTask::DoWork()
     }
   }
 
+#ifdef HAS_EMBEDDED
+  CHalHardwareInfo hwInfo;
+  CHalSoftwareInfo swInfo;
+  IHalServices& client = CHalServicesFactory::GetInstance();
+
+  if(client.GetHardwareInfo(hwInfo))
+  {
+    mapRemoteOptions["serialnumber"] = hwInfo.serialNumber;
+  }
+
+  if (client.GetSoftwareInfo(swInfo))
+  {
+    mapRemoteOptions["regionsku"] = swInfo.regionSKU;
+  }
+#endif
+
   if (mapRemoteOptions.size() > 0)
   {
     strUrl += BoxeeUtils::BuildParameterString(mapRemoteOptions);
   }
 
-  bool succeeded = appBoxBoxeeApplicationsList.LoadFromURL(strUrl);
+  appBoxBoxeeApplicationsList.LoadFromURL(strUrl);
 
-  if (succeeded)
+  bool isLoaded = m_taskHandler->m_appBoxBoxeeApplicationsList.IsLoaded();
+  long lastRetCode = appBoxBoxeeApplicationsList.GetLastRetCode();
+
+  LOG(LOG_LEVEL_DEBUG,"RequestAppBoxBoxeeApplicationsListFromServerTask::DoWork - After LoadFromURL. [lastRetCode=%d][isLoaded=%d][size=%d][currSize=%d] (appbox)",lastRetCode,isLoaded,appBoxBoxeeApplicationsList.GetNumOfApplication(),m_taskHandler->m_appBoxBoxeeApplicationsList.GetNumOfApplication());
+
+  if (!isLoaded || lastRetCode == 200)
   {
+    /////////////////////////////////////////////////
+    // copy return result from the server if:      //
+    // a) appBoxBoxeeApplicationsList isn't loaded //
+    // b) the server returned 200                  //
+    /////////////////////////////////////////////////
+
     m_taskHandler->CopyAppBoxBoxeeApplicationsList(appBoxBoxeeApplicationsList);
-  }
-  else
-  {
-    LOG(LOG_LEVEL_WARNING,"RequestAppBoxBoxeeApplicationsListFromServerTask::DoWork - Call to LoadFromURL for [strUrl=%s] returned [%d] (appbox)",strUrl.c_str(),succeeded);
-
-    // set loaded to true so Get() functions won't wait forever
-    m_taskHandler->SetAppBoxBoxeeApplicationsListIsLoaded(true);
   }
   
   LOG(LOG_LEVEL_DEBUG,"RequestAppBoxBoxeeApplicationsListFromServerTask::DoWork - Exit function (appbox)");
@@ -555,12 +609,12 @@ void BXAppBoxManager::RequestAppBoxPopularitiesListFromServerTask::DoWork()
 {
   LOG(LOG_LEVEL_DEBUG,"RequestAppBoxPopularitiesListFromServerTask::DoWork - Enter function (appbox)(popu)");
 
-  if (!g_application.IsConnectedToInternet())
+  if (!g_application.ShouldConnectToInternet())
   {
     // set loaded to true so Get() functions won't wait forever
     m_taskHandler->SetAppBoxPopularitiesApplicationsListIsLoaded(true);
 
-    LOG(LOG_LEVEL_DEBUG,"RequestAppBoxPopularitiesListFromServerTask::DoWork - [IsConnectedToInternet=FALSE] -> Exit function (appbox)(popu)");
+    LOG(LOG_LEVEL_DEBUG,"RequestAppBoxPopularitiesListFromServerTask::DoWork - [ShouldConnectToInternet=FALSE] -> Exit function (appbox)(popu)");
     return;
   }
 
@@ -571,18 +625,22 @@ void BXAppBoxManager::RequestAppBoxPopularitiesListFromServerTask::DoWork()
 
   std::string strUrl = BXConfiguration::GetInstance().GetURLParam("Boxee.AppBoxPopularitiesUrl","http://app.boxee.tv/applications/popularity");
 
-  bool succeeded = appBoxPopularitiesList.LoadFromURL(strUrl);
+  appBoxPopularitiesList.LoadFromURL(strUrl);
 
-  if (succeeded)
+  bool isLoaded = m_taskHandler->m_appBoxPopularitiesList.IsLoaded();
+  long lastRetCode = appBoxPopularitiesList.GetLastRetCode();
+
+  LOG(LOG_LEVEL_DEBUG,"RequestAppBoxPopularitiesListFromServerTask::DoWork - After LoadFromURL. [lastRetCode=%d][isLoaded=%d][size=%d][currSize=%d] (appbox)(popu)",lastRetCode,isLoaded,appBoxPopularitiesList.GetNumOfPopularities(),m_taskHandler->m_appBoxPopularitiesList.GetNumOfPopularities());
+
+  if (!isLoaded || lastRetCode == 200)
   {
+    ////////////////////////////////////////////////
+    // copy return result from the server if:     //
+    // a) appBoxPopularitiesList isn't loaded     //
+    // b) the server returned 200                 //
+    ////////////////////////////////////////////////
+
     m_taskHandler->CopyAppBoxPopularitiesList(appBoxPopularitiesList);
-  }
-  else
-  {
-    LOG(LOG_LEVEL_WARNING,"RequestAppBoxPopularitiesListFromServerTask::DoWork - Call to LoadFromURL for [strUrl=%s] returned [%d] (appbox)(popu)",strUrl.c_str(),succeeded);
-
-    // set loaded to true so Get() functions won't wait forever
-    m_taskHandler->SetAppBoxPopularitiesApplicationsListIsLoaded(true);
   }
 
   LOG(LOG_LEVEL_DEBUG,"RequestAppBoxPopularitiesListFromServerTask::DoWork - Exit function (appbox)(popu)");
@@ -608,12 +666,12 @@ void BXAppBoxManager::RequestAppBoxRepositoriesListFromServerTask::DoWork()
 {
   LOG(LOG_LEVEL_DEBUG,"RequestAppBoxRepositoriesListFromServerTask::DoWork - Enter function (repos)");
 
-  if (!g_application.IsConnectedToInternet())
+  if (!g_application.ShouldConnectToInternet())
   {
     // set loaded to true so Get() functions won't wait forever
     m_taskHandler->SetAppBoxRepositoriesListIsLoaded(true);
 
-    LOG(LOG_LEVEL_DEBUG,"RequestAppBoxRepositoriesListFromServerTask::DoWork - [IsConnectedToInternet=FALSE] -> Exit function (repos)");
+    LOG(LOG_LEVEL_DEBUG,"RequestAppBoxRepositoriesListFromServerTask::DoWork - [ShouldConnectToInternet=FALSE] -> Exit function (repos)");
     return;
   }
 
@@ -624,10 +682,21 @@ void BXAppBoxManager::RequestAppBoxRepositoriesListFromServerTask::DoWork()
 
   std::string strUrl = BXConfiguration::GetInstance().GetURLParam("Boxee.AppBoxRepositoriesUrl","http://app.boxee.tv/api/get_repositories");
 
-  bool succeeded = appBoxRepositoriesList.LoadFromURL(strUrl);
+  appBoxRepositoriesList.LoadFromURL(strUrl);
 
-  if (succeeded)
+  bool isLoaded = m_taskHandler->m_appBoxRepositoriesList.IsLoaded();
+  long lastRetCode = appBoxRepositoriesList.GetLastRetCode();
+
+  LOG(LOG_LEVEL_DEBUG,"RequestAppBoxRepositoriesListFromServerTask::DoWork - After LoadFromURL. [lastRetCode=%d][isLoaded=%d][size=%d][currSize=%d] (repos)",lastRetCode,isLoaded,appBoxRepositoriesList.GetNumOfRepositories(),m_taskHandler->m_appBoxRepositoriesList.GetNumOfRepositories());
+
+  if (!isLoaded || lastRetCode == 200)
   {
+    ////////////////////////////////////////////////
+    // copy return result from the server if:     //
+    // a) appBoxRepositoriesList isn't loaded     //
+    // b) the server returned 200                 //
+    ////////////////////////////////////////////////
+
     m_taskHandler->CopyAppBoxRepositoriesList(appBoxRepositoriesList);
 
     LOG(LOG_LEVEL_DEBUG,"RequestAppBoxRepositoriesListFromServerTask::DoWork - Going to call BuildRepositoriesApplicationsList. [NumOfRepositories=%d] (repos)",appBoxRepositoriesList.GetNumOfRepositories());
@@ -639,13 +708,6 @@ void BXAppBoxManager::RequestAppBoxRepositoriesListFromServerTask::DoWork()
     LOG(LOG_LEVEL_DEBUG,"RequestAppBoxRepositoriesListFromServerTask::DoWork - Call to BuildRepositoriesApplicationsList for [NumOfRepositories=%d] returned [appBox3rdPartyRepositoriesApplicationsMapSize=%d] (repos)",appBoxRepositoriesList.GetNumOfRepositories(),(int)appBox3rdPartyRepositoriesApplicationsMap.size());
 
     m_taskHandler->CopyAppBox3rdPartyRepositoriesApplicationsList(appBox3rdPartyRepositoriesApplicationsMap);
-  }
-  else
-  {
-    LOG(LOG_LEVEL_WARNING,"RequestAppBoxRepositoriesListFromServerTask::DoWork - Call to LoadFromURL for [strUrl=%s] returned [%d] (repos)",strUrl.c_str(),succeeded);
-
-    // set loaded to true so Get() functions won't wait forever
-    m_taskHandler->SetAppBoxRepositoriesListIsLoaded(true);
   }
 
   LOG(LOG_LEVEL_DEBUG,"RequestAppBoxRepositoriesListFromServerTask::DoWork - Exit function (repos)");
@@ -690,35 +752,171 @@ void BXAppBoxManager::RequestAppBoxRepositoriesListFromServerTask::BuildReposito
       continue;
     }
 
-    std::string appsXml;
-    BOXEE::BXCurl curl;
-    try
+    BOXEE::BXXMLDocument document;
+    if (!document.LoadFromURL(strUrl.c_str()))
     {
-      appsXml = curl.HttpGetString(strUrl.c_str());
-    }
-    catch(...)
-    {
-      LOG(LOG_LEVEL_ERROR,"RequestAppBoxRepositoriesListFromServerTask::BuildRepositoriesApplicationsList - [%d/%d] - Exception when try to get [strUrl=%s] (repos)",i+1,appBoxRepositoriesList.GetNumOfRepositories(),strUrl.c_str());
-    }
-
-    if (appsXml.empty())
-    {
-      LOG(LOG_LEVEL_DEBUG,"RequestAppBoxRepositoriesListFromServerTask::BuildRepositoriesApplicationsList - [%d/%d] - Try to get [strUrl=%s] return an EMPTY answer. Continue to next repository (repos)",i+1,appBoxRepositoriesList.GetNumOfRepositories(),strUrl.c_str());
+      LOG(LOG_LEVEL_ERROR,"RequestAppBoxRepositoriesListFromServerTask::BuildRepositoriesApplicationsList - [%d/%d] - FAILED to parse index file for [repoId=%s][repoName=%s]. [ErrorDesc=%s] at [row=%d][col=%d]. Continue to next repository (repos)",i+1,appBoxRepositoriesList.GetNumOfRepositories(),repoId.c_str(),repoName.c_str(),document.GetDocument().ErrorDesc(),document.GetDocument().ErrorRow(),document.GetDocument().ErrorCol());
       continue;
     }
 
-    // Parse it
-    TiXmlDocument xmlDoc;
-    if (!xmlDoc.Parse(appsXml.c_str()))
-    {
-      LOG(LOG_LEVEL_ERROR,"RequestAppBoxRepositoriesListFromServerTask::BuildRepositoriesApplicationsList - [%d/%d] - FAILED to parse index file for [repoId=%s][repoName=%s]. [ErrorDesc=%s] at [row=%d][col=%d]. Continue to next repository (repos)",i+1,appBoxRepositoriesList.GetNumOfRepositories(),repoId.c_str(),repoName.c_str(),xmlDoc.ErrorDesc(),xmlDoc.ErrorRow(),xmlDoc.ErrorCol());
-      continue;
-    }
-
-    appBox3rdPartyRepositoriesApplicationsMap[repoId] = xmlDoc;
+    appBox3rdPartyRepositoriesApplicationsMap[repoId] = document.GetDocument();
 
     LOG(LOG_LEVEL_DEBUG,"RequestAppBoxRepositoriesListFromServerTask::BuildRepositoriesApplicationsList - [%d/%d] - After add RepositoryApplicationXml for [strUrl=%s][repoId=%s][repoName=%s]. [3rdPartyRepositoriesApplicationsMapSize=%d] (repos)",i+1,appBoxRepositoriesList.GetNumOfRepositories(),strUrl.c_str(),repoId.c_str(),repoName.c_str(),(int)appBox3rdPartyRepositoriesApplicationsMap.size());
   }
+}
+
+//////////////////////
+// Apps Categories  //
+//////////////////////
+
+BXAppBoxManager::RequestAppsCategoriesListFromServerTask::RequestAppsCategoriesListFromServerTask(BXAppBoxManager* taskHandler, unsigned long executionDelayInMS, bool repeat):BoxeeScheduleTask("RequestRepositoriesList",executionDelayInMS,repeat)
+{
+  m_taskHandler = taskHandler;
+}
+
+BXAppBoxManager::RequestAppsCategoriesListFromServerTask::~RequestAppsCategoriesListFromServerTask()
+{
+
+}
+
+void BXAppBoxManager::RequestAppsCategoriesListFromServerTask::DoWork()
+{
+  LOG(LOG_LEVEL_DEBUG,"RequestAppsCategoriesListFromServerTask::DoWork - Enter function (categories)");
+
+  if (!g_application.ShouldConnectToInternet())
+  {
+    LOG(LOG_LEVEL_DEBUG,"RequestAppsCategoriesListFromServerTask::DoWork - [ShouldConnectToInternet=FALSE] -> Exit function (categories)");
+    return;
+  }
+
+  std::string strLink = BXConfiguration::GetInstance().GetStringParam("Boxee.ApiGetAppCategories","http://app.boxee.tv/applications/categories");
+
+  bool bHasParameters = false;
+  if (!g_langInfo.GetLanguageCode().IsEmpty())
+  {
+    strLink += "?lang=";
+    strLink += g_langInfo.GetLanguageCode().c_str();
+    bHasParameters = true;
+  }
+
+  if (CUtil::IsAdultAllowed())
+  {
+    strLink += bHasParameters?"&":"?";
+    strLink += "adult=yes";
+  }
+
+  BXXMLDocument xmlDoc;
+
+  xmlDoc.SetCredentials(BOXEE::Boxee::GetInstance().GetCredentials());
+  xmlDoc.SetVerbose(BOXEE::Boxee::GetInstance().IsVerbose());
+
+  if (!xmlDoc.LoadFromURL(strLink))
+  {
+    LOG(LOG_LEVEL_ERROR,"RequestAppsCategoriesListFromServerTask::DoWork - FAILED to get application categories from [strLink=%s] (categories)",strLink.c_str());
+    return;
+  }
+
+  TiXmlElement *pRootElement = xmlDoc.GetDocument().RootElement();
+  if (!pRootElement || strcmpi(pRootElement->Value(), "categories") != 0)
+  {
+    LOG(LOG_LEVEL_ERROR,"RequestAppsCategoriesListFromServerTask::DoWork - could not parse application categories. [pRootElement=%p] (categories)",pRootElement);
+    return;
+  }
+
+  std::vector<AppCategoryItem> appCategoryVec;
+
+  const TiXmlNode* pTag = 0;
+  while ((pTag = pRootElement->IterateChildren(pTag)))
+  {
+    if (pTag && pTag->ValueStr() == "category")
+    {
+      const TiXmlNode* pValue = pTag->FirstChild();
+
+      if (pValue)
+      {
+        AppCategoryItem categoryItem;
+        const char* attribute = ((TiXmlElement*)pTag)->Attribute("id");
+
+        if (attribute)
+          categoryItem.m_Id = std::string(attribute);
+
+        categoryItem.m_Text = pValue->ValueStr();
+
+        appCategoryVec.push_back(categoryItem);
+      }
+    }
+  }
+
+  m_taskHandler->CopyAppsCategoriesList(appCategoryVec);
+
+  return;
+}
+
+bool BXAppBoxManager::UpdateAppsCategoriesList(unsigned long executionDelayInMS, bool repeat)
+{
+  RequestAppsCategoriesListFromServerTask* reqAppCategoriesListTask = new RequestAppsCategoriesListFromServerTask(this,executionDelayInMS,repeat);
+
+  if(reqAppCategoriesListTask)
+  {
+    Boxee::GetInstance().GetBoxeeScheduleTaskManager().AddScheduleTask(reqAppCategoriesListTask);
+    return true;
+  }
+  else
+  {
+    LOG(LOG_LEVEL_ERROR,"BXApplicationsManager::UpdateAppsCategoriesList - FAILED to allocate RequestAppsCategoriesListFromServerTask (appscategories)");
+    return false;
+  }
+}
+
+bool BXAppBoxManager::GetAppsCategories(std::vector<AppCategoryItem>& categoryList)
+{
+  LockAppsCategoriesList();
+
+  categoryList = m_appCategoryList;
+
+  UnLockAppsCategoriesList();
+
+  return true;
+}
+
+std::string BXAppBoxManager::GetAppsCategoryLabel(const std::string& id)
+{
+  std::string output;
+  LockAppsCategoriesList();
+
+  for (size_t i = 0; i<m_appCategoryList.size(); i++)
+  {
+    if (m_appCategoryList[i].m_Id == id)
+    {
+      output = m_appCategoryList[i].m_Text;
+    }
+  }
+
+  UnLockAppsCategoriesList();
+
+  return output;
+}
+
+void BXAppBoxManager::LockAppsCategoriesList()
+{
+  SDL_LockMutex(m_appsCategoriesListGuard);
+}
+
+void BXAppBoxManager::UnLockAppsCategoriesList()
+{
+  SDL_UnlockMutex(m_appsCategoriesListGuard);
+}
+
+void BXAppBoxManager::CopyAppsCategoriesList(const std::vector<AppCategoryItem>& appCategoriesList)
+{
+  LockAppsCategoriesList();
+
+  m_appCategoryList = appCategoriesList;
+
+  UnLockAppsCategoriesList();
+
+  CGUIMessage refreshMenuMsg(GUI_MSG_UPDATE, WINDOW_INVALID, GUI_MSG_APPS_CATEGORIES_UPDATE);
+  g_windowManager.SendThreadMessage(refreshMenuMsg,WINDOW_BOXEE_BROWSE_APPS);
 }
 
 }

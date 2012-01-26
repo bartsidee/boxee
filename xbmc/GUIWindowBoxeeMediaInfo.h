@@ -8,12 +8,12 @@
 #ifndef GUIWINDOWBOXEEMEDIAINFO_H_
 #define GUIWINDOWBOXEEMEDIAINFO_H_
 
-#include "GUIWindow.h"
+#include "GUIDialog.h"
 #include "FileItem.h"
 
 class CFileItem;
 
-class CGUIWindowBoxeeMediaInfo: public CGUIWindow
+class CGUIWindowBoxeeMediaInfo: public CGUIDialog
 {
 public:
   CGUIWindowBoxeeMediaInfo();
@@ -26,8 +26,6 @@ public:
   static void Show(CFileItem* pItem);
 
 protected:
-  void HandlePlayForVideoItem();
-  void HandlePlayForPictureItem();
 
   CFileItem m_item;
 };

@@ -38,6 +38,8 @@ public:
   virtual bool CanSuspend();
   virtual bool CanHibernate();
   virtual bool CanReboot();
+
+  virtual bool IsSuspended()  { return false; }
 };
 #endif
 #endif

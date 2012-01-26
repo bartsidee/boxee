@@ -44,7 +44,7 @@
 
 #define D3DPIXELSHADERDEF DWORD
 
-struct D3DTexture 
+struct D3DTexture
 {
   DWORD Common;
   DWORD Data;
@@ -66,7 +66,7 @@ struct D3DPalette
 
 typedef D3DPalette* LPDIRECT3DPALETTE8;
 
-#if defined(HAS_GL) || defined(HAS_GLES)
+#if defined(HAS_GL2) || defined(HAS_GLES)
 
 namespace XBMC
 {

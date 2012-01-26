@@ -1,11 +1,11 @@
 /*
  *      Copyright (C) 2005-2008 Team XBMC
  *      http://www.xbmc.org
- * The following functions are based on ffdshow-tryout and are also (C) ffdshow-tryout
- *  CDVDAudioCodecPassthrough::PaddTrueHDData
- *  CDVDAudioCodecPassthrough::PaddDTSHDData
- *  CDVDAudioCodecPassthrough::ParseTrueHDFrame
- *  CDVDAudioCodecPassthrough::ParseDTSHDFrame
+ *  The following functions are based on ffdshow-tryout and are also (C) ffdshow-tryout
+ *   CDVDAudioCodecPassthrough::PaddTrueHDData
+ *   CDVDAudioCodecPassthrough::PaddDTSHDData
+ *   CDVDAudioCodecPassthrough::ParseTrueHDFrame
+ *   CDVDAudioCodecPassthrough::ParseDTSHDFrame
  *
  *  This Program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,12 +23,18 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
+#ifndef WIN32
+#include <config.h>
+#endif
+#include "system.h"
+#if defined HAS_DVD_LIBA52_CODEC && defined HAS_DVD_LIBDTS_CODEC
  
 #include "DVDAudioCodecPassthrough.h"
 #include "DVDCodecs/DVDCodecs.h"
 #include "DVDStreamInfo.h"
 #include "DVDPlayerAudio.h"
 #include "GUISettings.h"
+#include "AdvancedSettings.h"
 #include "Settings.h"
 #include "utils/log.h"
 
@@ -84,6 +90,10 @@ CDVDAudioCodecPassthrough::CDVDAudioCodecPassthrough(void)
   m_bIsDTSHD = false;
   m_bFirstDTSFrame = true;
   m_DTSPrevFrameLen = 0;
+
+  m_bHardwareBitStream = g_advancedSettings.m_bForceAudioHardwarePassthrough;
+
+  m_bHardwareDecode = false;
 }
 
 CDVDAudioCodecPassthrough::~CDVDAudioCodecPassthrough(void)
@@ -199,6 +209,18 @@ int CDVDAudioCodecPassthrough::PaddDTSHDData( BYTE* pData, int iDataSize, bool b
       return 0;
     }
   }
+  else if( m_bHardwareBitStream )
+  {
+    // We only hit this after the first frame - we detect DTS-HD but have a buffered DTS frame.
+    // be nice to the audio sink and package things up per hardware bitstream rules
+    memcpy( pOut, m_DTSPrevFrame, m_DTSPrevFrameLen );
+    memcpy( pOut+m_DTSPrevFrameLen, pData, iDataSize );
+
+    idx = m_DTSPrevFrameLen + iDataSize;
+    m_DTSPrevFrameLen = 0;
+
+    return idx;
+  }
   else
   {
     // Otherwise, prep the syncword and insert the frame size..
@@ -218,7 +240,7 @@ int CDVDAudioCodecPassthrough::PaddDTSHDData( BYTE* pData, int iDataSize, bool b
     idx = 8;
 
     // stuff in the dtsma preamble
-    memcpy( (char*)pOut+idx,(char*)dtshdPreamble, sizeof(dtshdPreamble) );
+    memcpy((char*)pOut+idx,(char*)dtshdPreamble, sizeof(dtshdPreamble));
     idx += sizeof(dtshdPreamble);
 
     // insert the frame length
@@ -397,30 +419,70 @@ int CDVDAudioCodecPassthrough::PaddTrueHDData( BYTE* pData, int iDataSize, BYTE*
   return idx; // bytes copied
 }
 
-bool CDVDAudioCodecPassthrough::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options)
+bool CDVDAudioCodecPassthrough::IsPassthroughAudioCodec( int Codec )
 {
-  bool bSupportsAC3Out = false,  bSupportsDTSOut = false;
-  bool bSupportsTrueHDOut = false, bSupportsDTSHDOut = false;
+  bool bSupportsAC3Out = false;
   bool bSupportsEAC3Out = false;
+  bool bSupportsDTSOut = false;
+  bool bSupportsDTSHDOut = false;
+  bool bSupportsTrueHDOut = false;
 
-  // TODO - move this stuff somewhere else
-  if (g_guiSettings.GetInt("audiooutput.mode") == AUDIO_DIGITAL)
+  if( g_guiSettings.GetInt("audiooutput.mode") == AUDIO_DIGITAL_HDMI ||
+      g_guiSettings.GetInt("audiooutput.mode") == AUDIO_DIGITAL_SPDIF)
   {
     bSupportsAC3Out = g_guiSettings.GetBool("audiooutput.ac3passthrough");
     bSupportsDTSOut = g_guiSettings.GetBool("audiooutput.dtspassthrough");
+  }
+  if( g_guiSettings.GetInt("audiooutput.mode") == AUDIO_DIGITAL_HDMI )
+  {
     bSupportsEAC3Out = g_guiSettings.GetBool("audiooutput.eac3passthrough");
     bSupportsTrueHDOut = g_guiSettings.GetBool("audiooutput.truehdpassthrough");
-    m_bBitstreamDTSHD = bSupportsDTSHDOut = g_guiSettings.GetBool("audiooutput.dtshdpassthrough");
-  }  
+    bSupportsDTSHDOut = g_guiSettings.GetBool("audiooutput.dtshdpassthrough");
+  }
 
-  //Samplerate cannot be checked here as we don't know it at this point in time. 
-  //We should probably have a way to try to decode data so that we know what samplerate it is.
-  if ((hints.codec == CODEC_ID_AC3 && bSupportsAC3Out)
-   || (hints.codec == CODEC_ID_EAC3 && bSupportsEAC3Out)
-   || (hints.codec == CODEC_ID_DTS && bSupportsDTSOut)
-   || (hints.codec == CODEC_ID_TRUEHD && bSupportsTrueHDOut))
+  // NOTE - DTS-HD is not a codec setting and is always detected after the first two frames
+  if ((Codec == CODEC_ID_AC3 && bSupportsAC3Out)
+    || (Codec == CODEC_ID_EAC3 && bSupportsEAC3Out)
+    || (Codec == CODEC_ID_DTS && bSupportsDTSOut)
+    || (Codec == CODEC_ID_TRUEHD && bSupportsTrueHDOut))
   {
+    return true;
+  }
 
+  return false;
+}
+
+bool CDVDAudioCodecPassthrough::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options)
+{
+  bool bSupportsPassthrough = IsPassthroughAudioCodec( hints.codec );
+  bool bSupportedSampleRate = (hints.samplerate == 0 || hints.samplerate == 48000);
+
+  // See if we will support bitstreaming DTS-HD
+  if( hints.codec == CODEC_ID_DTS )
+  {
+    m_bBitstreamDTSHD = g_guiSettings.GetBool("audiooutput.dtshdpassthrough") &&
+                        g_guiSettings.GetInt("audiooutput.mode") == AUDIO_DIGITAL_HDMI;
+  }
+
+  // Caller has requested bitstream only; if we don't support bitstream for this format
+  // exit now, otherwise we'll end up hardware decoding
+  if( hints.bitstream && !bSupportsPassthrough )
+  {
+    return false;
+  }
+  
+
+  if(m_bHardwareBitStream)
+  {
+    m_iChannels = hints.channels;
+    m_Codec = hints.codec;
+    m_iSourceSampleRate = hints.samplerate;
+    return true;
+  }
+
+
+  if( bSupportsPassthrough )
+  {
     // TODO - this is only valid for video files, and should be moved somewhere else
     if( hints.channels == 2 && g_stSettings.m_currentVideoSettings.m_OutputToAllSpeakers )
     {
@@ -428,8 +490,8 @@ bool CDVDAudioCodecPassthrough::Open(CDVDStreamInfo &hints, CDVDCodecOptions &op
       return false;
     }
 
-    // TODO - some soundcards do support other sample rates, but they are quite uncommon
-    if( hints.samplerate > 0 && hints.samplerate != 48000 )
+    // Not clear if this is really valid - we should check this against the EDID for HDMI TODO
+    if( !bSupportedSampleRate )
     {
       CLog::Log(LOGINFO, "CDVDAudioCodecPassthrough::Open - disabled passthrough due to sample rate not being 48000");
       return false;
@@ -437,7 +499,7 @@ bool CDVDAudioCodecPassthrough::Open(CDVDStreamInfo &hints, CDVDCodecOptions &op
 
     // trust the hints for now
     m_iChannels = hints.channels;
-    m_iSampleRate = hints.samplerate;
+    m_iSourceSampleRate = hints.samplerate;
 
     m_Codec = hints.codec;
     m_iByteCounter = 0;
@@ -630,9 +692,6 @@ int CDVDAudioCodecPassthrough::ParseFrame(BYTE* data, int size, BYTE** frame, in
   case CODEC_ID_AC3:
     *ft = AC3;
     break;
-  case CODEC_ID_EAC3:
-    *ft = EAC3;
-    break;
   case CODEC_ID_TRUEHD:
     *ft = TrueHD;
     break;
@@ -686,6 +745,11 @@ int CDVDAudioCodecPassthrough::ParseFrame(BYTE* data, int size, BYTE** frame, in
       }
       else
       {
+        if( size > (int) sizeof(m_InputBuffer) )
+        {
+          CLog::Log(LOGWARNING, "Passthrough codec breaking an audio frame of %d bytes\n", size);
+          size = sizeof(m_InputBuffer);
+        }
         m_InputSize = size;
         memcpy(m_InputBuffer, data, m_InputSize);
         return m_InputSize;
@@ -723,7 +787,7 @@ int CDVDAudioCodecPassthrough::ParseFrame(BYTE* data, int size, BYTE** frame, in
       // If that failed or if it's DTS-HD then look for the DTS-HD syncword
       if( !m_iFrameSize )
       {
-        m_iFrameSize = ParseDTSHDFrame( data, &m_iSourceSampleRate, &m_iSourceBitrate, &m_iSamplesPerFrame );
+        m_iFrameSize = ParseDTSHDFrame( m_InputBuffer, &m_iSourceSampleRate, &m_iSourceBitrate, &m_iSamplesPerFrame );
         if( m_iFrameSize )
         {
           flags = m_iSourceFlags;
@@ -757,17 +821,29 @@ int CDVDAudioCodecPassthrough::ParseFrame(BYTE* data, int size, BYTE** frame, in
   len = m_iFrameSize-m_InputSize;
   if(len > size)
     len = size;
-
-  memcpy(m_InputBuffer+m_InputSize, data, len);
-  m_InputSize += len;
-  data        += len;
-  size        -= len;
-
-  if(m_InputSize >= m_iFrameSize)
+  if( len + m_InputSize > (int) sizeof(m_InputBuffer) )
   {
-    *frame     = m_InputBuffer;
-    *framesize = m_iFrameSize;
+    // We don't have room to buffer this frame, so drop, mark the packet consumed, and move on
+    CLog::Log(LOGWARNING, "Passsthrough codec dropping a frame of size %d\n", len + m_InputSize);
+    len += m_InputSize;
     m_InputSize = 0;
+    *framesize = 0;
+    *frame = NULL;
+    return len;
+  }
+  else
+  {
+    memcpy(m_InputBuffer+m_InputSize, data, len);
+    m_InputSize += len;
+    data        += len;
+    size        -= len;
+
+    if(m_InputSize >= m_iFrameSize)
+    {
+      *frame     = m_InputBuffer;
+      *framesize = m_iFrameSize;
+      m_InputSize = 0;
+    }
   }
 
   return data - orig;
@@ -779,8 +855,16 @@ int CDVDAudioCodecPassthrough::Decode(BYTE* pData, int iSize)
   int len, framesize;
   BYTE* frame;
 
-  m_OutputSize = 0;
+  if(m_bHardwareBitStream)
+  {
+    memcpy(m_OutputBuffer, pData, iSize);
+    m_OutputSize = iSize;
+    len = iSize;
 
+    return len;
+  }
+
+  m_OutputSize = 0;
   len = ParseFrame(pData, iSize, &frame, &framesize, &ft);
   if(!frame)
     return len;
@@ -824,12 +908,20 @@ int CDVDAudioCodecPassthrough::GetChannels()
   // here's the dilemma. on some passthrough formats we need to lie and indicate 2 channels
   // for truehd though we have to lie and indicate 8
   // this could use some work
+
   return CODEC_ID_TRUEHD == m_Codec ? m_iChannels : OUT_CHANNELS;
+}
+
+enum PCMChannels* CDVDAudioCodecPassthrough::GetChannelMap()
+{
+  // We always present stereo ch mapping
+  static enum PCMChannels map[2] = {PCM_FRONT_LEFT, PCM_FRONT_RIGHT };
+  return map;
 }
 
 int CDVDAudioCodecPassthrough::GetSampleRate()
 {
-  return m_iSampleRate;
+  return m_iSourceSampleRate;
 }
 
 int CDVDAudioCodecPassthrough::GetBitsPerSample()
@@ -840,9 +932,14 @@ int CDVDAudioCodecPassthrough::GetBitsPerSample()
 // See DVDPlayerAudio.h
 unsigned char CDVDAudioCodecPassthrough::GetFlags()
 {
-  unsigned char flags = FFLAG_PASSTHROUGH;
+  unsigned char flags = 0;
+  if( m_bHardwareDecode ) flags |= FFLAG_HWDECODE;
+  else                    flags |= FFLAG_PASSTHROUGH;
+
   if( CODEC_ID_TRUEHD == m_Codec || (m_bIsDTSHD && m_bBitstreamDTSHD) )
     flags |= FFLAG_HDFORMAT;
 
   return flags; 
 }
+
+#endif

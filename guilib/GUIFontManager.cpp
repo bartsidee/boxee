@@ -32,6 +32,7 @@
 #include "../xbmc/FileSystem/SpecialProtocol.h"
 #include "utils/log.h"
 #include "WindowingFactory.h"
+#include "Application.h"
 
 using namespace std;
 
@@ -42,7 +43,7 @@ GUIFontManager::GUIFontManager(void)
   m_skinResolution=RES_INVALID;
   m_fontsetUnicode=false;
   m_canReload = true;
-} 
+}
 
 GUIFontManager::~GUIFontManager(void)
 {
@@ -52,7 +53,7 @@ GUIFontManager::~GUIFontManager(void)
 CGUIFont* GUIFontManager::LoadTTF(const CStdString& strFontName, const CStdString& strFilename, color_t textColor, color_t shadowColor, const int iSize, const int iStyle, float lineSpacing, float aspect, RESOLUTION sourceRes)
 {
   float originalAspect = aspect;
-
+  
   //check if font already exists
   CGUIFont* pFont = GetFont(strFontName, false);
   if (pFont)
@@ -65,7 +66,6 @@ CGUIFont* GUIFontManager::LoadTTF(const CStdString& strFontName, const CStdStrin
   // set scaling resolution so that we can scale our font sizes correctly
   // as fonts aren't scaled at render time (due to aliasing) we must scale
   // the size of the fonts before they are drawn to bitmaps
-  g_graphicsContext.SetScalingResolution(sourceRes, 0, 0, true);
 
   // adjust aspect ratio
   if (sourceRes == RES_PAL_16x9 || sourceRes == RES_PAL60_16x9 || sourceRes == RES_NTSC_16x9 || sourceRes == RES_HDTV_480p_16x9)
@@ -76,7 +76,7 @@ CGUIFont* GUIFontManager::LoadTTF(const CStdString& strFontName, const CStdStrin
   
   // First try to load the font from the skin
   CStdString strPath;
-  if (!CURL::IsFullPath(strFilename))
+  if (!CURI::IsFullPath(strFilename))
   {
     strPath = CUtil::AddFileToFolder(g_graphicsContext.GetMediaDir(), "fonts");
     strPath = CUtil::AddFileToFolder(strPath, strFilename);
@@ -143,14 +143,14 @@ CGUIFont* GUIFontManager::LoadTTF(const CStdString& strFontName, const CStdStrin
 
       return NULL;
     }
-
+    
     m_vecFontFiles.push_back(pFontFile);
   }
 
   // font file is loaded, create our CGUIFont
   CGUIFont *pNewFont = new CGUIFont(strFontName, iStyle, textColor, shadowColor, lineSpacing, pFontFile);
   m_vecFonts.push_back(pNewFont);
-
+  
   // Store the original TTF font info in case we need to reload it in a different resolution
   OrigFontInfo fontInfo;
   fontInfo.size = iSize;
@@ -158,8 +158,8 @@ CGUIFont* GUIFontManager::LoadTTF(const CStdString& strFontName, const CStdStrin
   fontInfo.fontFilePath = strPath;
   fontInfo.fileName = strFilename;
   fontInfo.sourceRes = sourceRes;
-  m_vecFontInfo.push_back(fontInfo);
-
+  m_vecFontInfo.push_back(fontInfo);      
+  
   return pNewFont;
 }
 
@@ -182,7 +182,7 @@ bool GUIFontManager::OnMessage(CGUIMessage &message)
     m_canReload = true;
     return true;
   }
-
+  
   if (message.GetParam1() == GUI_MSG_WINDOW_RESIZE)
   { // we need to reload our fonts
     if (m_canReload)
@@ -200,6 +200,11 @@ void GUIFontManager::ReloadTTFFonts(void)
   if (!m_vecFonts.size())
     return;   // we haven't even loaded fonts in yet
 
+  if(g_application.m_pPlayer && g_application.m_pPlayer->IsPlaying())
+    return;
+
+  RESOLUTION sourceRes;
+
   for (unsigned int i = 0; i < m_vecFonts.size(); i++)
   {
     CGUIFont* font = m_vecFonts[i];
@@ -209,12 +214,11 @@ void GUIFontManager::ReloadTTFFonts(void)
     int iSize = fontInfo.size;
     CStdString& strPath = fontInfo.fontFilePath;
     CStdString& strFilename = fontInfo.fileName;
-
-    g_graphicsContext.SetScalingResolution(fontInfo.sourceRes, 0, 0, true);
+    sourceRes = fontInfo.sourceRes;
 
     if (fontInfo.sourceRes == RES_PAL_16x9 || fontInfo.sourceRes == RES_PAL60_16x9 || fontInfo.sourceRes == RES_NTSC_16x9 || fontInfo.sourceRes == RES_HDTV_480p_16x9)
       aspect *= 0.75f;
-
+  
     aspect *= g_graphicsContext.GetGUIScaleY() / g_graphicsContext.GetGUIScaleX();
     float newSize = (float) iSize / g_graphicsContext.GetGUIScaleY();
 
@@ -226,15 +230,15 @@ void GUIFontManager::ReloadTTFFonts(void)
       pFontFile = new CGUIFontTTF(TTFfontName);
       if (!pFontFile || !pFontFile->Load(strPath, newSize, aspect))
       {
-        delete pFontFile;
+        delete pFontFile;   
         // font could not be loaded
         CLog::Log(LOGERROR, "Couldn't re-load font file:%s", strPath.c_str());
         return;
       }
-
+  
       m_vecFontFiles.push_back(pFontFile);
     }
-
+          
     font->SetFont(pFontFile);
   }
 }

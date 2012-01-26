@@ -21,6 +21,8 @@
  *
  */
 
+
+
 #include "cores/IPlayer.h"
 #include "utils/Thread.h"
 
@@ -41,6 +43,7 @@
 #include "dlgcache.h"
 #include "FileItem.h"
 
+#include "PacketCache.h"
 
 class CDVDInputStream;
 
@@ -95,6 +98,7 @@ typedef struct
   std::string  filename;
   std::string  language;
   std::string  name;
+  CDemuxStream::EFlags flags;
   int          source;
   int          id;  
 } SelectionStream;
@@ -116,7 +120,8 @@ public:
   int              IndexOf (StreamType type, CDVDPlayer& p);
   int              Count   (StreamType type) { return IndexOf(type, STREAM_SOURCE_NONE, -1) + 1; }
   SelectionStream& Get     (StreamType type, int index);
-  
+  bool             Get     (StreamType type, CDemuxStream::EFlags flag, SelectionStream& out);
+
   void             Clear   (StreamType type, StreamSource source);
   int              Source  (StreamSource source, std::string filename);
 
@@ -129,6 +134,10 @@ public:
 #define DVDPLAYER_VIDEO    2
 #define DVDPLAYER_SUBTITLE 3
 #define DVDPLAYER_TELETEXT 4
+
+
+
+
 
 class CDVDPlayer : public IPlayer, public CThread, public IDVDPlayer
 {
@@ -144,14 +153,18 @@ public:
   virtual bool IsPaused() const;
   virtual bool HasVideo() const;
   virtual bool HasAudio() const;
+  virtual bool HasLiveTV() const;
   virtual bool IsPassthrough() const;
   virtual bool CanSeek();
+  virtual bool CanSeekToTime();
+  virtual bool CanPause() const;
   virtual void Seek(bool bPlus, bool bLargeStep);
   virtual bool SeekScene(bool bPlus = true);
   virtual void SeekPercentage(float iPercent);
   virtual float GetPercentage();
   virtual float GetPercentageWithCache();
-  virtual void SetVolume(long nVolume)                          { m_dvdPlayerAudio.SetVolume(nVolume); }
+  virtual int GetPositionWithCache();
+  virtual void SetVolume(long nVolume);
   virtual void SetDynamicRangeCompression(long drc)             { m_dvdPlayerAudio.SetDynamicRangeCompression(drc); }
   virtual void GetAudioInfo(CStdString& strAudioInfo);
   virtual void GetVideoInfo(CStdString& strVideoInfo);
@@ -170,15 +183,19 @@ public:
   virtual int GetSubtitleCount();
   virtual int GetSubtitle();
   virtual void GetSubtitleName(int iStream, CStdString &strStreamName);
+  virtual void GetSubtitleLang(int iStream, CStdString &strStreamLang);
   virtual void SetSubtitle(int iStream);
   virtual bool GetSubtitleVisible();
   virtual void SetSubtitleVisible(bool bVisible);
+  virtual bool GetSubtitleForced();
+  virtual void SetSubtitleForced(bool bVisible);
   virtual bool GetSubtitleExtension(CStdString &strSubtitleExtension) { return false; }
   virtual bool AddSubtitle(const CStdString& strSubPath);
 
   virtual int GetAudioStreamCount();
   virtual int GetAudioStream();
   virtual void GetAudioStreamName(int iStream, CStdString &strStreamName);
+  virtual void GetAudioStreamLang(int iStream, CStdString &strStreamLang);
   virtual void SetAudioStream(int iStream);
 
   virtual TextCacheStruct_t* GetTeletextCache();
@@ -203,6 +220,7 @@ public:
   virtual CStdString GetAudioCodecName();
   virtual CStdString GetVideoCodecName();
   virtual int GetPictureWidth();
+  virtual int GetPictureHeight();
   virtual bool GetStreamDetails(CStreamDetails &details);
 
   virtual bool GetCurrentSubtitle(CStdString& strSubtitle);
@@ -215,11 +233,22 @@ public:
   virtual bool IsCaching() const { return m_caching; } 
   virtual int GetCacheLevel() const ; 
 
-  virtual int OnDVDNavResult(void* pData, int iMessage);
+  virtual int OnDVDNavResult(void* pData, int iMessage);    
+  virtual bool IsAborting() { return m_bAbortRequest; };
+  virtual bool IsDirectRendering(){ return m_dvdPlayerVideo.IsDirectRendering(); }
 
   virtual bool IsPlayingStreamPlaylist();
+  virtual int  GetStreamPlaylistTimecode();
+
   virtual bool RestartSubtitleStream();
 
+  virtual iplayer_error GetError();
+  virtual CStdString GetErrorString();
+
+  virtual bool OnAppMessage(const CStdString& strHandler, const CStdString& strParam);
+
+  virtual void GetVideoCacheLevel(unsigned int& cur, unsigned int& max);
+  virtual void GetAudioCacheLevel(unsigned int& cur, unsigned int& max);
 protected:  
   friend class CSelectionStreams;
   void LockStreams()                                            { EnterCriticalSection(&m_critStreamSection); }
@@ -229,15 +258,15 @@ protected:
   virtual void OnExit();
   virtual void Process();
 
-  bool OpenAudioStream(int iStream, int source);
-  bool OpenVideoStream(int iStream, int source);
+  bool OpenAudioStream(int iStream, int source, bool force_hardware = false);
+  int OpenVideoStream(int iStream, int source);
   bool OpenTeletextStream(int iStream, int source);
   bool OpenSubtitleStream(int iStream, int source);
   bool CloseAudioStream(bool bWaitForBuffers);
   bool CloseVideoStream(bool bWaitForBuffers);
   bool CloseSubtitleStream(bool bKeepOverlays);
   bool CloseTeletextStream(bool bWaitForBuffers);
-  bool ChooseAndOpenSubtitleStream();
+  bool ChooseAndOpenSubtitleStream(int iStream = -1, int source = -1);
 
   void ProcessPacket(CDemuxStream* pStream, DemuxPacket* pPacket);
   void ProcessAudioData(CDemuxStream* pStream, DemuxPacket* pPacket);
@@ -251,7 +280,7 @@ protected:
    */
   void SetPlaySpeed(int iSpeed);
   int GetPlaySpeed()                                                { return m_playSpeed; }
-  void SetCaching(bool enabled);
+  virtual void SetCaching(bool enabled);
 
   __int64 GetTotalTimeInMsec();
   void FlushBuffers(bool queued);
@@ -275,7 +304,7 @@ protected:
 
   bool OpenInputStream();
   bool OpenDemuxStream();
-  void OpenDefaultStreams();
+  bool OpenDefaultStreams();
 
   void UpdateApplication(double timeout);
   void UpdatePlayState(double timeout);
@@ -284,12 +313,17 @@ protected:
   bool m_bAbortRequest;
   bool m_has_err;  
   CStdString m_err;
+  iplayer_error m_lastError;
 
   std::string m_filename; // holds the actual filename
   std::string m_content;  // hold a hint to what content file contains (mime type)
   bool        m_caching;  // player is filling up the demux queue
   bool        m_seeking;  // player is currently trying to fullfill a seek request
+  bool        m_seekrecovery;  // player is caching as a result of a seek op
+  int         m_cachesuppress; // number of times we have suppressed a full cache;
   CFileItem   m_item;
+  bool        m_internetStream;
+  bool        m_pausedCaching; //for HTML5 media playback: indicates player is paused since it was caching
 
   CCurrentStream m_CurrentAudio;
   CCurrentStream m_CurrentVideo;
@@ -356,12 +390,19 @@ protected:
       recording     = false;
       demux_video   = "";
       demux_audio   = "";
+      
+      seek_pending_time = 0;
+      seek_depth = 0;
     }
 
     double timestamp;         // last time of update
 
     double time;              // current playback time
     double time_total;        // total playback time
+
+    // seeking support
+    __int64 seek_pending_time; // time of the last queued seek
+    int seek_depth;            // number of queued seek ops
 
     std::string player_state;  // full player state
 
@@ -426,5 +467,6 @@ protected:
   } m_EdlAutoSkipMarkers;
 
   CPlayerOptions m_PlayerOptions;
+  bool m_waitForInitialPlay;
 };
 

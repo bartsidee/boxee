@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<language>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<language code="tr">
   <charsets>
     <gui unicodefont="true">CP1254</gui>
     <subtitle>CP1254</subtitle>
@@ -18,4 +18,8 @@
       <speedunit>kmh</speedunit>
     </region>
   </regions>
+  <sorttokens>
+    <token>The</token>
+    <token>A</token>
+  </sorttokens>
 </language>

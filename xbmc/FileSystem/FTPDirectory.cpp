@@ -20,6 +20,9 @@
  */
 
 #include "FTPDirectory.h"
+
+#ifdef HAS_FTP
+
 #include "FTPParse.h"
 #include "URL.h"
 #include "Util.h"
@@ -27,6 +30,10 @@
 #include "FileItem.h"
 #include "StringUtils.h"
 #include "utils/CharsetConverter.h"
+
+#ifdef _WIN32
+#include "../win32/c_defs.h"
+#endif
 
 using namespace XFILE;
 using namespace DIRECTORY;
@@ -38,7 +45,7 @@ bool CFTPDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
 {
   CFileCurl reader;
 
-  CURL url(strPath);
+  CURI url(strPath);
 
   CStdString path = url.GetFileName();
   if( !path.IsEmpty() && !path.Right(1).Equals("/") )
@@ -58,7 +65,8 @@ bool CFTPDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
 
     StringUtils::RemoveCRLF(strBuffer);
 
-    struct ftpparse lp = {};
+    struct ftpparse lp;
+    bzero(&lp, sizeof(lp));
     if (ftpparse(&lp, (char*)strBuffer.c_str(), strBuffer.size()) == 1)
     {
       if( lp.namelen == 0 )
@@ -87,7 +95,7 @@ bool CFTPDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
 
       /* qualify the url with host and all */
       url.SetFileName(pItem->m_strPath);
-      url.GetURL(pItem->m_strPath);
+      pItem->m_strPath = url.Get();
 
       pItem->m_dwSize = lp.size;
       pItem->m_dateTime=lp.mtime;
@@ -98,3 +106,6 @@ bool CFTPDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
 
   return true;
 }
+
+#endif
+

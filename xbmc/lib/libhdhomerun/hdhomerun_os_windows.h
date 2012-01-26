@@ -1,7 +1,7 @@
 /*
  * hdhomerun_os_windows.h
  *
- * Copyright © 2006-2008 Silicondust Engineering Ltd. <www.silicondust.com>.
+ * Copyright © 2006-2010 Silicondust USA Inc. <www.silicondust.com>.
  *
  * This library is free software; you can redistribute it and/or 
  * modify it under the terms of the GNU Lesser General Public
@@ -34,6 +34,7 @@
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <wspiapi.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -42,24 +43,6 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/timeb.h>
-
-#ifdef __MINGW__
-extern 
-int WSAAPI getaddrinfo(
-  const char *nodename,
-  const char *servname,
-  const struct addrinfo *hints,
-  struct addrinfo **res
-);
-
-extern
-void WSAAPI freeaddrinfo(
-  struct addrinfo *ai
-);
-#else
-#include <wspiapi.h>
-#endif
-
 
 #if defined(DLL_IMPORT)
 #define LIBTYPE __declspec( dllexport )
@@ -78,106 +61,42 @@ typedef unsigned __int8 uint8_t;
 typedef unsigned __int16 uint16_t;
 typedef unsigned __int32 uint32_t;
 typedef unsigned __int64 uint64_t;
+typedef void (*sig_t)(int);
 typedef HANDLE pthread_t;
 typedef HANDLE pthread_mutex_t;
 
-#define socklen_t int
-#define close closesocket
-#define sock_getlasterror WSAGetLastError()
-#define sock_getlasterror_socktimeout (WSAGetLastError() == WSAETIMEDOUT)
-#ifndef va_copy
 #define va_copy(x, y) x = y
-#endif
 #define atoll _atoi64
 #define strdup _strdup
-#ifndef strcasecmp
 #define strcasecmp _stricmp
-#endif
 #define snprintf _snprintf
 #define fseeko _fseeki64
 #define ftello _ftelli64
 #define THREAD_FUNC_PREFIX DWORD WINAPI
-#define SIGPIPE SIGABRT
 
-static inline int msleep(unsigned int ms)
-{
-	Sleep(ms);
-	return 0;
-}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-static inline int sleep(unsigned int sec)
-{
-	Sleep(sec * 1000);
-	return 0;
-}
+extern LIBTYPE uint32_t random_get32(void);
+extern LIBTYPE uint64_t getcurrenttime(void);
+extern LIBTYPE void msleep_approx(uint64_t ms);
+extern LIBTYPE void msleep_minimum(uint64_t ms);
 
-static inline uint64_t getcurrenttime(void)
-{
-	struct timeb tb;
-	ftime(&tb);
-	return ((uint64_t)tb.time * 1000) + tb.millitm;
-}
-
-static inline int setsocktimeout(int s, int level, int optname, uint64_t timeout)
-{
-	int t = (int)timeout;
-	return setsockopt(s, level, optname, (char *)&t, sizeof(t));
-}
-
-static inline int pthread_create(pthread_t *tid, void *attr, LPTHREAD_START_ROUTINE start, void *arg)
-{
-	*tid = CreateThread(NULL, 0, start, arg, 0, NULL);
-	if (!*tid) {
-		return (int)GetLastError();
-	}
-	return 0;
-}
-
-static inline int pthread_join(pthread_t tid, void **value_ptr)
-{
-	while (1) {
-		DWORD ExitCode = 0;
-		if (!GetExitCodeThread(tid, &ExitCode)) {
-			return (int)GetLastError();
-		}
-		if (ExitCode != STILL_ACTIVE) {
-			return 0;
-		}
-	}
-}
-
-static inline void pthread_mutex_init(pthread_mutex_t *mutex, void *attr)
-{
-	*mutex = CreateMutex(NULL, FALSE, NULL);
-}
-
-static inline void pthread_mutex_lock(pthread_mutex_t *mutex)
-{
-	WaitForSingleObject(*mutex, INFINITE);
-}
-
-static inline void pthread_mutex_unlock(pthread_mutex_t *mutex)
-{
-	ReleaseMutex(*mutex);
-}
+extern LIBTYPE int pthread_create(pthread_t *tid, void *attr, LPTHREAD_START_ROUTINE start, void *arg);
+extern LIBTYPE int pthread_join(pthread_t tid, void **value_ptr);
+extern LIBTYPE void pthread_mutex_init(pthread_mutex_t *mutex, void *attr);
+extern LIBTYPE void pthread_mutex_lock(pthread_mutex_t *mutex);
+extern LIBTYPE void pthread_mutex_unlock(pthread_mutex_t *mutex);
 
 /*
  * The console output format should be set to UTF-8, however in XP and Vista this breaks batch file processing.
  * Attempting to restore on exit fails to restore if the program is terminated by the user.
  * Solution - set the output format each printf.
  */
-static inline void console_vprintf(const char *fmt, va_list ap)
-{
-	UINT cp = GetConsoleOutputCP();
-	SetConsoleOutputCP(CP_UTF8);
-	vprintf(fmt, ap);
-	SetConsoleOutputCP(cp);
-}
+extern LIBTYPE void console_vprintf(const char *fmt, va_list ap);
+extern LIBTYPE void console_printf(const char *fmt, ...);
 
-static inline void console_printf(const char *fmt, ...)
-{
-	va_list ap;
-	va_start(ap, fmt);
-	console_vprintf(fmt, ap);
-	va_end(ap);
+#ifdef __cplusplus
 }
+#endif

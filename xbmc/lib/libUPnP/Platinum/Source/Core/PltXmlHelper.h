@@ -2,7 +2,7 @@
 |
 |   Platinum - Xml Helper
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -29,7 +29,7 @@
 | 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 | http://www.gnu.org/licenses/gpl-2.0.html
 |
- ****************************************************************/
+****************************************************************/
 
 #ifndef _PLT_XML_HELPER_H_
 #define _PLT_XML_HELPER_H_
@@ -41,6 +41,10 @@
 /*----------------------------------------------------------------------
 |   PLT_XmlAttributeFinder
 +---------------------------------------------------------------------*/
+/**
+ The PLT_XmlAttributeFinder class is used to determine if an attribute 
+ exists given an xml element node, an attribute name and namespace.
+ */
 class PLT_XmlAttributeFinder
 {
 public:
@@ -83,6 +87,10 @@ private:
 /*----------------------------------------------------------------------
 |   PLT_XmlHelper
 +---------------------------------------------------------------------*/
+/**
+ The PLT_XmlHelper class is a set of utility functions for manipulating 
+ xml documents and DOM trees.
+ */
 class PLT_XmlHelper
 {
 public:
@@ -106,12 +114,12 @@ public:
         value = text?*text:"";
         return NPT_SUCCESS;
     }
-
+                                   
     static NPT_Result RemoveAttribute(NPT_XmlElementNode* node, 
                                       const char*         name,
                                       const char*         namespc = "") {
         if (!node) return NPT_FAILURE;
-                                   
+
         // special case "" means we look for the same namespace as the parent
         if (namespc && namespc[0] == '\0') namespc = node->GetNamespace()?node->GetNamespace()->GetChars():NPT_XML_NO_NAMESPACE;
 
@@ -138,7 +146,10 @@ public:
 
         NPT_List<NPT_XmlAttribute*>::Iterator attribute;
         attribute = node->GetAttributes().Find(PLT_XmlAttributeFinder(*node, name, namespc));
-        if (!attribute) return NPT_FAILURE;
+        if (!attribute) {
+            NPT_Debug("Failed to find attribute [%s]:%s", namespc, name);
+            return NPT_FAILURE;
+        }
 
         attr = (*attribute);
         return NPT_SUCCESS;
@@ -265,20 +276,24 @@ public:
         return NPT_FAILURE;
     }
 
-    static NPT_Result Serialize(NPT_XmlNode& node, NPT_String& xml, bool add_header = true) {
-        NPT_XmlWriter writer(0);
-        NPT_MemoryStreamReference stream(new NPT_MemoryStream());
+    static NPT_Result Serialize(NPT_XmlNode& node, NPT_String& xml, bool add_header = true, NPT_Int8 indentation = 0) {
+        NPT_XmlWriter writer(indentation);
+        NPT_StringOutputStreamReference stream(new NPT_StringOutputStream(&xml));
         NPT_CHECK(writer.Serialize(node, *stream, add_header));
-
-        NPT_LargeSize size;
-        stream->GetAvailable(size);
-        if (size != (NPT_Size)size) return NPT_ERROR_OUT_OF_RANGE;
-
-        xml.Reserve((NPT_Size)size);
-        stream->Read(xml.UseChars(), (NPT_Size)size);
-        xml.SetLength((NPT_Size)size);
         return NPT_SUCCESS;
     }
+
+	static NPT_String Serialize(NPT_XmlNode& node, bool add_header = true, NPT_Int8 indentation = 0) {
+		NPT_XmlWriter writer(indentation);
+		NPT_String xml;
+		NPT_StringOutputStreamReference stream(new NPT_StringOutputStream(&xml));
+		if (NPT_FAILED(writer.Serialize(node, *stream, add_header))) {
+			NPT_Debug("Failed to serialize xml node");
+			return "";
+		}
+
+		return xml;
+	}
 private:
     // members
 };

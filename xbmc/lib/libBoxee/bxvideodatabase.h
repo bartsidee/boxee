@@ -3,6 +3,8 @@
 #define BXVIDEODATABASE_H_
 
 #include "bxdatabase.h"
+#include "../../utils/CriticalSection.h"
+#include <set>
 
 namespace dbiplus {
 class Dataset;
@@ -17,6 +19,7 @@ class BXFolder;
 class BXSeries;
 class BXSeason;
 class BXPath;
+class BXVideoLink;
 
 #define BXVIDEO_ALL_VIDEOS   1
 #define BXVIDEO_MOVIES_ONLY  2
@@ -34,20 +37,23 @@ public:
 	virtual ~BXVideoDatabase();
 	
 	
-	bool GetMovies(std::vector<BXMetadata*> &vecMediaFiles, const std::string& strGenre, const std::string& strPrefix, const std::vector<std::string>& vecPathFilter, int iItemLimit);
+	bool GetMovies(std::vector<BXMetadata*> &vecMediaFiles, const std::string& strGenre, const std::string& strPrefix, const std::vector<std::string>& vecPathFilter, int iItemLimit, bool bLoadOnlyFirstTrailerLink = false);
 	bool SearchMoviesByTitle(const std::string& strTitle, std::vector<BXMetadata*> &vecMediaFiles, const std::vector<std::string>& vecPathFilter, int iItemLimit);
 
 	bool GetVideoParts(int iVideoId, std::vector<std::string> &vecVideoParts);
 	
-	bool GetLinks(const std::string& strBoxeeId, std::vector<BXPath>& vecLinks);
+	bool GetLinks(const std::string& strBoxeeId, std::vector<BXPath>& vecLinks, const std::vector<std::string>& vecPathFilter);
 
 	bool GetTvShows(std::vector<BXMetadata*> &vecMediaFiles, const std::string& strGenre, const std::string& strPrefix, const std::vector<std::string>& vecPathFilter, int iItemLimit);
+
+	bool GetTvShowsGenres (std::set<std::string> &setGenres , const std::vector<std::string>& vecPathFilter);
+	bool GetMoviesGenres (std::set<std::string> &setGenres , const std::vector<std::string>& vecPathFilter);
 	bool SearchTvShowsByTitle(const std::string& strTitle, std::vector<BXMetadata*> &vecMediaFiles, const std::vector<std::string>& vecPathFilter, int iItemLimit);
 
-	unsigned int GetLatestEpisodeDate(const std::string& strTvShowId, int iSeason = -1);
+	unsigned int GetLatestEpisodeReleaseDate(const std::string& strTvShowId, int iSeason = -1);
 	bool GetEpisodes(const std::string& strTvShowBoxeeId, int iSeason, std::vector<BXMetadata*> &vecEpisodes, const std::vector<std::string>& vecPathFilter);
 
-	int GetVideosByFolder(std::map<std::string, BXMetadata*> &mapMediaFiles, const std::string& _strFolderPath);
+	int GetVideosByFolder(std::map<std::string, BXMetadata*> &mapMediaFiles, const std::string& _strFolderPath, bool bGetFiles = false);
 	bool GetVideosByTitle(std::vector<BXMetadata*> &vecMediaFiles, const std::string& strTitle, const std::vector<std::string>& vecPathFilter, int iItemLimit);
 
 	// Video files
@@ -89,6 +95,10 @@ public:
 	int RemoveVideoByFolder(const std::string& strFolderPath);
 	int RemoveSeries(int iSeriesId, int iSeason = -1);
 
+	int AddVideoLink(const std::string& strBoxeeId , const BXVideoLink& videoLink);
+	int RemoveVideoLinkByURL(const std::string& strURL);
+	int RemoveVideoLinksByBoxeeId(const std::string& strBoxeeId);
+	int GetVideoLinks(std::vector<BXVideoLink>& videoLinks, const std::string& strBoxeeId = "", const std::string& strBoxeeType = "" , int iCount = -1);
 
 	int DropVideoByPath(const std::string& strPath);
 	int DropVideoById(int iId);
@@ -96,12 +106,15 @@ public:
   virtual bool UpdateTables() { return true; }
 
 private:
+
+  bool ConvertDatasetToUniqueSet(std::set<std::string>& output, dbiplus::Dataset* ds , const std::vector<std::string>& vecPathFilter);
+
   int AddSeries(const BXSeries* pSeries);
   int AddSeason(const BXSeason* pSeries);
   bool HasEpisodes(const std::string& strBoxeeId, int iSeason, const std::vector<std::string>& vecPathFilter);
-  unsigned long GetLatestEdpisodeDate(const std::string& strBoxeeId);
+  unsigned long GetLatestEpisodeDate(const std::string& strBoxeeId);
 
-  bool CreateVideosFromDataset(dbiplus::Dataset* pDS, std::vector<BXMetadata*> &vecMediaFiles, const std::vector<std::string>& vecPathFilter, int iItemLimit);
+  bool CreateVideosFromDataset(dbiplus::Dataset* pDS, std::vector<BXMetadata*> &vecMediaFiles, const std::vector<std::string>& vecPathFilter, int iItemLimit , bool bLoadOnlyFirstTrailerLink = false);
   bool CreateVideoFromDataset(dbiplus::Dataset* pDS, BXMetadata* pMetadata, std::map<int, std::string>& mapDirectors, std::map<int, std::vector<std::string> >& mapActors);
 
 	bool LoadVideoFromDataset(dbiplus::Dataset* pDSa, BXVideo* pVideo);
@@ -114,6 +127,7 @@ private:
 	void MapDirectorsByVideoId(std::map<int, std::string>& mapDirectors);
 	void MapActorsByVideoId(std::map<int, std::vector<std::string> >& mapActors);
 
+	static CCriticalSection m_lock;
 };
 
 }

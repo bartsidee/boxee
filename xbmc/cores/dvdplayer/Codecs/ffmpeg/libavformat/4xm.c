@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavformat/4xm.c
+ * @file
  * 4X Technologies file demuxer
  * by Mike Melanson (melanson@pcisys.net)
  * for more information on the .4xm file format, visit:
@@ -149,7 +149,7 @@ static int fourxm_read_header(AVFormatContext *s,
 
             fourxm->video_stream_index = st->index;
 
-            st->codec->codec_type = CODEC_TYPE_VIDEO;
+            st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
             st->codec->codec_id = CODEC_ID_4XM;
             st->codec->extradata_size = 4;
             st->codec->extradata = av_malloc(4);
@@ -185,6 +185,13 @@ static int fourxm_read_header(AVFormatContext *s,
             fourxm->tracks[current_track].sample_rate = AV_RL32(&header[i + 40]);
             fourxm->tracks[current_track].bits        = AV_RL32(&header[i + 44]);
             fourxm->tracks[current_track].audio_pts   = 0;
+            if(   fourxm->tracks[current_track].channels    <= 0
+               || fourxm->tracks[current_track].sample_rate <= 0
+               || fourxm->tracks[current_track].bits        <  0){
+                av_log(s, AV_LOG_ERROR, "audio header invalid\n");
+                ret= -1;
+                goto fail;
+            }
             i += 8 + size;
 
             /* allocate a new AVStream */
@@ -198,7 +205,7 @@ static int fourxm_read_header(AVFormatContext *s,
 
             fourxm->tracks[current_track].stream_index = st->index;
 
-            st->codec->codec_type = CODEC_TYPE_AUDIO;
+            st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
             st->codec->codec_tag = 0;
             st->codec->channels              = fourxm->tracks[current_track].channels;
             st->codec->sample_rate           = fourxm->tracks[current_track].sample_rate;
@@ -291,7 +298,7 @@ static int fourxm_read_packet(AVFormatContext *s,
             out_size= get_le32(pb);
             size-=8;
 
-            if (track_number < fourxm->track_count) {
+            if (track_number < fourxm->track_count && fourxm->tracks[track_number].channels>0) {
                 ret= av_get_packet(s->pb, pkt, size);
                 if(ret<0)
                     return AVERROR(EIO);
@@ -336,7 +343,7 @@ static int fourxm_read_close(AVFormatContext *s)
     return 0;
 }
 
-AVInputFormat fourxm_demuxer = {
+AVInputFormat ff_fourxm_demuxer = {
     "4xm",
     NULL_IF_CONFIG_SMALL("4X Technologies format"),
     sizeof(FourxmDemuxContext),

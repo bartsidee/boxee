@@ -24,6 +24,7 @@
 #include <PlatformDefs.h>
 #include "utils/log.h"
 #include <math.h>
+#include <CoreServices/CoreServices.h>
 
 char* UInt32ToFourCC(UInt32* pVal) // NOT NULL TERMINATED! Modifies input value.
 {
@@ -409,8 +410,8 @@ bool CCoreAudioDevice::SetHogStatus(bool hog)
       {
         CLog::Log(LOGERROR, "CCoreAudioDevice::SetHogStatus: failed to release. still hogging!");
         return false;
-      }
     }
+  }
   }
   return true;
 }

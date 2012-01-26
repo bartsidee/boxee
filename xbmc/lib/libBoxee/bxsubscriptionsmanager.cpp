@@ -77,7 +77,9 @@ void BXSubscriptionsManager::UnLockSubscriptionsList()
 void BXSubscriptionsManager::CopySubscriptionsList(const BXBoxeeSubscriptions& subscriptionsList)
 {
   LockSubscriptionsList();
-  
+
+  LOG(LOG_LEVEL_DEBUG,"BXSubscriptionsManager::CopySubscriptionsList - going to copy subscriptionsList [size=%d]. [currSize=%d] (subs)",subscriptionsList.GetNumOfSubscriptions(),m_subscriptionsList.GetNumOfSubscriptions());
+
   m_subscriptionsList = subscriptionsList;
   m_subscriptionsList.SetLoaded(true);
   
@@ -330,13 +332,13 @@ BXSubscriptionsManager::RequestSubscriptionsListFromServerTask::~RequestSubscrip
 void BXSubscriptionsManager::RequestSubscriptionsListFromServerTask::DoWork()
 {
   LOG(LOG_LEVEL_DEBUG,"RequestSubscriptionsListFromServerTask::DoWork - Enter function (subs)");
-  
-  if (!g_application.IsConnectedToInternet())
+
+  if (!g_application.ShouldConnectToInternet())
   {
     // set loaded to true so Get() functions won't wait forever
     m_taskHandler->SetSubscriptionsListIsLoaded(true);
 
-    LOG(LOG_LEVEL_DEBUG,"RequestSubscriptionsListFromServerTask::DoWork - [IsConnectedToInternet=FALSE] -> Exit function (subs)");
+    LOG(LOG_LEVEL_DEBUG,"RequestSubscriptionsListFromServerTask::DoWork - [ShouldConnectToInternet=FALSE] -> Exit function (subs)");
     return;
   }
 
@@ -348,8 +350,23 @@ void BXSubscriptionsManager::RequestSubscriptionsListFromServerTask::DoWork()
   std::string strUrl = BXConfiguration::GetInstance().GetURLParam("Boxee.SubscriptionsListUrl","http://app.boxee.tv/api/get_subscriptions");
 
   subscriptionsList.LoadFromURL(strUrl);
-  m_taskHandler->CopySubscriptionsList(subscriptionsList);
   
+  bool isLoaded = m_taskHandler->m_subscriptionsList.IsLoaded();
+  long lastRetCode = subscriptionsList.GetLastRetCode();
+
+  LOG(LOG_LEVEL_DEBUG,"RequestSubscriptionsListFromServerTask::DoWork - After LoadFromURL. [lastRetCode=%d][isLoaded=%d][size=%d][currSize=%d] (subs)",lastRetCode,isLoaded,subscriptionsList.GetNumOfSubscriptions(),m_taskHandler->m_subscriptionsList.GetNumOfSubscriptions());
+
+  if (!isLoaded || lastRetCode == 200)
+  {
+    ////////////////////////////////////////////
+    // copy return result from the server if: //
+    // a) recommendationsList isn't loaded    //
+    // b) the server returned 200             //
+    ////////////////////////////////////////////
+
+    m_taskHandler->CopySubscriptionsList(subscriptionsList);
+  }
+
   LOG(LOG_LEVEL_DEBUG,"RequestSubscriptionsListFromServerTask::DoWork - Exit function (subs)");
 
   return;

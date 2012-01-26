@@ -70,6 +70,7 @@ PAPlayer::PAPlayer(IPlayerCallback& callback) : IPlayer(callback)
   for (int i=0; i<2; i++)
   {
     m_channelCount[i]   = 0;
+    m_channelMap[i]     = NULL;
     m_sampleRate[i]     = 0;
     m_bitsPerSample[i]  = 0;
 
@@ -77,11 +78,13 @@ PAPlayer::PAPlayer(IPlayerCallback& callback) : IPlayer(callback)
     m_pcmBuffer[i] = NULL;
     m_bufferPos[i] = 0;
     m_Chunklen[i]  = PACKET_SIZE;
+    m_format[i] = AUDIO_MEDIA_FMT_PCM;
+    m_passthrough[i] = false;
+
+    m_packet[i][0].packet = NULL;
   }
 
   m_currentStream = 0;
-  m_packet[0][0].packet = NULL;
-  m_packet[1][0].packet = NULL;
 
   m_bytesSentOut = 0;
   m_BytesPerSecond = 0;
@@ -103,7 +106,9 @@ PAPlayer::~PAPlayer()
 {
   CloseFileInternal(true);
   delete m_currentFile;
+  m_currentFile = NULL;
   delete m_nextFile;
+  m_nextFile = NULL;
 }
 
 
@@ -157,9 +162,12 @@ bool PAPlayer::OpenFile(const CFileItem& file, const CPlayerOptions &options)
   m_timeOffset = (__int64)(options.starttime * 1000);
 
   unsigned int channel, sampleRate, bitsPerSample;
-  m_decoder[m_currentDecoder].GetDataFormat(&channel, &sampleRate, &bitsPerSample);
+  AudioMediaFormat format;
+  bool passthrough;
 
-  if (!CreateStream(m_currentStream, channel, sampleRate, bitsPerSample))
+  m_decoder[m_currentDecoder].GetDataFormat(&channel, &sampleRate, &bitsPerSample, &format, &passthrough);
+
+  if (!CreateStream(m_currentStream, channel, sampleRate, bitsPerSample, format, passthrough))
   {
     m_decoder[m_currentDecoder].Destroy();
     CLog::Log(LOGERROR, "PAPlayer::Unable to create audio stream");
@@ -179,6 +187,11 @@ bool PAPlayer::OpenFile(const CFileItem& file, const CPlayerOptions &options)
   m_bQueueFailed = false;
 
   m_decoder[m_currentDecoder].Start();  // start playback
+
+  if (file.HasProperty("pause-on-seek"))
+    m_bPauseOnSeek = true;
+  else
+    m_bPauseOnSeek = false;
 
   return true;
 }
@@ -250,19 +263,24 @@ bool PAPlayer::QueueNextFile(const CFileItem &file, bool checkCrossFading)
   }
 
   unsigned int channels, samplerate, bitspersample;
-  m_decoder[decoder].GetDataFormat(&channels, &samplerate, &bitspersample);
+  AudioMediaFormat format;
+  bool passthrough;
+  m_decoder[decoder].GetDataFormat(&channels, &samplerate, &bitspersample, &format, &passthrough);
 
   // check the number of channels isn't changing (else we can't do crossfading)
-  if (m_crossFading && m_decoder[m_currentDecoder].GetChannels() == channels)
+  if (m_crossFading &&
+      m_decoder[m_currentDecoder].GetChannels() == channels &&
+      m_format[m_currentDecoder] == AUDIO_MEDIA_FMT_PCM     && 
+      format == AUDIO_MEDIA_FMT_PCM)
   { // crossfading - need to create a new stream
-    if (!CreateStream(1 - m_currentStream, channels, samplerate, bitspersample))
+    if (!CreateStream(1 - m_currentStream, channels, samplerate, bitspersample, format, passthrough))
     {
       m_decoder[decoder].Destroy();
       CLog::Log(LOGERROR, "PAPlayer::Unable to create audio stream");
     }
   }
   else
-  { // no crossfading if nr of channels is not the same
+  { // no crossfading if nr of channels is not the same or if this isn't 100% PCM
     m_crossFading = 0;
   }
 
@@ -282,7 +300,6 @@ bool PAPlayer::CloseFileInternal(bool bAudioDevice /*= true*/)
   m_bStop = true;
 
   m_visBufferLength = 0;
-  StopThread();
 
   // kill both our streams if we need to
   for (int i = 0; i < 2; i++)
@@ -292,8 +309,13 @@ bool PAPlayer::CloseFileInternal(bool bAudioDevice /*= true*/)
       FreeStream(i);
   }
 
-  m_currentFile->Reset();
-  m_nextFile->Reset();
+  StopThread();
+
+  if(m_currentFile)
+    m_currentFile->Reset();
+ 
+  if(m_nextFile)
+    m_nextFile->Reset();
 
   if(bAudioDevice)
     g_audioContext.SetActiveDevice(CAudioContext::DEFAULT_DEVICE);
@@ -322,19 +344,19 @@ void PAPlayer::FreeStream(int stream)
   {
     m_packet[stream][i].packet = NULL;
   }
-
-  m_resampler[stream].DeInitialize();
+  if( m_format[stream] == AUDIO_MEDIA_FMT_PCM )
+    m_resampler[stream].DeInitialize();
 }
 
 void PAPlayer::DrainStream(int stream)
 {
-  if(m_bStopPlaying || m_pAudioDecoder[1 - stream])
+  if(m_bStopPlaying || m_pAudioDecoder[1 - stream] || m_format[stream] != AUDIO_MEDIA_FMT_PCM)
   {
     m_pAudioDecoder[stream]->Stop();
     return;
   }
 
-  DWORD silence = m_pAudioDecoder[stream]->GetChunkLen() - m_bufferPos[stream] % m_pAudioDecoder[stream]->GetChunkLen();
+  DWORD silence = m_Chunklen[stream] - m_bufferPos[stream] % m_Chunklen[stream];
 
   if(silence > 0 && m_bufferPos[stream] > 0)
   {
@@ -344,7 +366,7 @@ void PAPlayer::DrainStream(int stream)
   }
 
   DWORD added = 0;
-  while(m_bufferPos[stream] - added >= m_pAudioDecoder[stream]->GetChunkLen())
+  while(m_bufferPos[stream] - added >= m_Chunklen[stream])
   {
     added += m_pAudioDecoder[stream]->AddPackets(m_pcmBuffer[stream] + added, m_bufferPos[stream] - added);
     Sleep(1);
@@ -354,11 +376,19 @@ void PAPlayer::DrainStream(int stream)
   m_pAudioDecoder[stream]->WaitCompletion();
 }
 
-bool PAPlayer::CreateStream(int num, unsigned int channels, unsigned int samplerate, unsigned int bitspersample, CStdString codec)
+bool PAPlayer::CreateStream(int num, unsigned int channels, unsigned int samplerate, unsigned int bitspersample, AudioMediaFormat format, bool passthrough, CStdString codec)
 {
-  unsigned int outputSampleRate = (channels <= 2 && g_advancedSettings.m_musicResample) ? g_advancedSettings.m_musicResample : samplerate;
+  unsigned int outputSampleRate = samplerate;
 
-  if (m_pAudioDecoder[num] != NULL && m_channelCount[num] == channels && m_sampleRate[num] == outputSampleRate /* && m_bitsPerSample[num] == bitspersample */)
+  if( channels <= 2 && AUDIO_MEDIA_FMT_PCM == format && g_advancedSettings.m_musicResample )
+    outputSampleRate = g_advancedSettings.m_musicResample;
+
+  if (m_pAudioDecoder[num] != NULL &&
+      m_channelCount[num] == channels &&
+      m_sampleRate[num] == outputSampleRate /* && */
+    /*m_bitsPerSample[num] == bitspersample */ &&
+      m_format[num] == format &&
+      m_passthrough[num] == passthrough)
   {
     CLog::Log(LOGDEBUG, "PAPlayer: Using existing audio renderer");
   }
@@ -366,20 +396,38 @@ bool PAPlayer::CreateStream(int num, unsigned int channels, unsigned int sampler
   {
     FreeStream(num);
     CLog::Log(LOGDEBUG, "PAPlayer: Creating new audio renderer");
-    m_bitsPerSample[num]  = 16;
+    m_bitsPerSample[num]  = (AUDIO_MEDIA_FMT_PCM == format ? 16 : bitspersample);
     m_sampleRate[num]     = outputSampleRate;
     m_channelCount[num]   = channels;
+    m_channelMap[num]     = m_decoder[num].GetChannelMap();
+    m_format[num]         = format;
+    m_passthrough[num]    = passthrough;
+
     m_BytesPerSecond      = (m_bitsPerSample[num] / 8)* outputSampleRate * channels;
 
     /* Open the device */
-    m_pAudioDecoder[num] = CAudioRendererFactory::Create(m_pCallback, m_channelCount[num], m_sampleRate[num], m_bitsPerSample[num], false, codec.c_str(), true, false);
+    m_pAudioDecoder[num] = CAudioRendererFactory::Create(m_pCallback, m_channelCount[num], m_channelMap[num], m_sampleRate[num], m_bitsPerSample[num], false, codec.c_str(), true, m_passthrough[num], false, m_format[num]);
 
     if (!m_pAudioDecoder[num]) return false;
 
-    m_pcmBuffer[num] = (unsigned char*)malloc((m_pAudioDecoder[num]->GetChunkLen() + PACKET_SIZE));
+    int nChunkLen = (int)(m_pAudioDecoder[num]->GetChunkLen());
+    if(nChunkLen == 0)
+      nChunkLen = PACKET_SIZE;
+
+    m_Chunklen[num]  = nChunkLen;
+
+    if( m_format[num] == AUDIO_MEDIA_FMT_PCM )
+    {
+      m_pcmBuffer[num] = (unsigned char*)malloc((m_Chunklen[num] + PACKET_SIZE));
+    }
+    else
+    {
+      m_pcmBuffer[num] = (unsigned char*)malloc(4 * (m_Chunklen[num]));
+    }
+
     m_bufferPos[num] = 0;
     m_latency[num]   = m_pAudioDecoder[num]->GetDelay();
-    m_Chunklen[num]  = std::max(PACKET_SIZE, (int)m_pAudioDecoder[num]->GetChunkLen());
+
     m_packet[num][0].packet = (BYTE*)malloc(PACKET_SIZE * PACKET_COUNT);
     for (int i = 1; i < PACKET_COUNT ; i++)
       m_packet[num][i].packet = m_packet[num][i - 1].packet + PACKET_SIZE;
@@ -388,7 +436,8 @@ bool PAPlayer::CreateStream(int num, unsigned int channels, unsigned int sampler
   // set initial volume
   SetStreamVolume(num, g_stSettings.m_nVolumeLevel);
 
-  m_resampler[num].InitConverter(samplerate, bitspersample, channels, outputSampleRate, m_bitsPerSample[num], PACKET_SIZE);
+  if( AUDIO_MEDIA_FMT_PCM == m_format[num] )
+    m_resampler[num].InitConverter(samplerate, bitspersample, channels, outputSampleRate, m_bitsPerSample[num], PACKET_SIZE);
 
   // TODO: How do we best handle the callback, given that our samplerate etc. may be
   // changing at this point?
@@ -415,6 +464,7 @@ void PAPlayer::Pause()
     if (m_currentlyCrossFading && m_pAudioDecoder[1 - m_currentStream])
       m_pAudioDecoder[1 - m_currentStream]->Pause();
 
+    m_callback.OnPlayBackPaused();
     CLog::Log(LOGDEBUG, "PAPlayer: Playback paused");
   }
   else
@@ -425,6 +475,7 @@ void PAPlayer::Pause()
     if (m_currentlyCrossFading && m_pAudioDecoder[1 - m_currentStream])
       m_pAudioDecoder[1 - m_currentStream]->Resume();
 
+    m_callback.OnPlayBackResumed();
     CLog::Log(LOGDEBUG, "PAPlayer: Playback resumed");
   }
 }
@@ -432,7 +483,7 @@ void PAPlayer::Pause()
 void PAPlayer::SetVolume(long nVolume)
 {
   if (m_pAudioDecoder[m_currentStream])
-  m_pAudioDecoder[m_currentStream]->SetCurrentVolume(nVolume);
+    m_pAudioDecoder[m_currentStream]->SetCurrentVolume(nVolume);
 }
 
 void PAPlayer::SetDynamicRangeCompression(long drc)
@@ -475,6 +526,7 @@ void PAPlayer::Process()
 void PAPlayer::ToFFRW(int iSpeed)
 {
   m_iSpeed = iSpeed;
+  m_callback.OnPlayBackSpeedChanged(iSpeed);
 }
 
 void PAPlayer::UpdateCacheLevel()
@@ -536,7 +588,10 @@ bool PAPlayer::ProcessPAP()
       m_cachingNextFile = true;
     }
 
-    if (m_crossFading && m_decoder[0].GetChannels() == m_decoder[1].GetChannels())
+    if (m_crossFading &&
+        m_decoder[0].GetChannels() == m_decoder[1].GetChannels() &&
+        m_format[0] == AUDIO_MEDIA_FMT_PCM &&
+        m_format[1] == AUDIO_MEDIA_FMT_PCM)
     {
       if (((GetTotalTime64() - GetTime() < m_crossFading * 1000L) || (m_forceFadeToNext)) && !m_currentlyCrossFading)
       { // request the next file from our application
@@ -581,21 +636,34 @@ bool PAPlayer::ProcessPAP()
         { // swap streams
           CLog::Log(LOGDEBUG, "PAPlayer: Swapping tracks %i to %i", m_currentDecoder, 1-m_currentDecoder);
           if (!m_crossFading || m_decoder[0].GetChannels() != m_decoder[1].GetChannels())
-          { // playing gapless (we use only the 1 output stream in this case)
-            int prefixAmount = m_decoder[m_currentDecoder].GetDataSize();
-            CLog::Log(LOGDEBUG, "PAPlayer::Prefixing %i samples of old data to new track for gapless playback", prefixAmount);
-            m_decoder[1 - m_currentDecoder].PrefixData(m_decoder[m_currentDecoder].GetData(prefixAmount), prefixAmount);
+          {
             // check if we need to change the resampler (due to format change)
             unsigned int channels, samplerate, bitspersample;
-            m_decoder[m_currentDecoder].GetDataFormat(&channels, &samplerate, &bitspersample);
             unsigned int channels2, samplerate2, bitspersample2;
-            m_decoder[1 - m_currentDecoder].GetDataFormat(&channels2, &samplerate2, &bitspersample2);
+            AudioMediaFormat format, format2;
+            bool passthrough, passthrough2;
+
+            m_decoder[m_currentDecoder].GetDataFormat(&channels, &samplerate, &bitspersample, &format, &passthrough);
+            m_decoder[1 - m_currentDecoder].GetDataFormat(&channels2, &samplerate2, &bitspersample2, &format2, &passthrough2);
+
+            // playing gapless (we use only the 1 output stream in this case)
+            if( AUDIO_MEDIA_FMT_PCM == format && AUDIO_MEDIA_FMT_PCM == format2 )
+            {
+              int prefixAmount = m_decoder[m_currentDecoder].GetDataSize();
+              CLog::Log(LOGDEBUG, "PAPlayer::Prefixing %i samples of old data to new track for gapless playback", prefixAmount);
+              m_decoder[1 - m_currentDecoder].PrefixData(m_decoder[m_currentDecoder].GetData(prefixAmount), prefixAmount);
+            }
+
             // change of channels - reinitialize our speaker configuration
-            if (channels != channels2 || (g_advancedSettings.m_musicResample == 0 && (samplerate != samplerate2 || bitspersample != bitspersample2)))
+            if (channels != channels2       ||
+                format != format2           ||
+                passthrough != passthrough2 ||
+                (g_advancedSettings.m_musicResample == 0 &&
+                   (samplerate != samplerate2 || bitspersample != bitspersample2)))
             {
               CLog::Log(LOGINFO, "PAPlayer: Stream properties have changed, restarting stream");
               FreeStream(m_currentStream);
-              if (!CreateStream(m_currentStream, channels2, samplerate2, bitspersample2))
+              if (!CreateStream(m_currentStream, channels2, samplerate2, bitspersample2, format2, passthrough2))
               {
                 CLog::Log(LOGERROR, "PAPlayer: Error creating stream!");
                 return false;
@@ -605,8 +673,10 @@ bool PAPlayer::ProcessPAP()
             else if (samplerate != samplerate2 || bitspersample != bitspersample2)
             {
               CLog::Log(LOGINFO, "PAPlayer: Restarting resampler due to a change in data format");
-              m_resampler[m_currentStream].DeInitialize();
-              if (!m_resampler[m_currentStream].InitConverter(samplerate2, bitspersample2, channels2, g_advancedSettings.m_musicResample, 16, PACKET_SIZE))
+              if( format == AUDIO_MEDIA_FMT_PCM )
+                m_resampler[m_currentStream].DeInitialize();
+              if( format2 == AUDIO_MEDIA_FMT_PCM &&
+                  !m_resampler[m_currentStream].InitConverter(samplerate2, bitspersample2, channels2, g_advancedSettings.m_musicResample, 16, PACKET_SIZE))
               {
                 CLog::Log(LOGERROR, "PAPlayer: Error initializing resampler!");
                 return false;
@@ -752,10 +822,15 @@ void PAPlayer::ResetTime()
 
 __int64 PAPlayer::GetTime()
 {
-  __int64  timeplus = m_BytesPerSecond ? (__int64)(((float) m_bytesSentOut / (float) m_BytesPerSecond ) * 1000.0) : 0;
-  if (m_pAudioDecoder[m_currentStream])
-    timeplus -= (__int64)(m_pAudioDecoder[m_currentStream]->GetDelay() * 1000.0f);
-  return m_timeOffset + timeplus - m_currentFile->m_lStartOffset * 1000 / 75;
+  if( m_format[m_currentDecoder] != AUDIO_MEDIA_FMT_PCM )
+    return m_decoder[m_currentDecoder].GetTime();
+  else
+  {
+    __int64  timeplus = m_BytesPerSecond ? (__int64)(((float) m_bytesSentOut / (float) m_BytesPerSecond ) * 1000.0) : 0;
+    if (m_pAudioDecoder[m_currentStream])
+      timeplus -= (__int64)(m_pAudioDecoder[m_currentStream]->GetDelay() * 1000.0f);
+    return m_timeOffset + timeplus - m_currentFile->m_lStartOffset * 1000 / 75;
+  }
 }
 
 __int64 PAPlayer::GetTotalTime64()
@@ -822,9 +897,21 @@ int PAPlayer::GetAudioBitrate()
   return 0;
 }
 
+bool PAPlayer::IsPassthrough() const
+{
+  if( m_format[m_currentStream] != AUDIO_MEDIA_FMT_PCM && m_passthrough[m_currentStream] )
+    return true;
+  return false;
+}
+
 bool PAPlayer::CanSeek()
 {
   return ((m_decoder[m_currentDecoder].TotalTime() > 0) && m_decoder[m_currentDecoder].CanSeek());
+}
+
+bool PAPlayer::CanSeekToTime()
+{
+  return CanSeek();
 }
 
 void PAPlayer::Seek(bool bPlus, bool bLargeStep)
@@ -855,9 +942,11 @@ void PAPlayer::Seek(bool bPlus, bool bLargeStep)
 void PAPlayer::SeekTime(__int64 iTime /*=0*/)
 {
   if (!CanSeek()) return;
+  int seekOffset = (int)(iTime - GetTime());
   if (m_currentFile->m_lStartOffset)
     iTime += m_currentFile->m_lStartOffset * 1000 / 75;
   m_SeekTime = iTime;
+  m_callback.OnPlayBackSeek((int)m_SeekTime, seekOffset);
   CLog::Log(LOGDEBUG, "PAPlayer::Seeking to time %f", 0.001f * m_SeekTime);
 }
 
@@ -878,6 +967,9 @@ void PAPlayer::HandleSeeking()
 {
   if (m_SeekTime != -1)
   {
+    if (m_bPauseOnSeek)
+      m_bPaused = true;
+
     DWORD time = CTimeUtils::GetTimeMS();
     m_timeOffset = m_decoder[m_currentDecoder].Seek(m_SeekTime);
     CLog::Log(LOGDEBUG, "Seek to time %f took %i ms", 0.001f * m_SeekTime, CTimeUtils::GetTimeMS() - time);
@@ -894,9 +986,18 @@ void PAPlayer::FlushStreams()
   {
     if (m_pAudioDecoder[stream] && m_packet[stream])
     {
+#ifdef HAS_INTEL_SMD
+      m_pAudioDecoder[stream]->Pause();
+#else
       m_pAudioDecoder[stream]->Stop();
+#endif
       m_pAudioDecoder[stream]->Resume();
       m_bufferPos[stream] = 0;
+      if (m_format[stream] == AUDIO_MEDIA_FMT_PCM)
+      {
+        m_resampler[stream].DeInitialize();
+        m_resampler[stream].InitConverter(m_sampleRate[stream] ,m_bitsPerSample[stream] ,m_channelCount[stream] ,m_sampleRate[stream] ,m_bitsPerSample[stream] ,PACKET_SIZE);
+      }
     }
   }
 }
@@ -956,42 +1057,84 @@ void PAPlayer::SetStreamVolume(int stream, long nVolume)
 
 bool PAPlayer::AddPacketsToStream(int stream, CAudioDecoder &dec)
 {
+  bool ret = false;
+
   if (!m_pAudioDecoder[stream] || dec.GetStatus() == STATUS_NO_FILE)
     return false;
 
-  bool ret = false;
-  int amount = m_resampler[stream].GetInputSamples();
-  if (amount > 0 && amount <= (int)dec.GetDataSize())
-  { // resampler wants more data - let's feed it
-    m_resampler[stream].PutFloatData((float *)dec.GetData(amount), amount);
-    ret = true;
-  }
-  else if (m_Chunklen[stream] > m_pAudioDecoder[stream]->GetSpace())
-  { // resampler probably have data but wait until we can send atleast a packet
-    ret = false;
-  }
-  else if (m_resampler[stream].GetData(m_packet[stream][0].packet))
+  if( m_format[stream] == AUDIO_MEDIA_FMT_PCM )
   {
-    // got some data from our resampler - construct audio packet
-    m_packet[stream][0].length = PACKET_SIZE;
-    m_packet[stream][0].stream = stream;
-
-    unsigned char *pcmPtr = m_packet[stream][0].packet;
-    int len = m_packet[stream][0].length;
-    StreamCallback(&m_packet[stream][0]);
-
-    memcpy(m_pcmBuffer[stream]+m_bufferPos[stream], pcmPtr, len);
-    m_bufferPos[stream] += len;
-
-    while (m_bufferPos[stream] >= (int)m_pAudioDecoder[stream]->GetChunkLen())
-    {
-      int rtn = m_pAudioDecoder[stream]->AddPackets(m_pcmBuffer[stream], m_bufferPos[stream]);
-      m_bufferPos[stream] -= rtn;
-      memmove(m_pcmBuffer[stream], m_pcmBuffer[stream] + rtn, m_bufferPos[stream]);
+    int amount = m_resampler[stream].GetInputSamples();
+    if (amount > 0 && amount <= (int)dec.GetDataSize())
+    { // resampler wants more data - let's feed it
+      m_resampler[stream].PutFloatData((float *)dec.GetData(amount), amount);
+      ret = true;
     }
+    else if (m_Chunklen[stream] > m_pAudioDecoder[stream]->GetSpace())
+    { // resampler probably have data but wait until we can send atleast a packet
+      ret = false;
+    }
+    else if (m_resampler[stream].GetData(m_packet[stream][0].packet))
+    {
+      // got some data from our resampler - construct audio packet
+      m_packet[stream][0].length = PACKET_SIZE;
+      m_packet[stream][0].stream = stream;
 
-    // something done
-    ret = true;
+      unsigned char *pcmPtr = m_packet[stream][0].packet;
+      int len = m_packet[stream][0].length;
+      StreamCallback(&m_packet[stream][0]);
+
+      memcpy(m_pcmBuffer[stream]+m_bufferPos[stream], pcmPtr, len);
+      m_bufferPos[stream] += len;
+
+      while (m_bufferPos[stream] >= (int)m_Chunklen[stream])
+      {
+        int rtn = m_pAudioDecoder[stream]->AddPackets(m_pcmBuffer[stream], m_bufferPos[stream]);
+        m_bufferPos[stream] -= rtn;
+        memmove(m_pcmBuffer[stream], m_pcmBuffer[stream] + rtn, m_bufferPos[stream]);
+      }
+
+      // something done
+      ret = true;
+    }
+  }
+  else
+  {
+    // either passthrough or hw decode mode
+    // exit out if there's no space
+    if( m_Chunklen[stream] > m_pAudioDecoder[stream]->GetSpace())
+    {
+      ret = false;
+    } else
+    {
+      // outer loop pulls data from the decoder
+      // inner loop feeds the renderer
+      unsigned int dataSize = 0;
+      for( dataSize = dec.GetDataSize(); dataSize >= m_Chunklen[stream]; dataSize = dec.GetDataSize() )
+      {
+        // can copy up to 4 chunks
+        if( m_bufferPos[stream] <= (int) (3*m_Chunklen[stream]) )
+        {
+          void* data = dec.GetData(m_Chunklen[stream]);
+          memcpy( m_pcmBuffer[stream] + m_bufferPos[stream], data, m_Chunklen[stream] );
+          m_bufferPos[stream] += m_Chunklen[stream];
+        }
+
+        while( (unsigned int) m_bufferPos[stream] >= m_Chunklen[stream] && m_Chunklen[stream] <= m_pAudioDecoder[stream]->GetSpace() )
+        {
+          int copied = m_pAudioDecoder[stream]->AddPackets(m_pcmBuffer[stream], m_bufferPos[stream]);
+          m_bufferPos[stream] -= copied;
+          memmove( m_pcmBuffer[stream], m_pcmBuffer[stream] + copied, m_bufferPos[stream]);
+        }
+
+        ret = true;
+
+        // exit here if we are full
+        if( m_Chunklen[stream] > m_pAudioDecoder[stream]->GetSpace() ||
+            (m_bufferPos[stream] == (int) (4*m_Chunklen[stream])) )
+          break;
+      }
+    }
   }
 
   return ret;
@@ -1105,4 +1248,20 @@ void PAPlayer::WaitForStream()
   {
     m_pAudioDecoder[m_currentStream]->WaitCompletion();
   }
+}
+
+bool PAPlayer::CanSkip() const
+{
+  if (m_currentFile->HasProperty("no-skip"))
+    return false;
+
+  return true;
+}
+
+bool PAPlayer::CanPause() const
+{
+  if (m_currentFile->HasProperty("no-pause"))
+    return false;
+
+  return true;
 }

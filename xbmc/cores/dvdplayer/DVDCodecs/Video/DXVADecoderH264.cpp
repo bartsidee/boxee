@@ -296,10 +296,12 @@ void CDXVADecoderH264::ClearUnusedRefFrames()
 
 void CDXVADecoderH264::SetExtraData (BYTE* pDataIn, UINT nSize)
 {
+  /*
 	AVCodecContext*		pAVCtx = m_pFilter->GetAVCtx();
 	m_nNALLength	= pAVCtx->nal_length_size;
 	FFH264DecodeBuffer (pAVCtx, pDataIn, nSize, NULL, NULL, NULL);
 	FFH264SetDxvaSliceLong (pAVCtx, m_pSliceLong);
+  */
 }
 
 

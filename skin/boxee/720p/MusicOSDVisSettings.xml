@@ -14,7 +14,8 @@
 				<posy>0</posy>
 				<width>400</width>
 				<height>400</height>
-				<texture border="32">osd_background.png</texture>
+				<texture border="20">menu_dialog_background.png</texture>
+				<colordiffuse>F3212121</colordiffuse>
 			</control>
 			<control type="group">
 				<control type="label" id="2">
@@ -25,8 +26,8 @@
 					<label>5</label>
 					<align>left</align>
 					<aligny>top</aligny>
-					<font>title28b</font>
-					<textcolor>title</textcolor>
+					<font>font28b</font>
+					<textcolor>white</textcolor>
 				</control>
 				<control type="label" id="3">
 					<description>No Presets Label</description>

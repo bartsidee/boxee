@@ -30,7 +30,11 @@
  */
 
 #include "TextureManager.h"
+#include "AdvancedSettings.h"
+#include "gui3d.h"
 #include "Geometry.h"
+#include "TransformMatrix.h"
+#include "WindowingFactory.h"
 #include "system.h" // HAS_GL, HAS_DX, etc
 
 typedef uint32_t color_t;
@@ -44,6 +48,26 @@ typedef uint32_t color_t;
 #define ASPECT_ALIGNY_BOTTOM 8
 #define ASPECT_ALIGN_MASK    3
 #define ASPECT_ALIGNY_MASK  ~3
+
+#ifdef _DEBUG
+#define RATIO 2.25f
+#define PS_SINGLE 0
+#define PS_SINGLE_COLOR 1
+#define PS_MULTI 2
+#define PS_MULTI_COLOR 3
+#endif
+
+typedef struct _ImageVertex
+{
+  float x, y, z;
+  float u1, v1;
+  float u2, v2;
+} ImageVertex;
+
+typedef struct _ImageCoords
+{
+  ImageVertex m_pCoords[4];
+} ImageCoords;
 
 class CAspectRatio
 {
@@ -76,6 +100,7 @@ public:
   void operator=(const CTextureInfo &right);
   bool       useLarge;
   CRect      border;      // scaled  - unneeded if we get rid of scale on load
+  CRect      srcBorder;   // non scaled
   int        orientation; // orientation of the texture (0 - 7 == EXIForientation - 1)
   CStdString diffuse;     // diffuse overlay texture
   CStdString filename;    // main texture file
@@ -89,6 +114,7 @@ public:
   CGUITextureBase(float posX, float posY, float width, float height, const CTextureInfo& texture, CBaseTexture* textureData = NULL);
   CGUITextureBase(const CGUITextureBase &left);
   virtual ~CGUITextureBase(void);
+  static void PrintPixelCount();
 
   void Render();
 
@@ -103,6 +129,7 @@ public:
   void SetWidth(float width);
   void SetHeight(float height);
   void SetFileName(const CStdString &filename);
+  void SetLoadingAnimation(const CStdString& strLoadingAnimation) { m_loadingAnimation = strLoadingAnimation; };
   void SetAspectRatio(const CAspectRatio &aspect);
   void SetRenderBorderOnly(bool renderBorderOnly);
 
@@ -127,18 +154,27 @@ protected:
   void LoadDiffuseImage();
   void AllocateOnDemand();
   void UpdateAnimFrame();
-  void Render(float left, float top, float bottom, float right, float u1, float v1, float u2, float v2, float u3, float v3);
+  void BuildVertexCoords(ImageCoords& coords, float left, float top, float bottom, 
+          float right, float u1, float v1, float u2, float v2, float u3, float v3);
+  void BuildColorData();
   void OrientateTexture(CRect &rect, float width, float height, int orientation);
+
+  void DrawRectangleElements();
 
   // functions that our implementation classes handle
   virtual void Allocate() {}; ///< called after our textures have been allocated
   virtual void Free() {};     ///< called after our textures have been freed
-  virtual void Begin() {};
-  virtual void Draw(float *x, float *y, float *z, const CRect &texture, const CRect &diffuse, color_t color, int orientation)=0;
-  virtual void End() {};
+  virtual void Begin() = 0;
+  virtual void Draw(ImageCoords& coords) = 0;
+  virtual void End() = 0;
 
-  bool m_visible;
-  color_t m_diffuseColor;
+  virtual bool LoadShaders() = 0;
+  virtual bool SelectShader() = 0;
+
+  bool    m_visible;
+  color_t m_diffuseColor; // the original diffuse color
+  color_t m_diffuseColorBlended;// diffuse color after blending
+  bool    m_bNeedBlending;
 
   float m_posX;         // size of the frame
   float m_posY;
@@ -147,7 +183,10 @@ protected:
 
   CRect m_vertex;       // vertex coords to render
   bool m_invalid;       // if true, we need to recalculate
+  float m_globalAlpha;  // track alpha changes from global effects (e.g fadein-fadeout)
 
+  // left, center and right coordinates
+  ImageCoords m_vertexCoords[9];
   unsigned char m_alpha;
 
   float m_frameWidth, m_frameHeight;          // size in pixels of the actual frame within the texture
@@ -168,6 +207,7 @@ protected:
 
   CTextureInfo m_info;
   CAspectRatio m_aspect;
+  CStdString m_loadingAnimation;
 
   CTextureArray m_diffuse;
   CTextureArray m_texture;
@@ -176,12 +216,12 @@ protected:
 };
 
 
-#if defined(HAS_GL)
-#include "GUITextureGL.h"
-#define CGUITexture CGUITextureGL
-#elif defined(HAS_GLES)
+#if defined(HAS_GLES)
 #include "GUITextureGLES.h"
 #define CGUITexture CGUITextureGLES
+#elif defined(HAS_GL2)
+#include "GUITextureGL.h"
+#define CGUITexture CGUITextureGL
 #elif defined(HAS_DX)
 #include "GUITextureD3D.h"
 #define CGUITexture CGUITextureD3D

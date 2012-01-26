@@ -37,10 +37,12 @@ CVideoSettings::CVideoSettings()
   m_ViewMode = VIEW_MODE_NORMAL;
   m_CustomZoomAmount = 1.0f;
   m_CustomPixelRatio = 1.0f;
+  m_CustomVerticalShift = 0.0f;
+  m_CustomNonLinStretch = false;
   m_AudioStream = -1;
   m_SubtitleStream = -1;
   m_SubtitleDelay = 0.0f;
-  m_SubtitleOn = true;
+  m_SubtitleOn = false;
   m_SubtitleCached = false;
   m_Brightness = 50.0f;
   m_Contrast = 50.0f;

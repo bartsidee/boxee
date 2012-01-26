@@ -28,7 +28,10 @@
 #define CXIMAGEJPG_SUPPORT_EXIF 1
 
 extern "C" {
-#ifdef _LINUX
+#if defined(_LINUX) && !defined(__APPLE__)
+ #include "../jpeg-turbo/jpeglib.h"
+ #include "../jpeg-turbo/jerror.h"
+#elif defined(__APPLE__)
  #include <jpeglib.h>
  #include <jerror.h>
 #else
@@ -36,6 +39,10 @@ extern "C" {
  #include "../jpeg/jerror.h"
 #endif
 }
+
+#ifndef INPUT_BUF_SIZE
+#define INPUT_BUF_SIZE 4096
+#endif
 
 class DLL_EXP CxImageJPG: public CxImage
 {
@@ -191,7 +198,7 @@ protected:
 class CxFileJpg : public jpeg_destination_mgr, public jpeg_source_mgr
 	{
 public:
-	enum { eBufSize = 4096 };
+	enum { eBufSize = INPUT_BUF_SIZE };
 
 	CxFileJpg(CxFile* pFile)
 	{
@@ -258,6 +265,15 @@ public:
 	{
 		size_t nbytes;
 		CxFileJpg* pSource = (CxFileJpg*)cinfo->src;
+        //printf("eBufSize is %d \n", eBufSize);
+#ifdef OPENMAX_SUPPORTED
+        long filepos = pSource->m_pFile->Tell();
+        if (cinfo->context->bfileresync) {
+            pSource->m_pFile->Seek(cinfo->context->filepos,SEEK_SET);
+            cinfo->context->filepos = filepos - pSource->bytes_in_buffer;
+            cinfo->context->bfileresync = false;
+        }
+#endif
 		nbytes = pSource->m_pFile->Read(pSource->m_pBuffer,1,eBufSize);
 		if (nbytes <= 0){
 			if (pSource->m_bStartOfFile)	//* Treat empty input file as fatal error 

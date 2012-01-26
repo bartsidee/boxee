@@ -17,8 +17,24 @@
 #include "bxappboxrepositories.h"
 #include <SDL/SDL.h>
 
+#define DEFAULT_APP_CATEGORY "LIBRARY" //should be the same as id of the default section the server gives us
+
 namespace BOXEE
 {
+
+class AppCategoryItem
+{
+public:
+  AppCategoryItem()
+  {
+    m_Id = DEFAULT_APP_CATEGORY;
+    m_Text = m_Id;
+  };
+  virtual ~AppCategoryItem(){};
+
+  std::string m_Id;
+  std::string m_Text;
+};
 
 class BXAppBoxManager
 {
@@ -34,6 +50,7 @@ public:
 
   bool UpdateAppBoxBoxeeApplicationsList(unsigned long executionDelayInMS, bool repeat);
   bool GetAppBoxBoxeeApplications(TiXmlDocument& boxeeApplicationsList);
+  bool IsAppIdInAppBoxApplicationsList(const std::string& id);
 
   //////////////////////////////
   // 3rdPartyApplicationsList //
@@ -54,6 +71,14 @@ public:
 
   bool UpdateAppBoxRepositoriesList(unsigned long executionDelayInMS, bool repeat);
   bool GetRepositories(BXAppBoxRepositories& repositoriesList);
+
+  //////////////////////
+  // Apps Categories  //
+  //////////////////////
+
+  bool UpdateAppsCategoriesList(unsigned long executionDelayInMS, bool repeat);
+  bool GetAppsCategories(std::vector<AppCategoryItem>& categoryList);
+  std::string GetAppsCategoryLabel(const std::string& id);
 
 private:
 
@@ -143,6 +168,29 @@ private:
   private:
 
     void BuildRepositoriesApplicationsList(const BXAppBoxRepositories& appBoxRepositoriesList, std::map<std::string, TiXmlDocument>& appBox3rdPartyRepositoriesApplicationsMap);
+
+    BXAppBoxManager* m_taskHandler;
+  };
+
+  //////////////////////
+  // Apps Categories  //
+  //////////////////////
+  void LockAppsCategoriesList();
+  void UnLockAppsCategoriesList();
+  void CopyAppsCategoriesList(const std::vector<AppCategoryItem>& appCategoriesList);
+
+  SDL_mutex* m_appsCategoriesListGuard;
+  std::vector<AppCategoryItem> m_appCategoryList;
+
+  class RequestAppsCategoriesListFromServerTask : public BoxeeScheduleTask
+  {
+  public:
+
+    RequestAppsCategoriesListFromServerTask(BXAppBoxManager* taskHandler, unsigned long executionDelayInMS, bool repeat);
+    virtual ~RequestAppsCategoriesListFromServerTask();
+    virtual void DoWork();
+
+  private:
 
     BXAppBoxManager* m_taskHandler;
   };

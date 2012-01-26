@@ -53,7 +53,7 @@ void CBoxeeMediaSourceList::deleteSourceByAppId(CStdString appId)
       continue;
     }
     
-    CURL appUrl(source.path);
+    CURI appUrl(source.path);
     CStdString sourceAppId = appUrl.GetHostName();
     
     if (sourceAppId.CompareNoCase(appId) == 0)
@@ -139,22 +139,24 @@ void CBoxeeMediaSourceList::updateSource(CStdString oldName,const CStdString &st
   BoxeeMediaSourceMap::iterator findIterator = m_sources.find(oldName);
   if (findIterator == m_sources.end())
   {
-	CLog::Log(LOGERROR,"can not find name %s in the sources list ", oldName.c_str());
+	  CLog::Log(LOGERROR,"can not find name %s in the sources list ", oldName.c_str());
   }
+
   CBoxeeMediaSource& source = (*findIterator).second;
 
   if (source.isVideo)
   {
-	g_settings.UpdateSource("video",oldName, strUpdateChild, strUpdateValue );
+	  g_settings.UpdateSource("video",oldName, strUpdateChild, strUpdateValue );
   }
   if (source.isMusic)
   {
-	g_settings.UpdateSource("music",oldName, strUpdateChild, strUpdateValue );
+	  g_settings.UpdateSource("music",oldName, strUpdateChild, strUpdateValue );
   }
   if (source.isPicture)
   {
-	g_settings.UpdateSource("pictures",oldName, strUpdateChild, strUpdateValue );
+	  g_settings.UpdateSource("pictures",oldName, strUpdateChild, strUpdateValue );
   }
+
   g_settings.SaveSources();
 
   load();
@@ -177,7 +179,7 @@ void CBoxeeMediaSourceList::addOrEditSource(CBoxeeMediaSource orig_source, CBoxe
   if (source.isVideo == orig_source.isVideo)
   {
     CLog::Log(LOGDEBUG,"CBoxeeMediaSourceList::addOrEditSource video scan type wasn't change - don't delete or add");
-  }
+}
   else
   {
     if (orig_source.isVideo)

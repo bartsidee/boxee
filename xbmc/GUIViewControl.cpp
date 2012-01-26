@@ -63,7 +63,7 @@ void CGUIViewControl::SetParentWindow(int window)
 }
 
 // Sets view by control id only
-void CGUIViewControl::SetCurrentViewByID(int viewId)
+void CGUIViewControl::SetCurrentViewByID(int viewId, bool focusToCurrentView)
 {
   // grab the previous control
   CGUIControl *previousView = NULL;
@@ -78,11 +78,10 @@ void CGUIViewControl::SetCurrentViewByID(int viewId)
   if (newView < 0)
     return;
 
-  SelectVisibleView(newView, previousView);
-
+  SelectVisibleView(newView, previousView, focusToCurrentView);
 }
 
-void CGUIViewControl::SetCurrentView(int viewMode)
+void CGUIViewControl::SetCurrentView(int viewMode, bool focusToCurrentView)
 {
   // grab the previous control
   CGUIControl *previousView = NULL;
@@ -109,11 +108,10 @@ void CGUIViewControl::SetCurrentView(int viewMode)
   if (newView < 0)
     return;
 
-  SelectVisibleView(newView, previousView);
-
+  SelectVisibleView(newView, previousView, focusToCurrentView);
 }
 
-void CGUIViewControl::SelectVisibleView(int iViewIndex, CGUIControl *previousView)
+void CGUIViewControl::SelectVisibleView(int iViewIndex, CGUIControl *previousView, bool focusToVisibleView)
 {
   m_currentView = iViewIndex;
   CGUIControl *pNewView = m_visibleViews[m_currentView];
@@ -123,30 +121,28 @@ void CGUIViewControl::SelectVisibleView(int iViewIndex, CGUIControl *previousVie
     (*view)->SetVisible(false);
   pNewView->SetVisible(true);
 
+  if (focusToVisibleView)
+  {
+    // if requested -> set focus to the new view
+    CGUIMessage msg(GUI_MSG_SETFOCUS, m_parentWindow, pNewView->GetID(), 0);
+    g_windowManager.SendMessage(msg);
+  }
+
   if (pNewView == previousView)
     return; // no need to actually update anything (other than visibility above)
 
   //  CLog::Log(LOGDEBUG,"SetCurrentView: Oldview: %i, Newview :%i", m_currentView, viewMode);
 
-  bool hasFocus(false);
   int item = -1;
   if (previousView)
   { // have an old view - let's clear it out and hide it.
-    hasFocus = previousView->HasFocus();
     item = GetSelectedItem(previousView);
     CGUIMessage msg(GUI_MSG_LABEL_RESET, m_parentWindow, previousView->GetID());
     previousView->OnMessage(msg);
   }
 
-  // and focus if necessary
-  if (hasFocus)
-  {
-    CGUIMessage msg(GUI_MSG_SETFOCUS, m_parentWindow, pNewView->GetID(), 0);
-    g_windowManager.SendMessage(msg);
-  }
-
   // Update it with the contents
-  UpdateContents(pNewView, item);
+  UpdateContents(pNewView, item, false);
 
   // Update our view control
   UpdateViewAsControl(((CGUIBaseContainer *)pNewView)->GetLabel());
@@ -157,17 +153,25 @@ void CGUIViewControl::SetItems(CFileItemList &items)
   //  CLog::Log(LOGDEBUG,"SetItems: %i", m_currentView);
   m_fileItems = &items;
   // update our current view control...
-  UpdateView();
+  UpdateView(false);
 }
 
-void CGUIViewControl::UpdateContents(const CGUIControl *control, int currentItem)
+void CGUIViewControl::AppendItems(CFileItemList& completeList, CFileItemList& deltaList)
+{
+  m_fileItems = &completeList;
+  m_deltaItems = &deltaList;
+
+  UpdateView(true);
+}
+
+void CGUIViewControl::UpdateContents(const CGUIControl *control, int currentItem, bool append)
 {
   if (!control || !m_fileItems) return;
-  CGUIMessage msg(GUI_MSG_LABEL_BIND, m_parentWindow, control->GetID(), currentItem, 0, m_fileItems);
+  CGUIMessage msg(GUI_MSG_LABEL_BIND, m_parentWindow, control->GetID(), currentItem, (int)append, append?m_deltaItems:m_fileItems);
   g_windowManager.SendMessage(msg);
 }
 
-void CGUIViewControl::UpdateView()
+void CGUIViewControl::UpdateView(bool append)
 {
   //  CLog::Log(LOGDEBUG,"UpdateView: %i", m_currentView);
   if (m_currentView < 0 || m_currentView >= (int)m_visibleViews.size())
@@ -176,7 +180,7 @@ void CGUIViewControl::UpdateView()
   CGUIControl *pControl = m_visibleViews[m_currentView];
   // get the currently selected item
   int item = GetSelectedItem(pControl);
-  UpdateContents(pControl, item < 0 ? 0 : item);
+  UpdateContents(pControl, item < 0 ? 0 : item, append);
 }
 
 int CGUIViewControl::GetSelectedItem(const CGUIControl *control) const

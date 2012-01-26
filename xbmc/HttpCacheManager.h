@@ -71,6 +71,7 @@ namespace XBMC
 
     virtual bool Initialize(const std::string &strLocalCachePath);
     virtual void Deinitialize();
+    virtual void Delete();
 
     // to use the cache - one must retrieve a handle using Open, and release (Close) it when the operation is over.
     virtual HttpCacheHandle Open();
@@ -128,7 +129,7 @@ namespace XBMC
     void SetMaxCacheSize(int nMaxSize);
     
 protected:
-
+    
     void Cleanup();
 
     std::string      m_localCachePath;
@@ -148,7 +149,7 @@ protected:
     void ClearRefMap();
 
 private:
-
+    void EnsureCacheSize(HttpCacheHandle h, int64_t newFileSize);
     class HttpCacheManagerCleanup : public BOXEE::BXBGJob
     {
     public:
@@ -160,7 +161,7 @@ private:
       private:
 
       CHttpCacheManager* m_cacheHandler;
-    };
+  };
 
     BOXEE::BXBGProcess m_scanProcessor;
     unsigned long      m_lastCleanup;

@@ -22,6 +22,8 @@
 #include "infotagmusic.h"
 #include "pyutil.h"
 
+#include "../../../placement_new.h"
+
 #ifndef __GNUC__
 #pragma code_seg("PY_TEXT")
 #pragma data_seg("PY_DATA")
@@ -45,7 +47,7 @@ namespace PYXBMC
   {
     InfoTagMusic* self = (InfoTagMusic*)InfoTagMusic_Type.tp_alloc(&InfoTagMusic_Type, 0);
     if (!self) return NULL;
-    new(&self->infoTag) MUSIC_INFO::CMusicInfoTag();
+   PLACEMENT_NEW(&self->infoTag) MUSIC_INFO::CMusicInfoTag();
     self->infoTag = infoTag;
 
     return self;

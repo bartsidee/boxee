@@ -63,7 +63,7 @@ void CGUIListGroup::AddControl(CGUIControl *control, int position /*= -1*/)
 
 void CGUIListGroup::Render()
 {
-  g_graphicsContext.SetOrigin(m_posX, m_posY);
+  g_graphicsContext.PushTransform(TransformMatrix::CreateTranslation(m_posX, m_posY));
   bool cropping = (m_cropping && g_graphicsContext.SetClipRegion(0, 0, m_width, m_height));
   for (iControls it = m_children.begin(); it != m_children.end(); ++it)
   {
@@ -76,7 +76,7 @@ void CGUIListGroup::Render()
   CGUIControl::Render();
   if (cropping)
     g_graphicsContext.RestoreClipRegion();
-  g_graphicsContext.RestoreOrigin();
+  g_graphicsContext.PopTransform();
   m_item = NULL;
 }
 

@@ -203,7 +203,7 @@
          <allowedValueList>
             <allowedValue>FactoryDefaults</allowedValue>
          </allowedValueList>
-      </stateVariable>
+      </stateVariable>   
    <stateVariable sendEvents="no">
          <name>VolumeDB</name>
          <dataType>i2</dataType>

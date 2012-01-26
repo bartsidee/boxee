@@ -156,7 +156,6 @@ void CGUIDialogSettings::SetSettingVisiable(unsigned int id, bool visable)
   if(settingNum == (unsigned int)-1)
     return;
 
-  SettingInfo &setting = m_settings.at(settingNum);
   unsigned int controlID = settingNum + CONTROL_START;
 
   CGUIControl *pControl = (CGUIControl *)GetControl(controlID);
@@ -168,6 +167,15 @@ void CGUIDialogSettings::SetSettingVisiable(unsigned int id, bool visable)
   pControl->SetVisible(visable);
 
 }
+
+void CGUIDialogSettings::UpdateSettingInfoLabel2(SettingInfo &setting)
+{
+  if(setting.label2.Equals("(Invalid)") || setting.label2.Equals("Unknown (Invalid)"))
+  {
+    setting.label2 = "Unknown";
+  }
+}
+
 void CGUIDialogSettings::UpdateSetting(unsigned int id)
 {
   unsigned int settingNum = (unsigned int)-1;
@@ -188,6 +196,11 @@ void CGUIDialogSettings::UpdateSetting(unsigned int id)
   {
     CGUISpinControlEx *pControl = (CGUISpinControlEx *)GetControl(controlID);
     if (pControl && setting.data) pControl->SetValue(*(int *)setting.data);
+  }
+  else if (setting.type == SettingInfo::SPIN_FLOAT)
+  {
+    CGUISpinControlEx *pControl = (CGUISpinControlEx *)GetControl(controlID);
+    if (pControl && setting.data) pControl->SetFloatValue(*(float *)setting.data);
   }
   else if (setting.type == SettingInfo::CHECK)
   {
@@ -257,7 +270,12 @@ void CGUIDialogSettings::OnClick(int iID)
   if (setting.type == SettingInfo::SPIN)
   {
     CGUISpinControlEx *pControl = (CGUISpinControlEx *)GetControl(iID);
-    if (setting.data) *(int *)setting.data = pControl->GetValue();
+    if (setting.data) *(int*)setting.data = pControl->GetValue();
+  }
+  else if (setting.type == SettingInfo::SPIN_FLOAT)
+  {
+    CGUISpinControlEx *pControl = (CGUISpinControlEx *)GetControl(iID);
+    if (setting.data) *(float*)setting.data = pControl->GetFloatValue();
   }
   else if (setting.type == SettingInfo::CHECK)
   {
@@ -282,6 +300,15 @@ void CGUIDialogSettings::OnClick(int iID)
       SET_CONTROL_LABEL2(iID, setting.formatFunction(*(float *)setting.data, setting.interval));
   }
   OnSettingChanged(setting);
+
+  if(setting.type == SettingInfo::BUTTON)
+  {
+    if(!setting.label2.IsEmpty())
+    {
+      UpdateSettingInfoLabel2(setting);
+      SET_CONTROL_LABEL2(iID,setting.label2);
+    }
+  }
 }
 
 void CGUIDialogSettings::FreeControls()
@@ -303,6 +330,11 @@ void CGUIDialogSettings::AddSetting(SettingInfo &setting, float width, int iCont
     pControl = new CGUIButtonControl(*m_pOriginalSettingsButton);
     if (!pControl) return ;
     ((CGUIButtonControl *)pControl)->SetLabel(setting.name);
+    if(!setting.label2.IsEmpty())
+    {
+      UpdateSettingInfoLabel2(setting);
+      ((CGUIButtonControl *)pControl)->SetLabel2(setting.label2);
+    }
     if (setting.formatFunction)
       ((CGUIButtonControl *)pControl)->SetLabel2(setting.formatFunction(*(float *)setting.data, setting.interval));
     pControl->SetWidth(width);
@@ -322,7 +354,7 @@ void CGUIDialogSettings::AddSetting(SettingInfo &setting, float width, int iCont
     pControl->SetWidth(width);
     if (setting.data) ((CGUIRadioButtonControl *)pControl)->SetSelected(*(bool *)setting.data == 1);
   }
-  else if (setting.type == SettingInfo::SPIN && setting.entry.size() > 0 && m_pOriginalSpin)
+  else if ((setting.type == SettingInfo::SPIN || setting.type == SettingInfo::SPIN_FLOAT ) && setting.entry.size() > 0 && m_pOriginalSpin)
   {
     pControl = new CGUISpinControlEx(*m_pOriginalSpin);
     if (!pControl) return ;
@@ -331,7 +363,17 @@ void CGUIDialogSettings::AddSetting(SettingInfo &setting, float width, int iCont
     pControl->SetWidth(width);
     for (unsigned int i = 0; i < setting.entry.size(); i++)
       ((CGUISpinControlEx *)pControl)->AddLabel(setting.entry[i], i);
-    if (setting.data) ((CGUISpinControlEx *)pControl)->SetValue(*(int *)setting.data);
+    if(setting.type == SettingInfo::SPIN_FLOAT)
+    {
+      ((CGUISpinControlEx *)pControl)->SetType(SPIN_CONTROL_TYPE_FLOAT);
+      ((CGUISpinControlEx *)pControl)->SetFloatRange(setting.min, setting.max);
+      ((CGUISpinControlEx *)pControl)->SetFloatInterval(setting.interval);
+      if (setting.data) ((CGUISpinControlEx *)pControl)->SetFloatValue(*(float *)setting.data);
+    }
+    else
+    {
+      if (setting.data) ((CGUISpinControlEx *)pControl)->SetValue(*(int *)setting.data);
+    }
   }
   else if (setting.type == SettingInfo::SLIDER)
   {
@@ -362,7 +404,7 @@ void CGUIDialogSettings::AddSetting(SettingInfo &setting, float width, int iCont
     delete pControl;
 }
 
-void CGUIDialogSettings::AddButton(unsigned int id, int label, float *current, float min, float interval, float max, FORMATFUNCTION function)
+void CGUIDialogSettings::AddButton(unsigned int id, int label, float *current, float min, float interval, float max, FORMATFUNCTION function, CStdString label2)
 {
   SettingInfo setting;
   setting.id = id;
@@ -373,6 +415,18 @@ void CGUIDialogSettings::AddButton(unsigned int id, int label, float *current, f
   setting.max = max;
   setting.interval = interval;
   setting.formatFunction = function;
+  setting.label2 = label2;
+  m_settings.push_back(setting);
+}
+
+void CGUIDialogSettings::AddButton(unsigned int id, int label, int *current, CStdString label2)
+{
+  SettingInfo setting;
+  setting.id = id;
+  setting.name = g_localizeStrings.Get(label);
+  setting.type = SettingInfo::BUTTON;
+  setting.data = current;
+  setting.label2 = label2;
   m_settings.push_back(setting);
 }
 
@@ -386,7 +440,32 @@ void CGUIDialogSettings::AddBool(unsigned int id, int label, bool *on, bool enab
   setting.enabled = enabled;
   m_settings.push_back(setting);
 }
+void CGUIDialogSettings::AddSpin(unsigned int id, int label, float *current, float min, float max, float interval, FORMATFUNCTION function, const char* minLabel, const char* maxLabel)
+{
+  SettingInfo setting;
+  setting.id = id;
+  setting.name = g_localizeStrings.Get(label);
+  setting.type = SettingInfo::SPIN_FLOAT;
+  setting.data = current;
+  setting.interval=interval;
+  setting.min=min;
+  setting.max=max;
+  setting.formatFunction = function;
 
+  for(float f=min; f < max; f+=interval)
+  {
+    CStdString format;
+    if (f == min && minLabel)
+      format = minLabel;
+    if (f == max && maxLabel)
+      format = maxLabel;
+    else
+      format.Format("%.3f", f);
+
+    setting.entry.push_back(format);
+  }
+  m_settings.push_back(setting);
+}
 void CGUIDialogSettings::AddSpin(unsigned int id, int label, int *current, unsigned int max, const int *entries)
 {
   SettingInfo setting;

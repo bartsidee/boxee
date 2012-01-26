@@ -28,11 +28,13 @@ private:
   void ChangeOverscan(int iControl);
   void SelectScreenFormatButton(int iControl);
   void SelectOverscanButton(int iControl);
+  // We need to copy the calibration to all matching resolutions
+  void CopyOverscan();
   
   ScreenFormatType m_savedScreenFormat;
   OverscanType m_savedOverscan;
   float m_savedPixelRatio;
-  OVERSCAN m_savedOverscanValues;
+  OVERSCAN m_savedOverscanValues;  
 
   int m_launchFromLogin;
 };

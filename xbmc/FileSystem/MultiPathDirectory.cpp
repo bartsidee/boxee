@@ -78,9 +78,8 @@ bool CMultiPathDirectory::GetDirectory(const CStdString& strPath, CFileItemList 
     }
     if (dlgProgress)
     {
-      CURL url(vecPaths[i]);
-      CStdString strStripped;
-      url.GetURLWithoutUserDetails(strStripped);
+      CURI url(vecPaths[i]);
+      CStdString strStripped = url.GetWithoutUserDetails();
       dlgProgress->SetLine(1, strStripped);
       dlgProgress->SetProgressAdvance();
       dlgProgress->Progress();

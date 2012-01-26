@@ -33,29 +33,30 @@
 /*
  * \brief Get and prepare a FreeType glyph
  */
-static void drawing_make_glyph(ass_drawing_t *drawing, void *fontconfig_priv,
-                               ass_font_t *font, ass_hinting_t hint)
+static void drawing_make_glyph(ASS_Drawing *drawing, void *fontconfig_priv,
+                               ASS_Font *font)
 {
     FT_OutlineGlyph glyph;
 
     // This is hacky...
     glyph = (FT_OutlineGlyph) ass_font_get_glyph(fontconfig_priv, font,
-                                                 (uint32_t) ' ', hint, 0);
+                                                 (uint32_t) ' ', 0, 0);
+    if (glyph) {
+        FT_Outline_Done(drawing->ftlibrary, &glyph->outline);
+        FT_Outline_New(drawing->ftlibrary, GLYPH_INITIAL_POINTS,
+                       GLYPH_INITIAL_CONTOURS, &glyph->outline);
 
-    FT_Outline_Done(drawing->ftlibrary, &glyph->outline);
-    FT_Outline_New(drawing->ftlibrary, GLYPH_INITIAL_POINTS,
-                   GLYPH_INITIAL_CONTOURS, &glyph->outline);
-
-    glyph->outline.n_contours = 0;
-    glyph->outline.n_points = 0;
-    glyph->root.advance.x = glyph->root.advance.y = 0;
+        glyph->outline.n_contours = 0;
+        glyph->outline.n_points = 0;
+        glyph->root.advance.x = glyph->root.advance.y = 0;
+    }
     drawing->glyph = glyph;
 }
 
 /*
  * \brief Add a single point to a contour.
  */
-static inline void drawing_add_point(ass_drawing_t *drawing,
+static inline void drawing_add_point(ASS_Drawing *drawing,
                                      FT_Vector *point)
 {
     FT_Outline *ol = &drawing->glyph->outline;
@@ -76,7 +77,7 @@ static inline void drawing_add_point(ass_drawing_t *drawing,
 /*
  * \brief Close a contour and check glyph size overflow.
  */
-static inline void drawing_close_shape(ass_drawing_t *drawing)
+static inline void drawing_close_shape(ASS_Drawing *drawing)
 {
     FT_Outline *ol = &drawing->glyph->outline;
 
@@ -86,14 +87,16 @@ static inline void drawing_close_shape(ass_drawing_t *drawing)
                                drawing->max_contours);
     }
 
-    ol->contours[ol->n_contours] = ol->n_points - 1;
-    ol->n_contours++;
+    if (ol->n_points) {
+        ol->contours[ol->n_contours] = ol->n_points - 1;
+        ol->n_contours++;
+    }
 }
 
 /*
  * \brief Prepare drawing for parsing.  This just sets a few parameters.
  */
-static void drawing_prepare(ass_drawing_t *drawing)
+static void drawing_prepare(ASS_Drawing *drawing)
 {
     // Scaling parameters
     drawing->point_scale_x = drawing->scale_x *
@@ -106,26 +109,14 @@ static void drawing_prepare(ass_drawing_t *drawing)
  * \brief Finish a drawing.  This only sets the horizontal advance according
  * to the glyph's bbox at the moment.
  */
-static void drawing_finish(ass_drawing_t *drawing, int raw_mode)
+static void drawing_finish(ASS_Drawing *drawing, int raw_mode)
 {
     int i, offset;
-    FT_BBox bbox;
+    FT_BBox bbox = drawing->cbox;
     FT_Outline *ol = &drawing->glyph->outline;
 
     // Close the last contour
     drawing_close_shape(drawing);
-
-#if 0
-    // Dump points
-    for (i = 0; i < ol->n_points; i++) {
-        printf("point (%d, %d)\n", (int) ol->points[i].x,
-               (int) ol->points[i].y);
-    }
-
-    // Dump contours
-    for (i = 0; i < ol->n_contours; i++)
-        printf("contour %d\n", ol->contours[i]);
-#endif
 
     ass_msg(drawing->library, MSGL_V,
             "Parsed drawing with %d points and %d contours", ol->n_points,
@@ -134,7 +125,6 @@ static void drawing_finish(ass_drawing_t *drawing, int raw_mode)
     if (raw_mode)
         return;
 
-    FT_Outline_Get_CBox(&drawing->glyph->outline, &bbox);
     drawing->glyph->root.advance.x = d6_to_d16(bbox.xMax - bbox.xMin);
 
     drawing->desc = double_to_d6(-drawing->pbo * drawing->scale_y);
@@ -150,7 +140,7 @@ static void drawing_finish(ass_drawing_t *drawing, int raw_mode)
 /*
  * \brief Check whether a number of items on the list is available
  */
-static int token_check_values(ass_drawing_token_t *token, int i, int type)
+static int token_check_values(ASS_DrawingToken *token, int i, int type)
 {
     int j;
     for (j = 0; j < i; j++) {
@@ -162,16 +152,16 @@ static int token_check_values(ass_drawing_token_t *token, int i, int type)
 }
 
 /*
- * \brief Tokenize a drawing string into a list of ass_drawing_token_t
+ * \brief Tokenize a drawing string into a list of ASS_DrawingToken
  * This also expands points for closing b-splines
  */
-static ass_drawing_token_t *drawing_tokenize(char *str)
+static ASS_DrawingToken *drawing_tokenize(char *str)
 {
     char *p = str;
     int i, val, type = -1, is_set = 0;
     FT_Vector point = {0, 0};
 
-    ass_drawing_token_t *root = NULL, *tail = NULL, *spline_start = NULL;
+    ASS_DrawingToken *root = NULL, *tail = NULL, *spline_start = NULL;
 
     while (*p) {
         if (*p == 'c' && spline_start) {
@@ -179,7 +169,7 @@ static ass_drawing_token_t *drawing_tokenize(char *str)
             // back to the end
             if (token_check_values(spline_start->next, 2, TOKEN_B_SPLINE)) {
                 for (i = 0; i < 3; i++) {
-                    tail->next = calloc(1, sizeof(ass_drawing_token_t));
+                    tail->next = calloc(1, sizeof(ASS_DrawingToken));
                     tail->next->prev = tail;
                     tail = tail->next;
                     tail->type = TOKEN_B_SPLINE;
@@ -214,11 +204,11 @@ static ass_drawing_token_t *drawing_tokenize(char *str)
 
         if (type != -1 && is_set == 2) {
             if (root) {
-                tail->next = calloc(1, sizeof(ass_drawing_token_t));
+                tail->next = calloc(1, sizeof(ASS_DrawingToken));
                 tail->next->prev = tail;
                 tail = tail->next;
             } else
-                root = tail = calloc(1, sizeof(ass_drawing_token_t));
+                root = tail = calloc(1, sizeof(ASS_DrawingToken));
             tail->type = type;
             tail->point = point;
             is_set = 0;
@@ -228,38 +218,44 @@ static ass_drawing_token_t *drawing_tokenize(char *str)
         p++;
     }
 
-#if 0
-    // Check tokens
-    ass_drawing_token_t *t = root;
-    while(t) {
-        printf("token %d point (%d, %d)\n", t->type, t->point.x, t->point.y);
-        t = t->next;
-    }
-#endif
-
     return root;
 }
 
 /*
  * \brief Free a list of tokens
  */
-static void drawing_free_tokens(ass_drawing_token_t *token)
+static void drawing_free_tokens(ASS_DrawingToken *token)
 {
     while (token) {
-        ass_drawing_token_t *at = token;
+        ASS_DrawingToken *at = token;
         token = token->next;
         free(at);
     }
 }
 
 /*
+ * \brief Update drawing cbox
+ */
+static inline void update_cbox(ASS_Drawing *drawing, FT_Vector *point)
+{
+    FT_BBox *box = &drawing->cbox;
+
+    box->xMin = FFMIN(box->xMin, point->x);
+    box->xMax = FFMAX(box->xMax, point->x);
+    box->yMin = FFMIN(box->yMin, point->y);
+    box->yMax = FFMAX(box->yMax, point->y);
+}
+
+/*
  * \brief Translate and scale a point coordinate according to baseline
  * offset and scale.
  */
-static inline void translate_point(ass_drawing_t *drawing, FT_Vector *point)
+static inline void translate_point(ASS_Drawing *drawing, FT_Vector *point)
 {
     point->x = drawing->point_scale_x * point->x;
     point->y = drawing->point_scale_y * -point->y;
+
+    update_cbox(drawing, point);
 }
 
 /*
@@ -267,16 +263,13 @@ static inline void translate_point(ass_drawing_t *drawing, FT_Vector *point)
  * This curve evaluator is also used in VSFilter (RTS.cpp); it's a simple
  * implementation of the De Casteljau algorithm.
  */
-static void drawing_evaluate_curve(ass_drawing_t *drawing,
-                                   ass_drawing_token_t *token, char spline,
+static void drawing_evaluate_curve(ASS_Drawing *drawing,
+                                   ASS_DrawingToken *token, char spline,
                                    int started)
 {
     double cx3, cx2, cx1, cx0, cy3, cy2, cy1, cy0;
     double t, h, max_accel, max_accel1, max_accel2;
-    int x0, y0;
-    int x1, y1;
-    int x2, y2;
-    int x3, y3;
+    int x0,y0,x1,y1,x2,y2,x3,y3;
     FT_Vector cur = {0, 0};
 
     cur = token->point;
@@ -362,26 +355,25 @@ static void drawing_evaluate_curve(ass_drawing_t *drawing,
 /*
  * \brief Create and initialize a new drawing and return it
  */
-ass_drawing_t *ass_drawing_new(void *fontconfig_priv, ass_font_t *font,
-                               ass_hinting_t hint, FT_Library lib)
+ASS_Drawing *ass_drawing_new(void *fontconfig_priv, ASS_Font *font,
+                             FT_Library lib)
 {
-    ass_drawing_t* drawing;
+    ASS_Drawing *drawing;
 
     drawing = calloc(1, sizeof(*drawing));
-    if (drawing)
-    {
     drawing->text = calloc(1, DRAWING_INITIAL_SIZE);
     drawing->size = DRAWING_INITIAL_SIZE;
-
+    drawing->cbox.xMin = drawing->cbox.yMin = INT_MAX;
+    drawing->cbox.xMax = drawing->cbox.yMax = INT_MIN;
+    drawing->fontconfig_priv = fontconfig_priv;
+    drawing->font = font;
     drawing->ftlibrary = lib;
     drawing->library = font->library;
-    drawing_make_glyph(drawing, fontconfig_priv, font, hint);
 
     drawing->scale_x = 1.;
     drawing->scale_y = 1.;
     drawing->max_contours = GLYPH_INITIAL_CONTOURS;
     drawing->max_points = GLYPH_INITIAL_POINTS;
-    }
 
     return drawing;
 }
@@ -389,17 +381,18 @@ ass_drawing_t *ass_drawing_new(void *fontconfig_priv, ass_font_t *font,
 /*
  * \brief Free a drawing
  */
-void ass_drawing_free(ass_drawing_t* drawing)
+void ass_drawing_free(ASS_Drawing* drawing)
 {
-    FT_Done_Glyph((FT_Glyph) drawing->glyph);
-    free(drawing->text);
+    if (drawing) {
+        free(drawing->text);
+    }
     free(drawing);
 }
 
 /*
  * \brief Add one ASCII character to the drawing text buffer
  */
-void ass_drawing_add_char(ass_drawing_t* drawing, char symbol)
+void ass_drawing_add_char(ASS_Drawing* drawing, char symbol)
 {
     drawing->text[drawing->i++] = symbol;
     drawing->text[drawing->i] = 0;
@@ -414,7 +407,7 @@ void ass_drawing_add_char(ass_drawing_t* drawing, char symbol)
  * \brief Create a hashcode for the drawing
  * XXX: To avoid collisions a better hash algorithm might be useful.
  */
-void ass_drawing_hash(ass_drawing_t* drawing)
+void ass_drawing_hash(ASS_Drawing* drawing)
 {
     drawing->hash = fnv_32a_str(drawing->text, FNV1_32A_INIT);
 }
@@ -422,11 +415,16 @@ void ass_drawing_hash(ass_drawing_t* drawing)
 /*
  * \brief Convert token list to outline.  Calls the line and curve evaluators.
  */
-FT_OutlineGlyph *ass_drawing_parse(ass_drawing_t *drawing, int raw_mode)
+FT_OutlineGlyph *ass_drawing_parse(ASS_Drawing *drawing, int raw_mode)
 {
     int started = 0;
-    ass_drawing_token_t *token;
+    ASS_DrawingToken *token;
     FT_Vector pen = {0, 0};
+
+    if (drawing->font)
+        drawing_make_glyph(drawing, drawing->fontconfig_priv, drawing->font);
+    if (!drawing->glyph)
+        return NULL;
 
     drawing->tokens = drawing_tokenize(drawing->text);
     drawing_prepare(drawing);

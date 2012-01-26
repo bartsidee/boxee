@@ -22,7 +22,6 @@
  */
 
 #include "Video/DVDVideoCodec.h"
-#include "utils/CriticalSection.h"
 
 struct YV12Image;
 
@@ -34,13 +33,13 @@ public:
   static bool CopyPicture(DVDVideoPicture* pDst, DVDVideoPicture* pSrc);
   static bool CopyPicture(YV12Image* pDst, DVDVideoPicture *pSrc);
   
-  static void LockCodec();
-  static void UnLockCodec();
-  
-  static CCriticalSection& GetCodecLock(){return m_codecLock;};
-	
-private:
-  
-  static CCriticalSection m_codecLock;
+  static DVDVideoPicture* ConvertToNV12Picture(DVDVideoPicture *pSrc);
+  static DVDVideoPicture* ConvertToYUV422PackedPicture(DVDVideoPicture *pSrc, DVDVideoPicture::EFormat format);
+  static bool CopyNV12Picture(YV12Image* pImage, DVDVideoPicture *pSrc);
+  static bool CopyYUV422PackedPicture(YV12Image* pImage, DVDVideoPicture *pSrc);
+
+  static bool IsVP3CompatibleWidth(int width);
+
+  static double NormalizeFrameduration(double frameduration);
 };
 

@@ -89,7 +89,7 @@ void CPullupCorrection::Add(double pts)
   {
     m_haspattern = true;
     m_patternlength = m_pattern.size();
-    CLog::Log(LOGDEBUG, "CPullupCorrection: detected pattern of length %i: %s",
+    CLog::Log(LOGDEBUG, "CPullupCorrection: detected pattern of length %zu: %s",
               pattern.size(), GetPatternStr().c_str());
   }
   

@@ -2,7 +2,7 @@
 |
 |   Platinum - AV Media Browser (Media Server Control Point)
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -43,7 +43,7 @@ NPT_SET_LOCAL_LOGGER("platinum.media.server.browser")
 /*----------------------------------------------------------------------
 |   PLT_MediaBrowser::PLT_MediaBrowser
 +---------------------------------------------------------------------*/
-PLT_MediaBrowser::PLT_MediaBrowser(PLT_CtrlPointReference&   ctrl_point, 
+PLT_MediaBrowser::PLT_MediaBrowser(PLT_CtrlPointReference&   ctrl_point,
                                    PLT_MediaBrowserDelegate* delegate /* = NULL */) :
     m_CtrlPoint(ctrl_point),
     m_Delegate(delegate)
@@ -68,8 +68,8 @@ PLT_MediaBrowser::OnDeviceAdded(PLT_DeviceDataReference& device)
     // verify the device implements the function we need
     PLT_Service* serviceCDS;
     PLT_Service* serviceCMR;
-    NPT_String type;
-    
+    NPT_String   type;
+
     if (!device->GetType().StartsWith("urn:schemas-upnp-org:device:MediaServer"))
         return NPT_FAILURE;
     
@@ -93,7 +93,7 @@ PLT_MediaBrowser::OnDeviceAdded(PLT_DeviceDataReference& device)
     } else {
         // in case it's a newer upnp implementation, force to 1
         serviceCMR->ForceVersion(1);
-    }    
+    }
     
     {
         NPT_AutoLock lock(m_MediaServers);
@@ -113,10 +113,10 @@ PLT_MediaBrowser::OnDeviceAdded(PLT_DeviceDataReference& device)
     }
 
     if (m_Delegate && m_Delegate->OnMSAdded(device)) {
-    m_CtrlPoint->Subscribe(serviceCDS);
-    m_CtrlPoint->Subscribe(serviceCMR);
+        m_CtrlPoint->Subscribe(serviceCDS);
+        m_CtrlPoint->Subscribe(serviceCMR);
     }
-
+    
     return NPT_SUCCESS;
 }
 
@@ -146,7 +146,7 @@ PLT_MediaBrowser::OnDeviceRemoved(PLT_DeviceDataReference& device)
 
         m_MediaServers.Remove(device);
     }
-
+    
     if (m_Delegate) {
         m_Delegate->OnMSRemoved(device);
     }
@@ -212,12 +212,14 @@ PLT_MediaBrowser::Search(PLT_DeviceDataReference& device,
     }
 
     // set the Starting Index
-    if (NPT_FAILED(action->SetArgumentValue("StartingIndex", NPT_String::FromInteger(start_index)))) {
+    if (NPT_FAILED(action->SetArgumentValue("StartingIndex", 
+                                            NPT_String::FromInteger(start_index)))) {
         return NPT_ERROR_INVALID_PARAMETERS;
     }
 
     // set the Requested Count
-    if (NPT_FAILED(action->SetArgumentValue("RequestedCount", NPT_String::FromInteger(count)))) {
+    if (NPT_FAILED(action->SetArgumentValue("RequestedCount", 
+                                            NPT_String::FromInteger(count)))) {
         return NPT_ERROR_INVALID_PARAMETERS;
     }
 
@@ -238,14 +240,14 @@ PLT_MediaBrowser::Search(PLT_DeviceDataReference& device,
 |   PLT_MediaBrowser::Browse
 +---------------------------------------------------------------------*/
 NPT_Result 
-PLT_MediaBrowser::Browse(PLT_DeviceDataReference&   device, 
-                         const char*                obj_id,
-                         NPT_UInt32                 start_index,
-                         NPT_UInt32                 count,
-                         bool                       browse_metadata,
-                         const char*                filter,
-                         const char*                sort_criteria,
-                         void*                      userdata)
+PLT_MediaBrowser::Browse(PLT_DeviceDataReference& device, 
+                         const char*              obj_id,
+                         NPT_UInt32               start_index,
+                         NPT_UInt32               count,
+                         bool                     browse_metadata,
+                         const char*              filter,
+                         const char*              sort_criteria,
+                         void*                    userdata)
 {
     // verify device still in our list
     PLT_DeviceDataReference device_data;
@@ -266,7 +268,8 @@ PLT_MediaBrowser::Browse(PLT_DeviceDataReference&   device,
     }
 
     // set the browse_flag
-    if (NPT_FAILED(action->SetArgumentValue("BrowseFlag", browse_metadata?"BrowseMetadata":"BrowseDirectChildren"))) {
+    if (NPT_FAILED(action->SetArgumentValue("BrowseFlag", 
+                                            browse_metadata?"BrowseMetadata":"BrowseDirectChildren"))) {
         return NPT_ERROR_INVALID_PARAMETERS;
     }
  
@@ -276,12 +279,14 @@ PLT_MediaBrowser::Browse(PLT_DeviceDataReference&   device,
     }
 
     // set the Starting Index
-    if (NPT_FAILED(action->SetArgumentValue("StartingIndex", NPT_String::FromInteger(start_index)))) {
+    if (NPT_FAILED(action->SetArgumentValue("StartingIndex", 
+                                            NPT_String::FromInteger(start_index)))) {
         return NPT_ERROR_INVALID_PARAMETERS;
     }
 
     // set the Requested Count
-    if (NPT_FAILED(action->SetArgumentValue("RequestedCount", NPT_String::FromInteger(count)))) {
+    if (NPT_FAILED(action->SetArgumentValue("RequestedCount", 
+                                            NPT_String::FromInteger(count)))) {
         return NPT_ERROR_INVALID_PARAMETERS;
     }
 
@@ -306,14 +311,12 @@ PLT_MediaBrowser::OnActionResponse(NPT_Result           res,
                                    PLT_ActionReference& action, 
                                    void*                userdata)
 {
-    NPT_String actionName = action->GetActionDesc().GetName();
-
-        // look for device in our list first
-        PLT_DeviceDataReference device;
+    // look for device in our list first
+    PLT_DeviceDataReference device;
     NPT_String uuid = action->GetActionDesc().GetService()->GetDevice()->GetUUID();
-        if (NPT_FAILED(FindServer(uuid, device))) res = NPT_FAILURE;
+    if (NPT_FAILED(FindServer(uuid, device))) res = NPT_FAILURE;
 
-    // Browse action response
+    NPT_String actionName = action->GetActionDesc().GetName();
     if (actionName.Compare("Browse", true) == 0) {
         return OnBrowseResponse(res, device, action, userdata);
     } else if (actionName.Compare("Search", true) == 0) {
@@ -332,9 +335,11 @@ PLT_MediaBrowser::OnBrowseResponse(NPT_Result               res,
                                    PLT_ActionReference&     action, 
                                    void*                    userdata)
 {
-    NPT_String value;
+    NPT_String     value;
     PLT_BrowseInfo info;
-    NPT_String unescaped;
+    NPT_String     unescaped;
+
+    if (!m_Delegate) return NPT_SUCCESS;
 
     if (NPT_FAILED(res) || action->GetErrorCode() != 0) {
         goto bad_action;
@@ -367,11 +372,11 @@ PLT_MediaBrowser::OnBrowseResponse(NPT_Result               res,
         goto bad_action;
     }
 
-    if (m_Delegate) m_Delegate->OnBrowseResult(NPT_SUCCESS, device, &info, userdata);
+    m_Delegate->OnBrowseResult(NPT_SUCCESS, device, &info, userdata);
     return NPT_SUCCESS;
 
 bad_action:
-    if (m_Delegate) m_Delegate->OnBrowseResult(NPT_FAILURE, device, NULL, userdata);
+    m_Delegate->OnBrowseResult(NPT_FAILURE, device, NULL, userdata);
     return NPT_FAILURE;
 }
 
@@ -387,6 +392,8 @@ PLT_MediaBrowser::OnSearchResponse(NPT_Result               res,
     NPT_String     value;
     PLT_BrowseInfo info;
     NPT_String     unescaped;
+
+    if (!m_Delegate) return NPT_SUCCESS;
 
     if (NPT_FAILED(res) || action->GetErrorCode() != 0) {
         goto bad_action;
@@ -419,11 +426,11 @@ PLT_MediaBrowser::OnSearchResponse(NPT_Result               res,
         goto bad_action;
     }
 
-    if (m_Delegate) m_Delegate->OnSearchResult(NPT_SUCCESS, device, &info, userdata);
+    m_Delegate->OnSearchResult(NPT_SUCCESS, device, &info, userdata);
     return NPT_SUCCESS;
 
 bad_action:
-    if (m_Delegate) m_Delegate->OnSearchResult(NPT_FAILURE, device, NULL, userdata);
+    m_Delegate->OnSearchResult(NPT_FAILURE, device, NULL, userdata);
     return NPT_FAILURE;
 }
 
@@ -442,6 +449,6 @@ PLT_MediaBrowser::OnEventNotify(PLT_Service* service, NPT_List<PLT_StateVariable
     PLT_DeviceDataReference data;
     NPT_CHECK_WARNING(FindServer(service->GetDevice()->GetUUID(), data));
 
-    if (m_Delegate) m_Delegate->OnMSStateVariablesChanged(service, vars);
+    m_Delegate->OnMSStateVariablesChanged(service, vars);
     return NPT_SUCCESS;
 }

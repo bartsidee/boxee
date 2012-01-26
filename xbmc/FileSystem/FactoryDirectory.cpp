@@ -32,8 +32,12 @@
 #include "MusicSearchDirectory.h"
 #include "VideoDatabaseDirectory.h"
 #include "ShoutcastDirectory.h"
+#ifdef HAS_LASTFM
 #include "LastFMDirectory.h"
+#endif
+#ifdef HAS_FTP
 #include "FTPDirectory.h"
+#endif
 #include "RSSDirectory.h"
 #include "HTTPDirectory.h"
 #include "Application.h"
@@ -47,6 +51,8 @@
 #include "BoxeeShortcutsDirectory.h"
 #include "SourcesDirectory.h"
 #include "BoxeeServerDirectory.h"
+#include "BoxeeServerOTADirectory.h"
+#include "BoxeeBrowseMenuDirectory.h"
 
 #ifdef HAS_FILESYSTEM_SMB
 #ifdef _WIN32
@@ -93,12 +99,18 @@
 #include "../utils/Network.h"
 #include "ZipDirectory.h"
 #include "RarDirectory.h"
+#ifdef HAS_FILESYSTEM_TUXBOX
 #include "DirectoryTuxBox.h"
+#endif
+#ifdef HAS_FILESYSTEM_HDHOMERUN
 #include "HDHomeRun.h"
+#endif
 #include "AppsDirectory.h"
 #include "AppBoxDirectory.h"
 #include "RepositoriesDirectory.h"
+#ifdef HAS_FILESYSTEM_MYTH
 #include "CMythDirectory.h"
+#endif
 #include "ScriptDirectory.h"
 #include "FileItem.h"
 #include "URL.h"
@@ -106,6 +118,23 @@
 #ifdef HAS_ZEROCONF
 #include "ZeroconfDirectory.h"
 #endif
+#include "UDFDirectory.h"
+#ifdef HAS_NFS
+#include "NfsDirectory.h"
+#endif
+#ifdef HAS_AFP
+#include "AfpDirectory.h"
+#endif
+#ifdef HAS_CIFS
+#include "CIFSDirectory.h"
+#endif
+#ifdef HAS_BMS
+#include "BMSDirectory.h"
+#endif
+#ifdef HAS_UPNP_AV
+#include "UPnPAvDirectory.h"
+#endif
+
 
 using namespace DIRECTORY;
 
@@ -117,7 +146,7 @@ using namespace DIRECTORY;
  */
 IDirectory* CFactoryDirectory::Create(const CStdString& strPath)
 {
-  CURL url(strPath);
+  CURI url(strPath);
 
   CFileItem item;
   IFileDirectory* pDir=CFactoryFileDirectory::Create(strPath, &item);
@@ -134,6 +163,7 @@ IDirectory* CFactoryDirectory::Create(const CStdString& strPath)
 #ifdef HAS_FILESYSTEM
   if (strProtocol == "iso9660") return new CISO9660Directory();
 #endif
+  if (strProtocol == "udf") return new CUDFDirectory();
   if (strProtocol == "plugin") return new CPluginDirectory();
   if (strProtocol == "script") return new CScriptDirectory();
   if (strProtocol == "zip") return new CZipDirectory();
@@ -155,18 +185,28 @@ IDirectory* CFactoryDirectory::Create(const CStdString& strPath)
   if (strProtocol == "network") return new CNetworkDirectory();
   if (strProtocol == "musicsearch") return new CMusicSearchDirectory();
   if (strProtocol == "videodb") return new CVideoDatabaseDirectory();
+  if (strProtocol == "ota") return new CBoxeeServerOTADirectory();
+  if (strProtocol == "browsemenu") return new CBoxeeBrowseMenuDirectory();
   if (strProtocol == "filereader")
     return CFactoryDirectory::Create(url.GetFileName());
 
 
   if (strProtocol == "shout") return new CShoutcastDirectory();
+#ifdef HAS_LASTFM
   if (strProtocol == "lastfm") return new CLastFMDirectory();
+#endif
+#ifdef HAS_FILESYSTEM_TUXBOX
   if (strProtocol == "tuxbox") return new CDirectoryTuxBox();
+#endif
+#ifdef HAS_FTP
   if (strProtocol == "ftp" ||  strProtocol == "ftpx" ||  strProtocol == "ftps") return new CFTPDirectory();
+#endif
   if (strProtocol == "http" || strProtocol == "https") return new CRSSDirectory();
 #ifdef HAS_FILESYSTEM_SMB
-#ifdef _WIN32
+#if defined(_WIN32)
   if (strProtocol == "smb") return new CWINSMBDirectory();
+#elif defined(HAS_CIFS)
+  if (strProtocol == "smb") return new CCifsDirectory();
 #else
   if (strProtocol == "smb") return new CSMBDirectory();
 #endif
@@ -182,16 +222,22 @@ IDirectory* CFactoryDirectory::Create(const CStdString& strPath)
   if (strProtocol == "rtv") return new CRTVDirectory();
 #endif
 #endif
-#ifdef HAS_UPNP
+#if defined(HAS_UPNP_AV)
+  if (strProtocol == "upnp") return new CUPnPAvDirectory();
+#elif defined(HAS_UPNP)
   if (strProtocol == "upnp") return new CUPnPDirectory();
 #endif
+#ifdef HAS_FILESYSTEM_HDHOMERUN
   if (strProtocol == "hdhomerun") return new CDirectoryHomeRun();
+#endif
   if (strProtocol == "rss")  return new CRSSDirectory();
   if (strProtocol == "apps") return new CAppsDirectory();
   if (strProtocol == "appbox") return new CAppBoxDirectory();
   if (strProtocol == "repositories") return new CRepositoriesDirectory();
+#ifdef HAS_FILESYSTEM_MYTH
   if (strProtocol == "myth") return new CCMythDirectory();
   if (strProtocol == "cmyth") return new CCMythDirectory();
+#endif
   if (strProtocol == "rss") return new CRSSDirectory();
 #ifdef HAS_FILESYSTEM_SAP
   if (strProtocol == "sap") return new CSAPDirectory();
@@ -204,6 +250,15 @@ IDirectory* CFactoryDirectory::Create(const CStdString& strPath)
 #endif
 #ifdef HAS_ZEROCONF
     if (strProtocol == "zeroconf") return new CZeroconfDirectory();
+#endif
+#ifdef HAS_NFS
+    if (strProtocol == "nfs") return new CNfsDirectory();
+#endif
+#ifdef HAS_AFP
+    if (strProtocol == "afp") return new CAfpDirectory();
+#endif
+#ifdef HAS_BMS
+    if (strProtocol == "bms") return new CBmsDirectory();
 #endif
 
   return NULL;

@@ -18,6 +18,8 @@
       <rule mimetypes="application/x-silverlight" player="FLASHPlayer" /> <!-- boxee -->
       <rule mimetypes="application/x-silverlight-2" player="FLASHPlayer" /> <!-- boxee -->
       <rule mimetypes="application/x-vnd.movenetworks.qm" player="FLASHPlayer" /> <!-- boxee -->
+      <rule mimetypes="application/vnd.apple.mpegurl" player="DVDPlayer" /> <!-- HLS boxee -->
+      <rule mimetypes="video/mp4" player="DVDPlayer" /> <!-- boxee -->
       <rule name="flv/aacp/sdp" mimetypes="video/x-flv|video-flv|audio/aacp|application/sdp" player="DVDPlayer" />
       <rule name="mp2" mimetypes="application/octet-stream" filetypes="mp2" player="PAPlayer" />
       <rule name="ts" filetypes="ts" player="DVDPlayer" />

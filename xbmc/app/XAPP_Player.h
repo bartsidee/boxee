@@ -1,11 +1,9 @@
 #ifndef XAPP_PLAYER_H_
 #define XAPP_PLAYER_H_
 
-
+#include "AppException.h"
 #include "XAPP_ListItem.h"
-#include "PlayList.h"
-#include "IPlayer.h"
-#include "../cores/playercorefactory/PlayerCoreFactory.h"
+#include <queue>
 
 class IEventCallback;
 class IActionCallback;
@@ -24,7 +22,9 @@ public:
     XAPP_PLAYER_ACTION_NONE,
     XAPP_PLAYER_ACTION_NEXT,
     XAPP_PLAYER_ACTION_PREV,
-    XAPP_PLAYER_ACTION_STOP
+    XAPP_PLAYER_ACTION_STOP,
+    XAPP_PLAYER_ACTION_SEEK,
+    XAPP_PLAYER_ACTION_OSD_EXT
   };
   
   /**
@@ -39,6 +39,8 @@ public:
     EVENT_NONE
   };
   
+  enum PLAYER_REPEAT_STATE { REPEAT_NONE = 0, REPEAT_ONE, REPEAT_ALL };
+
   /**
    * Creates a new player object
    * 
@@ -69,6 +71,12 @@ public:
    */
   virtual double GetTime() throw (XAPP::AppException);
   
+  /**
+   * Returns the current time (EXT-X-PROGRAM-DATE-TIME) in seconds of the currently playing HTTP live stream.
+   * 
+   */
+  virtual double GetPlaylistTimecode() throw (XAPP::AppException);
+
   /**
    * Sets the current position of the currently playing media to the specified
    * time in seconds.  Fractional portions of a second are valid.  The passed
@@ -101,6 +109,33 @@ public:
    */
   virtual void Play(ListItem item);
   
+  virtual void QueueNextItem(ListItem item);
+
+  /**
+   * Plays the specified list item
+   *
+   * @param item item to play
+   */
+  virtual void PlayRaw(ListItem &item);
+
+  void UpdateItem(ListItem &item);
+
+  virtual int FeedRaw(unsigned char* data, unsigned int length);
+
+  virtual void FlushRaw();
+
+  virtual void RawClose();
+
+  virtual bool RawIsEmpty();
+
+  virtual void RawSetEOF();
+
+  virtual void QueueNextRaw(ListItem item);
+
+  int m_currentRawPipe;
+
+  bool m_bFirstFeed;
+
   /**
    * Plays the specified list item without switching to full screen video window
    *
@@ -173,6 +208,20 @@ public:
   virtual void SetLastPlayerAction(XAPP::Player::PLAYER_ACTION action);
   
   /**
+   * Set lst player seek time
+   * @param action player action
+   */
+  virtual void SetSeekRequestTime(int iTime) {m_seekTime = iTime;}
+
+
+  virtual void SetOsdExtAmount(int amount) {m_osdExtAmount = amount;}
+  /**
+   * Get lst player seek time
+   * @param action player action
+   */
+  virtual int GetSeekRequestTime() {int i = m_seekTime; m_seekTime = -1; return i;}
+
+  /**
    * Returns the currently playing item
    */
   virtual XAPP::ListItem GetPlayingItem();
@@ -229,12 +278,26 @@ public:
    */
   virtual void ToggleMute();
 
+  /**
+   * Return true if the current playlist is shuffle
+   */
+  virtual bool IsShuffle();
+
+  virtual void ResumeAudio();
+
+  /**
+   * Return true if the current playlist is repeat
+   */
+  virtual PLAYER_REPEAT_STATE GetRepeatState();
+
 private:
   
   IEventCallback* m_eventCallback;
   IActionCallback* m_actionCallback;
   XAPP::Player::PLAYER_ACTION m_lastAction;
   XAPP::Player::PLAYER_EVENT m_lastEvent;
+  ListItem                   m_item;
+  int                        m_seekTime, m_osdExtAmount;
 };
 
 }

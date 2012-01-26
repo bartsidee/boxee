@@ -14,7 +14,7 @@ Button::Button(int windowId, int controlId) throw (AppException) : Control(windo
   CGUIControl::GUICONTROLTYPES type = (CGUIControl::GUICONTROLTYPES)msg.GetParam1();
 
   if (type != CGUIControl::GUICONTROL_BUTTON)
-    throw AppException("Control is not a Button");
+      throw AppException("Control is not a Button");
 
 //  CGUIWindow* pWindow = g_windowManager.GetWindow(m_windowId);
 //  if (pWindow)
@@ -25,12 +25,12 @@ Button::Button(int windowId, int controlId) throw (AppException) : Control(windo
 //      throw AppException("Control is not a Button");
 //    }
 //  }
-}
+    }
 
 void Button::SetLabel(const std::string& label)
 {
   std::vector<CStdString> vec;
-  ThreadMessage tMsg = { TMSG_SET_CONTROL_LABEL, m_windowId, m_controlId, label, vec, "", NULL, NULL };
+  ThreadMessage tMsg ( TMSG_SET_CONTROL_LABEL, m_windowId, m_controlId, label, vec, "", NULL, NULL );
   g_application.getApplicationMessenger().SendMessage(tMsg, false); 
 }
 

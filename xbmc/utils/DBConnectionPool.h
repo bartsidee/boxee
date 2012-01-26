@@ -12,6 +12,7 @@ typedef std::map< CStdString, CSqlitePoolMngr* > SqlitePoolMngrMap;
 public:
   CDBConnectionPool();
   virtual ~CDBConnectionPool();
+  void Cleanup();
 
   CSqliteConnectionPoolObject* GetSqliteConnectionPoolObject( const CStdString& strDatabaseFile );
   void ReturnToPool( CSqliteConnectionPoolObject* pSqliteConnectionObject, const CStdString& strDatabaseFile );
@@ -21,3 +22,4 @@ protected:
 };
 
 #endif
+

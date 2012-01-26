@@ -71,6 +71,7 @@ public:
   CGUIInfoColor textColor;
   CGUIInfoColor shadowColor;
   CGUIInfoColor selectedColor;
+  CGUIInfoColor selectedBackColor;
   CGUIInfoColor disabledColor;
   CGUIInfoColor focusedColor;
   uint32_t align;
@@ -94,6 +95,17 @@ public:
 };
 
 /*!
+ \brief Results of OnMouseEvent()
+ Any value not equal to EVENT_RESULT_UNHANDLED indicates that the event was handled.
+ */
+enum EVENT_RESULT { EVENT_RESULT_UNHANDLED = 0,
+                    EVENT_RESULT_HANDLED,
+                    EVENT_RESULT_PAN_HORIZONTAL,
+                    EVENT_RESULT_PAN_VERTICAL,
+                    EVENT_RESULT_ROTATE,
+                    EVENT_RESULT_ZOOM };
+
+/*!
  \ingroup controls
  \brief Base class for controls
  */
@@ -106,7 +118,9 @@ public:
   virtual CGUIControl *Clone() const=0;
 
   virtual void DoRender(unsigned int currentTime);
+  virtual bool PreRender();
   virtual void Render();
+  virtual void PostRender();
   XBMC_FORCE_INLINE bool HasRendered() const { return m_hasRendered; } 
 
   // OnAction() is called by our window when we are the focused control.
@@ -153,7 +167,7 @@ public:
   int GetParentID() const;
   virtual bool HasFocus() const;
   virtual void AllocResources();
-  virtual void FreeResources();
+  virtual void FreeResources(bool immediately = false);
   virtual void DynamicResourceAlloc(bool bOnOff);
   virtual bool IsDynamicallyAllocated() { return false; };
   virtual bool CanFocus() const;
@@ -162,8 +176,7 @@ public:
   virtual bool IsDisabled() const;
   virtual void SetPosition(float posX, float posY);
   virtual void SetHitRect(const CRect &rect);
-  virtual void SetCamera(const CPoint &camera);
-  void SetColorDiffuse(const CGUIInfoColor &color);
+  virtual void SetColorDiffuse(const CGUIInfoColor &color);
   CPoint GetRenderPosition() const;
   virtual float GetXPosition() const;
   virtual float GetYPosition() const;
@@ -193,6 +206,7 @@ public:
   virtual void SetInitialVisibility();
   virtual void SetEnabled(bool bEnable);
   virtual void SetInvalid() { m_bInvalidated = true; };
+  virtual bool IsInvalid() { return m_bInvalidated; }
   virtual void SetPulseOnSelect(bool pulse) { m_pulseOnSelect = pulse; };
   virtual CStdString GetDescription() const { return ""; };
 
@@ -217,6 +231,24 @@ public:
 
   void SetParentControl(CGUIControl *control) { m_parentControl = control; };
   virtual void SaveStates(std::vector<CControlState> &states);
+
+  bool HasProperty(const CStdString &strKey) const;
+  void SetProperty(const CStdString &strKey, const char *strValue);
+  void SetProperty(const CStdString &strKey, const CStdString &strValue);
+  void SetProperty(const CStdString &strKey, int nVal);
+  void SetProperty(const CStdString &strKey, bool bVal);
+  void SetProperty(const CStdString &strKey, double dVal);
+  void SetProperty(const CStdString &strKey, long long nVal);
+  void SetProperties(const std::map<CStdString, CStdString> props);
+
+  CStdString GetProperty(const CStdString &strKey) const;
+  int        GetPropertyInt(const CStdString &strKey) const;
+  bool       GetPropertyBOOL(const CStdString &strKey) const;
+  double     GetPropertyDouble(const CStdString &strKey) const;
+  long long  GetPropertyInt64(const CStdString &strKey) const;
+
+  void ClearProperties();
+  void ClearProperty(const CStdString &strKey);
 
   enum GUICONTROLTYPES {
     GUICONTROL_UNKNOWN,
@@ -259,7 +291,8 @@ public:
     GUICONTAINER_WRAPLIST,
     GUICONTAINER_FIXEDLIST,
     GUICONTAINER_PANEL,
-    GUICONTROL_KEYBOARD
+    GUICONTROL_KEYBOARD,
+    GUICONTROL_WEB,
   };
   GUICONTROLTYPES GetControlType() const { return ControlType; }
 
@@ -322,9 +355,17 @@ protected:
 
   // animation effects
   std::vector<CAnimation> m_animations;
-  CPoint m_camera;
-  bool m_hasCamera;
   TransformMatrix m_transform;
+
+  struct icompare
+  {
+    bool operator()(const CStdString &s1, const CStdString &s2) const
+    {
+      return s1.CompareNoCase(s2) < 0;
+    }
+  };
+
+  std::map<CStdString, CStdString, icompare> m_mapProperties;
 };
 
 #endif

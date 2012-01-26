@@ -36,11 +36,15 @@
 class CGUITextureD3D : public CGUITextureBase
 {
 public:
-  CGUITextureD3D(float posX, float posY, float width, float height, const CTextureInfo& texture);
-  static void DrawQuad(const CRect &coords, color_t color, CBaseTexture *texture = NULL, const CRect *texCoords = NULL);
+  CGUITextureD3D(float posX, float posY, float width, float height, const CTextureInfo& texture, CBaseTexture* textureData = NULL);
+  static void DrawQuad(const CRect &coords, color_t color, bool bWireframe = false, CBaseTexture *texture = NULL, const CRect *texCoords = NULL);
+  static void PrintPixelCount() {}
 protected:
   void Begin();
-  void Draw(float *x, float *y, float *z, const CRect &texture, const CRect &diffuse, color_t color, int orientation);
+
+  virtual void Draw(ImageCoords& coords);
+  virtual bool LoadShaders(){ return true; };
+  virtual bool SelectShader(){ return true; };
   void End();
 };
 

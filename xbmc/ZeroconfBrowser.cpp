@@ -58,6 +58,8 @@ CZeroconfBrowser::CZeroconfBrowser():mp_crit_sec(new CCriticalSection),m_started
   AddServiceType("_ftp._tcp.");
   AddServiceType("_htsp._tcp.");
   AddServiceType("_daap._tcp.");
+  AddServiceType("_afpovertcp._tcp.");
+  AddServiceType(BOXEE_SERVICE_NAME);
 }
 
 CZeroconfBrowser::~CZeroconfBrowser()
@@ -193,6 +195,11 @@ void CZeroconfBrowser::ZeroconfService::SetType(const CStdString& fcr_type)
 void CZeroconfBrowser::ZeroconfService::SetDomain(const CStdString& fcr_domain)
 {
   m_domain = fcr_domain;
+}
+
+void CZeroconfBrowser::ZeroconfService::SetHostName(const CStdString& fcr_hostname)
+{
+  m_hostname = fcr_hostname;
 }
 
 void CZeroconfBrowser::ZeroconfService::SetIP(const CStdString& fcr_ip)

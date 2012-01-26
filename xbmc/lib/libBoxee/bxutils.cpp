@@ -10,8 +10,10 @@
 #include "bxexceptions.h"
 #include "bxconfiguration.h"
 #include "StringUtils.h"
-
-#include "FileSystem/curl/curl.h"
+#include "Util.h"
+#include <json/writer.h>
+#include "FileSystem/DllLibCurl.h"
+#include "log.h"
 
 #include <algorithm>
 #ifdef WIN32
@@ -126,6 +128,13 @@ std::string BXUtils::IntToString(int iInt) {
 	return stream.str();
 }
 
+std::string BXUtils::LongToString(long iLong) {
+  // TODO: Add error handling
+  std::ostringstream stream;
+  stream << iLong;
+  return stream.str();
+}
+
 int BXUtils::StringToInt(std::string strString)
 {
 	// TODO: Add error handling
@@ -135,17 +144,28 @@ int BXUtils::StringToInt(std::string strString)
 	return value;
 }
 
-void BXUtils::PrintTokens(std::vector<std::string> vecTokens)
+unsigned long BXUtils::StringToUnsignedLong(std::string strString)
+{
+  unsigned long value (0);
+
+  std::istringstream iss(strString);
+  iss >> value;
+  return value;
+}
+
+std::string BXUtils::VectorTokened(const std::vector<std::string>& vecTokens , const std::string& separator)
 {
 	std::string strTokenString;
 
 	for (size_t i=0; i < vecTokens.size(); i++)
 	{
 		strTokenString += vecTokens[i];
-		strTokenString += ", ";
+
+		if (i+1 < vecTokens.size())
+		  strTokenString += separator;
 	}
 
-	//LOG(LOG_LEVEL_DEBUG, "Tokens: %s", strTokenString.c_str());
+	return strTokenString;
 }
 
 
@@ -220,7 +240,7 @@ std::string BXUtils::GetEffectiveFolderPath(const std::string& strPath )
 		strFolderName = BXUtils::GetFolderName(strFolderPath);
 		std::string strlowerFolderName = strFolderName;
 		transform (strlowerFolderName.begin(), strlowerFolderName.end(), strlowerFolderName.begin(), to_lower());
-
+		
 		if (BXUtils::RunRegExp(strlowerFolderName, strExpression, false) >= 0) 
 		{
 			std::string strKeepPath = strFolderPath;
@@ -377,36 +397,36 @@ std::string BXUtils::decToHex(char num, int radix)
 std::string BXUtils::URLDecode(const std::string& strInput)
 {
   std::string strRes=strInput;
-  CURL* helperHandle = curl_easy_init ();
+  CURL_HANDLE* helperHandle = g_curlInterface.easy_init ();
   if (helperHandle)
-  {
-    char *unescaped = curl_easy_unescape(helperHandle, strInput.c_str(), 0, NULL);
+	{
+    char *unescaped = g_curlInterface.easy_unescape(helperHandle, strInput.c_str(), 0, NULL);
     if (unescaped)
-    {
+		{ 
       strRes = unescaped;
-      curl_free(unescaped);
-    }
-    curl_easy_cleanup(helperHandle);
-  }
+      g_curlInterface.free_curl(unescaped);
+		} 
+    g_curlInterface.easy_cleanup(helperHandle);
+	}
   return strRes;
 }
 
 std::string BXUtils::URLEncode(const std::string& pcsEncode)
 { 
   std::string strRes=pcsEncode;
-  CURL* helperHandle = curl_easy_init ();
+  CURL_HANDLE* helperHandle = g_curlInterface.easy_init ();
   if (helperHandle)
-  {
-    char *escaped = curl_easy_escape(helperHandle, pcsEncode.c_str(), pcsEncode.size());
+	{
+    char *escaped = g_curlInterface.easy_escape(helperHandle, pcsEncode.c_str(), pcsEncode.size());
     if (escaped)
-    {
+		{
       strRes = escaped;
-      curl_free(escaped);
-    }
-    curl_easy_cleanup(helperHandle);
-  }
+      g_curlInterface.free_curl(escaped);
+		}   
+    g_curlInterface.easy_cleanup(helperHandle);
+		}
   return strRes;
-}
+		}
 
 std::string BXUtils::RemoveSMBCredentials(const std::string& strPath)
 {
@@ -434,6 +454,9 @@ bool BXUtils::CheckPathFilter(const std::vector<std::string>& vecPathFilter, con
   if (strPath.find("rar://") != std::string::npos || strPath.find("zip://") != std::string::npos)
     str1 = URLDecode(strPath).substr(6);
   
+  if(str1.find("upnp://") != std::string::npos)
+    str1 = URLDecode(strPath);
+
   str1 = RemoveSMBCredentials(str1);
   transform (str1.begin(), str1.end(), str1.begin(), to_lower());
 
@@ -450,6 +473,14 @@ bool BXUtils::CheckPathFilter(const std::vector<std::string>& vecPathFilter, con
     // further more - on some cases empty password on smb will be handled as smb://user:@host and sometimes as smb://user@host
       
     std::string str2 = vecPathFilter[i];
+
+    if(str2.find("upnp://") != std::string::npos)
+    {
+      std::string tmpStr = str2;
+      str2 = URLDecode(tmpStr);
+      RemoveSlashAtEnd(str2);
+    }
+
     transform (str2.begin(), str2.end(), str2.begin(), to_lower());
     str2 = RemoveSMBCredentials(str2);
     std::string::size_type startPos = str1.find(str2, 0);
@@ -508,9 +539,9 @@ uint64_t BXUtils::ComputeHash(std::ifstream& f)
 	f.seekg(0, ios::beg);
 
 	hash = fsize;
-	for(uint64_t tmp = 0, i = 0; i < 65536/sizeof(tmp) && f.read((char*)&tmp, sizeof(tmp)); i++, hash += tmp);
+	for(uint64_t tmp = 0, i = 0; i < 65536/sizeof(tmp) && f.read((char*)&tmp, sizeof(tmp)); i++, hash += tmp) {}
 	f.seekg(MAX_LONGLONG(0, (uint64_t)fsize - 65536), ios::beg);
-	for(uint64_t tmp = 0, i = 0; i < 65536/sizeof(tmp) && f.read((char*)&tmp, sizeof(tmp)); i++, hash += tmp);
+	for(uint64_t tmp = 0, i = 0; i < 65536/sizeof(tmp) && f.read((char*)&tmp, sizeof(tmp)); i++, hash += tmp) {}
 	return hash;
 } 
 
@@ -569,13 +600,13 @@ bool BXUtils::GetArtistData(const std::string& strArtistName_, BXArtist* pArtist
 	doc.LoadFromString(strXML);
 
 	TiXmlElement* pRootElement = doc.GetRoot();
-
+	
 	if (!pRootElement)
 	{
-	  // Add negative result to cache
-	  Boxee::GetInstance().GetMetadataEngine().AddArtistToCache(strArtistName_, *pArtist);
+    // Add negative result to cache
+    Boxee::GetInstance().GetMetadataEngine().AddArtistToCache(strArtistName_, *pArtist);
 
-	  return false;
+		return false;
 	}
 
 	if (strcmpi(pRootElement->Value(), "artist") != 0)
@@ -615,15 +646,18 @@ bool BXUtils::ParseDiscogsXML(const std::string& strXML, std::string& strPrimary
   {
     return false;
   }
+
   int iImages = TinyXPath::i_xpath_int(rootElement, "count(/resp/artist/images/image)");
 
-  for (int i = 0; i < iImages; i++) {
+  for (int i = 0; i < iImages; i++)
+  {
     char szQuery[1024];
     memset(szQuery,0,1024);
     snprintf(szQuery,1023,"/resp/artist/images/image[%d]/@type", i+1);
     std::string strPrimary = TinyXPath::S_xpath_string (rootElement, szQuery);
 
-    if (strPrimary == "primary") {
+    if (strPrimary == "primary")
+    {
       memset(szQuery,0,1024);
       snprintf(szQuery,1023,"/resp/artist/images/image[%d]/@uri", i+1);
       std::string strThumbUrl = TinyXPath::S_xpath_string (rootElement, szQuery);
@@ -641,7 +675,8 @@ bool BXUtils::ParseDiscogsXML(const std::string& strXML, std::string& strPrimary
       }
     }
 
-    if (strPrimary == "secondary" && strSecondaryThumb == "") {
+    if (strPrimary == "secondary" && strSecondaryThumb == "")
+    {
       memset(szQuery,0,1024);
       snprintf(szQuery,1023,"/resp/artist/images/image[%d]/@uri", i+1);
       std::string strThumbUrl = TinyXPath::S_xpath_string (rootElement, szQuery);
@@ -658,6 +693,8 @@ bool BXUtils::ParseDiscogsXML(const std::string& strXML, std::string& strPrimary
       }
     }
   }
+
+  return true;
 }
 
 // Function for fixing artist name (move "the" to the end of the name), in order to successfully bring artist thumb from Discogs.
@@ -811,6 +848,217 @@ std::string& BXUtils::StringToLower(std::string& s)
   transform(s.begin(), s.end(), s.begin(), to_lower());
   return s;
 }
-	
+
+bool BXUtils::PerformJSONGetRequest(const std::string& url, Json::Value& response, int& returnCode, bool useCache)
+{
+  if (url.empty())
+  {
+    return false;
+  }
+
+  std::string strUrl = url;
+
+  BXCurl curl;
+
+  curl.SetVerbose(BOXEE::Boxee::GetInstance().IsVerbose());
+  curl.SetCredentials(BOXEE::Boxee::GetInstance().GetCredentials());
+
+  ListHttpHeaders headers;
+  headers.push_back("Connection: keep-alive");
+  curl.HttpSetHeaders(headers);
+
+  std::string strJson = curl.HttpGetString(strUrl.c_str(), useCache);
+
+  Json::Reader reader;
+
+  returnCode = curl.GetLastRetCode();
+  if (returnCode != 200)
+  {
+    CLog::Log(LOGERROR, "Got error return code from server for url: <%s>. Code: %d", url.c_str(), returnCode);
+    return false;
+  }
+
+  if (strJson.length() == 0)
+  {
+    CLog::Log(LOGERROR, "Failed to parse empty server response for url: <%s>", url.c_str());
+    return false;
+  }
+
+  if (!reader.parse(strJson, response))
+  {
+    CLog::Log(LOGERROR, "Failed to parse server response for url: <%s>. Error: %s", url.c_str(), reader.getFormatedErrorMessages().c_str());
+    return false;
+  }
+
+  return true;
+}
+
+class JsonRequestBG : public IRunnable
+{
+public:
+  JsonRequestBG(const CStdString& url, Json::Value& response, int& returnCode, bool silent, bool useCache) : m_url(url), m_response(response), m_returnCode(returnCode)
+  {
+    m_bJobResult = false;
+    m_IsSilent = silent;
+    m_useCache = useCache;
+  }
+
+  virtual ~JsonRequestBG() { }
+
+  virtual void Run();
+  const CStdString m_url;
+  Json::Value m_response;
+  int& m_returnCode;
+  bool m_useCache;
+};
+
+void JsonRequestBG::Run()
+{
+  m_bJobResult = BXUtils::PerformJSONGetRequest(m_url, m_response, m_returnCode, m_useCache);
+}
+
+Job_Result BXUtils::PerformJSONGetRequestInBG(const std::string& url, Json::Value& response, int& returnCode, bool silent, bool useCache)
+{
+  JsonRequestBG* job = new JsonRequestBG(url, response, returnCode, silent, useCache);
+  Job_Result result = CUtil::RunInBG(job, false);
+  if (result == JOB_SUCCEEDED)
+  {
+    response = job->m_response;
+  }
+  delete job;
+
+  return result;
+}
+
+bool BXUtils::PerformJSONPostRequest(const std::string& url, Json::Value& body, Json::Value& response, int& returnCode)
+{
+  if (url.empty())
+  {
+    return false;
+  }
+
+  std::string strUrl = url;
+
+  BXCurl curl;
+
+  curl.SetVerbose(BOXEE::Boxee::GetInstance().IsVerbose());
+  curl.SetCredentials(BOXEE::Boxee::GetInstance().GetCredentials());
+
+  ListHttpHeaders headers;
+  headers.push_back("Connection: keep-alive");
+  headers.push_back("Content-Type: application/json");
+  curl.HttpSetHeaders(headers);
+
+  Json::FastWriter writer;
+  std::string strPostData = writer.write(body);
+
+  std::string strJson = curl.HttpPostString(strUrl.c_str(), strPostData);
+
+  returnCode = curl.GetLastRetCode();
+
+#if 0
+  Json::StyledWriter writer2;
+  std::string strPostData2 = writer2.write(body);
+  printf("Posting to %s\n\n", strUrl.c_str());
+  printf("%s", strPostData2.c_str());
+  printf("Got: RC=%d Text=<%s>\n", returnCode, strJson.c_str());
+#endif
+
+  if (returnCode != 200)
+  {
+    CLog::Log(LOGERROR, "Got error return code from server for url: <%s>. Code: %d", url.c_str(), returnCode);
+    return false;
+  }
+
+  if (strJson.length() == 0)
+  {
+    CLog::Log(LOGERROR, "Failed to parse empty server response for url: <%s>", url.c_str());
+    return false;
+  }
+
+  Json::Reader reader;
+  if (!reader.parse(strJson, response))
+  {
+    CLog::Log(LOGERROR, "Failed to parse server response for url: <%s>. Error: %s", url.c_str(), reader.getFormatedErrorMessages().c_str());
+    return false;
+  }
+
+  return true;
+}
+
+bool BXUtils::PerformPostRequest(const std::string& url, std::string& body, std::string& response, int& returnCode)
+{
+  if (url.empty())
+  {
+    return false;
+  }
+
+  BXCurl curl;
+
+  curl.SetVerbose(BOXEE::Boxee::GetInstance().IsVerbose());
+  curl.SetCredentials(BOXEE::Boxee::GetInstance().GetCredentials());
+
+  ListHttpHeaders headers;
+  headers.push_back("Connection: keep-alive");
+  curl.HttpSetHeaders(headers);
+
+  response = curl.HttpPostString(url.c_str(), body);
+
+  returnCode = curl.GetLastRetCode();
+
+#if 0
+  printf("Posting to %s\n\n", strUrl.c_str());
+  printf("%s", body.c_str());
+  printf("Got: RC=%d Text=<%s>\n", returnCode, strJson.c_str());
+#endif
+
+  if (returnCode != 200)
+  {
+    CLog::Log(LOGERROR, "Got error return code from server for url: <%s>. Code: %d", url.c_str(), returnCode);
+    return false;
+  }
+
+  return true;
+}
+
+class HttpPostRequestBG : public IRunnable
+{
+public:
+  HttpPostRequestBG(std::string url, std::string body, bool silent = true)
+  {
+    m_bJobResult = false;
+    m_IsSilent = silent;
+    m_url = url;
+    m_body = body;
+  }
+
+  virtual ~HttpPostRequestBG() { }
+
+  virtual void Run();
+  std::string m_url;
+  std::string m_response;
+  int m_returnCode;
+  std::string m_body;
+};
+
+void HttpPostRequestBG::Run()
+{
+  m_bJobResult = BXUtils::PerformPostRequest(m_url, m_body, m_response, m_returnCode);
+}
+
+Job_Result BXUtils::PerformPostRequestInBG(const std::string& url, std::string& body, std::string& response, int& returnCode, bool silent)
+{
+  HttpPostRequestBG* job = new HttpPostRequestBG(url, body, silent);
+
+  Job_Result result = CUtil::RunInBG(job, false);
+  if (result == JOB_SUCCEEDED)
+  {
+    response = job->m_response;
+  }
+  delete job;
+
+  return result;
+}
+
 }
 

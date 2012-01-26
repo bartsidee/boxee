@@ -14,6 +14,7 @@ namespace BOXEE
     public:
       BXUserProfileDatabase(void);
       virtual ~BXUserProfileDatabase(void);
+      bool Init();
 
       void MarkAsWatched(const std::string& strPath, const std::string& strBoxeeId, double iLastPosition);
       void MarkAsUnWatched(const std::string& strPath, const std::string& strBoxeeId);
@@ -32,3 +33,4 @@ namespace BOXEE
 
 }
 #endif
+

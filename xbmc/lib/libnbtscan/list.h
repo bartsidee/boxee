@@ -1,6 +1,6 @@
-#ifndef _WIN32
+//#ifndef _WIN32
 #define ERROR 12345
-#endif
+// #endif
 
 #ifdef __cplusplus
 extern "C" {

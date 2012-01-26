@@ -45,7 +45,8 @@ protected:
   virtual bool doPublishService(const std::string& fcr_identifier,
                                 const std::string& fcr_type,
                                 const std::string& fcr_name,
-                                unsigned int f_port);
+                                unsigned int f_port,
+                                const std::map<std::string, std::string>& txt);
 
   virtual bool doRemoveService(const std::string& fcr_ident);
 

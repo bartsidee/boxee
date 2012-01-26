@@ -54,7 +54,7 @@ CFileHD::~CFileHD()
   if (m_hFile != INVALID_HANDLE_VALUE) Close();
 }
 //*********************************************************************************************
-CStdString CFileHD::GetLocal(const CURL &url)
+CStdString CFileHD::GetLocal(const CURI &url)
 {
   CStdString path( url.GetFileName() );
 
@@ -81,7 +81,7 @@ CStdString CFileHD::GetLocal(const CURL &url)
 }
 
 //*********************************************************************************************
-bool CFileHD::Open(const CURL& url)
+bool CFileHD::Open(const CURI& url)
 {
   CStdString strFile = GetLocal(url);
 
@@ -100,7 +100,7 @@ bool CFileHD::Open(const CURL& url)
   return true;
 }
 
-bool CFileHD::Exists(const CURL& url)
+bool CFileHD::Exists(const CURI& url)
 {
   CStdString strFile = GetLocal(url);
 #ifdef _WIN32
@@ -129,7 +129,7 @@ int CFileHD::Stat(struct __stat64* buffer)
   return _fstat64(fd, buffer);
 }
 
-int CFileHD::Stat(const CURL& url, struct __stat64* buffer)
+int CFileHD::Stat(const CURI& url, struct __stat64* buffer)
 {
   CStdString strFile = GetLocal(url);
   CUtil::RemoveSlashAtEnd(strFile);
@@ -148,7 +148,7 @@ int CFileHD::Stat(const CURL& url, struct __stat64* buffer)
 
 
 //*********************************************************************************************
-bool CFileHD::OpenForWrite(const CURL& url, bool bOverWrite)
+bool CFileHD::OpenForWrite(const CURI& url, bool bOverWrite)
 {
   // make sure it's a legal FATX filename (we are writing to the harddisk)
   CStdString strPath = GetLocal(url);
@@ -266,7 +266,7 @@ int64_t CFileHD::GetPosition()
   return m_i64FilePos;
 }
 
-bool CFileHD::Delete(const CURL& url)
+bool CFileHD::Delete(const CURI& url)
 {
   CStdString strFile=GetLocal(url);
 
@@ -279,7 +279,7 @@ bool CFileHD::Delete(const CURL& url)
 #endif
 }
 
-bool CFileHD::Rename(const CURL& url, const CURL& urlnew)
+bool CFileHD::Rename(const CURI& url, const CURI& urlnew)
 {
   CStdString strFile=GetLocal(url);
   CStdString strNewFile=GetLocal(urlnew);

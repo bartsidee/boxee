@@ -98,7 +98,7 @@ bool CSpecialProtocol::ComparePath(const CStdString &path1, const CStdString &pa
 
 CStdString CSpecialProtocol::TranslatePath(const CStdString &path)
 {
-  CURL url(path);
+  CURI url(path);
   
   // check for special-protocol, if not, return
   if (!url.GetProtocol().Equals("special"))
@@ -119,12 +119,12 @@ CStdString CSpecialProtocol::TranslatePath(const CStdString &path)
     
 #if defined(_LINUX)
     fixPath.Replace('\\', '/');
-#else
-    // upnp rar and zip slashes should never be reversed
-	if( !url.GetProtocol().Equals("upnp") && !url.GetProtocol().Equals("rar") && !url.GetProtocol().Equals("zip") )
-    {
-      fixPath.Replace('/', '\\');
-	}
+//#else
+//    // upnp rar and zip slashes should never be reversed
+//	if( !url.GetProtocol().Equals("upnp") && !url.GetProtocol().Equals("rar") && !url.GetProtocol().Equals("zip") )
+//    {
+//    fixPath.Replace('/', '\\');
+//    }
 #endif
     
     return fixPath;
@@ -198,7 +198,7 @@ CStdString CSpecialProtocol::TranslatePath(const CStdString &path)
   }
 
   // Validate the final path, just in case
-  return CURL::ValidatePath(translatedPath);
+  return CURI::ValidatePath(translatedPath);
 }
 
 CStdString CSpecialProtocol::TranslatePathConvertCase(const CStdString& path)

@@ -99,7 +99,7 @@ bool CGUIWrappingListContainer::OnMessage(CGUIMessage& message)
       }
       else
       {
-        SelectItem(message.GetParam1());
+      SelectItem(message.GetParam1());
       }
       return true;
     }

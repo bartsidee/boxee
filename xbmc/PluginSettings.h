@@ -31,7 +31,7 @@ public:
   virtual ~CBasicSettings();
 
   bool SaveFromDefault(void);
-  virtual bool Load(const CURL& url)  { return false; }
+  virtual bool Load(const CURI& url)  { return false; }
   virtual bool Save(void) { return false; }
   void Clear();
 
@@ -49,7 +49,7 @@ class CPluginSettings : public CBasicSettings
 public:
   CPluginSettings();
   virtual ~CPluginSettings();
-  bool Load(const CURL& url);
+  bool Load(const CURI& url);
   bool Load(const CStdString &strSettings);
   bool Load(const TiXmlDocument &xmlDoc);
   bool Save(void);
@@ -58,7 +58,7 @@ public:
   CPluginSettings& operator =(const CBasicSettings&);
 private: 
   CStdString      m_id;
-  CURL            m_url;
+  CURI            m_url;
   CStdString      m_userFileName;  
 };
 

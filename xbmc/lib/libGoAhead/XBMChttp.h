@@ -136,12 +136,14 @@ public:
   CStdString GetCloseTag();
   
   // Boxee //
-  
   int BoxeeGetMediaItems(int numParas, CStdString paras[]);
   int BoxeeGetThumbnail(int numParas, CStdString paras[]);
   int BoxeeGetKeyboardText(int numParas, CStdString paras[]);
   int BoxeeSetUnicodeChar(int numParas, CStdString paras[]);
-  
+  int BoxeeIsBrowserMouseActive(int numParas, CStdString paras[]);
+  int BoxeeAddMediaSource(int numParas, CStdString paras[]);
+  int BoxeeRemoveMediaSource(int numParas, CStdString paras[]);
+  int BoxeeSendMove(int numParas, CStdString paras[]);
   ///////////
 
 private:

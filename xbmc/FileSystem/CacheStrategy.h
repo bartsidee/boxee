@@ -49,54 +49,54 @@ public:
   virtual int GetCacheLevel() { return -1; }
 
 };
-
+  
 class CCacheStrategy{
 public:
   CCacheStrategy();
   virtual ~CCacheStrategy();
-
+  
   virtual int Open() = 0;
   virtual int Close() = 0;
-
+  
   virtual int WriteToCache(const char *pBuffer, size_t iSize) = 0;
   virtual int ReadFromCache(char *pBuffer, size_t iMaxSize) = 0;
   virtual int64_t WaitForData(unsigned int iMinAvail, unsigned int iMillis) = 0;
-
+  
   virtual int64_t Seek(int64_t iFilePosition, int iWhence) = 0;
   virtual void Reset(int64_t iSourcePosition) = 0;
-
+  
   virtual int64_t	GetAvailableRead() = 0;
-
+  
   virtual void EndOfInput(); // mark the end of the input stream so that Read will know when to return EOF
   virtual bool IsEndOfInput();
   virtual void ClearEndOfInput();
-
+  
   virtual ICacheInterface* GetInterface() { return NULL; }
 protected:
   bool	m_bEndOfInput;
 };
-
+  
 /**
 */
 class CSimpleFileCache : public CCacheStrategy, ICacheInterface {
 public:
   CSimpleFileCache();
   virtual ~CSimpleFileCache();
-
+  
   virtual int Open() ;
   virtual int Close() ;
-
+  
   virtual int WriteToCache(const char *pBuffer, size_t iSize) ;
   virtual int ReadFromCache(char *pBuffer, size_t iMaxSize) ;
   virtual int64_t WaitForData(unsigned int iMinAvail, unsigned int iMillis) ;
-
+  
   virtual int64_t Seek(int64_t iFilePosition, int iWhence);
   virtual void Reset(int64_t iSourcePosition);
   virtual void EndOfInput();
   virtual ICacheInterface* GetInterface() { return (ICacheInterface*)this; }
-
+  
   virtual int64_t  GetAvailableRead();
-
+  
 protected:
   HANDLE	m_hCacheFileRead;
   HANDLE	m_hCacheFileWrite;

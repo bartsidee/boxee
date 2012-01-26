@@ -20,6 +20,9 @@
  */
 
 #include "DVDInputStreamHTSP.h"
+
+#ifdef HAS_FILESYSTEM_HTSP
+
 #include "URL.h"
 #include "VideoInfoTag.h"
 #include "FileItem.h"
@@ -89,7 +92,7 @@ bool CDVDInputStreamHTSP::Open(const char* file, const std::string& content)
   if (!CDVDInputStream::Open(file, content)) 
     return false;
 
-  CURL url(file);
+  CURI url(file);
   if(sscanf(url.GetFileName().c_str(), "tags/%d/%d", &m_tag, &m_channel) != 2)
   {
     CLog::Log(LOGERROR, "CDVDInputStreamHTSP::Open - invalid url (%s)\n", url.GetFileName().c_str());
@@ -233,3 +236,5 @@ void CDVDInputStreamHTSP::Abort()
 {
   m_session.Abort();
 }
+
+#endif

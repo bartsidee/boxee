@@ -22,6 +22,7 @@
 #include "Win32Exception.h"
 #ifndef _LINUX
 #include "eh.h"
+#include "../win32/StackWalker.h"
 #endif
 #include "log.h"
 
@@ -45,8 +46,27 @@ void win32_exception::install_handler()
     _set_se_translator(win32_exception::translate);
 }
 
+#ifdef _WIN32
+class Win32StackWalker : public StackWalker
+{
+public:
+  Win32StackWalker() : StackWalker() {}
+  Win32StackWalker(DWORD dwProcessId, HANDLE hProcess) : StackWalker(dwProcessId, hProcess) {}
+  virtual void OnOutput(LPCSTR szText) {
+    CLog::Log(LOGFATAL, "%s", szText);
+  }
+};
+#endif
+
+
 void win32_exception::translate(unsigned code, EXCEPTION_POINTERS* info)
 {
+#ifdef _WIN32
+	CLog::Log(LOGFATAL, "An exception occured. Stack Trace is:");
+	Win32StackWalker sw;
+	sw.ShowCallstack(GetCurrentThread(), info->ContextRecord);
+#endif
+
     // Windows guarantees that *(info->ExceptionRecord) is valid
     switch (code) {
     case EXCEPTION_ACCESS_VIOLATION:

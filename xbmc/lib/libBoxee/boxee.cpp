@@ -8,20 +8,22 @@
 #include <errno.h>
 #include <sys/time.h>
 #else
-#define bzero(a) memset(a,0,sizeof(a))
-typedef int socklen_t;
+#include "../../win32/c_defs.h"
 #endif
 
-#include <curl/curl.h>
+//#include <curl/curl.h>
 #include "tinyXML/tinyxml.h"
 #include "logger.h"
 #include "boxee.h"
 #include "bxcurl.h"
 #include "bxrssreader.h"
 #include "bxconfiguration.h"
+#include "bxoemconfiguration.h"
 #include "bxboxeefeed.h"
 #include "bxutils.h"
 #include "bxversion.h"
+#include "GUISettings.h"
+
 
 #include "../../utils/GUIInfoManager.h"
 
@@ -35,7 +37,9 @@ typedef int socklen_t;
 #define bx_stricmp _stricmp
 #endif
 
+#ifndef _WIN32
 using namespace std;
+#endif
  
 #define IPHONE_REMOTE_KEY "b0xeeRem0tE!"
 #define SHOW_MOVIE_LIBARRY "show_movie_library"
@@ -143,19 +147,19 @@ bool Boxee::SignalStop()
   
 bool Boxee::Stop()
 {
-  printf("Boxee: asked to stop\n");
+  LOG(LOG_LEVEL_INFO, "Boxee: asked to stop");
   if (!m_bStarted) 
 	{
-	  printf("Boxee: already stopped\n");
+    LOG(LOG_LEVEL_INFO, "Boxee: already stopped");
 		return true;
   }
 	
 	m_bStarted = false;
 	
-	printf("Stopping boxee background processor\n");
+	LOG(LOG_LEVEL_INFO, "Stopping boxee background processor");
 	m_backGroundProcessor.Stop();
 	
-	printf("Stopping metadata engine\n");
+	LOG(LOG_LEVEL_INFO, "Stopping metadata engine");
 	m_MetadataEngine.Stop();
 	
 	if (m_thread) 
@@ -303,7 +307,7 @@ std::string Boxee::StringMapToXML(const std::map<std::string,std::string> &sourc
 		iter++;
 	}
 	
-	strResult = "</" + strParentTag + ">";
+	strResult += "</" + strParentTag + ">";
 	
 	return strResult;
 }
@@ -452,6 +456,7 @@ bool Boxee::SetUserAction(const BXGeneralMessage &action)
 	doc.SetCredentials(m_credentials);
 	
   LOG(LOG_LEVEL_DEBUG,"Boxee::SetUserAction - Going to call LoadFromURL with [%s]. [ActionType=%s] (sua)",strUrl.c_str(),action.GetMessageType().c_str());
+
 	bool retVal = doc.LoadFromURL(strUrl,headers,strXML);
   LOG(LOG_LEVEL_DEBUG,"Boxee::SetUserAction - Call to  return LoadFromURL with [%s] returned [retVal=%d]. [ActionType=%s] (sua)",strUrl.c_str(),retVal,action.GetMessageType().c_str());
 
@@ -926,17 +931,14 @@ std::string Boxee::GenerateDiscoveryResponse(std::string request)
           // Calculate the digest
           std::string responseSignature = BXUtils::GetMD5Hex(randomChallengeString + std::string(IPHONE_REMOTE_KEY));
           
-          char hostname[255];
-          gethostname(hostname, sizeof(hostname));
-          
           response = "<?xml version=\"1.0\"?>\n<BDP1 cmd=\"found\" application=\"boxee\" version=\"";
           response += BOXEE_VERSION;
           response += "\" name=\"";
-          response += hostname;
-          
+          response += g_guiSettings.GetString("server.hostname");
           response += "\" httpPort=\"";
           response += m_webServerPort;
           response += "\" httpAuthRequired=\"";
+
           if(m_webserverPasswordEmpty)
           {
             response += "false";
@@ -1174,16 +1176,16 @@ void Boxee::Logout()
   
   SignalStop();
 
-  m_bLoggedIn = false;
-  m_boxeeFeed.Clear();
-  m_recommendationsList.Clear();
-  m_friendsList.Clear();
-  m_actionsList.Clear();
-  m_credentials.Clear();
-  m_currentUserObj = BXObject();
-  Stop();
+	m_bLoggedIn = false;
+	m_boxeeFeed.Clear();
+	m_recommendationsList.Clear();
+	m_friendsList.Clear();
+	m_actionsList.Clear();
+	m_credentials.Clear();
+	m_currentUserObj = BXObject();
+	Stop();
 
-  m_MetadataEngine.Reset();
+	m_MetadataEngine.Reset();
 	
   LOG(LOG_LEVEL_DEBUG,"Boxee::Logout - Exit function (logout)");
 }
@@ -1220,9 +1222,9 @@ BXLoginStatus Boxee::Login(BXCredentials &creds, BXObject &userObj)
   LOG(LOG_LEVEL_DEBUG,"Boxee::Login - After set creds [userObjUserName=%s][userObjPass=%s]. [m_boxeeFeedSize=%d][m_friendsListSize=%d][m_actionsListSize=%d] (login)",userObj.GetCredentialsUserName().c_str(),userObj.GetCredentialsPassword().c_str(),m_boxeeFeed.GetNumOfActions(),m_friendsList.GetCount(),m_actionsList.GetNumOfActions());
 	
   std::string strLoginUrl = BXConfiguration::GetInstance().GetURLParam("Boxee.LoginUrl","http://app.boxee.tv/api/login");
-  ListHttpHeaders headers;
+	ListHttpHeaders headers;
 	
-  bool bLoaded = false;
+	bool bLoaded = false;
   BXLoginStatus loginRet = LOGIN_ERROR_ON_NETWORK;
 
   bLoaded = doc.LoadFromURL(strLoginUrl.c_str(), headers);
@@ -1238,21 +1240,21 @@ BXLoginStatus Boxee::Login(BXCredentials &creds, BXObject &userObj)
 
 		return loginRet;
 	}
-
+	
 	if (!ParseServerLoginResponse(doc,userObj))
 	{
 	  m_bLoggedIn = false;
 	  m_bDuringLogin = false;
 	  return LOGIN_GENERAL_ERROR;
 	}
-
+	
 	creds.SetAuthKey(doc.GetRespHeader("cookie"));
 
-	PostLoginInitializations(creds,userObj);
+	PostLoginInitializations(creds, userObj);
 
 	m_bLoggedIn = true;
 	loginRet = LOGIN_SUCCESS;
-
+	
 	m_bDuringLogin = false;
 
 	return loginRet;

@@ -2,7 +2,7 @@
 |
 |   Platinum - SSDP
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -29,7 +29,11 @@
 | 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 | http://www.gnu.org/licenses/gpl-2.0.html
 |
- ****************************************************************/
+****************************************************************/
+
+/** @file
+ UPnP SSDP
+ */
 
 #ifndef _PLT_SSDP_H_
 #define _PLT_SSDP_H_
@@ -38,7 +42,6 @@
 |   includes
 +---------------------------------------------------------------------*/
 #include "Neptune.h"
-#include "PltSsdpListener.h"
 #include "PltThreadTask.h"
 #include "PltHttpServerTask.h"
 
@@ -48,8 +51,42 @@
 class PLT_DeviceHost;
 
 /*----------------------------------------------------------------------
+|   PLT_SsdpPacketListener class
++---------------------------------------------------------------------*/
+/**
+ The PLT_SsdpPacketListener class is an interface for handling SSDP packets
+ (M-SEARCH and NOTIFY).
+ */
+class PLT_SsdpPacketListener
+{
+public:
+    virtual ~PLT_SsdpPacketListener() {}
+    virtual NPT_Result OnSsdpPacket(const NPT_HttpRequest&        request, 
+                                    const NPT_HttpRequestContext& context) = 0;
+};
+
+/*----------------------------------------------------------------------
+|   PLT_SsdpSearchResponseListener class
++---------------------------------------------------------------------*/
+/**
+ The PLT_SsdpSearchResponseListener class is an interface for handling SSDP M-SEARCH 
+ responses.
+ */
+class PLT_SsdpSearchResponseListener
+{
+public:
+    virtual ~PLT_SsdpSearchResponseListener() {}
+    virtual NPT_Result ProcessSsdpSearchResponse(NPT_Result                    res,  
+                                                 const NPT_HttpRequestContext& context,
+                                                 NPT_HttpResponse*             response) = 0;
+};
+
+/*----------------------------------------------------------------------
 |   PLT_SsdpSender class
 +---------------------------------------------------------------------*/
+/**
+ The PLT_SsdpSender class provides a mechanism to format and send SSDP packets.
+ */
 class PLT_SsdpSender
 {
 public:
@@ -78,6 +115,10 @@ private:
 /*----------------------------------------------------------------------
 |   PLT_SsdpDeviceSearchResponseInterfaceIterator class
 +---------------------------------------------------------------------*/
+/**
+ The PLT_SsdpDeviceSearchResponseInterfaceIterator class looks for the best network
+ interface to use then sends a SSDP M-SEARCH response.
+ */
 class PLT_SsdpDeviceSearchResponseInterfaceIterator
 {
 public:
@@ -98,6 +139,10 @@ private:
 /*----------------------------------------------------------------------
 |   PLT_SsdpDeviceSearchResponseTask class
 +---------------------------------------------------------------------*/
+/**
+ The PLT_SsdpDeviceSearchResponseTask class is used by a PLT_DeviceHost to respond
+ to SSDP M-SEARCH requests from UPnP ControlPoints.
+ */
 class PLT_SsdpDeviceSearchResponseTask : public PLT_ThreadTask
 {
 public:
@@ -121,6 +166,10 @@ protected:
 /*----------------------------------------------------------------------
 |   PLT_SsdpAnnounceInterfaceIterator class
 +---------------------------------------------------------------------*/
+/**
+ The PLT_SsdpAnnounceInterfaceIterator class is used to send SSDP announcements 
+ given a list of network interaces. 
+ */
 class PLT_SsdpAnnounceInterfaceIterator
 {
 public:
@@ -138,6 +187,10 @@ private:
 /*----------------------------------------------------------------------
 |   PLT_SsdpInitMulticastIterator class
 +---------------------------------------------------------------------*/
+/** 
+ The PLT_SsdpInitMulticastIterator class is used to join a multicast group 
+ given a list of IP addresses.
+ */
 class PLT_SsdpInitMulticastIterator
 {
 public:
@@ -157,6 +210,10 @@ private:
 /*----------------------------------------------------------------------
 |   PLT_SsdpDeviceAnnounceTask class
 +---------------------------------------------------------------------*/
+/**
+ The PLT_SsdpDeviceAnnounceTask class is a task to send UPnP Device SSDP announcements
+ (alive or byebye). It can be setup to automatically repeat after an interval.
+ */
 class PLT_SsdpDeviceAnnounceTask : public PLT_ThreadTask
 {
 public:
@@ -184,6 +241,10 @@ protected:
 /*----------------------------------------------------------------------
 |   PLT_NetworkInterfaceAddressSearchIterator class
 +---------------------------------------------------------------------*/
+/**
+ The PLT_NetworkInterfaceAddressSearchIterator class returns the network interface
+ given an IP address.
+ */
 class PLT_NetworkInterfaceAddressSearchIterator
 {
 public:
@@ -204,6 +265,10 @@ private:
 /*----------------------------------------------------------------------
 |   PLT_SsdpPacketListenerIterator class
 +---------------------------------------------------------------------*/
+/**
+ The PLT_SsdpPacketListenerIterator class iterates through a list of 
+ PLT_SsdpPacketListener instances to notify of a new SSDP incoming packet.
+ */
 class PLT_SsdpPacketListenerIterator
 {
 public:
@@ -223,6 +288,11 @@ private:
 /*----------------------------------------------------------------------
 |   PLT_SsdpListenTask class
 +---------------------------------------------------------------------*/
+/**
+ The PLT_SsdpListenTask class is used to listen for incoming SSDP packets and 
+ keep track of a list of PLT_SsdpPacketListener listeners to notify when a new 
+ SSDP packet has arrived.
+ */
 class PLT_SsdpListenTask : public PLT_HttpServerSocketTask
 {
 public:
@@ -230,7 +300,14 @@ public:
                        bool multicast = true,
                        bool join_hard = false) : 
         PLT_HttpServerSocketTask(socket, true), 
-        m_Multicast(multicast), m_JoinHard(join_hard) {}
+        m_Multicast(multicast), m_JoinHard(join_hard) {
+        // Change read time out for UDP because iPhone 3.0 seems to hang
+        // after reading everything from the socket even though
+        // more stuff arrived
+#if defined(TARGET_OS_IPHONE)
+        m_Socket->SetReadTimeout(1000);
+#endif
+    }
 
     NPT_Result AddListener(PLT_SsdpPacketListener* listener) {
         NPT_AutoLock lock(m_Mutex);
@@ -253,10 +330,9 @@ protected:
     // PLT_HttpServerSocketTask methods
     NPT_Result GetInputStream(NPT_InputStreamReference& stream);
     NPT_Result GetInfo(NPT_SocketInfo& info);
-    NPT_Result ProcessRequest(NPT_HttpRequest&              request, 
-                              const NPT_HttpRequestContext& context,
-                              NPT_HttpResponse*&            response,
-                              bool&                         headers_only);
+    NPT_Result SetupResponse(NPT_HttpRequest&              request, 
+                             const NPT_HttpRequestContext& context,
+                             NPT_HttpResponse&             response);
 
 protected:
     PLT_InputDatagramStreamReference  m_Datagram;
@@ -269,13 +345,17 @@ protected:
 /*----------------------------------------------------------------------
 |   PLT_SsdpSearchTask class
 +---------------------------------------------------------------------*/
+/**
+ The PLT_SsdpSearchTask class is a task used by a PLT_CtrlPoint to issue a SSDP
+ M-SEARCH request. It can be set to repeat at a certain frequencey.
+ */
 class PLT_SsdpSearchTask : public PLT_ThreadTask
 {
 public:
     PLT_SsdpSearchTask(NPT_UdpSocket*                  socket,
                        PLT_SsdpSearchResponseListener* listener, 
                        NPT_HttpRequest*                request,
-                       NPT_Timeout                     frequency); // pass 0 for one time
+                       NPT_TimeInterval                frequency = NPT_TimeInterval(0.)); // pass 0 for one time
 
 protected:
     virtual ~PLT_SsdpSearchTask();
@@ -285,14 +365,14 @@ protected:
     virtual void DoRun();
 
     virtual NPT_Result ProcessResponse(NPT_Result                    res, 
-                                       NPT_HttpRequest*              request,  
+                                       const NPT_HttpRequest&        request,  
                                        const NPT_HttpRequestContext& context,
                                        NPT_HttpResponse*             response);
 
 private:
     PLT_SsdpSearchResponseListener* m_Listener;
     NPT_HttpRequest*                m_Request;
-    NPT_Timeout                     m_Timeout;
+    NPT_TimeInterval                m_Frequency;
     bool                            m_Repeat;
     NPT_UdpSocket*                  m_Socket;
 };

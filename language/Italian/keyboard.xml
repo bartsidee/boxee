@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<keyboard lang="en" desc="english" has_caps="true">
+<?xml version="1.0" encoding="utf-8"?>
+<keyboard lang="it" desc="italian" has_caps="true">
   <char caps="false" order="0">a</char>
   <char caps="false" order="1">à</char>
   <char caps="false" order="2">b</char>

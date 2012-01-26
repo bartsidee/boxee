@@ -46,6 +46,7 @@ class NPT_System
 public:
     // methods
     static NPT_Result GetProcessId(NPT_UInt32& id);
+    static NPT_Result GetMachineName(NPT_String& name);
     static NPT_Result GetCurrentTimeStamp(NPT_TimeStamp& now);
     static NPT_Result Sleep(const NPT_TimeInterval& duration);
     static NPT_Result SleepUntil(const NPT_TimeStamp& when);

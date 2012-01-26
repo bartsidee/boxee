@@ -201,7 +201,7 @@ get_soi (j_decompress_ptr cinfo)
   
   TRACEMS(cinfo, 1, JTRC_SOI);
 
-  if (cinfo->marker->saw_SOI && cinfo->global_state != DSTATE_INHEADER)
+  if (cinfo->marker->saw_SOI)
     ERREXIT(cinfo, JERR_SOI_DUPLICATE);
 
   /* Reset all parameters that are defined to be reset by SOI */
@@ -258,7 +258,7 @@ get_sof (j_decompress_ptr cinfo, boolean is_prog, boolean is_arith)
 	   (int) cinfo->image_width, (int) cinfo->image_height,
 	   cinfo->num_components);
 
-  if (cinfo->marker->saw_SOF && cinfo->global_state != DSTATE_INHEADER)
+  if (cinfo->marker->saw_SOF)
     ERREXIT(cinfo, JERR_SOF_DUPLICATE);
 
   /* We don't support files in which the image height is initially specified */
@@ -1088,7 +1088,7 @@ read_markers (j_decompress_ptr cinfo)
        * Once the JPEG 3 version-number marker is well defined, this code
        * ought to change!
        */
-      // ERREXIT1(cinfo, JERR_UNKNOWN_MARKER, cinfo->unread_marker); <DP>
+      ERREXIT1(cinfo, JERR_UNKNOWN_MARKER, cinfo->unread_marker);
       break;
     }
     /* Successfully processed marker, so reset state variable */

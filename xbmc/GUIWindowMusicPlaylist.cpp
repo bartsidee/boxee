@@ -25,7 +25,9 @@
 #include "PlayListM3U.h"
 #include "Application.h"
 #include "PlayListPlayer.h"
+#ifndef _BOXEE_
 #include "PartyModeManager.h"
+#endif
 #include "LastFmManager.h"
 #include "utils/LabelFormatter.h"
 #include "MusicInfoTag.h"
@@ -131,6 +133,7 @@ bool CGUIWindowMusicPlayList::OnMessage(CGUIMessage& message)
   case GUI_MSG_CLICKED:
     {
       int iControl = message.GetSenderId();
+#ifndef _BOXEE_
       if (iControl == CONTROL_BTNSHUFFLE)
       {
         if (!g_partyModeManager.IsEnabled())
@@ -142,7 +145,9 @@ bool CGUIWindowMusicPlayList::OnMessage(CGUIMessage& message)
           Update(m_vecItems->m_strPath);
         }
       }
-      else if (iControl == CONTROL_BTNSAVE)
+      else 
+#endif        
+        if (iControl == CONTROL_BTNSAVE)
       {
         if (m_musicInfoLoader.IsLoading()) // needed since we destroy m_vecitems to save memory
           m_musicInfoLoader.StopThread();
@@ -359,8 +364,9 @@ void CGUIWindowMusicPlayList::RemovePlayListItem(int iItem)
   {
     m_viewControl.SetSelectedItem(iItem);
   }
-
+#ifndef _BOXEE_
   g_partyModeManager.OnSongChange();
+#endif
 }
 
 void CGUIWindowMusicPlayList::UpdateButtons()
@@ -368,6 +374,7 @@ void CGUIWindowMusicPlayList::UpdateButtons()
   CGUIWindowMusicBase::UpdateButtons();
 
   // Update playlist buttons
+#ifndef _BOXEE_
   if (m_vecItems->Size() && !g_partyModeManager.IsEnabled() && !CLastFmManager::GetInstance()->IsRadioEnabled())
   {
     CONTROL_ENABLE(CONTROL_BTNSHUFFLE);
@@ -395,6 +402,7 @@ void CGUIWindowMusicPlayList::UpdateButtons()
     }
   }
   else
+#endif
   {
     // disable buttons if party mode is enabled too
     CONTROL_DISABLE(CONTROL_BTNSHUFFLE);
@@ -425,9 +433,11 @@ void CGUIWindowMusicPlayList::UpdateButtons()
 
 bool CGUIWindowMusicPlayList::OnPlayMedia(int iItem)
 {
+#ifndef _BOXEE_
   if (g_partyModeManager.IsEnabled())
     g_partyModeManager.Play(iItem);
   else
+#endif 
   {
     int iPlaylist=m_guiState->GetPlaylist();
     if (iPlaylist!=PLAYLIST_NONE)
@@ -527,8 +537,10 @@ void CGUIWindowMusicPlayList::GetContextButtons(int itemNumber, CContextButtons 
     {
       // we can move the item to any position not where we are, and any position not above currently
       // playing item in party mode
+#ifndef _BOXEE_
       if (itemNumber != m_movingFrom && (!g_partyModeManager.IsEnabled() || itemNumber > itemPlaying))
         buttons.Add(CONTEXT_BUTTON_MOVE_HERE, 13252);         // move item here
+#endif
       buttons.Add(CONTEXT_BUTTON_CANCEL_MOVE, 13253);
     }
     else
@@ -537,24 +549,29 @@ void CGUIWindowMusicPlayList::GetContextButtons(int itemNumber, CContextButtons 
         buttons.Add(CONTEXT_BUTTON_SONG_INFO, 658); // Song Info
       if (CFavourites::IsFavourite(item.get(), GetID()))
         buttons.Add(CONTEXT_BUTTON_ADD_FAVOURITE, 14077);     // Remove Favourite
+#ifndef _BOXEE_
       else
         buttons.Add(CONTEXT_BUTTON_ADD_FAVOURITE, 14076);     // Add To Favourites;
       if (itemNumber > (g_partyModeManager.IsEnabled() ? 1 : 0))
         buttons.Add(CONTEXT_BUTTON_MOVE_ITEM_UP, 13332);
+#endif
       if (itemNumber + 1 < m_vecItems->Size())
         buttons.Add(CONTEXT_BUTTON_MOVE_ITEM_DOWN, 13333);
+#ifndef _BOXEE_
       if (!g_partyModeManager.IsEnabled() || itemNumber != itemPlaying)
         buttons.Add(CONTEXT_BUTTON_MOVE_ITEM, 13251);
+#endif
       if (itemNumber != itemPlaying)
         buttons.Add(CONTEXT_BUTTON_DELETE, 1210); // Remove
     }
   }
-
+#ifndef _BOXEE_
   if (g_partyModeManager.IsEnabled())
   {
     buttons.Add(CONTEXT_BUTTON_EDIT_PARTYMODE, 21439);
     buttons.Add(CONTEXT_BUTTON_CANCEL_PARTYMODE, 588);      // cancel party mode
   }
+#endif
 }
 
 bool CGUIWindowMusicPlayList::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
@@ -592,11 +609,11 @@ bool CGUIWindowMusicPlayList::OnContextButton(int itemNumber, CONTEXT_BUTTON but
       CFavourites::AddOrRemove(item.get(), GetID());
       return true;
     }
-
+#ifndef _BOXEE_
+#ifndef _BOXEE_
   case CONTEXT_BUTTON_CANCEL_PARTYMODE:
     g_partyModeManager.Disable();
     return true;
-
   case CONTEXT_BUTTON_EDIT_PARTYMODE:
   {
     CStdString playlist = g_settings.GetUserDataItem("PartyMode.xsp");
@@ -608,6 +625,7 @@ bool CGUIWindowMusicPlayList::OnContextButton(int itemNumber, CONTEXT_BUTTON but
     }
     return true;
   }
+#endif
 
   default:
     break;

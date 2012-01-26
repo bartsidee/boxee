@@ -74,7 +74,7 @@ void CPluginDirectory::removeHandle(int handle)
 
 bool CPluginDirectory::StartScript(const CStdString& strPath)
 {
-  CURL url(strPath);
+  CURI url(strPath);
 
   CStdString fileName;
 
@@ -377,7 +377,11 @@ void CPluginDirectory::AddSortMethod(int handle, SORT_METHOD sortMethod)
 
 bool CPluginDirectory::GetDirectory(const CStdString& strPath, CFileItemList& items)
 { 
-  CURL url(strPath);
+#ifndef HAS_PYTHON
+  return false;
+#endif
+
+  CURI url(strPath);
   if (url.GetFileName().IsEmpty())
   { // called with no script - should never happen
     CLog::Log(LOGERROR, " called with no script - should NEVER happen, path = %s", strPath.c_str());
@@ -426,6 +430,7 @@ bool CPluginDirectory::GetDirectory(const CStdString& strPath, CFileItemList& it
   // run the script
   CLog::Log(LOGDEBUG, "%s - calling plugin %s('%s','%s','%s')", __FUNCTION__, pathToScript.c_str(), plugin_argv[0], plugin_argv[1], plugin_argv[2]);
   bool success = false;
+#ifdef HAS_PYTHON
   if (g_pythonParser.evalFile(pathToScript.c_str(), 3, (const char**)plugin_argv) >= 0)
   { 
     // wait for our script to finish
@@ -435,6 +440,7 @@ bool CPluginDirectory::GetDirectory(const CStdString& strPath, CFileItemList& it
     success = WaitOnScriptResult(pathToScript, scriptName);
   }
   else
+#endif
   {
     CLog::Log(LOGERROR, "Unable to run plugin %s", pathToScript.c_str());
   }
@@ -471,7 +477,7 @@ bool CPluginDirectory::GetDirectory(const CStdString& strPath, CFileItemList& it
 
 bool CPluginDirectory::RunScriptWithParams(const CStdString& strPath)
 {
-  CURL url(strPath);
+  CURI url(strPath);
   if (url.GetFileName().IsEmpty()) // called with no script - should never happen
     return false;
 
@@ -693,7 +699,7 @@ void CPluginDirectory::SetProperty(int handle, const CStdString &strProperty, co
   dir->m_listItems->SetProperty(strProperty, strValue);
 }
 
-void CPluginDirectory::LoadPluginStrings(const CURL &url)
+void CPluginDirectory::LoadPluginStrings(const CURI &url)
 {
   CStdString pathToPlugin = GetPathToPlugin(url.GetHostName(), url.GetFileName());
   

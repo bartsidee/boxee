@@ -19,7 +19,7 @@
 #include "XBMC_events.h"
 #include "utils/TimeUtils.h"
 
-#if defined(_LINUX) && !defined(__APPLE__)
+#if defined(HAS_X11_EVENTS)
 #include <X11/Xlib.h>
 #include <X11/XKBlib.h>
 #endif
@@ -67,24 +67,24 @@ struct XBMC_KeyMapping
 
 // based on the evdev mapped scancodes in /user/share/X11/xkb/keycodes
 static XBMC_KeyMapping g_mapping_evdev[] =
-{ { 121, 0xad } // Volume mute
-, { 122, 0xae } // Volume down
-, { 123, 0xaf } // Volume up
-, { 135, 0x5d } // Right click
-, { 136, 0xb2 } // Stop
-, { 138, 0x49 } // Info
-, { 166, 0xa6 } // Browser back
-, { 167, 0xa7 } // Browser forward
-, { 171, 0xb0 } // Next track
-, { 172, 0xb3 } // Play_Pause
-, { 173, 0xb1 } // Prev track
-, { 174, 0xb2 } // Stop
-, { 176, 0x52 } // Rewind
-, { 180, 0xac } // Browser home
-, { 181, 0xa8 } // Browser refresh
-, { 214, 0x1B } // Close
-, { 215, 0xb3 } // Play_Pause
-, { 216, 0x46 } // Forward
+{ { 121, 0xad, 0, 0 } // Volume mute
+, { 122, 0xae, 0, 0 } // Volume down
+, { 123, 0xaf, 0, 0 } // Volume up
+, { 135, 0x5d, 0, 0 } // Right click
+, { 136, 0xb2, 0, 0 } // Stop
+, { 138, 0x49, 0, 0 } // Info
+, { 166, 0xa6, 0, 0 } // Browser back
+, { 167, 0xa7, 0, 0 } // Browser forward
+, { 171, 0xb0, 0, 0 } // Next track
+, { 172, 0xb3, 0, 0 } // Play_Pause
+, { 173, 0xb1, 0, 0 } // Prev track
+, { 174, 0xb2, 0, 0 } // Stop
+, { 176, 0x52, 0, 0 } // Rewind
+, { 180, 0xac, 0, 0 } // Browser home
+, { 181, 0xa8, 0, 0 } // Browser refresh
+, { 214, 0x1B, 0, 0 } // Close
+, { 215, 0xb3, 0, 0 } // Play_Pause
+, { 216, 0x46, 0, 0 } // Forward
 //, {167, 0xb3 } // Record
 };
 
@@ -97,103 +97,118 @@ static XBMC_KeyMapping g_mapping_evdev[] =
 
 // special "keys" above F1 till F12 on my MS natural keyboard mapped to virtual keys "F13" till "F24"):
 static XBMC_KeyMapping g_mapping_ubuntu[] =
-{ { 0xf5, 0x7c } // F13 Launch help browser
-, { 0x87, 0x7d } // F14 undo
-, { 0x8a, 0x7e } // F15 redo
-, { 0x89, 0x7f } // F16 new
-, { 0xbf, 0x80 } // F17 open
-, { 0xaf, 0x81 } // F18 close
-, { 0xe4, 0x82 } // F19 reply
-, { 0x8e, 0x83 } // F20 forward
-, { 0xda, 0x84 } // F21 send
-//, { 0x, 0x85 } // F22 check spell (doesn't work for me with ubuntu)
-, { 0xd5, 0x86 } // F23 save
-, { 0xb9, 0x87 } // 0x2a?? F24 print
+{ { 0xf5, 0x7c, 0, 0 } // F13 Launch help browser
+, { 0x87, 0x7d, 0, 0 } // F14 undo
+, { 0x8a, 0x7e, 0, 0 } // F15 redo
+, { 0x89, 0x7f, 0, 0 } // F16 new
+, { 0xbf, 0x80, 0, 0 } // F17 open
+, { 0xaf, 0x81, 0, 0 } // F18 close
+, { 0xe4, 0x82, 0, 0 } // F19 reply
+, { 0x8e, 0x83, 0, 0 } // F20 forward
+, { 0xda, 0x84, 0, 0 } // F21 send
+//, { 0x, 0x85, 0, 0 } // F22 check spell (doesn't work for me with ubuntu)
+, { 0xd5, 0x86, 0, 0 } // F23 save
+, { 0xb9, 0x87, 0, 0 } // 0x2a?? F24 print
         // end of special keys above F1 till F12
 
-, { 234, 0xa6 } // Browser back
-, { 233, 0xa7 } // Browser forward
-, { 231, 0xa8 } // Browser refresh
+, { 234, 0xa6, 0, 0 } // Browser back
+, { 233, 0xa7, 0, 0 } // Browser forward
+, { 231, 0xa8, 0, 0 } // Browser refresh
 //, { , 0xa9 } // Browser stop
-, { 122, 0xaa } // Browser search
-, { 0xe5, 0xaa } // Browser search
-, { 230, 0xab } // Browser favorites
-, { 130, 0xac } // Browser home
-, { 0xa0, 0xad } // Volume mute
-, { 0xae, 0xae } // Volume down
-, { 0xb0, 0xaf } // Volume up
-, { 0x99, 0xb0 } // Next track
-, { 0x90, 0xb1 } // Prev track
-, { 0xa4, 0xb2 } // Stop
-, { 0xa2, 0xb3 } // Play_Pause
-, { 0xec, 0xb4 } // Launch mail
-, { 129, 0xb5 } // Launch media_select
-, { 198, 0xb6 } // Launch App1/PC icon
-, { 0xa1, 0xb7 } // Launch App2/Calculator
-, { 34, 0xba } // OEM 1: [ on us keyboard
-, { 51, 0xbf } // OEM 2: additional key on european keyboards between enter and ' on us keyboards
-, { 47, 0xc0 } // OEM 3: ; on us keyboards
-, { 20, 0xdb } // OEM 4: - on us keyboards (between 0 and =)
-, { 49, 0xdc } // OEM 5: ` on us keyboards (below ESC)
-, { 21, 0xdd } // OEM 6: =??? on us keyboards (between - and backspace)
-, { 48, 0xde } // OEM 7: ' on us keyboards (on right side of ;)
-//, { 0, 0xdf } // OEM 8
-, { 94, 0xe2 } // OEM 102: additional key on european keyboards between left shift and z on us keyboards
+, { 122, 0xaa, 0, 0 } // Browser search
+, { 0xe5, 0xaa, 0, 0 } // Browser search
+, { 230, 0xab, 0, 0 } // Browser favorites
+, { 130, 0xac, 0, 0 } // Browser home
+, { 0xa0, 0xad, 0, 0 } // Volume mute
+, { 0xae, 0xae, 0, 0 } // Volume down
+, { 0xb0, 0xaf, 0, 0 } // Volume up
+, { 0x99, 0xb0, 0, 0 } // Next track
+, { 0x90, 0xb1, 0, 0 } // Prev track
+, { 0xa4, 0xb2, 0, 0 } // Stop
+, { 0xa2, 0xb3, 0, 0 } // Play_Pause
+, { 0xec, 0xb4, 0, 0 } // Launch mail
+, { 129, 0xb5, 0, 0 } // Launch media_select
+, { 198, 0xb6, 0, 0 } // Launch App1/PC icon
+, { 0xa1, 0xb7, 0, 0 } // Launch App2/Calculator
+, { 34, 0xba, 0, 0 } // OEM 1: [ on us keyboard
+, { 51, 0xbf, 0, 0 } // OEM 2: additional key on european keyboards between enter and ' on us keyboards
+, { 47, 0xc0, 0, 0 } // OEM 3: ; on us keyboards
+, { 20, 0xdb, 0, 0 } // OEM 4: - on us keyboards (between 0 and =)
+, { 49, 0xdc, 0, 0 } // OEM 5: ` on us keyboards (below ESC)
+, { 21, 0xdd, 0, 0 } // OEM 6: =??? on us keyboards (between - and backspace)
+, { 48, 0xde, 0, 0 } // OEM 7: ' on us keyboards (on right side of ;)
+//, { 0, 0xdf, 0, 0 } // OEM 8
+, { 94, 0xe2, 0, 0 } // OEM 102: additional key on european keyboards between left shift and z on us keyboards
 //, { 0xb2, 0x } // Ubuntu default setting for launch browser
 //, { 0x76, 0x } // Ubuntu default setting for launch music player
 //, { 0xcc, 0x } // Ubuntu default setting for eject
-, { 117, 0x5d } // right click
+, { 117, 0x5d, 0, 0 } // right click
 };
 
 // OSX defines unicode values for non-printing keys which breaks the key parser, set m_wUnicode
 static XBMC_KeyMapping g_mapping_npc[] =
-{ { XBMCK_BACKSPACE, 0x08 }
-, { XBMCK_TAB, 0x09 }
-, { XBMCK_RETURN, 0x0d }
-, { XBMCK_ESCAPE, 0x1b }
+{ { XBMCK_BACKSPACE, 0x08, 0, 0 }
+, { XBMCK_TAB, 0x09, 0, 0 }
+, { XBMCK_RETURN, 0x0d, 0, 0 }
+, { XBMCK_ESCAPE, 0x1b, 0, 0 }
 , { XBMCK_SPACE, 0x20, ' ', L' ' }
-, { XBMCK_MENU, 0x5d }
-, { XBMCK_KP0, 0x60 }
-, { XBMCK_KP1, 0x61 }
-, { XBMCK_KP2, 0x62 }
-, { XBMCK_KP3, 0x63 }
-, { XBMCK_KP4, 0x64 }
-, { XBMCK_KP5, 0x65 }
-, { XBMCK_KP6, 0x66 }
-, { XBMCK_KP7, 0x67 }
-, { XBMCK_KP8, 0x68 }
-, { XBMCK_KP9, 0x69 }
-, { XBMCK_KP_ENTER, 0x6C }
-, { XBMCK_UP, 0x26 }
-, { XBMCK_DOWN, 0x28 }
-, { XBMCK_LEFT, 0x25 }
-, { XBMCK_RIGHT, 0x27 }
-, { XBMCK_INSERT, 0x2D }
-, { XBMCK_DELETE, 0x2E }
-, { XBMCK_HOME, 0x24 }
-, { XBMCK_END, 0x23 }
-, { XBMCK_F1, 0x70 }
-, { XBMCK_F2, 0x71 }
-, { XBMCK_F3, 0x72 }
-, { XBMCK_F4, 0x73 }
-, { XBMCK_F5, 0x74 }
-, { XBMCK_F6, 0x75 }
-, { XBMCK_F7, 0x76 }
-, { XBMCK_F8, 0x77 }
-, { XBMCK_F9, 0x78 }
-, { XBMCK_F10, 0x79 }
-, { XBMCK_F11, 0x7a }
-, { XBMCK_F12, 0x7b }
-, { XBMCK_KP_PERIOD, 0x6e }
-, { XBMCK_KP_MULTIPLY, 0x6a }
-, { XBMCK_KP_MINUS, 0x6d }
-, { XBMCK_KP_PLUS, 0x6b }
-, { XBMCK_KP_DIVIDE, 0x6f }
-, { XBMCK_PAGEUP, 0x21 }
-, { XBMCK_PAGEDOWN, 0x22 }
-, { XBMCK_PRINT, 0x2a }
-, { XBMCK_LSHIFT, 0xa0 }
-, { XBMCK_RSHIFT, 0xa1 }
+, { XBMCK_MENU, 0x5d, 0, 0 }
+, { XBMCK_KP0, 0x60, 0, 0 }
+, { XBMCK_KP1, 0x61, 0, 0 }
+, { XBMCK_KP2, 0x62, 0, 0 }
+, { XBMCK_KP3, 0x63, 0, 0 }
+, { XBMCK_KP4, 0x64, 0, 0 }
+, { XBMCK_KP5, 0x65, 0, 0 }
+, { XBMCK_KP6, 0x66, 0, 0 }
+, { XBMCK_KP7, 0x67, 0, 0 }
+, { XBMCK_KP8, 0x68, 0, 0 }
+, { XBMCK_KP9, 0x69, 0, 0 }
+, { XBMCK_KP_ENTER, 0x6C, 0, 0 }
+, { XBMCK_UP, 0x26, 0, 0 }
+, { XBMCK_DOWN, 0x28, 0, 0 }
+, { XBMCK_LEFT, 0x25, 0, 0 }
+, { XBMCK_RIGHT, 0x27, 0, 0 }
+, { XBMCK_INSERT, 0x2D, 0, 0 }
+, { XBMCK_DELETE, 0x2E, 0, 0 }
+, { XBMCK_HOME, 0x24, 0, 0 }
+, { XBMCK_END, 0x23, 0, 0 }
+, { XBMCK_F1, 0x70, 0, 0 }
+, { XBMCK_F2, 0x71, 0, 0 }
+, { XBMCK_F3, 0x72, 0, 0 }
+, { XBMCK_F4, 0x73, 0, 0 }
+, { XBMCK_F5, 0x74, 0, 0 }
+, { XBMCK_F6, 0x75, 0, 0 }
+, { XBMCK_F7, 0x76, 0, 0 }
+, { XBMCK_F8, 0x77, 0, 0 }
+, { XBMCK_F9, 0x78, 0, 0 }
+, { XBMCK_F10, 0x79, 0, 0 }
+, { XBMCK_F11, 0x7a, 0, 0 }
+, { XBMCK_F12, 0x7b, 0, 0 }
+, { XBMCK_F13, 0x7c, 0, 0 }
+, { XBMCK_F14, 0x7d, 0, 0 }
+, { XBMCK_F15, 0x7e, 0, 0 }
+, { XBMCK_KP_PERIOD, 0, 46, 46 }
+, { XBMCK_KP_MULTIPLY,0, 42, 42 }
+, { XBMCK_KP_MINUS, 0, 45, 45 }
+, { XBMCK_KP_PLUS,0, 43, 43 }
+, { XBMCK_KP_DIVIDE,0, 47, 47 }
+, { XBMCK_PAGEUP, 0x21, 0, 0 }
+, { XBMCK_PAGEDOWN, 0x22, 0, 0 }
+, { XBMCK_PRINT, 0x2a, 0, 0 }
+, { XBMCK_LSHIFT, 0xa0, 0, 0 }
+, { XBMCK_RSHIFT, 0xa1, 0, 0 }
+, { XBMCK_PLAYPAUSE, 0xB3, 0, 0 }
+, { XBMCK_RMETA, 0xFB, 0, 0 }
+, { XBMCK_VOLUME_UP, 0xAF, 0, 0 }
+, { XBMCK_VOLUME_DOWN, 0xAE, 0, 0 }
+, { XBMCK_MUTE, 0xAD, 0, 0 }
+, { XBMCK_HOME_WINDOW, 0xAC, 0, 0 }
+, { XBMCK_PLAY, 0xCF, 0, 0 }
+, { XBMCK_PAUSE, 0xCD, 0, 0 }
+, { XBMCK_FASTFORWARD, 0xD0, 0, 0 }
+, { XBMCK_REWIND, 0xD1, 0, 0 }
+, { XBMCK_STOP, 0xb2, 0, 0 }
+, { XBMCK_BACK, 0xa6, 0, 0 }
 };
 
 static bool LookupKeyMapping(BYTE* VKey, char* Ascii, WCHAR* Unicode, int source, XBMC_KeyMapping* map, int count)
@@ -466,6 +481,39 @@ CKeyboardStat::CKeyboardStat()
   keynames[XBMCK_EURO] = "euro";
   keynames[XBMCK_UNDO] = "undo";
 
+#if 0
+  // Temporary map for boxee box, should move to xml file
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_q, XBMCKMOD_LALT)] = XBMCK_1;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_w, XBMCKMOD_LALT)] = XBMCK_2;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_e, XBMCKMOD_LALT)] = XBMCK_3;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_r, XBMCKMOD_LALT)] = XBMCK_4;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_t, XBMCKMOD_LALT)] = XBMCK_5;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_y, XBMCKMOD_LALT)] = XBMCK_6;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_u, XBMCKMOD_LALT)] = XBMCK_7;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_i, XBMCKMOD_LALT)] = XBMCK_8;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_o, XBMCKMOD_LALT)] = XBMCK_9;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_p, XBMCKMOD_LALT)] = XBMCK_0;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_a, XBMCKMOD_LALT)] = XBMCK_EXCLAIM;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_s, XBMCKMOD_LALT)] = XBMCK_AT;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_d, XBMCKMOD_LALT)] = XBMCK_HASH;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_f, XBMCKMOD_LALT)] = XBMCK_DOLLAR;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_g, XBMCKMOD_LALT)] = XBMCK_PERCENT;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_h, XBMCKMOD_LALT)] = XBMCK_AMPERSAND;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_j, XBMCKMOD_LALT)] = XBMCK_PERIOD;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_k, XBMCKMOD_LALT)] = XBMCK_LEFTPAREN;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_l, XBMCKMOD_LALT)] = XBMCK_RIGHTPAREN;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_COMMA, XBMCKMOD_LALT)] = XBMCK_SLASH;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_z, XBMCKMOD_LALT)] = XBMCK_UNDERSCORE;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_x, XBMCKMOD_LALT)] = XBMCK_MINUS;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_c, XBMCKMOD_LALT)] = XBMCK_PLUS;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_v, XBMCKMOD_LALT)] = XBMCK_SEMICOLON;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_b, XBMCKMOD_LALT)] = XBMCK_COLON;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_n, XBMCKMOD_LALT)] = XBMCK_QUOTEDBL;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_m, XBMCKMOD_LALT)] = XBMCK_QUOTE;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_PERIOD, XBMCKMOD_LALT)] = XBMCK_QUESTION;
+  m_translationMap[std::pair<XBMCKey, XBMCMod>(XBMCK_MENU, XBMCKMOD_NONE)] = XBMCK_ESCAPE;
+#endif
+
   Reset();
   m_lastKey = XBMCK_UNKNOWN;
   m_keyHoldTime = 0;
@@ -482,7 +530,7 @@ void CKeyboardStat::Initialize()
  * but in some x11 specific WinEvents file  *
  * but for some reason the code to map keys *
  * to specific xbmc vkeys is here           */
-#if defined(_LINUX) && !defined(__APPLE__)
+#if defined(HAS_X11_EVENTS)
   Display* dpy = XOpenDisplay(NULL);
   if (!dpy)
     return;
@@ -537,6 +585,14 @@ unsigned int CKeyboardStat::KeyHeld() const
 
 int CKeyboardStat::HandleEvent(XBMC_Event& newEvent)
 {
+  // First, let's see if we need to translate this event.
+  if (m_translationMap.find(std::pair<XBMCKey, XBMCMod>(newEvent.key.keysym.sym, XBMC_ModState)) != m_translationMap.end())
+  {
+    XBMCKey translatedKey = m_translationMap.find(std::pair<XBMCKey, XBMCMod>(newEvent.key.keysym.sym, XBMC_ModState))->second;
+    newEvent.key.keysym.sym = translatedKey;
+    newEvent.key.keysym.unicode = translatedKey;
+  }
+
   int repeatable;
   uint16_t modstate;
 
@@ -598,9 +654,12 @@ int CKeyboardStat::HandleEvent(XBMC_Event& newEvent)
       case XBMCK_LMETA:
         modstate |= XBMCKMOD_LMETA;
         break;
+#ifndef HAS_INTELCE
+    // for YouTube leanback - we'll use this key to switch between keyboard and mouse modes
       case XBMCK_RMETA:
         modstate |= XBMCKMOD_RMETA;
         break;
+#endif
       case XBMCK_MODE:
         modstate |= XBMCKMOD_MODE;
         break;
@@ -700,7 +759,7 @@ void CKeyboardStat::Update(XBMC_Event& event)
     m_bAlt = (event.key.keysym.mod & XBMCKMOD_ALT) != 0;
     m_bRAlt = (event.key.keysym.mod & XBMCKMOD_RALT) != 0;
 
-    CLog::Log(LOGDEBUG, "SDLKeyboard: scancode: %d, sym: %d, unicode: %d, modifier: %x", event.key.keysym.scancode, event.key.keysym.sym, event.key.keysym.unicode, event.key.keysym.mod);
+    CLog::Log(LOGDEBUG, "CKeyboardStat, SDLKeyboard: scancode: %d, sym: %d, unicode: %d, modifier: %x", event.key.keysym.scancode, event.key.keysym.sym, event.key.keysym.unicode, event.key.keysym.mod);
 
     if ((event.key.keysym.unicode >= 'A' && event.key.keysym.unicode <= 'Z') ||
       (event.key.keysym.unicode >= 'a' && event.key.keysym.unicode <= 'z'))

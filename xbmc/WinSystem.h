@@ -30,7 +30,9 @@ typedef enum _WindowSystemType
   WINDOW_SYSTEM_WIN32,
   WINDOW_SYSTEM_OSX,
   WINDOW_SYSTEM_X11,
-  WINDOW_SYSTEM_SDL
+  WINDOW_SYSTEM_OPENKODE,
+  WINDOW_SYSTEM_SDL,
+  WINDOW_SYSTEM_GDL
 } WindowSystemType;
 
 class CWinSystemBase
@@ -69,11 +71,13 @@ public:
 
   virtual void UpdateResolutions();
   void SetWindowResolution(int width, int height);
+  virtual bool SupportsTrue24p() { return m_bSupportTrue24p; }
   
 protected:
-  void UpdateDesktopResolution(RESOLUTION_INFO& newRes, int screen, int width, int height, float refreshRate);
+  void UpdateDesktopResolution(RESOLUTION_INFO& newRes, int screen, int width, int height, float refreshRate, bool interlaced = false);
   
   WindowSystemType m_eWindowSystem;
+  RESOLUTION_INFO m_Res;
   int m_nWidth;
   int m_nHeight;
   int m_nTop;
@@ -82,6 +86,7 @@ protected:
   bool m_bFullScreen;
   int m_nScreen;
   bool m_bBlankOtherDisplay;
+  bool m_bSupportTrue24p;
 };
 
 

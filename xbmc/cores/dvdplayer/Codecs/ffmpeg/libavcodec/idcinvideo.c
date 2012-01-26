@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/idcinvideo.c
+ * @file
  * id Quake II Cin Video Decoder by Dr. Tim Ferguson
  * For more information about the id CIN format, visit:
  *   http://www.csse.monash.edu.au/~timf/
@@ -77,7 +77,7 @@ typedef struct IdcinContext {
 /*
  * Find the lowest probability node in a Huffman table, and mark it as
  * being assigned to a higher probability.
- * Returns the node index of the lowest unused node, or -1 if all nodes
+ * @return the node index of the lowest unused node, or -1 if all nodes
  * are used.
  */
 static int huff_smallest_node(hnode *hnodes, int num_hnodes) {
@@ -253,9 +253,9 @@ static av_cold int idcin_decode_end(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec idcin_decoder = {
+AVCodec ff_idcin_decoder = {
     "idcinvideo",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_IDCIN,
     sizeof(IdcinContext),
     idcin_decode_init,

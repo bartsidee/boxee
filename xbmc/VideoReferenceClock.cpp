@@ -19,24 +19,30 @@
  *
  */
 #include "system.h"
-#include <iostream> //for debugging, please remove
 #include <list>
 #include "StdString.h"
 #include "VideoReferenceClock.h"
 #include "MathUtils.h"
 #include "utils/log.h"
 #include "utils/TimeUtils.h"
-#include "utils/SingleLock.h"
+#include "SingleLock.h"
+
+#ifdef HAS_INTEL_SMD
+#include "cores/IntelSMDGlobals.h"
+#endif
 
 #if defined(HAS_GLX) && defined(HAS_XRANDR)
+  #include <sstream>
   #include <X11/extensions/Xrandr.h>
-  #define NVSETTINGSCMD "nvidia-settings -nt -q RefreshRate 2>&1"
-#elif defined(__APPLE__)
+  #define NVSETTINGSCMD "nvidia-settings -nt -q RefreshRate3"
+#elif defined(__APPLE__) && !defined(__arm__)
   #include <QuartzCore/CVDisplayLink.h>
   #include "CocoaInterface.h"
+#elif defined(__APPLE__) && defined(__arm__)
+  #include "WindowingFactory.h"
 #elif defined(_WIN32) && defined(HAS_DX)
   #pragma comment (lib,"d3d9.lib")
-  #if (D3DX_SDK_VERSION >= 41) //aug 2009 sdk and up there is no dxerr9 anymore
+  #if (D3DX_SDK_VERSION >= 42) //aug 2009 sdk and up there is no dxerr9 anymore
     #include <Dxerr.h>
     #pragma comment (lib,"DxErr.lib")
   #else
@@ -107,11 +113,19 @@ using namespace std;
 CVideoReferenceClock::CVideoReferenceClock()
 {
   m_SystemFrequency = CurrentHostFrequency();
-  m_AdjustedFrequency = m_SystemFrequency;
+  m_ClockSpeed = 1.0;
   m_ClockOffset = 0;
   m_TotalMissedVblanks = 0;
   m_UseVblank = false;
   m_Started.Reset();
+
+#if defined(HAS_GLX) && defined(HAS_XRANDR)
+  m_Dpy = NULL;
+#endif
+
+#ifdef HAS_INTEL_SMD
+  g_IntelSMDGlobals.CreateMainClock();
+#endif
 }
 
 void CVideoReferenceClock::Process()
@@ -145,8 +159,11 @@ void CVideoReferenceClock::Process()
     CSingleLock SingleLock(m_CritSection);
     Now = CurrentHostCounter();
     m_CurrTime = Now + m_ClockOffset; //add the clock offset from the previous time we stopped
-    m_AdjustedFrequency = m_SystemFrequency;
+    m_CurrTimeFract = 0.0;
+    m_ClockSpeed = 1.0;
     m_TotalMissedVblanks = 0;
+    m_fineadjust = 1.0;
+    m_RefreshChanged = 0;
     m_Started.Set();
 
     if (SetupSuccess)
@@ -175,7 +192,6 @@ void CVideoReferenceClock::Process()
     m_UseVblank = false;                       //we're back to using the systemclock
     Now = CurrentHostCounter();                //set the clockoffset between the vblank clock and systemclock
     m_ClockOffset = m_CurrTime - Now;
-    m_Started.Reset();
     SingleLock.Leave();
 
     //clean up the vblank clock
@@ -215,18 +231,20 @@ bool CVideoReferenceClock::SetupGLX()
   unsigned int GlxTest;
   XSetWindowAttributes Swa;
 
-  m_Dpy = NULL;
   m_vInfo = NULL;
   m_Context = NULL;
-  m_Window = NULL;
+  m_Window = 0;
 
   CLog::Log(LOGDEBUG, "CVideoReferenceClock: Setting up GLX");
 
-  m_Dpy = XOpenDisplay(NULL);
   if (!m_Dpy)
   {
-    CLog::Log(LOGDEBUG, "CVideoReferenceClock: Unable to open display");
-    return false;
+    m_Dpy = XOpenDisplay(NULL);
+    if (!m_Dpy)
+    {
+      CLog::Log(LOGDEBUG, "CVideoReferenceClock: Unable to open display");
+      return false;
+    }
   }
 
   if (!glXQueryExtension(m_Dpy, NULL, NULL))
@@ -235,9 +253,23 @@ bool CVideoReferenceClock::SetupGLX()
     return false;
   }
 
-  if (!strstr(glXQueryExtensionsString(m_Dpy, DefaultScreen(m_Dpy)), "SGI_video_sync"))
+  bool          ExtensionFound = false;
+  istringstream Extensions(glXQueryExtensionsString(m_Dpy, DefaultScreen(m_Dpy)));
+  string        ExtensionStr;
+
+  while (!ExtensionFound)
   {
-    CLog::Log(LOGDEBUG, "CVideoReferenceClock: X server does not support SGI_video_sync");
+    Extensions >> ExtensionStr;
+    if (Extensions.fail())
+      break;
+
+    if (ExtensionStr == "GLX_SGI_video_sync")
+      ExtensionFound = true;
+  }
+
+  if (!ExtensionFound)
+  {
+    CLog::Log(LOGDEBUG, "CVideoReferenceClock: X server does not support GLX_SGI_video_sync");
     return false;
   }
 
@@ -308,7 +340,7 @@ bool CVideoReferenceClock::SetupGLX()
   //set up receiving of RandR events, we'll get one when the refreshrate changes
   XRRQueryExtension(m_Dpy, &m_RREventBase, &ReturnV);
   XRRSelectInput(m_Dpy, RootWindow(m_Dpy, m_vInfo->screen), RRScreenChangeNotifyMask);
-  
+
   UpdateRefreshrate(true); //forced refreshrate update
   m_MissedVblanks = 0;
 
@@ -321,9 +353,24 @@ bool CVideoReferenceClock::ParseNvSettings(int& RefreshRate)
   char   Buff[255];
   int    ReturnV;
   struct lconv *Locale = localeconv();
+  FILE*  NvSettings;
 
-  FILE* NvSettings = popen(NVSETTINGSCMD, "r");
+  const char* VendorPtr = (const char*)glGetString(GL_VENDOR);
+  if (!VendorPtr)
+  {
+    CLog::Log(LOGDEBUG, "CVideoReferenceClock: glGetString(GL_VENDOR) returned NULL, not using nvidia-settings");
+    return false;
+  }
 
+  CStdString Vendor = VendorPtr;
+  Vendor.ToLower();
+  if (Vendor.find("nvidia") == std::string::npos)
+  {
+    CLog::Log(LOGDEBUG, "CVideoReferenceClock: GL_VENDOR:%s, not using nvidia-settings", Vendor.c_str());
+    return false;
+  }
+
+  NvSettings = popen(NVSETTINGSCMD, "r");
   if (!NvSettings)
   {
     CLog::Log(LOGDEBUG, "CVideoReferenceClock: %s: %s", NVSETTINGSCMD, strerror(errno));
@@ -365,17 +412,30 @@ int CVideoReferenceClock::GetRandRRate()
 {
   int RefreshRate;
   XRRScreenConfiguration *CurrInfo;
-  
+
   CurrInfo = XRRGetScreenInfo(m_Dpy, RootWindow(m_Dpy, m_vInfo->screen));
   RefreshRate = XRRConfigCurrentRate(CurrInfo);
   XRRFreeScreenConfigInfo(CurrInfo);
-  
+
   return RefreshRate;
 }
 
 void CVideoReferenceClock::CleanupGLX()
 {
   CLog::Log(LOGDEBUG, "CVideoReferenceClock: Cleaning up GLX");
+
+  bool AtiWorkaround = false;
+  const char* VendorPtr = (const char*)glGetString(GL_VENDOR);
+  if (VendorPtr)
+  {
+    CStdString Vendor = VendorPtr;
+    Vendor.ToLower();
+    if (Vendor.compare(0, 3, "ati") == 0)
+    {
+      CLog::Log(LOGDEBUG, "CVideoReferenceClock: GL_VENDOR: %s, using ati dpy workaround", VendorPtr);
+      AtiWorkaround = true;
+    }
+  }
 
   if (m_vInfo)
   {
@@ -391,9 +451,11 @@ void CVideoReferenceClock::CleanupGLX()
   if (m_Window)
   {
     XDestroyWindow(m_Dpy, m_Window);
-    m_Window = NULL;
+    m_Window = 0;
   }
-  if (m_Dpy)
+
+  //ati saves the Display* in their libGL, if we close it here, we crash
+  if (m_Dpy && !AtiWorkaround)
   {
     XCloseDisplay(m_Dpy);
     m_Dpy = NULL;
@@ -421,7 +483,7 @@ void CVideoReferenceClock::RunGLX()
     ReturnV = m_glXWaitVideoSyncSGI(2, (VblankCount + 1) % 2, &VblankCount);
     m_glXGetVideoSyncSGI(&VblankCount); //the vblank count returned by glXWaitVideoSyncSGI is not always correct
     Now = CurrentHostCounter();         //get the timestamp of this vblank
-    
+
     if(ReturnV)
     {
       CLog::Log(LOGDEBUG, "CVideoReferenceClock: glXWaitVideoSyncSGI returned %i", ReturnV);
@@ -443,22 +505,22 @@ void CVideoReferenceClock::RunGLX()
     else
     {
       CLog::Log(LOGDEBUG, "CVideoReferenceClock: Vblank counter has reset");
-      
+
       //only try reattaching once
       if (IsReset)
         return;
 
       //because of a bug in the nvidia driver, glXWaitVideoSyncSGI breaks when the vblank counter resets
-      ReturnV = glXMakeCurrent(m_Dpy, None, NULL);
       CLog::Log(LOGDEBUG, "CVideoReferenceClock: Detaching glX context");
+      ReturnV = glXMakeCurrent(m_Dpy, None, NULL);
       if (ReturnV != True)
       {
         CLog::Log(LOGDEBUG, "CVideoReferenceClock: glXMakeCurrent returned %i", ReturnV);
         return;
       }
-      
-      glXMakeCurrent(m_Dpy, m_Window, m_Context);
+
       CLog::Log(LOGDEBUG, "CVideoReferenceClock: Attaching glX context");
+      ReturnV = glXMakeCurrent(m_Dpy, m_Window, m_Context);
       if (ReturnV != True)
       {
         CLog::Log(LOGDEBUG, "CVideoReferenceClock: glXMakeCurrent returned %i", ReturnV);
@@ -466,7 +528,7 @@ void CVideoReferenceClock::RunGLX()
       }
 
       m_glXGetVideoSyncSGI(&VblankCount);
-      
+
       IsReset = true;
     }
     PrevVblankCount = VblankCount;
@@ -578,7 +640,7 @@ bool CVideoReferenceClock::SetupD3D()
     return false;
   }
 
-  if (DevCaps.Caps != D3DCAPS_READ_SCANLINE)
+  if ((DevCaps.Caps & D3DCAPS_READ_SCANLINE) != D3DCAPS_READ_SCANLINE)
   {
     CLog::Log(LOGDEBUG, "CVideoReferenceClock: Hardware does not support GetRasterStatus");
     return false;
@@ -648,6 +710,12 @@ bool CVideoReferenceClock::SetupD3D()
     m_RefreshRate = m_PrevRefreshRate;
     if (m_RefreshRate == 23 || m_RefreshRate == 29 || m_RefreshRate == 59)
       m_RefreshRate++;
+
+    if (m_Interlaced)
+    {
+      m_RefreshRate *= 2;
+      CLog::Log(LOGDEBUG, "CVideoReferenceClock: display is interlaced");
+    }
 
     CLog::Log(LOGDEBUG, "CVideoReferenceClock: detected refreshrate: %i hertz, assuming %i hertz", m_PrevRefreshRate, (int)m_RefreshRate);
   }
@@ -724,7 +792,7 @@ void CVideoReferenceClock::CleanupD3D()
 }
 
 #elif defined(__APPLE__)
-
+#if !defined(__arm__)
 // Called by the Core Video Display Link whenever it's appropriate to render a frame.
 static CVReturn DisplayLinkCallBack(CVDisplayLinkRef displayLink, const CVTimeStamp* inNow, const CVTimeStamp* inOutputTime, CVOptionFlags flagsIn, CVOptionFlags* flagsOut, void* displayLinkContext)
 {
@@ -735,31 +803,37 @@ static CVReturn DisplayLinkCallBack(CVDisplayLinkRef displayLink, const CVTimeSt
 
   // Create an autorelease pool (necessary to call into non-Obj-C code from Obj-C code)
   void* pool = Cocoa_Create_AutoReleasePool();
-  
+
   CVideoReferenceClock *VideoReferenceClock = reinterpret_cast<CVideoReferenceClock*>(displayLinkContext);
   VideoReferenceClock->VblankHandler(inNow->hostTime, fps);
-  
+
   // Destroy the autorelease pool
   Cocoa_Destroy_AutoReleasePool(pool);
-  
+
   return kCVReturnSuccess;
 }
-
+#endif
 bool CVideoReferenceClock::SetupCocoa()
 {
-  CLog::Log(LOGDEBUG, "CVideoReferenceClock: setting up up Cocoa");
+  CLog::Log(LOGDEBUG, "CVideoReferenceClock: setting up Cocoa");
 
   //init the vblank timestamp
   m_LastVBlankTime = CurrentHostCounter();
   m_MissedVblanks = 0;
   m_RefreshRate = 60;              //init the refreshrate so we don't get any division by 0 errors
-  
+
+  #if defined(__arm__)
+  {
+    g_Windowing.InitDisplayLink();
+  }
+  #else
   if (!Cocoa_CVDisplayLinkCreate((void*)DisplayLinkCallBack, reinterpret_cast<void*>(this)))
   {
     CLog::Log(LOGDEBUG, "CVideoReferenceClock: Cocoa_CVDisplayLinkCreate failed");
     return false;
   }
   else
+  #endif
   {
     UpdateRefreshrate(true);
     return true;
@@ -778,38 +852,43 @@ void CVideoReferenceClock::RunCocoa()
 void CVideoReferenceClock::CleanupCocoa()
 {
   CLog::Log(LOGDEBUG, "CVideoReferenceClock: cleaning up Cocoa");
-  Cocoa_CVDisplayLinkRelease();
-}    
+  #if defined(__arm__)
+    g_Windowing.DeinitDisplayLink();
+  #else
+    Cocoa_CVDisplayLinkRelease();
+  #endif
+}
 
 void CVideoReferenceClock::VblankHandler(int64_t nowtime, double fps)
 {
   int           NrVBlanks;
   double        VBlankTime;
   int           RefreshRate = MathUtils::round_int(fps);
-  
+
   CSingleLock SingleLock(m_CritSection);
 
   if (RefreshRate != m_RefreshRate)
   {
-    CLog::Log(LOGDEBUG, "CVideoReferenceClock: Detected refreshrate: %i hertz", RefreshRate);
+    CLog::Log(LOGDEBUG, "CVideoReferenceClock: Detected refreshrate: %f hertz, rounding to %i hertz", fps, RefreshRate);
     m_RefreshRate = RefreshRate;
   }
   m_LastRefreshTime = m_CurrTime;
-  
+
   //calculate how many vblanks happened
   VBlankTime = (double)(nowtime - m_LastVBlankTime) / (double)m_SystemFrequency;
   NrVBlanks = MathUtils::round_int(VBlankTime * (double)m_RefreshRate);
 
   //save the timestamp of this vblank so we can calculate how many happened next time
   m_LastVBlankTime = nowtime;
-  
+
   //update the vblank timestamp, update the clock and send a signal that we got a vblank
   m_VblankTime = nowtime;
   UpdateClock(NrVBlanks, true);
-  
+
   SingleLock.Leave();
-  
+
   SendVblankSignal();
+  UpdateRefreshrate();
 }
 #endif
 
@@ -819,8 +898,9 @@ void CVideoReferenceClock::UpdateClock(int NrVBlanks, bool CheckMissed)
   if (CheckMissed) //set to true from the vblank run function, set to false from Wait and GetTime
   {
     if (NrVBlanks < m_MissedVblanks) //if this is true the vblank detection in the run function is wrong
-      CLog::Log(LOGDEBUG, "CVideoReferenceClock: detected %i vblanks, missed %i", NrVBlanks, m_MissedVblanks);
-    
+      CLog::Log(LOGDEBUG, "CVideoReferenceClock: detected %i vblanks, missed %i, refreshrate might have changed",
+                NrVBlanks, m_MissedVblanks);
+
     NrVBlanks -= m_MissedVblanks; //subtract the vblanks we missed
     m_MissedVblanks = 0;
   }
@@ -832,37 +912,44 @@ void CVideoReferenceClock::UpdateClock(int NrVBlanks, bool CheckMissed)
   }
 
   if (NrVBlanks > 0) //update the clock with the adjusted frequency if we have any vblanks
-    m_CurrTime += (int64_t)NrVBlanks * m_AdjustedFrequency / m_RefreshRate;
+  {
+    double increment = (double)NrVBlanks * m_ClockSpeed * m_fineadjust / m_RefreshRate * m_SystemFrequency;
+    double integer   = floor(increment);
+    m_CurrTime      += (int64_t)(integer + 0.5); //make sure it gets correctly converted to int
+
+    //accumulate what we lost due to rounding in m_CurrTimeFract, then add the integer part of that to m_CurrTime
+    m_CurrTimeFract += increment - integer;
+    integer          = floor(m_CurrTimeFract);
+    m_CurrTime      += (int64_t)(integer + 0.5);
+    m_CurrTimeFract -= integer;
+  }
 }
 
 //called from dvdclock to get the time
 int64_t CVideoReferenceClock::GetTime()
 {
   CSingleLock SingleLock(m_CritSection);
-  
+
   //when using vblank, get the time from that, otherwise use the systemclock
   if (m_UseVblank)
   {
     int64_t  NextVblank;
     int64_t  Now;
-    
+
     Now = CurrentHostCounter();        //get current system time
     NextVblank = TimeOfNextVblank();   //get time when the next vblank should happen
-    
+
     while(Now >= NextVblank)  //keep looping until the next vblank is in the future
     {
       UpdateClock(1, false);           //update clock when next vblank should have happened already
       NextVblank = TimeOfNextVblank(); //get time when the next vblank should happen
     }
-    
+
     return m_CurrTime;
   }
   else
   {
-    int64_t ClockOffset = m_ClockOffset; //get offset of clock
-    SingleLock.Leave();
-    
-    return CurrentHostCounter() + ClockOffset;
+    return CurrentHostCounter() + m_ClockOffset;
   }
 }
 
@@ -878,28 +965,35 @@ void CVideoReferenceClock::SetSpeed(double Speed)
   //dvdplayer can change the speed to fit the rereshrate
   if (m_UseVblank)
   {
-    int64_t Frequency = (int64_t)((double)m_SystemFrequency * Speed);
-    if (Frequency != m_AdjustedFrequency)
+    if (Speed != m_ClockSpeed)
     {
-      m_AdjustedFrequency = Frequency;
-      CLog::Log(LOGDEBUG, "CVideoReferenceClock: Clock speed %f%%", GetSpeed() * 100);
+      m_ClockSpeed = Speed;
+      CLog::Log(LOGDEBUG, "CVideoReferenceClock: Clock speed %f%%", GetSpeed() * 100.0);
     }
   }
 }
 
 double CVideoReferenceClock::GetSpeed()
 {
-  double Speed = 1.0;
   CSingleLock SingleLock(m_CritSection);
 
   //dvdplayer needs to know the speed for the resampler
-  if (m_UseVblank) Speed = (double)m_AdjustedFrequency / (double)m_SystemFrequency;
-
-  return Speed;
+  if (m_UseVblank)
+    return m_ClockSpeed;
+  else
+    return 1.0;
 }
 
 bool CVideoReferenceClock::UpdateRefreshrate(bool Forced /*= false*/)
 {
+  //if the graphicscontext signaled that the refreshrate changed, we check it about one second later
+  if (m_RefreshChanged == 1 && !Forced)
+  {
+    m_LastRefreshTime = m_CurrTime;
+    m_RefreshChanged = 2;
+    return false;
+  }
+
   //update the refreshrate about once a second, or update immediately if a forced update is required
   if (m_CurrTime - m_LastRefreshTime < m_SystemFrequency && !Forced)
     return false;
@@ -910,10 +1004,10 @@ bool CVideoReferenceClock::UpdateRefreshrate(bool Forced /*= false*/)
     m_LastRefreshTime = m_CurrTime;
 
 #if defined(HAS_GLX) && defined(HAS_XRANDR)
-  
-  bool   GotEvent = Forced;
-  XEvent Event;
+
   //check for RandR events
+  bool   GotEvent = Forced || m_RefreshChanged == 2;
+  XEvent Event;
   while (XCheckTypedEvent(m_Dpy, m_RREventBase + RRScreenChangeNotify, &Event))
   {
     if (Event.type == m_RREventBase + RRScreenChangeNotify)
@@ -923,10 +1017,13 @@ bool CVideoReferenceClock::UpdateRefreshrate(bool Forced /*= false*/)
     }
     XRRUpdateConfiguration(&Event);
   }
-  
+
+  if (!Forced)
+    m_RefreshChanged = 0;
+
   if (!GotEvent) //refreshrate did not change
     return false;
-  
+
   //the refreshrate can be wrong on nvidia drivers, so read it from nvidia-settings when it's available
   if (m_UseNvSettings || Forced)
   {
@@ -940,15 +1037,15 @@ bool CVideoReferenceClock::UpdateRefreshrate(bool Forced /*= false*/)
       m_RefreshRate = NvRefreshRate;
       return true;
     }
-    
+
     CLog::Log(LOGDEBUG, "CVideoReferenceClock: Using RandR for refreshrate detection");
   }
-    
+
   CSingleLock SingleLock(m_CritSection);
   m_RefreshRate = GetRandRRate();
-  
+
   CLog::Log(LOGDEBUG, "CVideoReferenceClock: Detected refreshrate: %i hertz", (int)m_RefreshRate);
-  
+
   return true;
 
 #elif defined(_WIN32) && defined(HAS_DX)
@@ -960,19 +1057,25 @@ bool CVideoReferenceClock::UpdateRefreshrate(bool Forced /*= false*/)
   if (DisplayMode.RefreshRate == 0)
     DisplayMode.RefreshRate = 60;
 
-  if (m_PrevRefreshRate != DisplayMode.RefreshRate  || m_Width != DisplayMode.Width || m_Height != DisplayMode.Height || Forced)
+  if (m_PrevRefreshRate != DisplayMode.RefreshRate || m_Width != DisplayMode.Width || m_Height != DisplayMode.Height ||
+      m_Interlaced != g_Windowing.Interlaced() || Forced )
   {
     m_PrevRefreshRate = DisplayMode.RefreshRate;
     m_Width = DisplayMode.Width;
     m_Height = DisplayMode.Height;
+    m_Interlaced = g_Windowing.Interlaced();
     return true;
   }
-   
+
   return false;
 
 #elif defined(__APPLE__)
-  int RefreshRate = MathUtils::round_int(Cocoa_GetCVDisplayLinkRefreshPeriod());
-  
+  #if defined(__arm__)
+    int RefreshRate = round(g_Windowing.GetDisplayLinkFPS() + 0.5);
+  #else
+    int RefreshRate = MathUtils::round_int(Cocoa_GetCVDisplayLinkRefreshPeriod());
+  #endif
+
   if (RefreshRate != m_RefreshRate || Forced)
   {
     CSingleLock SingleLock(m_CritSection);
@@ -987,12 +1090,17 @@ bool CVideoReferenceClock::UpdateRefreshrate(bool Forced /*= false*/)
 }
 
 //dvdplayer needs to know the refreshrate for matching the fps of the video playing to it
-int CVideoReferenceClock::GetRefreshRate()
+int CVideoReferenceClock::GetRefreshRate(double* interval /*= NULL*/)
 {
   CSingleLock SingleLock(m_CritSection);
 
   if (m_UseVblank)
+  {
+    if (interval)
+      *interval = m_ClockSpeed / m_RefreshRate;
+
     return (int)m_RefreshRate;
+  }
   else
     return -1;
 }
@@ -1004,23 +1112,21 @@ int64_t CVideoReferenceClock::Wait(int64_t Target)
 {
   int64_t       Now;
   int           SleepTime;
-  int64_t       NextVblank;
-  bool          Late;
 
   CSingleLock SingleLock(m_CritSection);
-  
+
   if (m_UseVblank) //when true the vblank is used as clock source
   {
     while (m_CurrTime < Target)
     {
       //calculate how long to sleep before we should have gotten a signal that a vblank happened
       Now = CurrentHostCounter();
-      NextVblank = TimeOfNextVblank();
+      int64_t NextVblank = TimeOfNextVblank();
       SleepTime = (int)((NextVblank - Now) * 1000 / m_SystemFrequency);
 
       int64_t CurrTime = m_CurrTime; //save current value of the clock
-      
-      Late = false;
+
+      bool Late = false;
       if (SleepTime <= 0) //if sleeptime is 0 or lower, the vblank clock is already late in updating
       {
         Late = true;
@@ -1033,17 +1139,11 @@ int64_t CVideoReferenceClock::Wait(int64_t Target)
           Late = true;                          //the required time
         SingleLock.Enter();
       }
-      
+
       //if the vblank clock was late with its update, we update the clock ourselves
       if (Late && CurrTime == m_CurrTime)
-      {
-#ifndef HAVE_LIBVDPAU
-        // vdpau spams the log with missed vblanks so only log if vdpau is not compiled in.
-        // actually checking for vdpau enabled is too messy to be used in this routine. 
-        CLog::Log(LOGDEBUG, "CVideoReferenceClock: vblank clock was late: SleepTime %i", SleepTime);
-#endif
         UpdateClock(1, false); //update the clock by 1 vblank
-      }
+
     }
     return m_CurrTime;
   }
@@ -1056,7 +1156,7 @@ int64_t CVideoReferenceClock::Wait(int64_t Target)
     SleepTime = (int)((Target - (Now + ClockOffset)) * 1000 / m_SystemFrequency);
     if (SleepTime > 0)
       ::Sleep(SleepTime);
-    
+
     Now = CurrentHostCounter();
     return Now + ClockOffset;
   }
@@ -1068,13 +1168,13 @@ void CVideoReferenceClock::SendVblankSignal()
   m_VblankEvent.Set();
 }
 
-#define MAXVBLANKDELAY 1200
+#define MAXVBLANKDELAY 13LL
 //guess when the next vblank should happen,
 //based on the refreshrate and when the previous one happened
-//increase that by 20% to allow for errors
+//increase that by 30% to allow for errors
 int64_t CVideoReferenceClock::TimeOfNextVblank()
 {
-  return m_VblankTime + (m_SystemFrequency / m_RefreshRate * MAXVBLANKDELAY / 1000);
+  return m_VblankTime + (m_SystemFrequency / m_RefreshRate * MAXVBLANKDELAY / 10LL);
 }
 
 //for the codec information screen
@@ -1083,11 +1183,17 @@ bool CVideoReferenceClock::GetClockInfo(int& MissedVblanks, double& ClockSpeed, 
   if (m_UseVblank)
   {
     MissedVblanks = m_TotalMissedVblanks;
-    ClockSpeed = (double)m_AdjustedFrequency / (double)m_SystemFrequency * 100.0;
+    ClockSpeed = m_ClockSpeed * 100.0;
     RefreshRate = (int)m_RefreshRate;
     return true;
   }
   return false;
+}
+
+void CVideoReferenceClock::SetFineAdjust(double fineadjust)
+{
+  CSingleLock SingleLock(m_CritSection);
+  m_fineadjust = fineadjust;
 }
 
 CVideoReferenceClock g_VideoReferenceClock;

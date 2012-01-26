@@ -28,25 +28,30 @@ public:
   virtual void OnInitWindow();
   virtual bool OnAction(const CAction &action);
   virtual bool OnMessage(CGUIMessage& message);
+  static CStdString GetSelectedEncodedPath(const CStdString& _strPath);
 
 private:
   bool InitBrowseDirectory();
   void BrowseDirectory();
   void ProccessItemSelectedInControlFoldersList();
+  bool OnBack();
   void ProccessHitOnAddButton();
+  void UpdateEjectButtonState();
   
-  CStdString GetSelectedEncodedPath();
   CStdString GetSelectedFolderThumbPath();
+  CStdString GetItemDescription();
 
   CFileItemList m_devices;
   bool m_devicesFound;
   CStdString m_rootFolder;
   CStdString m_currentFolder;
+  std::vector<CStdString> m_previousFoldervec;
   CFileItemList m_folders;
   int m_selectedSource;
   std::vector<int> m_LastPosition;
   int m_currentPosition;
   CStdString m_currentFolderThumbPath;
+
 };
 
 #endif

@@ -124,8 +124,8 @@ void CMediaSource::FromNameAndPaths(const CStdString &category, const CStdString
   // in terms of what we expect
   
   //CUtil::AddSlashAtEnd(strPath);
-  CURL url(strPath);
-  url.GetURL(strPath);
+  CURI url(strPath);
+  strPath = url.Get();
 }
 
 bool CMediaSource::operator==(const CMediaSource &share) const
@@ -137,3 +137,38 @@ bool CMediaSource::operator==(const CMediaSource &share) const
     return false;
   return true;
 }
+
+void AddOrReplace(VECSOURCES& sources, const VECSOURCES& extras)
+{
+  unsigned int i;
+  for( i=0;i<extras.size();++i )
+  {
+    unsigned int j;
+    for ( j=0;j<sources.size();++j)
+    {
+      if (sources[j].strPath.Equals(extras[i].strPath))
+      {
+        sources[j] = extras[i];
+        break;
+      }
+    }
+    if (j == sources.size())
+      sources.push_back(extras[i]);
+  }
+}
+
+void AddOrReplace(VECSOURCES& sources, const CMediaSource& source)
+{
+  unsigned int i;
+  for( i=0;i<sources.size();++i )
+  {
+    if (sources[i].strPath.Equals(source.strPath))
+    {
+      sources[i] = source;
+      break;
+    }
+  }
+  if (i == sources.size())
+    sources.push_back(source);
+}
+

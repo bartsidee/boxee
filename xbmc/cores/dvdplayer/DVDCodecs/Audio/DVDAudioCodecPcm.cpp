@@ -22,6 +22,7 @@
 #include "DVDAudioCodecPcm.h"
 #include "DVDStreamInfo.h"
 #include "DVDCodecs/DVDCodecs.h"
+#include "utils/log.h"
 
 /* from g711.c by SUN microsystems (unrestricted use) */
 #define	SIGN_BIT	(0x80)		/* Sign bit for a A-law byte. */
@@ -152,6 +153,12 @@ bool CDVDAudioCodecPcm::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options)
 
   // set desired output
   m_iOutputChannels = m_iSourceChannels;
+
+  // fix for incorrect sample rates on some handheld devices
+  if( hints.samplerate == 11024 )
+    m_iSourceSampleRate = 11025;
+
+  CLog::Log(LOGINFO, "CDVDAudioCodecPcm::Open success. Codec %d", hints.codec);
 
   return true;
 }
@@ -291,6 +298,31 @@ void CDVDAudioCodecPcm::Reset()
 int CDVDAudioCodecPcm::GetChannels()
 {
   return m_iOutputChannels;
+}
+
+enum PCMChannels* CDVDAudioCodecPcm::GetChannelMap()
+{
+  /* ? = probably wrong, just a guess */
+  static enum PCMChannels map[8][8] =
+  {
+    /* ?MONO   */  { PCM_FRONT_LEFT },
+    /*  STEREO */  { PCM_FRONT_LEFT, PCM_FRONT_RIGHT },
+    /* ?3.0    */  { PCM_FRONT_LEFT, PCM_FRONT_RIGHT, PCM_FRONT_CENTER },
+    /* ?4.0    */  { PCM_FRONT_LEFT, PCM_FRONT_RIGHT, PCM_BACK_LEFT,
+                        PCM_BACK_RIGHT },
+    /*  5.0    */  { PCM_FRONT_LEFT, PCM_FRONT_RIGHT, PCM_FRONT_CENTER,
+                        PCM_BACK_LEFT, PCM_BACK_RIGHT },
+    /* ?5.1    */  { PCM_FRONT_LEFT, PCM_FRONT_RIGHT, PCM_FRONT_CENTER,
+                        PCM_BACK_LEFT, PCM_BACK_RIGHT, PCM_LOW_FREQUENCY },
+    /* ?7.0    */  { PCM_FRONT_LEFT, PCM_FRONT_RIGHT, PCM_FRONT_CENTER,
+                        PCM_BACK_LEFT, PCM_BACK_RIGHT,
+                        PCM_FRONT_LEFT_OF_CENTER, PCM_FRONT_RIGHT_OF_CENTER},
+    /* ?7.1    */  { PCM_FRONT_LEFT, PCM_FRONT_RIGHT, PCM_FRONT_CENTER,
+                        PCM_BACK_LEFT, PCM_BACK_RIGHT, PCM_LOW_FREQUENCY,
+                        PCM_FRONT_LEFT_OF_CENTER , PCM_FRONT_RIGHT_OF_CENTER}
+  };
+
+  return map[m_iOutputChannels-1];
 }
 
 int CDVDAudioCodecPcm::GetSampleRate()

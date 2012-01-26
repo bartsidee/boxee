@@ -3,6 +3,7 @@
 
 #include "IDirectory.h"
 #include "AppDescriptor.h"
+#include "URL.h"
 
 namespace DIRECTORY
 {
@@ -15,10 +16,11 @@ namespace DIRECTORY
 
   private:
 
-    bool HandleAppRequest(const CURL& url, CFileItemList &items);
-    bool GetAppDirectoryByType(const CAppDescriptor::AppDescriptorsMap& availableAppsDesc, const CURL& url, CFileItemList &items);
+    bool HandleAppRequest(const CURI& url, CFileItemList &items);
+    bool GetAppDirectoryByType(const CAppDescriptor::AppDescriptorsMap& availableAppsDesc, const CURI& url, CFileItemList &items, const CStdString& strExtLink="");
 
-    bool AddTestApps(std::set<CStdString> userInstalledAppsSet, CFileItemList &items);
+    bool AddTestApps(std::set<CStdString> userInstalledAppsSet, CFileItemList &items,const CStdString& path="special://home/apps", bool bOnRemovableStorage=false);
+    bool VerifyDeviceSignature(const CFileItemPtr& appItem, const CStdString& path);
   };
 }
 

@@ -55,38 +55,39 @@
 #define GUI_MSG_LABEL_RESET    14  // clear all labels of a control // add label control (for controls supporting more then 1 label)
 
 #define GUI_MSG_ITEM_SELECTED  15  // ask control 2 return the selected item
-#define GUI_MSG_ITEM_SELECT    16  // ask control 2 select a specific item
-#define GUI_MSG_LABEL2_SET     17
+#define GUI_MSG_ITEM_SELECT   16  // ask control 2 select a specific item
+#define GUI_MSG_LABEL2_SET   17
 #define GUI_MSG_SHOWRANGE      18
 
-#define GUI_MSG_FULLSCREEN     19  // should go to fullscreen window (vis or video)
-#define GUI_MSG_EXECUTE        20  // user has clicked on a button with <execute> tag
+#define GUI_MSG_FULLSCREEN  19  // should go to fullscreen window (vis or video)
+#define GUI_MSG_EXECUTE    20  // user has clicked on a button with <execute> tag
 
-#define GUI_MSG_NOTIFY_ALL     21  // message will be send to all active and inactive(!) windows, all active modal and modeless dialogs
+#define GUI_MSG_NOTIFY_ALL    21  // message will be send to all active and inactive(!) windows, all active modal and modeless dialogs
                                   // dwParam1 must contain an additional message the windows should react on
 
 #define GUI_MSG_REFRESH_THUMBS 22 // message is sent to all windows to refresh all thumbs
 
-#define GUI_MSG_MOVE           23 // message is sent to the window from the base control class when it's
+#define GUI_MSG_MOVE          23 // message is sent to the window from the base control class when it's
                                  // been asked to move.  dwParam1 contains direction.
 
 #define GUI_MSG_LABEL_BIND     24   // bind label control (for controls supporting more then 1 label)
 
-#define GUI_MSG_SELCHANGED     25  // selection within the control has changed
+#define GUI_MSG_SELCHANGED  25  // selection within the control has changed
 
-#define GUI_MSG_FOCUSED        26  // a control has become focused
+#define GUI_MSG_FOCUSED     26  // a control has become focused
 
 #define GUI_MSG_WINDOW_RESET   27  // reset window to initial state
 
-#define GUI_MSG_PAGE_CHANGE    28  // a page control has changed the page number
+#define GUI_MSG_PAGE_CHANGE 28  // a page control has changed the page number
 
-#define GUI_MSG_REFRESH_LIST   29 // message sent to all listing controls telling them to refresh their item layouts
+#define GUI_MSG_REFRESH_LIST 29 // message sent to all listing controls telling them to refresh their item layouts
 
-#define GUI_MSG_PAGE_UP        30 // page up
-#define GUI_MSG_PAGE_DOWN      31 // page down
-#define GUI_MSG_MOVE_OFFSET    32 // Instruct the contorl to MoveUp or MoveDown by offset amount
+#define GUI_MSG_PAGE_UP      30 // page up
+#define GUI_MSG_PAGE_DOWN    31 // page down
+#define GUI_MSG_MOVE_OFFSET  32 // Instruct the contorl to MoveUp or MoveDown by offset amount
 
-#define GUI_MSG_SET_TYPE       33 ///< Instruct a control to set it's type appropriately
+#define GUI_MSG_SET_TYPE     33 ///< Instruct a control to set it's type appropriately
+
 
 /*!
  \brief Message indicating the window has been resized
@@ -108,6 +109,9 @@
  */
 #define GUI_MSG_RENDERER_RESET 36
 
+#define GUI_MSG_MANAGE_ITEM  37 // send a window with an item to manage it, use with corresponding sub-message parameter in GUIUserMessages.h (GUI_MSG_ADD_ITEM etc..)
+
+#define GUI_MSG_GESTURE_NOTIFY  38
 
 #define GUI_MSG_USER         1000
 
@@ -133,10 +137,13 @@
 #define GUI_MSG_JUMPTOLETTER 98
 
 #define GUI_MSG_GET_ITEM   99
-#define GUI_MSG_GET_ITEMS  100
+#define GUI_MSG_GET_ITEMS   100
 #define GUI_MSG_GET_MARKED_ITEMS   101
 #define GUI_MSG_GET_TYPE   102
 #define GUI_MSG_SET_PATH   103
+
+#define GUI_MSG_ERROR      104
+#define GUI_MSG_LOADING_TIMEDOUT 105
 
 #define MSG_ITEM_LOADED      999
 
@@ -229,7 +236,7 @@ do { \
 
 /*!
  \ingroup winmsg
- \brief
+ \brief 
  */
 #define SET_CONTROL_HIDDEN(controlID) \
 do { \
@@ -262,6 +269,13 @@ do { \
  CGUIMessage msg(bSelect?GUI_MSG_SELECTED:GUI_MSG_DESELECTED, dwSenderId, controlID); \
  OnMessage(msg); \
 } while(0)
+
+#define CONTROL_GET_SELECTED_ITEM(dwSenderId, controlID, iResult) \
+{ \
+ CGUIMessage msg(GUI_MSG_ITEM_SELECTED, dwSenderId, controlID); \
+ OnMessage(msg); \
+ iResult = msg.GetParam1(); \
+}
 
 #define BIND_CONTROL(i,c,pv) \
 do { \

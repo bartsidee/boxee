@@ -66,7 +66,7 @@ void PrintTimeMeasure(TimeMeasure &measure) {
 void ClearTimeMeasure(TimeMeasure &measure) {
   measure.str_to_usec.clear();
   measure.total = 0;
-}  
+}
 */
 
 

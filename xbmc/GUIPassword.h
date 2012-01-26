@@ -31,6 +31,8 @@ class CMediaSource;
 
 typedef std::vector<CMediaSource> VECSOURCES;
 
+typedef std::map<CStdString, std::pair<CStdString, CStdString> > MAPUSERNAMEPASSWORDS;
+typedef std::map<CStdString, std::pair<CStdString, CStdString> >::iterator IMAPUSERNAMEPASSWORDS;
 typedef std::map<CStdString, CStdString> MAPPASSWORDS;
 typedef std::map<CStdString, CStdString>::iterator IMAPPASSWORDS;
 
@@ -61,23 +63,36 @@ public:
   
   void UpdateMasterLockRetryCount(bool bResetCount);
   bool GetSMBShareUserPassword();
+  bool GetCIFSShareUserPassword();
+  bool GetAFPShareUserPassword();
   void SetSMBShare(const CStdString &strShare);
+  void SetAFPShare(const CStdString &strShare);
+  void SetCIFSShare(const CStdString &strShare);
   CStdString GetSMBShare();
+  CStdString GetAFPShare();
+  CStdString GetCIFSShare();
+  CStdString GetCifsPathCredentials(const CStdString& path);
   bool CheckStartUpLock();
   bool CheckMenuLock(int iWindowID);
   bool SetMasterLockMode(bool bDetails=true);
   CStdString GetSMBAuthFilename(const CStdString& strAuth);
+  CStdString GetAFPAuthFilename(const CStdString& strAuth);
+  CStdString GetCIFSAuthFilename(const CStdString& strAuth);
   bool LockSource(const CStdString& strType, const CStdString& strName, bool bState);
   void LockSources(bool lock);
   void RemoveSourceLocks();
   bool IsDatabasePathUnlocked(const CStdString& strPath, VECSOURCES& vecSources);
 
   MAPPASSWORDS  m_mapSMBPasswordCache; // SMB share password cache
+  MAPUSERNAMEPASSWORDS  m_mapAFPPasswordCache; // AFP share password cache
+  MAPUSERNAMEPASSWORDS  m_mapCIFSPasswordCache;  //CIFS share password cache
 
   bool bMasterUser;
   int iMasterLockRetriesLeft;
 protected:
   CStdString m_SMBShare;
+  CStdString m_AFPShare;
+  CStdString m_CIFSShare;
 private:
   int VerifyPassword(LockType btnType, const CStdString& strPassword, const CStdString& strHeading);
 };

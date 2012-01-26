@@ -21,7 +21,7 @@ public:
   virtual void OnInitWindow();
   virtual bool OnMessage(CGUIMessage& message);
   virtual void RegisterContainers();
-  virtual void RegisterContainer(DWORD containerId);
+  virtual void RegisterContainer(DWORD containerId);  
   virtual void ReloadContainer(DWORD containerId, bool clearCacheFirst = false);
   virtual void OnContainersLoadSuccess(CGUIBaseContainer& container);
   virtual void OnContainersLoadFailed(CGUIBaseContainer& container);

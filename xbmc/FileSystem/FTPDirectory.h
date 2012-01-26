@@ -20,6 +20,10 @@
  *
  */
 
+#include "system.h"
+
+#ifdef HAS_FTP
+
 #include "IDirectory.h"
 
 namespace DIRECTORY
@@ -33,4 +37,6 @@ namespace DIRECTORY
     private:      
   };
 }
+
+#endif
 

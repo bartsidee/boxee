@@ -58,6 +58,8 @@ int insert(struct list* lst, unsigned long content) {
 	int cmp;
 
 	item = new_list_item(content);
+	if(!item)
+		return ERROR;
 	
 	cmp = compare(lst->head, item);
 	if(lst->head==NULL) {
@@ -96,6 +98,8 @@ int insert(struct list* lst, unsigned long content) {
 		return ERROR;
 	};
   
+	if(item)
+		free(item);
   return ERROR;
 };
 
@@ -139,6 +143,8 @@ int head(struct list* lst, unsigned long* content, int remove )
   if( remove )
   {
     lst->head = tmp->next;
+    if( lst->head )
+      lst->head->prev = NULL;
     free(tmp);
   }
   return 1;

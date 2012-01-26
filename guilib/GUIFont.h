@@ -1,6 +1,6 @@
 /*!
 \file GUIFont.h
-\brief 
+\brief
 */
 
 #ifndef CGUILIB_GUIFONT_H
@@ -8,7 +8,9 @@
 #pragma once
 
 #include "StdString.h"
+#include "gui3d.h"
 #include <assert.h>
+#include <vector>
 
 typedef uint32_t character_t;
 typedef uint32_t color_t;
@@ -30,11 +32,30 @@ class CGUIFontTTFBase;
 #define FONT_STYLE_ITALICS      2
 #define FONT_STYLE_BOLD_ITALICS 3
 
+typedef struct _FontVertex
+{
+  float x, y, z;
+  unsigned char r, g, b, a; // main color
+  unsigned char rs, gs, bs, as; // shadow color
+  float u1, v1;
+} FontVertex;
+
+typedef struct _FontCoords
+{
+  FontVertex m_pCoords[4];
+} FontCoords;
+
+typedef struct _FontCoordsIndiced
+{
+  std::vector<FontCoords>     m_pCoord;
+  std::vector<unsigned short>   m_nIndices;
+} FontCoordsIndiced;
+
 class CScrollInfo
 {
 public:
   CScrollInfo(unsigned int wait = 50, float pos = 0, int speed = defaultSpeed, const CStdStringW &scrollSuffix = L" | ")
-  { 
+  {
     initialWait = wait;
     initialPos = pos;
     SetSpeed(speed);
@@ -94,39 +115,41 @@ public:
 
   CStdString& GetFontName();
 
-  void DrawText( float x, float y, color_t color, color_t shadowColor,
-                 const vecText &text, uint32_t alignment, float maxPixelWidth)
+  bool BuildTextCoords( float x, float y, color_t color, color_t shadowColor,
+                 const vecText &text, uint32_t alignment, float maxPixelWidth, FontCoordsIndiced& pData, bool clip = true)
   {
     vecColors colors;
     colors.push_back(color);
-    DrawText(x, y, colors, shadowColor, text, alignment, maxPixelWidth);
+    return BuildTextCoords(x, y, colors, shadowColor, text, alignment, maxPixelWidth, pData, clip);
   };
 
-  void DrawText( float x, float y, const vecColors &colors, color_t shadowColor,
-                 const vecText &text, uint32_t alignment, float maxPixelWidth);
+  bool BuildTextCoords( float x, float y, const vecColors &colors, color_t shadowColor,
+                 const vecText &text, uint32_t alignment, float maxPixelWidth, FontCoordsIndiced& pData, bool clip = true);
 
-  void DrawScrollingText( float x, float y, const vecColors &colors, color_t shadowColor,
-                 const vecText &text, uint32_t alignment, float maxPixelWidth, CScrollInfo &scrollInfo);
+  void BuildScrollingTextCoords( float x, float y, const vecColors &colors, color_t shadowColor,
+                 const vecText &text, uint32_t alignment, float maxPixelWidth, CScrollInfo &scrollInfo, FontCoordsIndiced& pData);
+
+  void RenderText(FontCoordsIndiced& pData);
 
   float GetTextWidth( const vecText &text );
   float GetCharWidth( character_t ch );
   float GetTextHeight(int numLines) const;
   float GetLineHeight() const;
 
-  void Begin();
-  void End();
+  unsigned int GetFontTextureWidth();
+  unsigned int GetFontTextureHeight();
 
   uint32_t GetStyle() const { return m_style; };
 
   static wchar_t RemapGlyph(wchar_t letter);
-  
+
   CGUIFontTTFBase* GetFont() const
   {
-     return m_font;
+    return m_font;
   }
-  
+
   void SetFont(CGUIFontTTFBase* font);
-  
+
 protected:
   CStdString m_strFontName;
   uint32_t m_style;
@@ -134,7 +157,7 @@ protected:
   color_t m_textColor;
   float m_lineSpacing;
   CGUIFontTTFBase *m_font; // the font object has the size information
-  
+
 private:
   bool ClippedRegionIsEmpty(float x, float y, float width, uint32_t alignment) const;
 };

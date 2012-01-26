@@ -29,10 +29,14 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include "system.h"
 #include "IAudioRenderer.h"
 #include "IAudioCallback.h"
 #include "../ssrc.h"
 #include "utils/SingleLock.h"
+
+#ifdef HAS_ALSA
+
 #define ALSA_PCM_NEW_HW_PARAMS_API
 #include <alsa/asoundlib.h>
 #include "../../utils/PCMAmplifier.h"
@@ -49,10 +53,10 @@ public:
   virtual float GetDelay();
   virtual float GetCacheTime();
   CALSADirectSound();
-  virtual bool Initialize(IAudioCallback* pCallback, int iChannels, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec = "", bool bIsMusic=false, bool bPassthrough = false);
+  virtual bool Initialize(IAudioCallback* pCallback, int iChannels, enum PCMChannels* channelMap, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec = "", bool bIsMusic=false, bool bPassthrough = false,  bool bTimed = AUDIO_NOT_TIMED, AudioMediaFormat audioMediaFormat = AUDIO_MEDIA_FMT_PCM);
   virtual ~CALSADirectSound();
 
-  virtual unsigned int AddPackets(const void* data, unsigned int len);
+  virtual unsigned int AddPackets(const void* data, unsigned int len, double pts = DVD_NOPTS_VALUE, double duration = 0);
   virtual unsigned int GetSpace();
   virtual bool Deinitialize();
   virtual bool Pause();
@@ -73,7 +77,7 @@ public:
 private:
   virtual void FlushUnlocked();
   CCriticalSection m_lock;
-  snd_pcm_t  *m_pPlayHandle;
+  snd_pcm_t 		*m_pPlayHandle;
   IAudioCallback* m_pCallback;
   CPCMAmplifier 	m_amp;
   long m_nCurrentVolume;
@@ -91,6 +95,8 @@ private:
 
   bool m_bPassthrough;
 };
+
+#endif
 
 #endif 
 

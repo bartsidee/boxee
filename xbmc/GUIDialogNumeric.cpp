@@ -143,11 +143,6 @@ bool CGUIDialogNumeric::OnMessage(CGUIMessage& message)
 
 void CGUIDialogNumeric::OnBackSpace()
 {
-  if (!m_dirty && m_block)
-  {
-    m_block--;
-    return;
-  }
   if (m_mode == INPUT_NUMBER)
   { // just go back one character
     m_integer /= 10;
@@ -224,9 +219,6 @@ void CGUIDialogNumeric::OnPrevious()
 
 void CGUIDialogNumeric::OnNext()
 {
-  if (m_mode == INPUT_IP_ADDRESS && m_block==0 && m_ip[0]==0)
-    return;
-
   if (m_block < m_lastblock)
     m_block++;
   m_dirty = false;
@@ -441,6 +433,9 @@ void CGUIDialogNumeric::OnNumber(unsigned int num)
   }
   else if (m_mode == INPUT_IP_ADDRESS)
   {
+    if ((m_ip[m_block] > 25 || (m_ip[m_block] == 0 && num == 0)) && m_block == 3)
+      return;
+    
     if (m_dirty && ((m_ip[m_block] < 25) || (m_ip[m_block] == 25 && num < 6) || !(m_block==0 && num==0)))
     {
       m_ip[m_block] *= 10;
@@ -448,10 +443,10 @@ void CGUIDialogNumeric::OnNumber(unsigned int num)
     }
     else
       m_ip[m_block] = num;
-    if (m_ip[m_block] > 25 || (m_ip[m_block] == 0 && num == 0))
+    
+    if ((m_ip[m_block] > 25 || (m_ip[m_block] == 0 && num == 0)) && m_block < 3)
     {
       m_block++;
-      if (m_block > 3) m_block = 0;
       m_dirty = false;
     }
     else
@@ -535,7 +530,7 @@ bool CGUIDialogNumeric::ShowAndGetSeconds(CStdString &timeString, const CStdStri
   CGUIDialogNumeric *pDialog = (CGUIDialogNumeric *)g_windowManager.GetWindow(WINDOW_DIALOG_NUMERIC);
   if (!pDialog) return false;
   int seconds = StringUtils::TimeStringToSeconds(timeString);
-  SYSTEMTIME time = {0};
+  SYSTEMTIME time;
   time.wHour = seconds / 3600;
   time.wMinute = (seconds - time.wHour * 3600) / 60;
   time.wSecond = seconds - time.wHour * 3600 - time.wMinute * 60;

@@ -20,10 +20,16 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
-
 #include "DVDAudioCodec.h"
+#ifndef _WIN32
+#include <config.h>
+#endif
+#ifdef HAS_DVD_LIBA52_CODEC
 #include "DllLiba52.h"
+#endif
+#ifdef HAS_DVD_LIBDTS_CODEC
 #include "DllLibDts.h"
+#endif
 
 class CDVDAudioCodecPassthrough : public CDVDAudioCodec
 {
@@ -37,6 +43,7 @@ public:
   virtual int GetData(BYTE** dst);
   virtual void Reset();
   virtual int GetChannels();
+  virtual enum PCMChannels* GetChannelMap();
   virtual int GetSampleRate();
   virtual int GetBitsPerSample();
   virtual unsigned char GetFlags();
@@ -46,7 +53,6 @@ private:
   enum frametype
   {
     AC3 = 0,
-    EAC3,
     DTS,
     TrueHD,
     DTS_HD
@@ -59,16 +65,18 @@ private:
   int PaddDTSData( BYTE* pData, int iDataSize, BYTE* pOut);
   int PaddDTSHDData( BYTE* pData, int iDataSize, bool bIsDTSHDFrame, BYTE* pOut);
   
+  static bool IsPassthroughAudioCodec( int Codec );
+
   BYTE m_OutputBuffer[131072];
   int  m_OutputSize;
 
-  BYTE m_InputBuffer[4096];
+  // keep enough space to buffer a full dts-hd frame, since dts parsing in ffmpeg is marginal at best
+  BYTE m_InputBuffer[8192];
   int  m_InputSize;
 
   int m_iFrameSize;
 
   int m_iSamplesPerFrame;
-  int m_iSampleRate;
   int m_iChannels;
 
   int     m_Codec;
@@ -78,11 +86,14 @@ private:
   int m_iSourceSampleRate;
   int m_iSourceBitrate;
 
+#ifdef HAS_DVD_LIBDTS_CODEC
   DllLibDts m_dllDTS;
-  DllLiba52 m_dllA52;
-  
   dts_state_t* m_pStateDTS;
+#endif
+#ifdef HAS_DVD_LIBA52_CODEC
+  DllLiba52 m_dllA52;
   a52_state_t* m_pStateA52;
+#endif
 
   // State tracking for trueHD streams
   int m_iByteCounter;
@@ -92,6 +103,9 @@ private:
 
   bool m_bIsDTSHD;
   bool m_bBitstreamDTSHD;
+
+  bool m_bHardwareBitStream;
+  bool m_bHardwareDecode;
 
   bool m_bFirstDTSFrame;
   BYTE m_DTSPrevFrame[2048];

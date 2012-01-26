@@ -14,18 +14,19 @@
 				<posy>0</posy>
 				<width>800</width>
 				<height>260</height>
-				<texture border="64">dialog_background.png</texture>
+				<texture border="20">browse_menu_dialog_background.png</texture>
+				<colordiffuse>FF212121</colordiffuse>
 			</control>
 			<control type="label">
 				<posx>26</posx>
 				<posy>34</posy>
 				<width>750</width>
 				<height>28</height>
-				<font>title28b</font>
+				<font>font28b</font>
 				<align>left</align>
 				<aligny>center</aligny>
 				<label>53287</label>
-				<textcolor>FF3B2D06</textcolor>
+				<textcolor>white</textcolor>
 			</control>
 			<control type="label">
 				<posx>26</posx>
@@ -34,7 +35,7 @@
 				<height>90</height>
 				<label>53288</label>
 				<aligny>top</aligny>
-				<font>font24</font>
+				<font>font26</font>
 				<textcolor>white</textcolor>
 				<wrapmultiline>true</wrapmultiline>
 			</control>
@@ -46,22 +47,22 @@
 				<height>24</height>
 				<align>left</align>
 				<aligny>center</aligny>
-				<font>title22b</font>
-				<label>[UPPERCASE]$LOCALIZE[53289][/UPPERCASE]</label>
-				<textcolor>title</textcolor>
+				<font>font24b</font>
+				<label>$LOCALIZE[53289]</label>
+				<textcolor>white</textcolor>
 			</control>
 			<control type="multiimage">
 				<posx>208</posx>
 				<posy>150</posy>
 				<width>384</width>
 				<height>32</height>
-				<imagepath>update_animation</imagepath>
+				<imagepath>loading_small</imagepath>
 				<timeperimage>20</timeperimage>
 				<fadetime>1</fadetime>
 				<loop>yes</loop>
 				<randomize>false</randomize>
 				<colordiffuse>green</colordiffuse>
-			</control>
+				</control>
 		</control>
 	</controls>
 </window>

@@ -22,6 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavcore/imgutils.h"
 #include "avcodec.h"
 #include "bytestream.h"
 
@@ -62,15 +63,15 @@ static av_cold int qtrle_encode_init(AVCodecContext *avctx)
 {
     QtrleEncContext *s = avctx->priv_data;
 
-    if (avcodec_check_dimensions(avctx, avctx->width, avctx->height) < 0) {
+    if (av_image_check_size(avctx->width, avctx->height, 0, avctx) < 0) {
         return -1;
     }
     s->avctx=avctx;
 
     switch (avctx->pix_fmt) {
-/*    case PIX_FMT_RGB555:
+    case PIX_FMT_RGB555BE:
         s->pixel_size = 2;
-        break;*/
+        break;
     case PIX_FMT_RGB24:
         s->pixel_size = 3;
         break;
@@ -104,7 +105,7 @@ static av_cold int qtrle_encode_init(AVCodecContext *avctx)
 }
 
 /**
- * Computes the best RLE sequence for a line
+ * Compute the best RLE sequence for a line
  */
 static void qtrle_encode_line(QtrleEncContext *s, AVFrame *p, int line, uint8_t **buf)
 {
@@ -235,7 +236,7 @@ static void qtrle_encode_line(QtrleEncContext *s, AVFrame *p, int line, uint8_t 
     bytestream_put_byte(buf, -1); // end RLE line
 }
 
-/** Encodes frame including header */
+/** Encode frame including header */
 static int encode_frame(QtrleEncContext *s, AVFrame *p, uint8_t *buf)
 {
     int i;
@@ -320,14 +321,14 @@ static av_cold int qtrle_encode_end(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec qtrle_encoder = {
+AVCodec ff_qtrle_encoder = {
     "qtrle",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_QTRLE,
     sizeof(QtrleEncContext),
     qtrle_encode_init,
     qtrle_encode_frame,
     qtrle_encode_end,
-    .pix_fmts = (const enum PixelFormat[]){PIX_FMT_RGB24, PIX_FMT_ARGB, PIX_FMT_NONE},
+    .pix_fmts = (const enum PixelFormat[]){PIX_FMT_RGB24, PIX_FMT_RGB555BE, PIX_FMT_ARGB, PIX_FMT_NONE},
     .long_name = NULL_IF_CONFIG_SMALL("QuickTime Animation (RLE) video"),
 };

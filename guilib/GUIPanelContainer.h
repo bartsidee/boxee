@@ -65,5 +65,8 @@ protected:
   virtual bool HasNextPage() const;
 
   int m_itemsPerRow;
+  CStopWatch m_memoryTimer;
+  bool m_bShouldFreeMemory;
+  bool m_bIsScrolling;
 };
 

@@ -27,10 +27,12 @@
 
 #include <vector>
 
-class CCharsetConverter
+class CCharsetConverter 
 {
 public:
   CCharsetConverter();
+
+  bool Initialize();
 
   void reset();
 
@@ -68,16 +70,18 @@ public:
   void utf32ToStringCharset(const unsigned long* strSource, CStdStringA& strDest);
 
   std::vector<CStdString> getCharsetLabels();
-  CStdString& getCharsetLabelByName(const CStdString& charsetName);
-  CStdString& getCharsetNameByLabel(const CStdString& charsetLabel);
+  CStdString getCharsetLabelByName(const CStdString& charsetName);
+  CStdString getSubtitleFontByCharsetName(const CStdString& charsetName);
+  CStdString getCharsetNameByLabel(const CStdString& charsetLabel);
   bool isBidiCharset(const CStdString& charset);
 
   void unknownToUTF8(CStdStringA &sourceDest);
   void unknownToUTF8(const CStdStringA &source, CStdStringA &dest);
 
+  void toW(const CStdStringA& source, CStdStringW& dest, const CStdStringA& enc);
+  void fromW(const CStdStringW& source, CStdStringA& dest, const CStdStringA& enc);
+
   CStdString utf8Left(const CStdStringA &source, int num_chars);
-private:
-  CStdString EMPTY;
 };
 
 extern CCharsetConverter g_charsetConverter;

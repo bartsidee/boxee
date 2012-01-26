@@ -18,7 +18,10 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
-
+#ifndef WIN32
+#include <config.h>
+#endif
+#ifdef HAS_GYM_CODEC
 #include "MusicInfoTagLoaderGYM.h"
 #include "MusicInfoTag.h"
 #include "utils/log.h"
@@ -73,3 +76,4 @@ bool CMusicInfoTagLoaderGYM::Load(const CStdString& strFileName, CMusicInfoTag& 
 
   return tag.Loaded();
 }
+#endif

@@ -18,6 +18,9 @@
 */
 
 #include "system.h" // WIN32INCLUDES - not sure why this is needed
+
+#ifdef HAS_FILESYSTEM_SAP
+
 #include "GUIUserMessages.h"
 #include "GUIWindowManager.h"
 #include <string.h>
@@ -31,16 +34,9 @@
 #include "OSXGNUReplacements.h" // strnlen
 #endif
 
-#ifdef _MSC_VER
-#include <Ws2tcpip.h>
-#else
 #include <sys/socket.h>
-#define SD_BOTH SHUT_RDWR
-#endif
-
+#include <arpa/inet.h>
 #include <vector>
-
-using namespace std;
 
 CSAPSessions g_sapsessions;
 
@@ -129,7 +125,7 @@ namespace SDP
     return data - data_orig;
   }
 
-  static int parse_sdp_line(const char* data, string& type, string& value)
+  static int parse_sdp_line(const char* data, std::string& type, std::string& value)
   {
     const char* data2 = data;
     int l;
@@ -148,9 +144,9 @@ namespace SDP
     return data - data2;
   }
 
-  static int parse_sdp_type(const char** data, string type, string& value)
+  static int parse_sdp_type(const char** data, std::string type, std::string& value)
   {
-    string type2;
+    std::string type2;
     const char* data2 = *data;
 
     while(*data2 != 0) {
@@ -163,7 +159,7 @@ namespace SDP
     return 0;
   }
   
-  int parse_sdp_token(const char* data, string &value)
+  int parse_sdp_token(const char* data, std::string &value)
   {
     int l;
     l = strcspn(data, " \n\r");
@@ -177,7 +173,7 @@ namespace SDP
   int parse_sdp_token(const char* data, int &value)
   {
     int l;
-    string str;
+    std::string str;
     l = parse_sdp_token(data, str);
     value = atoi(str.c_str());
     return l;
@@ -198,7 +194,7 @@ namespace SDP
   int parse_sdp(const char* data, struct sdp_desc* sdp)
   {
     const char *data2 = data;
-    string value;
+    std::string value;
 
     // SESSION DESCRIPTION  
     if(parse_sdp_type(&data, "v", value)) {
@@ -289,7 +285,7 @@ void CSAPSessions::StopThread(bool bWait /*= true*/)
 {
   if(m_socket != INVALID_SOCKET)
   {
-    if(shutdown(m_socket, SD_BOTH) == SOCKET_ERROR)
+    if(shutdown(m_socket, SHUT_RDWR) == SOCKET_ERROR)
       CLog::Log(LOGERROR, "s - failed to shutdown socket");
 #ifdef WINSOCK_VERSION
     closesocket(m_socket);
@@ -328,7 +324,7 @@ bool CSAPSessions::ParseAnnounce(char* data, int len)
   }
 
   // check if we can find this session in our cache
-  for(vector<CSession>::iterator it = m_sessions.begin(); it != m_sessions.end(); it++)
+  for(std::vector<CSession>::iterator it = m_sessions.begin(); it != m_sessions.end(); it++)
   {
     if(it->origin         == header.origin
     && it->msgid          == header.msgid
@@ -493,7 +489,7 @@ namespace DIRECTORY
       g_sapsessions.Create();
 
     // check if we can find this session in our cache
-    for(vector<CSAPSessions::CSession>::iterator it = g_sapsessions.m_sessions.begin(); it != g_sapsessions.m_sessions.end(); it++)
+    for(std::vector<CSAPSessions::CSession>::iterator it = g_sapsessions.m_sessions.begin(); it != g_sapsessions.m_sessions.end(); it++)
     {
 
       if(it->payload_type != "application/sdp")
@@ -532,3 +528,4 @@ namespace DIRECTORY
 
 }
 
+#endif

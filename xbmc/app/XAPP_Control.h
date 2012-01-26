@@ -1,12 +1,24 @@
 #ifndef XAPP_CONTROL_H_
 #define XAPP_CONTROL_H_
 
-
-#include "GUIControl.h"
 #include "AppException.h"
 
 namespace XAPP
 {
+
+class ActionEvent
+{
+public:
+  int windowId;
+  int controlId;
+};
+
+class ActionListener
+{
+public:
+  virtual ~ActionListener();
+  virtual bool ActionPerformed(ActionEvent e) = 0;
+};
 
 /**
  * Represents a control in the user interface. Get the Control object by calling GetControl() on the Window.
@@ -54,7 +66,20 @@ public:
    */
   virtual bool IsEnabled();
   
+  /**
+   * Get window id
+   */
+  int GetWindowId();
+
+  /**
+   * Get window id
+   */
+  int GetControlId();
+
 #ifndef DOXYGEN_SHOULD_SKIP_THIS  
+  void AddActionListener(ActionListener* listener);
+  void RemoveActionListener(ActionListener* listener);
+
 protected:
   int m_windowId;
   int m_controlId;

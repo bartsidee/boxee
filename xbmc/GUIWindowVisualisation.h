@@ -34,6 +34,8 @@ public:
   virtual bool OnAction(const CAction &action);
   virtual bool OnMouse(const CPoint &point);
   virtual void Render();
+
+  void ShowOSD();
 protected:
   unsigned int m_initTimer;
   unsigned int m_lockedTimer;

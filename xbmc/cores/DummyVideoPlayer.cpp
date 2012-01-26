@@ -90,7 +90,6 @@ void CDummyVideoPlayer::Process()
       g_Windowing.Get3DDevice()->BeginScene();
 #endif
       g_graphicsContext.Clear();
-      g_graphicsContext.SetRenderingResolution(g_graphicsContext.GetVideoResolution(), 0, 0, false);
       Render();
       if (g_application.NeedRenderFullScreen())
         g_application.RenderFullScreen();
@@ -106,6 +105,11 @@ void CDummyVideoPlayer::Process()
 
 void CDummyVideoPlayer::Pause()
 {
+  if (m_paused)
+    m_callback.OnPlayBackResumed();
+  else
+    m_callback.OnPlayBackPaused();
+
   m_paused = !m_paused;
 }
 
@@ -224,7 +228,9 @@ float CDummyVideoPlayer::GetSubTitleDelay()
 
 void CDummyVideoPlayer::SeekTime(__int64 iTime)
 {
+  int seekOffset = (int)(iTime - m_clock);
   m_clock = iTime;
+  m_callback.OnPlayBackSeek((int)iTime, seekOffset);
 }
 
 // return the time in milliseconds
@@ -242,6 +248,7 @@ int CDummyVideoPlayer::GetTotalTime()
 void CDummyVideoPlayer::ToFFRW(int iSpeed)
 {
   m_speed = iSpeed;
+  m_callback.OnPlayBackSpeedChanged(iSpeed);
 }
 
 void CDummyVideoPlayer::ShowOSD(bool bOnoff)
@@ -273,7 +280,7 @@ void CDummyVideoPlayer::Render()
   newviewport.Height = (DWORD)vw.Height();
   g_graphicsContext.SetClipRegion(vw.x1, vw.y1, vw.Width(), vw.Height());
 #else
-  g_graphicsContext.SetViewPort(vw.x1, vw.y1, vw.Width(), vw.Height());
+  g_graphicsContext.PushViewPort(vw.x1, vw.y1, vw.Width(), vw.Height());
 #endif 
   CGUIFont *font = g_fontManager.GetFont("font13");
   if (font)
@@ -292,6 +299,6 @@ void CDummyVideoPlayer::Render()
 #ifdef HAS_DX
   g_graphicsContext.RestoreClipRegion();
 #else
-  g_graphicsContext.RestoreViewPort();
+  g_graphicsContext.PopViewPort();
 #endif
 }

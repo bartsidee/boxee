@@ -29,7 +29,7 @@
 #include <vector>
 #include "../utils/CriticalSection.h"
 
-class CURL;
+class CURI;
 class CFileItemList;
 
 namespace DIRECTORY
@@ -45,7 +45,7 @@ public:
   static bool RunScriptWithParams(const CStdString& strPath);
   static bool HasPlugins(const CStdString &type);
   bool GetPluginsDirectory(const CStdString &type, CFileItemList &items);
-  static void LoadPluginStrings(const CURL &url);
+  static void LoadPluginStrings(const CURI &url);
   static void ClearPluginStrings();
   bool StartScript(const CStdString& strPath);
   static bool GetPluginResult(const CStdString& strPath, CFileItem &resultItem);

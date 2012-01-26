@@ -41,6 +41,7 @@ public:
   const CStdString& GetDVDAudioLanguage() const;
   const CStdString& GetDVDSubtitleLanguage() const;
   const CStdString& GetTimeZone() const;
+  const CStdString& GetLanguageCode() const;
 
   bool ForceUnicodeFont() const { return m_currentRegion->m_forceUnicodeFont; }
 
@@ -69,12 +70,12 @@ public:
     TEMP_UNIT_NEWTON
   } TEMP_UNIT;
 
-  const CStdString& GetTempUnitString() const;
+  const CStdString& GetTempUnitString(bool withUnitLabel = true) const;
   CLangInfo::TEMP_UNIT GetTempUnit() const;
   void SetTempUnit(const CStdString& strUnit);
   CStdString TempUnitToStr(TEMP_UNIT  unit) const;
   CStdString TimeFormatToPattern(const CStdString &timeformat) const;
-
+  
   typedef enum _SPEED_UNIT
   {
     SPEED_UNIT_KMH=0, // kilemetre per hour
@@ -145,6 +146,7 @@ protected:
   CStdString m_strTimeFormat;
   CStdString m_strMeridiemSymbols[MERIDIEM_SYMBOL_MAX];
   TEMP_UNIT m_tempUnit;
+  CStdString m_strLanguageCode;
 };
 
 

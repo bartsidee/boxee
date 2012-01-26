@@ -171,7 +171,7 @@ CNetworkWin32::~CNetworkWin32(void)
 void CNetworkWin32::CleanInterfaceList()
 {
   m_interfaces.clear();
-}
+  }
 
 std::vector<CNetworkInterfacePtr> CNetworkWin32::GetInterfaceList(void)
 {

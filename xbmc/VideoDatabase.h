@@ -347,6 +347,7 @@ public:
   bool GetVideoSettings(const CStdString &strFilenameAndPath, CVideoSettings &settings);
   void SetVideoSettings(const CStdString &strFilenameAndPath, const CVideoSettings &settings);
   void EraseVideoSettings();
+  bool UpdateSubtitleSettings(bool subtitleOn);
 
   bool GetStackTimes(const CStdString &filePath, std::vector<int> &times);
   void SetStackTimes(const CStdString &filePath, std::vector<int> &times);

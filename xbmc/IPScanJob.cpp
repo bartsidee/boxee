@@ -51,7 +51,7 @@ static int w32_gettimeofday(struct timeval* tv)
 #define snprintf _snprintf
 #define CLOSE_SOCKET(x) closesocket(x)
 #define usleep(x) Sleep((x)/1000)
-#define bzero(var,sz) memset(var, 0, sz)
+#include "win32/c_defs.h"
 #define __EXTERNC extern "C"
 
 #endif // ! _WIN32
@@ -70,7 +70,7 @@ using namespace BOXEE;
 #define NB_RESPONSE_TYPE 0x20
 
 // Code for the group name type
-#define NBT_GROUP_FLAG 0x0001
+#define NBT_GROUP_FLAG 0x0080
 
 // Ports for WS-Discovery and NBT
 #define WS_DISCOVERY_PORT 3702
@@ -89,11 +89,12 @@ CSMBScanState::CSMBScanState()
 void CSMBScanState::GetShares( CFileItemList& list ) const
 {
   CSingleLock lock( m_lock );
-
+  
   std::map<CStdString, CFileItemList>::const_iterator iter = m_smbShares.begin();
   while (iter != m_smbShares.end())
-  {
+{
     list.Append(iter->second);
+
     iter++;
   }
 }
@@ -134,13 +135,6 @@ void CSMBScanState::MarkHostActive( const CStdString& strInterface, const CStdSt
   // NoIPCount is cleared when we actually enumerate the shares
 }
 
-bool CSMBScanState::IsHostAvailable( const CStdString& strHost )
-{
-  CSingleLock lock( m_lock );
-
-  return m_smbHosts.find(strHost) != m_smbHosts.end();
-}
-
 bool CSMBScanState::IsFoundHost( const CStdString& strInterface, const CStdString& strHostname )
 {
   CSingleLock lock( m_lock );
@@ -150,6 +144,119 @@ bool CSMBScanState::IsFoundHost( const CStdString& strInterface, const CStdStrin
   bool is_in_smbhosts = m_smbHosts.find( strHostname ) != m_smbHosts.end();
   bool is_in_cleanup = m_smbHostsToCleanup.find(strHostname) != m_smbHostsToCleanup.end();
   return is_in_smbhosts && !is_in_cleanup;
+}
+
+bool CSMBScanState::IsHostAvailable( const CStdString& strHost )
+{
+  CSingleLock lock( m_lock );
+  CStdString up = strHost;
+  up.ToUpper();
+
+  return m_smbHosts.find(up) != m_smbHosts.end();
+}
+
+bool CSMBScanState::GetHostAddress( const CStdString& strHost, CStdString& strIp, CStdString& strWorkgroup)
+{
+  CSingleLock lock( m_lock );
+
+  std::map<CStdString, CFileItemList>::const_iterator iter = m_smbShares.begin();
+  while (iter != m_smbShares.end())
+  {
+    const CFileItemList& l = iter->second;
+    CStdString h = l.GetProperty("HostName");
+
+    CStdString h1 = strHost;
+
+    if (h1.ToLower() == h.ToLower())
+    {
+      strIp = iter->first;
+      strWorkgroup = l.GetProperty("Workgroup");
+      return true;
+    }
+
+    iter++;
+  }
+  return false;
+}
+
+void CSMBScanState::TrackHostAvailability( const CStdString& strPath )
+{
+  CURI url(strPath);
+  CStdString hostname = url.GetHostName();
+  const char* hc = hostname.c_str();
+  struct in_addr ia;
+  
+  // If this isn't in dotted notation, then the user is using name resolution
+  // With name resolution things are ugly. What if it's DNS only and NBT is disabled? The scan loop relies on using
+  // NBTSTAT commands to see if a host is online.
+  // This function will split out all of the DNS resolution based cases since those will always fail in the scan loop,
+  // and we can't use NBTSTAT. We treat DNS based hosts as always-online from a browser perspective; we have to issue an SMB
+  // request to verify. The reason is everything except SMB could be blocked by the remote firewall (including ICMP).
+  // For everything else,
+  // * If it is dotted notation, we add it to the scan queue and will check it (covers cross subnet)
+  // * If it is a NBT hostname, we ignore it here, but will add the NBT name to m_smbHosts when we discover it through the mapper
+  // * For all other cases we'll fail here and fail to add in the mapper
+
+  if( IsHostAvailable( hostname ) )
+  {
+    // If the host is already being found in subnet scans, we do nothing here.
+    return ;
+}
+
+  if( 0 == inet_aton( hc, &ia ) )
+  {
+    struct hostent* hent = NULL;
+    
+    // This just short circuits doing a DNS lookup if we are offline.
+    // This also avoids doing lookups with a bad proxy address, which are expensive
+    if( g_application.IsOfflineMode() )
+    {
+      CLog::Log(LOGDEBUG, "SMB: Not looking up hostname <%s> as we are offline.\n", hostname.c_str());
+      
+      return ;
+    }
+    else
+    {
+      hent = gethostbyname( hc );
+    }
+    
+    if( !hent )
+    {
+      // There is a subtle timing issue here, if this is called before we've done any subnet
+      // scanning we hit this case. There is probably a perf impact with this too.
+      CLog::Log(LOGINFO, "Host string <%s> wasn't found by gethostbyname - probably a NBT name (err %d)\n", hc, h_errno);
+    }
+    else
+    {
+      // Sanity check the lookup, this shouldn't happen
+      if( (4 != hent->h_length) || (AF_INET != hent->h_addrtype) )
+      {
+        CLog::Log(LOGDEBUG, "Host <%s> resolved to a non-ipv4 address\n", hc );
+      }
+      else
+      {
+        // set ia to the first entry in the list.
+        ia.s_addr = *(unsigned int*)hent->h_addr;
+        
+        const char* a = inet_ntoa( ia );
+        CLog::Log(LOGDEBUG, "Host <%s> resolved to <%s> without netbios - we will treat this host as online by default\n", hc, a);
+        m_smbHosts.insert( hostname );
+        m_smbHosts.insert( a );
+      }
+    }
+  }
+  else
+  {
+    // ia set by inet_aton
+    CSingleLock lock( m_lock );
+    m_smbHostsToTrack.insert( ia.s_addr );
+  }
+}
+
+void CSMBScanState::GetTrackedHosts( std::set<unsigned int>& trackedHosts )
+{
+  CSingleLock lock( m_lock );
+  trackedHosts = m_smbHostsToTrack;
 }
 
 void CSMBScanState::MarkDirty()
@@ -218,11 +325,13 @@ void CSMBScanState::LogState()
 CSMBScanJob::CSMBScanJob( CStdString& local_interface,
                           CStdString& remote_ip,
                           CStdString& remote_hostname,
+                          CStdString& work_group,
                           CSMBScanState* scanState ) :
                     BXBGJob("CSMBScanJob"), 
                     m_strLocalInterface( local_interface ),
                     m_strRemoteIP( remote_ip ),
                     m_strRemoteHostname( remote_hostname ),
+                    m_strWorkgroup( work_group ),
                     m_pScanState( scanState )
 {
   m_strRemoteHostname.Trim();
@@ -239,14 +348,16 @@ void CSMBScanJob::DoWork()
 
   CDirectory::GetDirectory( smbUrl, list );
 
+  CLog::Log( LOGDEBUG, "Found %d shares on host %s", list.Size(), m_strRemoteHostname.c_str());
+
   for( int i = 0, nSize = list.Size(); i < nSize && !g_application.m_bStop; ++i )
   {
-    CFileItemPtr pFileItem = list[ i ];
+    CFileItemPtr pFileItem = list[ i ];    
     
     FormatShareString( pFileItem, smbUrl );
     pFileItem->SetLabel( smbUrl );
     
-    CURL u( pFileItem->m_strPath );
+    CURI u(pFileItem->m_strPath);
 
     pFileItem->m_strPath = "smb://" + m_strRemoteHostname + "/" + u.GetShareName();
   }
@@ -254,27 +365,29 @@ void CSMBScanJob::DoWork()
   CFileItemPtr pHostItem ( new CFileItem );
 
   pHostItem->m_strPath = "smb://" + m_strRemoteHostname;
-  pHostItem->SetLabel( m_strRemoteHostname + " (Samba)" );
+  pHostItem->SetLabel( m_strRemoteHostname);
   pHostItem->m_bIsFolder = true;
   list.Add(pHostItem);
   list.SetProperty( "HostIP", m_strRemoteIP );
   list.SetProperty( "Interface", m_strLocalInterface );
+  list.SetProperty( "HostName", m_strRemoteHostname );
+  list.SetProperty( "Workgroup", m_strWorkgroup);
 
   if (!g_application.m_bStop)
   {
     // add this to the smb scan state
     m_pScanState->AddShares( list );
-  }
+}
 }
 
 
 void CSMBScanJob::FormatShareString( CFileItemPtr fileItem, CStdString& strUrl ) const
 {
-  // from smb://<hostname>/<sharename>/ we will make <sharename> on <hostname> (Samba).
+  // from smb://<hostname>/<sharename>/ we will make <sharename> on <hostname>.
   CStdString strPath = fileItem->m_strPath;
   CUtil::RemoveSlashAtEnd(strPath);
   CStdString strShare = CUtil::GetFileName(strPath);
-  strUrl.Format( "%s / %s (Samba)", m_strRemoteHostname.c_str(), strShare.c_str() );
+  strUrl.Format( "%s / %s ", m_strRemoteHostname.c_str(), strShare.c_str() );
 }
 
 ////////////////////////
@@ -319,7 +432,10 @@ void CIPScanner::Scan( CSMBScanState* smbScanState )
     //const char* wins_server = NULL;   
 
     CLog::Log(LOGDEBUG, "Scanning interfaces for shares\n");
+    std::set<unsigned int> hostsToTrack;
 
+    m_pScanState->GetTrackedHosts( hostsToTrack );
+    
     m_scanTable.clear();
 
     std::vector< CNetworkInterfacePtr >::iterator iter    = vecInterfaces.begin();
@@ -332,7 +448,7 @@ void CIPScanner::Scan( CSMBScanState* smbScanState )
       if( (*iter)->IsConnected() )
       {
         // Flag the interface for mapping
-        AddToScanTable( *iter );
+        AddToScanTable( *iter, hostsToTrack );
         
         // Do the broadcast based scan, no mapping
         int hostsFound = ScanAdapterForHosts( *iter, false );
@@ -346,7 +462,8 @@ void CIPScanner::Scan( CSMBScanState* smbScanState )
     {
       if( (*iter)->IsConnected() )
       {
-        const char* macaddr = (*iter)->GetMacAddress().c_str();
+        CStdString ma = (*iter)->GetMacAddress();
+        const char* macaddr = ma.c_str();
         
         CLog::Log(LOGDEBUG, "Mapping out hosts on interface %s\n", macaddr);
 
@@ -366,7 +483,7 @@ void CIPScanner::Scan( CSMBScanState* smbScanState )
 
 // Add address ranges from the interface to the scan table
 // Do this in a way that makes it most likely that we find shares quickly
-void CIPScanner::AddToScanTable( CNetworkInterfacePtr pInterface )
+void CIPScanner::AddToScanTable( CNetworkInterfacePtr pInterface, std::set<unsigned int>& specificHosts )
 {
   // Here is the ideal logic - right now we do the limited version of just scanning from .1 to .254
   // Most home networks are structured with a single subnet with a router at x.x.x.1
@@ -386,35 +503,53 @@ void CIPScanner::AddToScanTable( CNetworkInterfacePtr pInterface )
   }
   else
   {
-    // Pull in the full range, scoping down to a /24 if needed.
+    // Enumerate through the specific hosts added and put an entry in the table for each one
+    std::set<unsigned int>::iterator iter = specificHosts.begin();
+    while( iter != specificHosts.end() )
+    {
+      scan_row_t host;
+      
+      host.start.s_addr = *iter;
+      host.end.s_addr = *iter;
+      
+      m_scanTable[pInterface].push_back(host);
+    
+      iter++;
+    } 
+    
+    // Now pull in the full range, scoping down to a /24 if needed.
     scan_row_t full_range;
 
     if( !(nmaddr.s_addr & 0xff100000) )
     {
       CLog::Log( LOGINFO, "Network interface %s is larger than 256 addresses; not scanning the full address range\n", pInterface->GetMacAddress().c_str() );
-      nmaddr.s_addr = 0x00ffffff;
+      inet_aton(pInterface->GetCurrentIPAddress().c_str(), &full_range.start);
+      full_range.start.s_addr = ntohl(full_range.start.s_addr & htonl(0xffffff00));
+      full_range.end.s_addr = full_range.start.s_addr | 0x000000ff;
     }
-    
-    full_range.start.s_addr = ntohl( (bcaddr.s_addr & nmaddr.s_addr) );
-    full_range.end.s_addr = ntohl( (bcaddr.s_addr) );
+    else
+    {
+      full_range.start.s_addr = ntohl( (bcaddr.s_addr & nmaddr.s_addr) );
+      full_range.end.s_addr = ntohl( (bcaddr.s_addr) );
+    }
     
     m_scanTable[pInterface].push_back(full_range);
   }
 }
 
 // Called if we find a live IP; queues a smb scan job to enumerate shares
-void CIPScanner::FoundActiveIP( CStdString& local_interface, CStdString& remote_ip, CStdString& remote_hostname, bool mapped )
+void CIPScanner::FoundActiveIP( CStdString& local_interface, CStdString& remote_ip, CStdString& remote_hostname, CStdString& work_group, bool mapped )
 {
   remote_hostname.Trim();
-  
+
   // If mapped == true then this host was found using the subnet mapper. So we need to pay some special attention, since it may have
   // been previously found through the standard methods.
-  if( !mapped || !m_pScanState->IsFoundHost( local_interface, remote_hostname ) )
+  if( !mapped || !m_pScanState->IsFoundHost( local_interface, remote_ip ) )
   {
     CLog::Log( LOGDEBUG, "Found machine %s address %s interface %s%s\n", remote_hostname.c_str(), remote_ip.c_str(), local_interface.c_str(),(mapped?" via mapping":"") );
     m_pScanState->MarkHostActive( local_interface, remote_hostname, remote_ip );
   
-    CSMBScanJob* pJob = new CSMBScanJob( local_interface, remote_ip, remote_hostname, m_pScanState );
+    CSMBScanJob* pJob = new CSMBScanJob( local_interface, remote_ip, remote_hostname, work_group, m_pScanState );
     m_pScanProcessor->QueueJob( pJob );
   }
 }
@@ -481,6 +616,7 @@ int CIPScanner::ScanAdapterForHosts( CNetworkInterfacePtr pInterface, bool mappi
   size_t scanned_workgroups = 0;
 
   scan_row_t mapping_row;
+  bzero(&mapping_row, sizeof(scan_row_t));
   
   if( mapping )
   {
@@ -601,30 +737,48 @@ int CIPScanner::ScanAdapterForHosts( CNetworkInterfacePtr pInterface, bool mappi
         {
           CStdString hostname, remote_ip, wg;
           
-          ParseNBTSTAT( hostinfo, hostname, wg );
-          remote_ip = inet_ntoa(dest_sockaddr.sin_addr);
-          ++active_hosts;
-
-          // Save off the workgroup name so we can scan this workgroup later
-          if( !mapping && wg[0] )
+          if( ParseNBTSTAT( hostinfo, hostname, wg ) )
           {
-            std::vector< CStdString >::iterator w = workgroups.begin();
-            while( w != workgroups.end() )
+            remote_ip = inet_ntoa(dest_sockaddr.sin_addr);
+            ++active_hosts;
+
+            // Save off the workgroup name so we can scan this workgroup later
+            if(!wg.IsEmpty() && !mapping && wg[0] )
             {
-              if( *w == wg )
-                break;
-              w++;
+              std::vector< CStdString >::iterator w = workgroups.begin();
+              while( w != workgroups.end() )
+              {
+                if( *w == wg )
+                  break;
+                w++;
+              }
+              if( w == workgroups.end() )
+              {
+                workgroups.push_back(wg);
+                more_to_send++;
+              }
             }
-            if( w == workgroups.end() )
+          
+#ifdef HAS_INTEL_SMD
+            // On embedded we ignore shares from the local machine
+            // since we only have one interface this check is sufficient
+            // ignore wg folder
+            if( remote_ip == pInterface->GetCurrentIPAddress() || (hostname == wg))
             {
-              workgroups.push_back(wg);
-              more_to_send++;
+              CLog::Log(LOGDEBUG, "Ignoring file shares from local host and workgroup folder [%s]", hostname.c_str());
+            }
+            else
+#endif
+            {
+              // We found an IP and have the hostname; time to queue the scanner to find shares
+              CStdString macAddr =  pInterface->GetMacAddress();
+              FoundActiveIP( macAddr, remote_ip, hostname, wg, mapping );
             }
           }
-          
-          // We found an IP and have the hostname; time to queue the scanner to find shares
-          CStdString macAddr =  pInterface->GetMacAddress();
-          FoundActiveIP( macAddr, remote_ip, hostname, mapping );
+          else
+          {
+            CLog::Log(LOGDEBUG, "Found IP %s via netbios but no fileserver available\n", inet_ntoa(dest_sockaddr.sin_addr) );
+          }
         }
       }
       else
@@ -670,7 +824,6 @@ int CIPScanner::ScanAdapterForHosts( CNetworkInterfacePtr pInterface, bool mappi
             {
               struct in_addr a;
               a.s_addr = htonl(mapping_row.start.s_addr);
-              
               send_query( sock, a, transmit_time.tv_usec, NULL, 0 );
             }
             if( mapping_row.start.s_addr == mapping_row.end.s_addr )
@@ -772,23 +925,41 @@ int CIPScanner::ScanAdapterForHosts( CNetworkInterfacePtr pInterface, bool mappi
   return active_hosts;
 }
 
-void CIPScanner::ParseNBTSTAT(nb_host_info* hostinfo, CStdString& hostname, CStdString& workgroup)
+bool CIPScanner::ParseNBTSTAT(nb_host_info* hostinfo, CStdString& hostname, CStdString& workgroup)
 {
-  // CStdString doesn't have length restricted copy without directly using the buffer...
-  CStdString hn( hostinfo->names->ascii_name, 15);
-  hostname = hn.Trim();
-        
-  /* find the group name in the message so we can query that group */
-  for( int idx = 0; idx < hostinfo->header->number_of_names; idx++ )
+  int done = 0;
+  
+  if(!hostinfo)
+    return false;
+
+  if(!hostinfo->header)
+	return false;
+
+  /* There are no order guarantees. Loop through all names finding the workgroup
+   * and machine names
+   */
+  for( int idx = 0; done != 3 && idx < hostinfo->header->number_of_names; idx++ )
   {
-    /* We assume that the first group name is the remote machine's group */
-    if( 0 != ( hostinfo->names[idx].rr_flags & NBT_GROUP_FLAG ) )
+    bool group = (NBT_GROUP_FLAG == ( hostinfo->names[idx].rr_flags & NBT_GROUP_FLAG ));
+    // Verify that the group flag is set and that the string type == domain name
+    if( group && NBS_DOMAINNAME == hostinfo->names[idx].ascii_name[15] )
     {
       workgroup = hostinfo->names[idx].ascii_name;
-      break;
+      workgroup = workgroup.Trim();
+
+      done |= 1;
+    }
+    else if( !group && NBS_FILESERVER == hostinfo->names[idx].ascii_name[15] )
+    {
+      CStdString hn( hostinfo->names->ascii_name, 15);
+      hostname = hn.Trim();
+
+      done |= 2;
     }
   }
 
+  // Return true if we at least found a hostname
+  return 2 == (done & 2);
 }
 
 // create our socket
@@ -855,7 +1026,7 @@ void CIPScanner::Uuidgen(char* uuid)
 int CIPScanner::SendDiscoveryProbe(int sock, struct in_addr local_ip)
 {
   // The content in a probe is very static, just the message ID (a uuid) needs to change with each probe
-  char* format =
+  const char* format =
     "<s:Envelope xmlns:d=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\" "\
     "xmlns:a=\"http://schemas.xmlsoap.org/ws/2004/08/addressing\" "\
     "xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" "\
@@ -930,4 +1101,76 @@ bool CIPScanner::CheckElapsedTime( struct timeval* last_timestamp, int min_elaps
     elapsed.tv_usec += (1000000);
   }
   return elapsed.tv_sec || ( elapsed.tv_usec > min_elapsed_us );
+}
+
+#ifdef _WIN32
+CIPScanJob::CIPScanJob( const char* subnet, const char* ip_address, const char* hostname, IIPScanCallback* pCallback ) : BXBGJob("CIPScanJob"),
+  m_pCallback( pCallback ), m_strIP( ip_address ), m_strSubnet(subnet),
+    m_strHostname( hostname )
+{
+  m_strHostname.Trim();
+}
+  
+void CIPScanJob::DoWork()
+{
+  CStdString    smbUrl = "smb://" + m_strIP;
+  CFileItemList list;
+
+  CLog::Log( LOGDEBUG, "Looking for shares in ip %s", m_strIP.c_str() );
+  CDirectory::GetDirectory( smbUrl, list );
+
+  int nSize = list.Size();
+  
+  for( int i = 0; i < nSize && !g_application.m_bStop; ++i )
+  {
+    CFileItemPtr pFileItem = list[ i ];
+    
+    FormatShareString( pFileItem, smbUrl );
+    pFileItem->SetLabel( smbUrl );
+    
+    CURI u( pFileItem->m_strPath );
+
+    pFileItem->m_strPath = "smb://" + m_strHostname + "/"+u.GetShareName();
+  }
+  
+  CFileItemPtr pHostItem ( new CFileItem );
+
+  pHostItem->m_strPath = "smb://" + m_strHostname;
+  pHostItem->SetLabel( m_strHostname );
+  pHostItem->m_bIsFolder = true;
+  list.Add(pHostItem);
+  list.SetProperty( "HostIP", m_strIP );
+  //list.SetProperty( "Subnet", m_strSubnet );
+
+  //list.SetProperty( "Interface", m_strLocalInterface );
+  //list.SetProperty( "HostName", m_strRemoteHostname );
+  //list.SetProperty( "Workgroup", m_strWorkgroup);
+
+  if (!g_application.m_bStop)
+    m_pCallback->IPScanned( list );
+}
+
+
+void CIPScanJob::FormatShareString( CFileItemPtr fileItem, CStdString& strUrl ) const
+{
+  // from smb://<hostname>/<sharename>/ we will make <sharename> on <hostname>.
+  CStdString strPath = fileItem->m_strPath;
+  CUtil::RemoveSlashAtEnd(strPath);
+  CStdString strShare = CUtil::GetFileName(strPath);
+  strUrl.Format( "%s / %s", m_strHostname.c_str(), strShare.c_str() );
+}
+
+#endif
+
+std::set<CStdString> CSMBScanState::GetIPs()
+{
+	std::set<CStdString> setIPs;
+	std::map<CStdString, CFileItemList>::const_iterator iter = m_smbShares.begin();
+    while (iter != m_smbShares.end())
+    {
+      //Add current smb share ip to the delete candidates list only if in the current interface subnet
+        setIPs.insert(iter->first);
+      iter++;
+    }
+	return setIPs;
 }

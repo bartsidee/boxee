@@ -44,7 +44,7 @@ public:
   CAppDescriptor::AppDescriptorsMap GetAvailableApps(bool force = false, bool boxeeAppsOnly = false);
   void GetAvailableApps(const CAppDescriptor::AppDescriptorsMap& availableAppsDesc, CFileItemList& availableAppsFileItems, const CStdString& mediaType = "");
   void ReloadAppDescriptors();
-
+  
   bool UpdateServerOfRepositoriesFile();
 
 private:

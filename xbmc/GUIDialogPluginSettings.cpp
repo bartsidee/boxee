@@ -126,7 +126,7 @@ void CGUIDialogPluginSettings::OnInitWindow()
 }
 
 // \brief Show CGUIDialogOK dialog, then wait for user to dismiss it.
-void CGUIDialogPluginSettings::ShowAndGetInput(CURL& url)
+void CGUIDialogPluginSettings::ShowAndGetInput(CURI& url)
 {
   m_url = url;
 
@@ -171,7 +171,7 @@ void CGUIDialogPluginSettings::ShowAndGetInput(SScraperInfo& info)
 void CGUIDialogPluginSettings::ShowAndGetInput(CStdString& path)
 {
   CUtil::RemoveSlashAtEnd(path);
-  m_url = CURL(path);
+  m_url = CURI(path);
 
   // Path where the language strings reside
   CStdString pathToLanguageFile = path;
@@ -481,10 +481,9 @@ void CGUIDialogPluginSettings::CreateControls()
     basepath = CUtil::AddFileToFolder(basepath, m_url.GetFileName());
   }
   else
-    m_url.GetURL(basepath);
+    basepath = m_url.Get();
 
   CGUIControl* pControl = NULL;
-  CGUIControl* pHeaderControl = NULL;
   int controlId = CONTROL_START_CONTROL;
 
   if (m_settings.GetPluginRoot() == NULL)
@@ -897,5 +896,5 @@ CStdString CGUIDialogPluginSettings::GenerateXmlSettingsStr(void)
   return xmlStr;
 }
 
-CURL CGUIDialogPluginSettings::m_url;
+CURI CGUIDialogPluginSettings::m_url;
 

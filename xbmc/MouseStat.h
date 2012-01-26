@@ -41,10 +41,10 @@
 
 #define MOUSE_MINIMUM_MOVEMENT 2
 #define MOUSE_DOUBLE_CLICK_LENGTH 500L
-#define MOUSE_ACTIVE_LENGTH       5000L
+#define MOUSE_ACTIVE_LENGTH   5000L
 #define MOUSE_MOVE_VALIDITY       1000L
 
-enum MOUSE_STATE { MOUSE_STATE_NORMAL = 1, MOUSE_STATE_FOCUS, MOUSE_STATE_DRAG, MOUSE_STATE_CLICK };
+enum MOUSE_STATE { MOUSE_STATE_NORMAL = 1, MOUSE_STATE_FOCUS, MOUSE_STATE_DRAG, MOUSE_STATE_CLICK , MOUSE_STATE_BROWSER_NORMAL, MOUSE_STATE_BROWSER_HAND};
 enum MOUSE_BUTTON { MOUSE_LEFT_BUTTON = 0, MOUSE_RIGHT_BUTTON, MOUSE_MIDDLE_BUTTON, MOUSE_EXTRA_BUTTON1, MOUSE_EXTRA_BUTTON2, MOUSE_BUTTON_LAST };
 
 struct MouseState
@@ -72,7 +72,7 @@ public:
   void SetResolution(int maxX, int maxY, float speedX, float speedY);
   bool IsActive();
   bool IsEnabled() const;
-  bool HasMoved(bool allMoves = false) const;
+  bool HasMoved(bool allMoves = true) const;
   void SetActive(bool active = true);
   void SetExclusiveAccess(int controlID, int windowID, const CPoint &point);
   void EndExclusiveAccess(int controlID, int windowID);
@@ -88,6 +88,7 @@ public:
   char GetWheel() const;
   void UpdateMouseWheel(char dir);
   void Update(XBMC_Event& newEvent);
+  bool IsEnabledInSettings();
 
   void ResetClicks();
   
@@ -105,9 +106,6 @@ private:
   MouseState m_mouseState;
   bool m_mouseEnabled;
   bool m_lastDown[(int)MOUSE_BUTTON_LAST];
-
-  // mouse device
-  // elis IMouseDevice *m_mouseDevice;
 
   // mouse limits and speed
   int m_maxX;

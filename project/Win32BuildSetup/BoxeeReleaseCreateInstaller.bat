@@ -61,17 +61,21 @@ ECHO	 M++++++++sNMMMdo/::+smMMNo:hMMMMm+oNMs++++++++NM++++++++oMMM
   IF EXIST %XBMC_SETUPFILE% del %XBMC_SETUPFILE% > NUL
   rem get path to makensis.exe from registry, first try tab delim
   FOR /F "tokens=2* delims=	" %%A IN ('REG QUERY "HKLM\Software\NSIS" /ve') DO SET NSISExePath=%%B
+  echo curr path is %NSISExePath%
   IF NOT EXIST "%NSISExePath%" (
     rem try with space delim instead of tab
 	FOR /F "tokens=2* delims= " %%A IN ('REG QUERY "HKLM\Software\NSIS" /ve') DO SET NSISExePath=%%B
   )
+echo curr path is %NSISExePath%
   rem x64 - get path to makensis.exe from registry, first try tab delim
   FOR /F "tokens=2* delims=	" %%A IN ('REG QUERY "HKLM\SOFTWARE\Wow6432Node\NSIS" /ve') DO SET NSISExePath=%%B
   IF NOT EXIST "%NSISExePath%" (
     rem x64 - try with space delim instead of tab
 	FOR /F "tokens=2* delims= " %%A IN ('REG QUERY "HKLM\SOFTWARE\Wow6432Node\NSIS" /ve') DO SET NSISExePath=%%B
   )
+echo curr path is %NSISExePath%
   SET NSISExe=%NSISExePath%\makensis.exe
+echo curr exe is %NSISExe%
   "%NSISExe%" /V1 /X"SetCompressor /FINAL lzma" /Dxbmc_root="%CD%\BUILD_WIN32" /Dxbmc_revision="%XBMC_REV%" "BOXEE for Windows.nsi"
   IF NOT EXIST "%XBMC_SETUPFILE%" (
 	  set DIETEXT=Failed to create %XBMC_SETUPFILE%.
@@ -94,10 +98,10 @@ ECHO	 M++++++++sNMMMdo/::+smMMNo:hMMMMm+oNMs++++++++NM++++++++oMMM
   ECHO ------------------------------------------------------------
 
 :VIEWLOG_EXE
-  IF NOT EXIST "%CD%\..\vs2008express\XBMC\Release (SDL)\BuildLog.htm" goto END
+  IF NOT EXIST "%CD%\..\vs2010express\BOXEE\Release (DirectX)\BuildLog.htm" goto END
   set /P XBMC_BUILD_ANSWER=View the build log in your HTML browser? [y/n]
   if /I %XBMC_BUILD_ANSWER% NEQ y goto END
-  start /D"%CD%\..\vs2008express\XBMC\Release (SDL)\BuildLog.htm"
+  start /D"%CD%\..\vs2010express\BOXEE\Release (DirectX)\BuildLog.htm"
   goto END
 
 :END

@@ -3,6 +3,13 @@
 
 #include "GUIWindowBoxeeBrowse.h"
 
+class CRepositoriesWindowState : public CBrowseWindowState
+{
+public:
+  CRepositoriesWindowState(CGUIWindowBoxeeBrowse* pWindow);
+
+};
+
 class CGUIWindowBoxeeBrowseRepositories : public CGUIWindowBoxeeBrowse
 {
 public:
@@ -11,9 +18,8 @@ public:
 	
   virtual void OnInitWindow();
   virtual bool OnMessage(CGUIMessage& message);
-  virtual bool OnAction(const CAction &action);
-  virtual void OnBack();
 
+  void ShowItems(CFileItemList& list, bool append=false);
 protected:
 
   /*
@@ -21,13 +27,9 @@ protected:
    */
   virtual bool OnClick(int iItem);
 
-private:
+  virtual void GetStartMenusStructure(std::list<CFileItemList>& browseMenuLevelList);
 
-  /**
-   * Creates the updated path that will be sent to BoxeeServerDirectory
-   * according to the current state of the buttons
-   */
-  virtual CStdString CreatePath();
+private:
 
   bool ProcessMenuClick(CGUIMessage& message);
 
@@ -37,7 +39,6 @@ private:
 
   static const char* ControlIdAsString(int controlId);
 
-  CStdString m_strPath;
   bool m_manageButtonOn;
 };
 

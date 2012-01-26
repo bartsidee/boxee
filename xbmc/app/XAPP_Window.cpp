@@ -34,6 +34,11 @@ Label Window::GetLabel(int id) throw (AppException)
   return Label(m_id, id);  
 }
 
+Textbox Window::GetTextbox(int id) throw (AppException)
+{
+  return Textbox(m_id, id);
+}
+
 List Window::GetList(int id) throw (AppException)
 {
   return List(m_id, id);  
@@ -96,6 +101,63 @@ void Window::ClearStateStack(bool restoreState)
   {
     ((CGUIWindowApp*) m_window)->ClearStateStack();
   }
+}
+
+/**
+ * Get window id
+ */
+int Window::GetWindowId()
+{
+  return m_id;
+}
+
+WindowListener::~WindowListener()
+{
+}
+
+void Window::AddWindowListener(WindowListener* listener)
+{
+  CGUIWindow* window = g_windowManager.GetWindow(m_id);
+  if (!window)
+    return;
+
+  ((CGUIWindowApp*) window)->AddWindowListener(listener);
+}
+
+void Window::RemoveWindowListener(WindowListener* listener)
+{
+  CGUIWindow* window = g_windowManager.GetWindow(m_id);
+  if (!window)
+    return;
+
+  ((CGUIWindowApp*) window)->RemoveWindowListener(listener);
+}
+
+void Window::AddKeyListener(KeyListener* listener)
+{
+  CGUIWindow* window = g_windowManager.GetWindow(m_id);
+  if (!window)
+    return;
+
+  ((CGUIWindowApp*) window)->AddKeyListener(listener);
+}
+
+void Window::RemoveKeyListener(KeyListener* listener)
+{
+  CGUIWindow* window = g_windowManager.GetWindow(m_id);
+  if (!window)
+    return;
+
+  ((CGUIWindowApp*) window)->RemoveKeyListener(listener);
+}
+
+void Window::SetProperty(const std::string &strKey, const std::string &strValue)
+{
+  CGUIWindow* window = g_windowManager.GetWindow(m_id);
+  if (!window)
+    return;
+
+  window->SetProperty(strKey, strValue);
 }
 
 }

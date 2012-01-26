@@ -117,6 +117,8 @@ bool CXBTFWriter::UpdateHeader()
       WRITE_U64(frame.GetUnpackedSize(), m_file);
       WRITE_U32(frame.GetDuration(), m_file);
       WRITE_U64(frame.GetOffset(), m_file);
+      WRITE_U32(frame.GetInitialWidth(), m_file);
+      WRITE_U32(frame.GetInitialHeight(), m_file);
     }
   }
 

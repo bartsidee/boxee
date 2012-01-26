@@ -21,12 +21,11 @@
 
 #pragma once
 
-#ifndef XBMC_FORCE_INLINE
-#ifndef __GNUC__
-#define XBMC_FORCE_INLINE inline 
+#ifdef __GNUC__
+// under gcc, inline will only take place if optimizations are applied (-O). this will force inline even whith optimizations.
+#define XBMC_FORCE_INLINE __attribute__((always_inline))
 #else
-#define XBMC_FORCE_INLINE __attribute__((always_inline)) inline 
-#endif
+#define XBMC_FORCE_INLINE
 #endif
 
 class CPoint

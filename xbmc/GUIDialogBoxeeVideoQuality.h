@@ -21,7 +21,6 @@ public:
   CGUIDialogBoxeeVideoQuality(void);
   virtual ~CGUIDialogBoxeeVideoQuality(void);
   virtual bool OnMessage(CGUIMessage &message);
-  virtual bool OnAction(const CAction &action);
   virtual void OnInitWindow();
   virtual void Close(bool forceClose = false);
   
@@ -44,6 +43,7 @@ protected:
   CFileItemList m_vecList;
   bool m_savePreference;
 
+  int m_listControlId;
 };
 
 #endif /* CGUIDIALOGBOXEEVIDEOQUALITY_H_ */

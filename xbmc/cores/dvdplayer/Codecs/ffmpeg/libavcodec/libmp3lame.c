@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/libmp3lame.c
+ * @file
  * Interface to libmp3lame for mp3 encoding.
  */
 
@@ -55,13 +55,12 @@ static av_cold int MP3lame_encode_init(AVCodecContext *avctx)
     } else {
         lame_set_quality(s->gfp, avctx->compression_level);
     }
-    /* lame 3.91 doesn't work in mono */
-    lame_set_mode(s->gfp, JOINT_STEREO);
+    lame_set_mode(s->gfp, s->stereo ? JOINT_STEREO : MONO);
     lame_set_brate(s->gfp, avctx->bit_rate/1000);
     if(avctx->flags & CODEC_FLAG_QSCALE) {
         lame_set_brate(s->gfp, 0);
         lame_set_VBR(s->gfp, vbr_default);
-        lame_set_VBR_q(s->gfp, avctx->global_quality / (float)FF_QP2LAMBDA);
+        lame_set_VBR_quality(s->gfp, avctx->global_quality/(float)FF_QP2LAMBDA);
     }
     lame_set_bWriteVbrTag(s->gfp,0);
     lame_set_disable_reservoir(s->gfp, avctx->flags2 & CODEC_FLAG2_BIT_RESERVOIR ? 0 : 1);
@@ -81,8 +80,8 @@ err:
     return -1;
 }
 
-static const int sSampleRates[3] = {
-    44100, 48000,  32000
+static const int sSampleRates[] = {
+    44100, 48000,  32000, 22050, 24000, 16000, 11025, 12000, 8000, 0
 };
 
 static const int sBitRates[2][3][15] = {
@@ -214,15 +213,16 @@ static av_cold int MP3lame_encode_close(AVCodecContext *avctx)
 }
 
 
-AVCodec libmp3lame_encoder = {
+AVCodec ff_libmp3lame_encoder = {
     "libmp3lame",
-    CODEC_TYPE_AUDIO,
+    AVMEDIA_TYPE_AUDIO,
     CODEC_ID_MP3,
     sizeof(Mp3AudioContext),
     MP3lame_encode_init,
     MP3lame_encode_frame,
     MP3lame_encode_close,
     .capabilities= CODEC_CAP_DELAY,
-    .sample_fmts = (const enum SampleFormat[]){SAMPLE_FMT_S16,SAMPLE_FMT_NONE},
+    .sample_fmts = (const enum AVSampleFormat[]){AV_SAMPLE_FMT_S16,AV_SAMPLE_FMT_NONE},
+    .supported_samplerates= sSampleRates,
     .long_name= NULL_IF_CONFIG_SMALL("libmp3lame MP3 (MPEG audio layer 3)"),
 };

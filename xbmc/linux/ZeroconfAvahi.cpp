@@ -24,6 +24,8 @@
 #include "PlatformDefs.h"
 
 #include "ZeroconfAvahi.h"
+#include "GUISettings.h"
+#include "BoxeeUtils.h"
 
 #include <string>
 #include <iostream>
@@ -35,7 +37,7 @@
 #include <avahi-common/error.h>
 #include <avahi-common/malloc.h>
 
-#include <unistd.h> //gethostname
+//#include <unistd.h> //gethostname
 
 #include <utils/log.h>
 
@@ -59,14 +61,15 @@ private:
 struct CZeroconfAvahi::ServiceInfo
 {
   ServiceInfo(const std::string& fcr_type, const std::string& fcr_name,
-              unsigned int f_port, AvahiEntryGroup* fp_group = 0):
-    m_type(fcr_type), m_name(fcr_name), m_port(f_port), mp_group(fp_group)
+              unsigned int f_port, const std::map<std::string, std::string> f_txt, AvahiEntryGroup* fp_group = 0):
+    m_type(fcr_type), m_name(fcr_name), m_port(f_port), m_txt(f_txt), mp_group(fp_group)
   {
   }
 
   std::string m_type;
   std::string m_name;
   unsigned int m_port;
+  std::map<std::string, std::string> m_txt;
 
   AvahiEntryGroup* mp_group;
 };
@@ -132,7 +135,8 @@ CZeroconfAvahi::~CZeroconfAvahi()
 bool CZeroconfAvahi::doPublishService(const std::string& fcr_identifier,
                               const std::string& fcr_type,
                               const std::string& fcr_name,
-                              unsigned int f_port)
+                              unsigned int f_port,
+                              const std::map<std::string, std::string>& txt)
 {
   CLog::Log(LOGDEBUG, "CZeroconfAvahi::doPublishService identifier: %s type: %s name:%s port:%i", fcr_identifier.c_str(), fcr_type.c_str(), fcr_name.c_str(), f_port);
 
@@ -145,7 +149,7 @@ bool CZeroconfAvahi::doPublishService(const std::string& fcr_identifier,
   }
 
   //create service info and add it to service map
-  tServiceMap::mapped_type p_service_info(new CZeroconfAvahi::ServiceInfo(fcr_type, fcr_name, f_port));
+  tServiceMap::mapped_type p_service_info(new CZeroconfAvahi::ServiceInfo(fcr_type, fcr_name, f_port, txt));
   it = m_services.insert(it, std::make_pair(fcr_identifier, p_service_info));
 
   //if client is already running, directly try to add the new service
@@ -321,20 +325,29 @@ void CZeroconfAvahi::shutdownCallback(AvahiTimeout *fp_e, void *fp_data)
 std::string CZeroconfAvahi::assemblePublishedName(const std::string& fcr_prefix)
 {
   std::stringstream ss;
-  ss << fcr_prefix << '@';
+  ss << fcr_prefix;
 
+#if 0
   // get our hostname
   char lp_hostname[256];
   if (gethostname(lp_hostname, sizeof(lp_hostname)))
   {
-    //TODO
     CLog::Log(LOGERROR, "CZeroconfAvahi::assemblePublishedName: could not get hostname.. hm... waaaah! PANIC!");
-    ss << "DummyThatCantResolveItsName";
   }
   else
   {
-    ss << lp_hostname;
+    ss << " (" << lp_hostname << ")";
   }
+
+//  ss << " (" << g_guiSettings.GetString("server.hostname") << ")";
+#endif
+
+  CStdString hostname = g_guiSettings.GetString("server.hostname");
+  if (hostname != BoxeeUtils::GetPlatformDefaultHostName())
+  {
+    ss << " [" << hostname << "]";
+  }
+
   return ss.str();
 }
 
@@ -380,9 +393,15 @@ void CZeroconfAvahi::addService(tServiceMap::mapped_type fp_service_info, AvahiC
   int ret;
   if (avahi_entry_group_is_empty(fp_service_info->mp_group))
   {
-    if ((ret = avahi_entry_group_add_service(fp_service_info->mp_group, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, AvahiPublishFlags(0),
+    AvahiStringList *lst = NULL;
+    for(std::map<std::string, std::string>::const_iterator itr = fp_service_info->m_txt.begin(); itr != fp_service_info->m_txt.end(); ++itr)
+    {
+      lst = avahi_string_list_add_pair(lst, (*itr).first.c_str(), (*itr).second.c_str());
+    }
+
+    if ((ret = avahi_entry_group_add_service_strlst(fp_service_info->mp_group, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, AvahiPublishFlags(0),
                                              assemblePublishedName(fp_service_info->m_name).c_str(),
-                                             fp_service_info->m_type.c_str(), NULL, NULL, fp_service_info->m_port, NULL) < 0))
+                                             fp_service_info->m_type.c_str(), NULL, NULL, fp_service_info->m_port, lst) < 0))
     {
       if (ret == AVAHI_ERR_COLLISION)
       {
@@ -391,12 +410,16 @@ void CZeroconfAvahi::addService(tServiceMap::mapped_type fp_service_info, AvahiC
         avahi_free(alt_name);
         CLog::Log(LOGNOTICE, "CZeroconfAvahi::addService: Service name collision. Renamed to: %s", fp_service_info->m_name.c_str());
         addService(fp_service_info, fp_client);
+        avahi_string_list_free(lst);
         return;
       }
       CLog::Log(LOGERROR, "CZeroconfAvahi::addService(): failed to add service named:%s@$(HOSTNAME) type:%s port:%i. Error:%s :/ FIXME!",
                 fp_service_info->m_name.c_str(), fp_service_info->m_type.c_str(), fp_service_info->m_port,  avahi_strerror(ret));
+      avahi_string_list_free(lst);
       return;
     }
+
+    avahi_string_list_free(lst);
   }
 
   // Tell the server to register the service

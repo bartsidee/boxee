@@ -232,7 +232,7 @@ static int audio_read_header(AVFormatContext *s1, AVFormatParameters *ap)
     }
 
     /* take real parameters */
-    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
     st->codec->codec_id = s->codec_id;
     st->codec->sample_rate = s->sample_rate;
     st->codec->channels = s->channels;
@@ -248,34 +248,15 @@ static int audio_read_packet(AVFormatContext *s1, AVPacket *pkt)
     int64_t cur_time;
     struct audio_buf_info abufi;
 
-    if (av_new_packet(pkt, s->frame_size) < 0)
-        return AVERROR(EIO);
-    for(;;) {
-        struct timeval tv;
-        fd_set fds;
+    if ((ret=av_new_packet(pkt, s->frame_size)) < 0)
+        return ret;
 
-        tv.tv_sec = 0;
-        tv.tv_usec = 30 * 1000; /* 30 msecs -- a bit shorter than 1 frame at 30fps */
-
-        FD_ZERO(&fds);
-        FD_SET(s->fd, &fds);
-
-        /* This will block until data is available or we get a timeout */
-        (void) select(s->fd + 1, &fds, 0, 0, &tv);
-
-        ret = read(s->fd, pkt->data, pkt->size);
-        if (ret > 0)
-            break;
-        if (ret == -1 && (errno == EAGAIN || errno == EINTR)) {
-            av_free_packet(pkt);
-            pkt->size = 0;
-            pkt->pts = av_gettime();
-            return 0;
-        }
-        if (!(ret == 0 || (ret == -1 && (errno == EAGAIN || errno == EINTR)))) {
-            av_free_packet(pkt);
-            return AVERROR(EIO);
-        }
+    ret = read(s->fd, pkt->data, pkt->size);
+    if (ret <= 0){
+        av_free_packet(pkt);
+        pkt->size = 0;
+        if (ret<0)  return AVERROR(errno);
+        else        return AVERROR_EOF;
     }
     pkt->size = ret;
 
@@ -312,7 +293,7 @@ static int audio_read_close(AVFormatContext *s1)
 }
 
 #if CONFIG_OSS_INDEV
-AVInputFormat oss_demuxer = {
+AVInputFormat ff_oss_demuxer = {
     "oss",
     NULL_IF_CONFIG_SMALL("Open Sound System capture"),
     sizeof(AudioData),
@@ -325,7 +306,7 @@ AVInputFormat oss_demuxer = {
 #endif
 
 #if CONFIG_OSS_OUTDEV
-AVOutputFormat oss_muxer = {
+AVOutputFormat ff_oss_muxer = {
     "oss",
     NULL_IF_CONFIG_SMALL("Open Sound System playback"),
     "",
@@ -334,11 +315,7 @@ AVOutputFormat oss_muxer = {
     /* XXX: we make the assumption that the soundcard accepts this format */
     /* XXX: find better solution with "preinit" method, needed also in
        other formats */
-#if HAVE_BIGENDIAN
-    CODEC_ID_PCM_S16BE,
-#else
-    CODEC_ID_PCM_S16LE,
-#endif
+    AV_NE(CODEC_ID_PCM_S16BE, CODEC_ID_PCM_S16LE),
     CODEC_ID_NONE,
     audio_write_header,
     audio_write_packet,

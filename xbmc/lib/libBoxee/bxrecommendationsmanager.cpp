@@ -11,11 +11,13 @@
 #include "boxee.h"
 #include "bxconfiguration.h"
 #include "bxexceptions.h"
+#include "bxutils.h"
 #include "logger.h"
 #include "GUIWindowManager.h"
 #include "GUIUserMessages.h"
-#include "GUIWindowBoxeeMain.h"
 #include "../../Application.h"
+
+#define MAX_NUMBER_OF_ITEMS_TO_REQ              200
 
 namespace BOXEE
 {
@@ -61,7 +63,7 @@ bool BXRecommendationsManager::UpdateRecommendationsList(unsigned long execution
   }
   else
   {
-    LOG(LOG_LEVEL_ERROR,"CBoxeeClientServerComManager::UpdateRecommendationsList - FAILED to allocate RequestRecommendationsListFromServerTask (rec)");
+    LOG(LOG_LEVEL_ERROR,"BXRecommendationsManager::UpdateRecommendationsList - FAILED to allocate RequestRecommendationsListFromServerTask (rec)");
     return false;
   }
 }
@@ -80,9 +82,11 @@ void BXRecommendationsManager::CopyRecommendationsList(const BXBoxeeFeed& recomm
 {
   LockRecommendationsList();
   
+  LOG(LOG_LEVEL_DEBUG,"BXRecommendationsManager::CopyRecommendationsList - going to copy recommendationsList [size=%d]. [currSize=%d] (rec)",recommendationsList.GetNumOfActions(),m_recommendationsList.GetNumOfActions());
+
   m_recommendationsList = recommendationsList;
   m_recommendationsList.SetLoaded(true);
-
+  
   UnLockRecommendationsList();
 }
 
@@ -97,7 +101,7 @@ void BXRecommendationsManager::SetRecommendationsListIsLoaded(bool isLoaded)
 
 bool BXRecommendationsManager::GetRecommendationsList(BXBoxeeFeed& recommendationsList)
 {
-  LOG(LOG_LEVEL_DEBUG,"BXRecommendationsManager::GetRecommendationsList - Enter function (shares)");
+  LOG(LOG_LEVEL_DEBUG,"BXRecommendationsManager::GetRecommendationsList - Enter function (rec)");
 
   if(BOXEE::Boxee::GetInstance().IsInOfflineMode())
   {
@@ -135,6 +139,30 @@ bool BXRecommendationsManager::GetRecommendationsList(BXBoxeeFeed& recommendatio
   return true;
 }
 
+int BXRecommendationsManager::GetRecommendationsListSize()
+{
+  int recommendationsSize = 0;
+
+  LockRecommendationsList();
+
+  BXBoxeeFeed recommendationsList;
+
+  if (GetRecommendationsList(recommendationsList))
+  {
+    recommendationsSize = recommendationsList.GetNumOfActions();
+
+    LOG(LOG_LEVEL_DEBUG,"BXRecommendationsManager::GetRecommendationsListSize - return [size=%d] (recommendations)",recommendationsSize);
+  }
+  else
+  {
+    LOG(LOG_LEVEL_ERROR,"BXRecommendationsManager::GetRecommendationsListSize - FAILED to get size(recommendations)");
+  }
+
+  UnLockRecommendationsList();
+
+  return recommendationsSize;
+}
+
 ////////////////////////////////////////////////////////
 // RequestRecommendationsListFromServerTask functions //
 ////////////////////////////////////////////////////////
@@ -152,7 +180,7 @@ BXRecommendationsManager::RequestRecommendationsListFromServerTask::~RequestReco
 void BXRecommendationsManager::RequestRecommendationsListFromServerTask::DoWork()
 {
   LOG(LOG_LEVEL_DEBUG,"RequestRecommendationsListFromServerTask::DoWork - Enter function (rec)");
-  
+
   if (!CanExecute())
   {
     // set loaded to true so Get() functions won't wait forever
@@ -163,41 +191,37 @@ void BXRecommendationsManager::RequestRecommendationsListFromServerTask::DoWork(
   }
 
   BXBoxeeFeed recommendationsList;
-  
+
   recommendationsList.SetCredentials(BOXEE::Boxee::GetInstance().GetCredentials());
   recommendationsList.SetVerbose(BOXEE::Boxee::GetInstance().IsVerbose());
 
   std::string strUrl = BXConfiguration::GetInstance().GetURLParam("Boxee.RecommendationsListUrl","http://app.boxee.tv/api/get_recommendations");
+
+  strUrl += "?last=0&count=";
+  strUrl += BXUtils::IntToString(MAX_NUMBER_OF_ITEMS_TO_REQ);
 
   recommendationsList.LoadFromURL(strUrl);
 
   bool isLoaded = m_taskHandler->m_recommendationsList.IsLoaded();
   long lastRetCode = recommendationsList.GetLastRetCode();
 
-  LOG(LOG_LEVEL_DEBUG,"RequestRecommendationsListFromServerTask::DoWork - After LoadFromURL. [lastRetCode=%d][isLoaded=%d] (rec)",lastRetCode,isLoaded);
+  LOG(LOG_LEVEL_DEBUG,"RequestRecommendationsListFromServerTask::DoWork - After LoadFromURL. [lastRetCode=%d][isLoaded=%d][size=%d][currSize=%d] (rec)",lastRetCode,isLoaded,recommendationsList.GetNumOfActions(),m_taskHandler->m_recommendationsList.GetNumOfActions());
 
   if (!isLoaded || lastRetCode == 200)
   {
     ////////////////////////////////////////////
     // copy return result from the server if: //
-    // a)  recommendationsList isn't loaded   //
+    // a) recommendationsList isn't loaded    //
     // b) the server returned 200             //
     ////////////////////////////////////////////
 
     m_taskHandler->CopyRecommendationsList(recommendationsList);
 
-    LOG(LOG_LEVEL_DEBUG,"RequestRecommendationsListFromServerTask::DoWork - After copy going to send GUI_MSG_UPDATE to LIST_RECOMMEND and WINDOW_BOXEE_BROWSE_DISCOVER (rec)");
-
-    int activeWindow = g_windowManager.GetActiveWindow();
-
-    if (activeWindow == WINDOW_HOME)
+    int activeWindowId = g_windowManager.GetActiveWindow();
+    if (!isLoaded && activeWindowId == WINDOW_BOXEE_BROWSE_DISCOVER)
     {
-      CGUIMessage refreshHomeRecommendList(GUI_MSG_UPDATE, WINDOW_HOME, LIST_RECOMMEND);
-      g_windowManager.SendThreadMessage(refreshHomeRecommendList);
-    }
+      LOG(LOG_LEVEL_DEBUG,"RequestRecommendationsListFromServerTask::DoWork - since [isLoaded=%d=FALSE] and [activeWindowId=%d=WINDOW_BOXEE_BROWSE_DISCOVER] sending GUI_MSG_UPDATE to WINDOW_BOXEE_BROWSE_DISCOVER (rec)",isLoaded,activeWindowId);
 
-    if (activeWindow == WINDOW_BOXEE_BROWSE_DISCOVER)
-    {
       CGUIMessage refreshDiscoverWinMsg(GUI_MSG_UPDATE, WINDOW_BOXEE_BROWSE_DISCOVER, 0, 1);
       g_windowManager.SendThreadMessage(refreshDiscoverWinMsg);
     }
@@ -212,13 +236,12 @@ bool BXRecommendationsManager::RequestRecommendationsListFromServerTask::CanExec
 {
   int activeWindowId = g_windowManager.GetActiveWindow();
   bool isLoaded = m_taskHandler->m_recommendationsList.IsLoaded();
-  bool IsConnectedToInternet = g_application.IsConnectedToInternet();
 
-  LOG(LOG_LEVEL_DEBUG,"RequestRecommendationsListFromServerTask::CanExecute - Enter function. [activeWindowId=%d][isLoaded=%d][IsConnectedToInternet=%d] (rec)",activeWindowId,isLoaded,IsConnectedToInternet);
+  LOG(LOG_LEVEL_DEBUG,"RequestRecommendationsListFromServerTask::CanExecute - Enter function. [activeWindowId=%d][isLoaded=%d] (rec)",activeWindowId,isLoaded);
 
-  if (!IsConnectedToInternet)
+  if (!g_application.ShouldConnectToInternet())
   {
-    LOG(LOG_LEVEL_DEBUG,"RequestRecommendationsListFromServerTask::CanExecute - [hasInternetConnection=%d] -> return FALSE (rec)",IsConnectedToInternet);
+    LOG(LOG_LEVEL_DEBUG,"RequestRecommendationsListFromServerTask::CanExecute - [ShouldConnectToInternet=FALSE] -> return FALSE (rec)");
     return false;
   }
 
@@ -228,14 +251,8 @@ bool BXRecommendationsManager::RequestRecommendationsListFromServerTask::CanExec
     return true;
   }
 
-  if ((activeWindowId == WINDOW_HOME) || (activeWindowId == WINDOW_BOXEE_BROWSE_DISCOVER))
-  {
-    LOG(LOG_LEVEL_DEBUG,"RequestRecommendationsListFromServerTask::CanExecute - [activeWindowId=%d] -> return TRUE (rec)",activeWindowId);
-    return true;
-  }
-
-  LOG(LOG_LEVEL_DEBUG,"RequestRecommendationsListFromServerTask::CanExecute - return FALSE (rec)");
-  return false;
+  LOG(LOG_LEVEL_DEBUG,"RequestRecommendationsListFromServerTask::CanExecute - return TRUE. [ActiveWindowId=%d] (rec)",activeWindowId);
+  return true;
 }
 
 }

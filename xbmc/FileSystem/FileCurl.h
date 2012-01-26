@@ -25,12 +25,9 @@
 #include <map>
 #include "utils/HttpHeader.h"
 
-namespace XCURL
-{
-  typedef void CURL_HANDLE;
-  typedef void CURLM;
-  struct curl_slist;
-}
+typedef void CURL_HANDLE;
+typedef void CURLM;
+struct curl_slist;
 
 class CHttpHeader;
 
@@ -41,13 +38,13 @@ namespace XFILE
     public:
 	    CFileCurl();
 	    virtual ~CFileCurl();
-      virtual bool Open(const CURL& url);
-	    virtual bool Exists(const CURL& url);
+      virtual bool Open(const CURI& url);
+	    virtual bool Exists(const CURI& url);
       virtual int64_t  Seek(int64_t iFilePosition, int iWhence=SEEK_SET);
       virtual int64_t GetPosition();
       virtual int64_t  GetLength();
       virtual int Stat(struct __stat64* buffer);
-      virtual int	Stat(const CURL& url, struct __stat64* buffer);
+      virtual int	Stat(const CURI& url, struct __stat64* buffer);
 	    virtual void Close();
       virtual bool ReadString(char *szLine, int iLineLength)     { return m_state->ReadString(szLine, iLineLength); }
       virtual unsigned int Read(void* lpBuf, int64_t uiBufSize)  { return m_state->Read(lpBuf, uiBufSize); }
@@ -81,8 +78,8 @@ namespace XFILE
       const CHttpHeader& GetHttpHeader() { return m_state->m_httpheader; }
 
       /* static function that will get content type of a file */      
-      static bool GetHttpHeader(const CURL &url, CHttpHeader &headers);
-      static bool GetContent(const CURL &url, CStdString &content, CStdString useragent="");
+      static bool GetHttpHeader(const CURI &url, CHttpHeader &headers);
+      static bool GetContent(const CURI &url, CStdString &content, CStdString useragent="");
 
       static void SetCookieJar(const CStdString &strCookieFile);
 
@@ -93,8 +90,8 @@ namespace XFILE
       public:
           CReadState();
           ~CReadState();
-          XCURL::CURL_HANDLE*    m_easyHandle;
-          XCURL::CURLM*          m_multiHandle;
+          CURL_HANDLE*    m_easyHandle;
+          CURLM*          m_multiHandle;
           CStdString             m_strEffectiveUrl;
 
           CRingBuffer m_buffer;           // our ringhold buffer
@@ -127,7 +124,7 @@ namespace XFILE
       };
 
     protected:
-      void ParseAndCorrectUrl(CURL &url);
+      void ParseAndCorrectUrl(CURI &url);
       void SetCommonOptions(CReadState* state);
       void SetRequestHeaders(CReadState* state);
       void SetCorrectHeaders(CReadState* state);
@@ -166,8 +163,8 @@ namespace XFILE
       int             m_stillRunning;     // Is background url fetch still in progress?
       long			  m_lastRetCode;      // hold  the last return code of curl_easy_preform action
 
-      struct XCURL::curl_slist* m_curlAliasList;
-      struct XCURL::curl_slist* m_curlHeaderList;
+      struct curl_slist* m_curlAliasList;
+      struct curl_slist* m_curlHeaderList;
       
       typedef std::map<CStdString, CStdString> MAPHTTPHEADERS;
       MAPHTTPHEADERS m_requestheaders;

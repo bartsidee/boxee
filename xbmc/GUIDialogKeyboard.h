@@ -28,6 +28,8 @@ class CGUIEditControl;
 
 enum KEYBOARD {CAPS, LOWER, SYMBOLS };
 
+#define CTL_LABEL_EDIT        310
+
 class CGUIDialogKeyboard: public CGUIDialog
 {
 
@@ -69,7 +71,8 @@ protected:
   void OnShift();
   void OnSymbols();
   void OnIPAddress();
-  void OnOK();
+
+  virtual void OnOK();
 
   void OnClickButton(int iButtonControl);
   void OnRemoteNumberClick(int key);

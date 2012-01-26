@@ -1,167 +1,116 @@
-﻿<?xml version="1.0"?>
-<window type="dialog" id="69">
-	<defaultcontrol always="true">9201</defaultcontrol>
-	<allowoverlay>no</allowoverlay>
+<?xml version="1.0"?>
+<window id="10403">
+	<defaultcontrol always="true">51</defaultcontrol>
 	<controls>
-		<include>Dialog_Popup_Background</include>
+		<!-- include>Common_Background</include -->
 		<control type="group">
-			<include>Dialog_Popup_Animation</include>
-			<animation effect="slide" start="0,0" end="0,-120" time="200" condition="Control.IsVisible(90)">Conditional</animation>
-			<control type="group" id="90">
-				<visible>false</visible>
-				<posx>239</posx>
-				<posy>434</posy>
-				<onup>200</onup>
+			<include>FTUDialogNoAnim_Heidi</include>
+			<!-- RIGHT SIDE - BEGIN-->
+			<control type="group">
 				<control type="image">
-					<description>browse background</description>
-					<posx>0</posx>
-					<posy>0</posy>
-					<width>804</width>
-					<height>380</height>
-					<texture border="64">action_menu_bg.png</texture>
+					<posx>474</posx>
+					<posy>66</posy>
+					<width>312</width>
+					<height>240</height>
+					<texture srcborder="24" border="16">text-field-no-stroke.png</texture>
+					<colordiffuse>FFEEEEEE</colordiffuse>
 				</control>
 				<control type="textbox" id="100">
-					<description>review</description>
-					<posx>26</posx>
-					<posy>26</posy>
-					<width>775</width>
-					<height>330</height>
+					<posx>485</posx>
+					<posy>76</posy>
+					<width>271</width>
+					<height>220</height>
+					<font>font14</font>
+					<textcolor>FF000000</textcolor>
+					<align>left</align>
+					<aligny>top</aligny>
+					<textcolor>black</textcolor>
+					<wrapmultiline>true</wrapmultiline>
 					<pagecontrol>110</pagecontrol>
 					<label>-</label>
-					<font>font22multi</font>
-					<wrapmultiline>true</wrapmultiline>
-					<visible>true</visible>
 				</control>
 				<control type="scrollbar" id="110">
-					<description>scroll bar indicator for lists</description>
-					<posx>766</posx>
-					<posy>26</posy>
-					<width>28</width>
-					<height>330</height>
-					<onright>-</onright>
-					<onleft>-</onleft>
-					<onup>200</onup>
-					<texturesliderbackground border="14">scrollbar_bg.png</texturesliderbackground>
-					<textureslidernib>-</textureslidernib>
-					<textureslidernibfocus>-</textureslidernibfocus>
-					<texturesliderbar diffuse="nofocus.png" border="14">scrollbar_slider.png</texturesliderbar>
-					<texturesliderbarfocus diffuse="nofocus.png" border="14">scrollbar_slider.png</texturesliderbarfocus>
+					<posx>767</posx>
+					<posy>77</posy>
+					<width>10</width>
+					<height>218</height>
+					<visible>true</visible>
+					<texturesliderbackground srcborder="0,9,0,9" border="0,6,0,6">graphic-scrollbar-bg.png</texturesliderbackground>
+					<texturesliderbar srcborder="0,9,0,9" border="0,6,0,6">graphic-scrollbar-slider.png</texturesliderbar>
+					<texturesliderbarfocus srcborder="0,9,0,9" border="0,6,0,6">graphic-scrollbar-slider.png</texturesliderbarfocus>
 					<orientation>vertical</orientation>
 					<showonepage>false</showonepage>
+					<onup>-</onup>
+					<ondown>210</ondown>
+					<onleft>-</onleft>
+					<onright>-</onright>
 				</control>
 			</control>
-			<control type="group">
-				<posx>240</posx>
-				<posy>182</posy>
-				<control type="image">
-					<description>browse background</description>
-					<posx>0</posx>
-					<posy>0</posy>
-					<width>800</width>
-					<height>260</height>
-					<texture border="64">dialog_background.png</texture>
-				</control>
+			<control type="button" id="210">
+				<description>cancel</description>
+				<posx>474</posx>
+				<posy>347</posy>
+				<width>312</width>
+				<height>56</height>
+				<include>Button_Heidi</include>
+				<label>[B]$LOCALIZE[53239][/B]</label>
+				<onclick></onclick>
+				<onup>110</onup>
+				<ondown>230</ondown>
+			</control>
+			<control type="button" id="230">
+				<description>update/ok</description>
+				<posx>474</posx>
+				<posy>422</posy>
+				<width>312</width>
+				<height>56</height>
+				<include>Button_Heidi</include>
+				<label>[B]$LOCALIZE[186][/B]</label>
+				<onclick></onclick>
+				<onup>210</onup>
+				<ondown></ondown>
+			</control>
+			<!-- RIGHT SIDE - END -->
+			<!-- LEFT SIDE - BEGIN -->
+			<control type="grouplist">
+				<posx>62</posx>
+				<posy>56</posy>
+				<width>320</width>
+				<height>412</height>
+				<orientation>vertical</orientation>
+				<itemgap>0</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
 				<control type="label">
-					<posx>26</posx>
-					<posy>34</posy>
-					<width>750</width>
-					<height>28</height>
-					<font>title28b</font>
+					<width>320</width>
+					<height min="0" max="120">auto</height>
 					<align>left</align>
-					<aligny>center</aligny>
-					<label>53240</label>
-					<textcolor>FF3B2D06</textcolor>
-				</control>
-				<control type="label" id="120">
-					<posx>26</posx>
-					<posy>60</posy>
-					<width>750</width>
-					<height>90</height>
-					<label>-</label>
 					<aligny>top</aligny>
-					<font>font24</font>
-					<textcolor>white</textcolor>
+					<label>[B]$LOCALIZE[53255][/B]</label>
+					<include>Header_Heidi</include>
 					<wrapmultiline>true</wrapmultiline>
+				</control>
+				<control type="label" id="330">
+					<posy>10</posy>
+					<width>320</width>
+					<height min="0" max="288">auto</height>
+					<align>left</align>
+					<aligny>top</aligny>
+					<label>-</label>
+					<wrapmultiline>true</wrapmultiline>
+					<include>LargeText_Heidi</include>
 				</control>
 				<control type="label" id="130">
-					<posx>25</posx>
-					<posy>115</posy>
-					<width>730</width>
-					<height>90</height>
+					<posy>40</posy>
+					<width>320</width>
+					<height min="0" max="288">auto</height>
 					<align>left</align>
-					<aligny>center</aligny>
-					<font>font22multi</font>
+					<aligny>top</aligny>
 					<label>-</label>
-					<textcolor>red</textcolor>
 					<wrapmultiline>true</wrapmultiline>
-				</control>
-				<control type="group" id="200">
-					<posx>20</posx>
-					<posy>186</posy>
-					<control type="button" id="210">
-						<posx>0</posx>
-						<posy>0</posy>
-						<width>160</width>
-						<height>54</height>
-						<align>center</align>
-						<aligny>center</aligny>
-						<textcolor>grey</textcolor>
-						<focusedcolor>white</focusedcolor>
-						<texturenofocus border="30">-</texturenofocus>
-						<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
-						<textureclick border="30">button_action_menu_source_click.png</textureclick>
-						<font>title22b</font>
-						<label>$LOCALIZE[222]</label>
-<!--Cancel-->
-						<onup>-</onup>
-						<ondown>110</ondown>
-						<onleft>-</onleft>
-						<onright>220</onright>
-					</control>
-					<control type="button" id="220">
-						<posx>140</posx>
-						<posy>0</posy>
-						<width>160</width>
-						<height>54</height>
-						<align>center</align>
-						<aligny>center</aligny>
-						<textcolor>grey</textcolor>
-						<focusedcolor>white</focusedcolor>
-						<texturenofocus border="30">-</texturenofocus>
-						<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
-						<textureclick border="30">button_action_menu_source_click.png</textureclick>
-						<font>title22b</font>
-						<label>$LOCALIZE[53262]</label>
-<!--More Info-->
-						<onup>-</onup>
-						<ondown>110</ondown>
-						<onleft>210</onleft>
-						<onright>230</onright>
-						<onclick>setVisible(90)</onclick>
-						<onclick>setFocus(110)</onclick>
-					</control>
-					<control type="button" id="230">
-						<posx>280</posx>
-						<posy>0</posy>
-						<width>280</width>
-						<height>54</height>
-						<align>center</align>
-						<aligny>center</aligny>
-						<textcolor>grey</textcolor>
-						<focusedcolor>white</focusedcolor>
-						<texturenofocus border="30">-</texturenofocus>
-						<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
-						<textureclick border="30">button_action_menu_source_click.png</textureclick>
-						<font>title22b</font>
-						<label>$LOCALIZE[186]</label>
-<!--Install or OK-->
-						<onup>-</onup>
-						<ondown>110</ondown>
-						<onleft>220</onleft>
-						<onright>-</onright>
-					</control>
-				</control>
+					<include>LargeText_Heidi</include>
+				</control>				
 			</control>
+			<!-- LEFT SIDE - END -->
 		</control>
 	</controls>
 </window>

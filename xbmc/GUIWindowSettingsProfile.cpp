@@ -120,7 +120,7 @@ void CGUIWindowSettingsProfile::OnPopupMenu(int iItem)
     OnMessage(msg3);
     CGUIMessage msgSelect(GUI_MSG_ITEM_SELECT, g_windowManager.GetActiveWindow(), iCtrlID, msg2.GetParam1(), msg2.GetParam2());
     OnMessage(msgSelect);
-    g_weatherManager.Refresh();
+    CWeather::GetInstance().Refresh();
   }
 
   if (iButton == btnDelete)

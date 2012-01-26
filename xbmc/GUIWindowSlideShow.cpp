@@ -50,6 +50,10 @@
 
 #include "boxee.h"
 
+#ifdef HAS_EMBEDDED
+#include "ItemLoader.h"
+#endif
+
 using namespace DIRECTORY;
 
 // boxee stuff
@@ -306,6 +310,8 @@ void CGUIWindowSlideShow::ShowPrevious()
 
 void CGUIWindowSlideShow::Select(const CStdString& strPicture)
 {
+  CSingleLock lock(m_slideSection);
+
   for (int i = 0; i < m_slides->Size(); ++i)
   {
     const CFileItemPtr item = m_slides->Get(i);
@@ -347,6 +353,13 @@ void CGUIWindowSlideShow::StartSlideShow(bool screensaver)
 {
   m_bSlideShow = true;
   m_bScreensaver = screensaver;
+
+#ifdef HAS_EMBEDDED
+  if(screensaver == false)
+  {
+    g_application.GetItemLoader().Pause();
+  }
+#endif
 }
 
 void CGUIWindowSlideShow::PauseSlideShow()
@@ -474,15 +487,18 @@ void CGUIWindowSlideShow::Render()
     }
   }
 
+  g_Windowing.ClearBuffers(0, 0, 0, 255);
+
   // render the current image
   if (m_Image[m_iCurrentPic].IsLoaded())
   {
     m_Image[m_iCurrentPic].SetInSlideshow(m_bSlideShow);
     m_Image[m_iCurrentPic].Pause(m_bPause);
+    m_Image[m_iCurrentPic].EnableBlend(true);
     m_Image[m_iCurrentPic].Render();
   }
 
-  // Check if we should be transistioning immediately
+  // Check if we should be transitioning immediately
   if (m_bLoadNextPic)
   {
     CLog::Log(LOGDEBUG, "Starting immediate transistion due to user wanting slide %s", m_slides->Get(m_iNextSlide)->m_strPath.c_str());
@@ -499,8 +515,11 @@ void CGUIWindowSlideShow::Render()
     if (m_Image[1 - m_iCurrentPic].IsLoaded())
     {
       // set the appropriate transistion time
+      if(m_bScreensaver)
+        m_Image[1 - m_iCurrentPic].CopyLocationAndZoom(m_Image[m_iCurrentPic]);
       m_Image[1 - m_iCurrentPic].SetTransistionTime(0, m_Image[m_iCurrentPic].GetTransistionTime(1));
       m_Image[1 - m_iCurrentPic].Pause(m_bPause);
+      m_Image[1 - m_iCurrentPic].EnableBlend(true);
       m_Image[1 - m_iCurrentPic].Render();
     }
     else // next pic isn't loaded.  We should hang around if it is in progress
@@ -553,6 +572,7 @@ bool CGUIWindowSlideShow::OnAction(const CAction &action)
   if (m_bScreensaver)
   {
     g_windowManager.PreviousWindow();
+    g_application.SetInSlideshowScreensaver(false);
     return true;
   }
 
@@ -592,6 +612,9 @@ bool CGUIWindowSlideShow::OnAction(const CAction &action)
     break;
   case ACTION_PREVIOUS_MENU:
   case ACTION_STOP:
+#ifdef HAS_EMBEDDED
+    g_application.GetItemLoader().Resume();
+#endif
     g_windowManager.PreviousWindow();
     
     // Set that we are out Slideshow ScreenSaver (in case we were in normal slideshow, it will be ignore).
@@ -632,7 +655,17 @@ bool CGUIWindowSlideShow::OnAction(const CAction &action)
   case ACTION_PAUSE:
     if (m_bSlideShow)
       m_bPause = !m_bPause;
-    
+
+#ifdef HAS_EMBEDDED
+      if(m_bPause == true)
+      {
+        g_application.GetItemLoader().Resume();
+      }
+      else
+      {
+        g_application.GetItemLoader().Pause();
+      }
+#endif    
     // In case in PAUSE and the CGUIDialogBoxeePictureCtx is active -> Close it
     if(!m_bPause)
     {
@@ -779,7 +812,7 @@ bool CGUIWindowSlideShow::OnMessage(CGUIMessage& message)
       if (pSlideList != NULL)
       {
         RunSlideShow(*pSlideList, bRandom, bNotRandom, strFolder, bStartInPause);
-      }
+    }
       else
       {
         RunSlideShow(strFolder, bRecursive, bRandom, bNotRandom, "", bStartInPause);
@@ -877,7 +910,7 @@ void CGUIWindowSlideShow::OnLoadPic(int iPic, int iSlideNumber, CBaseTexture* pT
       CSlideShowPic::DISPLAY_EFFECT dispEffect = CSlideShowPic::EFFECT_RANDOM;
       CSlideShowPic::TRANSISTION_EFFECT transEffect = CSlideShowPic::FADEIN_FADEOUT;
       
-      if(m_bSlideShow)
+      if (m_bSlideShow)
         dispEffect = g_guiSettings.GetBool("slideshow.displayeffects") ? CSlideShowPic::EFFECT_RANDOM : CSlideShowPic::EFFECT_NONE;
       else
         dispEffect = CSlideShowPic::EFFECT_NO_TIMEOUT;
@@ -885,8 +918,8 @@ void CGUIWindowSlideShow::OnLoadPic(int iPic, int iSlideNumber, CBaseTexture* pT
       if(m_bScreensaver)
       {
         m_Image[iPic].SetScreenSaverMode(true);
-        dispEffect = CSlideShowPic::EFFECT_NONE;
-        transEffect = CSlideShowPic::FADEIN_FADEOUT; 
+        dispEffect = CSlideShowPic::EFFECT_FLOAT;
+        transEffect = CSlideShowPic::FADEIN_FADEOUT;
       }
       else
         m_Image[iPic].SetScreenSaverMode(false);
@@ -899,7 +932,7 @@ void CGUIWindowSlideShow::OnLoadPic(int iPic, int iSlideNumber, CBaseTexture* pT
       m_Image[iPic].m_bIsComic = false;
       if (CUtil::IsInRAR(m_slides->Get(m_iCurrentSlide)->m_strPath) || CUtil::IsInZIP(m_slides->Get(m_iCurrentSlide)->m_strPath)) // move to top for cbr/cbz
       {
-        CURL url(m_slides->Get(m_iCurrentSlide)->m_strPath);
+        CURI url(m_slides->Get(m_iCurrentSlide)->m_strPath);
         CStdString strHostName = url.GetHostName();
         if (CUtil::GetExtension(strHostName).Equals(".cbr", false) || CUtil::GetExtension(strHostName).Equals(".cbz", false))
         {
@@ -968,43 +1001,43 @@ void CGUIWindowSlideShow::RunSlideShow(const CStdString &strPath, bool bRecursiv
 void CGUIWindowSlideShow::RunSlideShow(bool bRandom /* = false */, bool bNotRandom /* = false */, const CStdString& pictureToStart /*= ""*/, bool bStartInPause /*= false*/)
 {
   // stop any video
-   if (g_application.IsPlayingVideo())
-     g_application.StopPlaying();
+  if (g_application.IsPlayingVideo())
+    g_application.StopPlaying();
 
-   // mutually exclusive options
-   // if both are set, clear both and use the gui setting
-   if (bRandom && bNotRandom)
-     bRandom = bNotRandom = false;
+  // mutually exclusive options
+  // if both are set, clear both and use the gui setting
+  if (bRandom && bNotRandom)
+    bRandom = bNotRandom = false;
 
-   // NotRandom overrides the window setting
-   if ((!bNotRandom && g_guiSettings.GetBool("slideshow.shuffle")) || bRandom)
-     Shuffle();
+  // NotRandom overrides the window setting
+  if ((!bNotRandom && g_guiSettings.GetBool("slideshow.shuffle")) || bRandom)
+    Shuffle();
 
-   StartSlideShow();
-
-   if(!pictureToStart.IsEmpty())
-   {
-     Select(pictureToStart);
-   }
-
-   if (NumSlides())
-   {
-     g_windowManager.ActivateWindow(WINDOW_SLIDESHOW);
-
-     if(bStartInPause)
-     {
-       PauseSlideShow();
-
-       // If we start in PAUSE -> Open CGUIDialogBoxeePictureCtx for AUTO_CLOSE_PIC_CTX_DLG
-       CGUIDialogBoxeePictureCtx* pDlgInfo = (CGUIDialogBoxeePictureCtx*)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_PICTURE_CTX);
-       if (pDlgInfo)
-       {
-         pDlgInfo->SetItem(*GetCurrentSlide());
-         pDlgInfo->SetAutoClose(AUTO_CLOSE_PIC_CTX_DLG);
-         pDlgInfo->DoModal();
-       }
-     }
-   }
+  StartSlideShow();
+  
+  if(!pictureToStart.IsEmpty())
+  {
+    Select(pictureToStart);
+  }
+  
+  if (NumSlides())
+  {
+    g_windowManager.ActivateWindow(WINDOW_SLIDESHOW);
+    
+    if(bStartInPause)
+    {
+      PauseSlideShow();
+      
+      // If we start in PAUSE -> Open CGUIDialogBoxeePictureCtx for AUTO_CLOSE_PIC_CTX_DLG  
+      CGUIDialogBoxeePictureCtx* pDlgInfo = (CGUIDialogBoxeePictureCtx*)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_PICTURE_CTX);
+      if (pDlgInfo)
+      {
+        pDlgInfo->SetItem(*GetCurrentSlide());
+        pDlgInfo->SetAutoClose(AUTO_CLOSE_PIC_CTX_DLG);
+        pDlgInfo->DoModal();
+      }
+    }
+  }
 }
 
 void CGUIWindowSlideShow::AddItems(const CStdString &strPath, path_set *recursivePaths)

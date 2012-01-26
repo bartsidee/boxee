@@ -320,7 +320,7 @@ bool BXAudioDatabase::GetArtistByName(const std::string& strName, BXArtist* pArt
   }
 
   return bResult;
-}
+  }
 
 bool BXAudioDatabase::GetArtistById(int iArtistId, BXArtist* pArtist)
 {
@@ -1258,11 +1258,6 @@ int BXAudioDatabase::GetArtists(std::vector<BXMetadata*> &vecMediaFiles, const s
 
           std::string strPath = pDS->fv(3).get_asString();
 
-          if (pArtist->m_strName == "ABBA")
-          {
-            int i = 5;
-          }
-
           // Check that this artist has available albums, otherwise do not add it
           if (setArtists.find(pArtist->m_iId) != setArtists.end() || !BXUtils::CheckPathFilter(vecPathFilter, strPath)) 
           {
@@ -1483,6 +1478,18 @@ int BXAudioDatabase::RemoveAudioByFolder(const std::string& strFolderPath)
   return MEDIA_DATABASE_ERROR;
 }
 
+int BXAudioDatabase::RemoveAlbumById(int iId)
+{
+  Dataset* pDS_t = Exec("delete from audio_files where idAlbum = %d", iId);
+  if (pDS_t)
+  {
+    delete pDS_t;
+    return MEDIA_DATABASE_OK;
+  }
+
+  return MEDIA_DATABASE_ERROR;
+}
+
 bool BXAudioDatabase::DropAlbumById(int iId)
 {
   LOG(LOG_LEVEL_DEBUG, "BXAudioDatabase::DropAlbumById, DROP: drop album,  id =  %d", iId);
@@ -1546,7 +1553,7 @@ int BXAudioDatabase::AddAudioFile(const std::string& strPath, const std::string&
     if (pDS->num_rows() != 0)
     {
       iID = pDS->fv("idAudioFile").get_asInt();
-    }
+}
     delete pDS;
   }
 

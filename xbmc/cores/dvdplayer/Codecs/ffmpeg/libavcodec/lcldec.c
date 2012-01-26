@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/lcldec.c
+ * @file
  * LCL (LossLess Codec Library) Video Codec
  * Decoder for MSZH and ZLIB codecs
  * Experimental encoder for ZLIB RGB24
@@ -98,7 +98,7 @@ static unsigned int mszh_decomp(const unsigned char * srcptr, int srclen, unsign
             cnt = FFMIN(cnt, destptr_end - destptr);
             av_memcpy_backptr(destptr, ofs, cnt);
             destptr += cnt;
-            }
+        }
         maskbit >>= 1;
         if (!maskbit) {
             mask = *srcptr++;
@@ -117,6 +117,7 @@ static unsigned int mszh_decomp(const unsigned char * srcptr, int srclen, unsign
 }
 
 
+#if CONFIG_ZLIB_DECODER
 /**
  * \brief decompress a zlib-compressed data block into decomp_buf
  * \param src compressed input buffer
@@ -124,7 +125,6 @@ static unsigned int mszh_decomp(const unsigned char * srcptr, int srclen, unsign
  * \param offset offset in decomp_buf
  * \param expected expected decompressed length
  */
-#if CONFIG_ZLIB_DECODER
 static int zlib_decomp(AVCodecContext *avctx, const uint8_t *src, int src_len, int offset, int expected)
 {
     LclDecContext *c = avctx->priv_data;
@@ -252,7 +252,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
         } else {
             int ret = zlib_decomp(avctx, encoded, len, 0, c->decomp_size);
             if (ret < 0) return ret;
-            }
+        }
         encoded = c->decomp_buf;
         len = c->decomp_size;
         break;
@@ -384,7 +384,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
             pixel_ptr = row * c->pic.linesize[0];
             memcpy(outptr + pixel_ptr, encoded, 3 * width);
             encoded += 3 * width;
-            }
+        }
         break;
     case IMGTYPE_YUV411:
         for (row = 0; row < height; row++) {
@@ -455,10 +455,6 @@ static av_cold int decode_init(AVCodecContext *avctx)
 
     if (avctx->extradata_size < 8) {
         av_log(avctx, AV_LOG_ERROR, "Extradata size too small.\n");
-        return 1;
-    }
-
-    if (avcodec_check_dimensions(avctx, avctx->width, avctx->height) < 0) {
         return 1;
     }
 
@@ -613,9 +609,9 @@ static av_cold int decode_end(AVCodecContext *avctx)
 }
 
 #if CONFIG_MSZH_DECODER
-AVCodec mszh_decoder = {
+AVCodec ff_mszh_decoder = {
     "mszh",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_MSZH,
     sizeof(LclDecContext),
     decode_init,
@@ -628,9 +624,9 @@ AVCodec mszh_decoder = {
 #endif
 
 #if CONFIG_ZLIB_DECODER
-AVCodec zlib_decoder = {
+AVCodec ff_zlib_decoder = {
     "zlib",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_ZLIB,
     sizeof(LclDecContext),
     decode_init,

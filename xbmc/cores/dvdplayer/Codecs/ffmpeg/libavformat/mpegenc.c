@@ -76,10 +76,10 @@ typedef struct {
 
 } MpegMuxContext;
 
-extern AVOutputFormat mpeg1vcd_muxer;
-extern AVOutputFormat mpeg2dvd_muxer;
-extern AVOutputFormat mpeg2svcd_muxer;
-extern AVOutputFormat mpeg2vob_muxer;
+extern AVOutputFormat ff_mpeg1vcd_muxer;
+extern AVOutputFormat ff_mpeg2dvd_muxer;
+extern AVOutputFormat ff_mpeg2svcd_muxer;
+extern AVOutputFormat ff_mpeg2vob_muxer;
 
 static int put_pack_header(AVFormatContext *ctx,
                            uint8_t *buf, int64_t timestamp)
@@ -297,12 +297,12 @@ static int mpeg_mux_init(AVFormatContext *ctx)
     int video_bitrate;
 
     s->packet_number = 0;
-    s->is_vcd =    (CONFIG_MPEG1VCD_MUXER  && ctx->oformat == &mpeg1vcd_muxer);
-    s->is_svcd =   (CONFIG_MPEG2SVCD_MUXER && ctx->oformat == &mpeg2svcd_muxer);
-    s->is_mpeg2 = ((CONFIG_MPEG2VOB_MUXER  && ctx->oformat == &mpeg2vob_muxer) ||
-                   (CONFIG_MPEG2DVD_MUXER  && ctx->oformat == &mpeg2dvd_muxer) ||
-                   (CONFIG_MPEG2SVCD_MUXER && ctx->oformat == &mpeg2svcd_muxer));
-    s->is_dvd =    (CONFIG_MPEG2DVD_MUXER  && ctx->oformat == &mpeg2dvd_muxer);
+    s->is_vcd =    (CONFIG_MPEG1VCD_MUXER  && ctx->oformat == &ff_mpeg1vcd_muxer);
+    s->is_svcd =   (CONFIG_MPEG2SVCD_MUXER && ctx->oformat == &ff_mpeg2svcd_muxer);
+    s->is_mpeg2 = ((CONFIG_MPEG2VOB_MUXER  && ctx->oformat == &ff_mpeg2vob_muxer) ||
+                   (CONFIG_MPEG2DVD_MUXER  && ctx->oformat == &ff_mpeg2dvd_muxer) ||
+                   (CONFIG_MPEG2SVCD_MUXER && ctx->oformat == &ff_mpeg2svcd_muxer));
+    s->is_dvd =    (CONFIG_MPEG2DVD_MUXER  && ctx->oformat == &ff_mpeg2dvd_muxer);
 
     if(ctx->packet_size) {
         if (ctx->packet_size < 20 || ctx->packet_size > (1 << 23) + 10) {
@@ -335,7 +335,7 @@ static int mpeg_mux_init(AVFormatContext *ctx)
         av_set_pts_info(st, 64, 1, 90000);
 
         switch(st->codec->codec_type) {
-        case CODEC_TYPE_AUDIO:
+        case AVMEDIA_TYPE_AUDIO:
             if        (st->codec->codec_id == CODEC_ID_AC3) {
                 stream->id = ac3_id++;
             } else if (st->codec->codec_id == CODEC_ID_DTS) {
@@ -363,12 +363,14 @@ static int mpeg_mux_init(AVFormatContext *ctx)
             stream->max_buffer_size = 4 * 1024;
             s->audio_bound++;
             break;
-        case CODEC_TYPE_VIDEO:
+        case AVMEDIA_TYPE_VIDEO:
             stream->id = mpv_id++;
             if (st->codec->rc_buffer_size)
                 stream->max_buffer_size = 6*1024 + st->codec->rc_buffer_size/8;
-            else
+            else {
+                av_log(ctx, AV_LOG_WARNING, "VBV buffer size not set, muxing may fail\n");
                 stream->max_buffer_size = 230*1024; //FIXME this is probably too small as default
+            }
 #if 0
                 /* see VCD standard, p. IV-7*/
                 stream->max_buffer_size = 46 * 1024;
@@ -379,7 +381,7 @@ static int mpeg_mux_init(AVFormatContext *ctx)
 #endif
             s->video_bound++;
             break;
-        case CODEC_TYPE_SUBTITLE:
+        case AVMEDIA_TYPE_SUBTITLE:
             stream->id = mps_id++;
             stream->max_buffer_size = 16 * 1024;
             break;
@@ -1046,7 +1048,7 @@ retry:
         /* for subtitle, a single PES packet must be generated,
            so we flush after every single subtitle packet */
         if(s->packet_size > avail_data && !flush
-           && st->codec->codec_type != CODEC_TYPE_SUBTITLE)
+           && st->codec->codec_type != AVMEDIA_TYPE_SUBTITLE)
             return 0;
         if(avail_data==0)
             continue;
@@ -1156,13 +1158,17 @@ static int mpeg_mux_write_packet(AVFormatContext *ctx, AVPacket *pkt)
     int64_t pts, dts;
     PacketDesc *pkt_desc;
     const int preload= av_rescale(ctx->preload, 90000, AV_TIME_BASE);
-    const int is_iframe = st->codec->codec_type == CODEC_TYPE_VIDEO && (pkt->flags & PKT_FLAG_KEY);
+    const int is_iframe = st->codec->codec_type == AVMEDIA_TYPE_VIDEO && (pkt->flags & AV_PKT_FLAG_KEY);
 
     pts= pkt->pts;
     dts= pkt->dts;
 
-    if(pts != AV_NOPTS_VALUE) pts += preload;
-    if(dts != AV_NOPTS_VALUE) dts += preload;
+    if(pts != AV_NOPTS_VALUE) pts += 2*preload;
+    if(dts != AV_NOPTS_VALUE){
+        if(!s->last_scr)
+            s->last_scr= dts + preload;
+        dts += 2*preload;
+    }
 
 //av_log(ctx, AV_LOG_DEBUG, "dts:%f pts:%f flags:%d stream:%d nopts:%d\n", dts/90000.0, pts/90000.0, pkt->flags, pkt->stream_index, pts != AV_NOPTS_VALUE);
     if (!stream->premux_packet)
@@ -1227,7 +1233,7 @@ static int mpeg_mux_end(AVFormatContext *ctx)
 }
 
 #if CONFIG_MPEG1SYSTEM_MUXER
-AVOutputFormat mpeg1system_muxer = {
+AVOutputFormat ff_mpeg1system_muxer = {
     "mpeg",
     NULL_IF_CONFIG_SMALL("MPEG-1 System format"),
     "video/mpeg",
@@ -1241,7 +1247,7 @@ AVOutputFormat mpeg1system_muxer = {
 };
 #endif
 #if CONFIG_MPEG1VCD_MUXER
-AVOutputFormat mpeg1vcd_muxer = {
+AVOutputFormat ff_mpeg1vcd_muxer = {
     "vcd",
     NULL_IF_CONFIG_SMALL("MPEG-1 System format (VCD)"),
     "video/mpeg",
@@ -1255,7 +1261,7 @@ AVOutputFormat mpeg1vcd_muxer = {
 };
 #endif
 #if CONFIG_MPEG2VOB_MUXER
-AVOutputFormat mpeg2vob_muxer = {
+AVOutputFormat ff_mpeg2vob_muxer = {
     "vob",
     NULL_IF_CONFIG_SMALL("MPEG-2 PS format (VOB)"),
     "video/mpeg",
@@ -1271,7 +1277,7 @@ AVOutputFormat mpeg2vob_muxer = {
 
 /* Same as mpeg2vob_mux except that the pack size is 2324 */
 #if CONFIG_MPEG2SVCD_MUXER
-AVOutputFormat mpeg2svcd_muxer = {
+AVOutputFormat ff_mpeg2svcd_muxer = {
     "svcd",
     NULL_IF_CONFIG_SMALL("MPEG-2 PS format (VOB)"),
     "video/mpeg",
@@ -1287,7 +1293,7 @@ AVOutputFormat mpeg2svcd_muxer = {
 
 /*  Same as mpeg2vob_mux except the 'is_dvd' flag is set to produce NAV pkts */
 #if CONFIG_MPEG2DVD_MUXER
-AVOutputFormat mpeg2dvd_muxer = {
+AVOutputFormat ff_mpeg2dvd_muxer = {
     "dvd",
     NULL_IF_CONFIG_SMALL("MPEG-2 PS format (DVD VOB)"),
     "video/mpeg",

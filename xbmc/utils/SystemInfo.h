@@ -32,6 +32,15 @@
 
 #define MAX_KNOWN_ATTRIBUTES  46
 
+typedef enum {
+	PLATFORM_UNKNOWN,
+	PLATFORM_WINDOWS,
+	PLATFORM_MACOS,
+	PLATFORM_LINUX,
+	PLATFORM_CANMORE,
+	PLATFORM_INVALID
+} PLATFORM_TYPE;
+
 class CSysInfo : public CInfoLoader
 {
   public:
@@ -47,6 +56,7 @@ class CSysInfo : public CInfoLoader
     bool CreateBiosBackup();
     bool CreateEEPROMBackup();
     void WriteTXTInfoFile();
+	PLATFORM_TYPE GetPlatform();
 
     CStdString GetVideoEncoder();
     CStdString GetKernelVersion();
@@ -66,6 +76,7 @@ class CSysInfo : public CInfoLoader
     CStdString GetHddSpaceInfo(int& percent, int drive, bool shortText=false);
     CStdString GetHddSpaceInfo(int drive, bool shortText=false);
     CStdString GetInternetState();
+    bool IsVistaOrHigher();
 
     static bool IsAppleTV();
   

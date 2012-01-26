@@ -22,7 +22,7 @@
  */
 
 /**
- * @file libavcodec/mjpeg_parser.c
+ * @file
  * MJPEG parser.
  */
 
@@ -71,9 +71,9 @@ static int find_frame_end(ParseContext *pc, const uint8_t *buf, int buf_size){
 }
 
 static int jpeg_parse(AVCodecParserContext *s,
-                           AVCodecContext *avctx,
-                           const uint8_t **poutbuf, int *poutbuf_size,
-                           const uint8_t *buf, int buf_size)
+                      AVCodecContext *avctx,
+                      const uint8_t **poutbuf, int *poutbuf_size,
+                      const uint8_t *buf, int buf_size)
 {
     ParseContext *pc = s->priv_data;
     int next;
@@ -81,13 +81,13 @@ static int jpeg_parse(AVCodecParserContext *s,
     if(s->flags & PARSER_FLAG_COMPLETE_FRAMES){
         next= buf_size;
     }else{
-    next= find_frame_end(pc, buf, buf_size);
+        next= find_frame_end(pc, buf, buf_size);
 
-    if (ff_combine_frame(pc, next, &buf, &buf_size) < 0) {
-        *poutbuf = NULL;
-        *poutbuf_size = 0;
-        return buf_size;
-    }
+        if (ff_combine_frame(pc, next, &buf, &buf_size) < 0) {
+            *poutbuf = NULL;
+            *poutbuf_size = 0;
+            return buf_size;
+        }
     }
 
     *poutbuf = buf;
@@ -96,7 +96,7 @@ static int jpeg_parse(AVCodecParserContext *s,
 }
 
 
-AVCodecParser mjpeg_parser = {
+AVCodecParser ff_mjpeg_parser = {
     { CODEC_ID_MJPEG },
     sizeof(ParseContext),
     NULL,

@@ -46,14 +46,13 @@ namespace DIRECTORY
     else
       strPath = strPathOrig;
 
-    CURL url(strPath);
+    CURI url(strPath);
     CStdString strArchive = url.GetHostName();
     CStdString strOptions = url.GetOptions();
     CStdString strPathInArchive = url.GetFileName();
     url.SetOptions("");
 
-    CStdString strSlashPath;
-    url.GetURL(strSlashPath);
+    CStdString strSlashPath = url.Get();
 
     // the RAR code depends on things having a "\" at the end of the path
     CUtil::AddSlashAtEnd(strSlashPath);

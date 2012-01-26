@@ -19,6 +19,9 @@
  *
  */
 
+
+// TODO: Need to find a way (some sort of #pragma, etc.) to compile this file last.
+
 #include "CharsetConverter.h"
 #include "HTMLUtil.h"
 

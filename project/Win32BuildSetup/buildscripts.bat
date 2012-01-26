@@ -36,14 +36,14 @@ FOR /F "tokens=*" %%S IN ('dir /B /AD "%SCRIPT_PATH%"') DO (
 	  CD "%CUR_PATH%"
 	  if EXIST "%SCRIPT_PATH%\%%S\BUILD\%%S\default.py" (
 	    ECHO Copying files...
-	    xcopy "%SCRIPT_PATH%\%%S\BUILD\%%S" "%CUR_PATH%\BUILD_WIN32\Xbmc\scripts\%%S" /E /Q /I /Y /EXCLUDE:exclude.txt > NUL
+	    xcopy "%SCRIPT_PATH%\%%S\BUILD\%%S" "%CUR_PATH%\BUILD_WIN32\Boxee\scripts\%%S" /E /Q /I /Y /EXCLUDE:exclude.txt > NUL
 	  ) ELSE (
 	    ECHO "%SCRIPT_PATH%\%%S\BUILD\%%S\default.py not found, not including in build." >> error.log
 	  )
 	) ELSE (
 	  CD "%CUR_PATH%"
 	  IF EXIST "%SCRIPT_PATH%\%%S\default.py" (
-	    xcopy "%SCRIPT_PATH%\%%S" "%CUR_PATH%\BUILD_WIN32\Xbmc\scripts\%%S" /E /Q /I /Y /EXCLUDE:exclude.txt > NUL
+	    xcopy "%SCRIPT_PATH%\%%S" "%CUR_PATH%\BUILD_WIN32\Boxee\scripts\%%S" /E /Q /I /Y /EXCLUDE:exclude.txt > NUL
 	  ) ELSE (
 	    ECHO "No build.bat or default.py found for directory %%S, not including in build." >> error.log
 	  )

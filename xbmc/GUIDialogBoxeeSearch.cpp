@@ -11,12 +11,31 @@
 #include "LocalizeStrings.h"
 #include "BoxeeUtils.h"
 #include "FileSystem/BoxeeServerDirectory.h"
+#include "guilib/GUIEditControl.h"
+#include "guilib/GUIButtonControl.h"
+#include "guilib/GUIToggleButtonControl.h"
+#include "guilib/GUIControlGroupList.h"
+#include "guilib/GUIEditControl.h"
+#include "guilib/GUIControlFactory.h"
+#include "guilib/GUIMultiImage.h"
+#include "GUIFontManager.h"
+#include "BoxeeItemLauncher.h"
+#include "GUIFixedListContainer.h"
+#include "GUIDialogBoxeeBrowseMenu.h"
+
+#define GLOBAL_SEARCH_SUGGESTIONS_GROUP 4000
+
+
+#define GLOBAL_SEARCH_RESULTS_LIST      5200
 
 #define SUGGESTION_LIST 4100
 #define NUMBER_BUTTON   4200
 #define LANGUAGE_BUTTON   33
-#define FIRST_LINE 351
-#define LAST_LINE  356
+
+#define CTL_LABEL_EDIT  310
+#define CTL_IMG_LOADING 320
+
+#define DEFAULT_CATEGORY_BUTTON_HEIGHT 64
 
 #define KEYBOARD_DELAY 200
 
@@ -26,7 +45,64 @@
 
 #define SYMBOLS "0123456789!@,.;:\'\"?/\\#$&-_=+%^*[]()|"
 
+#define SEARCH_ICON   "icons/icon_browser_no_favorite.png"
+#define MOVIES_ICON   "icons/icon_browse_menu_video.png"
+#define CLIPS_ICON    "icons/icon_browse_menu_clip.png"
+#define SHOWS_ICON    "icons/icon_browse_menu_shows.png"
+#define APPS_ICON     "icons/icon_browse_menu_apps.png"
+
 using namespace XFILE;
+
+
+// //////////////////////////////////////////////////////////////////////////////////////////
+
+CStdString CSuggestionSource::GetUrl(const CStdString& strTerm)
+{
+  CStdString strLink = m_strBaseUrl;
+  m_mapOptions["term"] = strTerm;
+
+  strLink += BoxeeUtils::BuildParameterString(m_mapOptions);
+
+  return strLink;
+}
+
+void CSuggestionSource::ApplyIcon(CFileItemList& list)
+{
+  if (!list.IsEmpty())
+  {
+    for (unsigned int i = 0 ; i < (unsigned int)list.Size(); ++i)
+    {
+      CFileItemPtr item = list.Get(i);
+      item->SetProperty("icon",m_mediaIcon);
+    }
+  }
+}
+
+void CSuggestionMediaSource::ApplyIcon(CFileItemList& list)
+{
+  if (list.IsEmpty())
+    return;
+
+  for (unsigned int i = 0 ; i < (unsigned int)list.Size(); ++i)
+  {
+    CFileItemPtr item = list.Get(i);
+
+    CStdString type = item->GetProperty("boxee-mediatype");
+
+    if (type == "tv")
+    {
+      item->SetProperty("icon", SHOWS_ICON);
+    }
+    else if (type == "movie")
+    {
+      item->SetProperty("icon", MOVIES_ICON);
+    }
+    else if (type == "clip")
+    {
+      item->SetProperty("icon", CLIPS_ICON);
+    }
+  }
+}
 
 // START OF CSuggestionManager IMPLEMENTATION
 
@@ -48,13 +124,13 @@ void CSuggestionManager::Start()
 
 void CSuggestionManager::Stop()
 {
-  m_suggestionProcessor.Stop();
+  m_suggestionProcessor.SignalStop();
   m_http.Close();
 }
 
-void CSuggestionManager::AddSource(const CStdString& strSource)
+void CSuggestionManager::AddSource(const CSuggestionSourcePtr& source)
 {
-  m_vecSources.push_back(strSource);
+  m_vecSources.push_back(source);
 }
 
 void CSuggestionManager::GetSuggestions(const CStdString& strTerm)
@@ -82,86 +158,78 @@ void CSuggestionManager::GetSuggestionsBG(const CStdString& _strTerm)
   // Go over all sources
   for (int i = 0; i < (int)m_vecSources.size(); i++)
   {
-    CStdString strLink = m_vecSources[i];
-    strLink += strTerm;
-
     CFileItemList items;
+    CSuggestionSourcePtr source = m_vecSources[i];
+    CStdString strLink = source->GetUrl(strTerm);
 
-    if (CUtil::IsHTTP(strLink))
+    // Use get directory API
+    CLog::Log(LOGDEBUG, "CSuggestionManager::GetSuggestionsBG, get suggestions from %s (search)", strLink.c_str());
+    if (DIRECTORY::CDirectory::GetDirectory(strLink, items))
     {
-      CLog::Log(LOGDEBUG, "CSuggestionManager::GetSuggestionsBG, get suggestions from %s (search)", strLink.c_str());
-      CStdString strHtml;
-      if (m_http.Get(strLink, strHtml, false) )
-      {
-        CLog::Log(LOGDEBUG, "CSuggestionManager::GetSuggestionsBG, got suggestions from %s (search)", strLink.c_str());
-        // Parse retrieved html
-        ParseSuggestionXml(strHtml, items);
-      }
-      else
-      {
-        CLog::Log(LOGDEBUG, "CSuggestionManager::GetSuggestionsBG, could not get suggestions from %s (search)", strLink.c_str());
-      }
+      CLog::Log(LOGDEBUG, "CSuggestionManager::GetSuggestionsBG, got %d suggestions from %s (search)", items.Size(), strLink.c_str());
     }
     else
     {
-      // Use get directory API
-      DIRECTORY::CDirectory::GetDirectory(strLink, items);
+      CLog::Log(LOGDEBUG, "CSuggestionManager::GetSuggestionsBG, could not get suggestions from %s (search)", strLink.c_str());
     }
 
     // Merge the retrieved result into the suggestion list
-    CLog::Log(LOGDEBUG, "CSuggestionManager::GetSuggestionsBG, merge %d suggestions  (search)", items.Size());
+    source->ApplyIcon(items);
     MergeByLabel(items, suggestionList);
+    items.Clear();
   }
 
-  // Remove duplicate labels
-  std::vector<CSuggestionTip> vec;
-  std::set<CSuggestionTip> s;
-  unsigned size = suggestionList.Size();
-  for( unsigned i = 0; i < size; ++i )
+  //suggestionList.Sort(SORT_METHOD_SEARCH_COUNT,SORT_ORDER_DESC);
+
+  CStdString highlightColorPrefix = g_localizeStrings.Get(53954);
+  CStdString highlightColorPostfix = g_localizeStrings.Get(53955);
+
+  if (!highlightColorPrefix.IsEmpty() && !highlightColorPostfix.IsEmpty())
   {
-    s.insert(CSuggestionTip(suggestionList.Get(i)->GetLabel(), suggestionList.Get(i)->GetProperty("value"), suggestionList.Get(i)->GetProperty("year"), suggestionList.Get(i)->GetProperty("country-codes"), suggestionList.Get(i)->GetPropertyBOOL("country-rel"), suggestionList.Get(i)->IsAdult()));
-  }
-  vec.assign( s.begin(), s.end() );
-
-  suggestionList.Clear();
-
-  CStdString highlightColorPrefix;
-  CStdString highlightColorPostfix;
-  bool needToAddColor = BuildColorHighlight(highlightColorPrefix, highlightColorPostfix);
-
-  size = vec.size();
-  for( unsigned i = 0; i < size; ++i )
-  {
-    CSuggestionTip suggestion = vec[i];
-
-    if (needToAddColor)
+    for (unsigned int i = 0 ; i < (unsigned int)suggestionList.Size() ; ++i)
     {
-      CStdString label = suggestion.m_strLabel;
+      CFileItemPtr highlightItem = suggestionList.Get(i);
+      CStdString label = highlightItem->GetLabel();
       MarkSearchStringInSuggestion(label, _strTerm, highlightColorPrefix, highlightColorPostfix);
-      suggestion.m_strLabel = label;
+      highlightItem->SetProperty("highlightedLabel",label);
     }
-
-    CFileItem* tipItem = new CFileItem(suggestion.m_strLabel);
-
-    if (!suggestion.m_strTerm.empty())
-      tipItem->SetProperty("value", suggestion.m_strTerm);
-
-    if (!suggestion.m_strYear.empty())
-      tipItem->SetProperty("year", suggestion.m_strYear);
-
-    tipItem->SetCountryRestriction(suggestion.m_strCountries,suggestion.m_countriesRel);
-    tipItem->SetAdult(suggestion.m_isAdult);
-
-
-    suggestionList.Add(CFileItemPtr(tipItem));
-
   }
 
   // Pass the result to the callback
   suggestionList.SetProperty("term", _strTerm);
+
+  if (suggestionList.IsEmpty())
+  {
+    //append "No Results Found." item
+    CFileItemPtr emptyList (new CFileItem(g_localizeStrings.Get(51929)));
+    emptyList->SetProperty("highlightedLabel",emptyList->GetLabel());
+    emptyList->SetProperty("isseparator",true);
+    suggestionList.Add(emptyList);
+  }
+
+  //append the search engine url item
+  CStdString strSearchEngineURL = g_localizeStrings.Get(53956);
+  CStdString strSearchEngineLabel = g_localizeStrings.Get(53957);
+
+  strSearchEngineURL += _strTerm;
+  strSearchEngineLabel.Format(strSearchEngineLabel,_strTerm);
+
+  CFileItemPtr searchItem (new CFileItem(strSearchEngineURL));
+
+  searchItem->SetProperty("type", "url");
+  searchItem->SetProperty("link", strSearchEngineURL);
+  searchItem->SetProperty("highlightedLabel",strSearchEngineLabel);
+  searchItem->SetProperty("icon",SEARCH_ICON);
+
+  searchItem->m_strPath = strSearchEngineURL;
+
+  suggestionList.Add(searchItem);
+
+  CLog::Log(LOGDEBUG, "CSuggestionManager::GetSuggestionsBG, total of %d suggestions  (search)", suggestionList.Size());
+
   m_callback->OnSuggestions(suggestionList);
 }
-
+/*
 bool CSuggestionManager::ParseSuggestionXml(const CStdString& strHtml, CFileItemList& items)
 {
   TiXmlDocument xmlDoc;
@@ -184,18 +252,89 @@ bool CSuggestionManager::ParseSuggestionXml(const CStdString& strHtml, CFileItem
     {
       const TiXmlNode *pValue = pTag->FirstChild();
 
-      CStdString strYear = ((TiXmlElement*)pTag)->Attribute("year");
       CStdString strValue = pValue->ValueStr();
+      CStdString strYear = ((TiXmlElement*)pTag)->Attribute("year");
+      CStdString strType = ((TiXmlElement*)pTag)->Attribute("boxee_type");
+      CStdString strSearchCount = ((TiXmlElement*)pTag)->Attribute("search_count");
+      CStdString strBoxeeId = ((TiXmlElement*)pTag)->Attribute("boxee_id");
       CStdString strLabel;
+
       if (strYear.IsEmpty())
         strLabel.Format("%s", strValue.c_str());
       else
         strLabel.Format("%s (%s)", strValue.c_str(), strYear.c_str());
 
       CFileItemPtr tipItem (new CFileItem(strLabel));
-      tipItem->SetProperty("type", "tip");
-      tipItem->SetProperty("value", strValue);
+      tipItem->SetProperty("type", strType);
       tipItem->SetProperty("year", strYear);
+      tipItem->SetProperty("value", strValue);
+      tipItem->SetProperty("searchCount", strSearchCount);
+      // currently the server doesn't pass IsAdult -> set it to FALSE
+      tipItem->SetAdult(false);
+
+      tipItem->SetProperty("boxeeid",strBoxeeId);
+
+      if (strType == "movie")
+      {
+        tipItem->SetProperty("ismovie",true);
+      }
+      else if (strType == "tv")
+      {
+        tipItem->SetProperty("showid",strBoxeeId);
+        tipItem->SetProperty("ismovie",false);
+        tipItem->SetProperty("istvshowfolder",true);
+      }
+
+      items.Add(tipItem);
+    }
+    else if (pTag->ValueStr() == "app")
+    {
+      const TiXmlNode *pValue = pTag->FirstChild();
+
+      CStdString strValue = pValue->ValueStr();
+      CStdString strSearchCount = ((TiXmlElement*)pTag)->Attribute("search_count");
+      CStdString strAppId = ((TiXmlElement*)pTag)->Attribute("app_id");
+      CStdString strLink;
+
+      strLink.Format("app://%s/",strAppId.c_str());
+
+      CFileItemPtr tipItem (new CFileItem(strValue));
+      tipItem->SetProperty("appid", strAppId);
+      tipItem->SetProperty("type","app");
+      tipItem->SetProperty("isApp",true);
+      tipItem->m_strPath = strLink;
+
+      items.Add(tipItem);
+    }
+    else if (pTag->ValueStr() == "url")
+    {
+      const TiXmlNode *pValue = pTag->FirstChild();
+
+      CStdString strLink = ((TiXmlElement*)pTag)->Attribute("link");
+      CStdString strType = ((TiXmlElement*)pTag)->Attribute("boxee_type");
+      CStdString strSearchCount = ((TiXmlElement*)pTag)->Attribute("search_count");
+
+      CFileItemPtr tipItem (new CFileItem(pValue->ValueStr()));
+
+      if (strType.IsEmpty())
+      {
+        strType = "link";
+      }
+
+      tipItem->SetProperty("type", strType);
+      tipItem->SetProperty("link", strLink);
+
+      tipItem->SetProperty("searchCount", strSearchCount);
+      tipItem->m_strPath = strLink;
+
+      if (strType == "clip")
+      {
+        tipItem->SetProperty("isClip",true);
+      }
+      else
+      {
+        tipItem->SetProperty("isLink",true);
+      }
 
       // currently the server doesn't pass IsAdult -> set it to FALSE
       tipItem->SetAdult(false);
@@ -206,7 +345,7 @@ bool CSuggestionManager::ParseSuggestionXml(const CStdString& strHtml, CFileItem
 
   return true;
 }
-
+*/
 void CSuggestionManager::MergeByLabel(CFileItemList& left, CFileItemList& right)
 {
   if (left.Size() == 0)
@@ -222,12 +361,16 @@ void CSuggestionManager::MergeByLabel(CFileItemList& left, CFileItemList& right)
   {
     CFileItemPtr leftItem = left[i];
 
+    leftItem->SetProperty("type",left.GetPropertyBOOL("type"));
+    leftItem->SetProperty("IsLocal",left.GetPropertyBOOL("IsLocal"));
+
     for (int j = 0; j < right.Size();j++)
     {
-
       CFileItemPtr rightItem = right[j];
 
-      if (rightItem->GetLabel() == leftItem->GetLabel())
+      //merge if the content is from the same type, avoid pandora app merge with pandora movie
+      if (rightItem->GetLabel() == leftItem->GetLabel() &&
+          rightItem->GetProperty("boxeeid") == leftItem->GetProperty("boxeeid"))
       {
         // we found a match
         CLog::Log(LOGDEBUG, "CSuggestionManager::MergeByLabel, match found = %s (browse)", leftItem->GetLabel().c_str());
@@ -241,21 +384,28 @@ void CSuggestionManager::MergeByLabel(CFileItemList& left, CFileItemList& right)
           for (int j = 0; j < linksFileItemList->Size(); j++)
           {
             CFileItemPtr link = linksFileItemList->Get(j);
-            rightItem->AddLink(link->GetLabel(), link->m_strPath, link->GetContentType(true), CFileItem::GetLinkBoxeeTypeAsEnum(link->GetProperty("link-boxeetype")), "", "", "", "all", true,"",0);
+            rightItem->AddLink(link->GetLabel(), link->m_strPath, link->GetContentType(true), CFileItem::GetLinkBoxeeTypeAsEnum(link->GetProperty("link-boxeetype")), "", "", "", "all", true, "", 0, CFileItem::GetLinkBoxeeOfferAsEnum(link->GetProperty("link-boxeeoffer")), link->GetProperty("link-productslist"));
           }
         }
 
-        left.Remove(i);
+        left.Remove(i); //remove the duplicate item
         i--; // set the loop back
         break; // from the right loop
       }
     }
+
+    //we didn't find anything we can merge it with, just push it last in the list but before the urls for searching the web
+    /*if (right.Size() > 2)
+    {
+      right.AddFront(leftItem, right.Size()-2);
+      left.Remove(i);
+      i--;
+    }*/
   }
 
-  // Append the remaining items to the right list
   right.Append(left);
 }
-
+/*
 bool CSuggestionManager::BuildColorHighlight(CStdString& highlightColorPrefix, CStdString& highlightColorPostfix)
 {
   CStdString color;
@@ -295,7 +445,7 @@ bool CSuggestionManager::BuildColorHighlight(CStdString& highlightColorPrefix, C
 
   return true;
 }
-
+*/
 void CSuggestionManager::MarkSearchStringInSuggestion(CStdString& suggestion, const CStdString& strTerm, const CStdString& highlightColorPrefix, const CStdString& highlightColorPostfix)
 {
   CStdString strTermLower = strTerm;
@@ -320,8 +470,6 @@ void CSuggestionManager::MarkSearchStringInSuggestion(CStdString& suggestion, co
   }
 }
 
-// END OF CSuggestionManager IMPLEMENTATION
-
 CSuggestionManager::BXSuggestionJob::BXSuggestionJob(const CStdString& strTerm, CSuggestionManager* manager) : BXBGJob("BXSuggestionJob")
 {
   m_manager = manager;
@@ -338,94 +486,79 @@ void CSuggestionManager::BXSuggestionJob::DoWork()
   m_manager->GetSuggestionsBG(m_strTerm);
 }
 
-// END OF CSuggestionManager::BXSuggestionJob IMPLEMENTATION
 
 CGUIDialogBoxeeSearch::CGUIDialogBoxeeSearch(void)
-: CGUIDialogKeyboard(WINDOW_DIALOG_BOXEE_SEARCH, "boxee_search.xml"), m_suggestionManager(this)
+: CGUIDialogKeyboard(WINDOW_DIALOG_BOXEE_SEARCH, "boxee_search.xml"), m_suggestionManager(this)//, m_sourceController(this)
 {
   m_bAutoCompleteEnabled = true;
   m_delayCounter = 0;
   m_keyType = CAPS;
-  //m_bShift = true;
 }
 
 CGUIDialogBoxeeSearch::~CGUIDialogBoxeeSearch(void)
-{}
+{
+
+}
+
+void CGUIDialogBoxeeSearch::InitSuggestions()
+{
+  // Add all suggestion urls to the suggestion manager
+  CStdString strTipLink = BOXEE::BXConfiguration::GetInstance().GetStringParam("Boxee.Autocomplete","http://res.boxee.tv");
+
+  std::map<CStdString, CStdString> mapRemoteOptions;
+  DIRECTORY::CBoxeeServerDirectory::AddParametersToRemoteRequest(mapRemoteOptions);
+
+  //by order of appearance
+  CSuggestionSourcePtr appSource(new CSuggestionSource());
+  appSource->m_mapOptions = mapRemoteOptions;
+  appSource->m_strBaseUrl = "appbox://all/";//strTipLink + "/titles/searchtip/";
+  appSource->m_mediaIcon = APPS_ICON;
+  appSource->m_contentType = "apps";
+  m_suggestionManager.AddSource(appSource);
+
+  CSuggestionSource* localMoviesSource = new CSuggestionSource;
+  localMoviesSource->m_bRemote = false;
+  localMoviesSource->m_mediaIcon = MOVIES_ICON;
+  localMoviesSource->m_strBaseUrl = "boxeedb://movies/";
+  localMoviesSource->m_contentType = "movie";
+  m_suggestionManager.AddSource(CSuggestionSourcePtr(localMoviesSource));
+
+  CSuggestionSource* localShowsSource = new CSuggestionSource;
+  localShowsSource->m_bRemote = false;
+  localShowsSource->m_mediaIcon = SHOWS_ICON;
+  localShowsSource->m_strBaseUrl = "boxeedb://tvshows/";
+  localShowsSource->m_contentType = "tv";
+  m_suggestionManager.AddSource(CSuggestionSourcePtr(localShowsSource));
+
+  CSuggestionMediaSource* serverSource = new CSuggestionMediaSource;
+  serverSource->m_bRemote = true;
+  serverSource->m_mapOptions = mapRemoteOptions;
+  serverSource->m_moviesIcon = MOVIES_ICON;
+  serverSource->m_showsIcon = SHOWS_ICON;
+  serverSource->m_clipsIcon = CLIPS_ICON;
+  serverSource->m_strBaseUrl = "boxee://search/";//strTipLink + "/titles/searchtip/";
+  serverSource->m_contentType = "online";
+  m_suggestionManager.AddSource(CSuggestionSourcePtr(serverSource));
+
+}
 
 void CGUIDialogBoxeeSearch::OnInitWindow()
 {
   CLog::Log(LOGDEBUG,"CGUIDialogBoxeeSearch::OnInitWindow - Enter function with [m_strType=%s] (search)",m_strType.c_str());
 
+  m_bClosedByMovingRightFromTextBox = false;
   m_delayCounter = 0;
-  m_suggestionManager.Start();
+
   m_strSearchTerm = "";
   m_strSuggestion = "";
+  m_canSendQueryToServer = true;
 
-  if (m_strType == "tvshows")
-  {
-    if (g_application.IsConnectedToInternet())
-    {
-      CStdString strLink = BOXEE::BXConfiguration::GetInstance().GetStringParam("Boxee.Autocomplete","http://res.boxee.tv");
-      strLink += "/titles/searchtip/tv/";
-
-      std::map<CStdString, CStdString> mapRemoteOptions;
-      DIRECTORY::CBoxeeServerDirectory::AddParametersToRemoteRequest(mapRemoteOptions);
-      strLink += BoxeeUtils::BuildParameterString(mapRemoteOptions);
-
-      if (mapRemoteOptions.size() > 0)
-      {
-        strLink += "&term=";
-      }
-      else
-      {
-        strLink += "?term=";
-      }
-
-      m_suggestionManager.AddSource(strLink);
-    }
-
-    m_suggestionManager.AddSource("boxeedb://tvshows/?search=");
-  }
-  else if (m_strType == "movies")
-  {
-    if (g_application.IsConnectedToInternet())
-    {
-      CStdString strLink = BOXEE::BXConfiguration::GetInstance().GetStringParam("Boxee.Autocomplete","http://res.boxee.tv");
-      strLink += "/titles/searchtip/movie/";
-
-      std::map<CStdString, CStdString> mapRemoteOptions;
-      DIRECTORY::CBoxeeServerDirectory::AddParametersToRemoteRequest(mapRemoteOptions);
-      strLink += BoxeeUtils::BuildParameterString(mapRemoteOptions);
-
-      if (mapRemoteOptions.size() > 0)
-      {
-        strLink += "&term=";
-      }
-      else
-      {
-        strLink += "?term=";
-      }
-
-      m_suggestionManager.AddSource(strLink);
-    }
-
-    m_suggestionManager.AddSource("boxeedb://movies/?search=");
-  }
-  else if (m_strType == "apps")
-  {
-    m_suggestionManager.AddSource("apps://all/?search=");
-  }
-  else if (m_strType == "appbox")
-  {
-    m_suggestionManager.AddSource("appbox://all/?search=");
-  }
-  else if (m_strType == "music")
-  {
-    m_suggestionManager.AddSource("boxeedb://music/?search=");
-  }
+  m_suggestionManager.Start();
+  InitSuggestions();
 
   CGUIDialogKeyboard::OnInitWindow();
   UpdateButtons();
+
 }
 
 void CGUIDialogBoxeeSearch::OnDeinitWindow(int nextWindowID)
@@ -434,9 +567,42 @@ void CGUIDialogBoxeeSearch::OnDeinitWindow(int nextWindowID)
   CGUIDialogKeyboard::OnDeinitWindow(nextWindowID);
 }
 
+bool CGUIDialogBoxeeSearch::OnAction(const CAction &action)
+{
+  if (GetFocusedControl() && GetFocusedControl()->GetID() == CTL_LABEL_EDIT && action.id == ACTION_MOVE_RIGHT)
+  {
+    // Check if we are on the last letter of the textbox
+    CGUIEditControl* pEditControl = (CGUIEditControl*)GetControl(CTL_LABEL_EDIT);
+    if (pEditControl && (pEditControl->GetCursorPosition() >= (size_t) pEditControl->GetLabel2().GetLength()))
+    {
+      m_bClosedByMovingRightFromTextBox = true;
+      Close();
+      return true;
+    }
+  }
+
+  return CGUIDialogKeyboard::OnAction(action);
+}
+
 bool CGUIDialogBoxeeSearch::OnMessage(CGUIMessage& message)
 {
-  if (message.GetMessage() == GUI_MSG_LABEL_BIND)
+  if (message.GetMessage() == GUI_MSG_WINDOW_INIT)
+  {
+    CStdString param = message.GetStringParam();
+    m_strSearchTerm = param;
+
+    bool bResult = CGUIDialogKeyboard::OnMessage(message);
+
+    CGUIEditControl* pEdit = ((CGUIEditControl*)GetControl(CTL_LABEL_EDIT));
+    if (pEdit)
+    {
+      CStdString searchTerm = ((CGUIDialogBoxeeBrowseMenu*) g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_BROWSE_MENU))->GetSearchTerm();
+      pEdit->SetLabel2(searchTerm);
+    }
+
+    return bResult;
+  }
+  else if (message.GetMessage() == GUI_MSG_LABEL_BIND)
   {
     SetProperty("loading", false);
     if (message.GetPointer() && message.GetControlId() == 0)
@@ -444,35 +610,55 @@ bool CGUIDialogBoxeeSearch::OnMessage(CGUIMessage& message)
       CFileItemList *items = (CFileItemList *)message.GetPointer();
       if (items)
       {
-        CStdString strTerm = items->GetProperty("term");
-
-        // check that we received items for the current term
-        if (m_strSearchTerm == strTerm)
+        if (items->HasProperty("searchtips"))
         {
-          CGUIMessage msg(GUI_MSG_LABEL_RESET, GetID(), SUGGESTION_LIST, 0);
-          OnMessage(msg);
-
-          if (!m_strSearchTerm.IsEmpty())
-          {
-            // Add first item for the search term
-            CStdString searchTermLabel;
-            searchTermLabel.Format("More results for: %s", m_strSearchTerm.c_str());
-            CFileItemPtr termItem(new CFileItem(searchTermLabel));
-            termItem->SetProperty("value", m_strSearchTerm);
-
-            CGUIMessage winmsg1(GUI_MSG_LABEL_ADD, GetID(), SUGGESTION_LIST, 0, 0, termItem);
-            OnMessage(winmsg1);
-          }
-
-          for (int i = 0; i < items->Size(); i++)
-          {
-            CGUIMessage winmsg(GUI_MSG_LABEL_ADD, GetID(), SUGGESTION_LIST, 0, 0, items->Get(i));
-            OnMessage(winmsg);
-          }
-        }
+          CGUIMessage message2(GUI_MSG_LABEL_BIND, GetID(), SUGGESTION_LIST, 0, 0, items);
+          CGUIDialogKeyboard::OnMessage(message2);
+        }/*
+        else
+        {
+          BindSearchResults(items);
+        }*/
 
         delete items;
       }
+      return true;
+    }
+    else
+    {
+      return CGUIDialogKeyboard::OnMessage(message);
+    }
+  }
+  else if (message.GetMessage() == GUI_MSG_ITEM_LOADED)
+  {
+    // We don't handle a broadcast message that was sent from this window in order to avoid loop.
+    if((message.GetSenderId() == 0) && (message.GetControlId() == 0) && (message.GetParam1() == GetID()))
+    {
+      return true;
+    }
+
+    if (message.GetControlId() == 0)
+    {
+      CFileItem *pItem = (CFileItem *)message.GetPointer();
+      message.SetPointer(NULL);
+
+      if (pItem)
+      {
+        CLog::Log(LOGDEBUG, "CGUIDialogBoxeeSearch::OnMessage, got update for item %s (search)", pItem->GetLabel().c_str());
+
+        // Forward the item loaded message to the underlying list
+        int windowId = GetID();
+        CGUIMessage winmsg(GUI_MSG_ITEM_LOADED, windowId, GLOBAL_SEARCH_RESULTS_LIST, 0, 0);
+        winmsg.SetPointer(new CFileItem(*pItem));
+        g_windowManager.SendThreadMessage(winmsg, windowId);
+
+        delete pItem;
+      }
+    }
+    else
+    {
+      // Message to a specific container
+      return CGUIDialogKeyboard::OnMessage(message);
     }
 
     return true;
@@ -488,73 +674,134 @@ bool CGUIDialogBoxeeSearch::OnMessage(CGUIMessage& message)
       CLog::Log(LOGDEBUG,"CGUIDialogBoxeeSearch::OnMessage, suggestion list clicked (search)");
       CGUIBaseContainer* subMenuList = (CGUIBaseContainer*)GetControl(SUGGESTION_LIST);
       CGUIListItemPtr selectedListItem = subMenuList->GetSelectedItemPtr();
+
       if (selectedListItem.get())
       {
-        if (selectedListItem->HasProperty("value"))
-        {
-          m_strSuggestion = selectedListItem->GetProperty("value");
-        }
-        else
-        {
-          CLog::Log(LOGERROR,"CGUIDialogBoxeeSearch::OnMessage, no value property in suggestion (search)");
-        }
+        CFileItem* pItem = (CFileItem*)selectedListItem.get();
 
-        CLog::Log(LOGDEBUG,"CGUIDialogBoxeeSearch::OnMessage, clicked suggestion = %s (search)", m_strSuggestion.c_str());
-        OnOK();
+        if (pItem)
+        {
+          CStdString strType = selectedListItem->GetProperty("type");
+          if (strType == "url")
+          {
+            Close();
+            pItem->SetProperty("url_source", "browser-app");
+            g_application.PlayMedia(*pItem);
+            return true;
+          }
+          else
+          {
+            pItem->Dump();
+            if (CBoxeeItemLauncher::Launch(*pItem))
+            {
+              Close();
+              return true;
+            }
+          }
+        }
       }
-    }    
+    }
     else if (message.GetSenderId() == LANGUAGE_BUTTON)
     {
       // When pressing a language button, reset the numeric button state
       CGUIMessage msg(GUI_MSG_DESELECTED, GetID(), NUMBER_BUTTON);
-      g_windowManager.SendMessage(msg);      
+      g_windowManager.SendMessage(msg);
     }
     else if (message.GetSenderId() == NUMBER_BUTTON)
     {
       CGUIMessage msg(GUI_MSG_ITEM_SELECTED, GetID(), NUMBER_BUTTON);
       g_windowManager.SendMessage(msg);
-      
+
       if (msg.GetParam1())
       {
         char szLabel[2];
         szLabel[0] = 32;
         szLabel[1] = 0;
         CStdString aLabel = szLabel;
-        
+
         // set numerals
         for (int iButton = 65; iButton <= 100; iButton++)
         {
           aLabel[0] = SYMBOLS[iButton - 65];
           SetControlLabel(iButton, aLabel);
-          SET_CONTROL_VISIBLE(iButton);        
-        }      
-        
-        HideShowButtonLines();        
+          SET_CONTROL_VISIBLE(iButton);
+        }
+
+        HideShowButtonLines();
       }
       else
       {
         UpdateButtons();
       }
-    }    
+    }
     else
     {
       m_delayCounter = 0;
+      m_strSuggestion.clear();
+
+      // a change was made -> can query the server again
+      m_canSendQueryToServer = true;
     }
   }
 
   return bResult;
 }
 
+void CGUIDialogBoxeeSearch::OnOK()
+{
+  const CGUIEditControl* pEdit = ((const CGUIEditControl*)GetControl(CTL_LABEL_EDIT));
+  if (pEdit)
+  {
+    if (m_strEdit.Equals(pEdit->GetUnicodeLabel()) && !m_canSendQueryToServer)
+    {
+      // same query and no change was made -> don't query the server
+      return;
+    }
+
+    m_strEdit = pEdit->GetUnicodeLabel();
+    m_strEdit.Trim();
+  }
+
+  if (!m_strEdit.IsEmpty())
+  {
+    if (HandleSearchingUrl(m_strEdit))
+    {
+      Close();
+      return;
+    }
+
+    CLog::Log(LOGDEBUG,"CGUIDialogBoxeeSearch::OnOK - [strEdit=%ls] ISN'T URL (search)", m_strEdit.c_str());
+
+    // going to query the server -> don't query again unless a change will be made
+    m_canSendQueryToServer = false;
+
+  }
+  else
+  {
+    Close();
+  }
+}
+
 void CGUIDialogBoxeeSearch::Render()
 {
   CStdString currentText = GetCurrentText();
-  if (m_delayCounter > 15 && m_strSearchTerm != currentText)
+  currentText.Trim();
+
+  if (m_delayCounter > 15 && (m_strSearchTerm != currentText || currentText.IsEmpty()))
   {
     CLog::Log(LOGDEBUG,"CGUIDialogBoxeeSearch::Render, search for term = %s (search)", currentText.c_str());
 
     m_delayCounter = 0;
 
     m_strSearchTerm = currentText;
+
+    if (m_strSearchTerm.IsEmpty())
+    {
+      CGUIDialogKeyboard::Render();
+      Close();
+      return;
+    }
+
     SetProperty("loading", true);
     m_suggestionManager.GetSuggestions(m_strSearchTerm);
   }
@@ -584,57 +831,61 @@ CStdString CGUIDialogBoxeeSearch::GetText() const
     return m_strSuggestion;
 }
 
-
-bool CGUIDialogBoxeeSearch::ShowAndGetInput(CStdString& aTextString, const CStdString& strType, const CStdString &strHeading, bool allowEmptyResult, bool hiddenInput /* = false */)
-{
-  CGUIDialogBoxeeSearch *pKeyboard = (CGUIDialogBoxeeSearch*)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_SEARCH);
-
-  if (!pKeyboard)
-    return false;
-
-  // setup keyboard
-  pKeyboard->Initialize();
-  //pKeyboard->CenterWindow();
-  pKeyboard->SetHeading(strHeading);
-  pKeyboard->SetHiddenInput(hiddenInput);
-  pKeyboard->SetText(aTextString);
-  pKeyboard->SetType(strType);
-
-  // do this using a thread message to avoid render() conflicts
-  ThreadMessage tMsg = {TMSG_DIALOG_DOMODAL, WINDOW_DIALOG_BOXEE_SEARCH, g_windowManager.GetActiveWindow()};
-  g_application.getApplicationMessenger().SendMessage(tMsg, true);
-  pKeyboard->Close();
-
-  // If have text - update this.
-  if (pKeyboard->IsConfirmed())
-  {
-    aTextString = pKeyboard->GetText();
-
-    if (!allowEmptyResult && aTextString.IsEmpty())
-    {
-      return false;
-    }
-
-    return true;
-  }
-  else
-  {
-    return false;
-  }
-}
-
 void CGUIDialogBoxeeSearch::OnSuggestions(CFileItemList& suggestionList)
 {
+  //SET_CONTROL_HIDDEN(GLOBAL_SEARCH_RESULTS_GROUP);
+  SET_CONTROL_VISIBLE(GLOBAL_SEARCH_SUGGESTIONS_GROUP);
+
   CFileItemList* pNewList = new CFileItemList();
   pNewList->Copy(suggestionList);
   pNewList->SetProperty("term", suggestionList.GetProperty("term"));
+  pNewList->SetProperty("searchtips", true);
 
   CGUIMessage msg(GUI_MSG_LABEL_BIND, GetID(), 0, 0, 0, pNewList);
   g_windowManager.SendThreadMessage(msg, GetID());
 }
 
-void CGUIDialogBoxeeSearch::UpdateButtons()
+bool CGUIDialogBoxeeSearch::HandleSearchingUrl(const CStdString& url)
 {
-  CGUIDialogKeyboard::UpdateButtons();
+  CStdString searchText;
+  g_charsetConverter.wToUTF8(url, searchText);
+
+  CLog::Log(LOGDEBUG, "CGUIDialogBoxeeSearch::HandleSearchingUrl - enter function with [strEdit=%ls][searchText=%s] (search)",m_strEdit.c_str(),searchText.c_str());
+
+  bool hasDot = (searchText.Find(".") != -1);
+  bool hasSpace = (searchText.Find(" ") != -1);
+
+  if (!hasDot || hasSpace)
+  {
+    CLog::Log(LOGDEBUG, "CGUIDialogBoxeeSearch::HandleSearchingUrl - [searchText=%s] ISN'T url (search)",searchText.c_str());
+    return false;
+  }
+
+  CLog::Log(LOGDEBUG, "CGUIDialogBoxeeSearch::HandleSearchingUrl - [searchText=%s] is url (search)",searchText.c_str());
+
+  CFileItem urlItem(searchText);
+  if (!CUtil::IsHTTP(searchText))
+  {
+    urlItem.m_strPath = "http://";
+  }
+  urlItem.m_strPath += searchText;
+  urlItem.SetContentType("text/html");
+
+  urlItem.SetProperty("url_source", "browser-app");
+
+  g_application.PlayMedia(urlItem);
+
+  return true;
 }
 
+void CGUIDialogBoxeeSearch::Close(bool forceClose)
+{
+  CGUIMessage message(GUI_MSG_LABEL2_SET, WINDOW_DIALOG_BOXEE_BROWSE_MENU, BROWSE_MENU_BUTTON_SEARCH);
+  CStdString searchTerm = GetSearchTerm();
+  message.SetLabel(searchTerm);
+  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeSearch::Close - enter function. sending GUI_MSG_LABEL2_SET with [searchTerm=%s] to BUTTON_SEARCH in BROWSE_MENU (search)",searchTerm.c_str());
+  g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_BROWSE_MENU)->OnMessage(message);
+  m_canSendQueryToServer = true;
+
+  return CGUIDialogKeyboard::Close(forceClose);
+}

@@ -40,7 +40,7 @@ public:
 
 protected:
   struct rusage  m_usage;
-  struct timeval m_tmLastCheck;
+  struct timespec m_tmLastCheck;
   double m_dLastUsage;
 };
 

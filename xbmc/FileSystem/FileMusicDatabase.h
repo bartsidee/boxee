@@ -29,9 +29,9 @@ class CFileMusicDatabase : public IFile
 public:
   CFileMusicDatabase(void);
   virtual ~CFileMusicDatabase(void);
-  virtual bool Open(const CURL& url);
-  virtual bool Exists(const CURL& url);
-  virtual int Stat(const CURL& url, struct __stat64* buffer);
+  virtual bool Open(const CURI& url);
+  virtual bool Exists(const CURI& url);
+  virtual int Stat(const CURI& url, struct __stat64* buffer);
 
   virtual unsigned int Read(void* lpBuf, int64_t uiBufSize);
   virtual int64_t Seek(int64_t iFilePosition, int iWhence = SEEK_SET);
@@ -39,7 +39,7 @@ public:
   virtual int64_t GetPosition();
   virtual int64_t GetLength();
 
-  static CStdString TranslateUrl(const CURL& url);
+  static CStdString TranslateUrl(const CURI& url);
 protected:
   CFile m_file;
 };

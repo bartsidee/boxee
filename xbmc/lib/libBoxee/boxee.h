@@ -73,6 +73,7 @@ public:
 								const std::string &strUrl,
 								const std::string &strTransactionId,
 								void *pArg) {}
+	virtual void OnForcedStop() {}
 };
 
 // interface for a callback trigger.
@@ -208,7 +209,7 @@ public:
 protected:
   
   Boxee();
-
+    
   bool ParseServerLoginResponse(BXXMLDocument& doc, BXObject& userObj);
   void ParseUserObjFromServerResponse(const TiXmlNode* pObjectTag, BXObject& userObj);
 

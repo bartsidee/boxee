@@ -25,8 +25,17 @@
 #include "bxversion.h"
 #include "bxcurl.h"
 #include "lib/libBoxee/boxee.h"
+#include "lib/libBoxee/bxappboxapplications.h"
+#include "lib/libBoxee/bxconfiguration.h"
+#include "BoxeeUtils.h"
+#include "GUISettings.h"
+#include "Application.h"
 #ifdef __APPLE__
 #include "SystemInfo.h"
+#endif
+
+#ifdef HAS_EMBEDDED
+#include "HalServices.h"
 #endif
 
 #include "utils/log.h"
@@ -138,7 +147,7 @@ bool CAppRepository::IsValid()
   return m_valid;
 }
 
-CAppDescriptor::AppDescriptorsMap CAppRepository::GetAvailableApps()
+CAppDescriptor::AppDescriptorsMap CAppRepository::GetAvailableApps(const CStdString& category)
 {
   if (!m_valid)
   {
@@ -150,11 +159,11 @@ CAppDescriptor::AppDescriptorsMap CAppRepository::GetAvailableApps()
     return m_cachedAvailableApps;
   }
 
-  ReloadAppDescriptors();
+  ReloadAppDescriptors(false,category);
   return m_cachedAvailableApps;
 }
 
-bool CAppRepository::ReloadAppDescriptors(bool bDontWait)
+bool CAppRepository::ReloadAppDescriptors(bool bDontWait , const CStdString& category)
 {
   // this is updated at the beginning, so that even if a repository is down it will not 
   // get the system to keep trying to query it until the cache has expired
@@ -168,7 +177,7 @@ bool CAppRepository::ReloadAppDescriptors(bool bDontWait)
   if (m_id == "tv.boxee")
   {
     // Get the applications from the Boxee repository
-    succeeded = GetBoxeeApplications(result);
+    succeeded = GetBoxeeApplications(result , category);
 
     if(!succeeded)
     {
@@ -205,37 +214,25 @@ bool CAppRepository::LoadRepositoryFromURL(const CStdString& url)
   indexURL += "repository.xml";
 
   // Retrieve the file
-  CLog::Log(LOGDEBUG, "Reading repository descriptor from %s", indexURL.c_str());
+  CLog::Log(LOGDEBUG,"CAppRepository::LoadRepositoryFromURL - Reading repository descriptor from [url=%s]",indexURL.c_str());
 
-  BOXEE::BXCurl curl;
-  CStdString appsXml;
-  try
+  BOXEE::BXXMLDocument document;
+  if (!document.LoadFromURL(indexURL.c_str()))
   {
-    appsXml = curl.HttpGetString(indexURL);
-  }
-  catch (...)
-  {
-    return false;
-  }
-  
-  if (appsXml.length() == 0)
-  {
-    CLog::Log(LOGERROR, "Cannot get repository descriptor: %s", indexURL.c_str());
+    LOG(LOG_LEVEL_ERROR,"CAppRepository::LoadRepositoryFromURL - FAILED to load repository descriptor from [url=%s]",indexURL.c_str());
     return false;
   }
 
-  // Parse it
-  TiXmlDocument xmlDoc;
-  if (!xmlDoc.Parse(appsXml.c_str()))
+  TiXmlElement* rootElement = document.GetDocument().RootElement();
+  if (!rootElement)
   {
-    CLog::Log(LOGERROR, "Cannot parse repository descriptor file: %s at row=%d/col=%d", xmlDoc.ErrorDesc(), xmlDoc.ErrorRow(), xmlDoc.ErrorCol());
+    CLog::Log(LOGERROR,"CAppRepository::LoadRepositoryFromURL - FAILED to get root element. [url=%s]",indexURL.c_str());
     return false;
   }
 
-  TiXmlElement* rootElement = xmlDoc.RootElement();
   if (strcmpi(rootElement->Value(), "repository") != 0)
   {
-    CLog::Log(LOGERROR, "Invalid repository descriptor file, root element should be repository: %s", indexURL.c_str());
+    CLog::Log(LOGERROR,"CAppRepository::LoadRepositoryFromURL - Invalid repository descriptor file. root element is <%s> and should be <repository>. [url=%s]",rootElement->Value(),indexURL.c_str());
     return false;
   }
 
@@ -288,14 +285,75 @@ CAppRepository CAppRepository::LoadRepositoryFromXML(const TiXmlNode* rootElemen
   return CAppRepository(id, url, name, description, thumb);
 }
 
-bool CAppRepository::GetBoxeeApplications(CAppDescriptor::AppDescriptorsMap& result)
+bool CAppRepository::GetBoxeeApplications(CAppDescriptor::AppDescriptorsMap& result, const CStdString& category)
 {
   bool succeeded = false;
 
-  TiXmlDocument xmlDoc;
-  BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().GetAppBoxApplications(xmlDoc);
+  //TiXmlDocument xmlDoc;
 
-  TiXmlElement* rootElement = xmlDoc.RootElement();
+  //BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().GetAppBoxApplications(xmlDoc);
+
+  BOXEE::BXAppBoxApplications appBoxBoxeeApplicationsList;
+
+  appBoxBoxeeApplicationsList.SetCredentials(BOXEE::Boxee::GetInstance().GetCredentials());
+  appBoxBoxeeApplicationsList.SetVerbose(BOXEE::Boxee::GetInstance().IsVerbose());
+
+  std::string strUrl = BOXEE::BXConfiguration::GetInstance().GetURLParam("Boxee.AppBoxApplicationsPrefixUrl","http://app.boxee.tv/appindex");
+
+  strUrl += "/";
+  strUrl += BOXEE::Boxee::GetInstance().GetPlatform();
+  strUrl += "/";
+  strUrl += BOXEE_VERSION;
+
+  std::map<CStdString, CStdString> mapRemoteOptions;
+
+  if (!CUtil::IsAdultAllowed())
+  {
+    mapRemoteOptions["adult"] = "no";
+  }
+
+  if (g_guiSettings.GetBool("filelists.filtergeoip2"))
+  {
+    CStdString countryCode = g_application.GetCountryCode();
+
+    if (!countryCode.IsEmpty())
+    {
+      mapRemoteOptions["geo"] = countryCode;
+    }
+  }
+
+  if (!category.IsEmpty())
+  {
+    mapRemoteOptions["category"] = category;
+  }
+
+#ifdef HAS_EMBEDDED
+  CHalHardwareInfo hwInfo;
+  CHalSoftwareInfo swInfo;
+  IHalServices& client = CHalServicesFactory::GetInstance();
+
+  if(client.GetHardwareInfo(hwInfo))
+  {
+    mapRemoteOptions["serialnumber"] = hwInfo.serialNumber;
+  }
+
+  if (client.GetSoftwareInfo(swInfo))
+  {
+    mapRemoteOptions["regionsku"] = swInfo.regionSKU;
+  }
+#endif
+
+  if (mapRemoteOptions.size() > 0)
+  {
+    strUrl += BoxeeUtils::BuildParameterString(mapRemoteOptions);
+  }
+
+  appBoxBoxeeApplicationsList.LoadFromURL(strUrl);
+
+  //bool isLoaded = appBoxBoxeeApplicationsList.IsLoaded();
+  //long lastRetCode = appBoxBoxeeApplicationsList.GetLastRetCode();
+
+  TiXmlElement* rootElement = appBoxBoxeeApplicationsList.GetRoot();
   if (!rootElement)
   {
     CLog::Log(LOGERROR, "CAppRepository::GetBoxeeApplications - cant retrieve apps list");
@@ -332,17 +390,24 @@ bool CAppRepository::Get3rdPartyApplications(CAppDescriptor::AppDescriptorsMap& 
   }
 
   TiXmlElement* rootElement = xmlDoc.RootElement();
-  if (strcmpi(rootElement->Value(), "apps") != 0)
+  if (rootElement != NULL)
   {
-    CLog::Log(LOGERROR, "CAppRepository::Get3rdPartyApplications - Invalid apps list. Root element should be <apps>. [repoId=%s][RootElement=%s] (appbox)",m_id.c_str(),rootElement->Value());
-    return succeeded;
+    if (strcmpi(rootElement->Value(), "apps") != 0)
+    {
+      CLog::Log(LOGERROR, "CAppRepository::Get3rdPartyApplications - Invalid apps list. Root element should be <apps>. [repoId=%s][RootElement=%s] (appbox)",m_id.c_str(),rootElement->Value());
+      return succeeded;
+    }
+
+    succeeded = GetApps(result,rootElement,"3rd-Party");
+
+    if(!succeeded)
+    {
+      // Error log was written from GetApps() function
+    }
   }
-
-  succeeded = GetApps(result,rootElement,"3rd-Party");
-
-  if(!succeeded)
+  else
   {
-    // Error log was written from GetApps() function
+    CLog::Log(LOGERROR, "CAppRepository::Get3rdPartyApplications - Invalid apps list. Root element is null. [repoId=%s] (appbox)",m_id.c_str());
   }
 
   return succeeded;
@@ -368,7 +433,7 @@ bool CAppRepository::GetApps(CAppDescriptor::AppDescriptorsMap& result, TiXmlEle
 
     //CLog::Log(LOGDEBUG, "CAppRepository::GetApps - [%d] -  Handling app [id=%s][name=%s][MediaType=%s][IsLoaded=%d][MatchesPlatform=%d]. [repositoryType=%s] (appbox)",numOfAllApps,appDesc.GetId().c_str(),appDesc.GetName().c_str(),appDesc.GetMediaType().c_str(),appDesc.IsLoaded(),appDesc.MatchesPlatform(),repositoryType.c_str());
 
-    if (appDesc.IsLoaded() && appDesc.MatchesPlatform())
+    if (appDesc.IsLoaded())
     {
       result[appDesc.GetId()] = appDesc;
 

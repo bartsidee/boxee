@@ -41,20 +41,13 @@
 #include <setjmp.h>
 #include <sys/types.h>
 #endif
-#if defined(_LINUX) || defined(__APPLE__)
-#include <setjmp.h>
-#include <sys/types.h>
-#define _swab   swab
-#define _getcwd getcwd
-#endif
-#include <time.h>
 
 #define DCR_VERSION "8.91"
 
 // read dcraw.c and libdcr.c license before enabling RESTRICTED code
 #define RESTRICTED 0
 
-#define NO_JPEG
+//#define NO_JPEG
 #define NO_LCMS
 //#define DJGPP
 
@@ -212,10 +205,8 @@ struct dcr_DCRAW {
 	ushort (*image)[4], white[8][8], curve[0x4001], cr2_slice[3], sraw_mul[4];
 	float cam_mul[4], pre_mul[4], cmatrix[3][4], rgb_cam[3][4];
 	int histogram[4][0x2000];
-	void (*write_thumb)(DCRAW *, FILE *);
-	void (*write_fun)(DCRAW *, FILE *);
-	void (*load_raw)(DCRAW *);
-	void (*thumb_load_raw)(DCRAW *);
+	void (*write_thumb)(DCRAW *, FILE *), (*write_fun)(DCRAW *, FILE *);
+	void (*load_raw)(DCRAW *), (*thumb_load_raw)(DCRAW *);
 	jmp_buf failure;
 	char *sz_error;
 };

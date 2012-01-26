@@ -25,6 +25,8 @@
 #include "WindowingFactory.h"
 #include "utils/log.h"
 #include "utils/TimeUtils.h"
+#include "utils/AnnouncementManager.h"
+#include "GUISettings.h"
 
 CMouseStat g_Mouse;
 
@@ -69,8 +71,7 @@ void CMouseStat::HandleEvent(XBMC_Event& newEvent)
 {
   int dx = 0;
   int dy = 0;
-  
-  m_lastEventTime = CTimeUtils::GetTimeMS();
+  m_lastEventTime = CTimeUtils::GetFrameTime();
   
   if (m_mouseState.x == -1 || m_mouseState.y == -1)
   {
@@ -179,7 +180,15 @@ void CMouseStat::SetActive(bool active /*=true*/)
 {
   m_lastActiveTime = CTimeUtils::GetFrameTime();
   m_mouseState.active = active;
+   // we show the OS mouse if:
+  // 1. The mouse is active (it has been moved) AND
+  // 2. The XBMC mouse is disabled in settings AND
+  // 3. XBMC is not in fullscreen.
+#ifdef _WIN32
+  g_Windowing.ShowOSMouse(m_mouseState.active && !IsEnabled() && !g_Windowing.IsFullScreen());
+#else
   SDL_ShowCursor(m_mouseState.active && !(IsEnabled() || g_Windowing.IsFullScreen()));
+#endif
 }
 
 // IsActive - returns true if we have been active in the last MOUSE_ACTIVE_LENGTH period
@@ -187,12 +196,21 @@ bool CMouseStat::IsActive()
 {
   if (m_mouseState.active && (CTimeUtils::GetFrameTime() - m_lastActiveTime > MOUSE_ACTIVE_LENGTH))
     SetActive(false);
+
   return (m_mouseState.active && IsEnabled());
 }
 
 void CMouseStat::SetEnabled(bool enabled)
 {
+  if (m_mouseEnabled == enabled)
+    return;
+
   m_mouseEnabled = enabled;
+
+  if (enabled)
+    ANNOUNCEMENT::CAnnouncementManager::Announce(ANNOUNCEMENT::AF_GUI, "xbmc", "MouseEnabled");
+  else
+    ANNOUNCEMENT::CAnnouncementManager::Announce(ANNOUNCEMENT::AF_GUI, "xbmc", "MouseDisabled");
 }
 
 // IsEnabled - returns true if mouse is enabled
@@ -246,7 +264,7 @@ void CMouseStat::SetExclusiveAccess(int controlID, int windowID, const CPoint &p
   // convert posX, posY to screen coords...
   // NOTE: This relies on the window resolution having been set correctly beforehand in CGUIWindow::OnMouseAction()
   CPoint mouseCoords(GetLocation());
-  g_graphicsContext.InvertFinalCoords(mouseCoords.x, mouseCoords.y);
+  g_graphicsContext.MapScreenToWorld(mouseCoords.x, mouseCoords.y);
   m_exclusiveOffset = point - mouseCoords;
 }
 
@@ -258,4 +276,9 @@ void CMouseStat::EndExclusiveAccess(int controlID, int windowID)
 
 void CMouseStat::Acquire()
 {
+}
+
+bool CMouseStat::IsEnabledInSettings()
+{
+  return g_guiSettings.GetBool("lookandfeel.enablemouse");
 }

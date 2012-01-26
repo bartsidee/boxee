@@ -60,9 +60,14 @@ namespace BOXEE
       void OnKey(BX_WindowHandle win, short unicode);
       void OnMouseClick(BX_WindowHandle win, int x, int y);
       void OnMouseMove(BX_WindowHandle win, int x, int y);
-  
+      void OnScreensaverShown(BX_Handle hApp);
+      void OnScreensaverHidden(BX_Handle hApp);
+      BX_PlayerState GetPlayerState(BX_Handle hApp);
+      void OnDisplayRender(BX_WindowHandle win);
+
       void ExecuteRenderOperations();
       void PushRenderOperation(IGUIThreadTask* op);
+      void SetScreensaverState();
 
       virtual void OnPipeOverFlow();
       virtual void OnPipeUnderFlow();
@@ -90,7 +95,9 @@ namespace BOXEE
       DllNativeApp        m_dll;
     
       unsigned int        m_lastSetPos;
-    
+      bool                m_screenSaverState;
+      bool                m_playerCaching;
+
       std::vector<IGUIThreadTask*>  m_renderOpsQueueBack; 
       std::vector<IGUIThreadTask*>  m_renderOpsQueueFront; 
       CCriticalSection    m_lock;

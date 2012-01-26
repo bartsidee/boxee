@@ -315,7 +315,7 @@ bool CxImageGIF::DecodeExtension(CxFile *fp)
 		if (fc == 0xFE) { //<DP> Comment block
 			bContinue = (1 == fp->Read(&count, sizeof(count), 1));
 			if (bContinue) {
-				bContinue = (count == fp->Read(m_comment, count, 1));
+				bContinue = (1 == fp->Read(m_comment, count, 1));
 				m_comment[count]='\0';
 		}	}
 
@@ -325,14 +325,14 @@ bool CxImageGIF::DecodeExtension(CxFile *fp)
 				bContinue = (count==11);
 				if (bContinue){
 					char AppID[11];
-					bContinue = (count == fp->Read(AppID, count, 1));
+					bContinue = (1 == fp->Read(AppID, count, 1));
 					if (bContinue) {
 						bContinue = (1 == fp->Read(&count, sizeof(count), 1));
 						if (bContinue) {
 							BYTE* dati = (BYTE*)malloc(count);
 							bContinue = (dati!=NULL);
 							if (bContinue){
-								bContinue = (count == fp->Read(dati, count, 1));
+								bContinue = (1 == fp->Read(dati, count, 1));
 								if (count>2){
 									m_loops = dati[1]+256*dati[2];
 								}

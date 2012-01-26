@@ -26,6 +26,12 @@
 #else
 #define MEASURE_FUNCTION
 #endif
+#ifdef _DEBUG
+#include "GUITexture.h"
+#include "GUIFont.h"
+#include "GUIFontTTF.h"
+#include "AdvancedSettings.h"
+#endif
 
 CXBApplicationEx::CXBApplicationEx()
 {
@@ -102,8 +108,8 @@ INT CXBApplicationEx::Run()
       //MAX_EXCEPTION_COUNT exceptions in a row? -> bail out
       if (processExceptionCount > MAX_EXCEPTION_COUNT)
       {
-        CLog::Log(LOGERROR, "CApplication::Process(), too many exceptions");
-        throw;
+        CLog::Log(LOGERROR, "CApplicTextureGLESation::Process(), too many exceptions");
+		throw;
       }
     }
 #endif
@@ -127,7 +133,7 @@ INT CXBApplicationEx::Run()
       if (frameMoveExceptionCount > MAX_EXCEPTION_COUNT)
       {
         CLog::Log(LOGERROR, "CApplication::FrameMove(), too many exceptions");
-        throw;
+		throw;
       }
     }
 #endif
@@ -138,6 +144,14 @@ INT CXBApplicationEx::Run()
     {
 #endif
       if (!m_bStop) Render();
+
+#ifdef _DEBUG
+      if (g_advancedSettings.m_bCountPixels)
+      {
+        CGUITexture::PrintPixelCount();
+        CGUIFontTTF::PrintPixelCount();
+      }
+#endif
       //reset exception count
       renderExceptionCount = 0;
 
@@ -152,7 +166,7 @@ INT CXBApplicationEx::Run()
       if (renderExceptionCount > MAX_EXCEPTION_COUNT)
       {
         CLog::Log(LOGERROR, "CApplication::Render(), too many exceptions");
-        throw;
+		throw;
       }
     }
 #endif

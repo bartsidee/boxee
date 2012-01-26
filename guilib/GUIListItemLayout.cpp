@@ -206,6 +206,11 @@ void CGUIListItemLayout::CreateListControlLayouts(float width, float height, boo
 }
 //#endif
 
+void CGUIListItemLayout::FreeResources(bool immediately)
+{
+  m_group.FreeResources(immediately);
+}
+
 #ifdef _DEBUG
 void CGUIListItemLayout::DumpTextureUse()
 {

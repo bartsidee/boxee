@@ -38,11 +38,14 @@ protected:
   virtual void OnSettingChanged(SettingInfo &setting);
 
   void AddSubtitleStreams(unsigned int id);
+  void AddSubtitleCharset(unsigned int id);
   void ReloadSubtitle();
+  void SetSubtitleTitle();
 
   float m_volume;
   int m_audioStream;
   int m_subtitleStream;
+  int m_subtitleCharset;
   int m_outputmode;
   bool m_subtitleVisible;
   unsigned int m_reloadSubtitle;

@@ -20,6 +20,10 @@
  *
  */
 
+#include "system.h"
+
+#ifdef HAS_FILESYSTEM_HDHOMERUN
+
 #include "IDirectory.h"
 #include "DynamicDll.h"
 #include "lib/libhdhomerun/hdhomerun.h"
@@ -33,7 +37,7 @@ public:
   virtual struct hdhomerun_device_t*  device_create_from_str(const char *device_str, struct hdhomerun_debug_t *dbg)=0;
   virtual void          device_destroy(struct hdhomerun_device_t *hd)=0;
   virtual int           device_stream_start(struct hdhomerun_device_t *hd)=0;
-  virtual uint8_t*      device_stream_recv(struct hdhomerun_device_t *hd, unsigned int max_size, unsigned int* pactual_size)=0;
+  virtual uint8_t*      device_stream_recv(struct hdhomerun_device_t *hd, size_t max_size, size_t* pactual_size)=0;
   virtual void          device_stream_stop(struct hdhomerun_device_t *hd)=0;
   virtual int           device_set_tuner_channel(struct hdhomerun_device_t *hd, const char *channel)=0;
   virtual int           device_set_tuner_program(struct hdhomerun_device_t *hd, const char *program)=0;
@@ -49,7 +53,7 @@ class DllHdHomeRun : public DllDynamic, public DllHdHomeRunInterface
   DEFINE_METHOD2(struct hdhomerun_device_t*, device_create_from_str, (const char* p1, struct hdhomerun_debug_t *p2))
   DEFINE_METHOD1(void, device_destroy, (struct hdhomerun_device_t* p1))
   DEFINE_METHOD1(int, device_stream_start, (struct hdhomerun_device_t* p1))
-  DEFINE_METHOD3(uint8_t*, device_stream_recv, (struct hdhomerun_device_t* p1, unsigned int p2, unsigned int* p3))
+  DEFINE_METHOD3(uint8_t*, device_stream_recv, (struct hdhomerun_device_t* p1, size_t p2, size_t* p3))
   DEFINE_METHOD1(void, device_stream_stop, (struct hdhomerun_device_t* p1))
   DEFINE_METHOD2(int, device_set_tuner_channel, (struct hdhomerun_device_t *p1, const char *p2))
   DEFINE_METHOD2(int, device_set_tuner_program, (struct hdhomerun_device_t *p1, const char *p2))
@@ -93,13 +97,13 @@ namespace XFILE
 	    CFileHomeRun();
 	    ~CFileHomeRun();
 
-      virtual bool          Exists(const CURL& url);
+      virtual bool          Exists(const CURI& url);
       virtual int64_t       Seek(int64_t iFilePosition, int iWhence);
-      virtual int           Stat(const CURL& url, struct __stat64* buffer);
+      virtual int           Stat(const CURI& url, struct __stat64* buffer);
       virtual int64_t       GetPosition();
       virtual int64_t       GetLength();
       
-      virtual bool          Open(const CURL& url);
+      virtual bool          Open(const CURI& url);
 	    virtual void          Close();
       virtual unsigned int  Read(void* lpBuf, int64_t uiBufSize);
     private:
@@ -107,3 +111,5 @@ namespace XFILE
       DllHdHomeRun m_dll;
   };
 }
+
+#endif

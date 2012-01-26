@@ -22,7 +22,7 @@
 			<posy>5</posy>
 			<width>220</width>
 			<height>50</height>
-			<colordiffuse>DDFFFFFF</colordiffuse>
+			<colordiffuse>88FFFFFF</colordiffuse>
 			<texture>black.png</texture>
 		</control>
 		<control type="label">

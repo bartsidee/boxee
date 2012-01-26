@@ -40,6 +40,8 @@ public:
 private:
   static const char* GetBoxeeMediaTypeEnumAsString(CBoxeeMediaTypes::BoxeeMediaTypesEnums boxeeMediaTypeEnum);
 
+  void UpdateHistoryItemProperties(CFileItemPtr item);
+
   CBoxeeMediaTypes::BoxeeMediaTypesEnums GetTypeToRetrieve(const CStdString& strPath);
   bool DoesFileMatchForRetrieve(CFileItem* item,CBoxeeMediaTypes::BoxeeMediaTypesEnums typeToRetrieve);
   

@@ -2,7 +2,7 @@
 |
 |   Platinum - Datagram Stream
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -29,7 +29,11 @@
 | 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 | http://www.gnu.org/licenses/gpl-2.0.html
 |
- ****************************************************************/
+****************************************************************/
+
+/** @file
+ Datagram Input/Output Neptune streams
+ */
 
 #ifndef _PLT_DATAGRAM_H_
 #define _PLT_DATAGRAM_H_
@@ -42,6 +46,11 @@
 /*----------------------------------------------------------------------
 |   PLT_InputDatagramStream
 +---------------------------------------------------------------------*/
+/**
+ The PLT_InputDatagramStream class is a simple buffered input stream 
+ used when reading SSDP packets on a UDP socket. It allows to use Neptune
+ HTTP parsing as if reading on a TCP socket.
+ */
 class PLT_InputDatagramStream : public NPT_InputStream
 {
 public:
@@ -72,6 +81,11 @@ typedef NPT_Reference<PLT_InputDatagramStream> PLT_InputDatagramStreamReference;
 /*----------------------------------------------------------------------
 |   PLT_OutputDatagramStream
 +---------------------------------------------------------------------*/
+/**
+ The PLT_OutputDatagramStream class is a simple buffered output stream 
+ used when writing SSDP packets on a UDP socket. It allows to use Neptune
+ HTTP client as if writing on a TCP socket.
+ */
 class PLT_OutputDatagramStream : public NPT_OutputStream
 {
 public:

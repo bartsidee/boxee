@@ -20,6 +20,10 @@
  *
  */
 
+#include "system.h"
+
+#ifdef HAS_FILESYSTEM_VTP
+
 #include "IFile.h"
 #include "ILiveTV.h"
 #include "VideoInfoTag.h"
@@ -36,18 +40,18 @@ class CVTPFile
 public:
   CVTPFile();
   virtual ~CVTPFile();
-  virtual bool          Open(const CURL& url);
+  virtual bool          Open(const CURI& url);
   virtual int64_t       Seek(int64_t pos, int whence=SEEK_SET);
   virtual int64_t       GetPosition()                                  { return -1; }
   virtual int64_t       GetLength()                                    { return -1; }
-  virtual int           Stat(const CURL& url, struct __stat64* buffer) { return -1; }
+  virtual int           Stat(const CURI& url, struct __stat64* buffer) { return -1; }
   virtual void          Close();
   virtual unsigned int  Read(void* buffer, int64_t size);
   virtual CStdString    GetContent()                                   { return ""; }
   virtual bool          SkipNext()                                     { return m_socket ? true : false; }
 
-  virtual bool          Delete(const CURL& url)                        { return false; }
-  virtual bool          Exists(const CURL& url)                        { return false; }
+  virtual bool          Delete(const CURI& url)                        { return false; }
+  virtual bool          Exists(const CURI& url)                        { return false; }
 
   virtual ILiveTVInterface* GetLiveTV() {return (ILiveTVInterface*)this;}
 
@@ -68,4 +72,4 @@ protected:
 
 }
 
-
+#endif

@@ -33,7 +33,7 @@ jpeg_CreateCompress (j_compress_ptr cinfo, int version, size_t structsize)
 
   /* Guard against version mismatches between library and caller. */
   cinfo->mem = NULL;		/* so jpeg_destroy knows mem mgr not called */
-  if ((int) version != JPEG_LIB_VERSION)
+  if (version != JPEG_LIB_VERSION)
     ERREXIT2(cinfo, JERR_BAD_LIB_VERSION, JPEG_LIB_VERSION, version);
   if (structsize != SIZEOF(struct jpeg_compress_struct))
     ERREXIT2(cinfo, JERR_BAD_STRUCT_SIZE, 
@@ -63,8 +63,10 @@ jpeg_CreateCompress (j_compress_ptr cinfo, int version, size_t structsize)
 
   cinfo->comp_info = NULL;
 
-  for (i = 0; i < NUM_QUANT_TBLS; i++)
+  for (i = 0; i < NUM_QUANT_TBLS; i++) {
     cinfo->quant_tbl_ptrs[i] = NULL;
+    cinfo->q_scale_factor[i] = 100;
+  }
 
   for (i = 0; i < NUM_HUFF_TBLS; i++) {
     cinfo->dc_huff_tbl_ptrs[i] = NULL;

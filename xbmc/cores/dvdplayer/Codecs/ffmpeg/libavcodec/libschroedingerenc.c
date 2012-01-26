@@ -20,7 +20,7 @@
  */
 
 /**
-* @file libavcodec/libschroedingerenc.c
+* @file
 * Dirac encoder support via libschroedinger-1.0 libraries. More details about
 * the Schroedinger project can be found at http://www.diracvideo.org/.
 * The library implements Dirac Specification Version 2.2
@@ -37,6 +37,7 @@
 #include "avcodec.h"
 #include "libdirac_libschro.h"
 #include "libschroedinger.h"
+#include "bytestream.h"
 
 
 /** libschroedinger encoder private data */
@@ -85,16 +86,16 @@ static int SetSchroChromaFormat(AVCodecContext *avccontext)
 
     for (idx = 0; idx < num_formats; ++idx) {
         if (ffmpeg_schro_pixel_format_map[idx].ff_pix_fmt ==
-                                                       avccontext->pix_fmt) {
+            avccontext->pix_fmt) {
             p_schro_params->format->chroma_format =
                             ffmpeg_schro_pixel_format_map[idx].schro_pix_fmt;
             return 0;
         }
     }
 
-    av_log (avccontext, AV_LOG_ERROR,
-            "This codec currently only supports planar YUV 4:2:0, 4:2:2"
-            " and 4:4:4 formats.\n");
+    av_log(avccontext, AV_LOG_ERROR,
+           "This codec currently only supports planar YUV 4:2:0, 4:2:2"
+           " and 4:4:4 formats.\n");
 
     return -1;
 }
@@ -120,18 +121,36 @@ static int libschroedinger_encode_init(AVCodecContext *avccontext)
     preset = ff_get_schro_video_format_preset(avccontext);
     p_schro_params->format =
                     schro_encoder_get_video_format(p_schro_params->encoder);
-    schro_video_format_set_std_video_format (p_schro_params->format, preset);
-    p_schro_params->format->width = avccontext->width;
+    schro_video_format_set_std_video_format(p_schro_params->format, preset);
+    p_schro_params->format->width  = avccontext->width;
     p_schro_params->format->height = avccontext->height;
 
     if (SetSchroChromaFormat(avccontext) == -1)
         return -1;
 
+    if (avccontext->color_primaries == AVCOL_PRI_BT709) {
+        p_schro_params->format->colour_primaries = SCHRO_COLOUR_PRIMARY_HDTV;
+    } else if (avccontext->color_primaries == AVCOL_PRI_BT470BG) {
+        p_schro_params->format->colour_primaries = SCHRO_COLOUR_PRIMARY_SDTV_625;
+    } else if (avccontext->color_primaries == AVCOL_PRI_SMPTE170M) {
+        p_schro_params->format->colour_primaries = SCHRO_COLOUR_PRIMARY_SDTV_525;
+    }
+
+    if (avccontext->colorspace == AVCOL_SPC_BT709) {
+        p_schro_params->format->colour_matrix = SCHRO_COLOUR_MATRIX_HDTV;
+    } else if (avccontext->colorspace == AVCOL_SPC_BT470BG) {
+        p_schro_params->format->colour_matrix = SCHRO_COLOUR_MATRIX_SDTV;
+    }
+
+    if (avccontext->color_trc == AVCOL_TRC_BT709) {
+        p_schro_params->format->transfer_function = SCHRO_TRANSFER_CHAR_TV_GAMMA;
+    }
+
     if (ff_get_schro_frame_format(p_schro_params->format->chroma_format,
                                   &p_schro_params->frame_format) == -1) {
-        av_log (avccontext, AV_LOG_ERROR,
-                "This codec currently supports only planar YUV 4:2:0, 4:2:2"
-                " and 4:4:4 formats.\n");
+        av_log(avccontext, AV_LOG_ERROR,
+               "This codec currently supports only planar YUV 4:2:0, 4:2:2"
+               " and 4:4:4 formats.\n");
         return -1;
     }
 
@@ -145,17 +164,16 @@ static int libschroedinger_encode_init(AVCodecContext *avccontext)
     avccontext->coded_frame = &p_schro_params->picture;
 
     if (!avccontext->gop_size) {
-        schro_encoder_setting_set_double (p_schro_params->encoder,
-                                          "gop_structure",
-                                          SCHRO_ENCODER_GOP_INTRA_ONLY);
+        schro_encoder_setting_set_double(p_schro_params->encoder,
+                                         "gop_structure",
+                                         SCHRO_ENCODER_GOP_INTRA_ONLY);
 
         if (avccontext->coder_type == FF_CODER_TYPE_VLC)
-            schro_encoder_setting_set_double (p_schro_params->encoder,
-                                              "enable_noarith", 1);
+            schro_encoder_setting_set_double(p_schro_params->encoder,
+                                             "enable_noarith", 1);
     } else {
-        schro_encoder_setting_set_double (p_schro_params->encoder,
-                                          "gop_structure",
-                                          SCHRO_ENCODER_GOP_BIREF);
+        schro_encoder_setting_set_double(p_schro_params->encoder,
+                                         "au_distance", avccontext->gop_size);
         avccontext->has_b_frames = 1;
     }
 
@@ -163,38 +181,40 @@ static int libschroedinger_encode_init(AVCodecContext *avccontext)
     if (avccontext->flags & CODEC_FLAG_QSCALE) {
         if (!avccontext->global_quality) {
             /* lossless coding */
-            schro_encoder_setting_set_double (p_schro_params->encoder,
-                                          "rate_control",
-                                          SCHRO_ENCODER_RATE_CONTROL_LOSSLESS);
+            schro_encoder_setting_set_double(p_schro_params->encoder,
+                                             "rate_control",
+                                             SCHRO_ENCODER_RATE_CONTROL_LOSSLESS);
         } else {
-            int noise_threshold;
-            schro_encoder_setting_set_double (p_schro_params->encoder,
-                          "rate_control",
-                          SCHRO_ENCODER_RATE_CONTROL_CONSTANT_NOISE_THRESHOLD);
+            int quality;
+            schro_encoder_setting_set_double(p_schro_params->encoder,
+                                             "rate_control",
+                                             SCHRO_ENCODER_RATE_CONTROL_CONSTANT_QUALITY);
 
-            noise_threshold = avccontext->global_quality/FF_QP2LAMBDA;
-            if (noise_threshold > 100)
-                noise_threshold = 100;
-            schro_encoder_setting_set_double (p_schro_params->encoder,
-                                              "noise_threshold",
-                                              noise_threshold);
+            quality = avccontext->global_quality / FF_QP2LAMBDA;
+            if (quality > 10)
+                quality = 10;
+            schro_encoder_setting_set_double(p_schro_params->encoder,
+                                             "quality", quality);
         }
     } else {
-        schro_encoder_setting_set_double ( p_schro_params->encoder,
-                               "rate_control",
-                               SCHRO_ENCODER_RATE_CONTROL_CONSTANT_BITRATE);
+        schro_encoder_setting_set_double(p_schro_params->encoder,
+                                         "rate_control",
+                                         SCHRO_ENCODER_RATE_CONTROL_CONSTANT_BITRATE);
 
-        schro_encoder_setting_set_double (p_schro_params->encoder,
-                                          "bitrate",
-                                          avccontext->bit_rate);
+        schro_encoder_setting_set_double(p_schro_params->encoder,
+                                         "bitrate",
+                                         avccontext->bit_rate);
 
     }
 
     if (avccontext->flags & CODEC_FLAG_INTERLACED_ME)
         /* All material can be coded as interlaced or progressive
            irrespective of the type of source material. */
-        schro_encoder_setting_set_double (p_schro_params->encoder,
-                                            "interlaced_coding", 1);
+        schro_encoder_setting_set_double(p_schro_params->encoder,
+                                         "interlaced_coding", 1);
+
+    schro_encoder_setting_set_double(p_schro_params->encoder, "open_gop",
+                                     !(avccontext->flags & CODEC_FLAG_CLOSED_GOP));
 
     /* FIXME: Signal range hardcoded to 8-bit data until both libschroedinger
      * and libdirac support other bit-depth data. */
@@ -206,17 +226,17 @@ static int libschroedinger_encode_init(AVCodecContext *avccontext)
                                    p_schro_params->format);
 
     /* Set the debug level. */
-    schro_debug_set_level (avccontext->debug);
+    schro_debug_set_level(avccontext->debug);
 
-    schro_encoder_start (p_schro_params->encoder);
+    schro_encoder_start(p_schro_params->encoder);
 
     /* Initialize the encoded frame queue. */
-    ff_dirac_schro_queue_init (&p_schro_params->enc_frame_queue);
-    return 0 ;
+    ff_dirac_schro_queue_init(&p_schro_params->enc_frame_queue);
+    return 0;
 }
 
-static SchroFrame *libschroedinger_frame_from_data (AVCodecContext *avccontext,
-                                                    void *in_data)
+static SchroFrame *libschroedinger_frame_from_data(AVCodecContext *avccontext,
+                                                   void *in_data)
 {
     FfmpegSchroEncoderParams* p_schro_params = avccontext->priv_data;
     SchroFrame *in_frame;
@@ -226,10 +246,10 @@ static SchroFrame *libschroedinger_frame_from_data (AVCodecContext *avccontext,
     in_frame = ff_create_schro_frame(avccontext, p_schro_params->frame_format);
 
     if (in_frame)
-    avpicture_layout ((AVPicture *)in_data, avccontext->pix_fmt,
-                      avccontext->width, avccontext->height,
-                      in_frame->components[0].data,
-                      p_schro_params->frame_size);
+        avpicture_layout((AVPicture *)in_data, avccontext->pix_fmt,
+                          avccontext->width, avccontext->height,
+                          in_frame->components[0].data,
+                          p_schro_params->frame_size);
 
     return in_frame;
 }
@@ -238,7 +258,7 @@ static void SchroedingerFreeFrame(void *data)
 {
     FfmpegDiracSchroEncodedFrame *enc_frame = data;
 
-    av_freep (&(enc_frame->p_encbuf));
+    av_freep(&(enc_frame->p_encbuf));
     av_free(enc_frame);
 }
 
@@ -264,8 +284,8 @@ static int libschroedinger_encode_frame(AVCodecContext *avccontext,
         }
     } else {
         /* Allocate frame data to schro input buffer. */
-        SchroFrame *in_frame = libschroedinger_frame_from_data (avccontext,
-                                                                data);
+        SchroFrame *in_frame = libschroedinger_frame_from_data(avccontext,
+                                                               data);
         /* Load next frame. */
         schro_encoder_push_frame(encoder, in_frame);
     }
@@ -275,14 +295,14 @@ static int libschroedinger_encode_frame(AVCodecContext *avccontext,
 
     /* Now check to see if we have any output from the encoder. */
     while (go) {
-        SchroStateEnum  state;
+        SchroStateEnum state;
         state = schro_encoder_wait(encoder);
         switch (state) {
         case SCHRO_STATE_HAVE_BUFFER:
         case SCHRO_STATE_END_OF_STREAM:
             enc_buf = schro_encoder_pull(encoder, &presentation_frame);
-            assert (enc_buf->length > 0);
-            assert (enc_buf->length <= buf_size);
+            assert(enc_buf->length > 0);
+            assert(enc_buf->length <= buf_size);
             parse_code = enc_buf->data[4];
 
             /* All non-frame data is prepended to actual frame data to
@@ -292,7 +312,7 @@ static int libschroedinger_encode_frame(AVCodecContext *avccontext,
             p_schro_params->enc_buf = av_realloc(p_schro_params->enc_buf,
                                                  p_schro_params->enc_buf_size + enc_buf->length);
 
-            memcpy(p_schro_params->enc_buf+p_schro_params->enc_buf_size,
+            memcpy(p_schro_params->enc_buf + p_schro_params->enc_buf_size,
                    enc_buf->data, enc_buf->length);
             p_schro_params->enc_buf_size += enc_buf->length;
 
@@ -303,7 +323,7 @@ static int libschroedinger_encode_frame(AVCodecContext *avccontext,
             }
 
             if (!SCHRO_PARSE_CODE_IS_PICTURE(parse_code)) {
-                schro_buffer_unref (enc_buf);
+                schro_buffer_unref(enc_buf);
                 break;
             }
 
@@ -318,17 +338,14 @@ static int libschroedinger_encode_frame(AVCodecContext *avccontext,
 
             /* Parse the coded frame number from the bitstream. Bytes 14
              * through 17 represesent the frame number. */
-                p_frame_output->frame_num = (enc_buf->data[13] << 24) +
-                                            (enc_buf->data[14] << 16) +
-                                            (enc_buf->data[15] <<  8) +
-                                             enc_buf->data[16];
+            p_frame_output->frame_num = AV_RB32(enc_buf->data + 13);
 
-            ff_dirac_schro_queue_push_back (&p_schro_params->enc_frame_queue,
-                                            p_frame_output);
+            ff_dirac_schro_queue_push_back(&p_schro_params->enc_frame_queue,
+                                           p_frame_output);
             p_schro_params->enc_buf_size = 0;
             p_schro_params->enc_buf      = NULL;
 
-            schro_buffer_unref (enc_buf);
+            schro_buffer_unref(enc_buf);
 
             break;
 
@@ -367,15 +384,15 @@ static int libschroedinger_encode_frame(AVCodecContext *avccontext,
     /* Append the end of sequence information to the last frame in the
      * sequence. */
     if (last_frame_in_sequence && p_schro_params->enc_buf_size > 0) {
-        memcpy (frame + enc_size, p_schro_params->enc_buf,
-                p_schro_params->enc_buf_size);
+        memcpy(frame + enc_size, p_schro_params->enc_buf,
+               p_schro_params->enc_buf_size);
         enc_size += p_schro_params->enc_buf_size;
-        av_freep (&p_schro_params->enc_buf);
+        av_freep(&p_schro_params->enc_buf);
         p_schro_params->enc_buf_size = 0;
     }
 
     /* free frame */
-    SchroedingerFreeFrame (p_frame_output);
+    SchroedingerFreeFrame(p_frame_output);
 
     return enc_size;
 }
@@ -386,12 +403,12 @@ static int libschroedinger_encode_close(AVCodecContext *avccontext)
 
     FfmpegSchroEncoderParams* p_schro_params = avccontext->priv_data;
 
-     /* Close the encoder. */
+    /* Close the encoder. */
     schro_encoder_free(p_schro_params->encoder);
 
     /* Free data in the output frame queue. */
-    ff_dirac_schro_queue_free (&p_schro_params->enc_frame_queue,
-                               SchroedingerFreeFrame);
+    ff_dirac_schro_queue_free(&p_schro_params->enc_frame_queue,
+                              SchroedingerFreeFrame);
 
 
     /* Free the encoder buffer. */
@@ -401,19 +418,19 @@ static int libschroedinger_encode_close(AVCodecContext *avccontext)
     /* Free the video format structure. */
     av_freep(&p_schro_params->format);
 
-    return 0 ;
+    return 0;
 }
 
 
-AVCodec libschroedinger_encoder = {
+AVCodec ff_libschroedinger_encoder = {
     "libschroedinger",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_DIRAC,
     sizeof(FfmpegSchroEncoderParams),
     libschroedinger_encode_init,
     libschroedinger_encode_frame,
     libschroedinger_encode_close,
-   .capabilities= CODEC_CAP_DELAY,
+   .capabilities = CODEC_CAP_DELAY,
    .pix_fmts     = (const enum PixelFormat[]){PIX_FMT_YUV420P, PIX_FMT_YUV422P, PIX_FMT_YUV444P, PIX_FMT_NONE},
-   .long_name= NULL_IF_CONFIG_SMALL("libschroedinger Dirac 2.2"),
+   .long_name    = NULL_IF_CONFIG_SMALL("libschroedinger Dirac 2.2"),
 };

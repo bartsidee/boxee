@@ -1,111 +1,126 @@
 #ifndef GUIWINDOWBOXEEBROWSETVSHOWS_H_
 #define GUIWINDOWBOXEEBROWSETVSHOWS_H_
 
-#include "GUIWindowBoxeeBrowseWithPanel.h"
+#include "GUIWindowBoxeeBrowse.h"
 #include "BoxeeServerDirectory.h"
 #include "lib/libBoxee/bxgenresmanager.h"
 #include "lib/libBoxee/bxsourcesmanager.h"
+#include "GUIDialogBoxeeSortDropdown.h"
 
 using namespace BOXEE;
+
+class CRemoteTVShowsSource : public CBrowseWindowSource
+{
+public:
+  CRemoteTVShowsSource(int iWindowID);
+  virtual ~CRemoteTVShowsSource();
+
+  void AddStateParameters(std::map <CStdString, CStdString>& mapOptions);
+};
+
+class CTVShowsStoreSource : public CBrowseWindowSource
+{
+public:
+  CTVShowsStoreSource(int iWindowID);
+  virtual ~CTVShowsStoreSource();
+
+  void AddStateParameters(std::map <CStdString, CStdString>& mapOptions);
+};
+
+class CLocalTVShowsSource : public CBrowseWindowSource
+{
+public:
+  CLocalTVShowsSource(int iWindowID);
+  virtual ~CLocalTVShowsSource();
+
+  void AddStateParameters(std::map <CStdString, CStdString>& mapOptions);
+  void BindItems(CFileItemList& items);
+};
+
+class CTVShowsSubscriptionsSource : public CBrowseWindowSource
+{
+public:
+  CTVShowsSubscriptionsSource(int iWindowID);
+  virtual ~CTVShowsSubscriptionsSource();
+
+  void AddStateParameters(std::map <CStdString, CStdString>& mapOptions);
+};
 
 class CTvShowsWindowState : public CBrowseWindowState
 {
 public:
-  CTvShowsWindowState(CGUIWindow* pWindow);
+  CTvShowsWindowState(CGUIWindowBoxeeBrowse* pWindow);
   virtual ~CTvShowsWindowState() {}
 
-  virtual CStdString CreatePath();
-  virtual CStdString AddGuiStateParameters(const CStdString& _strPath);
+  virtual void Refresh(bool bResetSelected=false);
 
-  virtual void Reset();
+  //virtual bool OnBack();
+
+  virtual void SetCategory(const CStdString& strCategory);
+  void ClearCachedSources();
 
   // Filters
-  void SetGenre(const CStdString& strGenre);
-  CStdString GetGenre() { return m_strGenre; }
-
-  void SetSource(const CStdString& strSourceId, const CStdString& strSourceName);
-  CStdString GetSource() { return m_strSource; }
-
-  void SetFree(bool bFree);
-
-  void SetUnwatchedFilter(bool bOn);
-
   virtual void ResetFilters();
-  void UpdateFilters(const CStdString& strPath) {}
 
-  virtual void SortItems(CFileItemList &items);
+  void SetGenre(const GenreItem& genre);
+  GenreItem GetGenre() { return m_currentGenre; }
 
-  virtual bool OnBack();
+  void SetUnwatched(bool unwatched);
 
-  virtual void OnUnwatched();
-  virtual void OnFree();
+  void SetStore(const CStdString& strStoreId);
 
-  void RestoreWindowState();
+  void SetDefaultView();
+  void SetDefaultCategory();
 
-  bool m_bInShow;
+  // Flag that indicates that we are returning back from episodes screen of a specific tv show
+  int   m_iLastSelectedItem;
+
+  virtual CStdString GetItemSummary();
 
 protected:
-
   // filters
-  CStdString m_strGenre;
-  CStdString m_strSource;
+  GenreItem  m_currentGenre;
+  //CStdString m_strSource;
+  CStdString  m_strStoreId;
+  CStdString  m_strStoreName;
+  bool        m_bUnwatched;
 
-  bool m_bFree;
-  bool m_bUnwatched;
+  CFileItemList m_storeList;
 };
 
-class CMyShowsWindowState : public  CTvShowsWindowState
-{
-public:
-  CMyShowsWindowState(CGUIWindow* pWindow);
-  virtual ~CMyShowsWindowState() {}
-  void Reset();
-  virtual CStdString AddGuiStateParameters(const CStdString& _strPath);
-};
-
-class CAllShowsWindowState : public  CTvShowsWindowState
-{
-public:
-  CAllShowsWindowState(CGUIWindow* pWindow);
-  virtual ~CAllShowsWindowState() {}
-  void Reset();
-  virtual CStdString AddGuiStateParameters(const CStdString& _strPath);
-};
-
-
-class CGUIWindowBoxeeBrowseTvShows : public CGUIWindowBoxeeBrowseWithPanel
+///////////////////////////////////////////////////////////////////////////
+// TVshows browse window implementation
+class CGUIWindowBoxeeBrowseTvShows : public CGUIWindowBoxeeBrowse
 {
 public:
   CGUIWindowBoxeeBrowseTvShows();
   CGUIWindowBoxeeBrowseTvShows(DWORD dwID, const CStdString &xmlFile);
   virtual ~CGUIWindowBoxeeBrowseTvShows();
-	
+
   virtual void OnInitWindow();
   virtual bool OnAction(const CAction &action);
-  virtual bool ProcessPanelMessages(CGUIMessage& message);
-
+  virtual bool OnMessage(CGUIMessage& message);
 
   virtual bool OnClick(int iItem);
-  virtual void Render();
-  void SetVideoCounters(bool bOn);
+
+  void UpdateVideoCounters(bool bOn);
+
+  virtual void ShowItems(CFileItemList& list, bool append);
+  virtual bool HandleEmptyState();
+
+  // Set of functions that update UI flags and properties
+  void UpdateUIGenre(const CStdString& strValue);
 
 protected:
 
-  virtual void SetGenres();
-  virtual void SetSources();
+  virtual void ConfigureState(const CStdString& param);
+  virtual void GetStartMenusStructure(std::list<CFileItemList>& browseMenuLevelList);
 
-  void FillGenresList(CFileItemList& genres);
-  void FillSourcesList(CFileItemList& sources);
+  //void FillGenresList(CFileItemList& genres);
+  //void FillReadyToWatchList(CFileItemList& ready);
 
-  std::vector<GenreItem> m_vecGenres;
-  std::vector<BXSourcesItem> m_vecSources;
-
-  CTvShowsWindowState* myShowsState;
-  CTvShowsWindowState* allShowsState;
-  int                  m_renderCount;
-
-
-
+  // Counter used to update local media resolver status every 120 sec
+  int m_renderCount;
 };
 
 

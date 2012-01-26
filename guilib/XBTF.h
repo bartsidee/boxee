@@ -37,6 +37,9 @@
 #define XB_FMT_B8G8R8A8   16
 #define XB_FMT_A8         32
 #define XB_FMT_R8G8B8A8   64
+#define XB_FMT_ETC        128
+#define XB_FMT_PVR2       256
+#define XB_FMT_PVR4       512
 
 class CXBTFFrame
 {
@@ -44,10 +47,14 @@ public:
   CXBTFFrame();
   uint32_t GetWidth() const;
   void SetWidth(uint32_t width);
+  uint32_t GetInitialWidth() const;
+  void SetInitialWidth(uint32_t initialWidth);
   uint32_t GetFormat() const;
   void SetFormat(uint32_t format);
   uint32_t GetHeight() const;
   void SetHeight(uint32_t height);
+  uint32_t GetInitialHeight() const;
+  void SetInitialHeight(uint32_t initialHeight);
   uint64_t GetUnpackedSize() const;
   void SetUnpackedSize(uint64_t size);
   uint64_t GetPackedSize() const;
@@ -67,6 +74,9 @@ private:
   uint64_t m_unpackedSize;
   uint64_t m_offset;
   uint32_t m_duration;
+  uint32_t m_initialWidth;
+  uint32_t m_initialHeight;
+
 };
 
 class CXBTFFile

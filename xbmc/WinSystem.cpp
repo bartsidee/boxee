@@ -33,6 +33,7 @@ CWinSystemBase::CWinSystemBase()
   m_bFullScreen = false;
   m_nScreen = 0;
   m_bBlankOtherDisplay = false;
+  m_bSupportTrue24p = false;
 }
 
 CWinSystemBase::~CWinSystemBase()
@@ -47,8 +48,10 @@ bool CWinSystemBase::InitWindowSystem()
   return true;
 }
 
-void CWinSystemBase::UpdateDesktopResolution(RESOLUTION_INFO& newRes, int screen, int width, int height, float refreshRate)
+void CWinSystemBase::UpdateDesktopResolution(RESOLUTION_INFO& newRes, int screen, int width, int height, float refreshRate, bool interlaced)
 {
+  CStdString interlacedStr;
+
   newRes.Overscan.left = 0;
   newRes.Overscan.top = 0;
   newRes.Overscan.right = width;
@@ -61,57 +64,78 @@ void CWinSystemBase::UpdateDesktopResolution(RESOLUTION_INFO& newRes, int screen
   newRes.iWidth = width;
   newRes.iHeight = height;
   
-  bool stdRes = false;
-  if (width == 1280 && height == 720)
+  newRes.dwFlags = 0;
+  if (interlaced)
   {
-    newRes.strMode = "720";
-    stdRes = true;
+    newRes.dwFlags |= D3DPRESENTFLAG_INTERLACED;
+    interlacedStr = "i";
   }
-  if (width == 1366 && height == 768)
+  else
   {
-    newRes.strMode = "720";
-    stdRes = true;
-  }
-  else if (width == 720 && height == 480)
-  {
-    newRes.strMode = "480";
-    stdRes = true;
-  }
-  else if (width == 1920 && height == 1080)
-  {
-    newRes.strMode = "1080";
-    stdRes = true;
+    newRes.dwFlags |= D3DPRESENTFLAG_PROGRESSIVE;
+    interlacedStr = "p";
   }
 
-  if (stdRes)
+  if (width == 1280 && height == 720 && refreshRate < 59.95f && refreshRate > 59.93f)
   {
-    if (refreshRate > 23 && refreshRate < 31)
-    {
-      newRes.strMode += "i";
-    }
-    else
-    {
-      newRes.strMode += "p";
-    }
-      
-    if (refreshRate > 1)
-    {
-      newRes.strMode.Format("%s%2.f (Full Screen)",  newRes.strMode, refreshRate);
-    }
-  }  
+    newRes.strMode = CStdString("720") + interlacedStr;
+  }
+  else if (width == 1280 && height == 720 && refreshRate < 50.1f && refreshRate > 49.99f)
+  {
+    newRes.strMode = CStdString("720") + interlacedStr + CStdString(" 50Hz");
+  }
+  else if (width == 720 && height == 480 && interlacedStr == "p")
+  {
+    newRes.strMode = CStdString("480p");
+    newRes.fPixelRatio = 1.18f;
+  }
+  else if (width == 720 && height == 480 && interlacedStr == "i")
+  {
+    newRes.strMode = CStdString("NTSC");
+    newRes.fPixelRatio = 1.18f;
+  }
+  else if (width == 720 && height == 576 && interlacedStr == "i")
+  {
+    newRes.strMode = CStdString("PAL");
+    newRes.fPixelRatio = 1.416f;
+  }
+  else if (width == 720 && height == 576 && interlacedStr == "p")
+  {
+    newRes.strMode = CStdString("576p");
+    newRes.fPixelRatio = 1.416f;
+  }
+  else if (width == 1920 && height == 1080 && refreshRate < 59.95f && refreshRate > 59.93f)
+  {
+    newRes.strMode = CStdString("1080") + interlacedStr;
+  }
+  else if (width == 1920 && height == 1080 && refreshRate < 50.1f && refreshRate > 49.99f)
+  {
+    newRes.strMode = CStdString("1080") + interlacedStr + CStdString(" 50Hz");
+  }
+  else if (width == 1920 && height == 1080 && refreshRate < 24.1f && refreshRate > 23.8f)
+  {
+    newRes.strMode = CStdString("1080") + interlacedStr + CStdString(" 24Hz");
+  }
   else
   {
     newRes.strMode.Format("%dx%d", width, height);
     if (refreshRate > 1)
     {
-	    newRes.strMode.Format("%s @ %.2f - Full Screen", newRes.strMode, refreshRate);
+      if (refreshRate - floorf(refreshRate) < 0.001f)
+      {
+        newRes.strMode.Format("%s (%.0fHz%s)",  newRes.strMode, refreshRate, interlaced ? ", interlaced" : "");
+      }
+      else
+      {
+        newRes.strMode.Format("%s (%.2fHz%s)",  newRes.strMode, refreshRate, interlaced ? ", interlaced" : "");
+      }
     }
   }
   
   if (screen > 0)
   {
     newRes.strMode.Format("%s #%d", newRes.strMode, screen + 1);    
-  }  
+  }
 }
 
 void CWinSystemBase::UpdateResolutions()
@@ -132,5 +156,6 @@ void CWinSystemBase::SetWindowResolution(int width, int height)
   window.iWidth = width;
   window.iHeight = height;
   window.iSubtitles = (int)(0.965 * window.iHeight);
+  window.strMode = "Windowed";
   g_graphicsContext.ResetOverscan(window);
 }

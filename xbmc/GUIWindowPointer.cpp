@@ -21,6 +21,7 @@
 
 #include "GUIWindowPointer.h"
 #include "MouseStat.h"
+#include "Settings.h"
 
 #define ID_POINTER 10
 
@@ -76,9 +77,33 @@ void CGUIWindowPointer::OnWindowLoaded()
 
 void CGUIWindowPointer::Render()
 {
+  TransformMatrix mat;
+
+  RESOLUTION res = g_graphicsContext.GetVideoResolution();
+  RESOLUTION skinRes = g_graphicsContext.GetSkinResolution();
+
   CPoint location(g_Mouse.GetLocation());
-  SetPosition(location.x, location.y);
+  SetPosition(0, 0);
   SetPointer(g_Mouse.GetState());
+
+  int graphicsWidth = g_settings.m_ResInfo[skinRes].iWidth;
+  int graphicsHeight= g_settings.m_ResInfo[skinRes].iHeight;
+  int screenWidth = g_settings.m_ResInfo[res].iWidth;
+  int screenHeight = g_settings.m_ResInfo[res].iHeight;
+
+  TransformMatrix tran = TransformMatrix::CreateTranslation(location.x, location.y, 0);
+  TransformMatrix scale = TransformMatrix::CreateScaler((float) screenWidth / graphicsWidth,
+      (float) screenHeight / graphicsHeight, 0);
+
+  g_graphicsContext.PushTransform(tran * scale, true);
+  g_graphicsContext.PushViewPort(0, 0, 0, 0, false);
+  bool clip = g_graphicsContext.SetClipRegion(0, 0, 0, 0, false);
+
   CGUIWindow::Render();
+
+  g_graphicsContext.PopTransform();
+  g_graphicsContext.PopViewPort();
+  if(clip)
+    g_graphicsContext.RestoreClipRegion();
 }
 

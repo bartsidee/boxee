@@ -27,8 +27,6 @@ static av_cold int decode_init(AVCodecContext *avctx)
         av_log(avctx, AV_LOG_ERROR, "v210x needs even width\n");
         return -1;
     }
-    if(avcodec_check_dimensions(avctx, avctx->width, avctx->height) < 0)
-        return -1;
     avctx->pix_fmt = PIX_FMT_YUV422P16;
     avctx->bits_per_raw_sample= 10;
 
@@ -69,12 +67,12 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
     pic->key_frame= 1;
 
     for(;;){
-        uint32_t v= be2me_32(*src++);
+        uint32_t v= av_be2ne32(*src++);
         *udst++= (v>>16) & 0xFFC0;
         *ydst++= (v>>6 ) & 0xFFC0;
         *vdst++= (v<<4 ) & 0xFFC0;
 
-        v= be2me_32(*src++);
+        v= av_be2ne32(*src++);
         *ydst++= (v>>16) & 0xFFC0;
 
         if(ydst >= yend){
@@ -89,7 +87,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
         *udst++= (v>>6 ) & 0xFFC0;
         *ydst++= (v<<4 ) & 0xFFC0;
 
-        v= be2me_32(*src++);
+        v= av_be2ne32(*src++);
         *vdst++= (v>>16) & 0xFFC0;
         *ydst++= (v>>6 ) & 0xFFC0;
 
@@ -104,7 +102,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
 
         *udst++= (v<<4 ) & 0xFFC0;
 
-        v= be2me_32(*src++);
+        v= av_be2ne32(*src++);
         *ydst++= (v>>16) & 0xFFC0;
         *vdst++= (v>>6 ) & 0xFFC0;
         *ydst++= (v<<4 ) & 0xFFC0;
@@ -124,14 +122,25 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
     return avpkt->size;
 }
 
-AVCodec v210x_decoder = {
+static av_cold int decode_close(AVCodecContext *avctx)
+{
+    AVFrame *pic = avctx->coded_frame;
+    if (pic->data[0])
+        avctx->release_buffer(avctx, pic);
+    av_freep(&avctx->coded_frame);
+
+    return 0;
+}
+
+AVCodec ff_v210x_decoder = {
     "v210x",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_V210X,
     0,
     decode_init,
     NULL,
-    NULL,
+    decode_close,
     decode_frame,
     CODEC_CAP_DR1,
+    .long_name = NULL_IF_CONFIG_SMALL("Uncompressed 4:2:2 10-bit"),
 };

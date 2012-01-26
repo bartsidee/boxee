@@ -21,14 +21,23 @@
 #include "system.h"
 #include "VideoFilterShader.h"
 #include "utils/log.h"
+#include "utils/GLUtils.h"
+#include "ConvolutionKernels.h"
 
 #include <string>
 #include <math.h>
 
-#if defined(HAS_GL) || defined(HAS_GLES)
+#if defined(HAS_GL2) || HAS_GLES == 2
 
 using namespace Shaders;
 using namespace std;
+
+#if defined(HAS_GL)
+  #define USE1DTEXTURE
+  #define TEXTARGET GL_TEXTURE_1D
+#else
+  #define TEXTARGET GL_TEXTURE_2D
+#endif
 
 //////////////////////////////////////////////////////////////////////
 // BaseVideoFilterShader - base class for video filter shaders
@@ -38,156 +47,93 @@ BaseVideoFilterShader::BaseVideoFilterShader()
 {
   m_width = 1;
   m_height = 1;
-  m_hStepX = 0;
-  m_hStepY = 0;
+  m_hStepXY = 0;
   m_stepX = 0;
   m_stepY = 0;
   m_sourceTexUnit = 0;
   m_hSourceTex = 0;
 
-  string shaderv = 
-    "uniform float stepx;"
-    "uniform float stepy;"
+  m_stretch = 0.0f;
+
+  string shaderv =
+    "varying vec2 cord;"
     "void main()"
     "{"
-    "gl_TexCoord[0].xy = gl_MultiTexCoord0.xy - vec2(stepx * 0.5, stepy * 0.5);"
+    "cord = vec2(gl_TextureMatrix[0] * gl_MultiTexCoord0);"
     "gl_Position = ftransform();"
     "gl_FrontColor = gl_Color;"
     "}";
   VertexShader()->SetSource(shaderv);
 }
 
-//////////////////////////////////////////////////////////////////////
-// BicubicFilterShader
-//////////////////////////////////////////////////////////////////////
-
-BicubicFilterShader::BicubicFilterShader(float B, float C)
+ConvolutionFilterShader::ConvolutionFilterShader(ESCALINGMETHOD method, bool stretch)
 {
-  string shaderf = 
-    "uniform sampler2D img;"
-    "uniform float stepx;"
-    "uniform float stepy;"
-    "uniform sampler2D kernelTex;"
-    
-    "vec4 cubicFilter(float xValue, vec4 c0, vec4 c1, vec4 c2, vec4 c3)"
-    "{"
-    " vec4 h = texture2D(kernelTex, vec2(xValue, 0.5));"
-    " vec4 r = c0 * h.r;"
-    " r += c1 * h.g;"
-    " r += c2 * h.b;"
-    " r += c3 * h.a;"
-    " return r;"
-    "}"
-    ""
-    "void main()"
-    "{"
-    "vec2 f = vec2(gl_TexCoord[0].x / stepx , gl_TexCoord[0].y / stepy);"
-    "f = fract(f);"
-    "vec4 t0 = cubicFilter(f.x,"
-    "texture2D(img, gl_TexCoord[0].xy + vec2(-stepx, -stepy)),"
-    "texture2D(img, gl_TexCoord[0].xy + vec2(0.0, -stepy)),"
-    "texture2D(img, gl_TexCoord[0].xy + vec2(stepx, -stepy)),"
-    "texture2D(img, gl_TexCoord[0].xy + vec2(2.0*stepx, -stepy)));"
-    ""
-    "vec4 t1 = cubicFilter(f.x,"
-    "texture2D(img, gl_TexCoord[0].xy + vec2(-stepx, 0.0)),"
-    "texture2D(img, gl_TexCoord[0].xy + vec2(0.0, 0.0)),"
-    "texture2D(img, gl_TexCoord[0].xy + vec2(stepx, 0.0)),"
-    "texture2D(img, gl_TexCoord[0].xy + vec2(2.0*stepx, 0.0)));"
-    ""
-    "vec4 t2 = cubicFilter(f.x,"
-    "texture2D(img, gl_TexCoord[0].xy + vec2(-stepx, stepy)),"
-    "texture2D(img, gl_TexCoord[0].xy + vec2(0.0, stepy)),"
-    "texture2D(img, gl_TexCoord[0].xy + vec2(stepx, stepy)),"
-    "texture2D(img, gl_TexCoord[0].xy + vec2(2.0*stepx, stepy)));"
-    ""
-    "vec4 t3 = cubicFilter(f.x,"
-    "texture2D(img, gl_TexCoord[0].xy + vec2(-stepx, 2.0*stepy)),"
-    "texture2D(img, gl_TexCoord[0].xy + vec2(0, 2.0*stepy)),"
-    "texture2D(img, gl_TexCoord[0].xy + vec2(stepx, 2.0*stepy)),"
-    "texture2D(img, gl_TexCoord[0].xy + vec2(2.0*stepx, 2.0*stepy)));"
-    
-    "gl_FragColor = cubicFilter(f.y, t0, t1, t2, t3) ;"    
-    "gl_FragColor.a = gl_Color.a;"
-    "}";
-  PixelShader()->SetSource(shaderf);
+  m_method = method;
   m_kernelTex1 = 0;
-  m_B = B;
-  m_C = C;
-  if (B<=0)
-    m_B=1.0f/3.0f;
-  if (C<=0)
-    m_C=1.0f/3.0f;
+
+  string shadername;
+  string defines;
+
+#if defined(HAS_GL)
+  m_floattex = glewIsSupported("GL_ARB_texture_float");
+#elif HAS_GLES == 2
+  m_floattex = false;
+#endif
+
+  if (m_method == VS_SCALINGMETHOD_CUBIC ||
+      m_method == VS_SCALINGMETHOD_LANCZOS2 ||
+      m_method == VS_SCALINGMETHOD_LANCZOS3_FAST)
+  {
+    shadername = "convolution-4x4.glsl";
+#if defined(HAS_GL)
+    if (m_floattex)
+      m_internalformat = GL_RGBA16F_ARB;
+    else
+#endif
+      m_internalformat = GL_RGBA;
+  }
+  else if (m_method == VS_SCALINGMETHOD_LANCZOS3)
+  {
+    shadername = "convolution-6x6.glsl";
+#if defined(HAS_GL)
+    if (m_floattex)
+      m_internalformat = GL_RGB16F_ARB;
+    else
+#endif
+      m_internalformat = GL_RGB;
+  }
+
+  if (m_floattex)
+    defines = "#define HAS_FLOAT_TEXTURE 1\n";
+  else
+    defines = "#define HAS_FLOAT_TEXTURE 0\n";
+
+  //don't compile in stretch support when it's not needed
+  if (stretch)
+    defines += "#define XBMC_STRETCH 1\n";
+  else
+    defines += "#define XBMC_STRETCH 0\n";
+
+  //tell shader if we're using a 1D texture
+#ifdef USE1DTEXTURE
+  defines += "#define USE1DTEXTURE 1\n";
+#else
+  defines += "#define USE1DTEXTURE 0\n";
+#endif
+
+  CLog::Log(LOGDEBUG, "GL: ConvolutionFilterShader: using %s defines:\n%s", shadername.c_str(), defines.c_str());
+  PixelShader()->LoadSource(shadername, defines);
 }
 
-void BicubicFilterShader::OnCompiledAndLinked()
+void ConvolutionFilterShader::OnCompiledAndLinked()
 {
-  // TODO: check for floating point texture support GL_ARB_texture_float
-
   // obtain shader attribute handles on successfull compilation
   m_hSourceTex = glGetUniformLocation(ProgramHandle(), "img");
-  m_hStepX = glGetUniformLocation(ProgramHandle(), "stepx");
-  m_hStepY = glGetUniformLocation(ProgramHandle(), "stepy");
-  m_hKernTex = glGetUniformLocation(ProgramHandle(), "kernelTex");
-  //CreateKernels(512, 1.0/2.0, 1.0/2.0);
-  //CreateKernels(512, 0.0, 0.6); // mplayer's coeffs
-  //CreateKernels(512, 1.0/3.0, 1.0/3.0);
-  CreateKernels(256, m_B, m_C);
-  VerifyGLState();
-}
+  m_hStepXY    = glGetUniformLocation(ProgramHandle(), "stepxy");
+  m_hKernTex   = glGetUniformLocation(ProgramHandle(), "kernelTex");
+  m_hStretch   = glGetUniformLocation(ProgramHandle(), "m_stretch");
 
-bool BicubicFilterShader::OnEnabled()
-{
-  // set shader attributes once enabled
-  glActiveTexture(GL_TEXTURE2);
-  glBindTexture(GL_TEXTURE_2D, m_kernelTex1);
-
-  glActiveTexture(GL_TEXTURE0);
-  glUniform1i(m_hSourceTex, m_sourceTexUnit);
-  glUniform1i(m_hKernTex, 2);
-  glUniform1f(m_hStepX, m_stepX);
-  glUniform1f(m_hStepY, m_stepY);
-  VerifyGLState();
-  return true;
-}
-
-// Implementation idea taken from GPU Gems Vol.1
-
-bool BicubicFilterShader::CreateKernels(int size, float B, float C)
-{
-  float *img = new float[size*4];
-
-  if (!img)
-  {
-    CLog::Log(LOGERROR, "GL: Error creating bicubic kernels, out of memory");
-    return false;
-  }
-
-  memset(img, 0, sizeof(float)*4);
-
-  float *ptr = img;
-  float x, val;
-
-  for (int i = 0; i<size ; i++)
-  {
-    x = (float)i / (float)(size - 1);
-
-    val = MitchellNetravali(x+1, B, C);
-    *ptr = val;
-    ptr++;
-
-    val = MitchellNetravali(x, B, C);
-    *ptr = val;
-    ptr++;
-
-    val = MitchellNetravali(1-x, B, C);
-    *ptr = val;
-    ptr++;
-
-    val = MitchellNetravali(2-x, B, C);
-    *ptr = val;;
-    ptr++;
-  }
+  CConvolutionKernel kernel(m_method, 256);
 
   if (m_kernelTex1)
   {
@@ -199,28 +145,62 @@ bool BicubicFilterShader::CreateKernels(int size, float B, float C)
 
   if ((m_kernelTex1<=0))
   {
-    CLog::Log(LOGERROR, "GL: Error creating bicubic kernels, could not create textures");
-    delete[] img;
-    return false;
+    CLog::Log(LOGERROR, "GL: ConvolutionFilterShader: Error creating kernel texture");
+    return;
   }
 
-  // bind positive portion of cubic curve to texture unit 2
+  //make a kernel texture on GL_TEXTURE2 and set clamping and interpolation
+  //TEXTARGET is set to GL_TEXTURE_1D or GL_TEXTURE_2D
   glActiveTexture(GL_TEXTURE2);
-  glBindTexture(GL_TEXTURE_2D, m_kernelTex1);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-#ifdef HAS_GL
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F_ARB, size, 1, 0, GL_RGBA, GL_FLOAT, img);
+  glBindTexture(TEXTARGET, m_kernelTex1);
+  glTexParameteri(TEXTARGET, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(TEXTARGET, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(TEXTARGET, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(TEXTARGET, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+  //if float textures are supported, we can load the kernel as a float texture
+  //if not we load it as 8 bit unsigned which gets converted back to float in the shader
+  GLenum  format;
+  GLvoid* data;
+  if (m_floattex)
+  {
+    format = GL_FLOAT;
+    data   = (GLvoid*)kernel.GetFloatPixels();
+  }
+  else
+  {
+    format = GL_UNSIGNED_BYTE;
+    data   = (GLvoid*)kernel.GetUint8Pixels();
+  }
+
+  //upload as 1D texture or as 2D texture with height of 1
+#ifdef USE1DTEXTURE
+  glTexImage1D(TEXTARGET, 0, m_internalformat, kernel.GetSize(), 0, GL_RGBA, format, data);
+#else
+  glTexImage2D(TEXTARGET, 0, m_internalformat, kernel.GetSize(), 1, 0, GL_RGBA, format, data);
 #endif
 
   glActiveTexture(GL_TEXTURE0);
-  delete[] img;
+
+  VerifyGLState();
+}
+
+bool ConvolutionFilterShader::OnEnabled()
+{
+  // set shader attributes once enabled
+  glActiveTexture(GL_TEXTURE2);
+  glBindTexture(TEXTARGET, m_kernelTex1);
+
+  glActiveTexture(GL_TEXTURE0);
+  glUniform1i(m_hSourceTex, m_sourceTexUnit);
+  glUniform1i(m_hKernTex, 2);
+  glUniform2f(m_hStepXY, m_stepX, m_stepY);
+  glUniform1f(m_hStretch, m_stretch);
+  VerifyGLState();
   return true;
 }
 
-void BicubicFilterShader::Free()
+void ConvolutionFilterShader::Free()
 {
   if (m_kernelTex1)
     glDeleteTextures(1, &m_kernelTex1);
@@ -228,32 +208,23 @@ void BicubicFilterShader::Free()
   BaseVideoFilterShader::Free();
 }
 
-// Mitchell Netravali Reconstruction Filter
-// B = 1,   C = 0     - cubic B-spline 
-// B = 1/3, C = 1/3   - recommended
-// B = 0,   C = 1/2   - Catmull-Rom spline
-float BicubicFilterShader::MitchellNetravali(float x, float B, float C)
+StretchFilterShader::StretchFilterShader()
 {
-  float val = 0;
-  float ax = fabs(x);
-  if (ax<1.0f)
-  {
-    val =  ((12 - 9*B - 6*C) * ax * ax * ax +
-            (-18 + 12*B + 6*C) * ax * ax +
-            (6 - 2*B))/6;
-  }
-  else if (ax<2.0f)
-  {
-    val =  ((-B - 6*C) * ax * ax * ax + 
-            (6*B + 30*C) * ax * ax + (-12*B - 48*C) * 
-            ax + (8*B + 24*C)) / 6;
-  }
-  else
-  {
-    val = 0;
-  }
-//  val = ((val + 0.5) / 2);
-  return val;
+  PixelShader()->LoadSource("stretch.glsl");
+}
+
+void StretchFilterShader::OnCompiledAndLinked()
+{
+  m_hSourceTex = glGetUniformLocation(ProgramHandle(), "img");
+  m_hStretch   = glGetUniformLocation(ProgramHandle(), "m_stretch");
+}
+
+bool StretchFilterShader::OnEnabled()
+{
+  glUniform1i(m_hSourceTex, m_sourceTexUnit);
+  glUniform1f(m_hStretch, m_stretch);
+  VerifyGLState();
+  return true;
 }
 
 #endif

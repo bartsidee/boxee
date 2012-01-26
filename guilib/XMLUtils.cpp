@@ -217,7 +217,13 @@ void XMLUtils::SetInt(TiXmlNode* pRootNode, const char *strTag, int value)
   strValue.Format("%d", value);
   SetString(pRootNode, strTag, strValue);
 }
+void XMLUtils::SetUInt(TiXmlNode* pRootNode, const char *strTag, uint32_t value)
+{
+  CStdString strValue;
+  strValue.Format("%u", value);
+  SetString(pRootNode, strTag, strValue);
 
+}
 void XMLUtils::SetLong(TiXmlNode* pRootNode, const char *strTag, long value)
 {
   CStdString strValue;

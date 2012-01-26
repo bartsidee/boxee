@@ -76,12 +76,14 @@ public:
   int   evalString(const char *, const unsigned int argc = 0, const char ** argv = NULL);
   
 // BOXEE
-  int   evalFileInContext(const char *, const std::string& context, const unsigned int argc = 0, const char ** argv = NULL);
-  int   evalStringInContext(const char *pythonCode, const std::string& path, const std::string& context, const unsigned int argc = 0, const char ** argv = NULL);
-  XBPythonAppContext* GetContext(const std::string& _contextId);
+  int   evalFileInContext(const char *, const std::string& context, const CStdString& partnerId, const unsigned int argc = 0, const char ** argv = NULL);
+  //int   evalStringInContext(const char *pythonCode, const std::string& path, const std::string& context, const CStdString& securityLevel, const unsigned int argc = 0, const char ** argv = NULL);
+  int   evalStringInContext(const char *pythonCode, const std::string& path, const std::string& context, const CStdString& partnerId, const std::vector<CStdString>& params);
+  XBPythonAppContext* GetContext(const std::string& _contextId, const CStdString& partnerId);
   void RemoveContext(const std::string& _contextId);
   void RemoveContextAll();
-  PyThreadState* CreateNewInterpreter();   
+  bool HasPartnerThreadRunning(const CStdString& partnerId, const ThreadIdentifier& threadId);
+  PyThreadState* CreateNewInterpreter();  
 // End BOXEE
   
   bool	isRunning(int scriptId);
@@ -117,7 +119,7 @@ private:
 
   int               m_nextid;
   PyThreadState*    m_mainThreadState;
-  int               m_ThreadId;
+  ThreadIdentifier  m_ThreadId;
   bool              m_bInitialized;
   HANDLE            m_hEvent;
   int               m_iDllScriptCounter; // to keep track of the total scripts running that need the dll
@@ -127,7 +129,9 @@ private:
   PyList m_vecPyList;
   PlayerCallbackList m_vecPlayerCallbackList;
   CCriticalSection	m_critSection;
+#ifdef USE_PYTHON_DLL
   LibraryLoader*    m_pDll;
+#endif
   
   // any global events that scripts should be using
   HANDLE m_globalEvent;

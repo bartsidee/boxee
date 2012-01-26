@@ -129,7 +129,7 @@ static inline int get_parity(uint8_t value)
 static void lsf_decode(int16_t* lsfq, int16_t* past_quantizer_outputs[MA_NP + 1],
                        int16_t ma_predictor,
                        int16_t vq_1st, int16_t vq_2nd_low, int16_t vq_2nd_high)
-    {
+{
     int i,j;
     static const uint8_t min_distance[2]={10, 5}; //(2.13)
     int16_t* quantizer_output = past_quantizer_outputs[MA_NP];
@@ -171,7 +171,7 @@ static av_cold int decoder_init(AVCodecContext * avctx)
 
     if (avctx->channels != 1) {
         av_log(avctx, AV_LOG_ERROR, "Only mono sound is supported (requested channels: %d).\n", avctx->channels);
-        return AVERROR_NOFMT;
+        return AVERROR(EINVAL);
     }
 
     /* Both 8kbit/s and 6.4kbit/s modes uses two subframes per frame. */
@@ -188,11 +188,11 @@ static av_cold int decoder_init(AVCodecContext * avctx)
     memcpy(ctx->lsp[0], lsp_init, 10 * sizeof(int16_t));
 
     return 0;
-        }
+}
 
 static int decode_frame(AVCodecContext *avctx, void *data, int *data_size,
                         AVPacket *avpkt)
-        {
+{
     const uint8_t *buf = avpkt->data;
     int buf_size       = avpkt->size;
     int16_t *out_frame = data;
@@ -224,7 +224,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size,
         av_log(avctx, AV_LOG_DEBUG, "Packet type: %s\n", "G.729D @ 6.4kbit/s");
     } else {
         av_log(avctx, AV_LOG_ERROR, "Packet size %d is unknown.\n", buf_size);
-        return (AVERROR_NOFMT);
+        return AVERROR_INVALIDDATA;
     }
 
     for (i=0; i < buf_size; i++)
@@ -312,10 +312,10 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size,
     return buf_size;
 }
 
-AVCodec g729_decoder =
+AVCodec ff_g729_decoder =
 {
     "g729",
-    CODEC_TYPE_AUDIO,
+    AVMEDIA_TYPE_AUDIO,
     CODEC_ID_G729,
     sizeof(G729Context),
     decoder_init,

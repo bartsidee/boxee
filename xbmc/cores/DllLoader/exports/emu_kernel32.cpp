@@ -22,6 +22,7 @@
 #include "emu_kernel32.h"
 #include "emu_dummy.h"
 #include "utils/log.h"
+#include "Thread.h"
 
 #include "xbox/IoSupport.h"
 
@@ -31,6 +32,8 @@
 
 #include "../dll_tracker.h"
 #include "FileSystem/SpecialProtocol.h"
+
+#include "ThreadPolicy.h"
 
 #ifdef _LINUX
 #include "../../../linux/PlatformInclude.h"
@@ -1167,6 +1170,33 @@ extern "C" HANDLE WINAPI dllCreateFileA(
     IN HANDLE hTemplateFile
     )
 {
+  bool safeToOpen = true; 
+  char mode[2];
+  ThreadIdentifier tid;
+#if defined(_LINUX) && !defined(__APPLE__)
+  tid = gettid();
+#else
+  tid = CThread::GetCurrentThreadId();
+#endif 	
+  if(dwDesiredAccess & GENERIC_READ)
+    mode[0] = 'r';
+  else if(dwDesiredAccess & GENERIC_WRITE)
+    mode[0] = 'w';
+
+  mode[1] = 'b';
+
+  FileSystemItem item;
+  item.fileName = lpFileName;
+  item.accessMode = mode;
+
+  if(TPApplyPolicy(tid, FILE_SYSTEM, &item, &safeToOpen) && !safeToOpen)
+  {
+    CLog::Log(LOGDEBUG, "%s: Access denied for %s", __FUNCTION__, lpFileName);
+#if defined(_WIN32)
+    SetLastError(ERROR_ACCESS_DENIED);
+#endif
+    return NULL;
+  }
   return CreateFileA(_P(lpFileName), dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
 }
 
@@ -1300,3 +1330,35 @@ extern "C" DWORD WINAPI dllSizeofResource(HMODULE hModule, HRSRC hResInfo)
   return 0;
 #endif
 }
+
+extern "C" BOOL WINAPI dllCreateProcessA(
+  LPCSTR lpApplicationName, 
+  LPSTR lpCommandLine, 
+  LPSECURITY_ATTRIBUTES lpProcessAttributes,
+  LPSECURITY_ATTRIBUTES lpThreadAttributes,
+  BOOL bInheritHandles,
+  DWORD dwCreationFlags,
+  LPVOID lpEnvironment,
+  LPCSTR lpCurrentDirectory,
+  LPSTARTUPINFOA lpStartupInfo,
+  LPPROCESS_INFORMATION lpProcessInformation
+)
+{
+#ifdef _WIN32
+  ThreadIdentifier tid = GetCurrentThreadId();
+  bool safeToOpen;
+
+  if(TPApplyPolicy(tid, DISALLOW, (void*)lpApplicationName, &safeToOpen) && !safeToOpen)
+  {
+    CLog::Log(LOGDEBUG, "%s: Access denied for %s", __FUNCTION__, lpApplicationName ? lpApplicationName : lpCommandLine);
+    SetLastError(ERROR_ACCESS_DENIED);
+    return false;
+  }
+  return CreateProcessA(lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes, bInheritHandles, 
+                        dwCreationFlags, lpEnvironment,lpCurrentDirectory, lpStartupInfo, lpProcessInformation);  
+#else
+  not_implement("kernel32.dll fake function dllCreateProcessA called\n"); //warning
+  return 0;  
+#endif
+}
+

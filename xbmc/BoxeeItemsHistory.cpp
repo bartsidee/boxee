@@ -3,24 +3,33 @@
 #include "Util.h"
 #include "bxutils.h"
 #include "MusicInfoTag.h"
-//#include "XTimeUtils.h"
 #include "VideoInfoTag.h"
 #include "SpecialProtocol.h"
 #include "utils/log.h"
 #include "GUIUserMessages.h"
 #include "LocalizeStrings.h"
 #include "utils/SingleLock.h"
+#include "Thread.h"
+#include "GUIWindowManager.h"
+#include "URL.h"
+#include "BoxeeUtils.h"
 
 using namespace std;
 
-#define BOXEE_FILES_HISTORY_SIZE 500
-#define ITEMS_HISTORY_FILE_PATH "special://profile/playbackhistory.dmp"
-
 using namespace BOXEE;
 
-CBoxeeItemsHistory::CBoxeeItemsHistory()
+#define STR_WWW                   "www."
+#define STR_HTTP                  "http://"
+#define STR_HTTPS                 "https://"
+
+#define SECONDS_IN_A_DAY          (24 * 60 * 60)
+
+
+CBoxeeItemsHistory::CBoxeeItemsHistory(CStdString filepath, int iHistorySize)
 {
   m_historyReadyEvent = CreateEvent(NULL, TRUE, FALSE, "");
+  m_iHistoryMaxSize = iHistorySize;
+  m_strHistoryFilePath = filepath;
 }
 
 CBoxeeItemsHistory::~CBoxeeItemsHistory()
@@ -39,7 +48,7 @@ bool CBoxeeItemsHistory::AddItemToHistory(const CFileItem& item,CStdString histo
   {
     return false;
   }
-
+  
   CSingleLock lock(m_itemsHistorylock);
   
   CFileItem *ptr = CreateItemForHistoryList(item);  
@@ -55,7 +64,7 @@ bool CBoxeeItemsHistory::AddItemToHistory(const CFileItem& item,CStdString histo
   {
     historyId = _P(historyItem->m_strPath);
   }
-
+  
   historyItem->SetProperty("historyId",historyId);
   
   time_t tmNow = time(NULL);
@@ -74,14 +83,14 @@ bool CBoxeeItemsHistory::AddItemToHistory(const CFileItem& item,CStdString histo
     
     // Need to check if the FilesHistory id full.
     // If so remove the old item before adding new item
-    if(m_itemsHistoryList.Size() == BOXEE_FILES_HISTORY_SIZE)
+    if(m_itemsHistoryList.Size() == m_iHistoryMaxSize)
     {
-      CLog::Log(LOGDEBUG,"ItemsHistoryList size [%d] is equal to BOXEE_FILES_HISTORY_SIZE [%d]. Going to remove oldest item - (bh)",m_itemsHistoryList.Size(),BOXEE_FILES_HISTORY_SIZE);
+      CLog::Log(LOGDEBUG,"ItemsHistoryList size [%d] is equal to [HistoryMaxSize=%d]. Going to remove oldest item - (bh)",m_itemsHistoryList.Size(),m_iHistoryMaxSize);
       
       // Remove the oldest item in the FilesHistory list
-      CFileItemPtr itemToRemove = m_itemsHistoryList.Get(BOXEE_FILES_HISTORY_SIZE-1);
+      CFileItemPtr itemToRemove = m_itemsHistoryList.Get(m_iHistoryMaxSize-1);
       m_historyIdsOfItemsInHistoryList.erase(itemToRemove->GetProperty("historyId"));
-      m_itemsHistoryList.Remove(BOXEE_FILES_HISTORY_SIZE-1);
+      m_itemsHistoryList.Remove(m_iHistoryMaxSize-1);
     }
     
     m_itemsHistoryList.AddFront(historyItem,0);
@@ -103,6 +112,8 @@ bool CBoxeeItemsHistory::AddItemToHistory(const CFileItem& item,CStdString histo
     if(itemHistoryId.Equals(historyId))
     {
       CLog::Log(LOGDEBUG,"Item with [historyId=%s] is already at the front of the ItemsHistoryList. ItemsHistoryList size is [%d] (bh)",historyId.c_str(),m_itemsHistoryList.Size());
+
+      item->SetProperty("AddedToHistoryListTime",historyItem->GetProperty("AddedToHistoryListTime"));
       
       if(((item->GetThumbnailImage() == "defaultloading.gif") || (item->GetThumbnailImage() == "")) && (historyItem->GetThumbnailImage() != "defaultloading.gif"))
       {
@@ -223,14 +234,19 @@ CFileItem* CBoxeeItemsHistory::CreateItemForHistoryList(const CFileItem& item)
     else
     {
       *historyItem = item;
-      if (item.HasProperty("parentPath")) {
+      if (item.HasProperty("parentPath"))
+      {
         historyItem->SetProperty("parentfolder", item.GetProperty("parentPath"));
       }
+
       historyItem->SetProperty("IsInternetStream", true);
       historyItem->SetProperty("IsMusic", true);
       if (item.IsRSS())
+      {
         historyItem->SetProperty("IsRss", true);
+      }
     }
+
     historyItem->SetProperty("MediaType","music");
     CLog::Log(LOGDEBUG,"An audio item for HistoryList was created (bh)");
   }
@@ -269,6 +285,28 @@ CFileItem* CBoxeeItemsHistory::CreateItemForHistoryList(const CFileItem& item)
 
     CLog::Log(LOGDEBUG,"An Plugin Folder (YouTube) for HistoryList was created (bh)");
   }
+  else if ((item.m_bIsFolder) && (item.GetPropertyBOOL("isPictureFolder")))
+  {
+    // Case of Picture folder
+
+    historyItem = new CFileItem(item);
+
+    CLog::Log(LOGDEBUG,"A Picture folder item for HistoryList was created (bh)");
+  }
+  else if ((item.m_bIsFolder) && (item.GetPropertyBOOL("isMusicFolder")))
+  {
+    // Case of Picture folder
+
+    historyItem = new CFileItem(item);
+
+    CLog::Log(LOGDEBUG,"A Music folder item for HistoryList was created (bh)");
+  }
+  else if ((item.GetPropertyBOOL("isBrowserHistory")))
+  {
+    historyItem = new CFileItem(item);
+
+    CLog::Log(LOGDEBUG,"A Browser History item for HistoryList was created (bh)");
+  }
   else
   {
     CLog::Log(LOGERROR,"Failed to identify item [%s] type (bh)",(item.m_strPath).c_str());
@@ -303,6 +341,47 @@ CFileItem* CBoxeeItemsHistory::CreateItemForHistoryList(const CFileItem& item)
   }
   
   return historyItem;
+}
+
+
+CStdString CBoxeeItemsHistory::getSeperatorLabel(time_t labelTime, CHistorySeperator::HistorySeperatorEnums seperatorType)
+{
+  CStdString label = "";
+
+  char buffer [80];
+  struct tm *tmp = localtime(&labelTime);
+
+  switch (seperatorType)
+  {
+  case CHistorySeperator::TODAY:
+  {
+    label = g_localizeStrings.Get(57003);
+    label += " - ";
+    strftime(buffer, 80, "%A, %B %d, %Y", tmp);
+    label += buffer;
+  }
+  break;
+  case CHistorySeperator::YESTERDAY:
+  {
+    label = g_localizeStrings.Get(57007);
+    label += " - ";
+    strftime(buffer, 80, "%A, %B %d, %Y", tmp);
+    label += buffer;
+  }
+  break;
+  case CHistorySeperator::OLDER:
+  {
+    label = g_localizeStrings.Get(57008);
+  }
+  break;
+  default:
+  {
+    CLog::Log(LOGERROR,"FAILED to handle [seperatorType=%d]. an EMPTY label will be return (bh)",seperatorType);
+  }
+  break;
+  }
+
+  return label;
 }
 
 bool CBoxeeItemsHistory::RemoveItemFromHistory(const CFileItem& historyItem)
@@ -367,6 +446,58 @@ bool CBoxeeItemsHistory::RemoveItemFromHistory(const CFileItem& historyItem)
   }
 }
 
+bool CBoxeeItemsHistory::ClearAllHistory()
+{
+  CSingleLock lock(m_itemsHistorylock);
+
+  CLog::Log(LOGDEBUG,"CBoxeeItemsHistory::ClearAllHistory - Enter function. [ItemsHistoryListSize=%d] (bh)",m_itemsHistoryList.Size());
+
+  class ClearAllHistoryJob: public IRunnable
+  {
+  public:
+    ClearAllHistoryJob(CBoxeeItemsHistory* handler){m_handler = handler;};
+    virtual void Run()
+    {
+      if (m_handler)
+      {
+        CLog::Log(LOGDEBUG,"ClearAllHistoryJob::Run - Enter function. [ItemsHistoryListSize=%d] (bh)",m_handler->m_itemsHistoryList.Size());
+
+        m_handler->m_itemsHistoryList.Clear();
+        m_handler->m_historyIdsOfItemsInHistoryList.clear();
+
+        // Save the FilesHistory to file
+        m_handler->SaveItemsHistory();
+
+        CGUIMessage refreshHistoryWinMsg(GUI_MSG_UPDATE, WINDOW_BOXEE_BROWSE_HISTORY, 0);
+        g_windowManager.SendThreadMessage(refreshHistoryWinMsg);
+
+        m_bJobResult = true;
+        if (m_handler->m_itemsHistoryList.Size() > 0)
+        {
+          m_bJobResult = false;
+          CLog::Log(LOGERROR,"ClearAllHistoryJob::Run - FAILED to clear history (bh)");
+        }
+
+        CLog::Log(LOGDEBUG,"ClearAllHistoryJob::Run - Exit function. [ItemsHistoryListSize=%d] (bh)",m_handler->m_itemsHistoryList.Size());
+      }
+      else
+      {
+        m_bJobResult = false;
+        CLog::Log(LOGERROR,"ClearAllHistoryJob::Run - FAILED to clear history. Handler is NULL (bh)");
+      }
+    }
+  private:
+    CBoxeeItemsHistory* m_handler;
+  };
+
+  ClearAllHistoryJob* addToQueuejob = new ClearAllHistoryJob(this);
+  bool succeeded = (CUtil::RunInBG(addToQueuejob) == JOB_SUCCEEDED);
+
+  CLog::Log(LOGDEBUG,"CBoxeeItemsHistory::ClearAllHistory - Exit function. [succeeded=%d] (bh)",succeeded);
+
+  return succeeded;
+}
+
 bool CBoxeeItemsHistory::SaveItemsHistory()
 {
   //////////////////////////////////////////////////
@@ -376,7 +507,7 @@ bool CBoxeeItemsHistory::SaveItemsHistory()
 
   bool retVal = false;
 
-  retVal = m_itemsHistoryList.Save(_P(ITEMS_HISTORY_FILE_PATH));
+  retVal = m_itemsHistoryList.Save(_P(m_strHistoryFilePath));
 
   if(retVal == false)
   {
@@ -395,11 +526,20 @@ bool CBoxeeItemsHistory::LoadItemsHistory()
   m_itemsHistoryList.Clear();
   m_historyIdsOfItemsInHistoryList.clear();
 
-  bool retVal = m_itemsHistoryList.Load(_P(ITEMS_HISTORY_FILE_PATH));
+  bool retVal = false;
+
+  try
+  {
+    retVal = m_itemsHistoryList.Load(_P(m_strHistoryFilePath));
+  }
+  catch (std::exception& e)
+  {
+    CLog::Log(LOGERROR,"Failed to load the ItemsHistoryList, got exception: %s  (bh)", e.what());
+  }
 
   if(retVal == false)
   {
-    CLog::Log(LOGERROR,"Failed to load the ItemsHistoryList from file (bh)");
+    CLog::Log(LOGERROR,"Failed to load the ItemsHistoryList from file, clearing file (bh)");
 
     m_itemsHistoryList.Clear();
     m_historyIdsOfItemsInHistoryList.clear();
@@ -439,10 +579,152 @@ bool CBoxeeItemsHistory::GetFilesHistory(CFileItemList& itemsHistoryList)
 {
   CSingleLock lock(m_itemsHistorylock);
 
-  itemsHistoryList.Append(m_itemsHistoryList);
+  time_t tmNow = time(NULL);
+
+  struct tm t;
+  localtime_r(&tmNow, &t);
+  t.tm_sec = t.tm_min = t.tm_hour = 0;
+  time_t lastMidnight = mktime(&t);
+
+  CFileItemPtr item;
+  bool itemsToday = false;
+  bool itemsYesterday = false;
+  bool itemsOlder = false;
+
+  if (m_itemsHistoryList.Size() == 0)
+  {
+    CFileItemPtr emptySeperator(new CFileItem(getSeperatorLabel(tmNow,CHistorySeperator::TODAY)));
+    emptySeperator->SetProperty("isseparator", true);
+    itemsHistoryList.Add(emptySeperator);
+    itemsToday = true;
+
+    CFileItemPtr item(new CFileItem(g_localizeStrings.Get(54892).c_str()));
+    itemsHistoryList.Add(item);
+
+    itemsHistoryList.SetProperty("empty",true);
+  }
+
+  for (int i=0; i<m_itemsHistoryList.Size(); i++)
+  {
+    item = m_itemsHistoryList.Get(i);
+    time_t itemTime = item->GetPropertyInt("AddedToHistoryListTime");
+
+    if (itemTime > lastMidnight)
+    {
+      if (!itemsToday)
+      {
+        CFileItemPtr todaySeperator(new CFileItem(getSeperatorLabel(itemTime, CHistorySeperator::TODAY).c_str()));
+        todaySeperator->SetProperty("isseparator", true);
+        itemsHistoryList.Add(todaySeperator);
+        itemsHistoryList.Add(item);
+        itemsToday = true;
+      }
+      else
+      {
+        itemsHistoryList.Add(item);
+      }
+    }
+    else if (itemTime > (lastMidnight - SECONDS_IN_A_DAY))
+    {
+      if (!itemsYesterday)
+      {
+        CFileItemPtr yesterdaySeperator(new CFileItem(getSeperatorLabel(itemTime, CHistorySeperator::YESTERDAY).c_str()));
+        yesterdaySeperator->SetProperty("isseparator", true);
+        itemsHistoryList.Add(yesterdaySeperator);
+        itemsHistoryList.Add(item);
+        itemsYesterday = true;
+      }
+      else
+      {
+        itemsHistoryList.Add(item);
+      }
+    }
+    else
+    {
+      if ((itemsToday || itemsYesterday) && !itemsOlder)
+      {
+        CFileItemPtr olderSeperator(new CFileItem(getSeperatorLabel(itemTime, CHistorySeperator::OLDER).c_str()));
+        olderSeperator->SetProperty("isseparator", true);
+        itemsHistoryList.Add(olderSeperator);
+        itemsHistoryList.Add(item);
+        itemsOlder = true;
+      }
+      else
+      {
+        itemsHistoryList.Add(item);
+      }
+    }
+
+    itemsHistoryList.SetProperty("empty",false);
+  }
 
   return true;
 }
 
+int CBoxeeItemsHistory::GetHistorySize()
+{
+  CSingleLock lock(m_itemsHistorylock);
 
+  return m_itemsHistoryList.Size();
+}
 
+CBoxeeBrowserHistory::CBoxeeBrowserHistory(CStdString filepath, int iHistorySize) : CBoxeeItemsHistory(filepath,iHistorySize)
+{
+
+}
+
+CBoxeeBrowserHistory::~CBoxeeBrowserHistory()
+{
+
+}
+
+bool CBoxeeBrowserHistory::AddLinkToHistory(const CStdString& link, const CStdString& label)
+{
+  CFileItem historyItem;
+
+  CURI url(link);
+
+  CStdString strFavIcon= url.GetWithoutFilename();
+
+  if (!CUtil::HasSlashAtEnd(strFavIcon))
+  {
+    CUtil::AddSlashAtEnd(strFavIcon);
+  }
+
+  strFavIcon += "favicon.ico";
+
+  historyItem.m_strPath = link;
+  historyItem.m_strTitle = label;
+  historyItem.SetLabel(label);
+  historyItem.SetProperty("favicon",strFavIcon);
+  historyItem.SetProperty("isBrowserHistory",true);
+  historyItem.SetLabel2(GetDomain(strFavIcon).c_str());
+
+  return AddItemToHistory(historyItem);
+}
+
+CStdString CBoxeeBrowserHistory::GetDomain(CStdString link)
+{
+  CStdString strDomain = link;
+  int pos = link.find(STR_WWW);
+  if (pos != -1)
+    strDomain = link.substr(pos+4);
+  else
+  {
+    pos = link.find(STR_HTTPS);
+    if (pos != -1)
+      strDomain = link.substr(pos+8);
+    else
+    {
+      pos = link.find(STR_HTTP);
+      if (pos != -1)
+        strDomain = link.substr(pos+7);
+    }
+  }
+
+  pos = strDomain.find("/");
+  if (pos != -1)
+    strDomain = strDomain.substr(0, pos);
+
+  return strDomain;
+}

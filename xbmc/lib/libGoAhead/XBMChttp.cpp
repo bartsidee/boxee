@@ -9,6 +9,7 @@
 
 /********************************* Includes ***********************************/
 
+#include "lib/libBoxee/bxutils.h"
 #include "Application.h"
 #include "WebServer.h"
 #include "XBMChttp.h"
@@ -54,6 +55,9 @@
 #include "LocalizeStrings.h"
 #include "StringUtils.h"
 #include "utils/TimeUtils.h"
+#include "BoxeeMediaSourceList.h"
+#include "GUIDialogBoxeeBrowserCtx.h"
+#include "GUIEditControl.h"
 
 #ifdef _WIN32
 extern "C" FILE *fopen_utf8(const char *_Filename, const char *_Mode);
@@ -122,17 +126,17 @@ CXbmcHttp::~CXbmcHttp()
 }
 
 /*
-** encode
-**
-** base64 encode a stream adding padding and line breaks as per spec.
-*/
+ ** encode
+ **
+ ** base64 encode a stream adding padding and line breaks as per spec.
+ */
 CStdString CXbmcHttp::encodeFileToBase64(const CStdString &inFilename, int linesize )
 {
   unsigned char in[3];//, out[4];
   int len, blocksout = 0;
   CStdString strBase64="";
 
-//  Translation Table as described in RFC1113
+  //  Translation Table as described in RFC1113
   static const char cb64[]="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
   CFile file;
@@ -171,10 +175,10 @@ CStdString CXbmcHttp::encodeFileToBase64(const CStdString &inFilename, int lines
 }
 
 /*
-** decode
-**
-** decode a base64 encoded stream discarding padding, line breaks and noise
-*/
+ ** decode
+ **
+ ** decode a base64 encoded stream discarding padding, line breaks and noise
+ */
 bool CXbmcHttp::decodeBase64ToFile( const CStdString &inString, const CStdString &outfilename, bool append)
 {
   unsigned char in[4], v; //out[3];
@@ -183,7 +187,7 @@ bool CXbmcHttp::decodeBase64ToFile( const CStdString &inString, const CStdString
   unsigned int ptr=0;
   FILE *outfile;
 
-// Translation Table to decode
+  // Translation Table to decode
   static const char cd64[]="|$$$}rstuvwxyz{$$$$$$$>?@ABCDEFGHIJKLMNOPQRSTUVW$$$$$$XYZ[\\]^_`abcdefghijklmnopq";
 
   try
@@ -301,8 +305,8 @@ int CXbmcHttp::splitParameter(const CStdString &parameter, CStdString& command, 
           {
             paras[num]=paras[num].Trim();
             num++;
-			if (num==MAX_PARAS)
-		      return -2;
+            if (num==MAX_PARAS)
+              return -2;
           }
           else
           {
@@ -318,8 +322,8 @@ int CXbmcHttp::splitParameter(const CStdString &parameter, CStdString& command, 
         {
           paras[num]=paras[num].Trim();
           num++;
-		  if (num==MAX_PARAS)
-		    return -2;
+          if (num==MAX_PARAS)
+            return -2;
         }
         else
         {
@@ -396,17 +400,17 @@ int CXbmcHttp::displayDir(int numParas, CStdString paras[])
   if (numParas>2)
     option=paras[2].ToLower();
   if (numParas>3)
-	  lineStart=atoi(paras[3]);
+    lineStart=atoi(paras[3]);
   if (numParas>4)
-	  numLines=atoi(paras[4]);
+    numLines=atoi(paras[4]);
   if (!CDirectory::GetDirectory(folder, dirItems, mask))
   {
     return SetResponse(openTag+"Error:Not folder");
   }
   if (option=="size")
   {
-	CStdString tmp;
-	tmp.Format("%i",dirItems.Size());
+    CStdString tmp;
+    tmp.Format("%i",dirItems.Size());
     return SetResponse(openTag+tmp);
   }
   dirItems.Sort(SORT_METHOD_LABEL, SORT_ORDER_ASC);
@@ -428,7 +432,7 @@ int CXbmcHttp::displayDir(int numParas, CStdString paras[])
         aLine=closeTag+openTag + itm->m_strPath ;
     }
     else if (!itm->m_bIsFolder)
-        aLine=closeTag+openTag + itm->m_strPath;
+      aLine=closeTag+openTag + itm->m_strPath;
 
     if (!aLine.IsEmpty())
     {
@@ -498,7 +502,7 @@ void CXbmcHttp::AddItemToPlayList(const CFileItemPtr &pItem, int playList, int s
     CDirectory::GetDirectory(pItem->m_strPath, items, mask);
     items.Sort(SORT_METHOD_LABEL, SORT_ORDER_ASC);
     for (int i=0; i < items.Size(); ++i)
-	  if (!(CFileItem*)items[i]->m_bIsFolder || recursive)
+      if (!(CFileItem*)items[i]->m_bIsFolder || recursive)
         AddItemToPlayList(items[i], playList, sortMethod, mask, recursive);
   }
   else
@@ -572,27 +576,27 @@ void CXbmcHttp::copyThumb(CStdString srcFn, CStdString destFn)
   if (srcFn=="")
   {
     try
-	{
-	  if (CFile::Exists(destFn))
-	    CFile::Delete(destFn);
-	  lastThumbFn=srcFn;
-	}
+    {
+      if (CFile::Exists(destFn))
+        CFile::Delete(destFn);
+      lastThumbFn=srcFn;
+    }
     catch (...)
     {
     }
   }
   else
     if (srcFn!=lastThumbFn)
-	  try
-	  {
-	    lastThumbFn=srcFn;
-	    if (CFile::Exists(srcFn))
+      try
+  {
+        lastThumbFn=srcFn;
+        if (CFile::Exists(srcFn))
           CFile::Cache(srcFn, destFn);
-	    }
-      catch (...)
-      {
-        return;
-      }
+  }
+  catch (...)
+  {
+    return;
+  }
 }
 
 int CXbmcHttp::xbmcGetMediaLocation(int numParas, CStdString paras[])
@@ -648,19 +652,19 @@ int CXbmcHttp::xbmcGetMediaLocation(int numParas, CStdString paras[])
         bShowDate = true;
       else if (paras[i].Equals("pathsonly"))
         bPathsOnly = true;
-	  else if (paras[i].Equals("size"))
-	    bSize = true;
-	  else if (StringUtils::IsNaturalNumber(paras[i]))
-	  {
-	    lineStart=atoi(paras[i]);
-		i++;
-		if (i<numParas)
+      else if (paras[i].Equals("size"))
+        bSize = true;
+      else if (StringUtils::IsNaturalNumber(paras[i]))
+      {
+        lineStart=atoi(paras[i]);
+        i++;
+        if (i<numParas)
           if (StringUtils::IsNaturalNumber(paras[i]))
-		  {
-		    numLines=atoi(paras[i]);
-			i++;
-		  }
-	  }
+          {
+            numLines=atoi(paras[i]);
+            i++;
+          }
+      }
     }
     // pathsonly and showdate are mutually exclusive, pathsonly wins
     if (bPathsOnly)
@@ -672,29 +676,29 @@ int CXbmcHttp::xbmcGetMediaLocation(int numParas, CStdString paras[])
   switch(iType)
   {
   case MUSIC:
-    {
-      pShares = g_settings.GetSourcesFromType("music");
-      strMask = g_stSettings.m_musicExtensions;
-    }
-    break;
+  {
+    pShares = g_settings.GetSourcesFromType("music");
+    strMask = g_stSettings.m_musicExtensions;
+  }
+  break;
   case VIDEO:
-    {
-	  pShares = g_settings.GetSourcesFromType("video");
-      strMask = g_stSettings.m_videoExtensions;
-    }
-    break;
+  {
+    pShares = g_settings.GetSourcesFromType("video");
+    strMask = g_stSettings.m_videoExtensions;
+  }
+  break;
   case PICTURES:
-    {
-      pShares = g_settings.GetSourcesFromType("pictures");
-      strMask = g_stSettings.m_pictureExtensions;
-    }
-    break;
+  {
+    pShares = g_settings.GetSourcesFromType("pictures");
+    strMask = g_stSettings.m_pictureExtensions;
+  }
+  break;
   case FILES:
-    {
-      pShares = g_settings.GetSourcesFromType("files");
-      strMask = "";
-    }
-    break;
+  {
+    pShares = g_settings.GetSourcesFromType("files");
+    strMask = "";
+  }
+  break;
   }
 
   if (!pShares)
@@ -703,17 +707,17 @@ int CXbmcHttp::xbmcGetMediaLocation(int numParas, CStdString paras[])
   // TODO: Why are we insisting the passed path has anything to do with
   //       the shares in question??
   //       Surely we should just grab the directory regardless??
-	// 
-	// kraqh3d's response:
-	//	When I added this function, it was meant to behave more like Xbmc internally.
-	//	This code emulates the CVirtualDirectory class which does not allow arbitrary
-	//	fetching of directories. (nor does ActivateWindow for that matter.)
-	//	You can still use the older "getDirectory" command which is unbounded and will
-	//	fetch any old folder.
+  //
+  // kraqh3d's response:
+  //	When I added this function, it was meant to behave more like Xbmc internally.
+  //	This code emulates the CVirtualDirectory class which does not allow arbitrary
+  //	fetching of directories. (nor does ActivateWindow for that matter.)
+  //	You can still use the older "getDirectory" command which is unbounded and will
+  //	fetch any old folder.
 
   // special locations
   bool bSpecial = false;
-  CURL url(strLocation);
+  CURI url(strLocation);
   if (url.GetProtocol() == "rar" || url.GetProtocol() == "zip")
     bSpecial = true;
   if (strType.Equals("music"))
@@ -766,8 +770,8 @@ int CXbmcHttp::xbmcGetMediaLocation(int numParas, CStdString paras[])
   }
   if (bSize)
   {
-	CStdString tmp;
-	tmp.Format("%i",items.Size());
+    CStdString tmp;
+    tmp.Format("%i",items.Size());
     return SetResponse(openTag+tmp);
   }    
   items.Sort(SORT_METHOD_LABEL, SORT_ORDER_ASC);
@@ -879,32 +883,32 @@ int CXbmcHttp::xbmcGetSources(int numParas, CStdString paras[])
     switch(i)
     {
     case MUSIC:
-      {
-        strType = "music";
-      }
-      break;
+    {
+      strType = "music";
+    }
+    break;
     case VIDEO:
-      {
-        strType = "video";
-      }
-      break;
+    {
+      strType = "video";
+    }
+    break;
     case PICTURES:
-      {
-        strType = "pictures";
-      }
-      break;
+    {
+      strType = "pictures";
+    }
+    break;
     case FILES:
-      {
-        strType = "files";
-      }
-      break;
+    {
+      strType = "files";
+    }
+    break;
     }
 
-	pShares = g_settings.GetSourcesFromType(strType);
+    pShares = g_settings.GetSourcesFromType(strType);
 
     if (!pShares)
       return SetResponse(openTag+"Error");
-    
+
     VECSOURCES VECSOURCES = *pShares;
     for (int j = 0; j < (int)VECSOURCES.size(); ++j)
     {
@@ -913,7 +917,7 @@ int CXbmcHttp::xbmcGetSources(int numParas, CStdString paras[])
       strName.Replace(";", ";;");
       CStdString strPath = share.strPath;
       strPath.Replace(";", ";;");
-        CUtil::AddSlashAtEnd(strPath);
+      CUtil::AddSlashAtEnd(strPath);
       CStdString strLine = openTag;
       if (bShowType)
         strLine += strType + ";";
@@ -935,18 +939,18 @@ int CXbmcHttp::xbmcQueryMusicDataBase(int numParas, CStdString paras[])
     return SetResponse(openTag+"Error:Missing Parameter");
   else
   {
-	CMusicDatabase musicdatabase;
-	if (musicdatabase.Open())
-	{
-	  CStdString result;
+    CMusicDatabase musicdatabase;
+    if (musicdatabase.Open())
+    {
+      CStdString result;
       if (musicdatabase.GetArbitraryQuery(paras[0], openRecordSet, closeRecordSet, openRecord, closeRecord, openField, closeField, result))
-		return SetResponse(result);
-	  else
-		  return SetResponse(openTag+"Error:"+result);
-	  musicdatabase.Close();
-	}
-	else
-	  return SetResponse(openTag+"Error:Could not open database");
+        return SetResponse(result);
+      else
+        return SetResponse(openTag+"Error:"+result);
+      musicdatabase.Close();
+    }
+    else
+      return SetResponse(openTag+"Error:Could not open database");
   }
   return true;
 }
@@ -957,18 +961,18 @@ int CXbmcHttp::xbmcQueryVideoDataBase(int numParas, CStdString paras[])
     return SetResponse(openTag+"Error:Missing Parameter");
   else
   {
-	CVideoDatabase videodatabase;
-	if (videodatabase.Open())
-	{
-	  CStdString result;
+    CVideoDatabase videodatabase;
+    if (videodatabase.Open())
+    {
+      CStdString result;
       if (videodatabase.GetArbitraryQuery(paras[0], openRecordSet, closeRecordSet, openRecord, closeRecord, openField, closeField, result))
-		return SetResponse(result);
-	  else
-		  return SetResponse(openTag+"Error:"+result);
-	  videodatabase.Close();
-	}
-	else
-	  return SetResponse(openTag+"Error:Could not open database");
+        return SetResponse(result);
+      else
+        return SetResponse(openTag+"Error:"+result);
+      videodatabase.Close();
+    }
+    else
+      return SetResponse(openTag+"Error:Could not open database");
   }
   return true;
 }
@@ -1023,7 +1027,7 @@ int CXbmcHttp::xbmcAddToPlayListFromDB(int numParas, CStdString paras[])
     return SetResponse(openTag+"Error: Missing Parameter");
 
   CStdString type  = paras[0];
-  
+
   // Perform open query if empty where clause
   if (paras[1] == "")
     paras[1] = "1 = 1";
@@ -1042,8 +1046,8 @@ int CXbmcHttp::xbmcAddToPlayListFromDB(int numParas, CStdString paras[])
     musicdatabase.Close();
   }
   else if (type.Equals("movies") || 
-           type.Equals("episodes") ||
-           type.Equals("musicvideos"))
+      type.Equals("episodes") ||
+      type.Equals("musicvideos"))
   {
     playList = PLAYLIST_VIDEO;
 
@@ -1089,8 +1093,8 @@ int CXbmcHttp::xbmcAddToPlayList(int numParas, CStdString paras[])
         playList=g_playlistPlayer.GetCurrentPlaylist();
       if(numParas>2) //includes mask
         mask=procMask(paras[2]);
-	  if (numParas>3) //recursive
-	    recursive=(paras[3]=="1");
+      if (numParas>3) //recursive
+        recursive=(paras[3]=="1");
     }
     strFileName=paras[0] ;
     CFileItemPtr pItem(new CFileItem(strFileName));
@@ -1321,17 +1325,17 @@ int CXbmcHttp::xbmcGetCurrentlyPlaying(int numParas, CStdString paras[])
     }
     thumb = item.GetCachedPictureThumb();
     if (!item.HasThumbnail())
-	{
+    {
       thumb = "[None] " + thumb;
-	  copyThumb("DefaultPicture.png",thumbFn);
-	}
-	else
+      copyThumb("DefaultPicture.png",thumbFn);
+    }
+    else
       copyThumb(thumb,thumbFn);
     output+=closeTag+openTag+"Thumb:"+thumb;
-	if (changed)
-	  output+=closeTag+openTag+"Changed:True";
-	else  
-	  output+=closeTag+openTag+"Changed:False";
+    if (changed)
+      output+=closeTag+openTag+"Changed:True";
+    else
+      output+=closeTag+openTag+"Changed:False";
     return SetResponse(output);
   }
 
@@ -1339,26 +1343,26 @@ int CXbmcHttp::xbmcGetCurrentlyPlaying(int numParas, CStdString paras[])
   if (fileItem.m_strPath.IsEmpty())
   {
     output=openTag+"Filename:[Nothing Playing]";
-	if (lastPlayingInfo!=output)
-	{
-	  changed=true;
-	  lastPlayingInfo=output;
-	}
+    if (lastPlayingInfo!=output)
+    {
+      changed=true;
+      lastPlayingInfo=output;
+    }
     if (justChange && !changed)
-	  return SetResponse(openTag+"Changed:False");
-	copyThumb(thumbNothingPlaying,thumbFn);
-	return SetResponse(output);
+      return SetResponse(openTag+"Changed:False");
+    copyThumb(thumbNothingPlaying,thumbFn);
+    return SetResponse(output);
   }
   else
   {
     output = openTag + "Filename:" + fileItem.m_strPath;  // currently playing item filename
-	if (g_application.IsPlaying())
-	  if (!g_application.m_pPlayer->IsPaused()) 
-		output+=closeTag+openTag+"PlayStatus:Playing";
+    if (g_application.IsPlaying() && (g_application.GetCurrentPlayer() != EPC_FLASHPLAYER))
+      if (!g_application.m_pPlayer->IsPaused())
+        output+=closeTag+openTag+"PlayStatus:Playing";
       else
         output+=closeTag+openTag+"PlayStatus:Paused";
-	else
-		output+=closeTag+openTag+"PlayStatus:Stopped";
+    else
+      output+=closeTag+openTag+"PlayStatus:Stopped";
     if (g_application.IsPlayingVideo())
     { // Video information
       tmp.Format("%i",g_playlistPlayer.GetCurrentSong());
@@ -1371,14 +1375,14 @@ int CXbmcHttp::xbmcGetCurrentlyPlaying(int numParas, CStdString paras[])
           output+=closeTag+openTag+"Show Title"+tag+":"+tagVal->m_strShowTitle ;
         if (!tagVal->m_strTitle.IsEmpty())
           output+=closeTag+openTag+"Title"+tag+":"+tagVal->m_strTitle ;
-		//now have enough info to check for a change
-		if (lastPlayingInfo!=output)
-	    {
-	      changed=true;
-	      lastPlayingInfo=output;
-	    }
+        //now have enough info to check for a change
+        if (lastPlayingInfo!=output)
+        {
+          changed=true;
+          lastPlayingInfo=output;
+        }
         if (justChange && !changed)
-	      return SetResponse(openTag+"Changed:False");
+          return SetResponse(openTag+"Changed:False");
         //if still here, continue collecting info
         if (!tagVal->m_strGenre.IsEmpty())
           output+=closeTag+openTag+"Genre"+tag+":"+tagVal->m_strGenre;
@@ -1412,23 +1416,23 @@ int CXbmcHttp::xbmcGetCurrentlyPlaying(int numParas, CStdString paras[])
           output.Format("%s%i",output+closeTag+openTag+"Season"+tag+":",tagVal->m_iSeason);
         if (tagVal->m_iEpisode != -1)
           output.Format("%s%i",output+closeTag+openTag+"Episode"+tag+":",tagVal->m_iEpisode);
-	  }
-	  else
-	  {
-		//now have enough info to estimate a change
-		if (lastPlayingInfo!=output)
-	    {
-	      changed=true;
-	      lastPlayingInfo=output;
-	    }
+      }
+      else
+      {
+        //now have enough info to estimate a change
+        if (lastPlayingInfo!=output)
+        {
+          changed=true;
+          lastPlayingInfo=output;
+        }
         if (justChange && !changed)
-	      return SetResponse(openTag+"Changed:False");
+          return SetResponse(openTag+"Changed:False");
         //if still here, continue collecting info
-	  }
-	  thumb=g_infoManager.GetImage(VIDEOPLAYER_COVER, (DWORD)-1);
-		
-	  copyThumb(thumb,thumbFn);
-	  output+=closeTag+openTag+"Thumb"+tag+":"+thumb;
+      }
+      thumb=g_infoManager.GetImage(VIDEOPLAYER_COVER, (DWORD)-1);
+
+      copyThumb(thumb,thumbFn);
+      output+=closeTag+openTag+"Thumb"+tag+":"+thumb;
     }
     else if (g_application.IsPlayingAudio())
     { // Audio information
@@ -1439,23 +1443,23 @@ int CXbmcHttp::xbmcGetCurrentlyPlaying(int numParas, CStdString paras[])
       if (tagVal && !tagVal->GetTitle().IsEmpty())
         output+=closeTag+openTag+"Title"+tag+":"+tagVal->GetTitle();
       if (tagVal && tagVal->GetTrackNumber())
-	  {
-	    CStdString tmp;
-		tmp.Format("%i",(int)tagVal->GetTrackNumber());
+      {
+        CStdString tmp;
+        tmp.Format("%i",(int)tagVal->GetTrackNumber());
         output+=closeTag+openTag+"Track"+tag+":"+tmp;
-	  }
+      }
       if (tagVal && !tagVal->GetArtist().IsEmpty())
         output+=closeTag+openTag+"Artist"+tag+":"+tagVal->GetArtist();
       if (tagVal && !tagVal->GetAlbum().IsEmpty())
         output+=closeTag+openTag+"Album"+tag+":"+tagVal->GetAlbum();
-	  //now have enough info to check for a change
-	  if (lastPlayingInfo!=output)
-	  {
-	    changed=true;
-	    lastPlayingInfo=output;
-	  }
+      //now have enough info to check for a change
+      if (lastPlayingInfo!=output)
+      {
+        changed=true;
+        lastPlayingInfo=output;
+      }
       if (justChange && !changed)
-	    return SetResponse(openTag+"Changed:False");
+        return SetResponse(openTag+"Changed:False");
       //if still here, continue collecting info
       if (tagVal && !tagVal->GetGenre().IsEmpty())
         output+=closeTag+openTag+"Genre"+tag+":"+tagVal->GetGenre();
@@ -1474,9 +1478,9 @@ int CXbmcHttp::xbmcGetCurrentlyPlaying(int numParas, CStdString paras[])
         output+=closeTag+openTag+"Bitrate"+tag+":"+bitRate;  
       if (!sampleRate.IsEmpty())
         output+=closeTag+openTag+"Samplerate"+tag+":"+sampleRate;  
-	  thumb=g_infoManager.GetImage(MUSICPLAYER_COVER, (DWORD)-1);
+      thumb=g_infoManager.GetImage(MUSICPLAYER_COVER, (DWORD)-1);
       copyThumb(thumb,thumbFn);
-	  output+=closeTag+openTag+"Thumb"+tag+":"+thumb;
+      output+=closeTag+openTag+"Thumb"+tag+":"+thumb;
     }
     output+=closeTag+openTag+"Time:"+g_infoManager.GetCurrentPlayTime();
     output+=closeTag+openTag+"Duration:";
@@ -1494,10 +1498,10 @@ int CXbmcHttp::xbmcGetCurrentlyPlaying(int numParas, CStdString paras[])
       tmp.Format("%"PRId64,fileItem.m_dwSize);
       output+=closeTag+openTag+"File size:"+tmp;
     }
-	if (changed)
-	  output+=closeTag+openTag+"Changed:True";
-	else  
-	  output+=closeTag+openTag+"Changed:False";
+    if (changed)
+      output+=closeTag+openTag+"Changed:True";
+    else
+      output+=closeTag+openTag+"Changed:False";
   }
   return SetResponse(output);
 }
@@ -1508,7 +1512,7 @@ int CXbmcHttp::xbmcGetMusicLabel(int numParas, CStdString paras[])
     return SetResponse(openTag+"Error:Missing Parameter");
   else
   {
-	int item=(int)atoi(paras[0].c_str());
+    int item=(int)atoi(paras[0].c_str());
     return SetResponse(openTag+g_infoManager.GetMusicLabel(item));
   }
 }
@@ -1519,7 +1523,7 @@ int CXbmcHttp::xbmcGetVideoLabel(int numParas, CStdString paras[])
     return SetResponse(openTag+"Error:Missing Parameter");
   else
   {
-	int item=(int)atoi(paras[0].c_str());
+    int item=(int)atoi(paras[0].c_str());
     return SetResponse(openTag+g_infoManager.GetVideoLabel(item));
   }
 }
@@ -1569,8 +1573,8 @@ int CXbmcHttp::xbmcSeekPercentage(int numParas, CStdString paras[], bool relativ
 
 int CXbmcHttp::xbmcMute()
 {
-	g_application.Mute();
-    return SetResponse(openTag+"OK");
+  g_application.Mute();
+  return SetResponse(openTag+"OK");
 }
 
 int CXbmcHttp::xbmcSetVolume(int numParas, CStdString paras[])
@@ -1712,20 +1716,20 @@ int CXbmcHttp::xbmcGetGUIStatus()
   }
   int iWin=g_windowManager.GetActiveWindow();
   CGUIWindow* pWindow=g_windowManager.GetWindow(iWin);  
-  
+
   tmp.Format("%i", iWin);
   output = openTag+"ActiveWindow:" + tmp;
   if (pWindow)
   {
     output += closeTag+openTag+"ActiveWindowName:" + g_localizeStrings.Get(iWin) ; 
-    
+
     if (iWin == WINDOW_BOXEE_BROWSE) 
     {
-      CGUIWindowBoxeeBrowse* pBrowseWindow = (CGUIWindowBoxeeBrowse*)pWindow;
-      CStdString strPath = pBrowseWindow->GetLocationPath();
+      // NOT IMPLEMENTED
+      CStdString strPath = "";
       output += closeTag+openTag+"BrowseWindowPath: " + strPath; 
     }
-    
+
     // Check whether there is an open dialog over the window
     int iTopDialog = g_windowManager.GetTopMostModalDialogID();
     if (iTopDialog != WINDOW_INVALID)
@@ -1733,7 +1737,7 @@ int CXbmcHttp::xbmcGetGUIStatus()
       tmp.Format("%i", iTopDialog);
       output += closeTag+openTag+"OpenDialog: " + tmp;
     }
-    
+
     CGUIControl* pControl=pWindow->GetFocusedControl();
     if (pControl)
     {
@@ -1789,9 +1793,10 @@ int CXbmcHttp::xbmcGetThumb(int numParas, CStdString paras[], bool bGetThumb)
     linesize=0;
   }
   if (numParas>1)
-     tempSkipWebFooterHeader=paras[1].ToLower() == "bare";
+    tempSkipWebFooterHeader=paras[1].ToLower() == "bare";
   if (numParas>2)
-     tempSkipWebFooterHeader=paras[2].ToLower() == "bare";
+    tempSkipWebFooterHeader=paras[2].ToLower() == "bare";
+
   if (CUtil::IsRemote(paras[0]))
   {
     CStdString strDest="special://temp/xbmcDownloadFile.tmp";
@@ -1807,7 +1812,16 @@ int CXbmcHttp::xbmcGetThumb(int numParas, CStdString paras[], bool bGetThumb)
     }
   }
   else
+  {
+#ifdef HAS_EMBEDDED
+    CStdString localFile = _P(paras[0]);
+    if (localFile.substr(0, 8) != "/.boxee/" && localFile.substr(0, 7) != "/media/" && localFile.substr(0, 5) != "/mnt/")
+    {
+      return SetResponse(openTag+"Error:Missing parameter");
+    }
+#endif
     thumb+=encodeFileToBase64(paras[0],linesize);
+  }
 
   if (bImgTag)
   {
@@ -1921,7 +1935,7 @@ int CXbmcHttp::xbmcGetPlayListContents(int numParas, CStdString paras[])
     if (bShowTitle)
     {
       if (tagVal)
-      strInfo += ';' + tagVal->GetTitle();
+        strInfo += ';' + tagVal->GetTitle();
       else if (tagVid)
         strInfo += ';' + tagVid->m_strTitle;
     }
@@ -1929,11 +1943,11 @@ int CXbmcHttp::xbmcGetPlayListContents(int numParas, CStdString paras[])
     {
       CStdString duration;
       if (tagVal)
-      StringUtils::SecondsToTimeString(tagVal->GetDuration(), duration, TIME_FORMAT_GUESS);
+        StringUtils::SecondsToTimeString(tagVal->GetDuration(), duration, TIME_FORMAT_GUESS);
       else if (tagVid)
         duration = tagVid->m_strRuntime;
       if (!duration.IsEmpty())
-      strInfo += ';' + duration;
+        strInfo += ';' + duration;
     }
     list += closeTag + openTag + strInfo;
   }
@@ -1967,8 +1981,8 @@ int CXbmcHttp::xbmcGetSlideshowContents()
     if (slideshowContents.Size()==0)
       list=openTag+"[Empty]" ;
     else
-    for (int i = 0; i < slideshowContents.Size(); ++i)
-      list += closeTag+openTag + slideshowContents[i]->m_strPath;
+      for (int i = 0; i < slideshowContents.Size(); ++i)
+        list += closeTag+openTag + slideshowContents[i]->m_strPath;
     return SetResponse(list) ;
   }
 }
@@ -2027,19 +2041,19 @@ int CXbmcHttp::xbmcRemoveFromPlayList(int numParas, CStdString paras[])
   {
     int iPlaylist = g_playlistPlayer.GetCurrentPlaylist();
     CStdString strItem = paras[0];
-	int itemToRemove;
+    int itemToRemove;
     if (numParas > 1)
       iPlaylist = atoi(paras[1]);
-	if (StringUtils::IsNaturalNumber(strItem))
+    if (StringUtils::IsNaturalNumber(strItem))
       itemToRemove=atoi(strItem);
-	else
+    else
       itemToRemove=FindPathInPlayList(iPlaylist, strItem);
     // The current playing song can't be removed
     if (g_playlistPlayer.GetCurrentPlaylist() == PLAYLIST_MUSIC && g_application.IsPlayingAudio()
-      && g_playlistPlayer.GetCurrentSong() == itemToRemove)
+        && g_playlistPlayer.GetCurrentSong() == itemToRemove)
       return SetResponse(openTag+"Error:Can't remove current playing song");
     if (itemToRemove<0 || itemToRemove>=g_playlistPlayer.GetPlaylist(iPlaylist).size())
-	  return SetResponse(openTag+"Error:Item not found or parameter out of range");
+      return SetResponse(openTag+"Error:Item not found or parameter out of range");
     g_playlistPlayer.GetPlaylist(PLAYLIST_MUSIC).Remove(itemToRemove);
 
     // Correct the current playing song in playlistplayer
@@ -2072,10 +2086,10 @@ CKey CXbmcHttp::GetKey()
 {
   if (repeatKeyRate!=0)
     if (CTimeUtils::GetTimeMS() >= MarkTime + repeatKeyRate)
-	{
+    {
       MarkTime=CTimeUtils::GetTimeMS();
-	  key=lastKey;
-	}
+      key=lastKey;
+    }
   return key;
 }
 
@@ -2123,6 +2137,24 @@ int CXbmcHttp::xbmcSetKey(int numParas, CStdString paras[])
   }
 }
 
+int CXbmcHttp::BoxeeSendMove(int numParas, CStdString paras[])
+{
+  if (numParas<2)
+  {
+    CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeSendMove - NumOfParams received is [%d] < 2, therefore going to return [Error:Missing parameter] (bgmi)(sendmove)",numParas);
+    return SetResponse(openTag+"Error:Missing parameters");
+  }
+
+  CKey tempKey(KEY_BROWSER_MOUSE,0,0,(float)atof(paras[0]),(float)atof(paras[1]));
+
+  CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeSendMove - after set key [buttonId=%u][LeftThumbX=%f][RightThumbX=%f] (sendmove)",tempKey.GetButtonCode(),tempKey.GetLeftThumbX(),tempKey.GetLeftThumbY());
+
+  tempKey.SetFromHttpApi(true);
+  key = tempKey;
+  lastKey = key;
+  return SetResponse(openTag+"OK");
+}
+
 int CXbmcHttp::xbmcSetKeyRepeat(int numParas, CStdString paras[])
 {
   if (numParas!=1)
@@ -2130,14 +2162,14 @@ int CXbmcHttp::xbmcSetKeyRepeat(int numParas, CStdString paras[])
   else
   {
     repeatKeyRate = atoi(paras[0]);
-	return SetResponse(openTag+"OK");
+    return SetResponse(openTag+"OK");
   }
 }
 
 int CXbmcHttp::xbmcAction(int numParas, CStdString paras[], int theAction)
 {
   bool showingSlideshow=(g_windowManager.GetActiveWindow() == WINDOW_SLIDESHOW);
-  
+
   switch(theAction)
   {
   case 1:
@@ -2262,8 +2294,8 @@ int CXbmcHttp::xbmcExit(int theAction)
   if (theAction>0 && theAction<6)
   {
     SetResponse(openTag+"OK");
-	shuttingDown=true;
-	return theAction;
+    shuttingDown=true;
+    return theAction;
   }
   else
     return SetResponse(openTag+"Error");
@@ -2342,25 +2374,25 @@ int CXbmcHttp::xbmcChooseAlbum(int numParas, CStdString paras[])
     return SetResponse(openTag+"Error:Missing album name");
   else
     try
-    {
+  {
       CMusicAlbumInfo musicInfo;//("", "") ;
       XFILE::CFileCurl http;
       SScraperInfo info; // TODO - WTF is this code supposed to do?
       if (musicInfo.Load(http,info))
       {
         if (musicInfo.GetAlbum().thumbURL.m_url.size() > 0)
-         output=openTag+"image:" + musicInfo.GetAlbum().thumbURL.m_url[0].m_url;
+          output=openTag+"image:" + musicInfo.GetAlbum().thumbURL.m_url[0].m_url;
 
         output+=closeTag+openTag+"review:" + musicInfo.GetAlbum().strReview;
         return SetResponse(output) ;
       }
       else
         return SetResponse(openTag+"Error:Loading musinInfo");
-    }
-    catch (...)
-    {
-      return SetResponse(openTag+"Error:Exception");
-    }
+  }
+  catch (...)
+  {
+    return SetResponse(openTag+"Error:Exception");
+  }
 }
 
 int CXbmcHttp::xbmcDownloadInternetFile(int numParas, CStdString paras[])
@@ -2382,7 +2414,7 @@ int CXbmcHttp::xbmcDownloadInternetFile(int numParas, CStdString paras[])
     {
       try
       {
-	    if (numParas>1)
+        if (numParas>1)
           tempSkipWebFooterHeader=paras[1].ToLower() == "bare";
         if (numParas>2)
           tempSkipWebFooterHeader=paras[2].ToLower() == "bare";
@@ -2414,28 +2446,28 @@ int CXbmcHttp::xbmcSetFile(int numParas, CStdString paras[])
   else
   {
     paras[1].Replace(" ","+");
-	CStdString tmpFile = "special://temp/xbmcTemp.tmp";
-	if (numParas>2)
+    CStdString tmpFile = "special://temp/xbmcTemp.tmp";
+    if (numParas>2)
     {
-	  if (paras[2].ToLower() == "first")
-		decodeBase64ToFile(paras[1], tmpFile);
+      if (paras[2].ToLower() == "first")
+        decodeBase64ToFile(paras[1], tmpFile);
       else if (paras[2].ToLower() == "continue")
-		  decodeBase64ToFile(paras[1], tmpFile, true);
+        decodeBase64ToFile(paras[1], tmpFile, true);
       else if (paras[2].ToLower() == "last")
-		  {
-		    decodeBase64ToFile(paras[1], tmpFile, true);
-			CFile::Cache(tmpFile, paras[0].c_str(), NULL, NULL) ;
-      CFile::Delete(tmpFile);
-		  }
-		  else
-		    return  SetResponse(openTag+"Error:Unknown 2nd parameter");
+      {
+        decodeBase64ToFile(paras[1], tmpFile, true);
+        CFile::Cache(tmpFile, paras[0].c_str(), NULL, NULL) ;
+        CFile::Delete(tmpFile);
+      }
+      else
+        return  SetResponse(openTag+"Error:Unknown 2nd parameter");
     }
-	else
-	{
+    else
+    {
       decodeBase64ToFile(paras[1], tmpFile);
       CFile::Cache(tmpFile, paras[0].c_str(), NULL, NULL) ;
       CFile::Delete(tmpFile);
-	}
+    }
     return SetResponse(openTag+"OK");
   }
 }
@@ -2572,51 +2604,51 @@ int CXbmcHttp::xbmcGUISetting(int numParas, CStdString paras[])
     if (numParas<3)
       switch (atoi(paras[0])) 
       {
-        case 0:  //  int
-          tmp.Format("%i", g_guiSettings.GetInt(paras[1]));
-          return SetResponse(openTag + tmp );
-          break;
-        case 1: // bool
-          if (g_guiSettings.GetBool(paras[1])==0)
-            return SetResponse(openTag+"False");
-          else
-            return SetResponse(openTag+"True");
-          break;
-        case 2: // float
-          tmp.Format("%f", g_guiSettings.GetFloat(paras[1]));
-          return SetResponse(openTag + tmp);
-          break;
-        case 3: // string
-          tmp.Format("%s", g_guiSettings.GetString(paras[1]));
-          return SetResponse(openTag + tmp);
-          break;
-        default:
-          return SetResponse(openTag+"Error:Unknown type");
-          break;
+      case 0:  //  int
+        tmp.Format("%i", g_guiSettings.GetInt(paras[1]));
+        return SetResponse(openTag + tmp );
+        break;
+      case 1: // bool
+        if (g_guiSettings.GetBool(paras[1])==0)
+          return SetResponse(openTag+"False");
+        else
+          return SetResponse(openTag+"True");
+        break;
+      case 2: // float
+        tmp.Format("%f", g_guiSettings.GetFloat(paras[1]));
+        return SetResponse(openTag + tmp);
+        break;
+      case 3: // string
+        tmp.Format("%s", g_guiSettings.GetString(paras[1]));
+        return SetResponse(openTag + tmp);
+        break;
+      default:
+        return SetResponse(openTag+"Error:Unknown type");
+        break;
       }
     else
     {
       switch (atoi(paras[0])) 
       {
-        case 0:  //  int
-          g_guiSettings.SetInt(paras[1], atoi(paras[2]));
-          return SetResponse(openTag+"OK");
-          break;
-        case 1: // bool
-          g_guiSettings.SetBool(paras[1], (paras[2].ToLower()=="true"));
-          return SetResponse(openTag+"OK");
-          break;
-        case 2: // float
-          g_guiSettings.SetFloat(paras[1], (float)atof(paras[2]));
-          return SetResponse(openTag+"OK");
-          break;
-        case 3: // string
-          g_guiSettings.SetString(paras[1], paras[2]);
-          return SetResponse(openTag+"OK");
-          break;
-        default:
-          return SetResponse(openTag+"Error:Unknown type");
-          break;
+      case 0:  //  int
+        g_guiSettings.SetInt(paras[1], atoi(paras[2]));
+        return SetResponse(openTag+"OK");
+        break;
+      case 1: // bool
+        g_guiSettings.SetBool(paras[1], (paras[2].ToLower()=="true"));
+        return SetResponse(openTag+"OK");
+        break;
+      case 2: // float
+        g_guiSettings.SetFloat(paras[1], (float)atof(paras[2]));
+        return SetResponse(openTag+"OK");
+        break;
+      case 3: // string
+        g_guiSettings.SetString(paras[1], paras[2]);
+        return SetResponse(openTag+"OK");
+        break;
+      default:
+        return SetResponse(openTag+"Error:Unknown type");
+        break;
       }     
     }
   }
@@ -2702,7 +2734,7 @@ int CXbmcHttp::xbmcConfig(int numParas, CStdString paras[])
   int argc=0, ret=-1;
   char_t* argv[20]; 
   CStdString response="";
-  
+
   if (numParas<1) {
     return SetResponse(openTag+"Error:Missing paramters");
   }
@@ -2737,12 +2769,12 @@ int CXbmcHttp::xbmcConfig(int numParas, CStdString paras[])
     //getoption has been deprecated so the following is just to prevent (my) legacy client code breaking (to be removed later)
     if (paras[1]=="pictureextensions")
       response=openTag+g_stSettings.m_pictureExtensions;
-	else if (paras[1]=="videoextensions")
+    else if (paras[1]=="videoextensions")
       response=openTag+g_stSettings.m_videoExtensions;
-	else if (paras[1]=="musicextensions")
+    else if (paras[1]=="musicextensions")
       response=openTag+g_stSettings.m_musicExtensions;
-	else
-	  response=openTag+"Error:Function is deprecated";
+    else
+      response=openTag+"Error:Function is deprecated";
     //ret=XbmcWebsHttpAPIConfigGetOption(response, argc, argv);
     //if (ret!=-1)
     ret=1;
@@ -2754,7 +2786,7 @@ int CXbmcHttp::xbmcConfig(int numParas, CStdString paras[])
     return SetResponse(openTag+"Error:Unknown Config Command");
   }
   if (createdWebConfigObj)
-	  XbmcWebConfigRelease();
+    XbmcWebConfigRelease();
   if (ret==-1)
     return SetResponse(openTag+"Error:WebServer needs to be running - is it?");
   else
@@ -2814,10 +2846,10 @@ bool CXbmcHttp::xbmcBroadcast(CStdString message, int level)
   if  (g_stSettings.m_HttpApiBroadcastLevel>=level)
   {
     if (!pUdpBroadcast)
-	  pUdpBroadcast = new CUdpBroadcast();
-	CStdString msg;
+      pUdpBroadcast = new CUdpBroadcast();
+    CStdString msg;
     msg.Format(openBroadcast+message+";%i"+closeBroadcast, level);
-	return pUdpBroadcast->broadcast(msg, g_stSettings.m_HttpApiBroadcastPort);
+    return pUdpBroadcast->broadcast(msg, g_stSettings.m_HttpApiBroadcastPort);
   }
   else
     return true;
@@ -2828,19 +2860,19 @@ int CXbmcHttp::xbmcBroadcast(int numParas, CStdString paras[])
   if (numParas>0)
   {
     if (!pUdpBroadcast)
-		pUdpBroadcast = new CUdpBroadcast();
-	bool succ;
-	if (numParas>1)
-       succ=pUdpBroadcast->broadcast(paras[0], atoi(paras[1]));
-	else
-       succ=pUdpBroadcast->broadcast(paras[0], g_stSettings.m_HttpApiBroadcastPort);
-	if (succ)
-	  return SetResponse(openTag+"OK");
-	else
-	  return SetResponse(openTag+"Error: calling broadcast");
+      pUdpBroadcast = new CUdpBroadcast();
+    bool succ;
+    if (numParas>1)
+      succ=pUdpBroadcast->broadcast(paras[0], atoi(paras[1]));
+    else
+      succ=pUdpBroadcast->broadcast(paras[0], g_stSettings.m_HttpApiBroadcastPort);
+    if (succ)
+      return SetResponse(openTag+"OK");
+    else
+      return SetResponse(openTag+"Error: calling broadcast");
   }
   else
-	return SetResponse(openTag+"Error:Wrong number of parameters");
+    return SetResponse(openTag+"Error:Wrong number of parameters");
 }
 
 int CXbmcHttp::xbmcSetBroadcast(int numParas, CStdString paras[])
@@ -2848,9 +2880,9 @@ int CXbmcHttp::xbmcSetBroadcast(int numParas, CStdString paras[])
   if (numParas>0)
   {
     g_stSettings.m_HttpApiBroadcastLevel=atoi(paras[0]);
-	if (numParas>1)
-	   g_stSettings.m_HttpApiBroadcastPort=atoi(paras[1]);
-	return SetResponse(openTag+"OK");
+    if (numParas>1)
+      g_stSettings.m_HttpApiBroadcastPort=atoi(paras[1]);
+    return SetResponse(openTag+"OK");
   }
   else
     return SetResponse(openTag+"Error:Wrong number of parameters");
@@ -3003,9 +3035,9 @@ int CXbmcHttp::xbmcRecordStatus(int numParas, CStdString paras[])
   if (numParas!=0)
     return SetResponse(openTag+"Error:Too many parameters");
   else if( g_application.IsPlaying() && g_application.m_pPlayer && g_application.m_pPlayer->CanRecord())
-		return SetResponse(g_application.m_pPlayer->IsRecording()?openTag+"Recording":openTag+"Not recording");
-	  else
-        return SetResponse(openTag+"Can't record");
+    return SetResponse(g_application.m_pPlayer->IsRecording()?openTag+"Recording":openTag+"Not recording");
+  else
+    return SetResponse(openTag+"Can't record");
 }
 
 int CXbmcHttp::xbmcGetLogLevel()
@@ -3022,7 +3054,7 @@ int CXbmcHttp::xbmcSetLogLevel(int numParas, CStdString paras[])
   else
   {
     CLog::m_logLevel=atoi(paras[0]);
-	return SetResponse(openTag+"OK");
+    return SetResponse(openTag+"OK");
   }
 }
 
@@ -3055,7 +3087,7 @@ int CXbmcHttp::xbmcWebServerStatus(int numParas, CStdString paras[])
         return SetResponse(openTag+"OK");
       }
     else
-        return SetResponse(openTag+"Error:Unknown parameter");
+      return SetResponse(openTag+"Error:Unknown parameter");
 }
 
 int CXbmcHttp::xbmcSetResponseFormat(int numParas, CStdString paras[])
@@ -3069,9 +3101,9 @@ int CXbmcHttp::xbmcSetResponseFormat(int numParas, CStdString paras[])
     return SetResponse(openTag+"Error:Missing parameter");
   else
   {
-	CStdString para;
-	for (int i=0; i<numParas; i+=2)
-	{
+    CStdString para;
+    for (int i=0; i<numParas; i+=2)
+    {
       para=paras[i].ToLower();
       if (para=="webheader")
         incWebHeader=(paras[i+1].ToLower()=="true");
@@ -3089,23 +3121,23 @@ int CXbmcHttp::xbmcSetResponseFormat(int numParas, CStdString paras[])
         closeFinalTag=(paras[i+1].ToLower()=="true");
       else if (para=="openrecordset")
         openRecordSet=paras[i+1]; 
-	  else if (para=="closerecordset")
+      else if (para=="closerecordset")
         closeRecordSet=paras[i+1];
       else if (para=="openrecord")
         openRecord=paras[i+1];
-	  else if (para=="closerecord")
+      else if (para=="closerecord")
         closeRecord=paras[i+1];
-	  else if (para=="openfield")
+      else if (para=="openfield")
         openField=paras[i+1];
-	  else if (para=="closefield")
+      else if (para=="closefield")
         closeField=paras[i+1];
-	  else if (para=="openbroadcast")
+      else if (para=="openbroadcast")
         openBroadcast=paras[i+1];
-	  else if (para=="closebroadcast")
+      else if (para=="closebroadcast")
         closeBroadcast=paras[i+1];
-	  else
-		  return SetResponse(openTag+"Error:Unknown parameter:"+para);
-	}
+      else
+        return SetResponse(openTag+"Error:Unknown parameter:"+para);
+    }
     return SetResponse(openTag+"OK");
   }
 }
@@ -3148,7 +3180,8 @@ int CXbmcHttp::xbmcCommand(const CStdString &parameter)
     }
     CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeGetMediaItems - Enter function with [parameter=%s]. After split [command=%s][ParamsVec=%s][numParas=%d] (ipc)",parameter.c_str(),command.c_str(),par.c_str(),numParas);
     /////////
-    
+
+#if 0 
     if (command == "clearplaylist")                   retVal = xbmcClearPlayList(numParas, paras);  
     else if (command == "addtoplaylist")            retVal = xbmcAddToPlayList(numParas, paras);  
     else if (command == "playfile")
@@ -3156,20 +3189,24 @@ int CXbmcHttp::xbmcCommand(const CStdString &parameter)
       retVal = xbmcPlayerPlayFile(numParas, paras);
       CLog::Log(LOGDEBUG,"CXbmcHttp::xbmcCommand - In if [command=%s=playfile]. Call xbmcPlayerPlayFile() returned [retVal=%d] (bgmi)",command.c_str(),retVal);
     }
-    else if (command == "addtoplaylistfromdb")      retVal = xbmcAddToPlayListFromDB(numParas, paras);  
-    else if (command == "pause")                    retVal = xbmcAction(numParas, paras,1);
+    else if (command == "addtoplaylistfromdb")      retVal = xbmcAddToPlayListFromDB(numParas, paras);
+#endif
+    if (command == "pause")                         retVal = xbmcAction(numParas, paras,1);
     else if (command == "stop")                     retVal = xbmcAction(numParas, paras,2);
     else if (command == "playnext")                 retVal = xbmcAction(numParas, paras,3);
     else if (command == "playprev")                 retVal = xbmcAction(numParas, paras,4);
+#if 0
     else if (command == "rotate")                   retVal = xbmcAction(numParas, paras,5);
     else if (command == "move")                     retVal = xbmcAction(numParas, paras,6);
     else if (command == "zoom")                     retVal = xbmcAction(numParas, paras,7);
+#endif
     else if (command == "restart")                  retVal = xbmcExit(1);
     else if (command == "shutdown")                 retVal = xbmcExit(2);
     else if (command == "exit")                     retVal = xbmcExit(3);
     else if (command == "reset")                    retVal = xbmcExit(4);
     else if (command == "restartapp")               retVal = xbmcExit(5);
     else if (command == "getcurrentlyplaying")      retVal = xbmcGetCurrentlyPlaying(numParas, paras); 
+#if 0
     else if (command == "getxbeid")                 retVal = xbmcGetXBEID(numParas, paras); 
     else if (command == "getxbetitle")              retVal = xbmcGetXBETitle(numParas, paras); 
     else if (command == "getshares")                retVal = xbmcGetSources(numParas, paras); 
@@ -3180,6 +3217,7 @@ int CXbmcHttp::xbmcCommand(const CStdString &parameter)
       retVal = BoxeeGetMediaItems(numParas, paras);
       CLog::Log(LOGDEBUG,"CXbmcHttp::xbmcCommand - In if [command=%s=getmediaitems]. Call BoxeeGetMediaItems() returned [retVal=%d] (bgmi)",command.c_str(),retVal);
     }
+#endif
     else if(command == "getthumbnail")
     {
       retVal = BoxeeGetThumbnail(numParas, paras);
@@ -3190,50 +3228,79 @@ int CXbmcHttp::xbmcCommand(const CStdString &parameter)
       retVal = BoxeeGetKeyboardText(numParas, paras);
       CLog::Log(LOGDEBUG,"CXbmcHttp::xbmcCommand - In if [command=%s=getkeyboardtext]. Call BoxeeGetKeyboardText() returned [retVal=%d] (bgmi)",command.c_str(),retVal);
     }
+    else if(command == "isbrowsermouseactive")
+    {
+      retVal = BoxeeIsBrowserMouseActive(numParas, paras);
+      CLog::Log(LOGDEBUG,"CXbmcHttp::xbmcCommand - In if [command=%s=isbrowsermouseactive]. Call BoxeeIsBrowserMouseActive() returned [retVal=%d] (bgmi)",command.c_str(),retVal);
+    }
+    else if(command == "addmediasource")
+    {
+      retVal = BoxeeAddMediaSource(numParas, paras);
+      CLog::Log(LOGDEBUG,"CXbmcHttp::xbmcCommand - In if [command=%s=addmediasource]. Call BoxeeAddMediaSource() returned [retVal=%d] (bgmi)",command.c_str(),retVal);
+    }
+    else if(command == "removemediasource")
+    {
+      retVal = BoxeeRemoveMediaSource(numParas, paras);
+      CLog::Log(LOGDEBUG,"CXbmcHttp::xbmcCommand - In if [command=%s=addmediasource]. Call BoxeeRemoveMediaSource() returned [retVal=%d] (bgmi)",command.c_str(),retVal);
+    }
+#if 0
     else if (command == "gettagfromfilename")       retVal = xbmcGetTagFromFilename(numParas, paras);
     else if (command == "getcurrentplaylist")       retVal = xbmcGetCurrentPlayList();
     else if (command == "setcurrentplaylist")       retVal = xbmcSetCurrentPlayList(numParas, paras);
     else if (command == "getplaylistcontents")      retVal = xbmcGetPlayListContents(numParas, paras);
-	  else if (command == "getplaylistlength")        retVal = xbmcGetPlayListLength(numParas, paras);
+    else if (command == "getplaylistlength")        retVal = xbmcGetPlayListLength(numParas, paras);
     else if (command == "removefromplaylist")       retVal = xbmcRemoveFromPlayList(numParas, paras);
     else if (command == "setplaylistsong")          retVal = xbmcSetPlayListSong(numParas, paras);
     else if (command == "getplaylistsong")          retVal = xbmcGetPlayListSong(numParas, paras);
     else if (command == "playlistnext")             retVal = xbmcPlayListNext();
     else if (command == "playlistprev")             retVal = xbmcPlayListPrev();
-	  else if (command == "getmusiclabel")            retVal = xbmcGetMusicLabel(numParas, paras);
-	  else if (command == "getvideolabel")            retVal = xbmcGetVideoLabel(numParas, paras);
+#endif
+    else if (command == "getmusiclabel")            retVal = xbmcGetMusicLabel(numParas, paras);
+    else if (command == "getvideolabel")            retVal = xbmcGetVideoLabel(numParas, paras);
     else if (command == "getpercentage")            retVal = xbmcGetPercentage();
     else if (command == "seekpercentage")           retVal = xbmcSeekPercentage(numParas, paras, false);
     else if (command == "seekpercentagerelative")   retVal = xbmcSeekPercentage(numParas, paras, true);
     else if (command == "setvolume")                retVal = xbmcSetVolume(numParas, paras);
     else if (command == "getvolume")                retVal = xbmcGetVolume();
-	  else if (command == "mute")                     retVal = xbmcMute();
+    else if (command == "mute")                     retVal = xbmcMute();
     else if (command == "setplayspeed")             retVal = xbmcSetPlaySpeed(numParas, paras);
     else if (command == "getplayspeed")             retVal = xbmcGetPlaySpeed();
     else if (command == "filedownload")             retVal = xbmcGetThumb(numParas, paras, false);
     else if (command == "getthumbfilename")         retVal = xbmcGetThumbFilename(numParas, paras);
+#if 0
     else if (command == "lookupalbum")              retVal = xbmcLookupAlbum(numParas, paras);
     else if (command == "choosealbum")              retVal = xbmcChooseAlbum(numParas, paras);
     else if (command == "filedownloadfrominternet") retVal = xbmcDownloadInternetFile(numParas, paras);
     else if (command == "filedelete")               retVal = xbmcDeleteFile(numParas, paras);
     else if (command == "filecopy")                 retVal = xbmcCopyFile(numParas, paras);
     else if (command == "filesize")                 retVal = xbmcFileSize(numParas, paras);
+#endif
     else if (command == "getmoviedetails")          retVal = xbmcGetMovieDetails(numParas, paras);
+#if 0
     else if (command == "showpicture")              retVal = xbmcShowPicture(numParas, paras);
+#endif
     else if (command == "sendkey")
     {
       retVal = xbmcSetKey(numParas, paras);
       CLog::Log(LOGDEBUG,"CXbmcHttp::xbmcCommand - In if [command=%s=sendkey]. Call xbmcSetKey() returned [retVal=%d] (bgmi)",command.c_str(),retVal);
+    }
+    else if (command == "sendmove")
+    {
+      retVal = BoxeeSendMove(numParas, paras);
+      CLog::Log(LOGDEBUG,"CXbmcHttp::xbmcCommand - In if [command=%s=xbmcSendMove]. Call BoxeeSendMove() returned [retVal=%d] (bgmi)",command.c_str(),retVal);
     }
     else if (command == "sendunicodechar")
     {
       retVal = BoxeeSetUnicodeChar(numParas, paras);
       CLog::Log(LOGDEBUG,"CXbmcHttp::xbmcCommand - In if [command=%s=sendunicodechar]. Call BoxeeSetUnicodeChar() returned [retVal=%d] (bgmi)",command.c_str(),retVal);
     }
-	  else if (command == "keyrepeat")                retVal = xbmcSetKeyRepeat(numParas, paras);
+    else if (command == "keyrepeat")                retVal = xbmcSetKeyRepeat(numParas, paras);
+#if 0
     else if (command == "fileexists")               retVal = xbmcFileExists(numParas, paras);
     else if (command == "fileupload")               retVal = xbmcSetFile(numParas, paras);
+#endif
     else if (command == "getguistatus")             retVal = xbmcGetGUIStatus();
+#if 0
     else if (command == "execbuiltin")              retVal = xbmcExecBuiltIn(numParas, paras);
     else if (command == "config")                   retVal = xbmcConfig(numParas, paras);
     else if (command == "help")                     retVal = xbmcHelp();
@@ -3251,35 +3318,41 @@ int CXbmcHttp::xbmcCommand(const CStdString &parameter)
     else if (command == "getguidescription")        retVal = xbmcGetGUIDescription();
     else if (command == "setautogetpicturethumbs")  retVal = xbmcAutoGetPictureThumbs(numParas, paras);
     else if (command == "setresponseformat")        retVal = xbmcSetResponseFormat(numParas, paras);
-	  else if (command == "querymusicdatabase")       retVal = xbmcQueryMusicDataBase(numParas, paras);
-	  else if (command == "queryvideodatabase")       retVal = xbmcQueryVideoDataBase(numParas, paras);
+#endif
+    else if (command == "querymusicdatabase")       retVal = xbmcQueryMusicDataBase(numParas, paras);
+    else if (command == "queryvideodatabase")       retVal = xbmcQueryVideoDataBase(numParas, paras);
+#if 0
     else if (command == "execmusicdatabase")        retVal = xbmcExecMusicDataBase(numParas, paras);
     else if (command == "execvideodatabase")        retVal = xbmcExecVideoDataBase(numParas, paras);
-	  else if (command == "broadcast")                retVal = xbmcBroadcast(numParas, paras);
-	  else if (command == "setbroadcast")             retVal = xbmcSetBroadcast(numParas, paras);
-	  else if (command == "getbroadcast")             retVal = xbmcGetBroadcast();
-	  else if (command == "action")                   retVal = xbmcOnAction(numParas, paras);
-	  else if (command == "getrecordstatus")          retVal = xbmcRecordStatus(numParas, paras);
-	  else if (command == "webserverstatus")
-	  {
-	    retVal = xbmcWebServerStatus(numParas, paras);
+    else if (command == "broadcast")                retVal = xbmcBroadcast(numParas, paras);
+    else if (command == "setbroadcast")             retVal = xbmcSetBroadcast(numParas, paras);
+    else if (command == "getbroadcast")             retVal = xbmcGetBroadcast();
+#endif
+    else if (command == "action")                   retVal = xbmcOnAction(numParas, paras);
+#if 0
+    else if (command == "getrecordstatus")          retVal = xbmcRecordStatus(numParas, paras);
+    else if (command == "webserverstatus")
+    {
+      retVal = xbmcWebServerStatus(numParas, paras);
       CLog::Log(LOGDEBUG,"CXbmcHttp::xbmcCommand - In if [command=%s=webserverstatus]. Call xbmcWebServerStatus() returned [retVal=%d] (bgmi)",command.c_str(),retVal);
-	  }
-	  else if (command == "setloglevel")              retVal = xbmcSetLogLevel(numParas, paras);
-	  else if (command == "getloglevel")              retVal = xbmcGetLogLevel();
+    }
+    else if (command == "setloglevel")              retVal = xbmcSetLogLevel(numParas, paras);
+    else if (command == "getloglevel")              retVal = xbmcGetLogLevel();
 
-	  //only callable internally
-	  else if (command == "broadcastlevel")
-	  {
-	    retVal = xbmcBroadcast(paras[0], atoi(paras[1]));
-		retVal = 0;
-	  }
+    //only callable internally
+    else if (command == "broadcastlevel")
+    {
+      retVal = xbmcBroadcast(paras[0], atoi(paras[1]));
+      retVal = 0;
+    }
 
     //Old command names
     else if (command == "deletefile")               retVal = xbmcDeleteFile(numParas, paras);
     else if (command == "copyfile")                 retVal = xbmcCopyFile(numParas, paras);
     else if (command == "downloadinternetfile")     retVal = xbmcDownloadInternetFile(numParas, paras);
+#endif
     else if (command == "getthumb")                 retVal = xbmcGetThumb(numParas, paras, true);
+#if 0
     else if (command == "guisetting")               retVal = xbmcGUISetting(numParas, paras);
     else if (command == "setfile")                  retVal = xbmcSetFile(numParas, paras);
     else if (command == "setkey")
@@ -3287,16 +3360,16 @@ int CXbmcHttp::xbmcCommand(const CStdString &parameter)
       retVal = xbmcSetKey(numParas, paras);
       CLog::Log(LOGDEBUG,"CXbmcHttp::xbmcCommand - In if [command=%s=setkey]. Call xbmcSetKey() returned [retVal=%d] (bgmi)",command.c_str(),retVal);
     }
-
+#endif
     else
       retVal = SetResponse(openTag+"Error:Unknown command");
 
   }
   else if (numParas==-2)
-	  retVal = SetResponse(openTag+"Error:Too many parameters");
+    retVal = SetResponse(openTag+"Error:Too many parameters");
   else
     retVal = SetResponse(openTag+"Error:Missing command");
-//relinquish the remainder of time slice
+  //relinquish the remainder of time slice
   Sleep(0);
   //CLog::Log(LOGDEBUG, "HttpApi Finished command: %s", command.c_str());
   return retVal;
@@ -3309,7 +3382,7 @@ CXbmcHttpShim::CXbmcHttpShim()
 
 CXbmcHttpShim::~CXbmcHttpShim()
 {
-CLog::Log(LOGDEBUG, "xbmcHttpShim ends");
+  CLog::Log(LOGDEBUG, "xbmcHttpShim ends");
 }
 
 bool CXbmcHttpShim::checkForFunctionTypeParas(CStdString &cmd, CStdString &paras)
@@ -3318,15 +3391,15 @@ bool CXbmcHttpShim::checkForFunctionTypeParas(CStdString &cmd, CStdString &paras
   open = cmd.Find("(");
   if (open>0)
   {
-	close=cmd.length();
-	while (close>open && cmd.Mid(close,1)!=")")
-	  close--;
-	if (close>open)
-	{
-	  paras = cmd.Mid(open + 1, close - open - 1);
-	  cmd = cmd.Left(open);
-	  return (close-open)>1;
-	}
+    close=cmd.length();
+    while (close>open && cmd.Mid(close,1)!=")")
+      close--;
+    if (close>open)
+    {
+      paras = cmd.Mid(open + 1, close - open - 1);
+      cmd = cmd.Left(open);
+      return (close-open)>1;
+    }
   }
   return false;
 }
@@ -3348,23 +3421,23 @@ CStdString CXbmcHttpShim::flushResult(int eid, webs_t wp, const CStdString &outp
 CStdString CXbmcHttpShim::xbmcExternalCall(char *command)
 {
   if (m_pXbmcHttp && m_pXbmcHttp->shuttingDown)
-      return "";
+    return "";
   int open, close;
   CStdString parameter="", cmd=command, execute;
   open = cmd.Find("(");
   if (open>0)
   {
-	close=cmd.length();
-	while (close>open && cmd.Mid(close,1)!=")")
-	  close--;
-	if (close>open)
-	{
-	  parameter = cmd.Mid(open + 1, close - open - 1);
+    close=cmd.length();
+    while (close>open && cmd.Mid(close,1)!=")")
+      close--;
+    if (close>open)
+    {
+      parameter = cmd.Mid(open + 1, close - open - 1);
       parameter.Replace(",",";");
       execute = cmd.Left(open);
-	}
-	else //open bracket but no close
-	  return "";
+    }
+    else //open bracket but no close
+      return "";
   }
   else //no parameters
     execute = cmd;
@@ -3385,42 +3458,42 @@ CStdString CXbmcHttpShim::xbmcProcessCommand( int eid, webs_t wp, char_t *comman
   checkForFunctionTypeParas(cmd, paras);
   if (wp!=NULL)
   {
-	//we are being called via the webserver (rather than Python) so add any specific checks here
+    //we are being called via the webserver (rather than Python) so add any specific checks here
     if ((cmd=="webserverstatus") && (paras!=""))//(strcmp(parameter,XBMC_NONE)))
-	{
-	  response=m_pXbmcHttp->GetOpenTag()+"Error:Can't turn off/on WebServer via a web call";
-	  legalCmd=false;
-	}
+    {
+      response=m_pXbmcHttp->GetOpenTag()+"Error:Can't turn off/on WebServer via a web call";
+      legalCmd=false;
+    }
   }
   if (legalCmd)
   {
-	  if (paras!="")
-		g_application.getApplicationMessenger().HttpApi(cmd+"; "+paras, true);
-	  else
-		g_application.getApplicationMessenger().HttpApi(cmd, true);
-	//wait for response - max 20s
-	Sleep(0);
-	response=g_application.getApplicationMessenger().GetResponse();
-	while (response=="[No response yet]" && cnt++<200) 
-	{
-	  response=g_application.getApplicationMessenger().GetResponse();
-	  CLog::Log(LOGDEBUG, "XBMCHTTPShim: waiting %d", cnt);
-	  Sleep(100);
-	}
-	if (cnt>199)
-	{
-	  response=m_pXbmcHttp->GetOpenTag()+"Error:Timed out";
-	  CLog::Log(LOGDEBUG, "HttpApi Timed out");
-	}
+    if (paras!="")
+      g_application.getApplicationMessenger().HttpApi(cmd+"; "+paras, true);
+    else
+      g_application.getApplicationMessenger().HttpApi(cmd, true);
+    //wait for response - max 20s
+    Sleep(0);
+    response=g_application.getApplicationMessenger().GetResponse();
+    while (response=="[No response yet]" && cnt++<200)
+    {
+      response=g_application.getApplicationMessenger().GetResponse();
+      CLog::Log(LOGDEBUG, "XBMCHTTPShim: waiting %d", cnt);
+      Sleep(100);
+    }
+    if (cnt>199)
+    {
+      response=m_pXbmcHttp->GetOpenTag()+"Error:Timed out";
+      CLog::Log(LOGDEBUG, "HttpApi Timed out");
+    }
   }
   //flushresult
   if (wp!=NULL)
   {
-	  if (eid==NO_EID && m_pXbmcHttp && !m_pXbmcHttp->tempSkipWebFooterHeader)
-	  {
-	    if (m_pXbmcHttp->incWebHeader)
-          websHeader(wp);
-  }
+    if (eid==NO_EID && m_pXbmcHttp && !m_pXbmcHttp->tempSkipWebFooterHeader)
+    {
+      if (m_pXbmcHttp->incWebHeader)
+        websHeader(wp);
+    }
   }
   retVal=flushResult(eid, wp, m_pXbmcHttp->userHeader+response+m_pXbmcHttp->userFooter);
   if (m_pXbmcHttp) //this should always be true unless something is very wrong
@@ -3446,7 +3519,7 @@ int CXbmcHttpShim::xbmcCommand( int eid, webs_t wp, int argc, char_t **argv)
     return -1;
   }
   else if (parameters < 2) 
-	  parameter = (char*)"";
+    parameter = (char*)"";
   xbmcProcessCommand( eid, wp, command, parameter);
   return 0;
 }
@@ -3485,61 +3558,61 @@ int CXbmcHttp::BoxeeGetMediaItems(int numParas, CStdString paras[])
   }
   CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeGetMediaItems - Enter function with [numParas=%d][ParamsVec=%s] (bgmi)",numParas,par.c_str());
   /////////
-  */
-  
+   */
+
   //////////////////////////
   // Check for parameters //
   //////////////////////////
-  
+
   if (numParas < 1)
   {
     CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeGetMediaItems - NumOfParams received is [%d] therefore going to return [Error: No parameters was passed] (bgmi)",numParas);
 
     return SetResponse(openTag + "Error: No parameters was passed");
   }
-  
+
   ///////////////////////////////////
   // Check for location parameter //
   ///////////////////////////////////
 
   CStdString strLocation = paras[0];
-  
+
   if(strLocation.IsEmpty())
   {
     CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeGetMediaItems - Path param received is [%s] therefore going to return [Error: Path parameter is empty] (bgmi)",strLocation.c_str());
 
     return SetResponse(openTag+"Error: Path parameter is empty");
   }
-  
+
   CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeGetMediaItems - Enter function with [strLocation=%s] (bgmi)",strLocation.c_str());
 
   //////////////////////////////////
   // Manipulate on the items path //
   // (Needed for app:// paths)    //
   //////////////////////////////////
-  
+
   bool retVal = UpdatePath(strLocation);
-  
+
   if(retVal == false)
   {
     CStdString strError = "Error: Failed to manipulate location, " + strLocation;
     return SetResponse(openTag+strError);
   }
-  
+
   ////////////////////////////////
   // Get the items for the path //
   ////////////////////////////////
-  
+
   CFileItemList items;
   if (!CDirectory::GetDirectory(strLocation, items))
   {
     CStdString strError = "Error: could not get items for location, " + strLocation;
-    
+
     CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeGetMediaItems - Call to GetDirectory with path [%s] failed [itemsSize=%d] therefore going to return [%s] (bgmi)",strLocation.c_str(),items.Size(),strError.c_str());
 
     return SetResponse(openTag+strError);
   }
-  
+
   int numOfItems = items.Size();
 
   CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeGetMediaItems - Got [%d] itemd for [path=%s] (bgmi)",numOfItems,strLocation.c_str());
@@ -3547,7 +3620,7 @@ int CXbmcHttp::BoxeeGetMediaItems(int numParas, CStdString paras[])
   ////////////////////////////
   // Build the XML response //
   ////////////////////////////
-  
+
   CStdString xmlRes;
   xmlRes += "<boxee:iphone>";
   xmlRes += "<boxee:response>";
@@ -3557,11 +3630,11 @@ int CXbmcHttp::BoxeeGetMediaItems(int numParas, CStdString paras[])
   itoa(numOfItems,tmp,10);
   xmlRes += tmp;
   xmlRes += "\">";
-  
+
   for (int i=0; i<numOfItems; i++)
   {
     CStdString itemXml;
-    
+
     itemXml += "<boxee:item id=\"";
 
     char tmpId[10];
@@ -3571,19 +3644,19 @@ int CXbmcHttp::BoxeeGetMediaItems(int numParas, CStdString paras[])
     itemXml += "\"";
 
     CFileItemPtr item = items[i];
-    
+
     CStdString itemIPhoneXml;
     item->GetIPhoneXml(itemIPhoneXml);
-    
+
     itemXml += itemIPhoneXml;
 
     itemXml += "</boxee:item>";
 
     xmlRes += itemXml;
-    
+
     CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeGetMediaItems - [%d] Adding item [%s] (bgmi)",i+1,itemXml.c_str());
   }
-  
+
   xmlRes += "</boxee:items>";
   xmlRes += "</boxee:response>";
   xmlRes += "</boxee:iphone>";
@@ -3596,54 +3669,54 @@ int CXbmcHttp::BoxeeGetMediaItems(int numParas, CStdString paras[])
 bool CXbmcHttp::UpdatePath(CStdString& strLocation)
 {
   // Need to update only app:// paths
-  
-  CURL url(strLocation);
+
+  CURI url(strLocation);
 
   CLog::Log(LOGDEBUG,"CXbmcHttp::UpdatePath - Enter function with [strLocation=%s]. After parsing [protocol=%s][hostname=%s] (bgmi)",strLocation.c_str(),(url.GetProtocol()).c_str(),(url.GetHostName()).c_str());
 
   if(url.GetProtocol() == "app")
   {
     CLog::Log(LOGDEBUG,"CXbmcHttp::UpdatePath - For [strLocation=%s] the protocol IS [app] -> Need to update path (bgmi)",strLocation.c_str());
-    
+
     CAppDescriptor::AppDescriptorsMap appDescMap = CAppManager::GetInstance().GetRepositories().GetAvailableApps();
-    
+
     CAppDescriptor appsDesc;
-    
+
     CAppDescriptor::AppDescriptorsMap::iterator it;
     it = appDescMap.find(url.GetHostName());
     if(it != appDescMap.end())
     {
       appsDesc = it->second;
-      
+
       CStdString updatedUrl = appsDesc.GetURL();
-      
+
       if(updatedUrl.IsEmpty() == false)
       {
         strLocation = updatedUrl;
-        
+
         CLog::Log(LOGDEBUG,"CXbmcHttp::UpdatePath - strLocation was updated to [%s] (bgmi)",strLocation.c_str());
       }
       else
       {
         CLog::Log(LOGERROR,"CXbmcHttp::UpdatePath - The value for [key=%s] in AppDescriptorsMap is empty string. Can't update [strLocation=%s]. (bgmi)",(url.GetHostName()).c_str(),strLocation.c_str());
-        
+
         return false;        
       }
     }
     else
     {
       CLog::Log(LOGERROR,"CXbmcHttp::UpdatePath - Failed to find value for [key=%s] in AppDescriptorsMap. Can't update [strLocation=%s]. (bgmi)",(url.GetHostName()).c_str(),strLocation.c_str());
-      
+
       return false;
     }
   }
   else
   {
     // No need to update path
-    
+
     CLog::Log(LOGDEBUG,"CXbmcHttp::UpdatePath - For [strLocation=%s] the protocol ISN'T [app] -> No need to update path (bgmi)",strLocation.c_str());
   }
-  
+
   return true;
 }
 
@@ -3660,12 +3733,12 @@ int CXbmcHttp::BoxeeGetThumbnail(int numParas, CStdString paras[])
   }
   CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeGetThumbnail - Enter function with [numParas=%d][ParamsVec=%s] (bgt)",numParas,par.c_str());
   /////////
-  */
-  
+   */
+
   //////////////////////////
   // Check for parameters //
   //////////////////////////
-  
+
   if (numParas < 1)
   {
     return SetResponse(openTag + "Error: No parameters was passed");
@@ -3674,23 +3747,23 @@ int CXbmcHttp::BoxeeGetThumbnail(int numParas, CStdString paras[])
   ////////////////////////////
   // Get the thumbnail path //
   ////////////////////////////
-  
+
   CStdString strThumbnailPath = paras[0];
-  
+
   CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeGetThumbnail - strThumbnailPath was set to [%s] (bgt)",strThumbnailPath.c_str());
 
   if(strThumbnailPath.IsEmpty())
   {
     return SetResponse(openTag + "Error: Thumbnail path parameters was passed empty");
   }
-  
+
   CStdString base64Thumb="";
   int linesize=80;
 
   if(CUtil::IsRemote(strThumbnailPath))
   {
     // Thumbnail path is remote
-   
+
     CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeGetThumbnail - Thumbnail path [%s] is remote (bgt)",strThumbnailPath.c_str());
 
     // Get path for cache picture
@@ -3708,7 +3781,7 @@ int CXbmcHttp::BoxeeGetThumbnail(int numParas, CStdString paras[])
     if(CFile::Exists(cacheThumbnailPath))
     {
       // Thumbnail exist in cache
-      
+
       CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeGetThumbnail - Thumbnail path [%s] exist in cache [%s] (bgt)",strThumbnailPath.c_str(),cacheThumbnailPath.c_str());
 
       base64Thumb += encodeFileToBase64(cacheThumbnailPath,linesize);
@@ -3720,14 +3793,14 @@ int CXbmcHttp::BoxeeGetThumbnail(int numParas, CStdString paras[])
       CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeGetThumbnail - Thumbnail path [%s] doesn't exist in cache [%s]. Going to download it (bgt)",strThumbnailPath.c_str(),cacheThumbnailPath.c_str());
 
       XFILE::CFileCurl http;
-      
+
       CStdString cacheThumbnailPathTmp;
       cacheThumbnailPathTmp.Format("%s\\%c\\%s_iphonethumb_tmp.tbn", g_settings.GetPicturesThumbFolder().c_str(), hex[0], hex.c_str());
 
       cacheThumbnailPathTmp = _P(cacheThumbnailPathTmp);
 
       bool success = http.Download(strThumbnailPath,cacheThumbnailPathTmp);
-      
+
       if(success)
       {
         CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeGetThumbnail - Succeeded to download thumbnail [%s] to cache [%s]. Going to create thumbnail (resize it) (bgt)",strThumbnailPath.c_str(),cacheThumbnailPath.c_str());
@@ -3743,14 +3816,14 @@ int CXbmcHttp::BoxeeGetThumbnail(int numParas, CStdString paras[])
         else
         {
           CLog::Log(LOGERROR,"CXbmcHttp::BoxeeGetThumbnail - Failed to create thumbnail (resize it) (bgt)");
-          
+
           return SetResponse(openTag + "Error: Failed to create thumbnail");         
         }
       }
       else
       {
         CLog::Log(LOGERROR,"CXbmcHttp::BoxeeGetThumbnail - Failed to download thumbnail [%s] to cache [%s] (bgt)",strThumbnailPath.c_str(),cacheThumbnailPath.c_str());
-        
+
         return SetResponse(openTag + "Error: Failed to download thumbnail");
       }
     }
@@ -3764,7 +3837,7 @@ int CXbmcHttp::BoxeeGetThumbnail(int numParas, CStdString paras[])
     if(CFile::Exists(strThumbnailPath))
     {
       // Thumbnail exist in cache
-      
+
       CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeGetThumbnail - Thumbnail path [%s] exist in cache. Going to encode it to base64 (bgt)",strThumbnailPath.c_str());
 
       base64Thumb += encodeFileToBase64(strThumbnailPath,linesize);
@@ -3772,7 +3845,7 @@ int CXbmcHttp::BoxeeGetThumbnail(int numParas, CStdString paras[])
     else
     {
       CLog::Log(LOGERROR,"CXbmcHttp::BoxeeGetThumbnail - Thumbnail path [%s] doesn't exist in cache (bgt)",strThumbnailPath.c_str());
-      
+
       return SetResponse(openTag + "Error: Local thumbnail doesn't exist");
     }
   }
@@ -3791,37 +3864,65 @@ int CXbmcHttp::BoxeeGetKeyboardText(int numParas, CStdString paras[])
     return SetResponse(openTag + "Error: Failed to get the keyboard");
   }
 
+  bool setKeyboardState = false;
   CStdString xmlRes;
   xmlRes += "<boxee:iphone>";
   xmlRes += "<boxee:response>";
   xmlRes += "<boxee:keyboard active=";
-  
+
   if(pKeyboard->IsActive())
   {
     xmlRes += "\"1\"";
-    
+
     xmlRes += " text=\"";
     xmlRes += pKeyboard->GetText();
     xmlRes += "\"";
-    
+
     xmlRes += " hidden=";
-    if(pKeyboard->IsHiddenInput())
-    {
-      xmlRes += "\"1\"";
-    }
-    else
-    {
-      xmlRes += "\"0\"";      
-    }  
+    xmlRes += (pKeyboard->IsHiddenInput()) ? "\"1\"" : "\"0\"";
+
+    setKeyboardState = true;
   }
-  else
+
+  if (!setKeyboardState)
+  {
+    int focusedWindowId = g_windowManager.GetFocusedWindow();
+
+    CGUIWindow* focusedWindow = g_windowManager.GetWindow(focusedWindowId);
+    if (!focusedWindow)
+    {
+      return SetResponse(openTag + "Error: Failed to get focused window");
+    }
+
+    CGUIControl* focusedControl = focusedWindow->GetFocusedControl();
+    if (focusedControl)
+    {
+      CGUIControl::GUICONTROLTYPES controlType = focusedControl->GetControlType();
+
+      if (controlType == CGUIControl::GUICONTROL_EDIT)
+      {
+        xmlRes += "\"1\"";
+
+        CGUIEditControl* editControl = (CGUIEditControl*) focusedControl;
+        xmlRes += " text=\"";
+        xmlRes += editControl->GetLabel2();
+        xmlRes += "\"";
+
+        xmlRes += " hidden=";
+        xmlRes += (editControl->GetInputType() == CGUIEditControl::INPUT_TYPE_PASSWORD) ? "\"1\"" : "\"0\"";
+
+        setKeyboardState = true;
+      }
+    }
+  }
+
+  if (!setKeyboardState)
   {
     xmlRes += "\"0\"";
     xmlRes += " text=\"\"";
-    
     xmlRes += " hidden=\"0\"";
   }
-  
+
   xmlRes += ">";
 
   xmlRes += "</boxee:keyboard>";
@@ -3831,6 +3932,217 @@ int CXbmcHttp::BoxeeGetKeyboardText(int numParas, CStdString paras[])
   CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeGetKeyboardText - Going to return [%s] (key)",xmlRes.c_str());
 
   return SetResponse(xmlRes);
+}
+
+int CXbmcHttp::BoxeeIsBrowserMouseActive(int numParas, CStdString paras[])
+{
+  CStdString xmlRes;
+  xmlRes += "<boxee:iphone>";
+  xmlRes += "<boxee:response>";
+  xmlRes += "<boxee:browsermouse active=";
+
+  if(g_application.m_pPlayer && g_application.m_pPlayer->MouseRenderingEnabled() && g_application.m_pPlayer->ForceMouseRendering())
+  {
+    xmlRes += "\"1\"";
+  }
+  else
+  {
+    xmlRes += "\"0\"";
+  }
+
+  xmlRes += ">";
+
+  xmlRes += "</boxee:browsermouse>";
+  xmlRes += "</boxee:response>";
+  xmlRes += "</boxee:iphone>";
+
+  CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeIsBrowserMouseActive - Going to return [%s] (browsermouse)",xmlRes.c_str());
+
+  return SetResponse(xmlRes);
+}
+
+int CXbmcHttp::BoxeeAddMediaSource(int numParas, CStdString paras[])
+{
+  /*
+  // TMP - For debug //
+  CStdString par = "";
+  for(int k=0; k<numParas ; k++)
+  {
+    par += "<";
+    par += paras[k];
+    par += ">";
+  }
+  CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeAddMediaSource - Enter function with [numParas=%d][ParamsVec=%s] (bams)",numParas,par.c_str());
+  /////////
+   */
+
+  //////////////////////////
+  // Check for parameters //
+  //////////////////////////
+
+  if (numParas < 4)
+  {
+    CLog::Log(LOGERROR,"CXbmcHttp::BoxeeAddMediaSource - NumOfParams received is [%d<4] therefore going to return [Error: Not enough parameters was passed] (bams)",numParas);
+    return SetResponse(openTag + "Error: Not enough parameters was passed");
+  }
+
+  /////////////////////
+  // Read parameters //
+  /////////////////////
+
+  CBoxeeMediaSourceList sourceList;
+  CBoxeeMediaSource source;
+
+  CStdString strName = paras[0];
+  if(strName.IsEmpty())
+  {
+    CLog::Log(LOGERROR,"CXbmcHttp::BoxeeAddMediaSource - Receive EMPTY name parameter [%s], therefore going to return [Error: Share name parameter is empty] (bams)",strName.c_str());
+    return SetResponse(openTag+"Error: Sahre name parameter is empty");
+  }
+  if (sourceList.sourceNameExists(strName))
+  {
+    CLog::Log(LOGERROR,"CXbmcHttp::BoxeeAddMediaSource - Name parameter [%s] already exist, therefore going to return [Error: Share with name parameter already exist] (bams)",strName.c_str());
+    return SetResponse(openTag+"Error: Share with name parameter already exist");
+  }
+  source.name = strName;
+
+  CStdString strPath = paras[1];
+  if(strPath.IsEmpty())
+  {
+    CLog::Log(LOGERROR,"CXbmcHttp::BoxeeAddMediaSource - Receive EMPTY path parameter [%s], therefore going to return [Error: Share path parameter is empty] (bams)",strPath.c_str());
+    return SetResponse(openTag+"Error: Share path parameter is empty");
+  }
+  /*
+  if (!CDirectory::Exists(strPath))
+  {
+    CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeAddMediaSource - Path parameter [%s] doesn't exist, therefore going to return [Error: Path parameter doesn't exist] (bams)",strName.c_str());
+    return SetResponse(openTag+"Error: Path with name parameter already exist");
+  }
+  */
+  source.path = strPath;
+
+  CStdString strSourceType = paras[2];
+  if(strSourceType.IsEmpty())
+  {
+    CLog::Log(LOGERROR,"CXbmcHttp::BoxeeAddMediaSource - Receive EMPTY source type parameter [%s], therefore going to return [Error: Share source type parameter is empty] (bams)",strSourceType.c_str());
+    return SetResponse(openTag+"Error: Share source type parameter is empty");
+  }
+
+  vector<CStdString> tokens;
+  CUtil::Tokenize(strSourceType,tokens,",");
+  for (int i=0; i<(int)tokens.size(); i++)
+  {
+    if (tokens[i].ToLower() == "video")
+    {
+      source.isVideo = true;
+    }
+    else if (tokens[i].ToLower() == "music")
+    {
+      source.isMusic = true;
+    }
+    else if (tokens[i].ToLower() == "picture")
+    {
+      source.isPicture = true;
+    }
+  }
+
+  if (!source.isVideo && !source.isMusic && !source.isPicture)
+  {
+    CLog::Log(LOGERROR,"CXbmcHttp::BoxeeAddMediaSource - FAILED to set source type from parameter [%s], therefore going to return [Error: FAILED to set source type from parameter] (bams)",strSourceType.c_str());
+    return SetResponse(openTag+"Error: Failed to set source type");
+  }
+
+  source.scanType = -1;
+  CStdString strScanType = paras[3];
+  if(strScanType.IsEmpty())
+  {
+    CLog::Log(LOGERROR,"CXbmcHttp::BoxeeAddMediaSource - Receive EMPTY scan type parameter [%s], therefore going to return [Error: Scan type parameter is empty] (bams)",strScanType.c_str());
+    return SetResponse(openTag+"Error: Scan type parameter is empty");
+  }
+
+  if (strScanType.ToLower() == "private")
+  {
+    source.scanType = CMediaSource::SCAN_TYPE_PRIVATE;
+  }
+  else if (strScanType.ToLower() == "once")
+  {
+    source.scanType = CMediaSource::SCAN_TYPE_ONCE;
+  }
+  else if (strScanType.ToLower() == "daily")
+  {
+    source.scanType = CMediaSource::SCAN_TYPE_DAILY;
+  }
+  else if (strScanType.ToLower() == "hourly")
+  {
+    source.scanType = CMediaSource::SCAN_TYPE_HOURLY;
+  }
+  else if (strScanType.ToLower() == "monitored")
+  {
+    source.scanType = CMediaSource::SCAN_TYPE_MONITORED;
+  }
+
+  if (source.scanType == -1)
+  {
+    CLog::Log(LOGERROR,"CXbmcHttp::BoxeeAddMediaSource - FAILED to set scan type from parameter [%s], therefore going to return [Error: FAILED to set scan type from parameter] (bams)",strScanType.c_str());
+    return SetResponse(openTag+"Error: Failed to set scan type");
+  }
+
+  CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeAddMediaSource - going to add source [name=%s][path=%s][isVideo=%d][isMusic=%d][isPicture=%d][scanType=%d] (bams)",source.name.c_str(),source.path.c_str(),source.isVideo,source.isMusic,source.isPicture,source.scanType);
+
+  sourceList.addSource(source);
+
+  return SetResponse(openTag+"OK");
+}
+
+int CXbmcHttp::BoxeeRemoveMediaSource(int numParas, CStdString paras[])
+{
+  /*
+  // TMP - For debug //
+  CStdString par = "";
+  for(int k=0; k<numParas ; k++)
+  {
+    par += "<";
+    par += paras[k];
+    par += ">";
+  }
+  CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeAddMediaSource - Enter function with [numParas=%d][ParamsVec=%s] (brms)",numParas,par.c_str());
+  /////////
+   */
+
+  //////////////////////////
+  // Check for parameters //
+  //////////////////////////
+
+  if (numParas < 1)
+  {
+    CLog::Log(LOGERROR,"CXbmcHttp::BoxeeRemoveMediaSource - NumOfParams received is [%d<1] therefore going to return [Error: Not enough parameters was passed] (brms)",numParas);
+    return SetResponse(openTag + "Error: Not enough parameters was passed");
+  }
+
+  /////////////////////
+  // Read parameters //
+  /////////////////////
+
+  CBoxeeMediaSourceList sourceList;
+
+  CStdString strName = paras[0];
+  if(strName.IsEmpty())
+  {
+    CLog::Log(LOGERROR,"CXbmcHttp::BoxeeRemoveMediaSource - Receive EMPTY name parameter [%s], therefore going to return [Error: Share name parameter is empty] (bams)",strName.c_str());
+    return SetResponse(openTag+"Error: Share name parameter is empty");
+  }
+
+  if (!sourceList.sourceNameExists(strName))
+  {
+    CLog::Log(LOGERROR,"CXbmcHttp::BoxeeRemoveMediaSource - Name parameter [%s] DOESN'T exist, therefore going to return [Error: Share doesn't exist] (bams)",strName.c_str());
+    return SetResponse(openTag+"Error: Share doesn't exist");
+  }
+
+  CLog::Log(LOGDEBUG,"CXbmcHttp::BoxeeRemoveMediaSource - going to remove source [name=%s] (bams)",strName.c_str());
+
+  sourceList.deleteSource(strName);
+
+  return SetResponse(openTag+"OK");
 }
 
 CGUIDialogKeyboard* CXbmcHttp::GetKeyboard()

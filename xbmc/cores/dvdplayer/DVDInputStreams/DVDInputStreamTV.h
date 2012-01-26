@@ -21,6 +21,7 @@
  *
  */
 
+#include <string>
 #include "DVDInputStream.h"
 
 namespace XFILE {
@@ -45,11 +46,13 @@ public:
   virtual __int64 GetLength();
 
   virtual bool    NextStream();
+  virtual std::string& GetContent();
 
 
   bool            NextChannel();
   bool            PrevChannel();
   bool            SelectChannel(unsigned int channel);
+  int             GetProgramId();
 
   int             GetTotalTime();
   int             GetStartTime();

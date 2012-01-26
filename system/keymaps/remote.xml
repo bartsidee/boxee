@@ -72,14 +72,15 @@
       <blue>XBMC.ActivateWindow(MyPictures)</blue>
       <zero>Number0</zero>
       <one>Number1</one>
-      <two>JumpSMS2</two>
-      <three>JumpSMS3</three>
-      <four>JumpSMS4</four>
-      <five>JumpSMS5</five>
-      <six>JumpSMS6</six>
-      <seven>JumpSMS7</seven>
-      <eight>JumpSMS8</eight>
-      <nine>JumpSMS9</nine>
+      <two>Number2</two>
+      <three>Number3</three>
+      <four>Number4</four>
+      <five>Number5</five>
+      <six>Number6</six>
+      <seven>Number7</seven>
+      <eight>Number8</eight>
+      <nine>Number9</nine>
+      <BrowserToggleMode>BrowserToggleMode</BrowserToggleMode>
     </remote>
   </global>
   <Home>
@@ -137,7 +138,7 @@
       <menu>FullScreen</menu>
       <display>Stop</display>
       <select>Info</select>
-      <info>Info</info>
+      <info>CodecInfo</info>
       <forward>StepForward</forward>
       <reverse>StepBack</reverse>
       <right>StepForward</right>
@@ -152,8 +153,6 @@
       <eight>Number8</eight>
       <nine>Number9</nine>
       <left>StepBack</left>
-      <up>VolumeUp</up>
-      <down>VolumeDown</down>
       <enter>Info</enter>
       <teletext>XBMC.ActivateWindow(Teletext)</teletext>
     </remote>
@@ -190,16 +189,12 @@
       <display>Stop</display>
       <right>SkipNext</right>
       <left>SkipPrevious</left>
-      <up>VolumeUp</up>
-      <down>VolumeDown</down>
     </remote>
   </Visualisation>
   <MusicOSD>
     <remote>
       <right>SkipNext</right>
       <left>SkipPrevious</left>
-      <up>VolumeUp</up>
-      <down>VolumeDown</down>
       <menu>Close</menu>
       <back>Close</back>
       <title>Info</title>
@@ -264,8 +259,6 @@
       <menu>Close</menu>
       <right>SkipNext</right>
       <left>SkipPrevious</left>
-      <up>VolumeUp</up>
-      <down>VolumeDown</down>
     </remote>
   </VideoOSD>
   <VideoMenu>
@@ -421,24 +414,12 @@
       <menu>PreviousMenu</menu>
     </remote>
   </MyWeatherSettings>
-  <MyMusicSettings>
-    <remote>
-      <back>PreviousMenu</back>
-      <menu>PreviousMenu</menu>
-    </remote>
-  </MyMusicSettings>
   <SystemSettings>
     <remote>
       <back>PreviousMenu</back>
       <menu>PreviousMenu</menu>
     </remote>
   </SystemSettings>
-  <MyVideosSettings>
-    <remote>
-      <back>PreviousMenu</back>
-      <menu>PreviousMenu</menu>
-    </remote>
-  </MyVideosSettings>
   <NetworkSettings>
     <remote>
       <back>PreviousMenu</back>

@@ -10,10 +10,15 @@
 #include "lib/libBoxee/boxee.h"
 #include "lib/libBoxee/bximetadataresolver.h"
 #include "lib/libBoxee/bxmetadata.h"
+#include "lib/libBoxee/bxxmldocument.h"
 #include "../utils/md5.h"
 #include "IProgressCallback.h"
 #include "utils/MusicAlbumInfo.h"
 #include "utils/MusicInfoScraper.h"
+
+using namespace BOXEE;
+
+typedef std::vector<BXMetadata> vectorMetadata;
 
 class CResolvingTrack {
 public:
@@ -108,22 +113,28 @@ public:
    * Resolves music folder with provided path
    * @returns RESOLVER_SUCCESS on success, RESOLVER_FAILED on failure, RESOLVER_ABORTED on abort
    */
-  static int ResolveMusicFolder(const CStdString& strPath);
+  static int ResolveMusicFolder(BXMetadataScannerJob* pJob, bool rescan=false);
 
   /**
    * Get remote metadta from the internet for a single album, Used by the BoxeeFeedItemLoader
    */
   static bool ResolveAlbumMetadata(const CStdString& _strAlbum, const CStdString& _strArtist,  BOXEE::BXMetadata * pMetadata);
 
+  // helper functions for connecting and receiving info from the server
+  static bool LoadAlbumsInfo(BOXEE::BXXMLDocument& doc, vectorMetadata& list);
+  static bool LoadAlbumInfo(BOXEE::BXXMLDocument& doc , BXMetadata& albumRead);
+  static bool LoadAlbumInfo(TiXmlElement* albumElement, BXMetadata& albumRead);
+
+  static bool GetResultsFromServer(const CStdString& _strAlbum,const CStdString& _strArtist, const int _resultCount, BXXMLDocument& _resultDoc);
 
 private:
 
-  static bool ReadMusicFolder(const CStdString& strPath, CResolvingFolder& folder);
+  static int ReadMusicFolder(const CStdString& strPath, CResolvingFolder& folder, BXMetadataScannerJob* pJob);
 
   /**
    * Analyzes the folder tracks and creates one or more albums from them
    */
-  static bool CreateAlbumsFromFolder(const CResolvingFolder& folder, std::vector<CResolvedAlbum>& albums);
+  static int CreateAlbumsFromFolder(const CResolvingFolder& folder, std::vector<CResolvedAlbum>& albums, BXMetadataScannerJob* pJob);
 
   /**
    * Look for the local thumbnail (album cover) in the album folder
@@ -155,7 +166,7 @@ private:
 
   static void CleanDeletedAudiosFromDatabase(const std::map<std::string, BOXEE::BXMetadata*> &mapDeletedAudios);
 
-  //static CStdString CleanAlbumName(const CStdString& strName);
+  static bool GetMetadataFromServer(const CStdString& _strAlbum, const CStdString& _strArtist, BOXEE::BXMetadata * pMetadata);
 
   // Returns 0 if successful, -1 if information was not found and -2 if information was not retreived due to network 
   // problems
@@ -167,13 +178,6 @@ private:
   static std::vector<CResolvedAlbum> albumCache;
 
 public:
-  // ///////////////////////////////////////////////////////////////////////////////////////////////
-  // TESTING SECTION
-  //static void RunTests();
-  //static bool TestMovieNameCleanUp();
-  //static bool TestSeriesTagExtraction();
-  //static bool TestCleanVideoName();
-  //static bool TestAllMusicResolver();
 
 };
 

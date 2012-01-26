@@ -1020,7 +1020,7 @@ void Renderer::WaveformMath(PresetOutputs *presetOutputs, PresetInputs *presetIn
 			
 		case 7://dual waveforms
 		     {	
-		
+			
 			wave_x_temp=-2*0.4142*(fabs(fabs(presetOutputs->wave_mystery)-.5)-.5);
 		    
 			presetOutputs->wave_rot = -presetOutputs->wave_mystery*90;

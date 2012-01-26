@@ -24,11 +24,19 @@
 #include "DVDInputStreamFile.h"
 #include "Key.h"
 
+typedef struct PlaylistChapterInfo
+{
+  int startTime;
+  int duration;
+  std::string name;
+} PlaylistChapterInfo;
+
 class CDVDInputStreamPlaylist : public CDVDInputStreamFile
 {
 public:
   CDVDInputStreamPlaylist(DVDStreamType streamType = DVDSTREAM_TYPE_PLAYLIST);
   virtual ~CDVDInputStreamPlaylist();
+  virtual bool Open(const char* strFile, const std::string &content);
   bool OnAction(const CAction &action);
   virtual bool IsEOF();
   virtual bool NextStream() { return true; }
@@ -37,5 +45,26 @@ public:
   virtual unsigned int GetTotalTime();
   virtual unsigned int StartTime();
   virtual bool SeekTime(__int64 millis);
+  virtual DWORD GetReadAhead();
+
+  int GetSeekTime(bool bPlus, bool bLargeStep);
+  int GetChapter();
+  int GetChapterCount();
+  void GetChapterName(std::string& name);
+  void GetChapterInfo(int chap, uint64_t& startTime, uint64_t& duration, std::string& name);
+  bool SeekChapter(int ch);
+  int GetCurrentTimecode();
+  bool CanSeek();
+  bool CanPause();
+
+  bool SetChapters(const CStdString& chapterInfo);
+private:
+  std::map<int, PlaylistChapterInfo*> m_chaptersInfoMap;
+  CCriticalSection m_lock;
+
+  int m_iCurrentChapter;
+
+  void ClearChapters();
+  
 };
 

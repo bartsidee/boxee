@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/dct-test.c
+ * @file
  * DCT test (c) 2001 Fabrice Bellard
  * Started from sample code by Juan J. Sierralta P.
  */
@@ -32,6 +32,7 @@
 #include <unistd.h>
 #include <math.h>
 
+#include "libavutil/cpu.h"
 #include "libavutil/common.h"
 #include "libavutil/lfg.h"
 
@@ -40,15 +41,9 @@
 #include "faandct.h"
 #include "faanidct.h"
 #include "x86/idct_xvid.h"
+#include "dctref.h"
 
 #undef printf
-
-void *fast_memcpy(void *a, const void *b, size_t c){return memcpy(a,b,c);};
-
-/* reference fdct/idct */
-void ff_ref_fdct(DCTELEM *block);
-void ff_ref_idct(DCTELEM *block);
-void ff_ref_dct_init(void);
 
 void ff_mmx_idct(DCTELEM *data);
 void ff_mmxext_idct(DCTELEM *data);
@@ -64,9 +59,9 @@ void fdct_altivec(DCTELEM *block);
 //void idct_altivec(DCTELEM *block);?? no routine
 
 // ARM
-void j_rev_dct_ARM(DCTELEM *data);
-void simple_idct_ARM(DCTELEM *data);
-void simple_idct_armv5te(DCTELEM *data);
+void ff_j_rev_dct_arm(DCTELEM *data);
+void ff_simple_idct_arm(DCTELEM *data);
+void ff_simple_idct_armv5te(DCTELEM *data);
 void ff_simple_idct_armv6(DCTELEM *data);
 void ff_simple_idct_neon(DCTELEM *data);
 
@@ -100,24 +95,24 @@ struct algo algos[] = {
   {"SIMPLE-C",        1, ff_simple_idct,     ff_ref_idct, NO_PERM},
 
 #if HAVE_MMX
-  {"MMX",             0, ff_fdct_mmx,        ff_ref_fdct, NO_PERM, FF_MM_MMX},
+  {"MMX",             0, ff_fdct_mmx,        ff_ref_fdct, NO_PERM, AV_CPU_FLAG_MMX},
 #if HAVE_MMX2
-  {"MMX2",            0, ff_fdct_mmx2,       ff_ref_fdct, NO_PERM, FF_MM_MMX2},
-  {"SSE2",            0, ff_fdct_sse2,       ff_ref_fdct, NO_PERM, FF_MM_SSE2},
+  {"MMX2",            0, ff_fdct_mmx2,       ff_ref_fdct, NO_PERM, AV_CPU_FLAG_MMX2},
+  {"SSE2",            0, ff_fdct_sse2,       ff_ref_fdct, NO_PERM, AV_CPU_FLAG_SSE2},
 #endif
 
 #if CONFIG_GPL
-  {"LIBMPEG2-MMX",    1, ff_mmx_idct,        ff_ref_idct, MMX_PERM, FF_MM_MMX},
-  {"LIBMPEG2-MMX2",   1, ff_mmxext_idct,     ff_ref_idct, MMX_PERM, FF_MM_MMX2},
+  {"LIBMPEG2-MMX",    1, ff_mmx_idct,        ff_ref_idct, MMX_PERM, AV_CPU_FLAG_MMX},
+  {"LIBMPEG2-MMX2",   1, ff_mmxext_idct,     ff_ref_idct, MMX_PERM, AV_CPU_FLAG_MMX2},
 #endif
-  {"SIMPLE-MMX",      1, ff_simple_idct_mmx, ff_ref_idct, MMX_SIMPLE_PERM, FF_MM_MMX},
-  {"XVID-MMX",        1, ff_idct_xvid_mmx,   ff_ref_idct, NO_PERM, FF_MM_MMX},
-  {"XVID-MMX2",       1, ff_idct_xvid_mmx2,  ff_ref_idct, NO_PERM, FF_MM_MMX2},
-  {"XVID-SSE2",       1, ff_idct_xvid_sse2,  ff_ref_idct, SSE2_PERM, FF_MM_SSE2},
+  {"SIMPLE-MMX",      1, ff_simple_idct_mmx, ff_ref_idct, MMX_SIMPLE_PERM, AV_CPU_FLAG_MMX},
+  {"XVID-MMX",        1, ff_idct_xvid_mmx,   ff_ref_idct, NO_PERM, AV_CPU_FLAG_MMX},
+  {"XVID-MMX2",       1, ff_idct_xvid_mmx2,  ff_ref_idct, NO_PERM, AV_CPU_FLAG_MMX2},
+  {"XVID-SSE2",       1, ff_idct_xvid_sse2,  ff_ref_idct, SSE2_PERM, AV_CPU_FLAG_SSE2},
 #endif
 
 #if HAVE_ALTIVEC
-  {"altivecfdct",     0, fdct_altivec,       ff_ref_fdct, NO_PERM, FF_MM_ALTIVEC},
+  {"altivecfdct",     0, fdct_altivec,       ff_ref_fdct, NO_PERM, AV_CPU_FLAG_ALTIVEC},
 #endif
 
 #if ARCH_BFIN
@@ -126,10 +121,10 @@ struct algo algos[] = {
 #endif
 
 #if ARCH_ARM
-  {"SIMPLE-ARM",      1, simple_idct_ARM,    ff_ref_idct, NO_PERM },
-  {"INT-ARM",         1, j_rev_dct_ARM,      ff_ref_idct, MMX_PERM },
+  {"SIMPLE-ARM",      1, ff_simple_idct_arm, ff_ref_idct, NO_PERM },
+  {"INT-ARM",         1, ff_j_rev_dct_arm,   ff_ref_idct, MMX_PERM },
 #if HAVE_ARMV5TE
-  {"SIMPLE-ARMV5TE",  1, simple_idct_armv5te, ff_ref_idct, NO_PERM },
+  {"SIMPLE-ARMV5TE",  1, ff_simple_idct_armv5te, ff_ref_idct, NO_PERM },
 #endif
 #if HAVE_ARMV6
   {"SIMPLE-ARMV6",    1, ff_simple_idct_armv6, ff_ref_idct, MMX_PERM },
@@ -186,14 +181,14 @@ static void idct_mmx_init(void)
     }
 }
 
-DECLARE_ALIGNED(16, static DCTELEM, block[64]);
-DECLARE_ALIGNED(8, static DCTELEM, block1[64]);
-DECLARE_ALIGNED(8, static DCTELEM, block_org[64]);
+DECLARE_ALIGNED(16, static DCTELEM, block)[64];
+DECLARE_ALIGNED(8, static DCTELEM, block1)[64];
+DECLARE_ALIGNED(8, static DCTELEM, block_org)[64];
 
 static inline void mmx_emms(void)
 {
 #if HAVE_MMX
-    if (cpu_flags & FF_MM_MMX)
+    if (cpu_flags & AV_CPU_FLAG_MMX)
         __asm__ volatile ("emms\n\t");
 #endif
 }
@@ -384,8 +379,8 @@ static void dct_error(const char *name, int is_idct,
 #endif
 }
 
-DECLARE_ALIGNED(8, static uint8_t, img_dest[64]);
-DECLARE_ALIGNED(8, static uint8_t, img_dest1[64]);
+DECLARE_ALIGNED(8, static uint8_t, img_dest)[64];
+DECLARE_ALIGNED(8, static uint8_t, img_dest1)[64];
 
 static void idct248_ref(uint8_t *dest, int linesize, int16_t *block)
 {
@@ -560,7 +555,7 @@ int main(int argc, char **argv)
     int test_idct = 0, test_248_dct = 0;
     int c,i;
     int test=1;
-    cpu_flags = mm_support();
+    cpu_flags = av_get_cpu_flags();
 
     ff_ref_dct_init();
     idct_mmx_init();

@@ -17,9 +17,7 @@
 
 typedef enum { STATE_NORMAL, STATE_SELECT_SHORTCUT, STATE_MOVE_SHORTCUT } HomeWindowState;
 
-#define LIST_RECOMMEND        8100
 #define LIST_FEATURES         8200
-#define LIST_QUEUE            8300
 
 /**
  * Implements the new main screen for Boxee UI
@@ -33,15 +31,19 @@ public:
   virtual bool OnMessage(CGUIMessage& message);
   virtual bool OnAction(const CAction& action);
   virtual void OnInitWindow();
+  virtual void OnDeinitWindow(int nextWindowID);
+  virtual void Render();
+  
+#ifdef HAS_DVB
+  static bool  RunOnBoardingWizardIfNeeded(bool rescan);
+#endif
 
 private:
-
+  void SetUserName(bool force);
   void HandleClickInList(int listType);
-
-  void HandleClickOnRecommendationItem(const CFileItem& item);
   void HandleClickOnFeatureItem(const CFileItem& item);
-  void HandleClickOnQueueItem(const CFileItem& item);
-
+  
+  bool m_lastConnectedStatus;
 };
 
 #endif /*GUIWINDOWBOXEEMAIN_H_*/

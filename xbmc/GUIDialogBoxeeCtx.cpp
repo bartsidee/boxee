@@ -14,10 +14,10 @@
 #include "LocalizeStrings.h"
 #include "ItemLoader.h"
 #include "utils/log.h"
-#include "GUIDialogBoxeeDropdown.h"
 #include "lib/libBoxee/bxutils.h"
 #include "GUIDialogBoxeeVideoQuality.h"
 #include "lib/libBoxee/boxee.h"
+#include "GUIDialogBoxeeSeekBar.h"
 
 //#define BTN_WATCH     9001
 //#define BTN_TRAILER   9002
@@ -39,6 +39,11 @@
 
 #define INFO_HIDDEN_LIST 5000
 
+#define IMG1 9121
+#define IMG2 9122
+#define IMG3 9123
+#define IMG4 9124
+
 CGUIDialogBoxeeCtx::CGUIDialogBoxeeCtx(DWORD dwID, const CStdString &xmlFile) : 
   CGUIDialog(dwID, xmlFile), m_pDlgVideoQuality(NULL)
 {
@@ -50,20 +55,25 @@ CGUIDialogBoxeeCtx::~CGUIDialogBoxeeCtx(void)
 
 void CGUIDialogBoxeeCtx::SetItem(const CFileItem &item)
 {
-  if (m_item.m_strPath != item.m_strPath)
+  m_item = item;
+
+  // set properties for MoreInfo and Share for the OSD
+  m_item.SetProperty("has-more-info",BoxeeUtils::HasDescription(m_item));
+
+  if (!m_item.HasProperty("disable-recommend"))
   {
-    m_item = item;
-
-    // set properties for MoreInfo and Share for the OSD
-    m_item.SetProperty("has-more-info",BoxeeUtils::HasDescription(m_item));
-
-    if (!m_item.HasProperty("disable-recommend"))
-    {
-      m_item.SetProperty("disable-recommend",!BoxeeUtils::CanShare(m_item, false));
-    }
+    m_item.SetProperty("disable-recommend",!BoxeeUtils::CanShare(m_item, false));
   }
-  
-  if (m_item.IsVideo() && !m_item.GetPropertyBOOL("MetaDataExtracted"))
+
+  // save the WindowId the item came from
+  if (m_item.GetProperty("originWindowId").IsEmpty())
+  {
+    m_item.SetProperty("originWindowId",m_item.GetProperty("windowId"));
+  }
+
+  if ((m_item.IsVideo() && !m_item.GetPropertyBOOL("MetaDataExtracted")) ||
+      m_item.HasProperty("music-osd-ext-0-thumb-focus") || m_item.HasProperty("music-osd-ext-0-thumb-nofocus") ||
+      m_item.HasProperty("music-osd-ext-1-thumb-focus") || m_item.HasProperty("music-osd-ext-1-thumb-nofocus"))
   {
     g_application.GetItemLoader().LoadFileMetadata(GetID(), INFO_HIDDEN_LIST, &m_item);
   }
@@ -80,6 +90,13 @@ void CGUIDialogBoxeeCtx::Close(bool forceClose)
   {
     m_pDlgVideoQuality->Close(forceClose);
   }
+
+  CGUIDialogBoxeeSeekBar* dlgSeek = (CGUIDialogBoxeeSeekBar*)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_SEEK_BAR);
+  if (dlgSeek)
+  {
+    dlgSeek->Close(forceClose);
+  }
+
   CGUIDialog::Close(forceClose);
 }
 
@@ -104,6 +121,18 @@ bool CGUIDialogBoxeeCtx::OnMessage(CGUIMessage &message)
       
       CGUIMessage winmsg(GUI_MSG_LABEL_ADD, GetID(), INFO_HIDDEN_LIST, 0, 0, pItem);
       OnMessage(winmsg);
+
+      CGUIMessage ref1(GUI_MSG_REFRESH_THUMBS, GetID(), IMG1);
+      OnMessage(ref1);
+
+      CGUIMessage ref2(GUI_MSG_REFRESH_THUMBS, GetID(), IMG2);
+      OnMessage(ref2);
+
+      CGUIMessage ref3(GUI_MSG_REFRESH_THUMBS, GetID(), IMG3);
+      OnMessage(ref3);
+
+      CGUIMessage ref4(GUI_MSG_REFRESH_THUMBS, GetID(), IMG4);
+      OnMessage(ref4);
     }
 
     return true;
@@ -123,12 +152,12 @@ bool CGUIDialogBoxeeCtx::OnMessage(CGUIMessage &message)
         if (CGUIDialogBoxeeRate::ShowAndGetInput(bLike))
         {
           BoxeeUtils::Rate(&m_item, bLike);
-          g_application.m_guiDialogKaiToast.QueueNotification("", "", g_localizeStrings.Get(51034), 5000);
+          g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_STAR, "", g_localizeStrings.Get(51034), 5000 , KAI_YELLOW_COLOR, KAI_GREY_COLOR);
         }
       }
       else if (iControl == BTN_SHARE)
       {
-        CGUIDialogBoxeeShare* pShare = (CGUIDialogBoxeeShare *)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_SHARE);
+        CGUIDialogBoxeeShare *pShare = (CGUIDialogBoxeeShare *)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_SHARE);
 
         if (pShare)
         {
@@ -183,7 +212,7 @@ bool CGUIDialogBoxeeCtx::OnMessage(CGUIMessage &message)
       else if (iControl == BTN_QUALITY)
       {
         return HandleQualityList();
-      }
+    }
     }
     break;
   case GUI_MSG_WINDOW_DEINIT:
@@ -224,7 +253,6 @@ bool CGUIDialogBoxeeCtx::HandleQualityList()
     {
       FocusedItem = i;
     }
-
   }
 
   m_pDlgVideoQuality->ChangeDialogType(LIST_CVQ_DIALOG);
@@ -238,10 +266,9 @@ bool CGUIDialogBoxeeCtx::HandleQualityList()
   int chosenItemPos = m_pDlgVideoQuality->GetSelectedItemPos();
   CFileItemPtr chosenItem = linksFileItemList->Get(chosenItemPos);
 
-  if( m_pDlgVideoQuality->GetSavePerference())
+  if(m_pDlgVideoQuality->GetSavePerference())
   {
-    BOXEE::Boxee::GetInstance().GetMetadataEngine().UpdateProviderPerf(chosenItem->GetProperty("link-providername"),
-        chosenItem->GetPropertyInt("quality"));
+    BOXEE::Boxee::GetInstance().GetMetadataEngine().UpdateProviderPerf(chosenItem->GetProperty("link-provider"),chosenItem->GetPropertyInt("quality"));
   }
 
   // if the user ask for a different quality - switch to a different link
@@ -255,14 +282,14 @@ bool CGUIDialogBoxeeCtx::HandleQualityList()
       return false;
     }
 
-    // copy the relevenat properties from the choosen item
+    // copy the relevant properties from the chosen item
     m_item.m_strPath =  chosenItem->m_strPath;
     m_item.SetProperty("link-boxeetype", chosenItem->GetProperty("link-boxeetype"));
     m_item.SetProperty("link-provider", chosenItem->GetProperty("link-provider"));
     m_item.SetProperty("link-providername", chosenItem->GetProperty("link-providername"));
     m_item.SetProperty("link-providerthumb", chosenItem->GetProperty("link-providerthumb"));
     m_item.SetProperty("link-countrycodes", chosenItem->GetProperty("link-countrycodes"));
-    m_item.SetProperty("link-countryrel", chosenItem->GetProperty("link-countryrel"));
+    m_item.SetProperty("link-countryrel", chosenItem->GetPropertyBOOL("link-countryrel"));
     m_item.SetProperty("quality-lbl", chosenItem->GetProperty("quality-lbl"));
     m_item.SetProperty("quality", chosenItem->GetPropertyInt("quality"));
 
@@ -290,7 +317,7 @@ void CGUIDialogBoxeeCtx::OnInitWindow()
     SET_CONTROL_HIDDEN(BTN_MORE_INFO); 
   }
   
-  if ( (m_item.GetPropertyBOOL("isloaded") || m_item.IsApp() ) && m_item.HasVideoInfoTag() || m_item.HasMusicInfoTag() || m_item.IsRSS() || m_item.IsInternetStream()) 
+  if ( (m_item.GetPropertyBOOL("isloaded") || m_item.IsApp() ) && (m_item.HasVideoInfoTag() || m_item.HasMusicInfoTag() || m_item.IsRSS() || m_item.IsInternetStream()) )
   {
     SET_CONTROL_VISIBLE(BTN_RATE);
     SET_CONTROL_VISIBLE(BTN_SHARE);
@@ -323,7 +350,9 @@ void CGUIDialogBoxeeCtx::OnInitWindow()
     }
   }
 
-  SetAutoClose(8000);
+  g_settings.SetSkinString(g_settings.TranslateSkinString("totalTimeMoreThenHour"),g_application.GetTotalTime() < 3600 ? "0" : "1");
+
+  SetAutoClose(5000);
 
   CGUIDialog::OnInitWindow();
 }

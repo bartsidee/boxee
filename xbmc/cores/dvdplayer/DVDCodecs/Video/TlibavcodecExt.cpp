@@ -20,6 +20,7 @@
  *
  */
 
+#ifdef HAS_DX
 
 #include "PODtypes.h"
 #include "avcodec.h"
@@ -28,11 +29,13 @@
 
 void TlibavcodecExt::ConnectTo(AVCodecContext *pAVCtx)
 {
+  /*
 	pAVCtx->opaque						= this;
 	pAVCtx->get_buffer					= get_buffer;
 	pAVCtx->reget_buffer				= reget_buffer;
 	pAVCtx->release_buffer				= release_buffer;
 	pAVCtx->handle_user_data			= handle_user_data0;
+  */
 }
 
 int TlibavcodecExt::get_buffer(AVCodecContext *c, AVFrame *pic)
@@ -66,3 +69,5 @@ void TlibavcodecExt::handle_user_data0(AVCodecContext *c, const uint8_t *buf,int
 
 	tlib->HandleUserData(buf,buf_len);
 }
+
+#endif // HAS_DX

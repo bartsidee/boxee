@@ -66,7 +66,7 @@ CAudioContext::CAudioContext()
   m_pDirectSoundDevice=NULL;
 #ifdef _WIN32
   m_pDefaultDirectSoundDevice=NULL;
-#endif
+#endif  
 #endif  
 }
 
@@ -90,11 +90,11 @@ void CAudioContext::SetActiveDevice(int iDevice)
   {
     if (iDevice != NONE && m_pDirectSoundDevice)
     {
-      DSCAPS devCaps = {0};
-      devCaps.dwSize = sizeof(devCaps);
-      if (SUCCEEDED(m_pDirectSoundDevice->GetCaps(&devCaps))) // Make sure the DirectSound interface is still valid.
-        return;
-    }
+    DSCAPS devCaps = {0};
+    devCaps.dwSize = sizeof(devCaps);
+    if (SUCCEEDED(m_pDirectSoundDevice->GetCaps(&devCaps))) // Make sure the DirectSound interface is still valid.
+      return;
+  }
   }
 
 #else
@@ -113,7 +113,15 @@ void CAudioContext::SetActiveDevice(int iDevice)
   RemoveActiveDevice();
 
   m_iDevice=iDevice;
-  m_strDevice=g_guiSettings.GetString("audiooutput.audiodevice");
+
+  if (g_guiSettings.HasSetting("audiooutput.audiodevice"))
+  {
+    m_strDevice=g_guiSettings.GetString("audiooutput.audiodevice");
+  }
+  else
+  {
+    m_strDevice="audiodevice";
+  }
 
 #ifdef HAS_AUDIO
   memset(&g_digitaldevice, 0, sizeof(GUID));
@@ -236,7 +244,8 @@ void CAudioContext::SetupSpeakerConfig(int iChannels, bool& bAudioOnAllSpeakers,
 
 #ifdef HAS_AUDIO
   DWORD spconfig = DSSPEAKER_USE_DEFAULT;  
-  if (g_guiSettings.GetInt("audiooutput.mode") == AUDIO_DIGITAL)
+  if( g_guiSettings.GetInt("audiooutput.mode") == AUDIO_DIGITAL_HDMI ||
+    g_guiSettings.GetInt("audiooutput.mode") == AUDIO_DIGITAL_SPDIF)
   {
     if (g_stSettings.m_currentVideoSettings.m_OutputToAllSpeakers && !bIsMusic)
     {

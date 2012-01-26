@@ -22,7 +22,7 @@
 
 #include "IDirectory.h"
 
-class CURL;
+class CURI;
 class TiXmlElement;
 
 #define SHOUTCAST_MASTER_LINK "shout://classic.shoutcast.com/sbin/newxml.phtml"
@@ -38,8 +38,8 @@ public:
   virtual bool GetDirectory(const CStdString& strPath, CFileItemList &items);
   virtual bool IsAllowed(const CStdString &strFile) const { return true; };
   virtual DIR_CACHE_TYPE GetCacheType(const CStdString& strPath) const { return DIR_CACHE_ALWAYS; };
-  bool ParseGenres(TiXmlElement *root, CFileItemList &items, CURL &url);
-  bool ParseStations(TiXmlElement *root, CFileItemList &items, CURL &url);
+  bool ParseGenres(TiXmlElement *root, CFileItemList &items, CURI &url);
+  bool ParseStations(TiXmlElement *root, CFileItemList &items, CURI &url);
 protected:
 };
 

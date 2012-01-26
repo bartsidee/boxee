@@ -34,7 +34,7 @@ CGUIImage::CGUIImage(int parentID, int controlID, float posX, float posY, float 
   m_currentFadeTime = 0;
   m_lastRenderTime = 0;
   ControlType = GUICONTROL_IMAGE;
-  m_bDynamicResourceAlloc=false;
+  m_bDynamicResourceAlloc = false;
   m_renderBorderOnly = false;
 }
 
@@ -213,10 +213,10 @@ void CGUIImage::FreeTextures(bool immediately /* = false */)
   m_fadingTextures.clear();
 }
 
-void CGUIImage::FreeResources()
+void CGUIImage::FreeResources(bool immediately)
 {
-  FreeTextures();
-  CGUIControl::FreeResources();
+  FreeTextures(immediately);
+  CGUIControl::FreeResources(immediately);
 }
 
 // WORKAROUND - we are currently resetting all animations when this is called, which shouldn't be the case
@@ -289,7 +289,8 @@ void CGUIImage::SetFileName(const CStdString& strFileName, bool setConstant)
     // we'll check whether it loaded or not in Render()
     m_currentTexture = strFileName;
     m_texture.SetFileName(m_currentTexture);
-}
+    m_texture.SetLoadingAnimation(m_info.GetFallback());
+  }
 }
 
 #ifdef _DEBUG
@@ -329,7 +330,10 @@ void CGUIImage::SetInfo(const CGUIInfoLabel &info)
   m_info = info;
   // a constant image never needs updating
   if (m_info.IsConstant())
+  {
     m_texture.SetFileName(m_info.GetLabel(0));
+    m_texture.SetLoadingAnimation(m_info.GetFallback());
+  }
 }
 
 unsigned char CGUIImage::GetFadeLevel(unsigned int time) const

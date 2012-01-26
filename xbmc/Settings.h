@@ -56,13 +56,14 @@
 
 #define VOLUME_MINIMUM -6000  // -60dB
 #define VOLUME_MAXIMUM 0      // 0dB
+
 #define VOLUME_DRC_MINIMUM 0    // 0dB
 #define VOLUME_DRC_MAXIMUM 3000 // 30dB
 
 #define VIEW_MODE_NORMAL        0
 #define VIEW_MODE_ZOOM          1
 #define VIEW_MODE_STRETCH_4x3   2
-#define VIEW_MODE_STRETCH_14x9  3
+#define VIEW_MODE_WIDE_ZOOM     3
 #define VIEW_MODE_STRETCH_16x9  4
 #define VIEW_MODE_ORIGINAL      5
 #define VIEW_MODE_CUSTOM        6
@@ -79,6 +80,9 @@ static const float OverscanValues[] = { 0.0f, 0.03f, 0.04f, 0.05f, 0.06f };
 
 typedef enum { SCREEN_FORMAT_4_3, SCREEN_FORMAT_16_9, SCREEN_FORMAT_16_10, SCREEN_FORMAT_21_9, SCREEN_FORMAT_CUSTOM } ScreenFormatType;
 static const float ScreenFormatValues[] = { (16.0f / 9.0f) / (4.0f / 3.0f), (16.0f / 9.0f) / (16.0f / 9.0f), (16.0f / 9.0f) / (16.0f / 10.0f), (16.0f / 9.0f) / (21.0f / 9.0f) };
+
+typedef enum { BLACK_LEVEL_PC, BLACK_LEVEL_VIDEO, NUM_OF_BLACK_LEVEL, BLACK_LEVEL_ERROR } BlackLevelType;
+static const std::string blackLevelValues[] = { "[0..255]", "[16..235]" };
 
 /* FIXME: eventually the profile should dictate where special://masterprofile/ is but for now it
    makes sense to leave all the profile settings in a user writeable location 
@@ -137,7 +141,7 @@ public:
   bool GetSoureScanType(const CStdString &strPath, const CStdString& strType, std::map<std::pair<CStdString, CStdString>, int >);
 
   VECSOURCES *GetSourcesFromType(const CStdString &type);
-  VECSOURCES* GetAllMediaSources();
+  VECSOURCES* GetAllMediaSources(bool allowDuplicatePaths = false);
   CStdString GetDefaultSourceFromType(const CStdString &type);
 
   bool UpdateSource(const CStdString &strType, const CStdString strOldName, const CStdString &strUpdateChild, const CStdString &strUpdateValue);
@@ -158,6 +162,9 @@ public:
 
   void ResetSkinSetting(const CStdString &setting);
   void ResetSkinSettings();
+  CStdString GetLicenseFile() const;
+
+  int m_settingsVersion;
 
   struct stSettings
   {
@@ -202,6 +209,8 @@ public:
 
     float m_fZoomAmount;      // current zoom amount
     float m_fPixelRatio;      // current pixel ratio
+    float m_fVerticalShift;   // current vertical shift
+    bool  m_bNonLinStretch;   // current non-linear stretch
 
     int m_iMyVideoWatchMode;
 
@@ -226,6 +235,10 @@ public:
     time_t m_lastTimeCheckForThumbRemoval; // Time performed check for thumbnails removal
     
     VOICE_MASK m_karaokeVoiceMask[4];
+
+    bool m_doneFTU;
+    bool m_doneFTU2;
+    bool m_doneSetFavoriteSources;
   };
 
   struct RssSet
@@ -274,6 +287,12 @@ public:
   bool bUseLoginScreen;
   std::vector<RESOLUTION_INFO> m_ResInfo;
 
+  // boxee
+  std::vector<CStdString> m_subtitleLangsVec;
+  std::map<CStdString,CStdString> m_subtitleLangToCodeMap;
+  bool LoadAdditionalSettings();
+  // end boxee
+
   // utility functions for user data folders
   CStdString GetUserDataItem(const CStdString& strFile) const;
   CStdString GetProfileUserDataFolder() const;
@@ -301,6 +320,7 @@ public:
 
 //Boxee
   CBoxeeShortcutList& GetShortcuts();
+  BlackLevelType GetBlackLevelAsEnum(const std::string& blackLevel);
 //end Boxee
   
   bool LoadUPnPXml(const CStdString& strSettingsFile);
@@ -323,6 +343,7 @@ public:
 
   void LoadRSSFeeds();
   bool GetInteger(const TiXmlElement* pRootElement, const char *strTagName, int& iValue, const int iDefault, const int iMin, const int iMax);
+  bool GetUint(const TiXmlElement* pRootElement, const char *strTagName, uint32_t& uValue, const uint32_t uDefault, const uint32_t uMin, const uint32_t uMax);
   bool GetFloat(const TiXmlElement* pRootElement, const char *strTagName, float& fValue, const float fDefault, const float fMin, const float fMax);
   static bool GetPath(const TiXmlElement* pRootElement, const char *tagName, CStdString &strValue);
   static bool GetString(const TiXmlElement* pRootElement, const char *strTagName, CStdString& strValue, const CStdString& strDefaultValue);
@@ -340,6 +361,9 @@ protected:
   bool SaveCalibration(TiXmlNode* pRootNode) const;
 
   bool LoadSettings(const CStdString& strSettingsFile);
+
+  void UpgradeSettings();
+
 //  bool SaveSettings(const CStdString& strSettingsFile) const;
 
   bool LoadPlayerCoreFactorySettings(const CStdString& fileStr, bool clear);
@@ -349,7 +373,7 @@ protected:
   void SaveSkinSettings(TiXmlNode *pElement) const;
 
   void LoadUserFolderLayout();
-  
+
   bool UpdateServerOfProfileFiles();
   bool UpdateServerOfSourcesFile();
   bool CollectSourcesForReportToServer(TiXmlElement* pRootElement, VECSOURCES& allSourcesApps, VECSOURCES& allRssSources);

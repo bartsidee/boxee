@@ -141,7 +141,7 @@ extern "C" void Create(void* pd3dDevice, int iPosX, int iPosY, int iWidth, int i
   speed.AddEntry("Very Fast");
 
   g_vecSettings.push_back( scale );
-  g_vecSettings.push_back( mode );  
+  g_vecSettings.push_back( mode );
   g_vecSettings.push_back( speed );
 }
 
@@ -232,25 +232,25 @@ void draw_rectangle(GLfloat x1, GLfloat y1, GLfloat z1, GLfloat x2, GLfloat y2, 
 {
 #if defined(HAS_GL_1)
   if(y1 == y2)
-    {	
-      glVertex3f(x1, y1, z1);
-      glVertex3f(x2, y1, z1);
-      glVertex3f(x2, y2, z2);
-		
-      glVertex3f(x2, y2, z2);
-      glVertex3f(x1, y2, z2);
-      glVertex3f(x1, y1, z1);
-    }
+  {
+    glVertex3f(x1, y1, z1);
+    glVertex3f(x2, y1, z1);
+    glVertex3f(x2, y2, z2);
+
+    glVertex3f(x2, y2, z2);
+    glVertex3f(x1, y2, z2);
+    glVertex3f(x1, y1, z1);
+  }
   else
-    {
-      glVertex3f(x1, y1, z1);
-      glVertex3f(x2, y1, z2);
-      glVertex3f(x2, y2, z2);
-		
-      glVertex3f(x2, y2, z2);
-      glVertex3f(x1, y2, z1);
-      glVertex3f(x1, y1, z1);
-    }
+  {
+    glVertex3f(x1, y1, z1);
+    glVertex3f(x2, y1, z2);
+    glVertex3f(x2, y2, z2);
+
+    glVertex3f(x2, y2, z2);
+    glVertex3f(x1, y2, z1);
+    glVertex3f(x1, y1, z1);
+  }
 #elif( defined(HAS_GLES) || defined(HAS_GL_2))
 
   if(y1 == y2)
@@ -295,25 +295,25 @@ void draw_bar(GLfloat x_offset, GLfloat z_offset, GLfloat height, GLfloat red, G
     glColor3f(0.2, 1.0, 0.2);
 
   if (g_mode != GL_POINT)
-    {
-      glColor3f(red,green,blue);
-      draw_rectangle(x_offset, height, z_offset, x_offset + width, height, z_offset + 0.1);
-    }
+  {
+    glColor3f(red,green,blue);
+    draw_rectangle(x_offset, height, z_offset, x_offset + width, height, z_offset + 0.1);
+  }
   draw_rectangle(x_offset, 0, z_offset, x_offset + width, 0, z_offset + 0.1);
-	
+
   if (g_mode != GL_POINT)
-    {
-      glColor3f(0.5 * red, 0.5 * green, 0.5 * blue);
-      draw_rectangle(x_offset, 0.0, z_offset + 0.1, x_offset + width, height, z_offset + 0.1);
-    }
+  {
+    glColor3f(0.5 * red, 0.5 * green, 0.5 * blue);
+    draw_rectangle(x_offset, 0.0, z_offset + 0.1, x_offset + width, height, z_offset + 0.1);
+  }
   draw_rectangle(x_offset, 0.0, z_offset, x_offset + width, height, z_offset );
 
   if (g_mode != GL_POINT)
-    {
-      glColor3f(0.25 * red, 0.25 * green, 0.25 * blue);
-      draw_rectangle(x_offset, 0.0, z_offset , x_offset, height, z_offset + 0.1);	
-    }
-  draw_rectangle(x_offset + width, 0.0, z_offset , x_offset + width, height, z_offset + 0.1);	
+  {
+    glColor3f(0.25 * red, 0.25 * green, 0.25 * blue);
+    draw_rectangle(x_offset, 0.0, z_offset , x_offset, height, z_offset + 0.1);
+  }
+  draw_rectangle(x_offset + width, 0.0, z_offset , x_offset + width, height, z_offset + 0.1);
 #elif defined(HAS_GLES) || defined(HAS_GL_2)
   if (g_mode == GL_POINT)
     g_color[0] = 0.2f; g_color[1] = 1.0f; g_color[2] = 0.2f;
@@ -352,7 +352,7 @@ void draw_bars(void)
 
 #if defined(HAS_GL_1)
   glPushMatrix();
-  glTranslatef(0.0,-0.5,-5.0);	      
+  glTranslatef(0.0,-0.5,-5.0);
   glRotatef(x_angle,1.0,0.0,0.0);
   glRotatef(y_angle,0.0,1.0,0.0);
   glRotatef(z_angle,0.0,0.0,1.0);
@@ -372,27 +372,27 @@ void draw_bars(void)
 #endif
 
   for(y = 0; y < 16; y++)
-    {
-      z_offset = -1.6 + ((15 - y) * 0.2);
+  {
+    z_offset = -1.6 + ((15 - y) * 0.2);
 
-      b_base = y * (1.0 / 15);
-      r_base = 1.0 - b_base;
-			
-      for(x = 0; x < 16; x++)
-        {
-          x_offset = -1.6 + (x * 0.2);			
+    b_base = y * (1.0 / 15);
+    r_base = 1.0 - b_base;
+
+    for(x = 0; x < 16; x++)
+    {
+      x_offset = -1.6 + (x * 0.2);
       if (::fabs(cHeights[y][x]-heights[y][x])>hSpeed)
       {
         if (cHeights[y][x]<heights[y][x])
-              cHeights[y][x] += hSpeed;
+          cHeights[y][x] += hSpeed;
         else
-              cHeights[y][x] -= hSpeed;
-            }
-          draw_bar(x_offset, z_offset, 
-		   cHeights[y][x], r_base - (x * (r_base / 15.0)), 
-		   x * (1.0 / 15), b_base);
-        }
+          cHeights[y][x] -= hSpeed;
+      }
+      draw_bar(x_offset, z_offset,
+               cHeights[y][x], r_base - (x * (r_base / 15.0)),
+               x * (1.0 / 15), b_base);
     }
+  }
 #if defined(HAS_GL_1)
   glEnd();
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -445,24 +445,27 @@ extern "C" void Render()
 #endif
 
   if(configured)
-    {
-      x_angle += x_speed;
-      if(x_angle >= 360.0)
-        x_angle -= 360.0;
-            
-      y_angle += y_speed;
-      if(y_angle >= 360.0)
-        y_angle -= 360.0;
-            
-      z_angle += z_speed;
-      if(z_angle >= 360.0)
-        z_angle -= 360.0;
-            
-      draw_bars();
-    }
+  {
+    x_angle += x_speed;
+    if(x_angle >= 360.0)
+      x_angle -= 360.0;
+
+    y_angle += y_speed;
+    if(y_angle >= 360.0)
+      y_angle -= 360.0;
+
+    z_angle += z_speed;
+    if(z_angle >= 360.0)
+      z_angle -= 360.0;
+
+    draw_bars();
+  }
+
+#if defined(HAS_GL_1)
   glPopMatrix();
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
+#endif
   glDisable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
 }
@@ -472,21 +475,21 @@ extern "C" void Start(int iChannels, int iSamplesPerSec, int iBitsPerSample, con
   int x, y;
 
   for(x = 0; x < 16; x++)
+  {
+    for(y = 0; y < 16; y++)
     {
-      for(y = 0; y < 16; y++)
-        {
-          cHeights[y][x] = 0.0;
-        }
+      cHeights[y][x] = 0.0;
     }
+  }
 
-  scale = 1.0 / log(256.0);
+  scale = 1.0f / log(256.0f);
 
-  x_speed = 0.0;
-  y_speed = 0.5;
-  z_speed = 0.0;
-  x_angle = 20.0;
-  y_angle = 45.0;
-  z_angle = 0.0;
+  x_speed = 0.0f;
+  y_speed = 0.5f;
+  z_speed = 0.0f;
+  x_angle = 20.0f;
+  y_angle = 45.0f;
+  z_angle = 0.0f;
 }
 
 extern "C" void Stop()
@@ -503,32 +506,32 @@ extern "C" void AudioData(short* pAudioData, int iAudioDataLength, float *pFreqD
   int xscale[] = {0, 1, 2, 3, 5, 7, 10, 14, 20, 28, 40, 54, 74, 101, 137, 187, 255};
 
   for(y = 15; y > 0; y--)
+  {
+    for(i = 0; i < 16; i++)
     {
-      for(i = 0; i < 16; i++)
-        {
-          heights[y][i] = heights[y - 1][i];
-        }
+      heights[y][i] = heights[y - 1][i];
     }
-	
+  }
+
   for(i = 0; i < NUM_BANDS; i++)
+  {
+    for(c = xscale[i], y = 0; c < xscale[i + 1]; c++)
     {
-      for(c = xscale[i], y = 0; c < xscale[i + 1]; c++)
-        {
       if (c<iAudioDataLength)
       {
-            if(pAudioData[c] > y)
-              y = (int)pAudioData[c];
+        if(pAudioData[c] > y)
+          y = (int)pAudioData[c];
       }
       else
-            continue;
-          }
-      y >>= 7;
-      if(y > 0)
-        val = (logf(y) * scale);
-      else
-        val = 0;				
-      heights[0][i] = val;		
+        continue;
     }
+    y >>= 7;
+    if(y > 0)
+      val = (logf(y) * scale);
+    else
+      val = 0;
+    heights[0][i] = val;
+  }
 }
 
 
@@ -563,7 +566,7 @@ extern "C" void GetPresets(char ***pPresets, int *currentPreset, int *numPresets
 // Return the settings for XBMC to display
 //-----------------------------------------------------------------------------
 extern "C" unsigned int GetSettings(StructSetting*** sSet)
-{
+{ 
   m_uiVisElements = VisUtils::VecToStruct(g_vecSettings, &m_structSettings);
   *sSet = m_structSettings;
   return m_uiVisElements;
@@ -587,71 +590,71 @@ extern "C" void UpdateSetting(int num, StructSetting*** sSet)
   if (strcmp(g_vecSettings[num].name, "Size")==0)
   {
     switch (g_vecSettings[num].current)
-      {
-      case 0:
+    {
+    case 0:
       scale = 1.0f / log(256.0f);
-	break;
+      break;
 
-      case 1:
+    case 1:
       scale = 2.0f / log(256.0f);
-	break;
+      break;
 
-      case 2:
+    case 2:
       scale = 3.0f / log(256.0f);
-	break;
+      break;
 
-      case 3:
+    case 3:
       scale = 0.5f / log(256.0f);
-	break;
+      break;
 
-      case 4:
+    case 4:
       scale = 0.33f / log(256.0f);
-	break;
-      }
+      break;
+    }
   }
 
   if (strcmp(g_vecSettings[num].name, "Speed")==0)
   {
     switch (g_vecSettings[num].current)
-      {
-      case 0:
+    {
+    case 0:
       hSpeed = 0.05f;
-	break;
+      break;
 
-      case 1:
+    case 1:
       hSpeed = 0.025f;
-	break;
+      break;
 
-      case 2:
+    case 2:
       hSpeed = 0.0125f;
-	break;
+      break;
 
-      case 3:
+    case 3:
       hSpeed = 0.10f;
-	break;
+      break;
 
-      case 4:
+    case 4:
       hSpeed = 0.20f;
-	break;
-      }
+      break;
+    }
   }
 
   if (strcmp(g_vecSettings[num].name, "Mode")==0)
   {
     switch (g_vecSettings[num].current)
-      {
-      case 0:
-	g_mode = GL_FILL;
-	break;
+    {
+    case 0:
+      g_mode = GL_FILL;
+      break;
 
-      case 1:
-	g_mode = GL_LINE;
-	break;
+    case 1:
+      g_mode = GL_LINE;
+      break;
 
-      case 2:
-	g_mode = GL_POINT;
-	break;
-      }
+    case 2:
+      g_mode = GL_POINT;
+      break;
+    }
   }
 }
 

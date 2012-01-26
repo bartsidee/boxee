@@ -47,6 +47,9 @@
 #include "utils/log.h"
 #include "BrowserService.h"
 #include "utils/SingleLock.h"
+#include "SMBUtils.h"
+#include "BoxeeUtils.h"
+#include <set>
 
 #include "DirectoryCache.h"
 
@@ -86,16 +89,23 @@ CSMBDirectory::~CSMBDirectory(void)
 
 bool CSMBDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items)
 {
-  CBrowserService* pBrowser = g_application.GetBrowserService();
-
-  // We accept smb://[[[domain;]user[:password@]]server[/share[/path[/file]]]]
-  if( strPath == "smb://" && pBrowser )
+  if(SMBUtils::ProcessPath(strPath, items))
   {
-    pBrowser->GetShare( CBrowserService::SMB_SHARE, items );    
     return true;
   }
 
-  // If we have the items in the cache, return them
+  CBrowserService* pBrowser = g_application.GetBrowserService();
+
+#ifndef HAS_EMBEDDED
+  // We accept smb://[[[domain;]user[:password@]]server[/share[/path[/file]]]]
+  if( strPath == "smb://" && pBrowser )
+  {
+    pBrowser->GetShare( CBrowserService::SMB_SHARE, items );
+    return true;
+  }
+#endif
+  
+	// If we have the items in the cache, return them
 	if (g_directoryCache.GetDirectory(strPath, items)) {
 		return true;
 	}
@@ -105,7 +115,7 @@ bool CSMBDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
   smb.Init();
 
   /* we need an url to do proper escaping */
-  CURL url(strPath);
+  CURI url(strPath);
 
   //Separate roots for the authentication and the containing items to allow browsing to work correctly
   CStdString strRoot = strPath;
@@ -144,7 +154,7 @@ bool CSMBDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
   }
   smbc_closedir(fd);
   lock.Leave();
-  
+
   for (size_t i=0; !g_application.m_bStop && i<vecEntries.size(); i++)
   {
     CachedDirEntry aDir = vecEntries[i];
@@ -155,13 +165,15 @@ bool CSMBDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
     if (!strFile.Equals(".") && !strFile.Equals("..")
       && aDir.type != SMBC_PRINTER_SHARE && aDir.type != SMBC_IPC_SHARE)
     {
-     int64_t iSize = 0;
+      int64_t iSize = 0;
       bool bIsDir = true;
       int64_t lTimeDate = 0;
       bool hidden = false;
 
       if(strFile.Right(1).Equals("$") && aDir.type == SMBC_FILE_SHARE )
         continue;
+
+      struct timespec tm;
 
       // only stat files that can give proper responses
       if ( aDir.type == SMBC_FILE ||
@@ -170,56 +182,53 @@ bool CSMBDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
         // set this here to if the stat should fail
         bIsDir = (aDir.type == SMBC_DIR);
        
-#ifndef _LINUX 
+#if !defined(_LINUX)
         struct __stat64 info = {0};
+#elif defined(__APPLE__)
+        struct stat64 info;
 #else
-        struct stat info = {0};
+        struct stat info;
 #endif
         if (m_extFileInfo && g_advancedSettings.m_sambastatfiles)
         {
-        // make sure we use the authenticated path wich contains any default username
-        CStdString strFullName = strAuth + smb.URLEncode(strFile);
+          // make sure we use the authenticated path wich contains any default username
+          CStdString strFullName = strAuth + smb.URLEncode(strFile);
  
-        lock.Enter();
-        
-        if( !g_application.m_bStop && smbc_stat(strFullName.c_str(), &info) == 0 )
-        {
+          lock.Enter();
+
+          if( !g_application.m_bStop && smbc_stat(strFullName.c_str(), (struct stat *)&info) == 0 )
+          {
+            tm.tv_sec = info.st_mtime;
 
 #ifndef _LINUX
             if ((info.st_mode & S_IXOTH))
             hidden = true;
 #else             
-          char value[20];
+            char value[20];
             // We poll for extended attributes which symbolizes bits but split up into a string. Where 0x02 is hidden and 0x12 is hidden directory.
             // According to the libsmbclient.h it's supposed to return 0 if ok, or the length of the string. It seems always to return the length wich is 4
-          if ( !g_application.m_bStop && smbc_getxattr(strFullName, "system.dos_attr.mode", value, sizeof(value)) > 0)
-          {
-            long longvalue = strtol(value, NULL, 16);
+            if ( !g_application.m_bStop && smbc_getxattr(strFullName, "system.dos_attr.mode", value, sizeof(value)) > 0)
+            {
+              long longvalue = strtol(value, NULL, 16);
               if (longvalue & SMBC_DOS_MODE_HIDDEN)
               hidden = true;
-          }
-          else
-            CLog::Log(LOGERROR, "Getting extended attributes for the share: '%s'\nunix_err:'%x' error: '%s'", strFullName.c_str(), errno, strerror(errno));          
+            }
+            else
+              CLog::Log(LOGERROR, "Getting extended attributes for the share: '%s'\nunix_err:'%x' error: '%s'", strFullName.c_str(), errno, strerror(errno));
 #endif
 
-          bIsDir = (info.st_mode & S_IFDIR) ? true : false;
-          lTimeDate = info.st_mtime;
+            bIsDir = (info.st_mode & S_IFDIR) ? true : false;
+            lTimeDate = info.st_mtime;
             if(lTimeDate == 0) // if modification date is missing, use create date
-            lTimeDate = info.st_ctime;
-          iSize = info.st_size;          
-        }
-        else
-          CLog::Log(LOGERROR, "%s - Failed to stat file %s", __FUNCTION__, strFullName.c_str());
-        
-        lock.Leave();
-      }
-      }
+              lTimeDate = info.st_ctime;
+            iSize = info.st_size;
+          }
+          else
+            CLog::Log(LOGERROR, "%s - Failed to stat file %s", __FUNCTION__, strFullName.c_str());
 
-      FILETIME fileTime, localTime;
-      LONGLONG ll = Int32x32To64(lTimeDate & 0xffffffff, 10000000) + 116444736000000000ll;
-      fileTime.dwLowDateTime = (DWORD) (ll & 0xffffffff);
-      fileTime.dwHighDateTime = (DWORD)(ll >> 32);
-      FileTimeToLocalFileTime(&fileTime, &localTime);
+          lock.Leave();
+        }
+      }
 
       if (bIsDir)
       {
@@ -231,7 +240,7 @@ bool CSMBDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
         if (aDir.type == SMBC_SERVER)
         {
           /* create url with same options, user, pass.. but no filename or host*/
-          CURL rooturl(strRoot);
+          CURI rooturl(strRoot);
           rooturl.SetFileName("");
           rooturl.SetHostName("");
           pItem->m_strPath = smb.URLEncode(rooturl);
@@ -239,7 +248,7 @@ bool CSMBDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
         pItem->m_strPath += aDir.name;
         CUtil::AddSlashAtEnd(pItem->m_strPath);
         pItem->m_bIsFolder = true;
-        pItem->m_dateTime=localTime;
+        pItem->m_dateTime = tm.tv_sec;
         if (hidden)
           pItem->SetProperty("file:hidden", true);
         items.Add(pItem);
@@ -250,7 +259,7 @@ bool CSMBDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
         pItem->m_strPath = strRoot + aDir.name;
         pItem->m_bIsFolder = false;
         pItem->m_dwSize = iSize;
-        pItem->m_dateTime=localTime;
+        pItem->m_dateTime = tm.tv_sec;
         if (hidden)
           pItem->SetProperty("file:hidden", true);
         items.Add(pItem);
@@ -261,7 +270,141 @@ bool CSMBDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
   return true;
 }
 
-int CSMBDirectory::Open(const CURL &url)
+bool CSMBDirectory::ProcessPath(const CStdString& strPath, CFileItemList &items)
+{
+  CURI url(strPath);
+
+  if(url.GetProtocol() != "smb")
+  {
+    CLog::Log(LOGERROR, "CSMBDirectory::ProcessPath - invalid protocol [%s]", url.GetProtocol().c_str());
+    return false;
+  }
+
+  CStdString strComp;
+  CStdString strDevices;
+  std::map<std::string, std::string> mapParams;
+
+  // Parse boxeedb url
+  if (!BoxeeUtils::ParseBoxeeDbUrl(strPath, strComp, strDevices, mapParams))
+  {
+    return false;
+  }
+
+  if(strComp.Equals("computers") && mapParams["name"].empty())
+  {
+    GetComputers(items);
+    return true;
+  }
+
+  if(strComp.Equals("computers") && !mapParams["name"].empty())
+  {
+    CStdString selectedComp = mapParams["name"];
+    if(selectedComp.IsEmpty())
+    {
+      return false;
+    }
+    GetComputerDevices(strPath, selectedComp, items);
+    return true;
+  }
+
+  return false;
+}
+
+bool CSMBDirectory::GetComputers(CFileItemList &items)
+{
+  const CStdString strPath = "smb://";
+
+  CDirectory::GetDirectory(strPath, items);
+
+  bool bInsert;
+  std::set<CStdString> Computers;
+
+  int i = 0;
+  while(i < items.Size())
+  {
+    CStdString compName = GetComputerName(items[i]->GetLabel());
+    bInsert = Computers.insert(compName).second;
+
+    if(bInsert)
+    {
+      items[i]->SetLabel(compName);
+      items[i]->m_strPath =  "smb://computers/?name=" + compName;
+      i++;
+    }
+    else
+    {
+      items.Remove(i);
+    }
+  }
+
+  return true;
+}
+
+bool CSMBDirectory::GetComputerDevices(const CStdString& strSmbPath,const CStdString& selectedComp, CFileItemList &items)
+{
+  const CStdString strPathTmp = "smb://";
+  CDirectory::GetDirectory(strPathTmp, items);
+
+  size_t index;
+  int length, i = 0;
+  int indexToBeDeleted = -1;
+  CStdString label;
+
+  while(i < items.Size())
+  {
+    CStdString compName = GetComputerName(items[i]->GetLabel());
+
+    if(!selectedComp.Equals(compName))
+    {
+      items.Remove(i);
+    }
+    else
+    {
+      //remove the computer from list displayed
+      if(selectedComp.Equals(items[i]->GetLabel()))
+      {
+        indexToBeDeleted = i;
+      }
+
+      //remove computer name
+      label = items[i]->GetLabel();
+      index = label.find_first_of("//");
+      if (index != std::string::npos)
+      {
+        length = label.length() - (index + 1);
+        label = label.substr(index + 2,length);
+        items[i]->SetLabel(label);
+      }
+
+      i++;
+    }
+  }
+
+  if(items.Size() > 1 && indexToBeDeleted != -1)
+  {
+    items.Remove(indexToBeDeleted);
+  }
+
+  return true;
+}
+
+CStdString CSMBDirectory::GetComputerName(const CStdString& computer)
+{
+  CStdString compName;
+  int index = computer.Find('/');
+
+  if(index > 0)
+  {
+    compName = computer.substr(0,index - 1);
+  }
+  else
+  {
+    compName = computer;
+  }
+  return compName;
+}
+
+int CSMBDirectory::Open(const CURI &url)
 {
   smb.Init();
   CStdString strAuth;  
@@ -271,19 +414,21 @@ int CSMBDirectory::Open(const CURL &url)
 /// \brief Checks authentication against SAMBA share and prompts for username and password if needed
 /// \param strAuth The SMB style path
 /// \return SMB file descriptor
-int CSMBDirectory::OpenDir(const CURL& url, CStdString& strAuth)
+int CSMBDirectory::OpenDir(const CURI& url, CStdString& strAuth)
 {
   int fd = -1;
 #ifndef _LINUX
   int nt_error;
 #endif
+  bool userCreds = false;
+  bool cachedCreds = false;
   
   /* make a writeable copy */
-  CURL urlIn(url);
+  CURI urlIn(url);
 
   /* set original url */
   strAuth = smb.URLEncode(urlIn);
-  CURL origUrl(url);
+  CURI origUrl(url);
 
   CStdString strPath;
   CStdString strShare;
@@ -292,25 +437,53 @@ int CSMBDirectory::OpenDir(const CURL& url, CStdString& strAuth)
   strShare += "/";
   strShare += smb.URLEncode(urlIn.GetShareName());
 
+  CStdString strOrigPassword = origUrl.GetPassWord();
+  CStdString strOrigUserName = origUrl.GetUserName();
+
+  if( strOrigUserName.length() != 0 &&
+      (!strOrigUserName.Equals("guest") || strOrigPassword.length() != 0) )
+  {
+    userCreds = true;
+  }
+  strOrigPassword = "";
+  strOrigUserName = "";
+
   IMAPPASSWORDS it = g_passwordManager.m_mapSMBPasswordCache.find(strShare);
   if(it != g_passwordManager.m_mapSMBPasswordCache.end())
   {
     // if share found in cache use it to supply username and password
-    CURL url(it->second);		// map value contains the full url of the originally authenticated share. map key is just the share
+    CURI url(it->second);		// map value contains the full url of the originally authenticated share. map key is just the share
     CStdString strPassword = url.GetPassWord();
     CStdString strUserName = url.GetUserName();
-    urlIn.SetPassword(strPassword);
-    urlIn.SetUserName(strUserName);
+
+    CStdString strOrigPassword = origUrl.GetPassWord();
+    CStdString strOrigUserName = origUrl.GetUserName();
+    if( userCreds &&
+        ( strOrigUserName != strUserName ||
+          strOrigPassword != strPassword ) )
+    {
+      CLog::Log(LOGDEBUG, "%s - credential change for url %s\n", __FUNCTION__, strPath.c_str());
+    }
+    else
+    {
+      urlIn.SetPassword(strPassword);
+      urlIn.SetUserName(strUserName);
+      cachedCreds = true;
+    }
   }
   
   // for a finite number of attempts use the following instead of the while loop:
   // for(int i = 0; i < 3, fd < 0; i++)
-  while (fd < 0)
-  {    
-    /* samba has a stricter url encoding, than our own.. CURL can decode it properly */
+  bool prompet = false;
+  while (fd < 0 && !prompet)
+  {
+#ifdef HAS_EMBEDDED
+    strPath = urlIn.Get();
+#else
+    /* samba has a stricter url encoding, than our own.. CURI can decode it properly */
     /* however doesn't always encode it correctly (spaces for example) */
     strPath = smb.URLEncode(urlIn);
-  
+#endif
     // remove the / or \ at the end. the samba library does not strip them off
     // don't do this for smb:// !!
     CStdString s = strPath;
@@ -344,9 +517,69 @@ int CSMBDirectory::OpenDir(const CURL& url, CStdString& strAuth)
 #ifndef _LINUX
       if (nt_error == NT_STATUS_ACCESS_DENIED)
 #else
-      if (errno == EACCES)
+      if (errno == EACCES || errno == EPERM)
 #endif
       {
+        // take a guess at a username/password that may be viable here, by combing through
+        // the shares and seeing if we can find something relevant
+        if( !userCreds && !cachedCreds )
+        {
+          CStdString hostname = smb.URLEncode(urlIn.GetHostName());
+
+          CStdString strPassword;
+          CStdString strUserName;
+          bool bHaveGuess = false;
+          IMAPPASSWORDS bestGuess;
+          IMAPPASSWORDS it = g_passwordManager.m_mapSMBPasswordCache.begin();
+
+          while( it != g_passwordManager.m_mapSMBPasswordCache.end() )
+          {
+            CURI url(it->second);
+            strPassword = url.GetPassWord();
+            strUserName = url.GetUserName();
+
+            bool hasCreds = strUserName.length() > 0;
+
+            // if this url has credentials for the host, and they aren't 'guest', then use those.
+            if( it->first.Find(hostname) >= 0 && hasCreds )
+            {
+              cachedCreds = true;
+              break;
+            }
+            else if( hasCreds && !bHaveGuess)
+            {
+              // it has creds for a different host; may work in a local network
+              bHaveGuess = true;
+              bestGuess = it;
+            }
+            it++;
+          }
+
+          // if we're here, then we looped with only a guess as to what to set
+          // reload that username/pass
+          if( !cachedCreds && bHaveGuess  )
+          {
+            CURI url(bestGuess->second);
+            strPassword = url.GetPassWord();
+            strUserName = url.GetUserName();
+
+            cachedCreds = true;
+          }
+
+          // ok, we found cached credentials we should use
+          // set those and continue, forcing one more pass on the loop.
+          if( cachedCreds )
+          {
+            CLog::Log(LOGDEBUG, "%s - trying related credentials for %s on %s\n", __FUNCTION__, hostname.c_str(), strPath.c_str());
+
+            urlIn.SetPassword(strPassword);
+            urlIn.SetUserName(strUserName);
+            continue;
+          }
+
+          // otherwise we couldn't find useful creds; just fall through
+        }
+
         if (m_allowPrompting)
         {
           g_passwordManager.SetSMBShare(strPath);
@@ -356,9 +589,19 @@ int CSMBDirectory::OpenDir(const CURL& url, CStdString& strAuth)
           /* must do this as our urlencoding for spaces is invalid for samba */
           /* and doing double url encoding will fail */
           /* curl doesn't decode / encode filename yet */
-          CURL urlnew( g_passwordManager.GetSMBShare() );
-          urlIn.SetUserName(urlnew.GetUserName());
-          urlIn.SetPassword(urlnew.GetPassWord());
+          CURI urlnew( g_passwordManager.GetSMBShare() );
+          CStdString u = urlnew.GetUserName(), p = urlnew.GetPassWord();
+#ifndef HAS_CIFS
+          CUtil::UrlDecode(u);
+          CUtil::UrlDecode(p);
+          urlIn.SetUserName(u);
+          urlIn.SetPassword(p);
+          prompet = false;
+#else
+          urlIn.SetUserName(u);
+          urlIn.SetPassword(p);
+          prompet = true;
+#endif
         }
         else
         {
@@ -373,12 +616,12 @@ int CSMBDirectory::OpenDir(const CURL& url, CStdString& strAuth)
         CStdString cError;
 #ifndef _LINUX
         if (nt_error == NT_STATUS_OBJECT_NAME_NOT_FOUND)
-          cError.Format(g_localizeStrings.Get(770).c_str(),nt_error);
+          cError = g_localizeStrings.Get(770);
         else
           cError = get_friendly_nt_error_msg(nt_error);
 #else
         if (errno == ENODEV || errno == ENOENT)
-          cError.Format(g_localizeStrings.Get(770).c_str(),errno);
+          cError = g_localizeStrings.Get(770);
         else
           cError = strerror(errno);
 #endif
@@ -390,7 +633,7 @@ int CSMBDirectory::OpenDir(const CURL& url, CStdString& strAuth)
           pDialog->SetLine(1, "");
           pDialog->SetLine(2, "");
 
-          ThreadMessage tMsg = {TMSG_DIALOG_DOMODAL, WINDOW_DIALOG_OK, g_windowManager.GetActiveWindow()};
+          ThreadMessage tMsg(TMSG_DIALOG_DOMODAL, WINDOW_DIALOG_OK, g_windowManager.GetActiveWindow());
           g_application.getApplicationMessenger().SendMessage(tMsg, false);
         }
         break;
@@ -424,7 +667,7 @@ bool CSMBDirectory::Create(const char* strPath)
   CSingleLock lock(smb);
   smb.Init();
 
-  CURL url(strPath);
+  CURI url(strPath);
   CStdString strFileName = smb.URLEncode(url);
   strFileName = g_passwordManager.GetSMBAuthFilename(strFileName);
 
@@ -445,7 +688,7 @@ bool CSMBDirectory::Remove(const char* strPath)
   CSingleLock lock(smb);
   smb.Init();
 
-  CURL url(strPath);
+  CURI url(strPath);
   CStdString strFileName = smb.URLEncode(url);
   strFileName = g_passwordManager.GetSMBAuthFilename(strFileName);
 
@@ -463,33 +706,56 @@ bool CSMBDirectory::Remove(const char* strPath)
 
 bool CSMBDirectory::Exists(const char* strPath)
 {
+  bool ret;
+  int statval;
+  CURI url(strPath);
+  
   CBrowserService* pBrowser = g_application.GetBrowserService();
   if (pBrowser)
   {
-    CURL u(strPath);
-    if (!pBrowser->IsHostAvailable(u.GetHostName()))
+    if (!pBrowser->IsHostAvailable(url.GetHostName()))
     {
-      CLog::Log(LOGDEBUG,"Host <%s> not available according to browser-service",u.GetHostName().c_str());
+      CLog::Log(LOGDEBUG,"Host <%s> not available according to browser-service",url.GetHostName().c_str());
       return false;
     }
   }
   
+  //// locked
+  {
   CSingleLock lock(smb);
   smb.Init();
 
-  CURL url(strPath);
   CStdString strFileName = smb.URLEncode(url);
   strFileName = g_passwordManager.GetSMBAuthFilename(strFileName);
   
-#ifndef _LINUX
-  SMB_STRUCT_STAT info;
+#if !defined(_LINUX)
+    struct __stat64 info = {0};
+#elif defined(__APPLE__)
+    struct stat64 info;
 #else
-  struct stat info;
+    struct stat info;
 #endif
-  if (smbc_stat(strFileName.c_str(), &info) != 0)
-  return false;
+    statval = smbc_stat( strFileName.c_str(), (struct stat *)&info );
+    if( 0 == statval )
+    {
+      ret = (info.st_mode & S_IFDIR) ? true : false;
+    }
+    else
+    {
+      ret = false;
+    }
+  }
+  //// drop out of lock
 
-  return (info.st_mode & S_IFDIR) ? true : false;
+  if( 0 != statval )
+  {
+    // Note, we spam warnings for subtitle paths here. Not much we can do without skipping potentially
+    // important logs
+    CStdString printUrl = url.GetWithoutUserDetails();
+    CLog::Log(LOGWARNING, "Path <%s> not available according to smbc_stat (%d, %d)\n", printUrl.c_str(), statval, errno);
+  }
+
+  return ret;
 }
 
 CStdString CSMBDirectory::MountShare(const CStdString &smbPath, const CStdString &strType, const CStdString &strName, 

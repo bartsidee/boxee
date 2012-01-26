@@ -27,14 +27,18 @@
  */
 #include "WinSystemWin32GL.h"
 #include "WIN32Util.h"
-#include <GL/glew.h>
 
-#ifdef HAS_GL
+#if defined(HAS_GL)
+
+#ifdef HAS_GLEW
+#include <GL/glew.h>
+#endif
 
 #pragma comment (lib,"opengl32.lib")
 #pragma comment (lib,"glu32.lib")
+#ifdef HAS_GLEW
 #pragma comment (lib,"../../xbmc/lib/libglew/glew32.lib") 
-
+#endif
 
 CWinSystemWin32GL g_Windowing;
 
@@ -60,6 +64,7 @@ bool CWinSystemWin32GL::InitRenderSystem()
   pfd.nVersion = 1;
   pfd.cColorBits = 24;
   pfd.cDepthBits = 16;
+  pfd.cStencilBits = 8;
   pfd.dwFlags = PFD_DRAW_TO_WINDOW|PFD_SUPPORT_OPENGL|PFD_DOUBLEBUFFER;
   pfd.iPixelType = PFD_TYPE_RGBA;
 
@@ -91,6 +96,9 @@ void CWinSystemWin32GL::SetVSyncImpl(bool enable)
 {
   if(m_wglSwapIntervalEXT)
     m_wglSwapIntervalEXT(enable ? 1 : 0);
+
+  // elis test
+  //m_wglSwapIntervalEXT(0);
 }
 
 bool CWinSystemWin32GL::PresentRenderImpl()

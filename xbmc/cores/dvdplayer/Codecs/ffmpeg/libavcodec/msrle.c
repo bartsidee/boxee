@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/msrle.c
+ * @file
  * MS RLE Video Decoder by Mike Melanson (melanson@pcisys.net)
  * For more information about the MS RLE format, visit:
  *   http://www.pcisys.net/~melanson/codecs/
@@ -36,7 +36,6 @@
 #include <string.h>
 
 #include "avcodec.h"
-#include "libavformat/avformat.h"
 #include "dsputil.h"
 #include "msrledec.h"
 
@@ -144,9 +143,9 @@ static av_cold int msrle_decode_end(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec msrle_decoder = {
+AVCodec ff_msrle_decoder = {
     "msrle",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_MSRLE,
     sizeof(MsrleContext),
     msrle_decode_init,

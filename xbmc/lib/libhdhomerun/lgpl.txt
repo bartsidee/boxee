@@ -1,4 +1,4 @@
-		  GNU LESSER GENERAL PUBLIC LICENSE
+		   GNU LESSER GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
  Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
@@ -38,7 +38,7 @@ based on the Application, and not on the Linked Version.
 object code and/or source code for the Application, including any data
 and utility programs needed for reproducing the Combined Work from the
 Application, but excluding the System Libraries of the Combined Work.
-
+
   1. Exception to Section 3 of the GNU GPL.
 
   You may convey a covered work under sections 3 and 4 of this License
@@ -68,7 +68,7 @@ code under terms of your choice, provided that, if the incorporated
 material is not limited to numerical parameters, data structure
 layouts and accessors, or small macros, inline functions and templates
 (ten or fewer lines in length), you do both of the following:
-
+
    a) Give prominent notice with each copy of the object code that the
    Library is used in it and that the Library and its use are
    covered by this License.
@@ -90,14 +90,14 @@ the following:
 
    b) Accompany the Combined Work with a copy of the GNU GPL and this license
    document.
-  
+
    c) For a Combined Work that displays copyright notices during
    execution, include the copyright notice for the Library among
    these notices, as well as a reference directing the user to the
    copies of the GNU GPL and this license document.
 
    d) Do one of the following:
-
+
        0) Convey the Minimal Corresponding Source under the terms of this
        License, and the Corresponding Application Code in a form
        suitable for, and under terms that permit, the user to
@@ -157,7 +157,7 @@ published by the Free Software Foundation. If the Library as you
 received it does not specify a version number of the GNU Lesser
 General Public License, you may choose any version of the GNU Lesser
 General Public License ever published by the Free Software Foundation.
-
+
   If the Library as you received it specifies that a proxy can decide
 whether future versions of the GNU Lesser General Public License shall
 apply, that proxy's public statement of acceptance of any version is

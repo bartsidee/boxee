@@ -42,6 +42,9 @@ typedef unsigned long ThreadIdentifier;
 #ifndef strcasecmp
 #define strcasecmp strcmpi
 #endif
+#ifndef strncasecmp
+#define strncasecmp strnicmp
+#endif
 
 #ifndef PRIdS
 #define PRIdS "Id"
@@ -83,6 +86,9 @@ typedef unsigned long ThreadIdentifier;
 #define llrint(x) ((x) >= 0 ? ((__int64)((x) + 0.5)) : ((__int64)((x) - 0.5)))
 
 extern "C" char * strptime(const char *buf, const char *fmt, struct tm *tm);
+extern "C" int strverscmp (const char *s1, const char *s2);
+extern "C" char * strcasestr(const char* haystack, const char* needle);
+extern int pgwin32_putenv(const char *envval);
 
 #endif // _WIN32
 

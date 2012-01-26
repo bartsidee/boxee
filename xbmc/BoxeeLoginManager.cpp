@@ -16,18 +16,29 @@
 #include "SkinInfo.h"
 #include "FileSystem/File.h"
 #include "SystemInfo.h"
-#include "GUIDialogBoxeeUserLogin.h"
 #include "SpecialProtocol.h"
 #include "GUIWindowSettingsScreenSimpleCalibration.h"
 #include "DirectoryCache.h"
 #include "utils/log.h"
 #include "LocalizeStrings.h"
+#include "GUIWindowStateDatabase.h"
 #include "GUIUserMessages.h"
 #include "GUISettings.h"
 #include "FileCurl.h"
 #include "AppManager.h"
 #include "lib/libBoxee/bxcredentials.h"
+#include "GUIDialogBoxeeQuickTip.h"
 #include "FileSystem/Directory.h"
+#include "GUIWindowStateDatabase.h"
+#include "GUIDialogFirstTimeUseMenuCust.h"
+#include "utils/Base64.h"
+#include "lib/libBoxee/bxcurrentlocation.h"
+#include "Directory.h"
+#include "BoxeeUtils.h"
+
+#ifdef HAS_DVB
+#include "xbmc/cores/dvb/dvbmanager.h"
+#endif
 
 #ifdef HAS_PYTHON
 #include "lib/libPython/XBPython.h"
@@ -81,7 +92,11 @@ bool CBoxeeLoginManager::Login()
     {
       // AutoLogin was Successful
 
+      CLog::Log(LOGDEBUG,"CBoxeeLoginManager::Login - Login Succeeded [autoLoginStatus=%d=LS_OK] -> Going to call FinishSuccessfulLogin() (login)",autoLoginStatus);
       FinishSuccessfulLogin();
+
+      CLog::Log(LOGDEBUG,"CBoxeeLoginManager::Login - Going to WINDOW_HOME (login)");
+      g_windowManager.ChangeActiveWindow(WINDOW_HOME);
 
       return true;
     }
@@ -117,14 +132,15 @@ bool CBoxeeLoginManager::canTryAutoLogin()
   }
   
   int lastUsedProfileIndex = g_settings.m_iLastUsedProfileIndex;
-  int lastLoadedProfileIndex = g_settings.m_iLastLoadedProfileIndex;
+  //int lastLoadedProfileIndex = g_settings.m_iLastLoadedProfileIndex;
   CStdString lastUsedProfileLockCode = g_settings.m_vecProfiles[lastUsedProfileIndex].getLockCode();
   
-  CLog::Log(LOGDEBUG,"CBoxeeLoginManager::canTryAutoLogin - [lastUsedProfileIndex=%d][lastLoadedProfileIndex=%d][lastUsedProfileLockCode=%s]. [numOfProfilesInVec=%d] (login)",lastUsedProfileIndex,lastLoadedProfileIndex,lastUsedProfileLockCode.c_str(),numOfProfilesInVec);
+  //CLog::Log(LOGDEBUG,"CBoxeeLoginManager::canTryAutoLogin - [lastUsedProfileIndex=%d][lastLoadedProfileIndex=%d][lastUsedProfileLockCode=%s]. [numOfProfilesInVec=%d] (login)",lastUsedProfileIndex,lastLoadedProfileIndex,lastUsedProfileLockCode.c_str(),numOfProfilesInVec);
     
   if((lastUsedProfileIndex <= 0) || (lastUsedProfileIndex >= numOfProfilesInVec) || (lastUsedProfileLockCode == "-"))
   {
-    CLog::Log(LOGWARNING,"CBoxeeLoginManager::canTryAutoLogin - There is a problem with the LastUsedProfile [lastUsedProfileIndex=%d][lastUsedProfileLockCode=%s][numOfProfilesInVec=%d]. Exit function and return FALSE (login)",lastUsedProfileIndex,lastUsedProfileLockCode.c_str(),numOfProfilesInVec);
+    //CLog::Log(LOGWARNING,"CBoxeeLoginManager::canTryAutoLogin - There is a problem with the LastUsedProfile [lastUsedProfileIndex=%d][lastUsedProfileLockCode=%s][numOfProfilesInVec=%d]. Exit function and return FALSE (login)",lastUsedProfileIndex,lastUsedProfileLockCode.c_str(),numOfProfilesInVec);
+    CLog::Log(LOGWARNING,"CBoxeeLoginManager::canTryAutoLogin - There is a problem with the LastUsedProfile [lastUsedProfileIndex=%d][numOfProfilesInVec=%d]. Exit function and return FALSE (login)",lastUsedProfileIndex,numOfProfilesInVec);
     return false;    
   }
 
@@ -140,7 +156,8 @@ CBoxeeLoginStatusTypes::BoxeeLoginStatusEnums CBoxeeLoginManager::DoAutoLogin()
   int lastUsedProfileIndex = g_settings.m_iLastUsedProfileIndex;
   CStdString lastUsedProfileLockCode = g_settings.m_vecProfiles[lastUsedProfileIndex].getLockCode();
 
-  CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoAutoLogin - [lastUsedProfileIndex=%d] and its [LockCode=%s] -> Going to try AutoLogin by call ExecuteLoginForRegisterUser() (login)",lastUsedProfileIndex,lastUsedProfileLockCode.c_str());
+  //CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoAutoLogin - [lastUsedProfileIndex=%d] and its [LockCode=%s] -> Going to try AutoLogin by call ExecuteLoginForRegisterUser() (login)",lastUsedProfileIndex,lastUsedProfileLockCode.c_str());
+  CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoAutoLogin - going to try AutoLogin with by call ExecuteLoginForRegisterUser(). [lastUsedProfileIndex=%d] (login)",lastUsedProfileIndex);
   
   CBoxeeLoginStatusTypes::BoxeeLoginStatusEnums autoLoginStatus;// = CBoxeeLoginStatusTypes::LS_OK;
 
@@ -151,57 +168,65 @@ CBoxeeLoginStatusTypes::BoxeeLoginStatusEnums CBoxeeLoginManager::DoAutoLogin()
   return autoLoginStatus;
 }
 
-void CBoxeeLoginManager::FinishSuccessfulLogin(bool firstUser)
+void CBoxeeLoginManager::FinishSuccessfulLogin()
 {
-  DIRECTORY::CDirectory::Create("special://profile/cache");
-  g_application.GetHttpCacheManager().Initialize("special://profile/cache");
-
-  PostLoginActions();
-
-  // Initialize CBoxeeClientServerComManager
-  bool suceeded = BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().Initialize();
-  if(!suceeded)
+  class PostLoginBG : public IRunnable
   {
-    LOG(LOG_LEVEL_ERROR,"CBoxeeLoginManager::FinishSuccessfulLogin - FAILED to initialize CBoxeeClientServerComManager (login)");
-  }
-
-  if (firstUser)
-  {
-    // case of first user -> propose to first set Screen Calibration
-
-    CLog::Log(LOGDEBUG,"CBoxeeLoginManager::FinishSuccessfulLogin - Case of first user [firstUser=%d] -> Propose to the user to set Screen Calibration (login)",firstUser);
-
-    if(CGUIDialogYesNo2::ShowAndGetInput(53400,53401,53420))
+  public:
+    PostLoginBG(CBoxeeLoginManager* owner)
     {
-      CGUIWindowSettingsScreenSimpleCalibration* pSimpleCalibration = (CGUIWindowSettingsScreenSimpleCalibration*)g_windowManager.GetWindow(WINDOW_SCREEN_SIMPLE_CALIBRATION);
-      if (pSimpleCalibration)
+      m_owner = owner;
+    }
+
+    virtual void Run()
+    {
+#if 1
+      DIRECTORY::CDirectory::Create("special://profile/cache");
+
+      if (!g_application.GetHttpCacheManager().Initialize("special://profile/cache"))
       {
-        pSimpleCalibration->SetLaunchFromLogin(true);
-      }
-      else
-      {
-        CLog::Log(LOGERROR,"CBoxeeLoginManager::FinishSuccessfulLogin - FAILED to get CGUIWindowSettingsScreenSimpleCalibration object (login)");
+        CLog::Log(LOGERROR,"CBoxeeLoginManager::FinishSuccessfulLogin - FAILED to initialize HTTP cache. Deleting and re-creating.");
+
+        g_application.GetHttpCacheManager().Deinitialize();
+        g_application.GetHttpCacheManager().Delete();
+        if (!g_application.GetHttpCacheManager().Initialize("special://profile/cache"))
+        {
+          CLog::Log(LOGERROR,"CBoxeeLoginManager::FinishSuccessfulLogin - FAILED to initialize HTTP cache again.");
+        }
       }
 
-      CLog::Log(LOGDEBUG,"CBoxeeLoginManager::FinishSuccessfulLogin - Because first user [firstUser=%d] and YES was hit -> Going to WINDOW_SCREEN_SIMPLE_CALIBRATION (login)",firstUser);
-      g_windowManager.ChangeActiveWindow(WINDOW_SCREEN_SIMPLE_CALIBRATION);
+      g_application.GetThumbnailsManager().Deinitialize();
+
+      m_owner->PostLoginActions();
+
+      // Initialize CBoxeeClientServerComManager
+      bool suceeded = BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().Initialize();
+      if(!suceeded)
+      {
+        LOG(LOG_LEVEL_ERROR,"CBoxeeLoginManager::FinishSuccessfulLogin - FAILED to initialize CBoxeeClientServerComManager (login)");
+      }
+
+      g_application.PostLoginInitializations();
+
+      CGUIWindowStateDatabase stateDB;
+
+      CStdString showstarter;
+      bool settingExists = stateDB.GetUserSetting("showstarter", showstarter);
+      if (!settingExists)
+        stateDB.SetUserSetting("showstarter","true");
+
+      CLog::Log(LOGDEBUG,"CBoxeeLoginManager::FinishSuccessfulLogin - Going to call Application::PostLoginInitializations() (login)");
+
+      //if needed get user to add more facebook permissions
+      BoxeeUtils::LaunchGetFacebookExtraCredentials();
+#endif
     }
-    else
-    {
-      g_windowManager.ChangeActiveWindow(WINDOW_HOME);
-      CLog::Log(LOGDEBUG,"CBoxeeLoginManager::FinishSuccessfulLogin - Because first user [firstUser=%d] and NO was hit -> Going to WINDOW_HOME (login)",firstUser);
-    }
-  }
-  else
-  {
-    CLog::Log(LOGDEBUG,"CBoxeeLoginManager::FinishSuccessfulLogin - Because NOT first user [firstUser=%d] -> Going to WINDOW_HOME (login)",firstUser);
 
-    g_windowManager.ChangeActiveWindow(WINDOW_HOME);
-  }
+    CBoxeeLoginManager* m_owner;
+  };
 
-  CLog::Log(LOGDEBUG,"CBoxeeLoginManager::FinishSuccessfulLogin - Going to call Application::PostLoginInitializations() (login)");
-
-  g_application.PostLoginInitializations();
+  PostLoginBG* job = new PostLoginBG(this);
+  CUtil::RunInBG(job);
 }
 
 CBoxeeLoginStatusTypes::BoxeeLoginStatusEnums CBoxeeLoginManager::DoUserLogin(int iItem)
@@ -221,7 +246,7 @@ CBoxeeLoginStatusTypes::BoxeeLoginStatusEnums CBoxeeLoginManager::DoUserLogin(in
   creds.SetUserName(g_settings.m_vecProfiles[iItem].getID());
   creds.SetPassword(g_settings.m_vecProfiles[iItem].getLockCode());
   
-  CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoUserLogin - Credentials was set to [UserName=%s][Pass=%s] (login)",creds.GetUserName().c_str(),creds.GetPassword().c_str());
+  //CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoUserLogin - Credentials was set to [UserName=%s][Pass=%s] (login)",creds.GetUserName().c_str(),creds.GetPassword().c_str());
 
   pLoggingIn->Reset();
   pLoggingIn->SetProfileToLoad(iItem);
@@ -229,8 +254,9 @@ CBoxeeLoginStatusTypes::BoxeeLoginStatusEnums CBoxeeLoginManager::DoUserLogin(in
   
   CBoxeeLoginManager::SetProxyCreds(creds);
   
-  BOXEE::Boxee::GetInstance().SetCredentials(creds);
+  BOXEE::Boxee::GetInstance().SetCredentials(creds);  
 
+  BOXEE::BXCurl::DeleteCookieJarFile(creds.GetUserName());
   XFILE::CFileCurl::SetCookieJar(BOXEE::BXCurl::GetCookieJar());
 
   BOXEE::Boxee::GetInstance().Login_bg(creds);
@@ -271,7 +297,13 @@ CBoxeeLoginStatusTypes::BoxeeLoginStatusEnums CBoxeeLoginManager::DoUserLogin(in
   case BOXEE::LOGIN_ERROR_ON_NETWORK:
   {
     CLog::Log(LOGERROR,"CBoxeeLoginManager::DoUserLogin - Login FAILED with [LOGIN_ERROR_ON_NETWORK] (login)");
-    if (CGUIDialogYesNo::ShowAndGetInput(20068,51051,51052,51053))
+
+    CStdString line = g_localizeStrings.Get(51051);
+    line += "[CR]";
+    line += g_localizeStrings.Get(51052);
+    line += " ";
+    line += g_localizeStrings.Get(51053);
+    if (CGUIDialogYesNo2::ShowAndGetInput(g_localizeStrings.Get(20068),line))
     {
       g_application.SetOfflineMode(true);
       g_settings.LoadProfile(iItem);
@@ -284,9 +316,9 @@ CBoxeeLoginStatusTypes::BoxeeLoginStatusEnums CBoxeeLoginManager::DoUserLogin(in
     {
       g_application.SetOfflineMode(false);
       result = CBoxeeLoginStatusTypes::LS_ERROR;
-      
+
       CLog::Log(LOGERROR,"CBoxeeLoginManager::DoUserLogin - result was set to [%d=LS_STATUS_ERROR] and SetOfflineMode was called with [FALSE] (login)",result);
-    }    
+    }
   }
   break;
   case BOXEE::LOGIN_ERROR_ON_CREDENTIALS:
@@ -305,6 +337,154 @@ CBoxeeLoginStatusTypes::BoxeeLoginStatusEnums CBoxeeLoginManager::DoUserLogin(in
   CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoUserLogin - Exit function and return [result=%d] (login)",result);
   
   return result;
+}
+
+BOXEE::BXLoginStatus CBoxeeLoginManager::DoLogin(const CStdString& username, const CStdString& password, bool rememberPassword, int profileId)
+{
+  CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoLogin - enter function (blw)");
+
+  // Set the login credentials
+  BOXEE::BXCredentials creds;
+  creds.SetUserName(username);
+  creds.SetPassword(password);
+
+  // Prepare the logging-in screen
+  CGUIDialogBoxeeLoggingIn* pDlgLoggingIn = (CGUIDialogBoxeeLoggingIn*)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_LOGGING_IN);
+  pDlgLoggingIn->Reset();
+  pDlgLoggingIn->SetName(username);
+
+  if (profileId != NEW_USER_PROFILE_ID)
+  {
+    pDlgLoggingIn->SetProfileToLoad(profileId);
+    BOXEE::BXCurl::DeleteCookieJarFile(username);
+  }
+
+  CBoxeeLoginManager::SetProxyCreds(creds);
+
+  CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoLogin - Going to call Boxee::Login_bg() and run CGUIDialogBoxeeLoggingIn (blw)");
+
+  // Do the actual login and show the modal dialog
+  BOXEE::Boxee::GetInstance().SetCredentials(creds);
+
+  XFILE::CFileCurl::SetCookieJar(BOXEE::BXCurl::GetCookieJar());
+
+  BOXEE::Boxee::GetInstance().Login_bg(creds);
+  pDlgLoggingIn->DoModal();
+
+  // Get the login result and act accordingly
+  BOXEE::BXLoginStatus boxeeLoginStatus = pDlgLoggingIn->IsLoginSuccessful();
+
+  bool result = false;
+
+  switch (boxeeLoginStatus)
+  {
+  case BOXEE::LOGIN_SUCCESS:
+  {
+    g_application.SetOfflineMode(false);
+    result = true;
+    CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoLogin - After call to Boxee::Login_bg() [boxeeLoginStatus=%d=LOGIN_SUCCESS] and result was set to [%d] (blw)(login)",boxeeLoginStatus,result);
+  }
+  break;
+  case BOXEE::LOGIN_GENERAL_ERROR:
+  {
+    CGUIDialogOK2::ShowAndGetInput(20068,51075);
+    result = false;
+    CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoLogin - Case of LOGIN_GENERAL_ERROR -> result was set to [%d=FALSE] (blw)(login)",result);
+    return boxeeLoginStatus;
+  }
+  break;
+  case BOXEE::LOGIN_ERROR_ON_NETWORK:
+  {
+    CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoLogin - After call to Boxee::Login_bg() [boxeeLoginStatus=%d=LOGIN_ERROR_ON_NETWORK] (blw)(login)",boxeeLoginStatus);
+
+    if (profileId == NEW_USER_PROFILE_ID)
+    {
+      // Case of new user and no Internet connection -> Don't enter Boxee
+      result = false;
+      CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoLogin - Case of NewUser with LOGIN_ERROR_ON_NETWORK -> result was set to [%d=FALSE] (blw)(login)",result);
+      CGUIDialogOK2::ShowAndGetInput(53743, 53744);
+      return boxeeLoginStatus;
+    }
+    else
+    {
+      // If the profile exist, prompt the user to decide whether to work OffLine or not
+
+      CProfile& p = g_settings.m_vecProfiles[profileId];
+      if (p.getLastLockCode() != password)
+      {
+        result = false;
+        CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoLogin - Case of RegisterUser with wrong password and LOGIN_ERROR_ON_NETWORK -> result was set to [%d=FALSE] (blw)(login)",result);
+        CGUIDialogOK2::ShowAndGetInput(20068,20117);
+        return boxeeLoginStatus;
+      }
+      else
+      {
+        CStdString line = g_localizeStrings.Get(51051);
+        line += "[CR]";
+        line += g_localizeStrings.Get(51052);
+        line += " ";
+        line += g_localizeStrings.Get(51053);
+        if (CGUIDialogYesNo2::ShowAndGetInput(g_localizeStrings.Get(20068),line))
+        {
+          g_application.SetOfflineMode(true);
+          g_settings.LoadProfile(profileId);
+          result = true;
+          boxeeLoginStatus = BOXEE::LOGIN_SUCCESS;
+          CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoLogin - Case of RegisterUser and LOGIN_ERROR_ON_NETWORK -> The user choose to login in offline mode -> SetOfflineMode was called with [TRUE] and result was set to [%d=TRUE] (blw)(login)",result);
+        }
+        else
+        {
+          result = false;
+          CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoLogin - Case of RegisterUser and LOGIN_ERROR_ON_NETWORK -> The user choose NOT to login in offline mode -> result was set to [%d=FALSE] (blw)(login)",result);
+          return boxeeLoginStatus;
+        }
+      }
+    }
+  }
+  break;
+  case BOXEE::LOGIN_ERROR_ON_CREDENTIALS:
+  {
+    CGUIDialogOK2::ShowAndGetInput(20056,20127);
+    result = false;
+    CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoLogin - After call to Boxee::Login_bg() [boxeeLoginStatus=%d=LOGIN_ERROR_ON_CREDENTIALS] and result was set to [%d] (blw)(login)",boxeeLoginStatus,result);
+    return boxeeLoginStatus;
+  }
+  break;
+  default:
+    break;
+  }
+
+  // If login failed, nothing more to do here
+  if (!result)
+  {
+    CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoLogin - Login FAILED. Exit function and return FALSE (blw)(login)");
+    return boxeeLoginStatus;
+    //return false;
+  }
+
+  CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoLogin - Login SUCCEEDED (login)");
+
+  // Now we need to update the profile or create a new profile
+  if (profileId == NEW_USER_PROFILE_ID)
+  {
+    CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoLogin - For NEW user going to call CreateProfile() (blw)(login)");
+
+    profileId = g_application.GetBoxeeLoginManager().CreateProfile(username, pDlgLoggingIn->GetUserObj());
+
+    CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoLogin - Going to call LoadProfile() for [profileId=%d] (blw)(login)",profileId);
+
+    g_settings.LoadProfile(profileId);
+  }
+
+  CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoLogin - Going to call UpdateProfile() with [profileId=%d][password=%s][RememberPassword=%d] (blw)(login)",profileId,password.c_str(),rememberPassword);
+
+  // Update the password (both OffLine of online if the user asked for it) of the user
+  g_application.GetBoxeeLoginManager().UpdateProfile(profileId,password, rememberPassword);
+
+  CLog::Log(LOGDEBUG,"CBoxeeLoginManager::DoLogin - Exit function and return TRUE (blw)(login)");
+
+  return boxeeLoginStatus;
+  //return true;
 }
 
 bool CBoxeeLoginManager::PostLoginActions()
@@ -333,12 +513,42 @@ bool CBoxeeLoginManager::PostLoginActions()
     g_application.SetCountryCode(cc);
   }
   
-  g_weatherManager.Refresh();
+  BOXEE::BXCurrentLocation& location = BOXEE::BXCurrentLocation::GetInstance();
+
+  // Call the server to get the country code and update the
+  // weather and locale information
+  if (location.IsLocationDetected() &&
+      (g_guiSettings.GetString("weather.areacode1") == "" ||
+       g_guiSettings.GetString("locale.tempscale") == "" ||
+       !g_guiSettings.GetBool("weather.autoset")))
+  {
+    CStdString weatherCode = "XXX - "; // for backward compatibility with weather.com
+    weatherCode += location.GetCity();
+    weatherCode += ", ";
+
+    if (location.GetCountryCode() == "US")
+      weatherCode += location.GetState();
+    else
+      weatherCode += location.GetCountry();
+
+    g_guiSettings.SetString("weather.areacode1", weatherCode);
+    g_guiSettings.SetString("locale.tempscale", location.GetTemperatureScale().c_str());
+
+    CStdString timeFormat = location.GetClockHours();
+    timeFormat += "h";
+    g_guiSettings.SetString("locale.timeformat", timeFormat);
+
+    g_guiSettings.SetBool("weather.autoset", true);
+
+    g_settings.Save();
+  }
+
+  CWeather::GetInstance().Refresh();
   
 #ifdef HAS_PYTHON
   g_pythonParser.m_bLogin = true;
 #endif
-
+  
   return true;
 }
 
@@ -373,6 +583,11 @@ void CBoxeeLoginManager::HandleUpdateOnLogin()
   
   CLog::Log(LOGDEBUG,"CBoxeeLoginManager::HandleUpdateOnLogin - Under WINDOWS -> needToCheckForUpdateOnLogin was set to [%d] (update)",needToCheckForUpdateOnLogin);
 
+#elif defined(HAS_EMBEDDED)
+
+  needToCheckForUpdateOnLogin = true;
+  CLog::Log(LOGDEBUG,"CBoxeeLoginManager::HandleUpdateOnLogin - Under EMBEDDED -> needToCheckForUpdateOnLogin was set to [%d] (update)",needToCheckForUpdateOnLogin);
+
 #endif
   
   if(needToCheckForUpdateOnLogin)
@@ -381,7 +596,7 @@ void CBoxeeLoginManager::HandleUpdateOnLogin()
     // Check if there is a force update //
     //////////////////////////////////////
   
-    CLog::Log(LOGDEBUG,"CBoxeeLoginManager::HandleUpdateOnLogin - Under OSX or WINDOWS -> Going to Check if a force update exist (update)");
+    CLog::Log(LOGDEBUG,"CBoxeeLoginManager::HandleUpdateOnLogin - Under OSX/WINDOWS/EMBEDDED -> Going to Check if a force update exist (update)");
 
     CBoxeeVersionUpdateJob versionUpdateJob = g_boxeeVersionUpdateManager.GetBoxeeVerUpdateJob();
     if(versionUpdateJob.acquireVersionUpdateJobForPerformUpdate())
@@ -426,7 +641,7 @@ int CBoxeeLoginManager::CreateProfile(const CStdString& username, const BOXEE::B
   CStdString strDirectory = "profiles";
   strDirectory += PATH_SEPARATOR_STRING;
   strDirectory += username;
-
+  
   //////////////////////////////////////////
   // Create sources.xml and shortcuts.xml //
   //////////////////////////////////////////
@@ -443,6 +658,10 @@ int CBoxeeLoginManager::CreateProfile(const CStdString& username, const BOXEE::B
   shortcutsXml += "/shortcuts.xml";
   shortcutsXml = _P(shortcutsXml);
 
+  CStdString profile_root = _P("special://profile/");
+  profile_root += strDirectory;
+  DIRECTORY::CDirectory::CreateRecursive(profile_root);
+
 #ifdef __APPLE__
   if(CSysInfo::IsAppleTV())
   {
@@ -454,14 +673,17 @@ int CBoxeeLoginManager::CreateProfile(const CStdString& username, const BOXEE::B
     CFile::Cache("special://xbmc/userdata/sources.xml.in.osx", sourcesXml);
     CFile::Cache("special://xbmc/userdata/shortcuts.xml.in.osx", shortcutsXml);
   }
-#elif _WIN32
+#elif defined (_WIN32)
   CFile::Cache("special://xbmc/userdata/sources.xml.in.win", sourcesXml);
   CFile::Cache("special://xbmc/userdata/shortcuts.xml.in.win", shortcutsXml);
+#elif defined (HAS_EMBEDDED)
+  CFile::Cache("special://xbmc/userdata/sources.xml.in.embedded", sourcesXml);
+  CFile::Cache("special://xbmc/userdata/shortcuts.xml.in.embedded", shortcutsXml);
 #else
   CFile::Cache("special://xbmc/userdata/sources.xml.in.linux", sourcesXml);
   CFile::Cache("special://xbmc/userdata/shortcuts.xml.in.linux", shortcutsXml);
 #endif
-
+  
   // Create the profile
   CProfile p;
   p.setID(username);
@@ -484,16 +706,16 @@ int CBoxeeLoginManager::CreateProfile(const CStdString& username, const BOXEE::B
   
   if ( std::find_if( g_settings.m_vecProfiles.begin(), g_settings.m_vecProfiles.end(), FindProfile(username) ) == g_settings.m_vecProfiles.end() )
   {
-    g_settings.m_vecProfiles.push_back(p);
-    g_settings.SaveProfiles(PROFILES_FILE);
+  g_settings.m_vecProfiles.push_back(p);
+  g_settings.SaveProfiles(PROFILES_FILE);
   }
-  
+
   return g_settings.m_vecProfiles.size() - 1;
 }
 
 void CBoxeeLoginManager::UpdateProfile(int profileId, const CStdString& password, bool rememberPassword)
 {
-  CLog::Log(LOGDEBUG,"CBoxeeLoginManager::UpdateProfile - Enter function with [profileId=%d][password=%s][rememberPassword=%d] (login)",profileId,password.c_str(),rememberPassword);
+  //CLog::Log(LOGDEBUG,"CBoxeeLoginManager::UpdateProfile - Enter function with [profileId=%d][password=%s][rememberPassword=%d] (login)",profileId,password.c_str(),rememberPassword);
 
   CProfile& p = g_settings.m_vecProfiles[profileId];
 
@@ -508,7 +730,7 @@ void CBoxeeLoginManager::UpdateProfile(int profileId, const CStdString& password
 
   p.setLastLockCode(password);
 
-  CLog::Log(LOGDEBUG,"CBoxeeLoginManager::UpdateProfile - After set [LockCode=%s][LastLockCode=%s]. Going to save Profiles file (login)",p.getLockCode().c_str(),p.getLastLockCode().c_str());
+  //CLog::Log(LOGDEBUG,"CBoxeeLoginManager::UpdateProfile - After set [LockCode=%s][LastLockCode=%s]. Going to save Profiles file (login)",p.getLockCode().c_str(),p.getLastLockCode().c_str());
 
   g_settings.SaveProfiles(PROFILES_FILE);
 }
@@ -527,6 +749,10 @@ bool CBoxeeLoginManager::Logout()
 
   CAppManager::GetInstance().StopAllApps();
 
+#ifdef HAS_DVB
+  DVBManager::GetInstance().Stop();
+#endif
+
   BOXEE::Boxee::GetInstance().Logout();
 
   g_application.BoxeeUserLogoutAction();
@@ -539,6 +765,9 @@ bool CBoxeeLoginManager::Logout()
   
   g_settings.m_iLastLoadedProfileIndex = 0;
   g_settings.SaveProfiles(PROFILES_FILE);
+
+  // reset profile path
+  CSpecialProtocol::SetProfilePath(g_settings.GetProfileUserDataFolder());
 
   CLog::Log(LOGDEBUG,"CBoxeeLoginManager::Logout - Going to call Boxee::Start() (login)(logout)");
 
@@ -560,6 +789,10 @@ bool CBoxeeLoginManager::Logout()
 
   g_application.getApplicationMessenger().SetSwallowMessages(false);
 
+  // delete master user cookie jars 
+  BOXEE::BXCurl::DeleteCookieJarFile();
+  CFile::Delete(_P("special://profile/browser/cookies.dat"));
+ 
   bool loginSucceeded = Login();
   
   if(!loginSucceeded)
@@ -574,7 +807,7 @@ bool CBoxeeLoginManager::Logout()
     
     LogoutSucceeded = true;
   }
-  
+
   return LogoutSucceeded;
 }
 
@@ -583,7 +816,11 @@ void CBoxeeLoginManager::SetProxyCreds(BOXEE::BXCredentials &creds)
   if (g_guiSettings.GetBool("network.usehttpproxy")  && !g_guiSettings.GetString("network.httpproxyserver").empty())
   {
     std::string strProxy = "http://" + g_guiSettings.GetString("network.httpproxyserver") + ":" + g_guiSettings.GetString("network.httpproxyport");
+
     creds.SetProxy(strProxy);
+
+    creds.SetProxyUserName(g_guiSettings.GetString("network.httpproxyusername"));
+    creds.SetProxyPassword(g_guiSettings.GetString("network.httpproxypassword"));
   }
   else
   {
@@ -621,3 +858,27 @@ const char* CBoxeeLoginManager::CBoxeeLoginStatusEnumAsString(CBoxeeLoginStatusT
   }
 }
 
+bool CBoxeeLoginManager::DoesThisUserAlreadyExist(const CStdString& username)
+{
+  for (unsigned int i=0;i<g_settings.m_vecProfiles.size(); ++i)
+  {
+    CStdString id = (g_settings.m_vecProfiles[i]).getID();
+
+    if (id.Equals(username))
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+CStdString CBoxeeLoginManager::EncodePassword(CStdString password)
+{
+  XBMC::MD5 md5;
+  unsigned char md5hash[16];
+  md5.append((unsigned char *)password.c_str(), (int)password.size());
+  md5.getDigest(md5hash);
+
+  return CBase64::Encode(md5hash, 16);
+}

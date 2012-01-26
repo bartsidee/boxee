@@ -13,11 +13,20 @@
 #include "bxcurl.h"
 #include "SpecialProtocol.h"
 #include "StringUtils.h"
-#include "lib/libPython/XBPython.h"
 #include "AppManager.h"
 #include "FileSystem/Directory.h"
 #include "ItemLoader.h"
 #include "VideoDatabase.h"
+#include "HalServices.h"
+#include "Util.h"
+#include "GUISettings.h"
+#include "utils/Weather.h"
+#include "BoxeeUtils.h"
+#include "ThreadPolicy.h"
+#include <openssl/md5.h>
+#ifdef HAS_BOXEE_HAL
+#include "../BoxeeHalServices.h"
+#endif
 
 namespace XAPP
 {
@@ -122,12 +131,13 @@ void MC::LogError(const std::string& msg)
 Window MC::GetWindow(int id) throw (AppException)
 {
   int iWindowId = id;
-  PyObject *app = PySys_GetObject((char*)"app-id");
-  if (app)
+
+  const char *strAppId = CAppManager::GetInstance().GetCurrentContextAppId();
+  if (strAppId)
   {
-    const char *strAppId = PyString_AsString(app);
     iWindowId = CAppManager::GetInstance().GetWindowId(strAppId, id);
   }
+
   CLog::Log(LOGDEBUG, "XAPP::MC::GetWindow, requested window id = %d, translated window id = %d (applaunch)", id, iWindowId);
   return Window(iWindowId);
 }
@@ -139,22 +149,21 @@ Window MC::GetActiveWindow()
 
 void MC::ActivateWindow(int id)
 {
-  int iWindowId;
-  PyObject *app = PySys_GetObject((char*)"app-id");
-  if (app)
+  int iWindowId = WINDOW_INVALID;
+
+  const char *strAppId = CAppManager::GetInstance().GetCurrentContextAppId();
+  if (strAppId)
   {
-    const char *strAppId = PyString_AsString(app);
     iWindowId = CAppManager::GetInstance().GetWindowId(strAppId, id);
   }
 
   CLog::Log(LOGDEBUG, "XAPP::MC::ActivateWindow, requested window id = %d, translated window id = %d (flow)", id, iWindowId);
   if (iWindowId != WINDOW_INVALID)
   {
-    ThreadMessage tMsg = {TMSG_GUI_ACTIVATE_WINDOW, iWindowId, 0};
+    ThreadMessage tMsg (TMSG_GUI_ACTIVATE_WINDOW, iWindowId, 0);
     g_application.getApplicationMessenger().SendMessage(tMsg, false);
 
   }
-
 }
 
 void MC::CloseWindow()
@@ -191,6 +200,19 @@ ListItems MC::GetDirectory(const std::string& strPath)
 {
   CFileItemList items;
   ListItems listItems;
+#if defined(HAS_EMBEDDED) && !defined(__APPLE__) 
+  int tid = gettid();
+  FileSystemItem item = {0,0};
+  bool safeToOpen = true;
+
+  item.fileName = strPath.c_str();
+  item.accessMode = "rb";
+
+  if(TPApplyPolicy(tid, FILE_SYSTEM, &item, &safeToOpen) && !safeToOpen)
+    return listItems;
+  
+  TPDisablePolicy(tid, false);
+#endif
   if (DIRECTORY::CDirectory::GetDirectory(strPath, items))
   {
     for (int i = 0; i < items.Size(); i++)
@@ -199,7 +221,9 @@ ListItems MC::GetDirectory(const std::string& strPath)
       listItems.push_back(item);
     }
   }
-
+#if defined(HAS_EMBEDDED) && !defined(__APPLE__)
+  TPDisablePolicy(tid, true);
+#endif
   return listItems;
 }
 
@@ -239,6 +263,41 @@ std::string MC::GetGeoLocation()
   return g_application.GetCountryCode();
 }
 
+std::string MC::GetDeviceId()
+{
+#ifdef HAS_EMBEDDED
+  CStdString strMac = "UNKNOWN";
+  CNetworkInterfacePtr net = g_application.getNetwork().GetInterfaceByName("eth0");
+  if (net.get())
+  {
+    strMac = net->GetMacAddress();
+    strMac.Replace(":","");
+  }
+ 
+  return strMac; 
+#else
+  CNetworkInterfacePtr pInterface = g_application.getNetwork().GetFirstConnectedInterface();
+
+  if( pInterface.get() )
+  {
+    CLog::Log(LOGDEBUG, "XAPP::MC::GetDeviceId, interface IP = %s, MAC = %s (flow)", pInterface->GetCurrentIPAddress().c_str(), pInterface->GetMacAddress().c_str());
+    return pInterface->GetMacAddress();
+  }
+
+  return "";
+#endif
+}
+
+bool MC::IsEmbedded()
+{
+   return CUtil::IsEmbedded();
+}
+
+std::string MC::GetPlatform()
+{
+   return CUtil::GetPlatform();
+}
+
 int MC::GetCurrentPositionInSec(const std::string& strPath)
 {
   int timeInSec = 0;
@@ -254,6 +313,223 @@ int MC::GetCurrentPositionInSec(const std::string& strPath)
     db.Close();
   }
   return timeInSec;
+}
+
+std::string MC::GetWeatherLocation()
+{
+  CStdString areacode = g_guiSettings.GetString("weather.areacode1");
+  std::string result = areacode.c_str();
+  return result; 
+}
+
+void MC::SetWeatherLocation(std::string location)
+{
+  g_guiSettings.SetString("weather.areacode1", location.c_str());
+  CWeather::GetInstance().Refresh();
+}
+
+bool MC::SetWeatherLocation2(std::string cityName, std::string countryCode)
+{
+  return BoxeeUtils::SetWeatherLocation(cityName,countryCode);
+}
+
+std::string MC::GetTimezoneCountry()
+{
+  CStdString s = g_guiSettings.GetString("timezone.country");
+  std::string result = s.c_str();
+  return result;
+}
+
+std::string MC::GetTimezoneCity()
+{
+  CStdString s = g_guiSettings.GetString("timezone.city");
+  std::string result = s.c_str();
+  return result;
+}
+
+std::string MC::GetTemperatureScale()
+{
+  CStdString s = g_guiSettings.GetString("locale.tempscale");
+  std::string result = s.c_str();
+  return result;
+}
+
+void MC::SetTemperatureScale(std::string scale)
+{
+  if (scale != "C" && scale != "F")
+  {
+    return;
+  }
+
+  CStdString value = scale.c_str();
+  g_guiSettings.SetString("locale.tempscale", value);
+}
+
+bool MC::IsConnectedToInternet()
+{
+  return g_application.IsConnectedToInternet();
+}
+
+std::string MC::GetSystemLanguage()
+{
+  return g_guiSettings.GetString("locale.language");
+}
+
+/**
+ * Returns unique box id
+ */
+std::string MC::GetUniqueId()
+{
+#ifndef HAS_EMBEDDED
+  // Get the mac address
+  CStdString strMac;
+  CNetworkInterfacePtr net = g_application.getNetwork().GetInterfaceByName("eth0");
+  if (!net.get())
+    net = g_application.getNetwork().GetInterfaceByName("en0");
+
+  if (net.get())
+  {
+    strMac = net->GetMacAddress();
+    strMac.Replace(":","");
+  }
+
+  if (strMac.IsEmpty())
+  {
+    std::vector<CNetworkInterfacePtr> interfaces = g_application.getNetwork().GetInterfaceList();
+    for (size_t i=0; i<interfaces.size(); i++)
+    {
+      const CStdString &name = interfaces[i]->GetName();
+      strMac = interfaces[i]->GetMacAddress();
+      strMac.Replace(":","");
+
+      if (!name.IsEmpty() && !strMac.IsEmpty() && name.size() >= 2 && name.Left(2) != "lo")
+        break;
+    }
+  }
+
+  // Get the app id
+  CStdString strId = CAppManager::GetInstance().GetLastLaunchedId();
+
+  // Concatenate all this
+  char data[2048];
+  sprintf(data, "%s&%s", strMac.c_str(), strId.c_str());
+
+  // MD5
+  MD5_CTX md5Hash;
+  unsigned char digest[MD5_DIGEST_LENGTH] = {0};
+
+  memset(&md5Hash, 0, sizeof(md5Hash));
+  MD5_Init(&md5Hash);
+  MD5_Update(&md5Hash, data, strlen(data));
+  MD5_Final(digest, &md5Hash);
+
+  // Return string
+  std::string output;
+  char ch[3];
+  for(int i = 0; i < MD5_DIGEST_LENGTH; ++i)
+  {
+    sprintf(ch, "%02x", digest[i]);
+    output += ch;
+  }
+
+  return output;
+#else
+  FILE   *p = NULL;
+  CStdString uuidCmdPath = "/opt/local/bin/bxuuid";
+  CStdString uuidCmdArgs = CAppManager::GetInstance().GetLastLaunchedId();
+  CStdString popenCmd = uuidCmdPath + " " + uuidCmdArgs;
+
+  char uuid[256];
+  p = popen (popenCmd.c_str(), "r");
+  if (!p)
+    return "";
+
+  fgets(uuid, sizeof(uuid), p);
+  uuid[strlen(uuid)-1] = '\0';
+  fclose(p);
+
+  return uuid;
+#endif
+}
+
+/**
+ * Returns box vendor name
+ */
+std::string MC::GetHardwareVendor()
+{
+#ifdef HAS_BOXEE_HAL
+  CHalHardwareInfo info;
+  if (CHalServicesFactory::GetInstance().GetHardwareInfo(info))
+  {
+    return info.vendor;
+  }
+  else
+  {
+    return "UNKNOWN";
+  }
+#else
+  return "UNKNOWN";
+#endif
+}
+
+/**
+ * Returns box model name
+ */
+std::string MC::GetHardwareModel()
+{
+#ifdef HAS_BOXEE_HAL
+  CHalHardwareInfo info;
+  if (CHalServicesFactory::GetInstance().GetHardwareInfo(info))
+  {
+    return info.model;
+  }
+  else
+  {
+    return "UNKNOWN";
+  }
+#else
+  return "UNKNOWN";
+#endif
+}
+
+/**
+ * Returns box revision number
+ */
+std::string MC::GetHardwareRevision()
+{
+#ifdef HAS_BOXEE_HAL
+  CHalHardwareInfo info;
+  if (CHalServicesFactory::GetInstance().GetHardwareInfo(info))
+  {
+    return info.revision;
+  }
+  else
+  {
+    return "UNKNOWN";
+  }
+#else
+  return "UNKNOWN";
+#endif
+}
+
+/**
+ * Returns box revision number
+ */
+std::string MC::GetHardwareSerialNumber()
+{
+#ifdef HAS_BOXEE_HAL
+  CHalHardwareInfo info;
+  if (CHalServicesFactory::GetInstance().GetHardwareInfo(info))
+  {
+    return info.serialNumber;
+  }
+  else
+  {
+    return "UNKNOWN";
+  }
+#else
+  return "UNKNOWN";
+#endif
 }
 
 std::map<std::string, int> MC::m_translatedInfo;

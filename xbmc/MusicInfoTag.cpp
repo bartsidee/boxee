@@ -22,6 +22,7 @@
 #include "MusicInfoTag.h"
 #include "Album.h"
 #include "utils/log.h"
+#include "utils/Variant.h"
 
 using namespace MUSIC_INFO;
 
@@ -30,7 +31,7 @@ CMusicInfoTag::CMusicInfoTag(void)
   Clear();
 }
 
-CMusicInfoTag::CMusicInfoTag(const CMusicInfoTag& tag)
+CMusicInfoTag::CMusicInfoTag(const CMusicInfoTag& tag) : IArchivable(tag), ISerializable(tag)
 {
   *this = tag;
 }
@@ -385,7 +386,7 @@ void CMusicInfoTag::Dump() const
   CLog::Log(LOGDEBUG,"Music Brainz m_strMusicBrainzTRMID: %s", m_strMusicBrainzTRMID.c_str());
 }
 
-void CMusicInfoTag::Serialize(CArchive& ar)
+void CMusicInfoTag::Archive(CArchive& ar)
 {
   if (ar.IsStoring())
   {
@@ -427,6 +428,27 @@ void CMusicInfoTag::Serialize(CArchive& ar)
     ar >> m_strComment;
     ar >> m_rating;
  }
+}
+
+void CMusicInfoTag::Serialize(CVariant& value)
+{
+  value["url"] = m_strURL;
+  value["title"] = m_strTitle;
+  value["artist"] = m_strArtist;
+  value["album"] = m_strAlbum;
+  value["albumartist"] = m_strAlbumArtist;
+  value["genre"] = m_strGenre;
+  value["duration"] = m_iDuration;
+  value["track"] = m_iTrack;
+  value["loaded"] = m_bLoaded;
+  value["year"] = m_dwReleaseDate.wYear;
+  value["musicbrainztrackid"] = m_strMusicBrainzTrackID;
+  value["musicbrainzartistid"] = m_strMusicBrainzArtistID;
+  value["musicbrainzalbumid"] = m_strMusicBrainzAlbumID;
+  value["musicbrainzalbumartistid"] = m_strMusicBrainzAlbumArtistID;
+  value["musicbrainztrmid"] = m_strMusicBrainzTRMID;
+  value["comment"] = m_strComment;
+  value["rating"] = m_rating;
 }
 
 void CMusicInfoTag::Clear()

@@ -37,12 +37,18 @@
 //  classname: name of the wrapper class to construct
 //  dllname: file including path of the dll to wrap
 
+
+#define DECLARE_LIB_WRAPPER(classname) \
+public: \
+  classname () : LibStatic() {}
+
 #define DECLARE_DLL_WRAPPER(classname, dllname) \
 XDECLARE_DLL_WRAPPER(classname,dllname)
 
 #define XDECLARE_DLL_WRAPPER(classname, dllname) \
 public: \
   classname () : DllDynamic( dllname ) {}
+
 
 ///////////////////////////////////////////////////////////
 //
@@ -219,6 +225,7 @@ public: \
 #define DEFINE_METHOD10(result, name, args) DEFINE_METHOD_LINKAGE10(result, __cdecl, name, args)
 #define DEFINE_METHOD11(result, name, args) DEFINE_METHOD_LINKAGE11(result, __cdecl, name, args)
 
+#ifdef _MSC_VER
 ///////////////////////////////////////////////////////////
 //
 //  DEFINE_FUNC_ALIGNED 0-X
@@ -326,6 +333,23 @@ public: \
     DEFINE_FUNC_PART2(ALS(p1)+ALS(p2)+ALS(p3)+ALS(p4)+ALS(p5)+ALS(p6)+ALS(p7)+ALS(p8)+ALS(p9)) \
     DEFINE_FUNC_PART3(name,(p1, p2, p3, p4, p5, p6, p7, p8, p9))
 
+#else
+
+#define DEFINE_FUNC_ALIGNED0(result, linkage, name)                                            DEFINE_METHOD_LINKAGE0 (result, linkage, name)
+#define DEFINE_FUNC_ALIGNED1(result, linkage, name, t1)                                        DEFINE_METHOD_LINKAGE1 (result, linkage, name, (t1 p1) )
+#define DEFINE_FUNC_ALIGNED2(result, linkage, name, t1, t2)                                    DEFINE_METHOD_LINKAGE2 (result, linkage, name, (t1 p1, t2 p2) )
+#define DEFINE_FUNC_ALIGNED3(result, linkage, name, t1, t2, t3)                                DEFINE_METHOD_LINKAGE3 (result, linkage, name, (t1 p1, t2 p2, t3 p3) )
+#define DEFINE_FUNC_ALIGNED4(result, linkage, name, t1, t2, t3, t4)                            DEFINE_METHOD_LINKAGE4 (result, linkage, name, (t1 p1, t2 p2, t3 p3, t4 p4) )
+#define DEFINE_FUNC_ALIGNED5(result, linkage, name, t1, t2, t3, t4, t5)                        DEFINE_METHOD_LINKAGE5 (result, linkage, name, (t1 p1, t2 p2, t3 p3, t4 p4, t5 p5) )
+#define DEFINE_FUNC_ALIGNED6(result, linkage, name, t1, t2, t3, t4, t5, t6)                    DEFINE_METHOD_LINKAGE6 (result, linkage, name, (t1 p1, t2 p2, t3 p3, t4 p4, t5 p5, t6 p6) )
+#define DEFINE_FUNC_ALIGNED7(result, linkage, name, t1, t2, t3, t4, t5, t6, t7)                DEFINE_METHOD_LINKAGE7 (result, linkage, name, (t1 p1, t2 p2, t3 p3, t4 p4, t5 p5, t6 p6, t7 p7) )
+#define DEFINE_FUNC_ALIGNED8(result, linkage, name, t1, t2, t3, t4, t5, t6, t7, t8)            DEFINE_METHOD_LINKAGE8 (result, linkage, name, (t1 p1, t2 p2, t3 p3, t4 p4, t5 p5, t6 p6, t7 p7, t8 p8) )
+#define DEFINE_FUNC_ALIGNED9(result, linkage, name, t1, t2, t3, t4, t5, t6, t7, t8, t9)        DEFINE_METHOD_LINKAGE9 (result, linkage, name, (t1 p1, t2 p2, t3 p3, t4 p4, t5 p5, t6 p6, t7 p7, t8 p8, t9 p9) )
+#define DEFINE_FUNC_ALIGNED10(result, linkage, name, t1, t2, t3, t4, t5, t6, t7, t8, t10)      DEFINE_METHOD_LINKAGE10(result, linkage, name, (t1 p1, t2 p2, t3 p3, t4 p4, t5 p5, t6 p6, t7 p7, t8 p8, t9 p9, t10 p10) )
+#define DEFINE_FUNC_ALIGNED11(result, linkage, name, t1, t2, t3, t4, t5, t6, t7, t8, t10, t11) DEFINE_METHOD_LINKAGE11(result, linkage, name, (t1 p1, t2 p2, t3 p3, t4 p4, t5 p5, t6 p6, t7 p7, t8 p8, t9 p9, t10 p10, t11 p11) )
+
+#endif
+
 ///////////////////////////////////////////////////////////
 //
 //  BEGIN_METHOD_RESOLVE/END_METHOD_RESOLVE
@@ -356,11 +380,19 @@ public: \
 //  method: Name of the method defined with DEFINE_METHOD
 //          or DEFINE_METHOD_LINKAGE
 //
+
+#define STATIC_RESOLVE_METHOD(method) \
+  (m_##method##_ptr=(void *)&method) &&
+
+#define STATIC_RESOLVE_METHOD_FP(method) \
+  (method##_ptr=(void *)&method) &&
+
 #define RESOLVE_METHOD(method) \
   m_dll->ResolveExport( #method , & m_##method##_ptr ) &&
 
 #define RESOLVE_METHOD_FP(method) \
   m_dll->ResolveExport( #method , & method##_ptr ) &&
+
 
 ///////////////////////////////////////////////////////////
 //
@@ -372,11 +404,21 @@ public: \
 //  method: Name of the method defined with DEFINE_METHOD
 //          or DEFINE_METHOD_LINKAGE
 //
+
+
+#define STATIC_RESOLVE_METHOD_RENAME(libmethod, method) \
+  (m_##method##_ptr = (void *)&libmethod) &&
+
+#define STATIC_RESOLVE_METHOD_RENAME_FP(libmethod, method) \
+  (method##_ptr = (void *)&libmethod) &&
+
+
 #define RESOLVE_METHOD_RENAME(dllmethod, method) \
   m_dll->ResolveExport( #dllmethod , & m_##method##_ptr ) &&
 
 #define RESOLVE_METHOD_RENAME_FP(dllmethod, method) \
   m_dll->ResolveExport( #dllmethod , & method##_ptr ) &&
+
 
 
 ////////////////////////////////////////////////////////////////////
@@ -485,7 +527,7 @@ public:
   virtual ~DllDynamic();
   virtual bool Load();
   virtual void Unload();
-  bool IsLoaded() { return m_dll!=NULL; }
+  virtual bool IsLoaded() { return m_dll!=NULL; }
   bool CanLoad();
   bool EnableDelayedUnload(bool bOnOff);
   bool SetFile(const CStdString& strDllName);
@@ -497,3 +539,28 @@ protected:
   LibraryLoader* m_dll;
   CStdString m_strDllName;
 };
+
+
+///////////////////////////////////////////////////////////
+//
+//  Stub baseclass for a Statically loaded lib
+//  use the above macros to create a lib wrapper
+//
+class LibStatic
+{
+public:
+  LibStatic() { m_is_loaded=false; }
+  virtual ~LibStatic() { Unload(); }
+  virtual bool Load();
+  virtual void Unload() { m_is_loaded = false; }
+  virtual bool IsLoaded() { return m_is_loaded; }
+  bool CanLoad() { return true; }
+
+protected:
+  virtual bool ResolveExports() { return true; }
+  virtual bool LoadSymbols() { return false; }
+  bool m_is_loaded;
+};
+
+
+// TODO: Create an abstract base class for both DllDynamic and LibStatic?

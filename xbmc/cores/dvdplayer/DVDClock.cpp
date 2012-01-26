@@ -18,17 +18,23 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
- 
+
 #include "DVDClock.h"
 #include "VideoReferenceClock.h"
 #include <math.h>
 #include "MathUtils.h"
-#include "utils/SingleLock.h"
-#include "utils/log.h"
+#include "SingleLock.h"
+#include "log.h"
+
+#ifdef HAS_INTEL_SMD
+#include "../IntelSMDGlobals.h"
+#endif
 
 int64_t CDVDClock::m_systemOffset;
 int64_t CDVDClock::m_systemFrequency;
 CCriticalSection CDVDClock::m_systemsection;
+
+bool CDVDClock::m_ismasterclock;
 
 CDVDClock::CDVDClock()
 {
@@ -44,6 +50,11 @@ CDVDClock::CDVDClock()
   m_iDisc = 0;
   m_maxspeedadjust = 0.0;
   m_speedadjust = false;
+
+  m_ismasterclock = true;
+#ifdef HAS_INTEL_SMD
+  g_IntelSMDGlobals.ResetClock();
+#endif
 }
 
 CDVDClock::~CDVDClock()
@@ -101,7 +112,7 @@ double CDVDClock::GetClock()
 {
   CSharedLock lock(m_critSection);
   int64_t current;
-    
+
   if (m_bReset)
   {
     m_startClock = g_VideoReferenceClock.GetTime();
@@ -129,12 +140,19 @@ void CDVDClock::SetSpeed(int iSpeed)
   {
     if(!m_pauseClock)
       m_pauseClock = g_VideoReferenceClock.GetTime();
+#ifdef HAS_INTEL_SMD
+    g_IntelSMDGlobals.PauseClock();
+#endif
     return;
   }
-  
+
   int64_t current;
   int64_t newfreq = m_systemFrequency * DVD_PLAYSPEED_NORMAL / iSpeed;
-  
+
+#ifdef HAS_INTEL_SMD
+  g_IntelSMDGlobals.ResumeClock();
+#endif
+
   current = g_VideoReferenceClock.GetTime();
   if( m_pauseClock )
   {
@@ -142,29 +160,18 @@ void CDVDClock::SetSpeed(int iSpeed)
     m_pauseClock = 0;
   }
 
-  m_startClock = current - ( newfreq * (current - m_startClock) ) / m_systemUsed;
+  m_startClock = current - (int64_t)((double)(current - m_startClock) * newfreq / m_systemUsed);
   m_systemUsed = newfreq;
 }
 
-void CDVDClock::Discontinuity(ClockDiscontinuityType type, double currentPts, double delay)
+void CDVDClock::Discontinuity(double currentPts)
 {
   CExclusiveLock lock(m_critSection);
-  switch (type)
-  {
-  case CLOCK_DISC_FULL:
-    {
-      m_bReset = true;
-      break;
-    }
-  case CLOCK_DISC_NORMAL:
-    {
-      m_startClock = g_VideoReferenceClock.GetTime();
-      m_startClock += (int64_t)(delay * m_systemUsed / DVD_TIME_BASE);
-      m_iDisc = currentPts;
-      m_bReset = false;
-      break;
-    }
-  }
+  m_startClock = g_VideoReferenceClock.GetTime();
+  if(m_pauseClock)
+    m_pauseClock = m_startClock;
+  m_iDisc = currentPts;
+  m_bReset = false;
 }
 
 void CDVDClock::Pause()
@@ -184,13 +191,7 @@ void CDVDClock::Resume()
 
     m_startClock += current - m_pauseClock;
     m_pauseClock = 0;
-  }  
-}
-
-double CDVDClock::DistanceToDisc()
-{
-  // GetClock will lock. if we lock the shared lock here there's potentialy a chance that another thread will try exclusive lock on the section and we'll deadlock
-  return GetClock() - m_iDisc;
+  }
 }
 
 bool CDVDClock::SetMaxSpeedAdjust(double speed)
@@ -202,7 +203,7 @@ bool CDVDClock::SetMaxSpeedAdjust(double speed)
 }
 
 //returns the refreshrate if the videoreferenceclock is running, -1 otherwise
-int CDVDClock::UpdateFramerate(double fps)
+int CDVDClock::UpdateFramerate(double fps, double* interval /*= NULL*/)
 {
   //sent with fps of 0 means we are not playing video
   if(fps == 0.0)
@@ -213,12 +214,13 @@ int CDVDClock::UpdateFramerate(double fps)
   }
 
   //check if the videoreferenceclock is running, will return -1 if not
-  int rate = g_VideoReferenceClock.GetRefreshRate();
+  int rate = g_VideoReferenceClock.GetRefreshRate(interval);
 
   if (rate <= 0)
     return -1;
-  
+
   CSingleLock lock(m_speedsection);
+
   m_speedadjust = true;
 
   double weight = (double)rate / (double)MathUtils::round_int(fps);
@@ -226,9 +228,9 @@ int CDVDClock::UpdateFramerate(double fps)
   //set the speed of the videoreferenceclock based on fps, refreshrate and maximum speed adjust set by user
   if (m_maxspeedadjust > 0.05)
   {
-    if (weight / MathUtils::round_int(weight) < 1.0 + m_maxspeedadjust / 100.0 
-      &&  weight / MathUtils::round_int(weight) > 1.0 - m_maxspeedadjust / 100.0)
-        weight = MathUtils::round_int(weight);
+    if (weight / MathUtils::round_int(weight) < 1.0 + m_maxspeedadjust / 100.0
+    &&  weight / MathUtils::round_int(weight) > 1.0 - m_maxspeedadjust / 100.0)
+      weight = MathUtils::round_int(weight);
   }
   double speed = (double)rate / (fps * weight);
   lock.Leave();

@@ -37,11 +37,11 @@ CMultiPathFile::~CMultiPathFile(void)
   Close();
 }
 
-bool CMultiPathFile::Open(const CURL& url)
+bool CMultiPathFile::Open(const CURI& url)
 {
   // grab the filename off the url
   CStdString strURL, path, fileName;
-  url.GetURL(strURL);
+  strURL = url.Get();
   CUtil::Split(strURL, path, fileName);
   vector<CStdString> vecPaths;
   if (!CMultiPathDirectory::GetPaths(path, vecPaths))
@@ -57,11 +57,11 @@ bool CMultiPathFile::Open(const CURL& url)
   return false;
 }
 
-bool CMultiPathFile::Exists(const CURL& url)
+bool CMultiPathFile::Exists(const CURI& url)
 {
   // grab the filename off the url
   CStdString strURL, path, fileName;
-  url.GetURL(strURL);
+  strURL = url.Get();
   CUtil::Split(strURL, path, fileName);
   vector<CStdString> vecPaths;
   if (!CMultiPathDirectory::GetPaths(path, vecPaths))
@@ -77,11 +77,11 @@ bool CMultiPathFile::Exists(const CURL& url)
   return false;
 }
 
-int CMultiPathFile::Stat(const CURL& url, struct __stat64* buffer)
+int CMultiPathFile::Stat(const CURI& url, struct __stat64* buffer)
 {
   // grab the filename off the url
   CStdString strURL, path, fileName;
-  url.GetURL(strURL);
+  strURL = url.Get();
   CUtil::Split(strURL, path, fileName);
   vector<CStdString> vecPaths;
   if (!CMultiPathDirectory::GetPaths(path, vecPaths))

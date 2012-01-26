@@ -26,7 +26,7 @@ CBoxeeUserActionsDirectory::~CBoxeeUserActionsDirectory()
 
 bool CBoxeeUserActionsDirectory::GetDirectory(const CStdString& strPath, CFileItemList &itemsList)
 {
-  CURL url(strPath);
+  CURI url(strPath);
   CStdString protocol = url.GetProtocol();
   CStdString hostname = url.GetHostName();
   CStdString filename = url.GetFileName();

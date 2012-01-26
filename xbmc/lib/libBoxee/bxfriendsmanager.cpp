@@ -185,12 +185,12 @@ void BXFriendsManager::RequestFriendsListFromServerTask::DoWork()
 {
   LOG(LOG_LEVEL_DEBUG,"RequestFriendsListFromServerTask::DoWork - Enter function (friends)");
 
-  if (!g_application.IsConnectedToInternet())
+  if (!g_application.ShouldConnectToInternet())
   {
     // set loaded to true so Get() functions won't wait forever
     m_taskHandler->SetFriendsListIsLoaded(true);
 
-    LOG(LOG_LEVEL_DEBUG,"RequestFriendsListFromServerTask::DoWork - [IsConnectedToInternet=FALSE] -> Exit function (friends)");
+    LOG(LOG_LEVEL_DEBUG,"RequestFriendsListFromServerTask::DoWork - [ShouldConnectToInternetd=FALSE] -> Exit function (friends)");
     return;
   }
 

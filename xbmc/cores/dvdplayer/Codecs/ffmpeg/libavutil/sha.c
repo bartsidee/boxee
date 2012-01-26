@@ -21,10 +21,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "common.h"
+#include <string.h>
 #include "avutil.h"
 #include "bswap.h"
 #include "sha.h"
+#include "sha1.h"
+#include "intreadwrite.h"
 
 /** hash context */
 typedef struct AVSHA {
@@ -41,7 +43,7 @@ const int av_sha_size = sizeof(AVSHA);
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
 
 /* (R0+R1), R2, R3, R4 are the different operations used in SHA1 */
-#define blk0(i) (block[i] = be2me_32(((const uint32_t*)buffer)[i]))
+#define blk0(i) (block[i] = av_be2ne32(((const uint32_t*)buffer)[i]))
 #define blk(i)  (block[i] = rol(block[i-3] ^ block[i-8] ^ block[i-14] ^ block[i-16], 1))
 
 #define R0(v,w,x,y,z,i) z += ((w&(x^y))^y)     + blk0(i) + 0x5A827999 + rol(v, 5); w = rol(w, 30);
@@ -66,7 +68,7 @@ static void sha1_transform(uint32_t state[5], const uint8_t buffer[64])
     for (i = 0; i < 80; i++) {
         int t;
         if (i < 16)
-            t = be2me_32(((uint32_t*)buffer)[i]);
+            t = av_be2ne32(((uint32_t*)buffer)[i]);
         else
             t = rol(block[i-3] ^ block[i-8] ^ block[i-14] ^ block[i-16], 1);
         block[i] = t;
@@ -312,14 +314,14 @@ void av_sha_update(AVSHA* ctx, const uint8_t* data, unsigned int len)
 void av_sha_final(AVSHA* ctx, uint8_t *digest)
 {
     int i;
-    uint64_t finalcount = be2me_64(ctx->count << 3);
+    uint64_t finalcount = av_be2ne64(ctx->count << 3);
 
     av_sha_update(ctx, "\200", 1);
     while ((ctx->count & 63) != 56)
         av_sha_update(ctx, "", 1);
     av_sha_update(ctx, (uint8_t *)&finalcount, 8); /* Should cause a transform() */
     for (i = 0; i < ctx->digest_len; i++)
-        ((uint32_t*)digest)[i] = be2me_32(ctx->state[i]);
+        AV_WB32(digest + i*4, ctx->state[i]);
 }
 
 #if LIBAVUTIL_VERSION_MAJOR < 51

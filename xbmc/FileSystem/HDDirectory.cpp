@@ -62,7 +62,7 @@ bool CHDDirectory::GetDirectory(const CStdString& strPath1, CFileItemList &items
   CStdString strPath=strPath1;
 
   CStdString strRoot = strPath;
-  CURL url(strPath);
+  CURI url(strPath);
 
   memset(&wfd, 0, sizeof(wfd));
   if (!CUtil::HasSlashAtEnd(strPath) )

@@ -40,6 +40,8 @@
 #include "control.h"
 #include "pyutil.h"
 
+#include "../../../placement_new.h"
+
 using namespace std;
 
 #ifndef __GNUC__
@@ -65,7 +67,7 @@ namespace PYXBMC
 
     self = (ControlImage*)type->tp_alloc(type, 0);
     if (!self) return NULL;
-    new(&self->strFileName) string();    
+   PLACEMENT_NEW(&self->strFileName) string();    
 
     //if (!PyArg_ParseTuple(args, "lllls|l", &self->dwPosX, &self->dwPosY, &self->dwWidth, &self->dwHeight,
     //	&cImage, &self->aspectRatio)) return NULL;

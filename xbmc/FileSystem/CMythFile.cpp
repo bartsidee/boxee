@@ -20,6 +20,9 @@
  */
 
 #include "CMythFile.h"
+
+#ifdef HAS_FILESYSTEM_MYTH
+
 #include "Util.h"
 #include "DllLibCMyth.h"
 #include "URL.h"
@@ -79,7 +82,7 @@ bool CCMythFile::HandleEvents()
   return true;
 }
 
-bool CCMythFile::SetupConnection(const CURL& url, bool control, bool event, bool database)
+bool CCMythFile::SetupConnection(const CURI& url, bool control, bool event, bool database)
 {
   if(!m_session)
     m_session =  CCMythSession::AquireSession(url);
@@ -115,7 +118,7 @@ bool CCMythFile::SetupConnection(const CURL& url, bool control, bool event, bool
   return true;
 }
 
-bool CCMythFile::SetupRecording(const CURL& url)
+bool CCMythFile::SetupRecording(const CURI& url)
 {
   if (url.GetFileName().Left(11) != "recordings/" &&
       url.GetFileName().Left(7)  != "movies/" &&
@@ -164,7 +167,7 @@ bool CCMythFile::SetupRecording(const CURL& url)
   return true;
 }
 
-bool CCMythFile::SetupLiveTV(const CURL& url)
+bool CCMythFile::SetupLiveTV(const CURI& url)
 {
   if (url.GetFileName().Left(9) != "channels/")
     return false;
@@ -249,7 +252,7 @@ bool CCMythFile::SetupLiveTV(const CURL& url)
   return true;
 }
 
-bool CCMythFile::SetupFile(const CURL& url)
+bool CCMythFile::SetupFile(const CURI& url)
 {
   if (url.GetFileName().Left(6) != "files/")
     return false;
@@ -275,7 +278,7 @@ bool CCMythFile::SetupFile(const CURL& url)
   return true;
 }
 
-bool CCMythFile::Open(const CURL& url)
+bool CCMythFile::Open(const CURI& url)
 {
   Close();
 
@@ -371,7 +374,7 @@ CCMythFile::~CCMythFile()
   Close();
 }
 
-bool CCMythFile::Exists(const CURL& url)
+bool CCMythFile::Exists(const CURI& url)
 {
   CStdString path(url.GetFileName());
 
@@ -402,7 +405,7 @@ bool CCMythFile::Exists(const CURL& url)
   return false;
 }
 
-bool CCMythFile::Delete(const CURL& url) 
+bool CCMythFile::Delete(const CURI& url) 
 { 
   CStdString path(url.GetFileName());
 
@@ -655,3 +658,6 @@ bool CCMythFile::GetCommBreakList(cmyth_commbreaklist_t& commbreaklist)
   }
   return false;
 }
+
+#endif
+

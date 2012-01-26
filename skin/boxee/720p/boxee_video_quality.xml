@@ -1,166 +1,345 @@
-﻿<?xml version="1.0"?>
+<?xml version="1.0"?>
 <window id="14018">
 	<defaultcontrol>3</defaultcontrol>
 	<allowoverlay>no</allowoverlay>
 	<controls>
+		<!-- When on top of action dialog -->
+		<include>Dialog_Popup_Background</include>
 		<control type="group">
-			<posx>0</posx>
-			<posy>0</posy>
+			<animation effect="slide" start="0,0" end="0,-34" condition="stringcompare(Container(11).NumItems,3)">Conditional</animation>
+			<animation effect="slide" start="0,0" end="0,-68" condition="stringcompare(Container(11).NumItems,4)">Conditional</animation>
+			<visible>Window.CheckIntProperty(dialog-type,0))</visible>
+			<include>Dialog_Popup_Animation</include>
+			<posx>382</posx>
+			<posy>250</posy>
 			<control type="image">
-		  	    <visible>Window.CheckIntProperty(dialog-type,0))</visible>			
-				<description>dialog background</description>
+				<visible>stringcompare(Container(11).NumItems,2)</visible>
 				<posx>0</posx>
 				<posy>0</posy>
-				<width>400</width>
-				<height>472</height>
-				<texture border="64">dialog_background.png</texture>
+				<width>516</width>
+				<height>220</height>
+				<texture srcborder="51" border="34">dialog_bg.png</texture>
 			</control>
-			<control type="image"  id="20">
-		  	    <visible>Window.CheckIntProperty(dialog-type,1))</visible>			
-				<description>dialog background</description>
+			<control type="image">
+				<visible>stringcompare(Container(11).NumItems,3)</visible>
 				<posx>0</posx>
 				<posy>0</posy>
-				<width>243</width>
-				<height>50</height>
-				<texture border="64">dialog4_background.png</texture>
+				<width>516</width>
+				<height>288</height>
+				<texture srcborder="51" border="34">dialog_bg.png</texture>
 			</control>
-			<control type="label" id="1">
-		  	    <visible>Window.CheckIntProperty(dialog-type,0))</visible>			
-				<description>heading label</description>
-				<posx>26</posx>
-				<posy>34</posy>
-				<width>375</width>
-				<height>28</height>
-				<font>title28b</font>
-				<align>left</align>
-				<aligny>center</aligny>
-				<label>12027</label>
-				<textcolor>FF3B2D06</textcolor>
-			</control>
-			<control type="label" id="2">
-		  	    <visible>Window.CheckIntProperty(dialog-type,0))</visible>			
-				<posx>66</posx>
-				<posy>120</posy>
-				<width>375</width>
-				<height>60</height>
-				<font>title22b</font>
-				<align>left</align>
-				<aligny>center</aligny>
-				<label>12028</label>
-				<textcolor>white</textcolor>
-			</control>			
-			<control type="radiobutton" id="3">
-				<posx>66</posx>
-				<posy>190</posy>
-				<width>270</width>
-				<height>28</height>
-				<font>title18b</font>
-				<align>left</align>
-				<aligny>center</aligny>
-				<label>-</label>
-				<textcolor>white</textcolor>
-				<textoffsetx>40</textoffsetx>
-				<texturenofocus>-</texturenofocus>
-				<texturefocus border="15">button_option_menu_on.png</texturefocus>
-				<textureradiofocus>icons/icon_checkbox_full.png</textureradiofocus>
-				<textureradionofocus>icons/icon_checkbox_empty.png</textureradionofocus>
-				<pulseonselect>false</pulseonselect>
-				<radioposx>10</radioposx>
-				<radioposy>5</radioposy>
-				<radiowidth>20</radiowidth>
-				<radioheight>20</radioheight>
-			    <ondown>10</ondown>				
-			</control>		
-			<control type="grouplist" id="10">
-		      <posx>100</posx>
-			  <posy>250</posy>
-              <width>220</width>
-              <height>340</height>
-              <itemgap>10</itemgap>
-              <onleft>-</onleft>
-			  <onup>3</onup>				
-              <orientation>vertical</orientation>												
-			  <control type="list" id="11">
+			<control type="image">
+				<visible>stringcompare(Container(11).NumItems,4)</visible>
 				<posx>0</posx>
 				<posy>0</posy>
-				<width>220</width>
-				<height>340</height>
+				<width>516</width>
+				<height>356</height>
+				<texture srcborder="51" border="34">dialog_bg.png</texture>
+			</control>
+			<control type="list" id="11">
+				<posx>48</posx>
+				<posy>48</posy>
+				<width>420</width>
+				<height>276</height>
 				<onleft>-</onleft>
-  			    <onup>3</onup>				
+				<onup>-</onup>				
 				<onright>-</onright>
 				<pagecontrol>60</pagecontrol>
 				<scrolltime>200</scrolltime>
-				<itemlayout width="220" height="40">
+				<itemlayout width="420" height="68">
 					<control type="label">
-						<posx>20</posx>
-						<posy>0</posy>
-						<width>200</width>
-						<height>40</height>
-						<font>font22</font>
+						<posx>210</posx>
+						<posy>-1</posy>
+						<width>420</width>
+						<height>56</height>
+						<font>font24b</font>
+						<textcolor>mediumgreyheidi</textcolor>
+						<align>center</align>
 						<aligny>center</aligny>
-						<textcolor>grey</textcolor>
-						<selectedcolor>grey</selectedcolor>
-						<align>left</align>
-						<info>ListItem.Label</info>
+						<label>[B]$INFO[ListItem.Label][/B]</label>
 					</control>
-					<control type="image">
-					  <visible>!IsEmpty(ListItem.Property(is-hd))</visible>
-					  <posx>150</posx>
-					  <posy>0</posy>
-					  <width>32</width>
-					  <height>32</height>
-					  <texture diffuse="grey.png">icons/boxee-icon-HD.png</texture>
-					</control>														
 				</itemlayout>
-				<focusedlayout width="220" height="40">
+				<focusedlayout width="420" height="68">
 					<control type="image">
-					    <visible>Control.HasFocus(11)</visible>
 						<posx>0</posx>
 						<posy>0</posy>
-						<width>220</width>
-						<height>40</height>
-						<texture border="15">button_option_menu_on.png</texture>
+						<width>420</width>
+						<height>56</height>
+						<texture srcborder="24" border="16">button-focused.png</texture>
 					</control>
 					<control type="label">
-						<posx>20</posx>
-						<posy>0</posy>
-						<width>200</width>
-						<height>40</height>
-						<font>font22b</font>
+						<posx>210</posx>
+						<posy>-1</posy>
+						<width>420</width>
+						<height>56</height>
+						<font>font24b</font>
+						<textcolor>whiteheidi</textcolor>
+						<align>center</align>
 						<aligny>center</aligny>
-						<textcolor>white</textcolor>
-						<selectedcolor>white</selectedcolor>
-						<align>left</align>
-						<info>ListItem.Label</info>
-						<scroll>true</scroll>
-						<scrollout>false</scrollout>
-						<scrollspeed>40</scrollspeed>
-						<pauseatend>4000</pauseatend>						
+						<label>[B]$INFO[ListItem.Label][/B]</label>
+					</control>
+				</focusedlayout>
+			</control>
+		</control>
+		
+		<!-- When on top of OSD -->
+		<control type="group">
+			<visible>Window.CheckIntProperty(dialog-type,1))</visible>
+			<posx>340</posx>
+			<posy>145</posy>
+			<control type="image">
+				<visible>stringcompare(Container(12).NumItems,2)</visible>
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>600</width>
+				<height>185</height>
+				<texture border="20">menu_dialog_background.png</texture>
+				<colordiffuse>dialogbg</colordiffuse>
+			</control>
+			<control type="image">
+				<visible>stringcompare(Container(12).NumItems,3)</visible>
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>600</width>
+				<height>250</height>
+				<texture border="20">menu_dialog_background.png</texture>
+				<colordiffuse>dialogbg</colordiffuse>
+			</control>
+			<control type="image">
+				<visible>stringcompare(Container(12).NumItems,4)</visible>
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>600</width>
+				<height>316</height>
+				<texture border="20">menu_dialog_background.png</texture>
+				<colordiffuse>dialogbg</colordiffuse>
+			</control>
+			<control type="fixedlist" id="12">
+				<posx>26</posx>
+				<posy>26</posy>
+				<width>548</width>
+				<height>276</height>
+				<onleft>-</onleft>
+				<onup>-</onup>				
+				<onright>-</onright>
+				<pagecontrol>60</pagecontrol>
+				<scrolltime>200</scrolltime>
+				<itemlayout width="548" height="66">
+					<control type="group">
+						<visible>ListItem.IsFirst + !ListItem.IsLast</visible>
+						<control type="image">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>548</width>
+							<height>65</height>
+							<colordiffuse>33F8F8F8</colordiffuse>
+							<texture srcborder="30" border="20">button_16_pixel_T.png</texture>
+						</control>
+						<control type="image">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>166</width>
+							<height>65</height>
+							<colordiffuse>99F8F8F8</colordiffuse>
+							<texture srcborder="30" border="20">button_16_pixel_TL.png</texture>
+						</control>
+					</control>
+					<control type="group">
+						<visible>!ListItem.IsFirst + !ListItem.IsLast</visible>
+						<control type="image">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>548</width>
+							<height>65</height>
+							<colordiffuse>33F8F8F8</colordiffuse>
+							<texture srcborder="30" border="20">white.png</texture>
+						</control>
+						<control type="image">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>166</width>
+							<height>65</height>
+							<colordiffuse>99F8F8F8</colordiffuse>
+							<texture srcborder="30" border="20">white.png</texture>
+						</control>
+					</control>
+					<control type="group">
+						<visible>ListItem.IsFirst + ListItem.IsLast</visible>
+						<control type="image">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>548</width>
+							<height>65</height>
+							<colordiffuse>33F8F8F8</colordiffuse>
+							<texture srcborder="30" border="20">button_16_pixel.png</texture>
+						</control>
+						<control type="image">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>166</width>
+							<height>65</height>
+							<colordiffuse>99F8F8F8</colordiffuse>
+							<texture srcborder="30" border="20">button_16_pixel_L.png</texture>
+						</control>
+					</control>
+					<control type="group">
+						<visible>ListItem.IsLast + !ListItem.IsFirst</visible>
+						<control type="image">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>548</width>
+							<height>65</height>
+							<colordiffuse>33F8F8F8</colordiffuse>
+							<texture srcborder="30" border="20">button_16_pixel_B.png</texture>
+						</control>
+						<control type="image">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>166</width>
+							<height>65</height>
+							<colordiffuse>99F8F8F8</colordiffuse>
+							<texture srcborder="30" border="20">button_16_pixel_BL.png</texture>
+						</control>
+					</control>
+					<control type="label">
+						<posx>83</posx>
+						<posy>0</posy>
+						<width>166</width>
+						<height>65</height>
+						<font>font30b</font>
+						<align>center</align>
+						<aligny>center</aligny>
+						<label>$INFO[ListItem.Label]</label>
+						<textcolor>offwhite</textcolor>
 					</control>
 					<control type="image">
-					  <visible>!IsEmpty(ListItem.Property(is-hd))</visible>
-					  <posx>150</posx>
-					  <posy>0</posy>
-					  <width>32</width>
-					  <height>32</height>
-					  <texture>icons/boxee-icon-HD.png</texture>
-					</control>																			
+						<visible>ListItem.Property(is-hd)</visible>
+						<posx>476</posx>
+						<posy>16</posy>
+						<width>60</width>
+						<height>32</height>
+						<aspectratio>keep</aspectratio>
+						<texture>icons/icon_quality_HD.png</texture>
+					</control>
+					<control type="image">
+						<visible>!ListItem.Property(is-hd)</visible>
+						<posx>476</posx>
+						<posy>16</posy>
+						<width>60</width>
+						<height>32</height>
+						<aspectratio>keep</aspectratio>
+						<texture>icons/icon_quality_SD.png</texture>
+					</control>
+				</itemlayout>
+				<focusedlayout width="548" height="66">
+					<control type="group">
+						<visible>ListItem.IsFirst + !ListItem.IsLast</visible>
+						<control type="image">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>548</width>
+							<height>65</height>
+							<colordiffuse>blue</colordiffuse>
+							<texture srcborder="30" border="20">button_16_pixel_T.png</texture>
+						</control>
+						<control type="image">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>166</width>
+							<height>65</height>
+							<colordiffuse>99F8F8F8</colordiffuse>
+							<texture srcborder="30" border="20">button_16_pixel_TL.png</texture>
+						</control>
+					</control>
+					<control type="group">
+						<visible>!ListItem.IsFirst + !ListItem.IsLast</visible>
+						<control type="image">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>548</width>
+							<height>65</height>
+							<colordiffuse>blue</colordiffuse>
+							<texture srcborder="30" border="20">white.png</texture>
+						</control>
+						<control type="image">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>166</width>
+							<height>65</height>
+							<colordiffuse>99F8F8F8</colordiffuse>
+							<texture srcborder="30" border="20">white.png</texture>
+						</control>
+					</control>
+					<control type="group">
+						<visible>ListItem.IsFirst + ListItem.IsLast</visible>
+						<control type="image">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>548</width>
+							<height>65</height>
+							<colordiffuse>blue</colordiffuse>
+							<texture srcborder="30" border="20">button_16_pixel.png</texture>
+						</control>
+						<control type="image">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>166</width>
+							<height>65</height>
+							<colordiffuse>99F8F8F8</colordiffuse>
+							<texture srcborder="30" border="20">button_16_pixel_L.png</texture>
+						</control>
+					</control>
+					<control type="group">
+						<visible>ListItem.IsLast + !ListItem.IsFirst</visible>
+						<control type="image">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>548</width>
+							<height>65</height>
+							<colordiffuse>blue</colordiffuse>
+							<texture srcborder="30" border="20">button_16_pixel_B.png</texture>
+						</control>
+						<control type="image">
+							<posx>0</posx>
+							<posy>0</posy>
+							<width>166</width>
+							<height>65</height>
+							<colordiffuse>99F8F8F8</colordiffuse>
+							<texture srcborder="30" border="20">button_16_pixel_BL.png</texture>
+						</control>
+					</control>
+					<control type="label">
+						<posx>83</posx>
+						<posy>0</posy>
+						<width>166</width>
+						<height>65</height>
+						<font>font30b</font>
+						<align>center</align>
+						<aligny>center</aligny>
+						<label>$INFO[ListItem.Label]</label>
+						<textcolor>black</textcolor>
+					</control>
+					<control type="image">
+						<visible>ListItem.Property(is-hd)</visible>
+						<posx>476</posx>
+						<posy>16</posy>
+						<width>60</width>
+						<height>32</height>
+						<aspectratio>keep</aspectratio>
+						<colordiffuse>black</colordiffuse>
+						<texture>icons/icon_quality_HD.png</texture>
+					</control>
+					<control type="image">
+						<visible>!ListItem.Property(is-hd)</visible>
+						<posx>476</posx>
+						<posy>16</posy>
+						<width>60</width>
+						<height>32</height>
+						<aspectratio>keep</aspectratio>
+						<colordiffuse>black</colordiffuse>
+						<texture>icons/icon_quality_SD.png</texture>
+					</control>
 				</focusedlayout>
-			  </control>
-			</control>					
-			<control type="scrollbar" id="60">
-				<description>scroll bar indicator for lists</description>
-				<posx>380</posx>
-				<posy>104</posy>
-				<width>28</width>
-				<height>352</height>
-				<texturesliderbackground border="14">scrollbar_bg.png</texturesliderbackground>
-				<textureslidernib>scrollbar_slider.png</textureslidernib>
-				<textureslidernibfocus>scrollbar_slider.png</textureslidernibfocus>
-				<texturesliderbar>-</texturesliderbar>
-				<texturesliderbarfocus>-</texturesliderbarfocus>
-				<orientation>vertical</orientation>
-				<showonepage>false</showonepage>
 			</control>
 		</control>
 	</controls>

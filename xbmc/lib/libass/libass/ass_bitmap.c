@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License along
  * with libass; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-*/
+ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -29,14 +29,14 @@
 #include "ass_bitmap.h"
 
 struct ass_synth_priv {
-	int tmp_w, tmp_h;
-	unsigned short* tmp;
+    int tmp_w, tmp_h;
+    unsigned short *tmp;
 
-	int g_r;
-	int g_w;
+    int g_r;
+    int g_w;
 
-	unsigned *g;
-	unsigned *gt2;
+    unsigned *g;
+    unsigned *gt2;
 
     double radius;
 };
@@ -44,203 +44,195 @@ struct ass_synth_priv {
 static const unsigned int maxcolor = 255;
 static const unsigned base = 256;
 
-static int generate_tables(ass_synth_priv_t* priv, double radius)
+static int generate_tables(ASS_SynthPriv *priv, double radius)
 {
-	double A = log(1.0/base)/(radius*radius*2);
-	int mx, i;
-	double volume_diff, volume_factor = 0;
-	unsigned volume;
+    double A = log(1.0 / base) / (radius * radius * 2);
+    int mx, i;
+    double volume_diff, volume_factor = 0;
+    unsigned volume;
 
     if (priv->radius == radius)
         return 0;
     else
         priv->radius = radius;
 
-	priv->g_r = ceil(radius);
-	priv->g_w = 2*priv->g_r+1;
+    priv->g_r = ceil(radius);
+    priv->g_w = 2 * priv->g_r + 1;
 
-	if (priv->g_r) {
+    if (priv->g_r) {
         priv->g = realloc(priv->g, priv->g_w * sizeof(unsigned));
         priv->gt2 = realloc(priv->gt2, 256 * priv->g_w * sizeof(unsigned));
-		if (priv->g==NULL || priv->gt2==NULL) {
-			return -1;
-		}
-	}
+        if (priv->g == NULL || priv->gt2 == NULL) {
+            return -1;
+        }
+    }
 
-	if (priv->g_r) {
-		// gaussian curve with volume = 256
+    if (priv->g_r) {
+        // gaussian curve with volume = 256
         for (volume_diff = 10000000; volume_diff > 0.0000001;
              volume_diff *= 0.5) {
-			volume_factor+= volume_diff;
-			volume=0;
-			for (i = 0; i<priv->g_w; ++i) {
+            volume_factor += volume_diff;
+            volume = 0;
+            for (i = 0; i < priv->g_w; ++i) {
                 priv->g[i] =
                     (unsigned) (exp(A * (i - priv->g_r) * (i - priv->g_r)) *
                                 volume_factor + .5);
-				volume+= priv->g[i];
-			}
+                volume += priv->g[i];
+            }
             if (volume > 256)
                 volume_factor -= volume_diff;
-		}
-		volume=0;
-		for (i = 0; i<priv->g_w; ++i) {
+        }
+        volume = 0;
+        for (i = 0; i < priv->g_w; ++i) {
             priv->g[i] =
                 (unsigned) (exp(A * (i - priv->g_r) * (i - priv->g_r)) *
                             volume_factor + .5);
-			volume+= priv->g[i];
-		}
+            volume += priv->g[i];
+        }
 
-		// gauss table:
-		for(mx=0;mx<priv->g_w;mx++){
-			for(i=0;i<256;i++){
-				priv->gt2[mx+i*priv->g_w] = i*priv->g[mx];
-			}
-		}
-	}
+        // gauss table:
+        for (mx = 0; mx < priv->g_w; mx++) {
+            for (i = 0; i < 256; i++) {
+                priv->gt2[mx + i * priv->g_w] = i * priv->g[mx];
+            }
+        }
+    }
 
-	return 0;
+    return 0;
 }
 
-static void resize_tmp(ass_synth_priv_t* priv, int w, int h)
+static void resize_tmp(ASS_SynthPriv *priv, int w, int h)
 {
-	if (priv->tmp_w >= w && priv->tmp_h >= h)
-		return;
-	if (priv->tmp_w == 0)
-		priv->tmp_w = 64;
-	if (priv->tmp_h == 0)
-		priv->tmp_h = 64;
+    if (priv->tmp_w >= w && priv->tmp_h >= h)
+        return;
+    if (priv->tmp_w == 0)
+        priv->tmp_w = 64;
+    if (priv->tmp_h == 0)
+        priv->tmp_h = 64;
     while (priv->tmp_w < w)
         priv->tmp_w *= 2;
     while (priv->tmp_h < h)
         priv->tmp_h *= 2;
-	if (priv->tmp)
-		free(priv->tmp);
-	priv->tmp = malloc((priv->tmp_w + 1) * priv->tmp_h * sizeof(short));
+    free(priv->tmp);
+    priv->tmp = malloc((priv->tmp_w + 1) * priv->tmp_h * sizeof(short));
 }
 
-ass_synth_priv_t *ass_synth_init(double radius)
+ASS_SynthPriv *ass_synth_init(double radius)
 {
-	ass_synth_priv_t* priv = calloc(1, sizeof(ass_synth_priv_t));
-    if (priv)
+    ASS_SynthPriv *priv = calloc(1, sizeof(ASS_SynthPriv));
     generate_tables(priv, radius);
-	return priv;
+    return priv;
 }
 
-void ass_synth_done(ass_synth_priv_t* priv)
+void ass_synth_done(ASS_SynthPriv *priv)
 {
-	if (priv->tmp)
-		free(priv->tmp);
-	if (priv->g)
-		free(priv->g);
-	if (priv->gt2)
-		free(priv->gt2);
-	free(priv);
+    free(priv->tmp);
+    free(priv->g);
+    free(priv->gt2);
+    free(priv);
 }
 
-static bitmap_t* alloc_bitmap(int w, int h)
+static Bitmap *alloc_bitmap(int w, int h)
 {
-	bitmap_t* bm;
-	bm = calloc(1, sizeof(bitmap_t));
-	bm->buffer = malloc(w*h);
-	bm->w = w;
-	bm->h = h;
-	bm->left = bm->top = 0;
-	return bm;
+    Bitmap *bm;
+    bm = malloc(sizeof(Bitmap));
+    bm->buffer = calloc(w, h);
+    bm->w = w;
+    bm->h = h;
+    bm->left = bm->top = 0;
+    return bm;
 }
 
-void ass_free_bitmap(bitmap_t* bm)
+void ass_free_bitmap(Bitmap *bm)
 {
-	if (bm) {
-        if (bm->buffer)
-            free(bm->buffer);
-		free(bm);
-	}
+    if (bm)
+        free(bm->buffer);
+    free(bm);
 }
 
-static bitmap_t* copy_bitmap(const bitmap_t* src)
+static Bitmap *copy_bitmap(const Bitmap *src)
 {
-	bitmap_t* dst = alloc_bitmap(src->w, src->h);
-	dst->left = src->left;
-	dst->top = src->top;
-	memcpy(dst->buffer, src->buffer, src->w * src->h);
-	return dst;
+    Bitmap *dst = alloc_bitmap(src->w, src->h);
+    dst->left = src->left;
+    dst->top = src->top;
+    memcpy(dst->buffer, src->buffer, src->w * src->h);
+    return dst;
 }
 
-static int check_glyph_area(ass_library_t *library, FT_Glyph glyph)
+int check_glyph_area(ASS_Library *library, FT_Glyph glyph)
 {
-	FT_BBox bbox;
-	long long dx, dy;
-	FT_Glyph_Get_CBox(glyph, FT_GLYPH_BBOX_TRUNCATE, &bbox);
-	dx = bbox.xMax - bbox.xMin;
-	dy = bbox.yMax - bbox.yMin;
-	if (dx * dy > 8000000) {
+    FT_BBox bbox;
+    long long dx, dy;
+    FT_Glyph_Get_CBox(glyph, FT_GLYPH_BBOX_TRUNCATE, &bbox);
+    dx = bbox.xMax - bbox.xMin;
+    dy = bbox.yMax - bbox.yMin;
+    if (dx * dy > 8000000) {
         ass_msg(library, MSGL_WARN, "Glyph bounding box too large: %dx%dpx",
                (int) dx, (int) dy);
-		return 1;
-	} else
-		return 0;
+        return 1;
+    } else
+        return 0;
 }
 
-static bitmap_t *glyph_to_bitmap_internal(ass_library_t *library,
+static Bitmap *glyph_to_bitmap_internal(ASS_Library *library,
                                           FT_Glyph glyph, int bord)
 {
-	FT_BitmapGlyph bg;
-	FT_Bitmap* bit;
-	bitmap_t* bm;
-	int w, h;
-	unsigned char* src;
-	unsigned char* dst;
-	int i;
-	int error;
+    FT_BitmapGlyph bg;
+    FT_Bitmap *bit;
+    Bitmap *bm;
+    int w, h;
+    unsigned char *src;
+    unsigned char *dst;
+    int i;
+    int error;
 
     if (check_glyph_area(library, glyph))
-		return 0;
-	error = FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, 0, 0);
-	if (error) {
+        return 0;
+    error = FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, 0, 0);
+    if (error) {
         ass_msg(library, MSGL_WARN, "FT_Glyph_To_Bitmap error %d",
                error);
-		return 0;
-	}
+        return 0;
+    }
 
-	bg = (FT_BitmapGlyph)glyph;
-	bit = &(bg->bitmap);
-	if (bit->pixel_mode != FT_PIXEL_MODE_GRAY) {
+    bg = (FT_BitmapGlyph) glyph;
+    bit = &(bg->bitmap);
+    if (bit->pixel_mode != FT_PIXEL_MODE_GRAY) {
         ass_msg(library, MSGL_WARN, "Unsupported pixel mode: %d",
                (int) (bit->pixel_mode));
-		FT_Done_Glyph(glyph);
-		return 0;
-	}
+        FT_Done_Glyph(glyph);
+        return 0;
+    }
 
-	w = bit->width;
-	h = bit->rows;
-	bm = alloc_bitmap(w + 2*bord, h + 2*bord);
-	memset(bm->buffer, 0, bm->w * bm->h);
-	bm->left = bg->left - bord;
-	bm->top = - bg->top - bord;
+    w = bit->width;
+    h = bit->rows;
+    bm = alloc_bitmap(w + 2 * bord, h + 2 * bord);
+    bm->left = bg->left - bord;
+    bm->top = -bg->top - bord;
 
-	src = bit->buffer;
-	dst = bm->buffer + bord + bm->w * bord;
-	for (i = 0; i < h; ++i) {
-		memcpy(dst, src, w);
-		src += bit->pitch;
-		dst += bm->w;
-	}
+    src = bit->buffer;
+    dst = bm->buffer + bord + bm->w * bord;
+    for (i = 0; i < h; ++i) {
+        memcpy(dst, src, w);
+        src += bit->pitch;
+        dst += bm->w;
+    }
 
     FT_Done_Glyph(glyph);
-	return bm;
+    return bm;
 }
 
 /**
- * \brief fix outline bitmap and generate shadow bitmap
- * Two things are done here:
- * 1. Glyph bitmap is subtracted from outline bitmap. This way looks much better in some cases.
- * 2. Shadow bitmap is created as a sum of glyph and outline bitmaps.
+ * \brief fix outline bitmap
+ *
+ * The glyph bitmap is subtracted from outline bitmap. This way looks much
+ * better in some cases.
  */
-static bitmap_t* fix_outline_and_shadow(bitmap_t* bm_g, bitmap_t* bm_o)
+static void fix_outline(Bitmap *bm_g, Bitmap *bm_o)
 {
-	int x, y;
-	const int l = bm_o->left > bm_g->left ? bm_o->left : bm_g->left;
-	const int t = bm_o->top > bm_g->top ? bm_o->top : bm_g->top;
+    int x, y;
+    const int l = bm_o->left > bm_g->left ? bm_o->left : bm_g->left;
+    const int t = bm_o->top > bm_g->top ? bm_o->top : bm_g->top;
     const int r =
         bm_o->left + bm_o->w <
         bm_g->left + bm_g->w ? bm_o->left + bm_o->w : bm_g->left + bm_g->w;
@@ -248,30 +240,21 @@ static bitmap_t* fix_outline_and_shadow(bitmap_t* bm_g, bitmap_t* bm_o)
         bm_o->top + bm_o->h <
         bm_g->top + bm_g->h ? bm_o->top + bm_o->h : bm_g->top + bm_g->h;
 
-	bitmap_t* bm_s = copy_bitmap(bm_o);
-
     unsigned char *g =
         bm_g->buffer + (t - bm_g->top) * bm_g->w + (l - bm_g->left);
     unsigned char *o =
         bm_o->buffer + (t - bm_o->top) * bm_o->w + (l - bm_o->left);
-    unsigned char *s =
-        bm_s->buffer + (t - bm_s->top) * bm_s->w + (l - bm_s->left);
-	
-	for (y = 0; y < b - t; ++y) {
-		for (x = 0; x < r - l; ++x) {
-			unsigned char c_g, c_o;
-			c_g = g[x];
-			c_o = o[x];
-            o[x] = (c_o > (3 * c_g) / 5) ? c_o - (3 * c_g) / 5 : 0;
-			s[x] = (c_o < 0xFF - c_g) ? c_o + c_g : 0xFF;
-		}
-		g += bm_g->w;
-		o += bm_o->w;
-		s += bm_s->w;
-	}
 
-	assert(bm_s);
-	return bm_s;
+    for (y = 0; y < b - t; ++y) {
+        for (x = 0; x < r - l; ++x) {
+            unsigned char c_g, c_o;
+            c_g = g[x];
+            c_o = o[x];
+            o[x] = (c_o > c_g) ? c_o - (c_g / 2) : 0;
+        }
+        g += bm_g->w;
+        o += bm_o->w;
+    }
 }
 
 /**
@@ -473,12 +456,15 @@ static void be_blur(unsigned char *buf, int w, int h)
     }
 }
 
-int glyph_to_bitmap(ass_library_t *library, ass_synth_priv_t *priv_blur,
+int glyph_to_bitmap(ASS_Library *library, ASS_SynthPriv *priv_blur,
                     FT_Glyph glyph, FT_Glyph outline_glyph,
-                    bitmap_t **bm_g, bitmap_t **bm_o, bitmap_t **bm_s,
-                    int be, double blur_radius, FT_Vector shadow_offset)
+                    Bitmap **bm_g, Bitmap **bm_o, Bitmap **bm_s,
+                    int be, double blur_radius, FT_Vector shadow_offset,
+                    int border_style)
 {
-    int bbord, gbord, bord;
+    int bord;
+    int bbord;
+    int gbord;
     blur_radius *= 2;
     bbord = be > 0 ? sqrt(2 * be) : 0;
     gbord = blur_radius > 0.0 ? blur_radius + 1 : 0;
@@ -486,35 +472,35 @@ int glyph_to_bitmap(ass_library_t *library, ass_synth_priv_t *priv_blur,
     if (bord == 0 && (shadow_offset.x || shadow_offset.y))
         bord = 1;
 
-	assert(bm_g && bm_o && bm_s);
+    assert(bm_g && bm_o && bm_s);
 
-	*bm_g = *bm_o = *bm_s = 0;
+    *bm_g = *bm_o = *bm_s = 0;
 
-	if (glyph)
+    if (glyph)
         *bm_g = glyph_to_bitmap_internal(library, glyph, bord);
-	if (!*bm_g)
-		return 1;
+    if (!*bm_g)
+        return 1;
 
-	if (outline_glyph) {
+    if (outline_glyph) {
         *bm_o = glyph_to_bitmap_internal(library, outline_glyph, bord);
-		if (!*bm_o) {
-			return 1;
-		}
-	}
+        if (!*bm_o) {
+            return 1;
+        }
+    }
 
     // Apply box blur (multiple passes, if requested)
     while (be--) {
-	if (*bm_o)
+        if (*bm_o)
             be_blur((*bm_o)->buffer, (*bm_o)->w, (*bm_o)->h);
         else
             be_blur((*bm_g)->buffer, (*bm_g)->w, (*bm_g)->h);
     }
-	
+
     // Apply gaussian blur
     if (blur_radius > 0.0) {
-		if (*bm_o)
+        if (*bm_o)
             resize_tmp(priv_blur, (*bm_o)->w, (*bm_o)->h);
-		else
+        else
             resize_tmp(priv_blur, (*bm_g)->w, (*bm_g)->h);
         generate_tables(priv_blur, blur_radius);
         if (*bm_o)
@@ -527,16 +513,21 @@ int glyph_to_bitmap(ass_library_t *library, ass_synth_priv_t *priv_blur,
                            (*bm_g)->w, (*bm_g)->h, (*bm_g)->w,
                            (int *) priv_blur->gt2, priv_blur->g_r,
                            priv_blur->g_w);
-	}
+    }
 
-	if (*bm_o)
-		*bm_s = fix_outline_and_shadow(*bm_g, *bm_o);
-	else
-		*bm_s = copy_bitmap(*bm_g);
+    // Create shadow and fix outline as needed
+    if (*bm_o && border_style != 3) {
+        *bm_s = copy_bitmap(*bm_o);
+        fix_outline(*bm_g, *bm_o);
+    } else if (*bm_o) {
+        *bm_s = copy_bitmap(*bm_o);
+    } else
+        *bm_s = copy_bitmap(*bm_g);
+
+    assert(bm_s);
 
     shift_bitmap((*bm_s)->buffer, (*bm_s)->w,(*bm_s)->h,
                  shadow_offset.x, shadow_offset.y);
 
-	assert(bm_s);
-	return 0;
+    return 0;
 }

@@ -39,7 +39,9 @@
 #include "GUIPassword.h"
 #include "GUIDialogMusicScan.h"
 #include "GUIDialogMediaSource.h"
+#ifndef _BOXEE_
 #include "PartyModeManager.h"
+#endif
 #include "utils/GUIInfoManager.h"
 #include "FileSystem/MusicDatabaseDirectory.h"
 #include "GUIDialogSongInfo.h"
@@ -693,11 +695,13 @@ void CGUIWindowMusicBase::OnQueueItem(int iItem)
   m_viewControl.SetSelectedItem(iItem + 1);
 
   // if party mode, add items but DONT start playing
+#ifndef _BOXEE_
   if (g_partyModeManager.IsEnabled())
   {
     g_partyModeManager.AddUserSongs(queuedItems, false);
     return;
   }
+#endif
 
   g_playlistPlayer.Add(PLAYLIST_MUSIC, queuedItems);
   if (g_playlistPlayer.GetPlaylist(PLAYLIST_MUSIC).size() && !g_application.IsPlayingAudio())
@@ -1027,10 +1031,11 @@ bool CGUIWindowMusicBase::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
         OnClick(itemNumber);
       return true;
     }
-
+#ifndef _BOXEE_
   case CONTEXT_BUTTON_PLAY_PARTYMODE:
     g_partyModeManager.Enable(PARTYMODECONTEXT_MUSIC, item->m_strPath);
     return true;
+#endif
 
   case CONTEXT_BUTTON_STOP_SCANNING:
     { 
@@ -1049,8 +1054,9 @@ bool CGUIWindowMusicBase::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
     return true;
 
   case CONTEXT_BUTTON_SETTINGS:
-    g_windowManager.ActivateWindow(WINDOW_SETTINGS_MYMUSIC);
+    //g_windowManager.ActivateWindow(WINDOW_SETTINGS_MYMUSIC);
     return true;
+#ifdef HAS_LASTIF
   case CONTEXT_BUTTON_LASTFM_UNBAN_ITEM:
     if (CLastFmManager::GetInstance()->Unban(*item->GetMusicInfoTag()))
     {
@@ -1067,6 +1073,7 @@ bool CGUIWindowMusicBase::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
       Update(m_vecItems->m_strPath);
     }
     return true;
+#endif
   default:
     break;
   }
@@ -1156,11 +1163,13 @@ void CGUIWindowMusicBase::PlayItem(int iItem)
 
     CFileItemList queuedItems;
     AddItemToPlayList(item, queuedItems);
+#ifndef _BOXEE_
     if (g_partyModeManager.IsEnabled())
     {
       g_partyModeManager.AddUserSongs(queuedItems, true);
       return;
     }
+#endif
 
 //Boxee
     for (int i=0; i<queuedItems.Size()-1; i++)
@@ -1203,9 +1212,10 @@ void CGUIWindowMusicBase::PlayItem(int iItem)
 void CGUIWindowMusicBase::LoadPlayList(const CStdString& strPlayList)
 {
   // if partymode is active, we disable it
+#ifndef _BOXEE_
   if (g_partyModeManager.IsEnabled())
     g_partyModeManager.Disable();
-
+#endif
   // load a playlist like .m3u, .pls
   // first get correct factory to load playlist
   auto_ptr<CPlayList> pPlayList (CPlayListFactory::Create(strPlayList));
@@ -1246,6 +1256,7 @@ bool CGUIWindowMusicBase::OnPlayMedia(int iItem)
   }
 
   // party mode
+#ifndef _BOXEE_
   if (g_partyModeManager.IsEnabled() && !pItem->IsLastFM())
   {
     CPlayList playlistTemp;
@@ -1253,7 +1264,9 @@ bool CGUIWindowMusicBase::OnPlayMedia(int iItem)
     g_partyModeManager.AddUserSongs(playlistTemp, true);
     return true;
   }
-  else if (!pItem->IsPlayList() && !pItem->IsInternetStream())
+  else 
+#endif
+    if (!pItem->IsPlayList() && !pItem->IsInternetStream())
   { // single music file - if we get here then we have autoplaynextitem turned off, but we
     // still want to use the playlist player in order to handle more queued items following etc.
     g_playlistPlayer.Reset();
@@ -1367,9 +1380,9 @@ void CGUIWindowMusicBase::OnRetrieveMusicInfo(CFileItemList& items)
 
       if (!bProgressVisible && elapsed>1500 && m_dlgProgress)
       { // tag loading takes more then 1.5 secs, show a progress dialog
-        CURL url(items.m_strPath);
+        CURI url(items.m_strPath);
         CStdString strStrippedPath;
-        url.GetURLWithoutUserDetails(strStrippedPath);
+        strStrippedPath = url.GetWithoutUserDetails();
         m_dlgProgress->SetHeading(189);
         m_dlgProgress->SetLine(0, 505);
         m_dlgProgress->SetLine(1, "");

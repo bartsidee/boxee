@@ -390,7 +390,7 @@
       </stateVariable>
       <stateVariable sendEvents="no">
          <name>PossibleRecordQualityModes</name>
-         <dataType>string</dataType>
+         <dataType>string</dataType>  
          <allowedValueList>
             <allowedValue>NOT_IMPLEMENTED</allowedValue>
          </allowedValueList>

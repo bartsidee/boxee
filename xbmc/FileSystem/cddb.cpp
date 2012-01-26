@@ -41,6 +41,7 @@
 #include "utils/GUIInfoManager.h"
 #include "utils/CharsetConverter.h"
 #include "utils/log.h"
+#include "../lib/libBoxee/bxversion.h"
 
 using namespace std;
 using namespace MUSIC_INFO;
@@ -869,7 +870,7 @@ bool Xcddb::queryCDinfo(CCdInfo* pInfo)
 
   //##########################################################
   // Send the Hello message
-  CStdString strGreeting = CStdString( "cddb hello boxee 127.0.0.1 BOXEE " ) + VERSION_STRING;
+  CStdString strGreeting = CStdString( "cddb hello boxee 127.0.0.1 BOXEE " ) + BOXEE_VERSION;
   if ( ! Send(strGreeting.c_str()) )
   {
     CLog::Log(LOGERROR, "Xcddb::queryCDinfo Error sending \"%s\"", strGreeting.c_str());

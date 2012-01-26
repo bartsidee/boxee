@@ -38,27 +38,24 @@ CFileFileReader::~CFileFileReader()
 }
 
 //*********************************************************************************************
-bool CFileFileReader::Open(const CURL& url)
+bool CFileFileReader::Open(const CURI& url)
 {
-  CStdString strURL;
-  url.GetURL(strURL);
+  CStdString strURL = url.Get();
   strURL = strURL.Mid(13);
   return m_reader.Open(strURL,READ_CACHED);
 }
 
-bool CFileFileReader::Exists(const CURL& url)
+bool CFileFileReader::Exists(const CURI& url)
 {
-  CStdString strURL;
-  url.GetURL(strURL);
+  CStdString strURL = url.Get();
   strURL = strURL.Mid(13);
   
   return CFile::Exists(strURL);
 }
 
-int CFileFileReader::Stat(const CURL& url, struct __stat64* buffer)
+int CFileFileReader::Stat(const CURI& url, struct __stat64* buffer)
 {
-  CStdString strURL;
-  url.GetURL(strURL);
+  CStdString strURL = url.Get();
   strURL = strURL.Mid(13);
   
   return CFile::Stat(strURL,buffer);
@@ -66,7 +63,7 @@ int CFileFileReader::Stat(const CURL& url, struct __stat64* buffer)
 
 
 //*********************************************************************************************
-bool CFileFileReader::OpenForWrite(const CURL& url, bool bOverWrite)
+bool CFileFileReader::OpenForWrite(const CURI& url, bool bOverWrite)
 {
   return false;
 }

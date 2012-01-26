@@ -37,19 +37,19 @@ public:
   CacheMemBuffer();
   CacheMemBuffer(int nCacheSize); // will be 3 times this size (total history, current and readahead)
   virtual ~CacheMemBuffer();
-
+  
   virtual int Open() ;
   virtual int Close();
-
+  
   virtual int WriteToCache(const char *pBuffer, size_t iSize) ;
   virtual int ReadFromCache(char *pBuffer, size_t iMaxSize) ;
     virtual int64_t WaitForData(unsigned int iMinAvail, unsigned int iMillis) ;
-
+  
     virtual int64_t Seek(int64_t iFilePosition, int iWhence) ;
     virtual void Reset(int64_t iSourcePosition) ;
-
+  
   virtual int64_t	GetAvailableRead() ;
-
+  
 protected:
     int64_t m_nStartPosition;
   CRingBuffer m_buffer;

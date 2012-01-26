@@ -29,6 +29,7 @@ bool CBoxeeServerItemsLoader::LoadItem(CFileItem* pItem, bool bCanBlock)
   
   CStdString strType = pItem->GetProperty("type");
   CStdString strBoxeeId = pItem->GetProperty("boxeeid");
+  bool       bInfoLoaded = pItem->GetPropertyBOOL("infoLoaded");
 
   if (strBoxeeId.IsEmpty())
   {
@@ -36,82 +37,95 @@ bool CBoxeeServerItemsLoader::LoadItem(CFileItem* pItem, bool bCanBlock)
     return false;
   }
 
-  CLog::Log(LOGDEBUG,"CBoxeeServerItemsLoader::LoadItem - Going to resolve item [label=%s][path=%s][type=%s][boxeeId=%s] (bsil)(browse)", pItem->GetLabel().c_str(), pItem->m_strPath.c_str(), strType.c_str(), strBoxeeId.c_str());
-
   CFileItemList items;
   bool succeeded = false;
-  if (bCanBlock) 
+  if (bCanBlock)
   {
-	 succeeded = BoxeeUtils::ResolveItem(strBoxeeId, items);
-  }
-  if (!succeeded)
-  {
-    CLog::Log(LOGERROR,"CBoxeeServerItemsLoader::LoadItem - FAILED to resolve item [label=%s][path=%s][type=%s][boxeeId=%s]. [NumOfItems=%d] (bsil)(browse)", pItem->GetLabel().c_str(), pItem->m_strPath.c_str(), strType.c_str(), strBoxeeId.c_str(),items.Size());
-    return false;
-  }
+    CLog::Log(LOGDEBUG,"CBoxeeServerItemsLoader::LoadItem - Going to resolve item [label=%s][path=%s][type=%s][boxeeId=%s]. [bCanBlock=%d] (bsil)(browse)", pItem->GetLabel().c_str(), pItem->m_strPath.c_str(), strType.c_str(), strBoxeeId.c_str(),bCanBlock);
 
-  CLog::Log(LOGDEBUG,"CBoxeeServerItemsLoader::LoadItem - Resolve item [label=%s][path=%s][type=%s][boxeeId=%s] returned [NumOfItems=%d] (bsil)(browse)", pItem->GetLabel().c_str(), pItem->m_strPath.c_str(), strType.c_str(), strBoxeeId.c_str(),items.Size());
+    succeeded = BoxeeUtils::BuildItemInfo(*pItem,items,!pItem->GetPropertyBOOL("IsMergedItem"));
 
-  //////////////////////////////////////////
-  // find the match returned item by type //
-  //////////////////////////////////////////
-
-  for (int i=0; i<items.Size(); i++)
-  {
-    CFileItemPtr newItem = items.Get(i);
-
-    // If the size is 1 always copy the item, if there are more than one item, only copy the one with matching type
-    if (items.Size() == 1 || strType == newItem->GetProperty("boxee-mediatype"))
+    if (!succeeded && !pItem->GetPropertyBOOL("infoLoaded"))
     {
-      CLog::Log(LOGDEBUG,"CBoxeeServerItemsLoader::LoadItem - [%d/%d] - Found a match for item [label=%s][type=%s] (bsil)(browse)", i, items.Size(), pItem->GetLabel().c_str(), strType.c_str());
+      CLog::Log(LOGERROR,"CBoxeeServerItemsLoader::LoadItem - FAILED to resolve item [label=%s][path=%s][type=%s][boxeeId=%s]. [NumOfItems=%d] (bsil)(browse)", pItem->GetLabel().c_str(), pItem->m_strPath.c_str(), strType.c_str(), strBoxeeId.c_str(),items.Size());
+    }
+  }
 
-      //////////////////////////////////////////////////////////
-      // Save important properties to copy them to a new item //
-      //////////////////////////////////////////////////////////
+  if (succeeded)
+  {
+    CLog::Log(LOGDEBUG,"CBoxeeServerItemsLoader::LoadItem - Resolve item [label=%s][path=%s][type=%s][boxeeId=%s] returned [NumOfItems=%d] (bsil)(browse)", pItem->GetLabel().c_str(), pItem->m_strPath.c_str(), strType.c_str(), strBoxeeId.c_str(),items.Size());
 
-      CStdString controlId = pItem->GetProperty("controlId");
-      CStdString windowId = pItem->GetProperty("windowId");
-      CStdString directoryPath = pItem->GetProperty("directoryPath");
-      CStdString itemId = pItem->GetProperty("itemId");
-      CStdString parentPath = pItem->GetProperty("parentPath");
+    //////////////////////////////////////////
+    // find the match returned item by type //
+    //////////////////////////////////////////
 
-      // Copy the newly retrieved item over the old one
-      *pItem = *newItem;
+    for (int i=0; i<items.Size(); i++)
+    {
+      CFileItemPtr newItem = items.Get(i);
 
-      ///////////////////////////
-      // copy saved properties //
-      ///////////////////////////
-
-      if (!controlId.IsEmpty())
+      // If the size is 1 always copy the item, if there are more than one item, only copy the one with matching type
+      if (items.Size() == 1 || strType == newItem->GetProperty("boxee-mediatype"))
       {
-        pItem->SetProperty("controlId", controlId);
-      }
+        CLog::Log(LOGDEBUG,"CBoxeeServerItemsLoader::LoadItem - [%d/%d] - Found a match for item [label=%s][type=%s] (bsil)(browse)", i, items.Size(), pItem->GetLabel().c_str(), strType.c_str());
 
-      if (!windowId.IsEmpty())
-      {
-        pItem->SetProperty("windowId", windowId);
-      }
+        //////////////////////////////////////////////////////////
+        // Save important properties to copy them to a new item //
+        //////////////////////////////////////////////////////////
 
-      if (!directoryPath.IsEmpty())
-      {
-        pItem->SetProperty("directoryPath", directoryPath);
-      }
+        CStdString controlId = pItem->GetProperty("controlId");
+        CStdString windowId = pItem->GetProperty("windowId");
+        CStdString directoryPath = pItem->GetProperty("directoryPath");
+        CStdString itemId = pItem->GetProperty("itemId");
+        CStdString parentPath = pItem->GetProperty("parentPath");
+        bool  isRemoteItem = pItem->GetPropertyBOOL("IsBoxeeServerItem");
+        bool  isTrailerItem = pItem->GetPropertyBOOL("istrailer");
 
-      if (!itemId.IsEmpty())
-      {
-        pItem->SetProperty("itemId", itemId);
-      }
+        // Copy the newly retrieved item over the old one
+        *pItem = *newItem;
 
-      if (!parentPath.IsEmpty())
-      {
-        pItem->SetProperty("parentPath", parentPath);
+        ///////////////////////////
+        // copy saved properties //
+        ///////////////////////////
+
+        if (!controlId.IsEmpty())
+        {
+          pItem->SetProperty("controlId", controlId);
+        }
+
+        if (!windowId.IsEmpty())
+        {
+          pItem->SetProperty("windowId", windowId);
+        }
+
+        if (!directoryPath.IsEmpty())
+        {
+          pItem->SetProperty("directoryPath", directoryPath);
+        }
+
+        if (!itemId.IsEmpty())
+        {
+          pItem->SetProperty("itemId", itemId);
+        }
+
+        if (!parentPath.IsEmpty())
+        {
+          pItem->SetProperty("parentPath", parentPath);
+        }
+
+        if (isTrailerItem)
+          pItem->SetProperty("istrailer",isTrailerItem);
+
+        pItem->SetProperty("IsBoxeeServerItem",isRemoteItem);
       }
     }
   }
 
+  if (bInfoLoaded)
+    succeeded = true;
+
   // In any case, activate the picture loader to retreive the thumb
   CPictureThumbLoader loader;
-  bool bResult = loader.LoadItem(pItem, bCanBlock);
-  return bResult;
+  succeeded &= loader.LoadItem(pItem, bCanBlock);
+  return succeeded;
 };
 

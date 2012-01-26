@@ -1,13 +1,12 @@
 #pragma once
 
-#include "GUIDialog.h"
-#include "GUIDialogBoxeeCtx.h"
+#include "GUIDialogBoxeeSeekableCtx.h"
 
-class CGUIDialogBoxeeMusicCtx : public CGUIDialogBoxeeCtx
+class CGUIDialogBoxeeMusicCtx : public CGUIDialogBoxeeSeekableCtx
 {
 public:
-  CGUIDialogBoxeeMusicCtx(void);
-  virtual ~CGUIDialogBoxeeMusicCtx(void);
+  CGUIDialogBoxeeMusicCtx();
+  virtual ~CGUIDialogBoxeeMusicCtx();
   virtual bool OnMessage(CGUIMessage &message);
   virtual void Update();
 

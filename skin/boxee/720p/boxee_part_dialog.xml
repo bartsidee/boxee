@@ -62,12 +62,12 @@
 					<texturefocus border="26">button_option_on.png</texturefocus>
 					<textureclick border="26">button_option_click.png</textureclick>
 					<onclick>-</onclick>
-					<label>[UPPERCASE]$LOCALIZE[116][/UPPERCASE]</label>
+					<label>[B]$LOCALIZE[116][/B]</label>
 					<aligny>center</aligny>
 					<textoffsetx>42</textoffsetx>
 					<textcolor>grey</textcolor>
 					<focusedcolor>white</focusedcolor>
-					<font>title16b</font>
+					<font>font16b</font>
 				</control>
 				<!-- Remove shortcut -->
 				<control type="button" id="20">
@@ -83,12 +83,12 @@
 					<texturefocus border="26">button_option_on.png</texturefocus>
 					<textureclick border="26">button_option_click.png</textureclick>
 					<onclick>-</onclick>
-					<label>[UPPERCASE]$LOCALIZE[1210][/UPPERCASE]</label>
+					<label>[B]$LOCALIZE[1210][/B]</label>
 					<aligny>center</aligny>
 					<textoffsetx>42</textoffsetx>
 					<textcolor>grey</textcolor>
 					<focusedcolor>white</focusedcolor>
-					<font>title16b</font>
+					<font>font16b</font>
 				</control>
 				<control type="button" id="30">
 					<visible>false</visible>
@@ -103,7 +103,7 @@
 					<texturenofocus>-</texturenofocus>
 					<texturefocus>-</texturefocus>
 					<textureclick>-</textureclick>
-					<label>[UPPERCASE]$LOCALIZE[222][/UPPERCASE]</label>
+					<label>[B]$LOCALIZE[222][/B]</label>
 					<aligny>center</aligny>
 					<textoffsetx>40</textoffsetx>
 					<textcolor>grey</textcolor>

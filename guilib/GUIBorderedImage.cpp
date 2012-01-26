@@ -42,7 +42,7 @@ CGUIBorderedImage::~CGUIBorderedImage(void)
 
 void CGUIBorderedImage::Render()
 {
-  if (!m_borderImage.GetFileName().IsEmpty() && m_texture.IsAllocated())
+  if (!m_borderImage.GetFileName().IsEmpty())
   {
     CRect rect = CRect(m_texture.GetXPosition(), m_texture.GetYPosition(), m_texture.GetXPosition() + m_texture.GetWidth(), m_texture.GetYPosition() + m_texture.GetHeight());
     rect.Intersect(m_texture.GetRenderRect());
@@ -61,10 +61,10 @@ void CGUIBorderedImage::AllocResources()
   CGUIImage::AllocResources();
 }
 
-void CGUIBorderedImage::FreeResources()
+void CGUIBorderedImage::FreeResources(bool immediately)
 {
-  m_borderImage.FreeResources();
-  CGUIImage::FreeResources();
+  m_borderImage.FreeResources(immediately);
+  CGUIImage::FreeResources(immediately);
 }
 
 void CGUIBorderedImage::DynamicResourceAlloc(bool bOnOff)

@@ -24,22 +24,27 @@
 
 #if defined(_WIN32) && defined(HAS_GL)
 #include "WinSystemWin32GL.h"
-extern CWinSystemWin32GL g_Windowing;
 #endif
 
 #if defined(_WIN32) && defined(HAS_DX)
 #include "WinSystemWin32DX.h"
-extern CWinSystemWin32DX g_Windowing;
 #endif
 
 #if defined(__APPLE__)
 #include "WinSystemOSXGL.h"
 extern CWinSystemOSXGL g_Windowing;
-#endif
 
-#if defined(HAS_GLX)
+#elif defined(HAS_GLX)
 #include "WinSystemX11GL.h"
 extern CWinSystemX11GL g_Windowing;
+
+#elif defined(HAS_GDL)
+#include "WinSystemGDLGLES.h"
+extern CWinSystemGDLGLES g_Windowing;
+
+#elif defined(HAS_EGL) && defined(HAS_GLES)
+#include "WinSystemEGLGLES.h"
+extern CWinSystemEGLGLES g_Windowing;
 #endif
 
 #endif // WINDOWING_FACTORY_H

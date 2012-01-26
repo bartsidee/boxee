@@ -74,7 +74,7 @@ ParseCommandLine(char** args)
     char** tmp = args+1;
 
     /* default values */
-    Options.in_filename     = NULL;
+    Options.in_filename   = NULL;
     Options.variable_name = NULL;
     Options.out_filename  = NULL;
 
@@ -101,7 +101,7 @@ ParseCommandLine(char** args)
     if (Options.out_filename == NULL) {
         fprintf(stderr, "ERROR: output filename missing\n");
         PrintUsageAndExit(args);
-}
+    }
 }
 
 /*----------------------------------------------------------------------
@@ -187,7 +187,7 @@ main(int /*argc*/, char** argv)
     if (out == NULL) {
         fprintf(stderr, "ERROR: cannot open out output file (%s): %s\n", 
             Options.out_filename, strerror(errno));
-        }
+    }
     fprintf(out,
 "/*****************************************************************\n"
 "|\n"
@@ -234,27 +234,27 @@ main(int /*argc*/, char** argv)
     fprintf(out, "NPT_UInt8 %s[] =\n", 
     	  Options.variable_name?Options.variable_name:"kData");
     fprintf(out, "{\n  ");
-        col = 0;
-        
-        /* rewind the input file */
-        fseek(in, 0, SEEK_SET);
+    col = 0;
+    
+    /* rewind the input file */
+    fseek(in, 0, SEEK_SET);
 
-        for (k = 0; k < data_block_size; k++) {
+    for (k = 0; k < data_block_size; k++) {
         //PrintHex(&data_block[k], 1);
         PrintHexForHeader(out, data_block[k]);
         if (k < data_block_size - 1) fprintf(out, ", ");
 
-            /* wrap around 20 columns */
-            if (++col > 19) {
-                col = 0;
+        /* wrap around 20 columns */
+        if (++col > 19) {
+            col = 0;
             fprintf(out, "\n  ");
-            }
         }
+    }
 
-        /* print footer */
+    /* print footer */
     fprintf(out, "\n};\n\n");  
-        
-        /* close file */
+    
+    /* close file */
     fclose(out);
 
     /* close file */

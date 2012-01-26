@@ -94,7 +94,9 @@ bool CVideoThumbLoader::ExtractThumb(const CStdString &strPath, const CStdString
   CUtil::GetExtension(strPath, strExt);
 
   if (CUtil::IsLiveTV(strPath)
+#ifndef HAS_UPNP_AV
   ||  CUtil::IsUPnP(strPath)
+#endif
   ||  CUtil::IsDAAP(strPath)
     || strExt.ToLower() == ".swf")
     return false;
@@ -183,14 +185,20 @@ bool CVideoThumbLoader::LoadItem(CFileItem* pItem, bool bCanBlock)
   {
     // look for remote thumbs
     CStdString thumb(pItem->GetThumbnailImage());
-    if (!CURL::IsFileOnly(thumb) && !CUtil::IsHD(thumb))
+    if (!CURI::IsFileOnly(thumb) && !CUtil::IsHD(thumb))
     {
-      pItem->SetProperty("OriginalThumb", thumb);
+      if (pItem->GetProperty("OriginalThumb").IsEmpty())
+      {
+        //when the item is loaded from the database we don't want to overwrite the original thumb by mistake because the user might have his own thumb
+        //related to http://jira.boxee.tv/browse/BOXEE-8488
+        pItem->SetProperty("OriginalThumb", thumb);
+      }
+
       if(CFile::Exists(cachedThumb))
-	  {
-          pItem->SetThumbnailImage(cachedThumb);
-		  retVal = true;
-	  }
+      {
+        pItem->SetThumbnailImage(cachedThumb);
+        retVal = true;
+      }
       else
       {
         if (!bCanBlock) 
@@ -207,16 +215,26 @@ bool CVideoThumbLoader::LoadItem(CFileItem* pItem, bool bCanBlock)
     }
     else
     {
-      if(CFile::Exists(cachedThumb) == false)
+      if (!CFile::Exists(cachedThumb))
       {
         // Thumb can not be found. Going to create the thumb by fetching the original thumb and save it in cache
         if (!bCanBlock) 
         {
-          // we should not retreive remote thumbs if requested not to block
+          if (pItem->GetProperty("OriginalThumb").IsEmpty())
+          {
+            pItem->SetProperty("OriginalThumb", thumb);
+          }
           return false;
         }
 
         CStdString originalThumb = pItem->GetProperty("OriginalThumb");
+
+        if (!pItem->GetThumbnailImage().IsEmpty() && (CUtil::IsHD(pItem->GetThumbnailImage()) || CUtil::IsSmb(pItem->GetThumbnailImage()) || CUtil::IsUPnP(pItem->GetThumbnailImage())) && CFile::Exists(pItem->GetThumbnailImage()))
+        {
+          //if the user has the thumb locally, use it
+          originalThumb = pItem->GetThumbnailImage();
+        }
+
         CStdString newCachedThumb = pItem->GetCachedPictureThumb();
 
         if(CPicture::CreateThumbnail(originalThumb, newCachedThumb,true ))
@@ -329,27 +347,27 @@ bool CMusicThumbLoader::LoadItem(CFileItem* pItem, bool bCanBlock)
 
     CLog::Log(LOGDEBUG,"CMusicThumbLoader::LoadItem, retrieve remote thumb = %s (musicthumb)", thumb.c_str());
 
-    if (!CURL::IsFileOnly(thumb) && !CUtil::IsHD(thumb))
+    if (!CURI::IsFileOnly(thumb) && !CUtil::IsHD(thumb))
     {
       // Path points to remote location, save it first
       pItem->SetProperty("OriginalThumb", thumb);
-
-      // We need to get the file from remote location
-      if (bCanBlock)
-      {
-        if(CPicture::CreateThumbnail(thumb, cachedThumb))
+      
+        // We need to get the file from remote location
+        if (bCanBlock)
         {
+          if(CPicture::CreateThumbnail(thumb, cachedThumb))
+          {
           CLog::Log(LOGDEBUG,"CMusicThumbLoader::LoadItem, set thumb = %s (musicthumb)", cachedThumb.c_str());
-          pItem->SetThumbnailImage(cachedThumb);
+            pItem->SetThumbnailImage(cachedThumb);
+          }
+          return true;
         }
-        return true;
+        else 
+        {
+          // we could not get thumb with local means and we should not block, return false
+          return false;
+        }
       }
-      else
-      {
-        // we could not get thumb with local means and we should not block, return false
-        return false;
-      }
-    }
     else
     {
       CLog::Log(LOGDEBUG,"CMusicThumbLoader::LoadItem, retrieve local thumb = %s (musicthumb)", thumb.c_str());

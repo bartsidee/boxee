@@ -37,7 +37,7 @@ extern "C" {
     #include <ffmpeg/avcodec.h>
   #endif
 #else
-#include "../ffmpeg/avcodec.h"
+#include "ffmpeg/libavcodec/avcodec.h"
 #endif
 }
 #endif
@@ -48,8 +48,8 @@ class CDVDStreamInfo
 {
 public:
   CDVDStreamInfo();
-  CDVDStreamInfo(const CDVDStreamInfo &right, bool withextradata );
-  CDVDStreamInfo(const CDemuxStream &right, bool withextradata );
+  CDVDStreamInfo(const CDVDStreamInfo &right, bool withextradata = true);
+  CDVDStreamInfo(const CDemuxStream &right, bool withextradata = true);
 
   ~CDVDStreamInfo();
 
@@ -63,7 +63,7 @@ public:
   CodecID codec;
   StreamType type;
   bool software;  //force software decoding
-
+  bool bitstream;  //force hardware bitstreaming for audio
 
   // VIDEO
   int fpsscale; // scale of 1000 and a rate of 29970 will result in 29.97 fps
@@ -86,6 +86,7 @@ public:
   // CODEC EXTRADATA
   void*        extradata; // extra data for codec to use
   unsigned int extrasize; // size of extra data
+  unsigned int codec_tag; // extra identifier hints for decoding
 
   bool operator==(const CDVDStreamInfo& right)      { return Equal(right, true);}
   bool operator!=(const CDVDStreamInfo& right)      { return !Equal(right, true);}

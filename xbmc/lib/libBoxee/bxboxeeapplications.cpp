@@ -50,7 +50,7 @@ bool BXBoxeeApplications::Parse()
   
   m_applications.clear();
   m_applicationIdsMap.clear();
-
+  
   TiXmlNode *pMsgNode = 0;
   while ((pMsgNode = pChild->IterateChildren(pMsgNode)) != NULL)
   {
@@ -106,7 +106,7 @@ bool BXBoxeeApplications::IsApplicationIdExist(std::string appId)
   if(it == m_applicationIdsMap.end())
   {
     return false;
-  }
+}
   else
   {
     return true;

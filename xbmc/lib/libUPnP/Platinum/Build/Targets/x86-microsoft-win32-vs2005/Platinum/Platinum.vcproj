@@ -17,8 +17,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="Debug"
-			IntermediateDirectory="Debug"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			CharacterSet="2"
@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\Source\Platinum;..\..\..\..\Source\Core;..\..\..\..\Source\Devices\MediaServer;..\..\..\..\..\Neptune\Source\Core"
+				AdditionalIncludeDirectories="..\..\..\..\Source\Platinum;..\..\..\..\Source\Core;..\..\..\..\Source\Devices\MediaServer;..\..\..\..\Source\Devices\MediaRenderer;..\..\..\..\..\Neptune\Source\Core"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;NPT_CONFIG_ENABLE_LOGGING;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -84,8 +84,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="Release"
-			IntermediateDirectory="Release"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			CharacterSet="2"
@@ -107,7 +107,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\Source\Platinum;..\..\..\..\Source\Core;..\..\..\..\Source\Devices\MediaServer;..\..\..\..\..\Neptune\Source\Core"
+				AdditionalIncludeDirectories="..\..\..\..\Source\Platinum;..\..\..\..\Source\Core;..\..\..\..\Source\Devices\MediaServer;..\..\..\..\Source\Devices\MediaRenderer;..\..\..\..\..\Neptune\Source\Core"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -190,10 +190,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\Source\Core\PltDownloader.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\..\..\..\Source\Core\PltEvent.cpp"
 					>
 				</File>
@@ -215,18 +211,6 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\Source\Core\PltIconsData.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\Source\Core\PltLeaks.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\Source\Core\PltMetadataHandler.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\Source\Core\PltRingBufferStream.cpp"
 					>
 				</File>
 				<File
@@ -308,11 +292,15 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\Source\Devices\MediaServer\PltMediaPlaylist.cpp"
+					RelativePath="..\..\..\..\Source\Devices\MediaServer\PltMediaServer.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\Source\Devices\MediaServer\PltMediaServer.cpp"
+					RelativePath="..\..\..\..\Source\Devices\MediaServer\PltMimeType.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\Devices\MediaServer\PltProtocolInfo.cpp"
 					>
 				</File>
 				<File
@@ -328,15 +316,15 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\Source\Devices\MediaRenderer\ConnectionManagerSCPD.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\..\..\..\Source\Devices\MediaRenderer\PltMediaController.cpp"
 					>
 				</File>
 				<File
 					RelativePath="..\..\..\..\Source\Devices\MediaRenderer\PltMediaRenderer.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\Devices\MediaRenderer\RdrConnectionManagerSCPD.cpp"
 					>
 				</File>
 				<File
@@ -352,7 +340,123 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\Source\Devices\MediaConnect\PltXbox360.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\Devices\MediaConnect\PltXbox360.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\Source\Devices\MediaConnect\X_MS_MediaReceiverRegistrarSCPD.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Extras"
+				>
+				<File
+					RelativePath="..\..\..\..\Source\Extras\PltDownloader.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\Extras\PltFrameBuffer.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\Extras\PltFrameServer.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\Extras\PltFrameStream.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\Extras\PltLeaks.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\Extras\PltMetadataHandler.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\Extras\PltRingBufferStream.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\Extras\PltStreamPump.cpp"
 					>
 				</File>
 			</Filter>
@@ -402,10 +506,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\Source\Core\PltDownloader.h"
-					>
-				</File>
-				<File
 					RelativePath="..\..\..\..\Source\Core\PltEvent.h"
 					>
 				</File>
@@ -427,18 +527,6 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\Source\Core\PltHttpServerTask.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\Source\Core\PltLeaks.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\Source\Core\PltMetadataHandler.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\Source\Core\PltRingBufferStream.h"
 					>
 				</File>
 				<File
@@ -510,11 +598,15 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\Source\Devices\MediaServer\PltMediaPlaylist.h"
+					RelativePath="..\..\..\..\Source\Devices\MediaServer\PltMediaServer.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\Source\Devices\MediaServer\PltMediaServer.h"
+					RelativePath="..\..\..\..\Source\Devices\MediaServer\PltMimeType.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\Devices\MediaServer\PltProtocolInfo.h"
 					>
 				</File>
 				<File
@@ -543,6 +635,42 @@
 				>
 				<File
 					RelativePath="..\..\..\..\Source\Devices\MediaConnect\PltMediaConnect.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Extras"
+				>
+				<File
+					RelativePath="..\..\..\..\Source\Extras\PltDownloader.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\Extras\PltFrameBuffer.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\Extras\PltFrameServer.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\Extras\PltFrameStream.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\Extras\PltLeaks.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\Extras\PltMetadataHandler.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\Extras\PltRingBufferStream.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\Extras\PltStreamPump.h"
 					>
 				</File>
 			</Filter>

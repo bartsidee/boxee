@@ -1,5 +1,5 @@
 /**
- * @file libavutil/timer.h
+ * @file
  * high precision timer, useful to profile code
  *
  * copyright (c) 2006 Michael Niedermayer <michaelni@gmx.at>
@@ -39,7 +39,7 @@
 #endif
 
 #if !defined(AV_READ_TIME) && HAVE_GETHRTIME
-#define AV_READ_TIME gethrtime
+#   define AV_READ_TIME gethrtime
 #endif
 
 #ifdef AV_READ_TIME

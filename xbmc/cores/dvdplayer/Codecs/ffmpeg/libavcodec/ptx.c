@@ -20,6 +20,7 @@
  */
 
 #include "libavutil/intreadwrite.h"
+#include "libavcore/imgutils.h"
 #include "avcodec.h"
 
 typedef struct PTXContext {
@@ -64,7 +65,7 @@ static int ptx_decode_frame(AVCodecContext *avctx, void *data, int *data_size,
     if (p->data[0])
         avctx->release_buffer(avctx, p);
 
-    if (avcodec_check_dimensions(avctx, w, h))
+    if (av_image_check_size(w, h, 0, avctx))
         return -1;
     if (w != avctx->width || h != avctx->height)
         avcodec_set_dimensions(avctx, w, h);
@@ -105,9 +106,9 @@ static av_cold int ptx_end(AVCodecContext *avctx) {
     return 0;
 }
 
-AVCodec ptx_decoder = {
+AVCodec ff_ptx_decoder = {
     "ptx",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_PTX,
     sizeof(PTXContext),
     ptx_init,

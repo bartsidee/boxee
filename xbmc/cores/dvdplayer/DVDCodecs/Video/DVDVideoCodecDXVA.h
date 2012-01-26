@@ -57,7 +57,7 @@ public:
   virtual ~CDVDVideoCodecDXVA();
   virtual bool Open(CDVDStreamInfo &hints, CDVDCodecOptions &options);  
   virtual void Dispose();
-  virtual int Decode(BYTE* pData, int iSize, double pts);
+  virtual int Decode(BYTE* pData, int iSize, double pts, double dts);
   virtual void Reset();
   virtual bool GetPicture(DVDVideoPicture* pDvdVideoPicture);
   virtual void SetDropState(bool bDrop);
@@ -112,6 +112,7 @@ protected:
   int m_iScreenWidth;
   int m_iScreenHeight;
 
+  DllAvCore  m_dllAvCore;
   DllAvCodec m_dllAvCodec;
   DllAvUtil  m_dllAvUtil;
   std::string m_name;

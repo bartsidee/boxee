@@ -74,7 +74,7 @@ private:
 };
 
 /// \brief DateTime class, which uses FILETIME as it's base.
-class CDateTime : public ISerializable
+class CDateTime : public IArchivable
 {
 public:
   CDateTime();
@@ -141,7 +141,7 @@ public:
 
   operator FILETIME() const;
 
-  virtual void Serialize(CArchive& ar);
+  virtual void Archive(CArchive& ar);
 
   void Reset();
 
@@ -158,12 +158,14 @@ public:
   void SetDate(int year, int month, int day);
   void SetTime(int hour, int minute, int second);
   void SetFromDBDate(const CStdString &date);
+  void SetFromDBDateTime(const CStdString &date);
 
   void GetAsSystemTime(SYSTEMTIME& time) const;
   void GetAsTime(time_t& time) const;
   void GetAsTm(tm& time) const;
   void GetAsTimeStamp(FILETIME& time) const;
 
+  CDateTime GetAsUTCDateTime() const;
   CStdString GetAsDBDateTime() const;
   CStdString GetAsDBDate() const;
   CStdString GetAsLocalizedDate(bool longDate=false) const;
@@ -171,6 +173,8 @@ public:
   CStdString GetAsLocalizedDateTime(bool longDate=false, bool withSeconds=true) const;
   CStdString GetAsddMMMYYYYDate();
   CStdString ConvertMonthToString(int month);
+  CStdString ConvertDayofWeekToString(int day);
+  CStdString GetAsRFC1123DateTime() const;
 
   void SetValid(bool yesNo);
   bool IsValid() const;

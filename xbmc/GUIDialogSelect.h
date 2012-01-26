@@ -32,6 +32,7 @@ class CGUIDialogSelect :
 {
 public:
   CGUIDialogSelect(void);
+  CGUIDialogSelect(int id, const CStdString &xmlFile);
   virtual ~CGUIDialogSelect(void);
   virtual bool OnMessage(CGUIMessage& message);
 
@@ -50,6 +51,7 @@ public:
   void Sort(bool bSortOrder = true);
   void SetSelected(int iSelected);
 protected:
+  void InitSelectDialog();
   bool m_bButtonEnabled;
   bool m_bButtonPressed;
   int m_iSelected;

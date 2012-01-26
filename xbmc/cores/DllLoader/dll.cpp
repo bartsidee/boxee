@@ -27,6 +27,7 @@
 #include <climits>
 #include "FileSystem/SpecialProtocol.h"
 #include "utils/log.h"
+#include "ThreadPolicy.h"
 
 #define DEFAULT_DLLPATH "special://xbmc/system/players/mplayer/codecs/"
 #define HIGH_WORD(a) ((uintptr_t)(a) >> 16)
@@ -122,6 +123,13 @@ extern "C" HMODULE __stdcall dllLoadLibraryExExtended(LPCSTR lpLibFileName, HAND
 {
   char strFlags[512];
   strFlags[0] = '\0';
+  bool safeToOpen = true;
+  ThreadIdentifier tid = 0;
+#if defined(_LINUX)
+  tid = pthread_self();
+#elif defined(_WIN32)
+  tid = GetCurrentThreadId();
+#endif
 
   if (dwFlags & DONT_RESOLVE_DLL_REFERENCES) strcat(strFlags, "\n - DONT_RESOLVE_DLL_REFERENCES");
   if (dwFlags & LOAD_IGNORE_CODE_AUTHZ_LEVEL) strcat(strFlags, "\n - LOAD_IGNORE_CODE_AUTHZ_LEVEL");
@@ -130,6 +138,19 @@ extern "C" HMODULE __stdcall dllLoadLibraryExExtended(LPCSTR lpLibFileName, HAND
 
   CLog::Log(LOGDEBUG, "LoadLibraryExA called with flags: %s", strFlags);
   
+  FileSystemItem item;
+  item.fileName = (char*)lpLibFileName;
+  item.accessMode = "rb";
+
+  if(TPApplyPolicy(tid, SHARED_LIBRARY, &item, &safeToOpen) && !safeToOpen)
+  {
+    CLog::Log(LOGDEBUG, "%s: Access denied for %s", __FUNCTION__, lpLibFileName);
+#ifdef WIN32
+    SetLastError(ERROR_ACCESS_DENIED);
+#endif
+    return NULL;
+  }
+
   return dllLoadLibraryExtended(lpLibFileName, sourcedll);
 }
 

@@ -74,6 +74,12 @@ public:
     static void   ReleaseInstance(bool bWait);
     static bool   IsInstantiated() { return upnp != NULL; }
 
+    // fences for m_MediaBrowser class methods; ugly because the class is defined in the cpp.
+    void AddFriendlyName( const CStdString& device_id, const CStdString& object_id, const CStdString& friendly_name );
+    bool GetFriendlyName( const CStdString& device_id, const CStdString& object_id, CStdString& friendly_name );
+    bool GetFriendlyPath( const CStdString& path, CStdString& friendly_path );
+  
+  
 private:
     // methods
     CUPnPRenderer* CreateRenderer(int port = 0);

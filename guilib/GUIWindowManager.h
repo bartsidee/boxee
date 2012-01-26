@@ -32,6 +32,7 @@
 #include "GUIWindow.h"
 #include "IWindowManagerCallback.h"
 #include "IMsgTargetCallback.h"
+#include "utils/Stopwatch.h"
 #include <set>
 
 class CGUIDialog;
@@ -51,9 +52,11 @@ public:
   bool SendMessage(int message, int senderID, int destID, int param1 = 0, int param2 = 0);
   bool SendMessage(CGUIMessage& message, int window);
   void Initialize();
+  void InitializeFBO();
   void Add(CGUIWindow* pWindow);
   void AddUniqueInstance(CGUIWindow *window);
   void AddCustomWindow(CGUIWindow* pWindow);
+  void RemoveCustomWindow(CGUIWindow* pWindow);
   void Remove(int id);
   void Delete(int id);
   void ActivateWindow(int iWindowID, const CStdString &strPath = "");
@@ -101,8 +104,10 @@ public:
   bool IsOverlayAllowed() const;
   void ShowOverlay(CGUIWindow::OVERLAY_STATE state);
   void GetActiveModelessWindows(std::vector<int> &ids);
-  void AddWindowObserver(DWORD dwObserverWindow, DWORD dwObervationTarget);
-  std::set<DWORD> GetWindowObservers(DWORD dwWindowId);
+//  void AddWindowObserver(DWORD dwObserverWindow, DWORD dwObervationTarget);
+//  std::set<DWORD> GetWindowObservers(DWORD dwWindowId);
+  void SetDirty(bool dirty) { m_bIsDirty = dirty; }
+  bool IsDirty() { return m_bIsDirty; }
 #ifdef _DEBUG
   void DumpTextureUse();
 #endif
@@ -118,6 +123,9 @@ private:
   void ActivateWindow_Internal(int windowID, const std::vector<CStdString> &params, bool swappingWindows);
   void Process_Internal(bool renderOnly = false);
   void Render_Internal();
+  bool IsColorBufferActive();
+  void RenderUsingFBO(CGUIWindow* pWindow);
+  void BuildStencilBuffer(CGUIWindow* pWindow);
 
   typedef std::map<int, CGUIWindow *> WindowMap;
   WindowMap m_mapWindows;
@@ -139,6 +147,13 @@ private:
   std::map<DWORD, std::set<DWORD> > m_mapWindowObservers;
 
   bool m_bShowOverlay;
+  
+  bool m_bIsDirty;
+
+  bool m_bUseFBO;
+  bool m_bFBOValid;
+  bool m_bFBOCreated;
+  CStopWatch m_colorBufferSW;
 };
 
 /*!

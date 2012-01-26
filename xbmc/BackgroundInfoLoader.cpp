@@ -194,7 +194,7 @@ void CBackgroundInfoLoader::StopThread(bool bDetach)
   {
     if (m_workers.size() > 0)
     {
-      CLog::Log(LOGDEBUG,"CBackgroundInfoLoader::StopThread - stopping %lu threads",m_workers.size());
+      CLog::Log(LOGDEBUG,"CBackgroundInfoLoader::StopThread - stopping %zu threads",m_workers.size());
 
       lock.Leave();
 
@@ -312,7 +312,7 @@ void CBackgroundInfoLoader::LoadImageProperty(CFileItem* pItem, const CStdString
 
 void CBackgroundInfoLoader::LoadCustomImages(CFileItem* pItem, bool bCanBlock)
 {
-  CLog::Log(LOGDEBUG,"CBackgroundInfoLoader::LoadCustomImages - Enter function with item [path=%s][label=%s]. [bCanBlock=%d] (custi)",(pItem->m_strPath).c_str(),(pItem->GetLabel()).c_str(),bCanBlock);
+  //CLog::Log(LOGDEBUG,"CBackgroundInfoLoader::LoadCustomImages - Enter function with item [path=%s][label=%s]. [bCanBlock=%d] (custi)",(pItem->m_strPath).c_str(),(pItem->GetLabel()).c_str(),bCanBlock);
   
   for (int nImage=0; nImage < 10; nImage++)
   {
@@ -325,7 +325,7 @@ void CBackgroundInfoLoader::LoadCustomImages(CFileItem* pItem, bool bCanBlock)
     
     CStdString strImagePath = pItem->GetProperty(strPropName);
     
-    CLog::Log(LOGDEBUG,"CBackgroundInfoLoader::LoadCustomImages - [%d] Going to try and download property [%s] value [ImagePath=%s] for item [path=%s][label=%s]. [bCanBlock=%d] (custi)",nImage,strPropName.c_str(),strImagePath.c_str(),(pItem->m_strPath).c_str(),(pItem->GetLabel()).c_str(),bCanBlock);
+    //CLog::Log(LOGDEBUG,"CBackgroundInfoLoader::LoadCustomImages - [%d] Going to try and download property [%s] value [ImagePath=%s] for item [path=%s][label=%s]. [bCanBlock=%d] (custi)",nImage,strPropName.c_str(),strImagePath.c_str(),(pItem->m_strPath).c_str(),(pItem->GetLabel()).c_str(),bCanBlock);
 
     // Get path for cache picture
     Crc32 crc;
@@ -337,14 +337,14 @@ void CBackgroundInfoLoader::LoadCustomImages(CFileItem* pItem, bool bCanBlock)
     
     cacheImagePath = _P(cacheImagePath);
     
-    CLog::Log(LOGDEBUG,"CBackgroundInfoLoader::LoadCustomImages - [%d] For image [ImagePath=%s] the cacheImagePath is [%s]. Item [path=%s][label=%s]. [bCanBlock=%d] (custi)",nImage,strImagePath.c_str(),cacheImagePath.c_str(),(pItem->m_strPath).c_str(),(pItem->GetLabel()).c_str(),bCanBlock);  
+    //CLog::Log(LOGDEBUG,"CBackgroundInfoLoader::LoadCustomImages - [%d] For image [ImagePath=%s] the cacheImagePath is [%s]. Item [path=%s][label=%s]. [bCanBlock=%d] (custi)",nImage,strImagePath.c_str(),cacheImagePath.c_str(),(pItem->m_strPath).c_str(),(pItem->GetLabel()).c_str(),bCanBlock);
 
     if(CFile::Exists(cacheImagePath))
     {
       // Picture exist in cache
       pItem->SetProperty(strPropName, cacheImagePath);
       
-      CLog::Log(LOGDEBUG,"CBackgroundInfoLoader::LoadCustomImages - [%d] cacheImagePath [%s] already exist and was set to property [%s=%s]. item [path=%s][label=%s]. [bCanBlock=%d] (custi)",nImage,cacheImagePath.c_str(),strPropName.c_str(),(pItem->GetProperty(strPropName)).c_str(),(pItem->m_strPath).c_str(),(pItem->GetLabel()).c_str(),bCanBlock);  
+      //CLog::Log(LOGDEBUG,"CBackgroundInfoLoader::LoadCustomImages - [%d] cacheImagePath [%s] already exist and was set to property [%s=%s]. item [path=%s][label=%s]. [bCanBlock=%d] (custi)",nImage,cacheImagePath.c_str(),strPropName.c_str(),(pItem->GetProperty(strPropName)).c_str(),(pItem->m_strPath).c_str(),(pItem->GetLabel()).c_str(),bCanBlock);
     }
     else
     {
@@ -357,7 +357,7 @@ void CBackgroundInfoLoader::LoadCustomImages(CFileItem* pItem, bool bCanBlock)
       {
         pItem->SetProperty(strPropName, cacheImagePath);
         
-        CLog::Log(LOGDEBUG,"CBackgroundInfoLoader::LoadCustomImages - [%d] successed downloading image. cacheImagePath [%s]  was set to property [%s=%s]. item [path=%s][label=%s]. [bCanBlock=%d] (custi)",nImage,cacheImagePath.c_str(),strPropName.c_str(),(pItem->GetProperty(strPropName)).c_str(),(pItem->m_strPath).c_str(),(pItem->GetLabel()).c_str(),bCanBlock);  
+        //CLog::Log(LOGDEBUG,"CBackgroundInfoLoader::LoadCustomImages - [%d] successed downloading image. cacheImagePath [%s]  was set to property [%s=%s]. item [path=%s][label=%s]. [bCanBlock=%d] (custi)",nImage,cacheImagePath.c_str(),strPropName.c_str(),(pItem->GetProperty(strPropName)).c_str(),(pItem->m_strPath).c_str(),(pItem->GetLabel()).c_str(),bCanBlock);
       }
       else
       {

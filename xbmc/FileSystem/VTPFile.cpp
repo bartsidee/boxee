@@ -1,4 +1,7 @@
 #include "system.h" // WIN32INCLUDES - this is for SD_BOTH primarily, and must be included prior to VTPFile.h for some reason
+
+#ifdef HAS_FILESYSTEM_VTP
+
 #include "VTPFile.h"
 #include "VTPSession.h"
 #include "Util.h"
@@ -35,10 +38,10 @@ void CVTPFile::Close()
   m_socket  = INVALID_SOCKET;
 }
 
-bool CVTPFile::Open(const CURL& url2)
+bool CVTPFile::Open(const CURI& url2)
 {
   Close();
-  CURL url(url2);
+  CURI url(url2);
   if(url.GetHostName() == "")
     url.SetHostName("localhost");
 
@@ -201,3 +204,5 @@ bool CVTPFile::SelectChannel(unsigned int channel)
   else
     return false;
 }
+
+#endif

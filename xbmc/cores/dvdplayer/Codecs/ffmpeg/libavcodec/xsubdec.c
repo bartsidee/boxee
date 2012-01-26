@@ -18,6 +18,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+#include "libavcore/imgutils.h"
 #include "avcodec.h"
 #include "get_bits.h"
 #include "bytestream.h"
@@ -76,7 +77,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size,
     // read header
     w = bytestream_get_le16(&buf);
     h = bytestream_get_le16(&buf);
-    if (avcodec_check_dimensions(avctx, w, h) < 0)
+    if (av_image_check_size(w, h, 0, avctx) < 0)
         return -1;
     x = bytestream_get_le16(&buf);
     y = bytestream_get_le16(&buf);
@@ -86,9 +87,9 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size,
     rlelen = bytestream_get_le16(&buf);
 
     // allocate sub and set values
-        sub->rects =  av_mallocz(sizeof(*sub->rects));
-        sub->rects[0] = av_mallocz(sizeof(*sub->rects[0]));
-        sub->num_rects = 1;
+    sub->rects =  av_mallocz(sizeof(*sub->rects));
+    sub->rects[0] = av_mallocz(sizeof(*sub->rects[0]));
+    sub->num_rects = 1;
     sub->rects[0]->x = x; sub->rects[0]->y = y;
     sub->rects[0]->w = w; sub->rects[0]->h = h;
     sub->rects[0]->type = SUBTITLE_BITMAP;
@@ -130,9 +131,9 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size,
     return buf_size;
 }
 
-AVCodec xsub_decoder = {
+AVCodec ff_xsub_decoder = {
     "xsub",
-    CODEC_TYPE_SUBTITLE,
+    AVMEDIA_TYPE_SUBTITLE,
     CODEC_ID_XSUB,
     0,
     decode_init,

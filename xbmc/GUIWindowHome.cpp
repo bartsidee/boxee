@@ -21,6 +21,8 @@
 
 #include "GUIWindowHome.h"
 #include "Key.h"
+#include "Settings.h"
+#include "LocalizeStrings.h"
 
 CGUIWindowHome::CGUIWindowHome(void) : CGUIWindow(WINDOW_HOME, "Home.xml")
 {
@@ -30,3 +32,9 @@ CGUIWindowHome::~CGUIWindowHome(void)
 {
 }
 
+void CGUIWindowHome::OnInitWindow()
+{
+  SetProperty("item-summary", g_localizeStrings.Get(10000));
+  SetProperty("item-summary-count", g_settings.m_vecProfiles[g_settings.m_iLastLoadedProfileIndex].getName());
+  CGUIWindow::OnInitWindow();
+}

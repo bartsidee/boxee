@@ -54,8 +54,9 @@
 #include "AdvancedSettings.h"
 #include "Settings.h"
 #include "utils/TimeUtils.h"
-#include "SpecialProtocol.h"
 #include "Application.h"
+#include "UPnPDirectory.h"
+#include "utils/Variant.h"
 
 //Boxee
 #include "BoxeeUtils.h"
@@ -99,6 +100,7 @@ CFileItem::CFileItem(const CStdString &path, const CAlbum& album)
     m_strThumbnailImage = album.thumbURL.m_url[0].m_url;
   else
     m_strThumbnailImage.clear();
+  m_bIsAlbum = true;
 
   SetProperty("description", album.strReview);
   SetProperty("theme", album.strThemes);
@@ -159,7 +161,7 @@ CFileItem::CFileItem(const CGenre& genre)
   GetMusicInfoTag()->SetGenre(genre.strGenre);
 }
 
-CFileItem::CFileItem(const CFileItem& item): CGUIListItem()
+CFileItem::CFileItem(const CFileItem& item): CGUIListItem(), IArchivable(item), ISerializable(item)
 {
   m_musicInfoTag = NULL;
   m_videoInfoTag = NULL;
@@ -255,6 +257,7 @@ const CFileItem& CFileItem::operator=(const CFileItem& item)
   m_bLabelPreformated=item.m_bLabelPreformated;
   FreeMemory();
   m_strPath = item.m_strPath;
+  m_bPlayableFolder = item.m_bPlayableFolder;
   m_bIsParentFolder = item.m_bIsParentFolder;
   m_iDriveType = item.m_iDriveType;
   m_bIsShareOrDrive = item.m_bIsShareOrDrive;
@@ -345,7 +348,7 @@ CFileItemPtr CFileItem::GetNextItem() const
   return m_nextItem; 
 }
 
-void CFileItem::SetPrevItem(CFileItemPtr prev)
+void         CFileItem::SetPrevItem(CFileItemPtr prev)
 {
   m_prevItem = prev;
 }
@@ -355,7 +358,7 @@ void CFileItem::ResetPrevItem()
   m_prevItem.reset();
 }
 
-void CFileItem::SetNextItem(CFileItemPtr next)
+void         CFileItem::SetNextItem(CFileItemPtr next)
 {
   m_nextItem = next;
 }
@@ -371,6 +374,25 @@ void CFileItem::ResetPrevAndNextItems()
   ResetNextItem();
 }
 
+bool CFileItem::HasPath()
+{
+  if (!m_strPath.IsEmpty())
+  {
+    return true;
+  }
+
+  if (HasLinksList())
+  {
+    CFileItemList* list = (CFileItemList*)m_linksFileItemList.get();
+    if (list->Size() > 0)
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void CFileItem::Reset()
 {
   m_strLabel2.Empty();
@@ -379,11 +401,13 @@ void CFileItem::Reset()
   FreeIcons();
   m_overlayIcon = ICON_OVERLAY_NONE;
   m_bSelected = false;
+  m_bIsAlbum = false;
   m_strDVDLabel.Empty();
   m_strTitle.Empty();
   m_strPath.Empty();
   m_dwSize = 0;
   m_bIsFolder = false;
+  m_bPlayableFolder = false;
   m_bIsParentFolder=false;
   m_bIsShareOrDrive = false;
   m_dateTime.Reset();
@@ -419,9 +443,9 @@ void CFileItem::Reset()
   SetInvalid();
 }
 
-void CFileItem::Serialize(CArchive& ar)
+void CFileItem::Archive(CArchive& ar)
 {
-  CGUIListItem::Serialize(ar);
+  CGUIListItem::Archive(ar);
 
   if (ar.IsStoring())
   {
@@ -432,6 +456,7 @@ void CFileItem::Serialize(CArchive& ar)
     int nDumpVersion = 3;
     ar << nDumpVersion;
     
+    ar << m_bPlayableFolder;
     ar << m_bIsParentFolder;
     ar << m_bLabelPreformated;
     ar << m_strPath;
@@ -504,6 +529,7 @@ void CFileItem::Serialize(CArchive& ar)
     
     m_bIsParentFolder = bIsParentFolder;
     
+    ar >> m_bPlayableFolder;
     ar >> m_bLabelPreformated;
     ar >> m_strPath;
     ar >> m_bIsShareOrDrive;
@@ -556,6 +582,28 @@ void CFileItem::Serialize(CArchive& ar)
     SetInvalid();
   }
 }
+
+void CFileItem::Serialize(CVariant& value)
+{
+  //CGUIListItem::Serialize(value["CGUIListItem"]);
+
+  value["strPath"] = m_strPath;
+  value["dateTime"] = (m_dateTime.IsValid()) ? m_dateTime.GetAsRFC1123DateTime() : "";
+  value["size"] = (int) m_dwSize / 1000;
+  value["DVDLabel"] = m_strDVDLabel;
+  value["title"] = m_strTitle;
+  value["extrainfo"] = m_extrainfo;
+
+  if (m_musicInfoTag)
+    (*m_musicInfoTag).Serialize(value["musicInfoTag"]);
+
+  if (m_videoInfoTag)
+    (*m_videoInfoTag).Serialize(value["videoInfoTag"]);
+
+  if (m_pictureInfoTag)
+    (*m_pictureInfoTag).Serialize(value["pictureInfoTag"]);
+}
+
 bool CFileItem::Exists() const
 {
   if (m_strPath.IsEmpty() || m_strPath.Equals("add") || IsInternetStream() || IsParentFolder() || IsVirtualDirectoryRoot() || IsPlugin())
@@ -587,6 +635,8 @@ bool CFileItem::IsVideo() const
 {
   if (HasVideoInfoTag()) return true;
 
+  if(IsPlayableFolder()) return true;
+
   /* check preset content type */
   if( m_contenttype.Left(6).Equals("video/") )
     return true;
@@ -609,6 +659,9 @@ bool CFileItem::IsVideo() const
 
   if (m_strPath.Left(4).Equals("dvd:"))
     return true;
+
+   if(m_bPlayableFolder)
+     return true;
 
   CStdString extension;
   if( m_contenttype.Left(12).Equals("application/") )
@@ -723,9 +776,36 @@ bool CFileItem::IsLastFM() const
   return CUtil::IsLastFM(m_strPath);
 }
 
+bool CFileItem::IsInternetPlayList() const
+{
+  CURI url(m_strPath);
+  CStdString strProtocol = url.GetProtocol();
+  strProtocol.ToLower();
+
+  if (strProtocol == "playlist")
+  {
+    CStdString path = url.GetUrlWithoutOptions();
+    if (path.IsEmpty())
+      path = m_strPath;
+
+    // remove playlist://
+    path = path.substr(11);
+    CUtil::UrlDecode(path);
+    CURI u(path);
+
+    strProtocol = u.GetProtocol();
+    strProtocol.ToLower();
+
+    if(strProtocol == "http")
+      return true;
+  }
+
+  return false;
+}
+
 bool CFileItem::IsInternetStream() const
 {
-  CURL url(m_strPath);
+  CURI url(m_strPath);
   CStdString strProtocol = url.GetProtocol();
   strProtocol.ToLower();
 
@@ -880,8 +960,8 @@ bool CFileItem::IsRAR() const
     strPath2.Replace(token,strNumber);
     if (atoi(token.substr(4).c_str()) > 1 && CFile::Stat(strPath2,&stat) == 0)
     {
-      return false;
-    }
+  return false;
+}
     return true;
 
   }
@@ -912,13 +992,13 @@ bool CFileItem::IsStack() const
 
 bool CFileItem::IsPlugin() const
 {
-  CURL url(m_strPath);
+  CURI url(m_strPath);
   return url.GetProtocol().Equals("plugin") && !url.GetFileName().IsEmpty();
 }
 
 bool CFileItem::IsPluginRoot() const
 {
-  CURL url(m_strPath);
+  CURI url(m_strPath);
   return url.GetProtocol().Equals("plugin") && url.GetFileName().IsEmpty();
 }
 
@@ -977,6 +1057,16 @@ bool CFileItem::IsUPnP() const
   return CUtil::IsUPnP(m_strPath);
 }
 
+bool CFileItem::IsNFS() const
+{
+  return CUtil::IsNfs(m_strPath);
+}
+
+bool CFileItem::IsAFP() const
+{
+  return CUtil::IsAfp(m_strPath);
+}
+
 bool CFileItem::IsMythTV() const
 {
   return CUtil::IsMythTV(m_strPath);
@@ -1021,7 +1111,7 @@ bool CFileItem::IsVirtualDirectoryRoot() const
 
 bool CFileItem::IsMemoryUnit() const
 {
-  CURL url(m_strPath);
+  CURI url(m_strPath);
   return url.GetProtocol().Left(3).Equals("mem");
 }
 
@@ -1070,14 +1160,36 @@ bool CFileItem::IsBoxeeDb() const
 
 bool CFileItem::IsHidden() const
 {
-	CURL url(m_strPath);
+	CURI url(m_strPath);
 	return url.GetFileName().Left(1).Equals(".");
+}
+
+void CFileItem::SetPlayableFolder(bool isDVD)
+{
+  if(isDVD)
+  {
+    this->SetProperty("isDVDFolder", true);
+    this->SetProperty("contenttype", "dvd/folder");
+  }
+  else
+  {
+    this->SetProperty("isBlurayFolder", true);
+    this->SetProperty("contenttype", "bluray/folder");
+  }
+
+  m_bPlayableFolder = 1;
+}
+
+bool CFileItem::IsPlayableFolder() const
+{
+  return m_bPlayableFolder;
 }
 
 void CFileItem::Dump() const
 {
   CLog::Log(LOGDEBUG,"============================FileItem Dump Start===================================");
   CLog::Log(LOGDEBUG,"Is Folder: %s", m_bIsFolder?"true":"false");
+  CLog::Log(LOGDEBUG,"Is Playable Folder: %s", m_bPlayableFolder?"true":"false");
   CLog::Log(LOGDEBUG,"Is Parent Folder: %s", m_bIsParentFolder?"true":"false");
   CLog::Log(LOGDEBUG,"Label: %s", GetLabel().c_str());
   CLog::Log(LOGDEBUG,"Label2: %s", m_strLabel2.c_str());
@@ -1114,7 +1226,7 @@ void CFileItem::Dump() const
   else
     CLog::Log(LOGDEBUG,"** No music info tag");
 
-  CLog::Log(LOGDEBUG,"Properties (%lu):", m_mapProperties.size());
+  CLog::Log(LOGDEBUG,"Properties (%zu):", m_mapProperties.size());
   std::map<CStdString, CStdString,icompare>::const_iterator iter = m_mapProperties.begin();
   while (iter != m_mapProperties.end())
   {
@@ -1349,11 +1461,6 @@ void CFileItem::SetFileSizeLabel()
     SetLabel2(StringUtils::SizeToString(m_dwSize));
 }
 
-CURL CFileItem::GetAsUrl() const
-{
-  return CURL(m_strPath);
-}
-
 bool CFileItem::CanQueue() const
 {
   return m_bCanQueue;
@@ -1390,38 +1497,66 @@ const CStdString& CFileItem::GetContentType(bool bAllowQuery) const
       {
         m_ref = "x-directory/normal";
       }
-      else if( bAllowQuery &&
-              (m_strPath.Left(8).Equals("shout://")
-            || m_strPath.Left(7).Equals("http://")
-            || m_strPath.Left(8).Equals("https://")
-            || m_strPath.Left(7).Equals("upnp://")))
+      else if (bAllowQuery)
       {
-        CFileCurl::GetContent(GetAsUrl(), m_ref);
+        // dconti- this block is terrible; we are doing a network round trip
+        // just to get the content type
+        /* bondar - takes ridiculous amount of time
+        if (m_strPath.Left(7).Equals("upnp://"))
+        {
+          CUPnPDirectory dir;
+          CFileItemList list;
 
-      // try to get content type again but with an NSPlayer User-Agent
-      // in order for server to provide correct content-type.  Allows us
-      // to properly detect an MMS stream
-      if (m_ref.Left(11).Equals("video/x-ms-"))
-        CFileCurl::GetContent(GetAsUrl(), m_ref, "NSPlayer/11.00.6001.7000");
+          CStdString strPath = m_strPath;
+          CUtil::UrlDecode(strPath);
+          CUtil::AddSlashAtEnd(strPath);
+          if (dir.GetDirectory(strPath, list))
+          {
+            if (!list.IsEmpty())
+            {
+              m_ref = list[0]->GetContentType();
+              CLog::Log(LOGDEBUG,"CFileItem::GetContentType, FOUND CONTENT TYPE path:[%s].",strPath.c_str());
+            }
+            else
+            {
+              CLog::Log(LOGDEBUG,"CFileItem::GetContentType, empty list for directory path:[%s].",strPath.c_str());
+            }
+          }
+          else
+          {
+            CLog::Log(LOGDEBUG,"CFileItem::GetContentType, couldn't get content type for path:[%s].",strPath.c_str());
+          }
+        }
+        else*/
+        if (m_strPath.Left(8).Equals("shout://") || m_strPath.Left(7).Equals("http://") || m_strPath.Left(8).Equals("https://"))
+        {
+          CFileCurl::GetContent(CURI(m_strPath), m_ref);
 
-        // make sure there are no options set in content type
-        // content type can look like "video/x-ms-asf ; charset=utf8"
-        int i = m_ref.Find(';');
-        if(i>=0)
-          m_ref.Delete(i,m_ref.length()-i);
-        m_ref.Trim();
+          // try to get content type again but with an NSPlayer User-Agent
+          // in order for server to provide correct content-type.  Allows us
+          // to properly detect an MMS stream
+          if (m_ref.Left(11).Equals("video/x-ms-"))
+            CFileCurl::GetContent(CURI(m_strPath), m_ref, "NSPlayer/11.00.6001.7000");
+
+          // make sure there are no options set in content type
+          // content type can look like "video/x-ms-asf ; charset=utf8"
+          int i = m_ref.Find(';');
+          if (i >= 0)
+            m_ref.Delete(i, m_ref.length() - i);
+          m_ref.Trim();
+        }
+
+        // if it's still empty set to an unknown type
+        if (m_ref.IsEmpty() && bAllowQuery)
+          m_ref = "application/octet-stream";
       }
-
-      // if it's still empty set to an unknown type
-      if( m_ref.IsEmpty() && bAllowQuery)
-        m_ref = "application/octet-stream";
     }
     
     if (bAllowQuery)
     {
       ((CFileItem*)this) -> SetProperty("ContentTypeVerified",true);
       ((CFileItem*)this) -> SetProperty("NeedVerify",false);
-    }
+  }
   }
 
   // change protocol to mms for the following content-type.  Allows us to create proper FileMMS.
@@ -1554,13 +1689,41 @@ bool CFileItem::HasExternlFileItem() const
   return m_externalFileItem.get() != NULL;
 }
 
-bool CFileItem::AddLink(const CStdString& title, const CStdString& url, const CStdString& contentType, CLinkBoxeeType::LinkBoxeeTypeEnums boxeeTypeEnum, const CStdString& provider, const CStdString& providerName, const CStdString& providerThumb, const CStdString& countries, bool countriesRelAllow, const CStdString &qualityLabel, int quality)
+bool CFileItem::AddLink(const CFileItemPtr& linkItem , bool bPushBack)
 {
-  CFileItemPtr linkItem(new CFileItemList());
+  if (!linkItem->HasProperty("link-url") || !linkItem->HasProperty("link-boxeetype") || !linkItem->HasProperty("link-type") || !linkItem->HasProperty("contenttype"))
+  {
+    //like in the regular AddLink function, we must have certain properties in the link
+    return false;
+  }
 
+  if (!HasLinksList())
+  {
+    m_linksFileItemList = CFileItemPtr(new CFileItemList());
+  }
+
+  SetPropertyForLinkType(linkItem->GetProperty("link-boxeetype"), linkItem);
+  SetPropertyForLinkOffer(linkItem->GetProperty("link-boxeeoffer"), linkItem);
+
+  //CLog::Log(LOGDEBUG,"CFileItem::AddLink - [ItemLabel=%s][NumOfLinks=%d] - Adding link item at %s position [label=%s][path=%s][thumb=%s][contenttype=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-boxeeoffer=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d][quality-lbl=%s][quality=%d][is-hd=%s][productsList=%s] (bbma1)",GetLabel().c_str(),((CFileItemList*)m_linksFileItemList.get())->Size(),bPushBack?"Last":"First",linkItem->GetLabel().c_str(),linkItem->m_strPath.c_str(),linkItem->GetThumbnailImage().c_str(),linkItem->GetProperty("contenttype").c_str(),linkItem->GetProperty("link-title").c_str(),linkItem->GetProperty("link-url").c_str(),linkItem->GetProperty("link-boxeetype").c_str(),linkItem->GetProperty("link-boxeeoffer").c_str(),linkItem->GetProperty("link-type").c_str(),linkItem->GetProperty("link-provider").c_str(),linkItem->GetProperty("link-providername").c_str(),linkItem->GetProperty("link-providerthumb").c_str(),linkItem->GetProperty("link-countrycodes").c_str(),linkItem->GetPropertyBOOL("link-countryrel"),linkItem->GetProperty("quality-lbl").c_str(),linkItem->GetPropertyInt("quality"),linkItem->GetProperty("is-hd").c_str(),linkItem->GetProperty("link-productslist").c_str());
+
+  if (bPushBack)
+  {
+    ((CFileItemList*)m_linksFileItemList.get())->Add(linkItem);
+  }
+  else
+  {
+    ((CFileItemList*)m_linksFileItemList.get())->AddFront(linkItem,0);
+  }
+
+  return true;
+}
+
+bool CFileItem::CreateLink(CFileItemPtr& linkItem ,const CStdString& title, const CStdString& url, const CStdString& contentType, CLinkBoxeeType::LinkBoxeeTypeEnums boxeeTypeEnum, const CStdString& provider, const CStdString& providerName, const CStdString& providerThumb, const CStdString& countries, bool countriesRelAllow, const CStdString &qualityLabel, int quality, CLinkBoxeeOffer::LinkBoxeeOfferEnums boxeeOfferEnum, const CStdString& productsList)
+{
   if (title.IsEmpty())
   {
-    //CLog::Log(LOGDEBUG,"CFileItem::AddLink - [title] is empty so item label will be set to [Play]. [title=%s][url=%s][contentType=%s][boxeeType=%s][provider=%s][providerName=%s][providerThumb=%s][countries=%s][countriesRelAllow=%d] (bma)",title.c_str(),url.c_str(),contentType.c_str(),CFileItem::GetLinkBoxeeTypeAsString(boxeeTypeEnum).c_str(),provider.c_str(),providerName.c_str(),providerThumb.c_str(),countries.c_str(),countriesRelAllow);
+    //CLog::Log(LOGDEBUG,"CFileItem::AddLink - [title] is empty so item label will be set to [Play]. [title=%s][url=%s][contentType=%s][boxeeType=%s][provider=%s][providerName=%s][providerThumb=%s][countries=%s][countriesRelAllow=%d][qualityLabel=%s][quality=%d][boxeeOffer=%s][productsList=%s] (bma)",title.c_str(),url.c_str(),contentType.c_str(),CFileItem::GetLinkBoxeeTypeAsString(boxeeTypeEnum).c_str(),provider.c_str(),providerName.c_str(),providerThumb.c_str(),countries.c_str(),countriesRelAllow,qualityLabel.c_str(),quality,CFileItem::GetLinkBoxeeOfferAsString(boxeeOfferEnum).c_str(),productsList.c_str());
 
     linkItem->SetProperty("link-title","Play");
     linkItem->SetLabel("Play");
@@ -1573,7 +1736,7 @@ bool CFileItem::AddLink(const CStdString& title, const CStdString& url, const CS
 
   if (url.IsEmpty())
   {
-    CLog::Log(LOGERROR,"CFileItem::AddLink - Link will not be add because [url] is empty. [title=%s][url=%s][contentType=%s][boxeeType=%s][provider=%s][providerThumb=%s][countries=%s][countriesRelAllow=%d] (bma)",title.c_str(),url.c_str(),contentType.c_str(),CFileItem::GetLinkBoxeeTypeAsString(boxeeTypeEnum).c_str(),provider.c_str(),providerThumb.c_str(),countries.c_str(),countriesRelAllow);
+    CLog::Log(LOGERROR,"CFileItem::CreateLink - Link will not be created because [url] is empty. [title=%s][url=%s][contentType=%s][boxeeType=%s][provider=%s][providerThumb=%s][countries=%s][countriesRelAllow=%d][qualityLabel=%s][quality=%d][boxeeOffer=%s][productsList=%s] (bma)",title.c_str(),url.c_str(),contentType.c_str(),CFileItem::GetLinkBoxeeTypeAsString(boxeeTypeEnum).c_str(),provider.c_str(),providerThumb.c_str(),countries.c_str(),countriesRelAllow,qualityLabel.c_str(),quality,CFileItem::GetLinkBoxeeOfferAsString(boxeeOfferEnum).c_str(),productsList.c_str());
     return false;
   }
 
@@ -1585,15 +1748,27 @@ bool CFileItem::AddLink(const CStdString& title, const CStdString& url, const CS
   CStdString boxeeTypeStr = CFileItem::GetLinkBoxeeTypeAsString(boxeeTypeEnum);
   if (boxeeTypeStr.IsEmpty())
   {
-    CLog::Log(LOGERROR,"CFileItem::AddLink - Link will not be add because [boxeeTypeEnum=%d] is unknown. [title=%s][url=%s][contentType=%s][boxeeType=%s][provider=%s][providerThumb=%s][countries=%s][countriesRelAllow=%d] (bma)",boxeeTypeEnum,title.c_str(),url.c_str(),contentType.c_str(),CFileItem::GetLinkBoxeeTypeAsString(boxeeTypeEnum).c_str(),provider.c_str(),providerThumb.c_str(),countries.c_str(),countriesRelAllow);
+    CLog::Log(LOGERROR,"CFileItem::CreateLink - Link will not be created because [boxeeTypeEnum=%d] is unknown. [title=%s][url=%s][contentType=%s][boxeeType=%s][provider=%s][providerThumb=%s][countries=%s][countriesRelAllow=%d][qualityLabel=%s][quality=%d][boxeeOffer=%s][productsList=%s] (bma)",boxeeTypeEnum,title.c_str(),url.c_str(),contentType.c_str(),CFileItem::GetLinkBoxeeTypeAsString(boxeeTypeEnum).c_str(),provider.c_str(),providerThumb.c_str(),countries.c_str(),countriesRelAllow,qualityLabel.c_str(),quality,CFileItem::GetLinkBoxeeOfferAsString(boxeeOfferEnum).c_str(),productsList.c_str());
     return false;
   }
 
   linkItem->SetProperty("link-boxeetype",boxeeTypeStr);
 
+  // 130910 - Not handling BoxeeOffer at the moment
+  CStdString boxeeOfferStr = CFileItem::GetLinkBoxeeOfferAsString(boxeeOfferEnum);
+  if (boxeeOfferStr.IsEmpty())
+  {
+    // 140910 - don't fail link on BoxeeOffer since production server doesn't support it at the moment.
+    boxeeOfferStr = "unknown";
+    //CLog::Log(LOGERROR,"CFileItem::AddLink - Link will not be add because [boxeeOfferEnum=%d] is unknown. [title=%s][url=%s][contentType=%s][boxeeType=%s][provider=%s][providerThumb=%s][countries=%s][countriesRelAllow=%d][qualityLabel=%s][quality=%d][boxeeOffer=%s][productsList=%s] (bma)",boxeeOfferEnum,title.c_str(),url.c_str(),contentType.c_str(),CFileItem::GetLinkBoxeeTypeAsString(boxeeTypeEnum).c_str(),provider.c_str(),providerThumb.c_str(),countries.c_str(),countriesRelAllow,qualityLabel.c_str(),quality,boxeeOfferStr.c_str(),productsList.c_str());
+    //return false;
+  }
+
+  linkItem->SetProperty("link-boxeeoffer",boxeeOfferStr);
+
   if (contentType.IsEmpty())
   {
-    CLog::Log(LOGERROR,"CFileItem::AddLink - Link will not be add because [contentType] is empty. [title=%s][url=%s][contentType=%s][boxeeType=%s][provider=%s][providerThumb=%s][countries=%s][countriesRelAllow=%d] (bma)",title.c_str(),url.c_str(),contentType.c_str(),CFileItem::GetLinkBoxeeTypeAsString(boxeeTypeEnum).c_str(),provider.c_str(),providerThumb.c_str(),countries.c_str(),countriesRelAllow);
+    CLog::Log(LOGERROR,"CFileItem::CreateLink - Link will not be created because [contentType] is empty. [title=%s][url=%s][contentType=%s][boxeeType=%s][provider=%s][providerThumb=%s][countries=%s][countriesRelAllow=%d][qualityLabel=%s][quality=%d][boxeeOffer=%s][productsList=%s] (bma)",title.c_str(),url.c_str(),contentType.c_str(),CFileItem::GetLinkBoxeeTypeAsString(boxeeTypeEnum).c_str(),provider.c_str(),providerThumb.c_str(),countries.c_str(),countriesRelAllow,qualityLabel.c_str(),quality,CFileItem::GetLinkBoxeeOfferAsString(boxeeOfferEnum).c_str(),productsList.c_str());
     return false;
   }
 
@@ -1620,18 +1795,43 @@ bool CFileItem::AddLink(const CStdString& title, const CStdString& url, const CS
     linkItem->SetProperty("is-hd","true");
   }
 
-  if (!HasLinksList())
-  {
-    m_linksFileItemList = CFileItemPtr(new CFileItemList());
-  }
-
-  SetPropertyForLinkType(boxeeTypeStr, linkItem);
-
-  //CLog::Log(LOGDEBUG,"CFileItem::AddLink - [label=%s][NumOfLinks=%d] - Adding link item [label=%s][path=%s][thumb=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d] (bbma)",GetLabel().c_str(),((CFileItemList*)m_linksFileItemList.get())->Size(),linkItem->GetLabel().c_str(),linkItem->m_strPath.c_str(),linkItem->GetThumbnailImage().c_str(),linkItem->GetProperty("link-title").c_str(),linkItem->GetProperty("link-url").c_str(),linkItem->GetProperty("link-boxeetype").c_str(),linkItem->GetProperty("link-type").c_str(),linkItem->GetProperty("link-provider").c_str(),linkItem->GetProperty("link-providername").c_str(),linkItem->GetProperty("link-providerthumb").c_str(),linkItem->GetProperty("link-countrycodes").c_str(),linkItem->GetPropertyBOOL("link-countryrel"));
-
-  ((CFileItemList*)m_linksFileItemList.get())->Add(linkItem);
+  linkItem->SetProperty("link-productslist",productsList);
 
   return true;
+}
+
+bool CFileItem::AddLink(const CStdString& title, const CStdString& url, const CStdString& contentType, CLinkBoxeeType::LinkBoxeeTypeEnums boxeeTypeEnum, const CStdString& provider, const CStdString& providerName, const CStdString& providerThumb, const CStdString& countries, bool countriesRelAllow, const CStdString &qualityLabel, int quality, CLinkBoxeeOffer::LinkBoxeeOfferEnums boxeeOfferEnum, const CStdString& productsList , bool bPushBack)
+{
+  CFileItemPtr linkItem(new CFileItemList());
+
+  if (CFileItem::CreateLink(linkItem,title,url,contentType,boxeeTypeEnum, provider, providerName, providerThumb , countries, countriesRelAllow , qualityLabel, quality , boxeeOfferEnum, productsList))
+  {
+    if (!HasLinksList())
+    {
+      m_linksFileItemList = CFileItemPtr(new CFileItemList());
+    }
+
+    //CLog::Log(LOGDEBUG,"CFileItem::AddLink - [ItemLabel=%s][NumOfLinks=%d] - Adding link item at %s position [label=%s][path=%s][thumb=%s][contenttype=%s]. [link-title=%s][link-url=%s][link-boxeetype=%s][link-boxeeoffer=%s][link-type=%s][link-provider=%s][link-providername=%s][link-providerthumb=%s][link-countrycodes=%s][link-countryrel=%d][quality-lbl=%s][quality=%d][is-hd=%s][productsList=%s] (bbma)",GetLabel().c_str(),((CFileItemList*)m_linksFileItemList.get())->Size(), bPushBack?"last":"first",linkItem->GetLabel().c_str(),linkItem->m_strPath.c_str(),linkItem->GetThumbnailImage().c_str(),linkItem->GetProperty("contenttype").c_str(),linkItem->GetProperty("link-title").c_str(),linkItem->GetProperty("link-url").c_str(),linkItem->GetProperty("link-boxeetype").c_str(),linkItem->GetProperty("link-boxeeoffer").c_str(),linkItem->GetProperty("link-type").c_str(),linkItem->GetProperty("link-provider").c_str(),linkItem->GetProperty("link-providername").c_str(),linkItem->GetProperty("link-providerthumb").c_str(),linkItem->GetProperty("link-countrycodes").c_str(),linkItem->GetPropertyBOOL("link-countryrel"),linkItem->GetProperty("quality-lbl").c_str(),linkItem->GetPropertyInt("quality"),linkItem->GetProperty("is-hd").c_str(),linkItem->GetProperty("link-productslist").c_str());
+
+    SetPropertyForLinkType(linkItem->GetProperty("link-boxeetype"), linkItem);
+    SetPropertyForLinkOffer(linkItem->GetProperty("link-boxeeoffer"), linkItem);
+
+    if (bPushBack)
+    {
+      ((CFileItemList*)m_linksFileItemList.get())->Add(linkItem);
+    }
+    else
+    {
+      ((CFileItemList*)m_linksFileItemList.get())->AddFront(linkItem,0);
+    }
+
+    return true;
+  }
+  else
+  {
+    CLog::Log(LOGERROR,"CFileItem::AddLink - [ItemLabel=%s] - FAILED to add link. [title=%s][url=%s][contentType=%s][boxeeType=%s][provider=%s][providerThumb=%s][countries=%s][countriesRelAllow=%d][qualityLabel=%s][quality=%d][boxeeOffer=%s][productsList=%s] (bma)",GetLabel().c_str(),title.c_str(),url.c_str(),contentType.c_str(),CFileItem::GetLinkBoxeeTypeAsString(boxeeTypeEnum).c_str(),provider.c_str(),providerThumb.c_str(),countries.c_str(),countriesRelAllow,qualityLabel.c_str(),quality,CFileItem::GetLinkBoxeeOfferAsString(boxeeOfferEnum).c_str(),productsList.c_str());
+    return false;
+  }
 }
 
 void CFileItem::SetPropertyForLinkType(CStdString boxeeTypeStr, CFileItemPtr linkItem)
@@ -1642,22 +1842,22 @@ void CFileItem::SetPropertyForLinkType(CStdString boxeeTypeStr, CFileItemPtr lin
   {
   case CLinkBoxeeType::FEATURE:
   {
-    SetProperty("free-play",true);
-    linkItem->SetLabel(g_localizeStrings.Get(53770));
+    SetProperty("haslink-feature",true);
   }
   break;
   case CLinkBoxeeType::CLIP:
   {
-    SetProperty("clip-play",true);
+    SetProperty("haslink-clip",true);
     linkItem->SetLabel(g_localizeStrings.Get(53771));
   }
   break;
   case CLinkBoxeeType::TRAILER:
   {
-    SetProperty("trailer-play",true);
+    SetProperty("haslink-trailer",true);
     linkItem->SetLabel(g_localizeStrings.Get(53772));
   }
   break;
+  /*
   case CLinkBoxeeType::RENT:
   {
     SetProperty("rent-play",true);
@@ -1677,12 +1877,77 @@ void CFileItem::SetPropertyForLinkType(CStdString boxeeTypeStr, CFileItemPtr lin
     if (isRegisterToServices)
     {
       SetProperty("free-play",true);
+  }
+  }
+  break;
+  */
+  case CLinkBoxeeType::LOCAL:
+  {
+    SetProperty("haslink-free-local",true);
+  }
+  break;
+  default:
+  {
+    // do nothing
+  }
+  break;
+  }
+}
+
+void CFileItem::SetPropertyForLinkOffer(CStdString boxeeOfferStr, CFileItemPtr linkItem)
+{
+  CLinkBoxeeOffer::LinkBoxeeOfferEnums linkBoxeeOfferEnum = CFileItem::GetLinkBoxeeOfferAsEnum(boxeeOfferStr);
+
+  switch (linkBoxeeOfferEnum)
+  {
+  case CLinkBoxeeOffer::UNAVAILABLE:
+  {
+    SetProperty("haslink-unavailable",true);
+  }
+  break;
+  case CLinkBoxeeOffer::FREE:
+  {
+    SetProperty("haslink-free",true);
+    linkItem->SetLabel(g_localizeStrings.Get(53770));
+  }
+  break;
+  case CLinkBoxeeOffer::RENT:
+  {
+    SetProperty("haslink-rent",true);
+  }
+  break;
+  case CLinkBoxeeOffer::BUY:
+  {
+    SetProperty("haslink-buy",true);
+  }
+  break;
+  case CLinkBoxeeOffer::SUBSCRIPTION:
+  {
+    SetProperty("haslink-sub",true);
+
+    bool isEntitle = BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().IsInEntitlements(linkItem->GetProperty("link-productslist"));
+
+    if (isEntitle)
+    {
+      SetProperty("haslink-free",true);
     }
   }
   break;
-  case CLinkBoxeeType::LOCAL:
+  case CLinkBoxeeOffer::EXT_SUBSCRIPTION:
   {
-    SetProperty("free-play-local",true);
+    SetProperty("haslink-exsub",true);
+    linkItem->SetLabel(g_localizeStrings.Get(53773));
+
+    bool isRegisterToServices = BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().IsRegisterToServices(linkItem->GetProperty("link-provider"),BOXEE::CServiceIdentifierType::NAME);
+    if (isRegisterToServices)
+    {
+      SetProperty("haslink-free",true);
+      linkItem->SetLabel("");
+    }
+    else
+    {
+      linkItem->SetLabel(g_localizeStrings.Get(53773));
+    }
   }
   break;
   default:
@@ -1738,6 +2003,11 @@ void CFileItem::SortLinkList(CBoxeeSort& boxeeSort) const
   ((CFileItemList*)m_linksFileItemList.get())->Sort(boxeeSort);
 }
 
+bool CFileItem::IsAlbum() const
+{
+  return m_bIsAlbum;
+}
+
 /////////////////////////////////////////////////////////////////////////////////
 /////
 ///// CFileItemList
@@ -1765,7 +2035,7 @@ CFileItemList::CFileItemList(const CStdString& strPath)
   m_replaceListing = false;
 }
 
-CFileItemList::CFileItemList(const CFileItemList &itemList)
+CFileItemList::CFileItemList(const CFileItemList &itemList) :  CFileItem(itemList)
 {
   m_fastLookup = false;
   m_bIsFolder=true;
@@ -1790,6 +2060,21 @@ CFileItemPtr CFileItemList::operator[] (int iItem)
 const CFileItemPtr CFileItemList::operator[] (int iItem) const
 {
   return Get(iItem);
+}
+
+void CFileItemList::SetAtIndex(int iItem, const CFileItemPtr &pItem)
+{
+  CSingleLock lock(m_lock);
+
+  if ((int)m_items.size() <= iItem)
+    m_items.resize(iItem + 1);
+
+  m_items[iItem] = pItem;
+  if (m_fastLookup)
+  {
+    CStdString path(pItem->m_strPath); path.ToLower();
+    m_map.insert(MAPFILEITEMSPAIR(path, pItem));
+  }
 }
 
 CFileItemPtr CFileItemList::operator[] (const CStdString& strPath)
@@ -2035,6 +2320,7 @@ bool CFileItemList::Copy(const CFileItemList& items)
   // make a copy of each item
   for (int i = 0; i < items.Size(); i++)
   {
+    //CFileItemPtr newItem(items[i]);
     CFileItemPtr newItem(new CFileItem(*items[i]));
     Add(newItem);
   }
@@ -2168,6 +2454,22 @@ const CFileItemPtr CFileItemList::Get(const CStdString& strPropertyName, const C
   }
 
   return CFileItemPtr();
+}
+
+void CFileItemList::AssignTo(CFileItemList& outList, unsigned int start, unsigned int end)
+{
+  unsigned int itemsSize = m_items.size();
+  IVECFILEITEMS itListBegin = m_items.begin() + start;
+  IVECFILEITEMS itListEnd = m_items.begin() + end;
+
+  if (start < end && start < itemsSize && end <= itemsSize)
+  {
+    outList.m_items.insert(outList.m_items.begin(), itListBegin , itListEnd);
+  }
+  else
+  {
+
+  }
 }
 
 int CFileItemList::Size() const
@@ -2341,6 +2643,60 @@ void CFileItemList::Sort(SORT_METHOD sortMethod, SORT_ORDER sortOrder)
        Sort(sortOrder==SORT_ORDER_ASC ? SSortFileItem::RssItems : SSortFileItem::RssItems);
        bSorted = true;
        break;
+  case SORT_METHOD_APP_POPULARITY:
+       FillSortFields(SSortFileItem::ByAppPopularity);
+       // In case of SORT_METHOD_APP_POPULARITY and SortOrder was not set -> We want to sort in SORT_ORDER_DESC order
+       // that will match the "popularity" that was set to each item
+       if(sortOrder == SORT_ORDER_NONE)
+       {
+         sortOrder = SORT_ORDER_DESC;
+       }
+  break;
+  case SORT_METHOD_APP_RELEASE_DATE:
+       FillSortFields(SSortFileItem::ByAppReleaseDate);
+       // In case of SORT_METHOD_APP_RELEASE_DATE and SortOrder was not set -> We want to sort in SORT_ORDER_DESC order
+       // that will match the "popularity" that was set to each item
+       if(sortOrder == SORT_ORDER_NONE)
+       {
+         sortOrder = SORT_ORDER_DESC;
+       }
+  break;
+  case SORT_METHOD_APP_USAGE:
+       FillSortFields(SSortFileItem::ByAppUsage);
+       // In case of SORT_METHOD_APP_USAGE and SortOrder was not set -> We want to sort in SORT_ORDER_DESC order
+       // that will match the "popularity" that was set to each item
+       if(sortOrder == SORT_ORDER_NONE)
+       {
+         sortOrder = SORT_ORDER_DESC;
+       }
+  break;
+  case SORT_METHOD_APP_LAST_USED_DATE:
+       FillSortFields(SSortFileItem::ByAppLastUsedDate);
+       // In case of SORT_METHOD_APP_LAST_USED_DATE and SortOrder was not set -> We want to sort in SORT_ORDER_DESC order
+       // that will match the "popularity" that was set to each item
+       if(sortOrder == SORT_ORDER_NONE)
+       {
+         sortOrder = SORT_ORDER_DESC;
+       }
+  break;
+  case SORT_METHOD_RELEASE_DATE:
+  {
+/*     FillSortFields(SSortFileItem::ByReleaseDate);
+     if(sortOrder == SORT_ORDER_NONE)
+     {
+       sortOrder = SORT_ORDER_DESC;
+     }*/
+    Sort(sortOrder==SORT_ORDER_ASC ? SSortFileItem::ReleaseDateAscending : SSortFileItem::ReleaseDateDescending);
+    bSorted = true;
+  }
+  break;
+  case SORT_METHOD_SEARCH_COUNT:
+  {
+    Sort(sortOrder==SORT_ORDER_ASC ? SSortFileItem::SearchResultPopularity : SSortFileItem::SearchResultPopularity);
+    bSorted = true;
+    break;
+  }
+  break;
   default:
 	  break;
   }
@@ -2385,6 +2741,9 @@ void CFileItemList::Sort(CBoxeeSort& boxeeSort)
     break;
   case SORT_METHOD_ALBUM:
     FillSortFields(SSortFileItem::BySongAlbum);
+    break;
+  case SORT_METHOD_LINK_TITLE:
+    FillSortFields(SSortFileItem::ByLinkTitle);
     break;
   case SORT_METHOD_DEFAULT:
     FillSortFields(SSortFileItem::ByDefault);
@@ -2487,12 +2846,12 @@ void CFileItemList::Randomize()
   random_shuffle(m_items.begin(), m_items.end());
 }
 
-void CFileItemList::Serialize(CArchive& ar)
+void CFileItemList::Archive(CArchive& ar)
 {
   CSingleLock lock(m_lock);
   if (ar.IsStoring())
   {
-    CFileItem::Serialize(ar);
+    CFileItem::Archive(ar);
 
     // mark this as new-archive
     int nMark = -1;
@@ -2546,7 +2905,7 @@ void CFileItemList::Serialize(CArchive& ar)
     SetFastLookup(false);
     Clear();
 
-    CFileItem::Serialize(ar);
+    CFileItem::Archive(ar);
 
     int iSize = 0;
     int nMarker = 0;
@@ -2579,11 +2938,17 @@ void CFileItemList::Serialize(CArchive& ar)
     bool fastLookup=false;
     ar >> fastLookup;
 
-    ar >> (int&)m_sortMethod;
-    ar >> (int&)m_sortOrder;
+    int tmp;
+    ar >> tmp;
+    m_sortMethod = SORT_METHOD(tmp);
+    ar >> tmp;
+    m_sortOrder = SORT_ORDER(tmp);
 
     if (nVersion > 0)
-      ar >> (int&)m_cacheToDisc;
+    {
+      ar >> tmp;
+      m_cacheToDisc = CACHE_TYPE(tmp);
+    }
     else
     {
       bool bCache = true;
@@ -2599,7 +2964,8 @@ void CFileItemList::Serialize(CArchive& ar)
     for (unsigned int j = 0; j < detailSize; ++j)
     {
       SORT_METHOD_DETAILS details;
-      ar >> (int&)details.m_sortMethod;
+      ar >> tmp;
+      details.m_sortMethod = SORT_METHOD(tmp);
       ar >> details.m_buttonLabel;
       ar >> details.m_labelMasks.m_strLabelFile;
       ar >> details.m_labelMasks.m_strLabelFolder;
@@ -3240,7 +3606,7 @@ CStdString CFileItem::GetCachedPictureThumb() const
   if (!thumbPath.IsEmpty())
   {
     cachedPictureThumb = GetCachedThumb(thumbPath,g_settings.GetPicturesThumbFolder(),true);
-  }
+}
   else if (!m_strPath.IsEmpty() && (m_bIsFolder || IsPicture()))
   {
     cachedPictureThumb = GetCachedThumb(m_strPath,g_settings.GetPicturesThumbFolder(),true);
@@ -3336,7 +3702,7 @@ CStdString CFileItem::GetUserMusicThumb(bool alwaysCheckRemote /* = false */) co
 	
 	if (strPath == "") return "";
 	
-  CURL url(strPath);
+  CURI url(strPath);
   if (url.GetProtocol() == "rar" || url.GetProtocol() == "zip") return "";
   if (url.GetProtocol() == "upnp" || url.GetProtocol() == "ftp" || url.GetProtocol() == "ftps") return "";
 
@@ -3400,15 +3766,17 @@ void CFileItem::SetCachedPictureThumb()
   if (IsParentFolder()) return;
   CStdString cachedThumb(GetCachedPictureThumb());
   if (CFile::Exists(cachedThumb))
+  {
     SetThumbnailImage(cachedThumb);
+}
 }
 
 CStdString CFileItem::GetCachedVideoThumb() const
 {
   if (IsStack())
-    return GetCachedThumb(CStackDirectory::GetFirstStackedFile(_P(m_strPath)),g_settings.GetVideoThumbFolder(),true);
+    return GetCachedThumb(CStackDirectory::GetFirstStackedFile(m_strPath),g_settings.GetVideoThumbFolder(),true);
   else
-    return GetCachedThumb(_P(m_strPath),g_settings.GetVideoThumbFolder(),true);
+    return GetCachedThumb(m_strPath,g_settings.GetVideoThumbFolder(),true);
   }
 
 CStdString CFileItem::GetCachedEpisodeThumb() const
@@ -3456,7 +3824,7 @@ CStdString CFileItem::GetTBNFile() const
     CUtil::AddFileToFolder(strParent,CUtil::GetFileName(m_strPath),strFile);
   }
 
-  CURL url(strFile);
+  CURI url(strFile);
   strFile = url.GetFileName();
 
   if (m_bIsFolder && !IsFileFolder())
@@ -3469,21 +3837,23 @@ CStdString CFileItem::GetTBNFile() const
   else
     CUtil::ReplaceExtension(strFile, ".tbn", thumbFile);
     url.SetFileName(thumbFile);
-    url.GetURL(thumbFile);
+    thumbFile = url.Get();
   }
-    return thumbFile;
-  }
+  return thumbFile;
+}
 
 CStdString CFileItem::GetUserVideoThumb() const
 {
+#ifdef HAS_FILESYSTEM_TUXBOX
   if (IsTuxBox())
   {
     if (!m_bIsFolder)
       return g_tuxbox.GetPicon(GetLabel());
     else return "";
   }
+#endif
 
-  if (m_strPath.IsEmpty() 
+  if (m_strPath.IsEmpty()
   || m_bIsShareOrDrive
   || IsInternetStream()
   || CUtil::IsUPnP(m_strPath)
@@ -3502,7 +3872,8 @@ CStdString CFileItem::GetUserVideoThumb() const
   {
     CStdString strPath, movietbnFile;
     CUtil::GetParentPath(m_strPath, strPath);
-    CUtil::AddFileToFolder(strPath, "movie.tbn", movietbnFile);
+    //CUtil::AddFileToFolder(strPath, "movie.tbn", movietbnFile);
+    CUtil::AddFileToFolder(strPath, "folder.jpg", movietbnFile);
     if (CFile::Exists(movietbnFile))
       return movietbnFile;
   }
@@ -3678,7 +4049,7 @@ CStdString CFileItem::CacheFanart(bool probe) const
   CFileItemList items;
 
   if (CUtil::IsHD(strDir) || ( CUtil::IsSmb(strDir) && g_application.IsPathAvailable(strDir, false)))
-    CDirectory::GetDirectory(strDir, items, g_stSettings.m_pictureExtensions, false, false, DIR_CACHE_ALWAYS, false);
+  CDirectory::GetDirectory(strDir, items, g_stSettings.m_pictureExtensions, false, false, DIR_CACHE_ALWAYS, false);
 
   CStdStringArray fanarts;
   StringUtils::SplitString(g_advancedSettings.m_fanartImages, "|", fanarts);
@@ -3751,6 +4122,11 @@ CStdString CFileItem::GetCachedFanart() const
 
 CStdString CFileItem::GetCachedThumb(const CStdString &path, const CStdString &path2, bool split)
 {
+  if (path.length() == 0)
+  {
+    return path;
+  }
+
   // get the locally cached thumb
   Crc32 crc;
   crc.ComputeFromLowerCase(path);
@@ -4107,7 +4483,7 @@ void CFileItem::SetAdult(bool adult)
 bool CFileItem::IsCountryAllowed() const
 {
   bool isCountryAllowed = false;
-
+  
   if (!HasLinksList())
   {
     isCountryAllowed = CUtil::IsCountryAllowed(GetProperty("country-codes"), GetPropertyBOOL("country-rel"));
@@ -4131,7 +4507,7 @@ bool CFileItem::IsCountryAllowed() const
     }
   }
 
-  //CLog::Log(LOGDEBUG,"CFileItem::IsCountryAllowed() - For item [label=%s] going to return [isCountryAllowed=%d]. [country-codes=%s][country-rel=%d] (ica)",GetLabel().c_str(),isCountryAllowed,GetProperty("country-codes").c_str(),GetPropertyBOOL("country-rel"));
+  //CLog::Log(LOGDEBUG,"CFileItem::IsCountryAllowed() - For item [label=%s] going to return [isCountryAllowed=%d]. [country-codes=%s][country-rel=%d]. [cc=%s] (ica)",GetLabel().c_str(),isCountryAllowed,GetProperty("country-codes").c_str(),GetPropertyBOOL("country-rel"),g_application.GetCountryCode().c_str());
   return isCountryAllowed;
 }
 
@@ -4183,7 +4559,20 @@ bool CFileItem::IsAllowed() const
   }
   
   bool isCountryAllowed = IsCountryAllowed();
-  return isCountryAllowed;
+  if (!isCountryAllowed)
+  {
+    return false;
+  }
+
+#ifndef HAS_LASTFM
+  CURI url(m_strPath);
+  if (url.GetProtocol() == "lastfm")
+  {
+    return false;
+  }
+#endif
+
+  return true;
 }
 
 CLinkBoxeeType::LinkBoxeeTypeEnums CFileItem::GetLinkBoxeeTypeAsEnum(const CStdString& boxeeType)
@@ -4205,18 +4594,6 @@ CLinkBoxeeType::LinkBoxeeTypeEnums CFileItem::GetLinkBoxeeTypeAsEnum(const CStdS
   {
     boxeeTypeEnum = CLinkBoxeeType::TRAILER;
   }
-  else if (boxeeTypeStr == "rent")
-  {
-    boxeeTypeEnum = CLinkBoxeeType::RENT;
-  }
-  else if (boxeeTypeStr == "buy")
-  {
-    boxeeTypeEnum = CLinkBoxeeType::BUY;
-  }
-  else if (boxeeTypeStr == "subscription")
-  {
-    boxeeTypeEnum = CLinkBoxeeType::SUBSCRIPTION;
-  }
   else if (boxeeTypeStr == "local")
   {
     boxeeTypeEnum = CLinkBoxeeType::LOCAL;
@@ -4227,6 +4604,45 @@ CLinkBoxeeType::LinkBoxeeTypeEnums CFileItem::GetLinkBoxeeTypeAsEnum(const CStdS
   }
 
   return boxeeTypeEnum;
+}
+
+CLinkBoxeeOffer::LinkBoxeeOfferEnums CFileItem::GetLinkBoxeeOfferAsEnum(const CStdString& boxeeOffer)
+  {
+  CLinkBoxeeOffer::LinkBoxeeOfferEnums boxeeOfferEnum = CLinkBoxeeOffer::UNKNOWN;
+
+  CStdString boxeeOfferStr = boxeeOffer;
+  boxeeOfferStr = boxeeOfferStr.ToLower();
+
+  if (boxeeOfferStr == "unavailable")
+  {
+    boxeeOfferEnum = CLinkBoxeeOffer::UNAVAILABLE;
+  }
+  else if (boxeeOfferStr == "free")
+  {
+    boxeeOfferEnum = CLinkBoxeeOffer::FREE;
+  }
+  else if (boxeeOfferStr == "rent")
+  {
+    boxeeOfferEnum = CLinkBoxeeOffer::RENT;
+  }
+  else if (boxeeOfferStr == "buy")
+  {
+    boxeeOfferEnum = CLinkBoxeeOffer::BUY;
+  }
+  else if (boxeeOfferStr == "subscription")
+  {
+    boxeeOfferEnum = CLinkBoxeeOffer::SUBSCRIPTION;
+  }
+  else if (boxeeOfferStr == "external subscription" || boxeeOfferStr == "external_subscription")
+  {
+    boxeeOfferEnum = CLinkBoxeeOffer::EXT_SUBSCRIPTION;
+  }
+  else
+  {
+    CLog::Log(LOGDEBUG,"CFileItem::GetLinkBoxeeTypeAsEnum - Unknown boxeeType string [boxeeOffer=%s]",boxeeOffer.c_str());
+  }
+
+  return boxeeOfferEnum;
 
 }
 
@@ -4245,15 +4661,6 @@ CStdString CFileItem::GetLinkBoxeeTypeAsString(CLinkBoxeeType::LinkBoxeeTypeEnum
   case CLinkBoxeeType::TRAILER:
     boxeeTypeStr = "trailer";
     break;
-  case CLinkBoxeeType::RENT:
-    boxeeTypeStr = "rent";
-    break;
-  case CLinkBoxeeType::BUY:
-    boxeeTypeStr = "buy";
-    break;
-  case CLinkBoxeeType::SUBSCRIPTION:
-    boxeeTypeStr = "subscription";
-    break;
   case CLinkBoxeeType::LOCAL:
     boxeeTypeStr = "local";
     break;
@@ -4263,5 +4670,37 @@ CStdString CFileItem::GetLinkBoxeeTypeAsString(CLinkBoxeeType::LinkBoxeeTypeEnum
   }
 
   return boxeeTypeStr;
+}
+
+CStdString CFileItem::GetLinkBoxeeOfferAsString(CLinkBoxeeOffer::LinkBoxeeOfferEnums boxeeOffer)
+{
+  CStdString boxeeOfferStr = "";
+
+  switch(boxeeOffer)
+  {
+  case CLinkBoxeeOffer::UNAVAILABLE:
+    boxeeOfferStr = "unavailable";
+    break;
+  case CLinkBoxeeOffer::FREE:
+    boxeeOfferStr = "free";
+    break;
+  case CLinkBoxeeOffer::RENT:
+    boxeeOfferStr = "rent";
+    break;
+  case CLinkBoxeeOffer::BUY:
+    boxeeOfferStr = "buy";
+    break;
+  case CLinkBoxeeOffer::SUBSCRIPTION:
+    boxeeOfferStr = "subscription";
+    break;
+  case CLinkBoxeeOffer::EXT_SUBSCRIPTION:
+    boxeeOfferStr = "external_subscription";
+    break;
+  default:
+    CLog::Log(LOGDEBUG,"CFileItem::GetLinkBoxeeOfferAsString - Unknown boxeeOffer enum [boxeeOffer=%d]",boxeeOffer);
+    break;
+  }
+
+  return boxeeOfferStr;
 }
 

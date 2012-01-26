@@ -41,7 +41,7 @@ static bool LoadTexture(int width, int height, int stride
                       , CD3DTexture* texture)
 {
 
-  if (!texture->Create(width, height, 1, 0, format, D3DPOOL_MANAGED))
+  if (!texture->Create(width, height, 1, g_Windowing.DefaultD3DUsage(), format, g_Windowing.DefaultD3DPool()))
   {
     CLog::Log(LOGERROR, "LoadTexture - failed to allocate texture");
     return false;
@@ -136,7 +136,7 @@ COverlayQuadsDX::COverlayQuadsDX(CDVDOverlaySSA* o, double pts)
     return;
   }
 
-  if (!m_vertex.Create(sizeof(VERTEX) * 6 * quads.count, 0, m_fvf, D3DPOOL_MANAGED))
+  if (!m_vertex.Create(sizeof(VERTEX) * 6 * quads.count, D3DUSAGE_WRITEONLY, m_fvf, g_Windowing.DefaultD3DPool()))
   {
     CLog::Log(LOGERROR, "%s - failed to create vertex buffer", __FUNCTION__);
     m_texture.Release();
@@ -228,6 +228,12 @@ void COverlayQuadsDX::Render(SRenderState &state)
   D3DXMatrixMultiply(&world, &world, &trans);
 
   device->SetTransform(D3DTS_WORLD, &world);
+
+  TransformMatrix* matModelView = g_Windowing.GetHardwareTransform(MATRIX_TYPE_MODEL_VIEW);
+  TransformMatrix* matProjection = g_Windowing.GetHardwareTransform(MATRIX_TYPE_PROJECTION);
+
+  device->SetTransform(D3DTS_VIEW, &D3DXMATRIX((float *)matModelView->m));
+  device->SetTransform(D3DTS_PROJECTION, &D3DXMATRIX((float *)matProjection->m));
 
   device->SetTexture( 0, m_texture.Get() );
   device->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
@@ -350,7 +356,7 @@ void COverlayImageDX::Load(uint32_t* rgba, int width, int height, int stride)
                 , &m_texture))
     return;
 
-  if (!m_vertex.Create(sizeof(VERTEX) * 6, 0, m_fvf, D3DPOOL_MANAGED))
+  if (!m_vertex.Create(sizeof(VERTEX) * 6, D3DUSAGE_WRITEONLY, m_fvf, g_Windowing.DefaultD3DPool()))
   {
     CLog::Log(LOGERROR, "%s - failed to create vertex buffer", __FUNCTION__);
     m_texture.Release();
@@ -424,6 +430,12 @@ void COverlayImageDX::Render(SRenderState &state)
   D3DXMatrixMultiply(&world, &world, &trans);
 
   device->SetTransform(D3DTS_WORLD, &world);
+
+  TransformMatrix* matModelView = g_Windowing.GetHardwareTransform(MATRIX_TYPE_MODEL_VIEW);
+  TransformMatrix* matProjection = g_Windowing.GetHardwareTransform(MATRIX_TYPE_PROJECTION);
+
+  device->SetTransform(D3DTS_VIEW, &D3DXMATRIX((float *)matModelView->m));
+  device->SetTransform(D3DTS_PROJECTION, &D3DXMATRIX((float *)matProjection->m));
 
   device->SetTexture( 0, m_texture.Get() );
   device->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);

@@ -9,8 +9,8 @@
 
 #if CXIMAGE_SUPPORT_JPG
 
-#ifdef _LINUX
-#include <jmorecfg.h>
+#if defined(_LINUX) && !defined(__APPLE__)
+#include "../jpeg-turbo/jmorecfg.h"
 #else
 #include "../jpeg/jmorecfg.h"
 #endif
@@ -18,6 +18,29 @@
 #include "ximaiter.h"
          
 #include <setjmp.h>
+
+#if defined(_WIN32)
+/* replacement of Unix rint() for Windows */
+// TODO: Not sure if this actually works.
+static double nearbyintl (double x)
+{
+  char *buf;
+  int i,dec,sig;
+
+  buf = _fcvt(x, 0, &dec, &sig);
+  i = atoi(buf);
+  if(sig == 1) {
+    i = i * -1;
+  }
+  return (double)(i);
+}
+#endif
+
+#ifdef OPENMAX_SUPPORTED
+#include <pthread.h>
+static pthread_mutex_t a_mutex = PTHREAD_MUTEX_INITIALIZER;
+static bool blockacquired=false;
+#endif
 
 struct jpg_error_mgr {
 	struct jpeg_error_mgr pub;	/* "public" fields */
@@ -114,7 +137,7 @@ bool CxImageJPG::GetExifThumbnail(const char *filename, const char *outname, int
 #if CXIMAGE_SUPPORT_DECODE
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef XBMC
-#define RESAMPLE_FACTOR_OF_2_ON_LOAD
+#undef RESAMPLE_FACTOR_OF_2_ON_LOAD
 #define MAX_PICTURE_AREA 2048*2048 // 4MP == 16MB
 #undef RESAMPLE_IF_TOO_BIG
 bool CxImageJPG::Decode(CxFile * hFile, int &iMaxWidth, int &iMaxHeight)
@@ -188,9 +211,23 @@ bool CxImageJPG::Decode(CxFile * hFile)
 		/* If we get here, the JPEG code has signaled an error.
 		* We need to clean up the JPEG object, close the input file, and return.
 		*/
+		strcpy(info.szLastError, jerr.buffer); //<CSC>
 		jpeg_destroy_decompress(&cinfo);
+#ifdef OPENMAX_SUPPORTED
+    if (blockacquired) {
+      pthread_mutex_unlock( &a_mutex );
+      blockacquired = false;
+    }
+#endif
+
 		return 0;
 	}
+
+#ifdef OPENMAX_SUPPORTED
+	pthread_mutex_lock( &a_mutex );
+	blockacquired = true;
+#endif
+
 	/* Now we can initialize the JPEG decompression object. */
 	jpeg_create_decompress(&cinfo);
 
@@ -224,6 +261,38 @@ bool CxImageJPG::Decode(CxFile * hFile)
  *}
  */ //</DP>
 
+	double wScale = 0.0, hScale = 0.0;
+	BYTE bScale = 0;
+	if(iMaxWidth && iMaxWidth < cinfo.image_width){
+		
+		wScale = (double)cinfo.image_width/iMaxWidth;
+		
+	}
+	if(iMaxHeight && iMaxHeight < cinfo.image_height){
+
+		hScale = (double)cinfo.image_height/iMaxHeight;
+	}
+	
+
+#ifdef __mips__
+	bScale = (BYTE)__builtin_nearbyintl(max(wScale, hScale));
+#else
+	bScale = (BYTE)nearbyintl(max(wScale, hScale));
+#endif
+
+	if(bScale){
+		
+		if(bScale < 2)
+			bScale = 0;
+		else if(bScale < 4)
+			bScale = 2;
+		else if(bScale < 8)
+			bScale = 4;
+		else  	bScale = 8;
+
+		SetJpegScale(bScale);	
+	}
+
 	// Set the scale <ignacio>
 	cinfo.scale_denom = GetJpegScale();
         cinfo.scale_num = 1;
@@ -236,6 +305,12 @@ bool CxImageJPG::Decode(CxFile * hFile)
 		head.biHeight = cinfo.output_height;
 		info.dwType = CXIMAGE_FORMAT_JPG;
 		jpeg_destroy_decompress(&cinfo);
+
+#ifdef OPENMAX_SUPPORTED
+		blockacquired = false;
+		pthread_mutex_unlock( &a_mutex );
+#endif
+
 		return true;
 	}
   // check if we should load it downsampled by a factor of 2,4 or 8
@@ -519,7 +594,6 @@ bool CxImageJPG::Decode(CxFile * hFile)
 		num_scanlines_read++;
 	}
 #endif
-
 	/* Step 7: Finish decompression */
 	(void) jpeg_finish_decompress(&cinfo);
 	/* We can ignore the return value since suspension is not possible
@@ -540,6 +614,11 @@ bool CxImageJPG::Decode(CxFile * hFile)
 	/* Step 8: Release JPEG decompression object */
 	/* This is an important step since it will release a good deal of memory. */
 	jpeg_destroy_decompress(&cinfo);
+
+#ifdef OPENMAX_SUPPORTED
+	blockacquired = false;
+	pthread_mutex_unlock( &a_mutex );
+#endif
 
 	/* At this point you may want to check to see whether any corrupt-data
 	* warnings occurred (test whether jerr.pub.num_warnings is nonzero).
@@ -606,9 +685,22 @@ bool CxImageJPG::Encode(CxFile * hFile)
 		*/
 		strcpy(info.szLastError, jerr.buffer); //<CSC>
 		jpeg_destroy_compress(&cinfo);
+
+#ifdef OPENMAX_SUPPORTED
+    if (blockacquired) {
+      pthread_mutex_unlock( &a_mutex );
+      blockacquired = false;
+    }
+#endif
+
 		return 0;
 	}
-	
+
+#ifdef OPENMAX_SUPPORTED
+	pthread_mutex_lock( &a_mutex );
+	blockacquired = true;
+#endif
+
 	/* Now we can initialize the JPEG compression object. */
 	jpeg_create_compress(&cinfo);
 	/* Step 2: specify data destination (eg, a file) */
@@ -647,15 +739,15 @@ bool CxImageJPG::Encode(CxFile * hFile)
 	* Here we just illustrate the use of quality (quantization table) scaling:
 	*/
 
-//#ifdef C_ARITH_CODING_SUPPORTED
+#ifdef C_ARITH_CODING_SUPPORTED
 	if ((GetCodecOption(CXIMAGE_FORMAT_JPG) & ENCODE_ARITHMETIC) != 0)
 		cinfo.arith_code = TRUE;
-//#endif
+#endif
 
-//#ifdef ENTROPY_OPT_SUPPORTED
+#ifdef ENTROPY_OPT_SUPPORTED
 	if ((GetCodecOption(CXIMAGE_FORMAT_JPG) & ENCODE_OPTIMIZE) != 0)
 		cinfo.optimize_coding = TRUE;
-//#endif
+#endif
 
 	if ((GetCodecOption(CXIMAGE_FORMAT_JPG) & ENCODE_GRAYSCALE) != 0)
 		jpeg_set_colorspace(&cinfo, JCS_GRAYSCALE);
@@ -666,8 +758,9 @@ bool CxImageJPG::Encode(CxFile * hFile)
 	jpeg_set_quality(&cinfo, GetJpegQuality(), (GetCodecOption(CXIMAGE_FORMAT_JPG) & ENCODE_BASELINE) != 0);
 
 //#ifdef C_PROGRESSIVE_SUPPORTED
-	if ((GetCodecOption(CXIMAGE_FORMAT_JPG) & ENCODE_PROGRESSIVE) != 0)
+	if ((GetCodecOption(CXIMAGE_FORMAT_JPG) & ENCODE_PROGRESSIVE) != 0) {
 		jpeg_simple_progression(&cinfo);
+     }
 //#endif
 
 #ifdef C_LOSSLESS_SUPPORTED
@@ -749,6 +842,10 @@ bool CxImageJPG::Encode(CxFile * hFile)
 	/* This is an important step since it will release a good deal of memory. */
 	jpeg_destroy_compress(&cinfo);
 
+#ifdef OPENMAX_SUPPORTED
+	blockacquired = false;
+	pthread_mutex_unlock( &a_mutex );
+#endif
 
 #if CXIMAGEJPG_SUPPORT_EXIF
 	if (m_exif && m_exif->m_exifinfo->IsExif){

@@ -29,6 +29,13 @@
 #define MAX_DEFAULTCHAR           2
 
 #if defined (_XBOX) || defined (_LINUX)
+typedef struct _PROCESS_INFORMATION {
+  HANDLE hProcess;
+  HANDLE hThread;
+  DWORD  dwProcessId;
+  DWORD  dwThreadId;
+} PROCESS_INFORMATION, *LPPROCESS_INFORMATION;
+
 typedef struct _STARTUPINFOA
 {
   DWORD cb;
@@ -612,7 +619,18 @@ extern "C" BOOL WINAPI dllFreeLibrary(HINSTANCE hLibModule);
 extern "C" FARPROC WINAPI dllGetProcAddress(HMODULE hModule, LPCSTR function);
 extern "C" HMODULE WINAPI dllGetModuleHandleA(LPCSTR lpModuleName);
 extern "C" DWORD WINAPI dllGetModuleFileNameA(HMODULE hModule, LPSTR lpFilename, DWORD nSize);
-
+extern "C" BOOL WINAPI dllCreateProcessA(
+  LPCSTR lpApplicationName, 
+  LPSTR lpCommandLine, 
+  LPSECURITY_ATTRIBUTES lpProcessAttributes,
+  LPSECURITY_ATTRIBUTES lpThreadAttributes,
+  BOOL bInheritHandles,
+  DWORD dwCreationFlags,
+  LPVOID lpEnvironment,
+  LPCSTR lpCurrentDirectory,
+  LPSTARTUPINFOA lpStartupInfo,
+  LPPROCESS_INFORMATION lpProcessInformation
+);
 //GetSystemInfo are hardcoded for Xbox only.
 extern "C" void WINAPI dllGetSystemInfo(LPSYSTEM_INFO lpSystemInfo);
 

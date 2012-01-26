@@ -21,7 +21,7 @@
  */
 
 /**
- * @file libavcodec/vc1dec.c
+ * @file
  * VC-1 and WMV3 decoder
  *
  */
@@ -29,6 +29,7 @@
 #include "dsputil.h"
 #include "avcodec.h"
 #include "mpegvideo.h"
+#include "h263.h"
 #include "vc1.h"
 #include "vc1data.h"
 #include "vc1acdata.h"
@@ -161,17 +162,27 @@ enum Imode {
 
 static void vc1_loop_filter_iblk(MpegEncContext *s, int pq)
 {
-    int i, j;
-    if(!s->first_slice_line)
+    int j;
+    if (!s->first_slice_line) {
         s->dsp.vc1_v_loop_filter16(s->dest[0], s->linesize, pq);
-    s->dsp.vc1_v_loop_filter16(s->dest[0] + 8*s->linesize, s->linesize, pq);
-    for(i = !s->mb_x*8; i < 16; i += 8)
-        s->dsp.vc1_h_loop_filter16(s->dest[0] + i, s->linesize, pq);
-    for(j = 0; j < 2; j++){
-        if(!s->first_slice_line)
+        if (s->mb_x)
+            s->dsp.vc1_h_loop_filter16(s->dest[0] - 16*s->linesize, s->linesize, pq);
+        s->dsp.vc1_h_loop_filter16(s->dest[0] - 16*s->linesize+8, s->linesize, pq);
+        for(j = 0; j < 2; j++){
             s->dsp.vc1_v_loop_filter8(s->dest[j+1], s->uvlinesize, pq);
-        if(s->mb_x)
-            s->dsp.vc1_h_loop_filter8(s->dest[j+1], s->uvlinesize, pq);
+            if (s->mb_x)
+                s->dsp.vc1_h_loop_filter8(s->dest[j+1]-8*s->uvlinesize, s->uvlinesize, pq);
+        }
+    }
+    s->dsp.vc1_v_loop_filter16(s->dest[0] + 8*s->linesize, s->linesize, pq);
+
+    if (s->mb_y == s->mb_height-1) {
+        if (s->mb_x) {
+            s->dsp.vc1_h_loop_filter16(s->dest[0], s->linesize, pq);
+            s->dsp.vc1_h_loop_filter8(s->dest[1], s->uvlinesize, pq);
+            s->dsp.vc1_h_loop_filter8(s->dest[2], s->uvlinesize, pq);
+        }
+        s->dsp.vc1_h_loop_filter16(s->dest[0] + 8, s->linesize, pq);
     }
 }
 
@@ -277,12 +288,12 @@ static void vc1_mc_1mv(VC1Context *v, int dir)
         uint8_t *uvbuf= s->edge_emu_buffer + 19 * s->linesize;
 
         srcY -= s->mspel * (1 + s->linesize);
-        ff_emulated_edge_mc(s->edge_emu_buffer, srcY, s->linesize, 17+s->mspel*2, 17+s->mspel*2,
+        s->dsp.emulated_edge_mc(s->edge_emu_buffer, srcY, s->linesize, 17+s->mspel*2, 17+s->mspel*2,
                             src_x - s->mspel, src_y - s->mspel, s->h_edge_pos, s->v_edge_pos);
         srcY = s->edge_emu_buffer;
-        ff_emulated_edge_mc(uvbuf     , srcU, s->uvlinesize, 8+1, 8+1,
+        s->dsp.emulated_edge_mc(uvbuf     , srcU, s->uvlinesize, 8+1, 8+1,
                             uvsrc_x, uvsrc_y, s->h_edge_pos >> 1, s->v_edge_pos >> 1);
-        ff_emulated_edge_mc(uvbuf + 16, srcV, s->uvlinesize, 8+1, 8+1,
+        s->dsp.emulated_edge_mc(uvbuf + 16, srcV, s->uvlinesize, 8+1, 8+1,
                             uvsrc_x, uvsrc_y, s->h_edge_pos >> 1, s->v_edge_pos >> 1);
         srcU = uvbuf;
         srcV = uvbuf + 16;
@@ -392,7 +403,7 @@ static void vc1_mc_4mv_luma(VC1Context *v, int n)
        || (unsigned)(src_x - s->mspel) > s->h_edge_pos - (mx&3) - 8 - s->mspel*2
        || (unsigned)(src_y - s->mspel) > s->v_edge_pos - (my&3) - 8 - s->mspel*2){
         srcY -= s->mspel * (1 + s->linesize);
-        ff_emulated_edge_mc(s->edge_emu_buffer, srcY, s->linesize, 9+s->mspel*2, 9+s->mspel*2,
+        s->dsp.emulated_edge_mc(s->edge_emu_buffer, srcY, s->linesize, 9+s->mspel*2, 9+s->mspel*2,
                             src_x - s->mspel, src_y - s->mspel, s->h_edge_pos, s->v_edge_pos);
         srcY = s->edge_emu_buffer;
         /* if we deal with range reduction we need to scale source blocks */
@@ -526,9 +537,9 @@ static void vc1_mc_4mv_chroma(VC1Context *v)
     if(v->rangeredfrm || (v->mv_mode == MV_PMODE_INTENSITY_COMP)
        || (unsigned)uvsrc_x > (s->h_edge_pos >> 1) - 9
        || (unsigned)uvsrc_y > (s->v_edge_pos >> 1) - 9){
-        ff_emulated_edge_mc(s->edge_emu_buffer     , srcU, s->uvlinesize, 8+1, 8+1,
+        s->dsp.emulated_edge_mc(s->edge_emu_buffer     , srcU, s->uvlinesize, 8+1, 8+1,
                             uvsrc_x, uvsrc_y, s->h_edge_pos >> 1, s->v_edge_pos >> 1);
-        ff_emulated_edge_mc(s->edge_emu_buffer + 16, srcV, s->uvlinesize, 8+1, 8+1,
+        s->dsp.emulated_edge_mc(s->edge_emu_buffer + 16, srcV, s->uvlinesize, 8+1, 8+1,
                             uvsrc_x, uvsrc_y, s->h_edge_pos >> 1, s->v_edge_pos >> 1);
         srcU = s->edge_emu_buffer;
         srcV = s->edge_emu_buffer + 16;
@@ -861,12 +872,12 @@ static void vc1_interp_mc(VC1Context *v)
         uint8_t *uvbuf= s->edge_emu_buffer + 19 * s->linesize;
 
         srcY -= s->mspel * (1 + s->linesize);
-        ff_emulated_edge_mc(s->edge_emu_buffer, srcY, s->linesize, 17+s->mspel*2, 17+s->mspel*2,
+        s->dsp.emulated_edge_mc(s->edge_emu_buffer, srcY, s->linesize, 17+s->mspel*2, 17+s->mspel*2,
                             src_x - s->mspel, src_y - s->mspel, s->h_edge_pos, s->v_edge_pos);
         srcY = s->edge_emu_buffer;
-        ff_emulated_edge_mc(uvbuf     , srcU, s->uvlinesize, 8+1, 8+1,
+        s->dsp.emulated_edge_mc(uvbuf     , srcU, s->uvlinesize, 8+1, 8+1,
                             uvsrc_x, uvsrc_y, s->h_edge_pos >> 1, s->v_edge_pos >> 1);
-        ff_emulated_edge_mc(uvbuf + 16, srcV, s->uvlinesize, 8+1, 8+1,
+        s->dsp.emulated_edge_mc(uvbuf + 16, srcV, s->uvlinesize, 8+1, 8+1,
                             uvsrc_x, uvsrc_y, s->h_edge_pos >> 1, s->v_edge_pos >> 1);
         srcU = uvbuf;
         srcV = uvbuf + 16;
@@ -1480,7 +1491,7 @@ static int vc1_decode_i_block(VC1Context *v, DCTELEM block[64], int n, int coded
 
     {
         int last = 0, skip, value;
-        const int8_t *zz_table;
+        const uint8_t *zz_table;
         int scale;
         int k;
 
@@ -1666,7 +1677,7 @@ static int vc1_decode_i_block_adv(VC1Context *v, DCTELEM block[64], int n, int c
 
     if(coded) {
         int last = 0, skip, value;
-        const int8_t *zz_table;
+        const uint8_t *zz_table;
         int k;
 
         if(v->s.ac_pred) {
@@ -1873,7 +1884,7 @@ static int vc1_decode_intra_block(VC1Context *v, DCTELEM block[64], int n, int c
 
     if(coded) {
         int last = 0, skip, value;
-        const int8_t *zz_table;
+        const uint8_t *zz_table;
         int k;
 
         zz_table = wmv1_scantable[0];
@@ -1995,7 +2006,9 @@ static int vc1_decode_p_block(VC1Context *v, DCTELEM block[64], int n, int mquan
     if(ttblk == TT_4X4) {
         subblkpat = ~(get_vlc2(gb, ff_vc1_subblkpat_vlc[v->tt_index].table, VC1_SUBBLKPAT_VLC_BITS, 1) + 1);
     }
-    if((ttblk != TT_8X8 && ttblk != TT_4X4) && (v->ttmbf || (ttmb != -1 && (ttmb & 8) && !first_block))) {
+    if((ttblk != TT_8X8 && ttblk != TT_4X4)
+        && ((v->ttmbf || (ttmb != -1 && (ttmb & 8) && !first_block))
+            || (!v->res_rtm_flag && !first_block))) {
         subblkpat = decode012(gb);
         if(subblkpat) subblkpat ^= 3; //swap decoded pattern bits
         if(ttblk == TT_8X4_TOP || ttblk == TT_8X4_BOTTOM) ttblk = TT_8X4;
@@ -2056,7 +2069,7 @@ static int vc1_decode_p_block(VC1Context *v, DCTELEM block[64], int n, int mquan
                 if(!v->pquantizer)
                     block[idx + off] += (block[idx + off] < 0) ? -mquant : mquant;
             }
-            if(!(subblkpat & (1 << (3 - j))) && !skip_block) {
+            if(!(subblkpat & (1 << (3 - j))) && !skip_block){
                 if(i==1)
                     s->dsp.vc1_inv_trans_4x4_dc(dst + (j&1)*4 + (j&2)*2*linesize, linesize, block + off);
                 else
@@ -2224,12 +2237,12 @@ static int vc1_decode_p_mb(VC1Context *v)
                     if((i>3) && (s->flags & CODEC_FLAG_GRAY)) continue;
                     s->dsp.vc1_inv_trans_8x8(s->block[i]);
                     if(v->rangeredfrm) for(j = 0; j < 64; j++) s->block[i][j] <<= 1;
-                    s->dsp.put_signed_pixels_clamped(s->block[i], s->dest[dst_idx] + off, s->linesize >> ((i & 4) >> 2));
+                    s->dsp.put_signed_pixels_clamped(s->block[i], s->dest[dst_idx] + off, i & 4 ? s->uvlinesize : s->linesize);
                     if(v->pq >= 9 && v->overlap) {
                         if(v->c_avail)
-                            s->dsp.vc1_h_overlap(s->dest[dst_idx] + off, s->linesize >> ((i & 4) >> 2));
+                            s->dsp.vc1_h_overlap(s->dest[dst_idx] + off, i & 4 ? s->uvlinesize : s->linesize);
                         if(v->a_avail)
-                            s->dsp.vc1_v_overlap(s->dest[dst_idx] + off, s->linesize >> ((i & 4) >> 2));
+                            s->dsp.vc1_v_overlap(s->dest[dst_idx] + off, i & 4 ? s->uvlinesize : s->linesize);
                     }
                     if(apply_loop_filter && s->mb_x && s->mb_x != (s->mb_width - 1) && s->mb_y && s->mb_y != (s->mb_height - 1)){
                         int left_cbp, top_cbp;
@@ -2358,9 +2371,9 @@ static int vc1_decode_p_mb(VC1Context *v)
                     s->dsp.put_signed_pixels_clamped(s->block[i], s->dest[dst_idx] + off, (i&4)?s->uvlinesize:s->linesize);
                     if(v->pq >= 9 && v->overlap) {
                         if(v->c_avail)
-                            s->dsp.vc1_h_overlap(s->dest[dst_idx] + off, s->linesize >> ((i & 4) >> 2));
+                            s->dsp.vc1_h_overlap(s->dest[dst_idx] + off, i & 4 ? s->uvlinesize : s->linesize);
                         if(v->a_avail)
-                            s->dsp.vc1_v_overlap(s->dest[dst_idx] + off, s->linesize >> ((i & 4) >> 2));
+                            s->dsp.vc1_v_overlap(s->dest[dst_idx] + off, i & 4 ? s->uvlinesize : s->linesize);
                     }
                     if(v->s.loop_filter && s->mb_x && s->mb_x != (s->mb_width - 1) && s->mb_y && s->mb_y != (s->mb_height - 1)){
                         int left_cbp, top_cbp;
@@ -2560,7 +2573,7 @@ static void vc1_decode_b_mb(VC1Context *v)
             if((i>3) && (s->flags & CODEC_FLAG_GRAY)) continue;
             s->dsp.vc1_inv_trans_8x8(s->block[i]);
             if(v->rangeredfrm) for(j = 0; j < 64; j++) s->block[i][j] <<= 1;
-            s->dsp.put_signed_pixels_clamped(s->block[i], s->dest[dst_idx] + off, s->linesize >> ((i & 4) >> 2));
+            s->dsp.put_signed_pixels_clamped(s->block[i], s->dest[dst_idx] + off, i & 4 ? s->uvlinesize : s->linesize);
         } else if(val) {
             vc1_decode_p_block(v, s->block[i], i, mquant, ttmb, first_block, s->dest[dst_idx] + off, (i&4)?s->uvlinesize:s->linesize, (i&4) && (s->flags & CODEC_FLAG_GRAY), 0, 0, 0);
             if(!v->ttmbf && ttmb < 8) ttmb = -1;
@@ -2677,9 +2690,15 @@ static void vc1_decode_i_blocks(VC1Context *v)
                 return;
             }
         }
-        ff_draw_horiz_band(s, s->mb_y * 16, 16);
+        if (!v->s.loop_filter)
+            ff_draw_horiz_band(s, s->mb_y * 16, 16);
+        else if (s->mb_y)
+            ff_draw_horiz_band(s, (s->mb_y-1) * 16, 16);
+
         s->first_slice_line = 0;
     }
+    if (v->s.loop_filter)
+        ff_draw_horiz_band(s, (s->mb_height-1)*16, 16);
     ff_er_add_slice(s, 0, 0, s->mb_width - 1, s->mb_height - 1, (AC_END|DC_END|MV_END));
 }
 
@@ -2809,9 +2828,14 @@ static void vc1_decode_i_blocks_adv(VC1Context *v)
                 return;
             }
         }
-        ff_draw_horiz_band(s, s->mb_y * 16, 16);
+        if (!v->s.loop_filter)
+            ff_draw_horiz_band(s, s->mb_y * 16, 16);
+        else if (s->mb_y)
+            ff_draw_horiz_band(s, (s->mb_y-1) * 16, 16);
         s->first_slice_line = 0;
     }
+    if (v->s.loop_filter)
+        ff_draw_horiz_band(s, (s->mb_height-1)*16, 16);
     ff_er_add_slice(s, 0, 0, s->mb_width - 1, s->mb_height - 1, (AC_END|DC_END|MV_END));
 }
 
@@ -2910,9 +2934,14 @@ static void vc1_decode_b_blocks(VC1Context *v)
             }
             if(v->s.loop_filter) vc1_loop_filter_iblk(s, v->pq);
         }
-        ff_draw_horiz_band(s, s->mb_y * 16, 16);
+        if (!v->s.loop_filter)
+            ff_draw_horiz_band(s, s->mb_y * 16, 16);
+        else if (s->mb_y)
+            ff_draw_horiz_band(s, (s->mb_y-1) * 16, 16);
         s->first_slice_line = 0;
     }
+    if (v->s.loop_filter)
+        ff_draw_horiz_band(s, (s->mb_height-1)*16, 16);
     ff_er_add_slice(s, 0, 0, s->mb_width - 1, s->mb_height - 1, (AC_END|DC_END|MV_END));
 }
 
@@ -2993,11 +3022,9 @@ static av_cold int vc1_decode_init(AVCodecContext *avctx)
         avctx->idct_algo=FF_IDCT_WMV2;
     }
 
-    if(ff_h263_decode_init(avctx) < 0)
+    if(ff_msmpeg4_decode_init(avctx) < 0)
         return -1;
     if (vc1_init_common(v) < 0) return -1;
-    // only for ff_msmp4_mb_i_table
-    if (ff_msmpeg4_decode_init(s) < 0) return -1;
 
     avctx->coded_width = avctx->width;
     avctx->coded_height = avctx->height;
@@ -3191,6 +3218,8 @@ static int vc1_decode_frame(AVCodecContext *avctx,
 
             buf_size2 = vc1_unescape_buffer(buf, divider - buf, buf2);
             // TODO
+            if(!v->warn_interlaced++)
+                av_log(v->s.avctx, AV_LOG_ERROR, "Interlaced WVC1 support is not implemented\n");
             av_free(buf2);return -1;
         }else{
             buf_size2 = vc1_unescape_buffer(buf, buf_size, buf2);
@@ -3211,7 +3240,7 @@ static int vc1_decode_frame(AVCodecContext *avctx,
         }
     }
 
-    if(s->pict_type != FF_I_TYPE && !v->res_rtm_flag){
+    if(v->res_sprite && (s->pict_type!=FF_I_TYPE)){
         av_free(buf2);
         return -1;
     }
@@ -3316,9 +3345,9 @@ static av_cold int vc1_decode_end(AVCodecContext *avctx)
 }
 
 
-AVCodec vc1_decoder = {
+AVCodec ff_vc1_decoder = {
     "vc1",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_VC1,
     sizeof(VC1Context),
     vc1_decode_init,
@@ -3332,9 +3361,9 @@ AVCodec vc1_decoder = {
 };
 
 #if CONFIG_WMV3_DECODER
-AVCodec wmv3_decoder = {
+AVCodec ff_wmv3_decoder = {
     "wmv3",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_WMV3,
     sizeof(VC1Context),
     vc1_decode_init,
@@ -3349,9 +3378,9 @@ AVCodec wmv3_decoder = {
 #endif
 
 #if CONFIG_WMV3_VDPAU_DECODER
-AVCodec wmv3_vdpau_decoder = {
+AVCodec ff_wmv3_vdpau_decoder = {
     "wmv3_vdpau",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_WMV3,
     sizeof(VC1Context),
     vc1_decode_init,
@@ -3366,9 +3395,9 @@ AVCodec wmv3_vdpau_decoder = {
 #endif
 
 #if CONFIG_VC1_VDPAU_DECODER
-AVCodec vc1_vdpau_decoder = {
+AVCodec ff_vc1_vdpau_decoder = {
     "vc1_vdpau",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_VC1,
     sizeof(VC1Context),
     vc1_decode_init,
@@ -3380,8 +3409,4 @@ AVCodec vc1_vdpau_decoder = {
     .long_name = NULL_IF_CONFIG_SMALL("SMPTE VC-1 VDPAU"),
     .pix_fmts = (const enum PixelFormat[]){PIX_FMT_VDPAU_VC1, PIX_FMT_NONE}
 };
-#endif
-
-#ifdef _WIN32
-#include "vc1_dxva.c"
 #endif

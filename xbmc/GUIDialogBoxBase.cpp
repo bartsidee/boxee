@@ -30,6 +30,7 @@ CGUIDialogBoxBase::CGUIDialogBoxBase(int id, const CStdString &xmlFile)
 {
   m_bConfirmed = false;
   m_defaultChoice = -1;
+  m_headerId = 1;
 }
 
 CGUIDialogBoxBase::~CGUIDialogBoxBase(void)
@@ -73,9 +74,9 @@ void CGUIDialogBoxBase::SetHeading(const string& strLine)
   if (g_application.IsCurrentThread())
     Initialize();
 
-  CGUIMessage msg(GUI_MSG_LABEL_SET, GetID(), 1);
+  CGUIMessage msg(GUI_MSG_LABEL_SET, GetID(), m_headerId);
   msg.SetLabel(strLine);
-    g_windowManager.SendThreadMessage(msg, GetID());
+  g_windowManager.SendThreadMessage(msg, GetID());
 }
 
 void CGUIDialogBoxBase::SetHeading(int iString)
@@ -84,12 +85,12 @@ void CGUIDialogBoxBase::SetHeading(int iString)
   if (g_application.IsCurrentThread())
     Initialize();
 
-  CGUIMessage msg(GUI_MSG_LABEL_SET, GetID(), 1);
+  CGUIMessage msg(GUI_MSG_LABEL_SET, GetID(), m_headerId);
   if (iString)
     msg.SetLabel(iString);
   else
     msg.SetLabel("");
-    g_windowManager.SendThreadMessage(msg, GetID());
+  g_windowManager.SendThreadMessage(msg, GetID());
 }
 
 void CGUIDialogBoxBase::SetLine(int iLine, const string& strLine)
@@ -100,7 +101,7 @@ void CGUIDialogBoxBase::SetLine(int iLine, const string& strLine)
   
   CGUIMessage msg(GUI_MSG_LABEL_SET, GetID(), iLine + 2);
   msg.SetLabel(strLine);
-    g_windowManager.SendThreadMessage(msg, GetID());
+  g_windowManager.SendThreadMessage(msg, GetID());
 }
 
 void CGUIDialogBoxBase::SetLine(int iLine, int iString)
@@ -114,7 +115,7 @@ void CGUIDialogBoxBase::SetLine(int iLine, int iString)
     msg.SetLabel(iString);
   else
     msg.SetLabel("");
-    g_windowManager.SendThreadMessage(msg, GetID());
+  g_windowManager.SendThreadMessage(msg, GetID());
 }
 
 void CGUIDialogBoxBase::SetChoice(int iButton, int iString) // iButton == 0 for no, 1 for yes
@@ -128,7 +129,7 @@ void CGUIDialogBoxBase::SetChoice(int iButton, int iString) // iButton == 0 for 
     msg.SetLabel(iString);
   else
     msg.SetLabel("");
-    g_windowManager.SendThreadMessage(msg, GetID());
+  g_windowManager.SendThreadMessage(msg, GetID());
 }
 
 void CGUIDialogBoxBase::SetChoice(int iButton, const string& strString) // iButton == 0 for no, 1 for yes
@@ -139,7 +140,7 @@ void CGUIDialogBoxBase::SetChoice(int iButton, const string& strString) // iButt
 
   CGUIMessage msg(GUI_MSG_LABEL_SET, GetID(), 10+iButton);
   msg.SetLabel(strString);
-    g_windowManager.SendThreadMessage(msg, GetID());
+  g_windowManager.SendThreadMessage(msg, GetID());
 }
 
 void CGUIDialogBoxBase::SetDefaultChoice(int iButton)

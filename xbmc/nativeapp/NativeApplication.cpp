@@ -30,11 +30,20 @@
 #include "KeyboardStat.h"
 #include "GUIDialogProgress.h"
 #include "GUIWindowManager.h"
+#include "AppManager.h"
+#include "GUISettings.h"
+#include "FrameBufferObject.h"
+
+#ifdef CANMORE
+#include "IntelSMDGlobals.h"
+#endif
 
 #include <openssl/sha.h>
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
 #include <openssl/bio.h>
+
+CFrameBufferObject g_fbo;
 
 const char *BXGetVersionString ( BX_Handle hApp );
 void BXGetUniqueId( BX_Handle hApp, char* uid);
@@ -88,7 +97,12 @@ void BXPersistentClear( BX_Handle hApp);
 void BXPersistentPushBack (BX_Handle hApp, const char* key, const char* value, unsigned int nLimit);
 void BXPersistentPushFront (BX_Handle hApp, const char* key, const char* value, unsigned int nLimit);
 void BXGetDisplayOverscan(BX_Overscan* overscan);
-
+void BXBoxeeRenderingEnabled(bool enabled);
+BX_Mode3D BXDimensionalityGetSupportedModes(void);
+void BXDimensionalitySetMode(BX_Mode3D mode);
+BX_Mode3D BXDimensionalityGetMode(void);
+void BXShowTip(const char *text, int duration);
+void BXAudioGetOutputPortCaps(BX_AudioOutputPort* output, BX_AudioOutputCaps* caps);
 
 using namespace BOXEE;
 
@@ -96,6 +110,8 @@ NativeApplication::NativeApplication()
 {
   m_player = NULL;
   m_lastSetPos = 0;
+  m_screenSaverState = false;
+  m_playerCaching = true;
 }
 
 NativeApplication::~NativeApplication()
@@ -105,6 +121,16 @@ NativeApplication::~NativeApplication()
   ExecuteRenderOperations();
 
   m_dll.Unload();
+
+#ifdef HAS_GDL
+  // restore HDPC status to false
+  gdl_boolean_t hdcpControlEnabled = GDL_FALSE;
+  if (gdl_port_set_attr(GDL_PD_ID_HDMI, GDL_PD_ATTR_ID_HDCP,
+      &hdcpControlEnabled) != GDL_SUCCESS)
+  {
+    CLog::Log(LOGERROR, "NativeApplication::~NativeApplication Could not disable HDCP control");
+  }
+#endif
 }
 
 void NativeApplication::InitializeCallbacks(BX_Callbacks &m_callbacks)
@@ -159,27 +185,52 @@ void NativeApplication::InitializeCallbacks(BX_Callbacks &m_callbacks)
   m_callbacks.persistentPushBack = BXPersistentPushBack;
   m_callbacks.persistentPushFront  = BXPersistentPushFront;
   m_callbacks.persistentClear = BXPersistentClear;
-
+  m_callbacks.boxeeRenderingEnabled = BXBoxeeRenderingEnabled;
+  m_callbacks.dimensionalityGetSupportedModes = BXDimensionalityGetSupportedModes;
+  m_callbacks.dimensionalitySetMode = BXDimensionalitySetMode;
+  m_callbacks.dimensionalityGetMode = BXDimensionalityGetMode;
+  m_callbacks.showTip = BXShowTip;
+  m_callbacks.audioGetOutputPortCaps = BXAudioGetOutputPortCaps;
 }
 
 bool NativeApplication::Launch(const CAppDescriptor &desc, const CStdString &launchPath)
 {
+  /*
+   when starting a native app we must:
+   - Enable HDCP
+   - Clear old video planes
+   */
+#ifdef HAS_GDL
+  // Video plane might contain garbage
+  gdl_plane_reset(GDL_VIDEO_PLANE);
+
+  gdl_boolean_t hdcpControlEnabled = GDL_TRUE;
+  if (gdl_port_set_attr(GDL_PD_ID_HDMI, GDL_PD_ATTR_ID_HDCP,
+      &hdcpControlEnabled) != GDL_SUCCESS)
+  {
+    CLog::Log(LOGERROR, "NativeApplication::Launch Could not enable HDCP control");
+  }
+#endif
+
+  g_graphicsContext.Clear();
+
   CStdString path = desc.GetLocalPath();
   m_desc = desc;
   CStdString appPath;
 #ifdef __APPLE__
   CUtil::AddFileToFolder(path, "boxeeapp-x86-osx.so", appPath);
+#elif defined (CANMORE)
+  CUtil::AddFileToFolder(path, "boxeeapp-i686-cm-linux.so", appPath);
 #elif defined (_LINUX) && defined (__x86_64__)
   CUtil::AddFileToFolder(path, "boxeeapp-x86_64-linux.so", appPath);
+#elif defined (_LINUX)  && defined(__mips__) && defined (_MIPS_ARCH_MIPS32R2) && defined(MIPSEL)
+  CUtil::AddFileToFolder(path, "boxeeapp-mipsisa32r2el-linux.so", appPath);
 #elif defined (_LINUX) 
   CUtil::AddFileToFolder(path, "boxeeapp-i486-linux.so", appPath);
 #else  
   CUtil::AddFileToFolder(path, "boxeeapp.dll", appPath);
 #endif
   
-  /*
-   * first check that this object is signed by boxee
-   */
   if (!CUtil::CheckFileSignature(appPath, desc.GetSignature()))
   {
     CLog::Log(LOGERROR,"application can not be verified. aborting.");
@@ -193,12 +244,16 @@ bool NativeApplication::Launch(const CAppDescriptor &desc, const CStdString &lau
 
   if (!m_dll.Load())
   {
+    CLog::Log(LOGERROR, "NativeApp::Launch: could not load app dll");
     if (dlg)
       dlg->Close();
     return false;
   }
   
   m_registry.Load(m_desc);
+#ifdef HAS_EMBEDDED
+  m_persistentRegistry.Load(m_desc, true);
+#endif
   InitializeCallbacks(m_callbacks);
   memset(&m_appMethods, 0, sizeof(m_appMethods)); 
   memset(&m_handle, 0, sizeof(m_handle));
@@ -232,7 +287,11 @@ CAppRegistry &NativeApplication::GetRegistry()
 
 CAppRegistry &NativeApplication::GetPersistentRegistry()
 {
+#ifdef HAS_EMBEDDED
+  return m_persistentRegistry;
+#else
   return m_registry;
+#endif
 }
 
 CAppDescriptor &NativeApplication::GetDescriptor()
@@ -383,9 +442,36 @@ void NativeApplication::OnMouseMove(BX_WindowHandle win, int x, int y)
     m_appMethods.onMouseMove(win, x, y);    
 }
 
+void NativeApplication::OnScreensaverShown(BX_Handle hApp)
+{
+  if (m_appMethods.onScreensaverShown)
+    m_appMethods.onScreensaverShown(hApp);
+}
+
+void NativeApplication::OnScreensaverHidden(BX_Handle hApp)
+{
+  if (m_appMethods.onScreensaverHidden)
+    m_appMethods.onScreensaverHidden(hApp);
+}
+
+BX_PlayerState NativeApplication::GetPlayerState(BX_Handle hApp)
+{
+  if (m_appMethods.getPlayerState)
+    return m_appMethods.getPlayerState(hApp);
+  else
+    return BX_PLAYERSTATE_UNKNOWN;
+}
+
+void NativeApplication::OnDisplayRender(BX_WindowHandle win)
+{
+  if (m_appMethods.onDisplayRender)
+    m_appMethods.onDisplayRender(win);
+}
+
 void NativeApplication::SetPlayer(BX_PlayerHandle p)
 {
   m_player = p;
+  m_playerCaching = true;
 }
 
 void NativeApplication::OnPipeOverFlow()
@@ -395,8 +481,13 @@ void NativeApplication::OnPipeOverFlow()
 void NativeApplication::OnPipeUnderFlow()
 {
   // we have to check the player's internal buffer as well and not report underrun if it still has data to work with
-  if (m_appMethods.onPlaybackUnderrun && g_application.m_pPlayer && g_application.m_pPlayer->GetCacheLevel() == 0)
-    m_appMethods.onPlaybackUnderrun(m_player);    
+  if (m_appMethods.onPlaybackUnderrun && g_application.m_pPlayer && !m_playerCaching && g_application.m_pPlayer->GetCacheLevel() == 0
+      && g_application.m_pPlayer->GetTime() > 1)
+  {
+     m_appMethods.onPlaybackUnderrun(m_player);
+  }
+
+  m_playerCaching = g_application.m_pPlayer->IsCaching();
 }
 
 void NativeApplication::OnPlaybackEOF()
@@ -415,6 +506,30 @@ unsigned int NativeApplication::GetPos()
   return m_lastSetPos;
 }
 
+void NativeApplication::SetScreensaverState()
+{
+  BX_PlayerState playerState = GetPlayerState(&m_handle);
+  if (playerState != BX_PLAYERSTATE_UNKNOWN && playerState != BX_PLAYERSTATE_STOPPED)
+  {
+    g_application.ResetScreenSaver();
+  }
+
+  bool currentScreensaverState = g_application.IsInScreenSaver();
+  if (currentScreensaverState != m_screenSaverState)
+  {
+    m_screenSaverState = currentScreensaverState;
+
+    if (currentScreensaverState)
+    {
+      OnScreensaverShown(&m_handle);
+    }
+    else
+    {
+      OnScreensaverHidden(&m_handle);
+    }
+  }
+}
+
 void BXGetDisplayOverscan(BX_Overscan* overscan)
 {
   RESOLUTION res = g_graphicsContext.GetVideoResolution();
@@ -426,6 +541,79 @@ void BXGetDisplayOverscan(BX_Overscan* overscan)
   overscan->right = g_settings.m_ResInfo[res].Overscan.right;
   overscan->top = g_settings.m_ResInfo[res].Overscan.top;
   overscan->bottom = g_settings.m_ResInfo[res].Overscan.bottom;
+}
+
+void BXBoxeeRenderingEnabled(bool enabled)
+{
+  g_application.SetRenderingEnabled(enabled);
+}
+
+BX_Mode3D BXDimensionalityGetSupportedModes(void)
+{
+  if (g_guiSettings.GetBool("videoscreen.tv3dfc"))
+    return (BX_Mode3D) ((int) BX_MODE_3D_SIDE_BY_SIDE | (int) BX_MODE_3D_TOP_AND_BOTTOM);
+  else
+    return BX_MODE_3D_NONE;
+}
+
+void BXDimensionalitySetMode(BX_Mode3D mode)
+{
+  Mode3D renderMode;
+
+  switch (mode)
+  {
+  case BX_MODE_3D_SIDE_BY_SIDE: renderMode = MODE_3D_SBS; break;
+  case BX_MODE_3D_TOP_AND_BOTTOM: renderMode = MODE_3D_OU; break;
+  default: renderMode = MODE_3D_NONE; break;
+  }
+
+  g_Windowing.SetMode3D(renderMode);
+}
+
+BX_Mode3D BXDimensionalityGetMode(void)
+{
+  Mode3D renderMode = g_Windowing.GetMode3D();
+
+  switch (renderMode)
+  {
+  case MODE_3D_SBS: return BX_MODE_3D_SIDE_BY_SIDE;
+  case MODE_3D_OU: return BX_MODE_3D_TOP_AND_BOTTOM;
+  default: return BX_MODE_3D_NONE;
+  }
+}
+
+void BXShowTip(const char *text, int duration)
+{
+  g_application.m_guiDialogKaiToast.QueueNotification("", "", text, duration * 1000);
+}
+
+void BXAudioGetOutputPortCaps(BX_AudioOutputPort* output, BX_AudioOutputCaps* caps)
+{
+  if (output)
+  {
+    int audioOutputMode = g_guiSettings.GetInt("audiooutput.mode");
+    switch (audioOutputMode)
+    {
+    case AUDIO_ANALOG:         *output = BX_AUDIO_OUTPUT_I2S0; break;
+    case AUDIO_DIGITAL_SPDIF:  *output = BX_AUDIO_OUTPUT_SPDIF; break;
+    case AUDIO_DIGITAL_HDMI:   *output = BX_AUDIO_OUTPUT_HDMI; break;
+#ifdef HAS_INTEL_SMD
+    case AUDIO_ALL_OUTPUTS:    *output = (BX_AudioOutputPort) (BX_AUDIO_OUTPUT_I2S0 | BX_AUDIO_OUTPUT_SPDIF | BX_AUDIO_OUTPUT_HDMI); break;
+#endif
+    }
+  }
+
+  if (caps)
+  {
+    int capsInt = BX_AUDIO_CAPS_PCM;
+    if (g_guiSettings.GetBool("audiooutput.lpcm71passthrough")) capsInt = BX_AUDIO_CAPS_LPCM71;
+    if (g_guiSettings.GetBool("audiooutput.eac3passthrough"))   capsInt |= BX_AUDIO_CAPS_DDP;
+    if (g_guiSettings.GetBool("audiooutput.ac3passthrough"))    capsInt |= BX_AUDIO_CAPS_DD;
+    if (g_guiSettings.GetBool("audiooutput.truehdpassthrough")) capsInt |= BX_AUDIO_CAPS_TRUEHD;
+    if (g_guiSettings.GetBool("audiooutput.dtspassthrough"))    capsInt |= BX_AUDIO_CAPS_DTS;
+    if (g_guiSettings.GetBool("audiooutput.dtshdpassthrough"))  capsInt |= BX_AUDIO_CAPS_DTSMA;
+    *caps = (BX_AudioOutputCaps) capsInt;
+  }
 }
 
 #endif

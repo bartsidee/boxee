@@ -44,7 +44,7 @@ CFileISO::~CFileISO()
   }
 }
 //*********************************************************************************************
-bool CFileISO::Open(const CURL& url)
+bool CFileISO::Open(const CURI& url)
 {
   string strFName = "\\";
   strFName += url.GetFileName();
@@ -69,7 +69,7 @@ unsigned int CFileISO::Read(void *lpBuf, int64_t uiBufSize)
   if (!m_bOpened) return 0;
   char *pData = (char *)lpBuf;
 
-  if (m_cache.Size() > 0)
+  if (m_cache.getSize() > 0)
   {
     long lTotalBytesRead = 0;    
     while (uiBufSize > 0)
@@ -78,7 +78,7 @@ unsigned int CFileISO::Read(void *lpBuf, int64_t uiBufSize)
       {
         long lBytes2Read = m_cache.GetMaxReadSize();
         if (lBytes2Read > uiBufSize) lBytes2Read = (long)uiBufSize;
-        m_cache.ReadBinary(pData, lBytes2Read );
+        m_cache.ReadData(pData, lBytes2Read );
         uiBufSize -= lBytes2Read ;
         pData += lBytes2Read;
         lTotalBytesRead += lBytes2Read ;
@@ -89,7 +89,7 @@ unsigned int CFileISO::Read(void *lpBuf, int64_t uiBufSize)
         unsigned char buffer[5000];
         long lBytesRead = m_isoReader.ReadFile( m_hFile, buffer, sizeof(buffer));
         if (lBytesRead > 0)
-          m_cache.WriteBinary((char*)buffer, lBytesRead);
+          m_cache.WriteData((char*)buffer, lBytesRead);
         else
           return 0;
       }
@@ -133,7 +133,7 @@ int64_t CFileISO::GetPosition()
   return m_isoReader.GetFilePosition(m_hFile);
 }
 
-bool CFileISO::Exists(const CURL& url)
+bool CFileISO::Exists(const CURI& url)
 {
   string strFName = "\\";
   strFName += url.GetFileName();
@@ -149,7 +149,7 @@ bool CFileISO::Exists(const CURL& url)
   return true;
 }
 
-int CFileISO::Stat(const CURL& url, struct __stat64* buffer)
+int CFileISO::Stat(const CURI& url, struct __stat64* buffer)
 {
   string strFName = "\\";
   strFName += url.GetFileName();

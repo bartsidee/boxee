@@ -2,11 +2,12 @@
 
 @settitle Developer Documentation
 @titlepage
-@sp 7
 @center @titlefont{Developer Documentation}
-@sp 3
 @end titlepage
 
+@top
+
+@contents
 
 @chapter Developers Guide
 
@@ -149,9 +150,9 @@ should also be avoided if they don't make the code easier to understand.
    Also if you have doubts about splitting or not splitting, do not hesitate to
    ask/discuss it on the developer mailing list.
 @item
-   Do not change behavior of the program (renaming options etc) without
-   first discussing it on the ffmpeg-devel mailing list. Do not remove
-   functionality from the code. Just improve!
+   Do not change behavior of the programs (renaming options etc) or public
+   API or ABI without first discussing it on the ffmpeg-devel mailing list.
+   Do not remove functionality from the code. Just improve!
 
    Note: Redundant code can be removed.
 @item
@@ -252,6 +253,9 @@ keeping it as a logical unit that contains an individual change, even
 if it spans multiple files. This makes reviewing your patches much easier
 for us and greatly increases your chances of getting your patch applied.
 
+Use the patcheck tool of FFmpeg to check your patch.
+The tool is located in the tools directory.
+
 Run the regression tests before submitting a patch so that you can
 verify that there are no big problems.
 
@@ -286,8 +290,8 @@ send a reminder by email. Your patch should eventually be dealt with.
     Did you add a long_name under NULL_IF_CONFIG_SMALL to the AVCodec or
     AVInputFormat/AVOutputFormat struct?
 @item
-    Did you bump the minor version number in @file{avcodec.h} or
-    @file{avformat.h}?
+    Did you bump the minor version number (and reset the micro version
+    number) in @file{avcodec.h} or @file{avformat.h}?
 @item
     Did you register it in @file{allcodecs.c} or @file{allformats.c}?
 @item
@@ -300,8 +304,8 @@ send a reminder by email. Your patch should eventually be dealt with.
     Remember to do this even if you're just adding a format to a file that is
     already being compiled by some other rule, like a raw demuxer.
 @item
-    Did you add an entry to the table of supported formats or codecs in the
-    documentation?
+    Did you add an entry to the table of supported formats or codecs in
+    @file{doc/general.texi}?
 @item
     Did you add an entry in the Changelog?
 @item
@@ -411,13 +415,18 @@ The regression tests build a synthetic video stream and a synthetic
 audio stream. These are then encoded and decoded with all codecs or
 formats. The CRC (or MD5) of each generated file is recorded in a
 result file. A 'diff' is launched to compare the reference results and
-the result file.
+the result file. The output is checked immediately after each test
+has run.
 
 The regression tests then go on to test the FFserver code with a
 limited set of streams. It is important that this step runs correctly
 as well.
 
-Run 'make test' to test all the codecs and formats.
+Run 'make test' to test all the codecs and formats. Commands like
+'make regtest-mpeg2' can be used to run a single test. By default,
+make will abort if any test fails. To run all tests regardless,
+use make -k. To get a more verbose output, use 'make V=1 test' or
+'make V=2 test'.
 
 Run 'make fulltest' to test all the codecs, formats and FFserver.
 

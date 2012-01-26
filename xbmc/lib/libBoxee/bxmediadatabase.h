@@ -79,9 +79,10 @@ public:
   
   int UpdateFolderResolving(const BXFolder* pFolder);  
   int UpdateFolderResolved(const std::string& strPath, int iMetadataId);
-  int UpdateFolderUnresolved(const std::string& strPath);
+  int UpdateFolderUnresolved(const std::string& strPath , bool bDecreaseNeedsRescan = true);
   int UpdateFolderAborted(const std::string& strPath);
   int UpdateFolderNew(const std::string& strPath);
+  bool IsFolderBeingResolved(const std::string& strPath);
   int UpdateFolderTreeNew(const std::string& strPath);
   int UpdateFolderAvailability(const std::string& strPath, bool bAvailable);
 
@@ -102,7 +103,7 @@ public:
   bool RemoveQueueItem(const std::string& strClientId);
 
   bool AddMediaShare(const std::string& strLabel, const std::string& strPath, const std::string& strType, int iScanType);
-  bool UpdateMediaShare(const std::string& strLabel, const std::string& strPath, const std::string& strType, int iScanType);
+  bool UpdateMediaShare(const std::string& strOrgLabel, const std::string& strOrgType, const std::string& strLabel, const std::string& strPath, const std::string& strType, int iScanType);
   bool DeleteMediaShare(const std::string& strLabel, const std::string& strPath, const std::string& strType);
   bool GetScanTime(const std::string& strLabel, const std::string& strPath, const std::string& strType, time_t& iLastScanned);
   bool UpdateScanTime(const std::string& strLabel, const std::string& strPath, const std::string& strType, time_t iLastScanned);
@@ -113,6 +114,8 @@ public:
   int UpdateProviderPerf(const std::string& strProvider, int quality);
   int GetProviderPerfQuality(const std::string& strProvider);
 
+  int AddPlayableFolder(const std::string& strPath);
+  bool IsPlayableFolder(const std::string& strPath);
 };
 
 }

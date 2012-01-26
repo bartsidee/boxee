@@ -1,6 +1,10 @@
 ARCH=@ARCH@
 INCLUDES=-I. -I.. -I../../linux -I../../ -I ../../../guilib
-DEFINES+=-DHAS_SDL_OPENGL -DHAS_SDL -DHAS_GL=14
+ifeq (@USE_GLES@,1)
+DEFINES+=-DHAS_GLES=2 -DHAS_EGL
+else
+DEFINES+=-DHAS_SDL_OPENGL -DHAS_SDL -DHAS_GL
+endif
 CXXFLAGS=-O3 -fPIC
 OBJS=opengl_spectrum.o
 

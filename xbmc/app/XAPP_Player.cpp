@@ -8,6 +8,7 @@
 #include "GUIDialogBoxeeMediaAction.h"
 #include "utils/log.h"
 #include "GUIUserMessages.h"
+#include "FilePipe.h"
 
 namespace XAPP
 {
@@ -21,16 +22,36 @@ public:
   
   virtual void OnActionNextItem()
   {
-    CLog::Log(LOGDEBUG, "XAPP::ActionCallback::OnActionNextItem, (flow)");
+    CLog::Log(LOGINFO, "XAPP::ActionCallback::OnActionNextItem, (flow)");
     m_player.SetLastPlayerAction(Player::XAPP_PLAYER_ACTION_NEXT);
   }
-  
+
+  virtual void OnActionPrevItem()
+  {
+    CLog::Log(LOGINFO, "XAPP::ActionCallback::OnActionPrevItem, (flow)");
+    m_player.SetLastPlayerAction(Player::XAPP_PLAYER_ACTION_PREV);
+  }
+
   virtual void OnActionStop()
   {
     CLog::Log(LOGDEBUG, "XAPP::ActionCallback::OnActionStop, (flow)");
     m_player.SetLastPlayerAction(Player::XAPP_PLAYER_ACTION_STOP);
   }
   
+  virtual void OnActionSeek(int iTime)
+  {
+    CLog::Log(LOGDEBUG, "XAPP::ActionCallback::OnActionStop, (flow)");
+    m_player.SetLastPlayerAction(Player::XAPP_PLAYER_ACTION_SEEK);
+    m_player.SetSeekRequestTime(iTime);
+  }
+
+  virtual void OnActionOsdExt(int amount)
+  {
+    CLog::Log(LOGDEBUG, "XAPP::ActionCallback::OnActionStop, (flow)");
+    m_player.SetLastPlayerAction(Player::XAPP_PLAYER_ACTION_OSD_EXT);
+    m_player.SetOsdExtAmount(amount);
+  }
+
 private:
   XAPP::Player& m_player;
 };
@@ -112,7 +133,7 @@ public:
   
   virtual void OnQueueNextItem()
   {
-    CLog::Log(LOGDEBUG, "XAPP::EventCallback::OnQueueNextItem (flow)");
+    CLog::Log(LOGINFO, "XAPP::EventCallback::OnQueueNextItem (flow)");
     m_player.SetLastPlayerEvent(Player::EVENT_NEXT_ITEM);
   }
   
@@ -157,7 +178,7 @@ Player::Player(bool bRegisterCallbacks)
 {
   //m_playerCallback = new MyPlayerCallBack(*this);
   
-  
+  CLog::Log(LOGINFO, "create xapp player, register callbacks %d", bRegisterCallbacks);
   if (bRegisterCallbacks) {
     m_eventCallback = new MyEventCallBack(*this);
     m_actionCallback = new MyActionCallBack(*this);
@@ -172,7 +193,7 @@ Player::Player(bool bRegisterCallbacks)
   
   m_lastAction = XAPP_PLAYER_ACTION_NONE;
   m_lastEvent = EVENT_STOPPED;
-  
+  m_currentRawPipe = 1;
 }
 
 Player::~Player()
@@ -192,17 +213,50 @@ void Player::PlaySelected(int iItem, int type)
 {
   g_playlistPlayer.SetCurrentPlaylist(type);
   g_playlistPlayer.SetCurrentSong(iItem);
+  
+  ThreadMessage tMsg(TMSG_PLAYLISTPLAYER_PLAY, iItem);
 
-  ThreadMessage tMsg = {TMSG_PLAYLISTPLAYER_PLAY, iItem};
-
-  PyObject *app = PySys_GetObject((char*)"app-id");
-  if (app)
+  const char *strAppId = CAppManager::GetInstance().GetCurrentContextAppId();
+  if (strAppId)
   {
-    const char *id = PyString_AsString(app);
-    tMsg.strParam = id;
+    tMsg.strParam = strAppId;
   }  
   
   g_application.getApplicationMessenger().SendMessage(tMsg, false);
+}
+
+void Player::QueueNextItem(ListItem item)
+{
+  if (item.GetFileItem()->GetPropertyBOOL("add-to-history"))
+  {
+    if (item.GetFileItem()->HasExternlFileItem())
+    {
+      g_application.GetBoxeeItemsHistoryList().AddItemToHistory(*(item.GetFileItem()->GetExternalFileItem().get()));
+    }
+    else
+    {
+      g_application.GetBoxeeItemsHistoryList().AddItemToHistory(*(item.GetFileItem().get()));
+    }
+  }
+
+  if(item.GetFileItem()->IsInternetPlayList())
+  {
+    if (item.GetFileItem()->HasExternlFileItem())
+    {
+       (item.GetFileItem()->GetExternalFileItem().get())->SetProperty("DontShowSubtitles",true);
+    }
+
+    (item.GetFileItem().get())->SetProperty("DontShowSubtitles",true);
+  }
+
+  const char *strAppId = CAppManager::GetInstance().GetCurrentContextAppId();
+  if (strAppId)
+  {
+   (*(item.GetFileItem().get())).SetProperty("appid", strAppId);
+  }
+
+  g_application.getApplicationMessenger().QueueNextMediaFile(*(item.GetFileItem().get()));
+
 }
 
 void Player::Play(ListItem item)
@@ -219,11 +273,20 @@ void Player::Play(ListItem item)
     }
   }
   
-  PyObject *app = PySys_GetObject((char*)"app-id");
-  if (app)
+  if(item.GetFileItem()->IsInternetPlayList())
   {
-    const char *id = PyString_AsString(app);
-    (*(item.GetFileItem().get())).SetProperty("appid",id);
+    if (item.GetFileItem()->HasExternlFileItem())
+    {
+       (item.GetFileItem()->GetExternalFileItem().get())->SetProperty("DontShowSubtitles",true);
+    }
+
+    (item.GetFileItem().get())->SetProperty("DontShowSubtitles",true);
+  }
+
+  const char *strAppId = CAppManager::GetInstance().GetCurrentContextAppId();
+  if (strAppId)
+  {
+   (*(item.GetFileItem().get())).SetProperty("appid", strAppId);
   }
   
   g_application.getApplicationMessenger().MediaPlay(*(item.GetFileItem().get()));
@@ -243,11 +306,10 @@ void Player::PlayInBackground(ListItem item)
     }
   }
 
-  PyObject *app = PySys_GetObject((char*)"app-id");
-  if (app)
+  const char *strAppId = CAppManager::GetInstance().GetCurrentContextAppId();
+  if (strAppId)
   {
-    const char *id = PyString_AsString(app);
-    (*(item.GetFileItem().get())).SetProperty("appid",id);
+    (*(item.GetFileItem().get())).SetProperty("appid", strAppId);
   }
 
   // Set property DisableFullScreen to play the file in the background
@@ -294,8 +356,9 @@ void Player::Pause()
 void Player::Stop()
 {
   //g_application.getApplicationMessenger().MediaStop();
-  ThreadMessage tMsg = {TMSG_MEDIA_STOP};
+  ThreadMessage tMsg (TMSG_MEDIA_STOP);
   g_application.getApplicationMessenger().SendMessage(tMsg, false);
+  RawClose();
 }
 
 void Player::PlayNext() 
@@ -316,7 +379,18 @@ double Player::GetTime() throw (XAPP::AppException)
   {
     throw AppException("XBMC is not playing any media file");
   }
+
   return g_application.GetTime();
+}
+
+double Player::GetPlaylistTimecode() throw (XAPP::AppException)
+{
+  if (!g_application.IsPlaying())
+  {
+    throw AppException("XBMC is not playing any media file");
+  }
+
+  return g_application.GetStreamPlaylistTimecode();
 }
 
 double Player::GetTotalTime() throw (XAPP::AppException)
@@ -331,10 +405,12 @@ double Player::GetTotalTime() throw (XAPP::AppException)
 
 void Player::SeekTime(double seekTime)
 {
-   if (!g_application.IsPlaying())
+   if (!g_application.IsPlaying() || (g_application.m_pPlayer && !g_application.m_pPlayer->CanSeekToTime()))
    {
+     CLog::Log(LOGDEBUG,"XAPP::Player::SeekTime - FAILED to execute since [IsPlaying=%d][CanSeekToTime=%d]",g_application.IsPlaying(),(g_application.m_pPlayer ? g_application.m_pPlayer->CanSeekToTime() : -1));
      return;
    }
+
    g_application.SeekTime( seekTime );
 }
 
@@ -352,6 +428,7 @@ void Player::LockPlayerAction(XAPP::Player::PLAYER_ACTION action)
     break;
   default:
     g_infoManager.LockPlayerAction(PLAYER_ACTION_ALLOW_ALL);
+    break;
   }
 }
 
@@ -364,12 +441,14 @@ XAPP::ListItem Player::GetPlayingItem()
 
 XAPP::Player::PLAYER_EVENT Player::GetLastPlayerEvent()
 {
-  return m_lastEvent;
+  XAPP::Player::PLAYER_EVENT currEvent = m_lastEvent;
+  m_lastEvent = XAPP::Player::EVENT_NONE;
+  return currEvent;
 }
 
 void Player::SetLastPlayerEvent(XAPP::Player::PLAYER_EVENT event)
 {
-  m_lastEvent = event; 
+  m_lastEvent = event;
 }
 
 XAPP::Player::PLAYER_ACTION Player::GetLastPlayerAction()
@@ -404,7 +483,9 @@ bool Player::IsPaused()
 
 bool Player::IsCaching()
 {
-  return g_application.m_pPlayer->IsCaching();
+  if(g_application.m_pPlayer)
+    return g_application.m_pPlayer->IsCaching();
+  return false;
 }
 
 bool Player::IsForwarding()
@@ -430,6 +511,122 @@ int Player::GetVolume()
 void Player::ToggleMute()
 {
   g_application.Mute();
+}
+
+static XFILE::CFilePipe *s_pipe[2] = {NULL, NULL};
+
+void Player::PlayRaw(ListItem &item)
+{
+
+  CLog::Log(LOGINFO, "xapp player - play raw %d", 1 - m_currentRawPipe);
+  if (s_pipe[m_currentRawPipe])
+    RawClose();
+
+  m_currentRawPipe = 1 - m_currentRawPipe;
+
+  // if the pipe we want to use is occupied, close it
+  if (s_pipe[m_currentRawPipe])
+    RawClose();
+
+
+  // alloc new pipe
+  s_pipe[m_currentRawPipe] = new XFILE::CFilePipe;
+  s_pipe[m_currentRawPipe]->OpenForWrite(XFILE::PipesManager::GetInstance().GetUniquePipeName());
+
+  item.SetPath(s_pipe[m_currentRawPipe]->GetName());
+}
+
+void Player::UpdateItem(ListItem &item)
+{
+  g_application.getApplicationMessenger().UpdateItem(*(item.GetFileItem().get()));
+}
+
+void Player::QueueNextRaw(ListItem item)
+{
+
+  CLog::Log(LOGINFO, "xapp player - queue next raw %d", 1 - m_currentRawPipe);
+  m_currentRawPipe = 1 - m_currentRawPipe;
+
+  if (s_pipe[m_currentRawPipe])
+    RawClose();
+
+  s_pipe[m_currentRawPipe] = new XFILE::CFilePipe;
+  s_pipe[m_currentRawPipe]->OpenForWrite(XFILE::PipesManager::GetInstance().GetUniquePipeName());
+
+  item.SetPath(s_pipe[m_currentRawPipe]->GetName());
+  m_item = item;
+  g_application.getApplicationMessenger().QueueNextMediaFile(*(m_item.GetFileItem().get()));
+
+}
+
+int Player::FeedRaw(unsigned char* data, unsigned int length)
+{
+  //CLog::Log(LOGDEBUG, "xapp player - feed raw pipe %d", m_currentRawPipe);
+  if (s_pipe[m_currentRawPipe])
+  {
+    int rc = s_pipe[m_currentRawPipe]->Write(data, length);
+    if (m_bFirstFeed)
+    {
+      printf("-------------------- play file %s --------------------\n", m_item.GetPath().c_str());
+      //g_application.getApplicationMessenger().PlayFile(*(m_item.GetFileItem().get()));
+    }
+    m_bFirstFeed = false;
+    return rc;
+  }
+  return -1;
+}
+
+bool Player::RawIsEmpty()
+{
+  CLog::Log(LOGINFO, "xapp player - raw is empty pipe %d", m_currentRawPipe);
+  if (s_pipe[m_currentRawPipe]){
+    return s_pipe[m_currentRawPipe]->IsEmpty();
+  }
+  return true;
+}
+
+
+void Player::FlushRaw()
+{
+  if (s_pipe[m_currentRawPipe])
+    s_pipe[m_currentRawPipe]->Flush();
+}
+
+void Player::RawClose()
+{
+  CLog::Log(LOGINFO, "xapp player - raw close pipe %d", m_currentRawPipe);
+  if (s_pipe[m_currentRawPipe])
+  {
+    s_pipe[m_currentRawPipe]->SetEof();
+    s_pipe[m_currentRawPipe]->Close();
+    delete s_pipe[m_currentRawPipe];
+    s_pipe[m_currentRawPipe] = NULL;
+  }
+}
+
+void Player::RawSetEOF()
+{
+  CLog::Log(LOGINFO, "xapp player - set eof for pipe %d", m_currentRawPipe);
+  if (s_pipe[m_currentRawPipe])
+  {
+    s_pipe[m_currentRawPipe]->SetEof();
+  }
+}
+
+bool Player::IsShuffle()
+{
+  return g_playlistPlayer.IsShuffled(g_playlistPlayer.GetCurrentPlaylist());
+}
+
+XAPP::Player::PLAYER_REPEAT_STATE Player::GetRepeatState()
+{
+  return (XAPP::Player::PLAYER_REPEAT_STATE)g_playlistPlayer.GetRepeat(g_playlistPlayer.GetCurrentPlaylist());
+}
+
+void Player::ResumeAudio()
+{
+  if (IsPaused())
+    Pause();
 }
 
 }

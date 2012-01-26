@@ -10,8 +10,8 @@
 #define TITLE_PROPERTY "title"
 #define CUSTOM_LABEL "CUSTOM_LABEL"
 
-CGUIDialogBoxeeDropdown::CGUIDialogBoxeeDropdown()
-: CGUIDialog(WINDOW_DIALOG_BOXEE_DROPDOWN, "boxee_dropdown.xml")
+CGUIDialogBoxeeDropdown::CGUIDialogBoxeeDropdown(int id, const CStdString &xmlFile)
+: CGUIDialog(id, xmlFile)
 {
   m_bConfirmed = true;
   m_getDropdownLabelCallback = NULL;
@@ -79,13 +79,13 @@ bool CGUIDialogBoxeeDropdown::OnClick(CGUIMessage& message)
   {
     CGUIBaseContainer* subMenuList = (CGUIBaseContainer*)GetControl(ITEMS_LIST);
     GetClickedLabel(subMenuList);
-  }
+    }
   break;
   case ITEMS_LIST2:
   {
     CGUIBaseContainer* subMenuList = (CGUIBaseContainer*)GetControl(ITEMS_LIST2);
     GetClickedLabel(subMenuList);
-  }
+    }
   break;
   } // switch
 
@@ -96,64 +96,47 @@ bool CGUIDialogBoxeeDropdown::OnClick(CGUIMessage& message)
 
 bool CGUIDialogBoxeeDropdown::Show(CFileItemList& items, const CStdString& title, CStdString& value, float posX, float posY, int type, ICustomDropdownLabelCallback* cdlCallback)
 {
-  CGUIDialogBoxeeDropdown *dialog = (CGUIDialogBoxeeDropdown *)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_DROPDOWN);
-
-  if (!dialog)
-  {
-    return false;
-  }
-
   // save original position
-  float orgPosX = dialog->GetXPosition();
-  float orgPosY = dialog->GetYPosition();
-
-  dialog->AllocResources();
-  dialog->SetPosition(posX, posY);
+  AllocResources();
+  SetPosition(posX, posY);
 
   bool retVal = Show(items, title, value, type, cdlCallback);
 
   // reset original position
-  dialog->AllocResources();
-  dialog->SetPosition(orgPosX, orgPosY);
+  //dialog->AllocResources();
+  //dialog->SetPosition(orgPosX, orgPosY);
 
   return retVal;
 }
 
 bool CGUIDialogBoxeeDropdown::Show(CFileItemList& items, const CStdString& title, CStdString& value, int type, ICustomDropdownLabelCallback* cdlCallback)
 {
-  CGUIDialogBoxeeDropdown *dialog = (CGUIDialogBoxeeDropdown *)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_DROPDOWN);
-
-  if (!dialog)
-  {
-    return false;
-  }
-
-  dialog->m_items.Clear();
-  dialog->m_items.Append(items);
-  dialog->m_type = type;
-  dialog->m_value = value;
+  m_items.Clear();
+  m_items.Append(items);
+  m_type = type;
+  m_value = value;
 
   if (cdlCallback)
   {
     CFileItemPtr customLabelItem(new CFileItem(cdlCallback->m_customTitle));
     customLabelItem->SetProperty("value",CUSTOM_LABEL);
-    dialog->m_items.Add(customLabelItem);
+    m_items.Add(customLabelItem);
 
-    dialog->m_getDropdownLabelCallback = cdlCallback;
+    m_getDropdownLabelCallback = cdlCallback;
   }
   else
   {
-    dialog->m_getDropdownLabelCallback = NULL;
+    m_getDropdownLabelCallback = NULL;
   }
 
-  dialog->SetTitle(title);
+  SetTitle(title);
 
-  dialog->DoModal();
+  DoModal();
 
-  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeDropdown::Show, set genre =  %s (browse)", dialog->m_value.c_str());
-  value =  dialog->m_value;
+  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeDropdown::Show, set m_value =  %s (browse)", m_value.c_str());
+  value = m_value;
 
-  return dialog->m_bConfirmed;
+  return m_bConfirmed;
 }
 
 void CGUIDialogBoxeeDropdown::LoadItems()
@@ -178,8 +161,8 @@ void CGUIDialogBoxeeDropdown::LoadItems()
       if (stricmp(value.c_str(), m_value.c_str()) == 0)
       {
         iSelectedItem = i;
-      }
     }
+  }
 
     CGUIMessage winmsg1(GUI_MSG_ITEM_SELECT, GetID(), ITEMS_LIST, iSelectedItem);
     OnMessage(winmsg1);
@@ -197,11 +180,11 @@ void CGUIDialogBoxeeDropdown::LoadItems()
       if (stricmp(value.c_str(), m_value.c_str()) == 0)
       {
         iSelectedItem = i;
-      }
     }
+  }
     CGUIMessage winmsg1(GUI_MSG_ITEM_SELECT, GetID(), ITEMS_LIST2, iSelectedItem);
     OnMessage(winmsg1);
-  }
+}
 }
 
 void CGUIDialogBoxeeDropdown::SetTitle(const CStdString& title)
@@ -241,3 +224,12 @@ bool CGUIDialogBoxeeDropdown::GetClickedLabel(CGUIBaseContainer* subMenuList)
   return true;
 }
 
+CGUIDialogBoxeeBrowserDropdown::CGUIDialogBoxeeBrowserDropdown()
+: CGUIDialogBoxeeDropdown(WINDOW_DIALOG_BOXEE_BROWSER_DROPDOWN , "boxee_dropdown_browser.xml")
+{
+}
+
+
+CGUIDialogBoxeeBrowserDropdown::~CGUIDialogBoxeeBrowserDropdown()
+{
+}

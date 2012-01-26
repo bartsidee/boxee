@@ -66,7 +66,7 @@ bool CXBMSDirectory::GetDirectory(const CStdString& strPathUtf8, CFileItemList &
   CStdString strPath=strPathUtf8;
   g_charsetConverter.utf8ToStringCharset(strPath);
 
-  CURL url(strPath);
+  CURI url(strPath);
 
   CStdString strRoot = strPath;
   CUtil::AddSlashAtEnd(strPath);

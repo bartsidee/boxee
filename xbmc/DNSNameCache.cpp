@@ -66,7 +66,7 @@ bool CDNSNameCache::Lookup(const CStdString& strHostName, CStdString& strIpAdres
 #ifndef _LINUX
     /* Open a windows connection */
     WSADATA wsaData;    /* Used to open Windows connection */
-    if (WSAStartup(0x0101, &wsaData) != 0)
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
     {
       OutputDebugString("Could not open Windows connection\n");
       return false;

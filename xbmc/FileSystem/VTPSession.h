@@ -4,6 +4,8 @@
 
 #include "system.h" // for SOCKET
 
+#ifdef HAS_FILESYSTEM_VTP
+
 //#define VTP_STANDALONE
 
 class CVTPSession
@@ -41,3 +43,4 @@ private:
   SOCKET m_socket;
 };
 
+#endif

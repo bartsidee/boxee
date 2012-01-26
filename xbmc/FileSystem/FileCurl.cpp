@@ -45,7 +45,6 @@
 #include "utils/TimeUtils.h"
 
 using namespace XFILE;
-using namespace XCURL;
 
 #define XMIN(a,b) ((a)<(b)?(a):(b))
 #define FITS_INT(a) (((a) <= INT_MAX) && ((a) >= INT_MIN))
@@ -148,7 +147,7 @@ size_t CFileCurl::CReadState::WriteCallback(char *buffer, size_t size, size_t ni
     unsigned int maxWriteable = XMIN((unsigned int)m_buffer.GetMaxWriteSize(), m_overflowSize);
     if (maxWriteable)
     {
-      if (!m_buffer.WriteBinary(m_overflowBuffer, maxWriteable))
+      if (!m_buffer.WriteData(m_overflowBuffer, maxWriteable))
         CLog::Log(LOGERROR, "Unable to write to buffer - what's up?");
       if (m_overflowSize > maxWriteable)
       { // still have some more - copy it down
@@ -161,7 +160,7 @@ size_t CFileCurl::CReadState::WriteCallback(char *buffer, size_t size, size_t ni
   unsigned int maxWriteable = XMIN((unsigned int)m_buffer.GetMaxWriteSize(), amount);
   if (maxWriteable)
   {
-    if (!m_buffer.WriteBinary(buffer, maxWriteable))
+    if (!m_buffer.WriteData(buffer, maxWriteable))
       CLog::Log(LOGERROR, "Unable to write to buffer - what's up?");
     amount -= maxWriteable;
     buffer += maxWriteable;
@@ -263,12 +262,12 @@ long CFileCurl::CReadState::Connect(unsigned int size)
 
   // read some data in to try and obtain the length
   // maybe there's a better way to get this info??
-  m_stillRunning = 1;  
+  m_stillRunning = 1;
   if (!FillBuffer(1))
   {
     long response = -1;
     g_curlInterface.easy_getinfo(m_easyHandle, CURLINFO_RESPONSE_CODE, &response);
-    CLog::Log(LOGERROR, "CFileCurl::CReadState::Open, didn't get any data from stream. HTTP CODE: %d", response);    
+    CLog::Log(LOGDEBUG, "CFileCurl::CReadState::Open, didn't get any data from stream. HTTP CODE: %lu", response);
     return response;
   }
 
@@ -304,13 +303,13 @@ long CFileCurl::CReadState::Reconnect()
     g_curlInterface.multi_remove_handle(m_multiHandle, m_easyHandle);
     g_curlInterface.multi_add_handle(m_multiHandle, m_easyHandle);
   }
-
+  
   m_stillRunning = 1;
   if (!FillBuffer(1))
   {
     long response = -1;
     g_curlInterface.easy_getinfo(m_easyHandle, CURLINFO_RESPONSE_CODE, &response);
-    CLog::Log(LOGERROR, "CFileCurl::CReadState::Open, didn't get any data from stream. HTTP CODE: %d", response);    
+    CLog::Log(LOGERROR, "CFileCurl::CReadState::Open, didn't get any data from stream. HTTP CODE: %lu", response);    
     return response;
   }
   
@@ -392,6 +391,18 @@ void CFileCurl::Close()
 
   m_state->Disconnect();
 
+  CURI url(m_url);
+  double totalTime = 0.0, dnsTime = 0.0, connectTime = 0.0, pretransfer = 0.0, speed = 0.0, sizeDownloaded = 0.0;
+  g_curlInterface.easy_getinfo(m_state->m_easyHandle, CURLINFO_TOTAL_TIME, &totalTime);
+  g_curlInterface.easy_getinfo(m_state->m_easyHandle, CURLINFO_NAMELOOKUP_TIME, &dnsTime);
+  g_curlInterface.easy_getinfo(m_state->m_easyHandle, CURLINFO_CONNECT_TIME, &connectTime);
+  g_curlInterface.easy_getinfo(m_state->m_easyHandle, CURLINFO_PRETRANSFER_TIME, &pretransfer);
+  g_curlInterface.easy_getinfo(m_state->m_easyHandle, CURLINFO_SPEED_DOWNLOAD, &speed);
+  g_curlInterface.easy_getinfo(m_state->m_easyHandle, CURLINFO_SIZE_DOWNLOAD, &sizeDownloaded);
+  CLog::Log(LOGDEBUG,"CURL STATS: done with <%s>. %4.2fk in: %4.2f sec. dns: %4.2f sec. connect: %4.2f s. pretransfer: %4.2f s. speed: %4.2f kbytes/sec.\n",
+         url.GetHostName().c_str(), 
+         sizeDownloaded / 1024.0, totalTime, dnsTime, connectTime, pretransfer, speed / 1024.0); 
+  
   m_url.Empty();
   m_referer.Empty();
   
@@ -429,6 +440,7 @@ void CFileCurl::SetCommonOptions(CReadState* state)
   // Allow us to follow two redirects
   g_curlInterface.easy_setopt(h, CURLOPT_FOLLOWLOCATION, TRUE);
   g_curlInterface.easy_setopt(h, CURLOPT_MAXREDIRS, 8);
+//  g_curlInterface.easy_setopt(h, CURLOPT_TCP_NODELAY, 1);
 
   // When using multiple threads you should set the CURLOPT_NOSIGNAL option to
   // TRUE for all handles. Everything will work fine except that timeouts are not
@@ -597,7 +609,7 @@ void CFileCurl::SetCorrectHeaders(CReadState* state)
   }
 }
 
-void CFileCurl::ParseAndCorrectUrl(CURL &url2)
+void CFileCurl::ParseAndCorrectUrl(CURI &url2)
 {
   if( url2.GetProtocol().Equals("ftpx") )
     url2.SetProtocol("ftp");
@@ -923,12 +935,12 @@ void CFileCurl::Reset()
 }
 
 
-bool CFileCurl::Open(const CURL& url)
+bool CFileCurl::Open(const CURI& url)
 {
-  CURL url2(url);
+  CURI url2(url);
   ParseAndCorrectUrl(url2);
 
-  url2.GetURL(m_url);
+  m_url = url2.Get();
 
   CLog::Log(LOGDEBUG, "FileCurl::Open(%p) %s", (void*)this, m_url.c_str());  
 
@@ -936,11 +948,11 @@ bool CFileCurl::Open(const CURL& url)
   m_state->m_strEffectiveUrl = m_url;
   if( m_state->m_easyHandle == NULL )
     g_curlInterface.easy_aquire(url2.GetProtocol(), url2.GetHostName(), &m_state->m_easyHandle, &m_state->m_multiHandle );
-    
+  
   // reset the handle state before reusing it. it has to happen before setting the options.
   // later we will re-use this handle to utilize its "keep-alive" feature.
   if (m_opened)
-    curl_easy_reset(m_state->m_easyHandle);
+    g_curlInterface.easy_reset(m_state->m_easyHandle);
 
   // setup common curl options
   SetCommonOptions(m_state);
@@ -950,7 +962,7 @@ bool CFileCurl::Open(const CURL& url)
   {
     m_lastRetCode = m_state->Connect(m_bufferSize);
     if( m_lastRetCode < 0 || m_lastRetCode >= 400)
-      return false;
+    return false;
   }
   else
   {
@@ -991,7 +1003,7 @@ bool CFileCurl::Open(const CURL& url)
     m_state->m_fileSize = 0;
 
   m_seekable = false;
-  if(m_state->m_httpheader.GetValue("Accept-Ranges").Equals("bytes", false))
+  if(m_state->m_fileSize > 0)
   {
     m_seekable = true;
 
@@ -1003,6 +1015,7 @@ bool CFileCurl::Open(const CURL& url)
         m_seekable = false;
     }
   }
+
   return true;
 }
 
@@ -1028,7 +1041,7 @@ bool CFileCurl::CReadState::ReadString(char *szLine, int iLineLength)
   char* pLine = szLine;
   do
   {
-    if (!m_buffer.ReadBinary(pLine, 1))
+    if (!m_buffer.ReadData(pLine, 1))
       break;
 
     pLine++;
@@ -1038,7 +1051,7 @@ bool CFileCurl::CReadState::ReadString(char *szLine, int iLineLength)
   return (bool)((pLine - szLine) > 0);
 }
 
-bool CFileCurl::Exists(const CURL& url)
+bool CFileCurl::Exists(const CURI& url)
 {
   return Stat(url, NULL) == 0;
 }
@@ -1079,7 +1092,7 @@ int64_t CFileCurl::Seek(int64_t iFilePosition, int iWhence)
   CReadState* oldstate = NULL;
   if(m_multisession)
   {
-    CURL url(m_url);
+    CURI url(m_url);
     oldstate = m_state;
     m_state = new CReadState();
 
@@ -1096,7 +1109,7 @@ int64_t CFileCurl::Seek(int64_t iFilePosition, int iWhence)
 
   m_state->m_filePos = nextPos;
   long response = m_state->Connect(m_bufferSize);
-  if(response < 0)
+  if(response < 0 && (m_state->m_fileSize == 0 || m_state->m_fileSize != m_state->m_filePos))
   {
     m_seekable = false;
     if(oldstate)
@@ -1134,7 +1147,7 @@ int CFileCurl::Stat(struct __stat64* buffer)
   return 0;
 }
 
-int CFileCurl::Stat(const CURL& url, struct __stat64* buffer)
+int CFileCurl::Stat(const CURI& url, struct __stat64* buffer)
 { 
 
   // if file is already running, get info from it
@@ -1146,10 +1159,10 @@ int CFileCurl::Stat(const CURL& url, struct __stat64* buffer)
     return 0;
   }
 
-  CURL url2(url);
+  CURI url2(url);
   ParseAndCorrectUrl(url2);
 
-  url2.GetURL(m_url);
+  m_url = url2.Get();
 
   ASSERT(m_state->m_easyHandle == NULL);
   g_curlInterface.easy_aquire(url2.GetProtocol(), url2.GetHostName(), &m_state->m_easyHandle, NULL);
@@ -1195,7 +1208,7 @@ int CFileCurl::Stat(const CURL& url, struct __stat64* buffer)
   }
 
   m_lastRetCode = 0;
-  curl_easy_getinfo(m_state->m_easyHandle, CURLINFO_RESPONSE_CODE, &m_lastRetCode);
+  g_curlInterface.easy_getinfo(m_state->m_easyHandle, CURLINFO_RESPONSE_CODE, &m_lastRetCode);
 
   if( result != CURLE_WRITE_ERROR && result != CURLE_OK )
   {
@@ -1255,7 +1268,7 @@ unsigned int CFileCurl::CReadState::Read(void* lpBuf, int64_t uiBufSize)
   unsigned int want = (unsigned int)XMIN(m_buffer.GetMaxReadSize(), uiBufSize);
 
   /* xfer data to caller */
-  if (m_buffer.ReadBinary((char *)lpBuf, want))
+  if (m_buffer.ReadData((char *)lpBuf, want))
   {
     m_filePos += want;
     return want;
@@ -1293,7 +1306,7 @@ bool CFileCurl::CReadState::FillBuffer(unsigned int want)
     if(m_overflowSize)
     {
       unsigned amount = XMIN((unsigned int)m_buffer.GetMaxWriteSize(), m_overflowSize);
-      m_buffer.WriteBinary(m_overflowBuffer, amount);
+      m_buffer.WriteData(m_overflowBuffer, amount);
 
       if(amount < m_overflowSize)
         memcpy(m_overflowBuffer, m_overflowBuffer+amount,m_overflowSize-amount);
@@ -1330,7 +1343,7 @@ bool CFileCurl::CReadState::FillBuffer(unsigned int want)
         while((msg = g_curlInterface.multi_info_read(m_multiHandle, &msgs)))
         {
           long nRet=200;
-	        curl_easy_getinfo(msg->easy_handle, CURLINFO_RESPONSE_CODE, &nRet);
+	        g_curlInterface.easy_getinfo(msg->easy_handle, CURLINFO_RESPONSE_CODE, &nRet);
           if (nRet == 416) 
           {
             //m_seekable = false;
@@ -1345,7 +1358,10 @@ bool CFileCurl::CReadState::FillBuffer(unsigned int want)
             CLog::Log(LOGDEBUG, "%s: curl failed with code %i", __FUNCTION__, msg->data.result);
 
             // We need to check the data.result here as we don't want to retry on every error
-            if (msg->data.result == CURLE_OPERATION_TIMEDOUT || msg->data.result == CURLE_PARTIAL_FILE)
+            if ( (msg->data.result == CURLE_OPERATION_TIMEDOUT ||
+                  msg->data.result == CURLE_PARTIAL_FILE       ||
+                  msg->data.result == CURLE_RECV_ERROR)        &&
+                  !m_bFirstLoop)
               CURLresult=msg->data.result;
             else
               return false;
@@ -1409,8 +1425,8 @@ bool CFileCurl::CReadState::FillBuffer(unsigned int want)
 
     // We've finished out first loop
     if(m_bFirstLoop && m_buffer.GetMaxReadSize() > 0)
-      m_bFirstLoop = false;
-    
+    m_bFirstLoop=false;
+
     switch(result)
     {
       case CURLM_OK:
@@ -1487,7 +1503,7 @@ void CFileCurl::SetRequestHeader(CStdString header, long value)
 }
 
 /* STATIC FUNCTIONS */
-bool CFileCurl::GetHttpHeader(const CURL &url, CHttpHeader &headers)
+bool CFileCurl::GetHttpHeader(const CURI &url, CHttpHeader &headers)
 {
   try
   {
@@ -1502,13 +1518,13 @@ bool CFileCurl::GetHttpHeader(const CURL &url, CHttpHeader &headers)
   catch(...)
   {
     CStdString path;
-    url.GetURL(path);
+    path = url.Get();
     CLog::Log(LOGERROR, "%s - Exception thrown while trying to retrieve header url: %s", __FUNCTION__, path.c_str());
     return false;
   }
 }
 
-bool CFileCurl::GetContent(const CURL &url, CStdString &content, CStdString useragent)
+bool CFileCurl::GetContent(const CURI &url, CStdString &content, CStdString useragent)
 {
    CFileCurl file;
    if (!useragent.IsEmpty())
@@ -1526,7 +1542,7 @@ bool CFileCurl::GetContent(const CURL &url, CStdString &content, CStdString user
    }
    else
    {
-     content = "";
+   content = "";
    }
 
    return false;
@@ -1534,6 +1550,6 @@ bool CFileCurl::GetContent(const CURL &url, CStdString &content, CStdString user
 
 void CFileCurl::SetCookieJar(const CStdString &strCookieFile)
 {
-   m_strCookieFileName = strCookieFile;
+  m_strCookieFileName = strCookieFile;
 }
 

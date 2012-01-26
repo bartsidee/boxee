@@ -49,6 +49,7 @@ extern "C"
 
   // called periodically to activate the internal engine
   FLASHLIB_API void      FlashUpdate(FW_HANDLE handle, int usecs_timeout); 
+  FLASHLIB_API void      FlashUpdatePlayerCount(FW_HANDLE handle, bool add);
 
   FLASHLIB_API void      FlashLockImage(FW_HANDLE handle);
   FLASHLIB_API void      FlashUnlockImage(FW_HANDLE handle);
@@ -56,6 +57,8 @@ extern "C"
 
   FLASHLIB_API int       FlashGetHeight(FW_HANDLE handle);
   FLASHLIB_API int       FlashGetWidth(FW_HANDLE handle);
+  FLASHLIB_API void      FlashSetHeight(FW_HANDLE handle, int nHeight);
+  FLASHLIB_API void      FlashSetWidth(FW_HANDLE handle, int nWidth);
   FLASHLIB_API int       FlashGetPitch(FW_HANDLE handle);
   FLASHLIB_API int       FlashGetDepth(FW_HANDLE handle);
 
@@ -63,10 +66,13 @@ extern "C"
   FLASHLIB_API void      FlashSetWorkingPath(FW_HANDLE handle, const char *strPath);
 
   FLASHLIB_API void      FlashSendKeyStroke(FW_HANDLE handle, int key);
+  FLASHLIB_API void      FlashSendSelect(FW_HANDLE handle);
   FLASHLIB_API void      FlashSendMouseClick(FW_HANDLE handle, int x, int y);
   FLASHLIB_API void      FlashSendMouseMove(FW_HANDLE handle, int x, int y);
-  
+  FLASHLIB_API void      FlashScroll(FW_HANDLE handle, int x, int y);
+
   FLASHLIB_API void      FlashSetCrop(FW_HANDLE handle, int nTop, int nBottom, int nLeft, int nRight);
+  FLASHLIB_API void      FlashSetDestRect(FW_HANDLE handle, int x, int y, int w, int h);
   
   FLASHLIB_API void      FlashSetCallback(FW_HANDLE handle, IFlashPlayerListener *listener);
 
@@ -79,7 +85,10 @@ extern "C"
   FLASHLIB_API void      FlashSetVolume(FW_HANDLE handle, int nLevel); // 0-100	
 
   FLASHLIB_API void      FlashActivateExt(FW_HANDLE handle, int nID); 
-  FLASHLIB_API void      FlashUserText(FW_HANDLE handle, const char *text, const char *callback, bool bConfirmed);	
+  FLASHLIB_API void      FlashUserText(FW_HANDLE handle, const char *text, const char *callback, bool bConfirmed);
+  FLASHLIB_API void      FlashOpenDialog(FW_HANDLE handle, const char *callback, bool bConfirmed);
+
+  FLASHLIB_API void      FlashJsonCommand(FW_HANDLE handle, const char *cmd);
 }
 
 #endif

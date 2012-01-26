@@ -21,13 +21,14 @@
  */
 
 /**
-* @file libavcodec/libdiracdec.c
+* @file
 * Dirac decoder support via libdirac library; more details about the Dirac
 * project can be found at http://dirac.sourceforge.net/.
 * The libdirac_decoder library implements Dirac specification version 2.2
 * (http://dirac.sourceforge.net/specification.html).
 */
 
+#include "libavcore/imgutils.h"
 #include "libdirac.h"
 
 #undef NDEBUG
@@ -63,13 +64,13 @@ static enum PixelFormat GetFfmpegChromaFormat(dirac_chroma_t dirac_pix_fmt)
 static av_cold int libdirac_decode_init(AVCodecContext *avccontext)
 {
 
-    FfmpegDiracDecoderParams *p_dirac_params = avccontext->priv_data ;
+    FfmpegDiracDecoderParams *p_dirac_params = avccontext->priv_data;
     p_dirac_params->p_decoder =  dirac_decoder_init(avccontext->debug);
 
     if (!p_dirac_params->p_decoder)
         return -1;
 
-    return 0 ;
+    return 0;
 }
 
 static int libdirac_decode_frame(AVCodecContext *avccontext,
@@ -87,15 +88,15 @@ static int libdirac_decode_frame(AVCodecContext *avccontext,
 
     *data_size = 0;
 
-    if (buf_size>0) {
+    if (buf_size > 0) {
         /* set data to decode into buffer */
-        dirac_buffer (p_dirac_params->p_decoder, buf, buf+buf_size);
-        if ((buf[4] &0x08) == 0x08 && (buf[4] & 0x03))
+        dirac_buffer(p_dirac_params->p_decoder, buf, buf + buf_size);
+        if ((buf[4] & 0x08) == 0x08 && (buf[4] & 0x03))
             avccontext->has_b_frames = 1;
     }
     while (1) {
          /* parse data and process result */
-        DecoderState state = dirac_parse (p_dirac_params->p_decoder);
+        DecoderState state = dirac_parse(p_dirac_params->p_decoder);
         switch (state) {
         case STATE_BUFFER:
             return buf_size;
@@ -105,8 +106,8 @@ static int libdirac_decode_frame(AVCodecContext *avccontext,
             /* tell FFmpeg about sequence details */
             dirac_sourceparams_t *src_params = &p_dirac_params->p_decoder->src_params;
 
-            if (avcodec_check_dimensions(avccontext, src_params->width,
-                                         src_params->height) < 0) {
+            if (av_image_check_size(src_params->width, src_params->height,
+                                    0, avccontext) < 0) {
                 av_log(avccontext, AV_LOG_ERROR, "Invalid dimensions (%dx%d)\n",
                        src_params->width, src_params->height);
                 avccontext->height = avccontext->width = 0;
@@ -118,9 +119,9 @@ static int libdirac_decode_frame(AVCodecContext *avccontext,
 
             avccontext->pix_fmt = GetFfmpegChromaFormat(src_params->chroma);
             if (avccontext->pix_fmt == PIX_FMT_NONE) {
-                av_log (avccontext, AV_LOG_ERROR,
-                        "Dirac chroma format %d not supported currently\n",
-                        src_params->chroma);
+                av_log(avccontext, AV_LOG_ERROR,
+                       "Dirac chroma format %d not supported currently\n",
+                       src_params->chroma);
                 return -1;
             }
 
@@ -137,7 +138,7 @@ static int libdirac_decode_frame(AVCodecContext *avccontext,
 
             /* allocate output buffer */
             if (!p_dirac_params->p_out_frame_buf)
-                p_dirac_params->p_out_frame_buf = av_malloc (pict_size);
+                p_dirac_params->p_out_frame_buf = av_malloc(pict_size);
             buffer[0] = p_dirac_params->p_out_frame_buf;
             buffer[1] = p_dirac_params->p_out_frame_buf +
                         pic.linesize[0] * avccontext->height;
@@ -174,28 +175,28 @@ static int libdirac_decode_frame(AVCodecContext *avccontext,
 static av_cold int libdirac_decode_close(AVCodecContext *avccontext)
 {
     FfmpegDiracDecoderParams *p_dirac_params = avccontext->priv_data;
-    dirac_decoder_close (p_dirac_params->p_decoder);
+    dirac_decoder_close(p_dirac_params->p_decoder);
 
     av_freep(&p_dirac_params->p_out_frame_buf);
 
-    return 0 ;
+    return 0;
 }
 
-static void libdirac_flush (AVCodecContext *avccontext)
+static void libdirac_flush(AVCodecContext *avccontext)
 {
     /* Got a seek request. We will need free memory held in the private
      * context and free the current Dirac decoder handle and then open
      * a new decoder handle. */
-    libdirac_decode_close (avccontext);
-    libdirac_decode_init (avccontext);
+    libdirac_decode_close(avccontext);
+    libdirac_decode_init(avccontext);
     return;
 }
 
 
 
-AVCodec libdirac_decoder = {
+AVCodec ff_libdirac_decoder = {
     "libdirac",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_DIRAC,
     sizeof(FfmpegDiracDecoderParams),
     libdirac_decode_init,
@@ -205,4 +206,4 @@ AVCodec libdirac_decoder = {
     CODEC_CAP_DELAY,
     .flush = libdirac_flush,
     .long_name = NULL_IF_CONFIG_SMALL("libdirac Dirac 2.2"),
-} ;
+};

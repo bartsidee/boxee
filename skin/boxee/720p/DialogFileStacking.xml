@@ -1,7 +1,5 @@
 <window id="2008">
 	<defaultcontrol>450</defaultcontrol>
-	<animation effect="slide" time="150" start="0,-150" condition="!Skin.HasSetting(animated)">WindowOpen</animation>
-	<animation effect="slide" time="150" end="0,-150" condition="!Skin.HasSetting(animated)">WindowClose</animation>
 	<controls>
 		<control type="image">
 			<posx>875</posx>

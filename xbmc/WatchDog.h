@@ -11,7 +11,7 @@
 class IWatchDogListener
 {
 public:
-  virtual ~IWatchDogListener(){}
+  virtual ~IWatchDogListener() { }
   virtual void PathUpdate(const CStdString &strPath, bool bAvailable) = 0;
 };
 
@@ -36,7 +36,8 @@ public:
   bool IsConnectedToServer();
 
   void SetIsConnectedToInternet(bool bIsConnectToInternet);
-  bool IsConnectedToInternet();
+  void SetConnectionToInternetChanged();
+  bool IsConnectedToInternet(bool checkNow = false);
 
   void AddPathToWatch(const char *strPath);
   void RemovePathFromWatch(const char *strPath);
@@ -49,12 +50,15 @@ public:
 
 protected:
 
+  bool CheckIsConnectedToInternet(bool fromCheckInternetJob = false);
+
   void  TestPath(const CStdString &strPath);
   void  ProcessSlow();
-
+  
   bool m_bConnectedToServer;
   bool m_bIsConnectToInternet;
-
+  bool m_bConnectionToInternetChanged;
+  
   bool m_isStoped;
 
   CCriticalSection m_lock;
@@ -83,6 +87,26 @@ private:
   };
 
   CPingJob* m_pingJob;
+
+#ifdef HAS_EMBEDDED
+ 
+  class CChkupdJob : public BOXEE::BoxeeScheduleTask
+  {
+  public:
+    CChkupdJob(WatchDog* jobHandler,unsigned long executionDelayInMS,unsigned long repeatTaskIntervalInMS);
+    virtual ~CChkupdJob();
+    virtual void DoWork();
+
+    virtual bool ShouldDelete();
+
+  protected:
+
+    WatchDog* m_jobHandler;
+  };
+
+  CChkupdJob* m_chkupdJob;
+
+#endif
 
   class CTestPathJob : public BOXEE::BoxeeScheduleTask
   {
@@ -127,19 +151,19 @@ private:
 
   protected:
 
-    bool CheckIsConnectedToInternet();
     bool HandleInternetConnectionRestore();
     bool HandleInternetConnectionLost();
+    bool RefreshCountry();
 
     bool LoginUserAfterInternetConnectionRestore();
 
-    std::vector<CStdString> m_vecBoxeeServersUrls;
-
     WatchDog* m_jobHandler;
-  };
+};
 
   CCheckInternetConnectionJob* m_checkInternetConnectionJob;
 
+  CCriticalSection m_ServersUrlsVecLock;
+  std::vector<CStdString> m_vecBoxeeServersUrls;
 };
 
 #endif //__WATCHDOG__H__

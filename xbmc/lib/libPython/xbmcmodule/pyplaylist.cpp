@@ -333,9 +333,6 @@ namespace PYXBMC
     return ((PlayList*)self)->pPlayList->size();
   }
 
-  PyDoc_STRVAR(getitem__doc__,
-      "getitem(position) -- get item with specific index.\n");
-  
   PyObject* PlayList_GetItem(PyObject *self, PyObject *pAttr)
   {
     long pos = -1;

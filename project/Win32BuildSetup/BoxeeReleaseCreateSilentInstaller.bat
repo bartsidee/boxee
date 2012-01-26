@@ -94,10 +94,10 @@ ECHO	 M++++++++sNMMMdo/::+smMMNo:hMMMMm+oNMs++++++++NM++++++++oMMM
   ECHO ------------------------------------------------------------
 
 :VIEWLOG_EXE
-  IF NOT EXIST "%CD%\..\vs2008express\XBMC\Release (SDL)\BuildLog.htm" goto END
+  IF NOT EXIST "%CD%\..\vs2010express\BOXEE\Release (DirectX)\BuildLog.htm" goto END
   set /P XBMC_BUILD_ANSWER=View the build log in your HTML browser? [y/n]
   if /I %XBMC_BUILD_ANSWER% NEQ y goto END
-  start /D"%CD%\..\vs2008express\XBMC\Release (SDL)\BuildLog.htm"
+  start /D"%CD%\..\vs2010express\BOXEE\Release (DirectX)\BuildLog.htm"
   goto END
 
 :END

@@ -18,7 +18,10 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
-
+#ifndef WIN32
+#include <config.h>
+#endif
+#ifdef HAS_NSF_CODEC
 #include "NSFFileDirectory.h"
 #include "MusicInfoTagLoaderNSF.h"
 #include "MusicInfoTag.h"
@@ -43,3 +46,4 @@ int CNSFFileDirectory::GetTrackCount(const CStdString& strPath)
 
   return nsf.GetStreamCount(strPath);
 }
+#endif

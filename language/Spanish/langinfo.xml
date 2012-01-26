@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<language>
+<language code="es">
   <charsets>
     <gui>CP1252</gui>
     <subtitle>CP1252</subtitle>
@@ -23,10 +23,11 @@
 
   <sorttokens>
     <token>The</token>
-	<token>El</token>
-	<token>Los</token>
-	<token>La</token>
-	<token>Las</token>
-	<token>Un</token>
+    <token>A</token>
+    <token>El</token>
+    <token>Los</token>
+    <token>La</token>
+    <token>Las</token>
+    <token>Un</token>
   </sorttokens>
 </language>

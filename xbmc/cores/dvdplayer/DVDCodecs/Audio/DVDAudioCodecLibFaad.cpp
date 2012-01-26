@@ -106,6 +106,40 @@ bool CDVDAudioCodecLibFaad::SyncStream()
   return false;
 }
 
+enum PCMChannels* CDVDAudioCodecLibFaad::GetChannelMap()
+{
+  int valid_chans = 0;
+  for( int i = 0; i < m_iSourceChannels; i++ )
+  {
+    switch(m_frameInfo.channel_position[i])
+    {
+      case FRONT_CHANNEL_CENTER: m_pChannelMap[i] = PCM_FRONT_CENTER; break;
+      case FRONT_CHANNEL_LEFT:   m_pChannelMap[i] = PCM_FRONT_LEFT;   break;
+      case FRONT_CHANNEL_RIGHT:  m_pChannelMap[i] = PCM_FRONT_RIGHT;  break;
+      case SIDE_CHANNEL_LEFT:    m_pChannelMap[i] = PCM_SIDE_LEFT;    break;
+      case SIDE_CHANNEL_RIGHT:   m_pChannelMap[i] = PCM_SIDE_RIGHT;   break;
+      case BACK_CHANNEL_LEFT:    m_pChannelMap[i] = PCM_BACK_LEFT;    break;
+      case BACK_CHANNEL_RIGHT:   m_pChannelMap[i] = PCM_BACK_RIGHT;   break;
+      case BACK_CHANNEL_CENTER:  m_pChannelMap[i] = PCM_BACK_CENTER;  break;
+      case LFE_CHANNEL:          m_pChannelMap[i] = PCM_LOW_FREQUENCY; break;
+    }
+
+    if( UNKNOWN_CHANNEL != m_frameInfo.channel_position[i] )
+      valid_chans++;
+  }
+
+  // Somehow we didn't find all the channels - let someone else guess for now
+  if( valid_chans != m_iSourceChannels )
+  {
+    return NULL;
+  }
+  else
+  {
+    m_pChannelMap[m_iSourceChannels] = PCM_INVALID;
+    return m_pChannelMap;
+  }
+}
+
 int CDVDAudioCodecLibFaad::Decode(BYTE* pData, int iSize)
 {
   m_DecodedDataSize = 0;
@@ -227,7 +261,7 @@ bool CDVDAudioCodecLibFaad::OpenDecoder()
 
     // modify some stuff here
     pConfiguration->outputFormat = FAAD_FMT_16BIT; // already default
-    pConfiguration->downMatrix = g_guiSettings.GetBool("audiooutput.downmixmultichannel") ? 1 : 0;
+    pConfiguration->downMatrix = g_guiSettings.HasSetting("audiooutput.downmixmultichannel") && g_guiSettings.GetBool("audiooutput.downmixmultichannel") ? 1 : 0;
 
     m_dll.faacDecSetConfiguration(m_pHandle, pConfiguration);
 
@@ -236,3 +270,4 @@ bool CDVDAudioCodecLibFaad::OpenDecoder()
   
   return false;
 }
+

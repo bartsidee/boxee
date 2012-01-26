@@ -53,12 +53,12 @@ public:
   CBoxeeScheduleTaskManager* GetScheduleTaskManagerHandler();
 
   bool IsTaskRepeatable();
-
+  
   std::string GetName();
   
   virtual void PostDoWork();
   virtual bool ShouldDelete() { return true; }
-
+  
   virtual bool CanDelete();
 
 protected:

@@ -18,6 +18,10 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
+#ifndef WIN32
+#include <config.h>
+#endif
+#ifdef HAS_DVD_LIBMPEG2_CODEC
 
 #include "DVDVideoCodecLibMpeg2.h"
 #include "DVDClock.h"
@@ -198,7 +202,7 @@ void CDVDVideoCodecLibMpeg2::SetDropState(bool bDrop)
   m_hurry = bDrop ? 1 : 0;
 }
 
-int CDVDVideoCodecLibMpeg2::Decode(BYTE* pData, int iSize, double pts)
+int CDVDVideoCodecLibMpeg2::Decode(BYTE* pData, int iSize, double pts, double dts)
 {
   int iState = 0;
   if (!m_pHandle) return VC_ERROR;
@@ -588,3 +592,4 @@ int CDVDVideoCodecLibMpeg2::GuessAspect(const mpeg2_sequence_t * sequence,
   //  simplify (pixel_width, pixel_height);
   return (height == 576) ? 1 : 2;
 }
+#endif

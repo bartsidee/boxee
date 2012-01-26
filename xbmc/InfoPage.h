@@ -10,7 +10,7 @@
 // It can also be used to create actions in different modules.
 
 // Page indexes.
-#define INFOPAGE_EXIT        0
+#define INFOPAGE_EXIT 0
 #define INFOPAGE_APPLICATION 1
 #define INFOPAGE_GUISETTINGS 2
 #define INFOPAGE_X11         3
@@ -23,11 +23,11 @@
 
 class InfoPageble
 {
-public:
+  public:
   virtual ~InfoPageble() {}
-  virtual void GetInfoPage(CStdString *str, CStdString params) {
-    *str = "GetInfoPage function not implemented.\n";
-  };
+    virtual void GetInfoPage(CStdString *str, CStdString params) {
+      *str = "GetInfoPage function not implemented.\n";
+    };
 };
  
 
@@ -38,7 +38,7 @@ public:
   void Register(int index, CStdString descr, InfoPageble* p);
   void UnRegister(int index);
   virtual void Process();  
-  InfoPage();    
+  InfoPage();  
 protected:
   void PrintMenu();
   // for index keep page pointer and description.

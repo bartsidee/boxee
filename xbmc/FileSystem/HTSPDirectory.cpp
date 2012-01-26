@@ -20,6 +20,9 @@
  */
 
 #include "HTSPDirectory.h"
+
+#ifdef HAS_FILESYSTEM_HTSP
+
 #include "URL.h"
 #include "FileItem.h"
 #include "GUISettings.h"
@@ -85,7 +88,7 @@ CHTSPDirectorySession::~CHTSPDirectorySession()
   Close();
 }
 
-CHTSPDirectorySession* CHTSPDirectorySession::Acquire(const CURL& url)
+CHTSPDirectorySession* CHTSPDirectorySession::Acquire(const CURI& url)
 {
   CSingleLock lock(g_section);
 
@@ -156,7 +159,7 @@ void CHTSPDirectorySession::CheckIdle(DWORD idle)
 }
 }
 
-bool CHTSPDirectorySession::Open(const CURL& url)
+bool CHTSPDirectorySession::Open(const CURI& url)
 {
   if(!m_session.Connect(url.GetHostName(), url.GetPort()))
     return false;
@@ -356,18 +359,18 @@ CHTSPDirectory::~CHTSPDirectory(void)
 }
 
 
-bool CHTSPDirectory::GetChannels(const CURL &base, CFileItemList &items)
+bool CHTSPDirectory::GetChannels(const CURI &base, CFileItemList &items)
 {
   SChannels channels = m_session->GetChannels();
   return GetChannels(base, items, channels, 0);
 }
 
-bool CHTSPDirectory::GetChannels( const CURL &base
+bool CHTSPDirectory::GetChannels( const CURI &base
                                 , CFileItemList &items
                                 , SChannels channels
                                 , int tag)
 {
-  CURL url(base);
+  CURI url(base);
 
   SEvent event;
 
@@ -379,7 +382,7 @@ bool CHTSPDirectory::GetChannels( const CURL &base
     CFileItemPtr item(new CFileItem("", true));
 
     url.SetFileName("");
-    url.GetURL(item->m_strPath);
+    item->m_strPath = url.Get();
     CHTSPSession::ParseItem(it->second, tag, event, *item);
     item->m_bIsFolder = false;
     item->m_strTitle.Format("%d", it->second.id);
@@ -403,9 +406,9 @@ bool CHTSPDirectory::GetChannels( const CURL &base
 
 }
 
-bool CHTSPDirectory::GetTag(const CURL &base, CFileItemList &items)
+bool CHTSPDirectory::GetTag(const CURI &base, CFileItemList &items)
 {
-  CURL url(base);
+  CURI url(base);
 
   int id = atoi(url.GetFileName().Mid(5));
 
@@ -419,7 +422,7 @@ bool CHTSPDirectory::GetTag(const CURL &base, CFileItemList &items)
 
 bool CHTSPDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items)
 {
-  CURL                    url(strPath);
+  CURI                    url(strPath);
 
   CHTSPDirectorySession::Release(m_session);
   if(!(m_session = CHTSPDirectorySession::Acquire(url)))
@@ -432,7 +435,7 @@ bool CHTSPDirectory::GetDirectory(const CStdString& strPath, CFileItemList &item
 
     item.reset(new CFileItem("", true));
     url.SetFileName("tags/0/");
-    url.GetURL(item->m_strPath);
+    item->m_strPath = url.Get();
     item->SetLabel(g_localizeStrings.Get(22018));
     item->SetLabelPreformated(true);
     items.Add(item);
@@ -446,7 +449,7 @@ bool CHTSPDirectory::GetDirectory(const CStdString& strPath, CFileItemList &item
 
       item.reset(new CFileItem("", true));
       url.SetFileName(filename);
-      url.GetURL(item->m_strPath);
+      item->m_strPath = url.Get();
       item->SetLabel(label);
       item->SetLabelPreformated(true);
       item->SetThumbnailImage(it->second.icon);
@@ -459,3 +462,5 @@ bool CHTSPDirectory::GetDirectory(const CStdString& strPath, CFileItemList &item
     return GetTag(url, items);
   return false;
 }
+
+#endif

@@ -25,13 +25,11 @@
 
 #define AV_READ_TIME read_time
 
-#ifndef _MSC_VER
 static inline uint64_t read_time(void)
 {
     uint32_t a, d;
     __asm__ volatile("rdtsc" : "=a" (a), "=d" (d));
     return ((uint64_t)d << 32) + a;
 }
-#endif
 
 #endif /* AVUTIL_X86_TIMER_H */

@@ -32,6 +32,10 @@
 #include "DVDDemuxHTSP.h"
 #endif
 
+#ifdef HAS_INTEL_SMD
+#include "DVDDemuxSMD.h"
+#endif
+
 using namespace std;
 
 CDVDDemux* CDVDFactoryDemuxer::CreateDemuxer(CDVDInputStream* pInputStream)
@@ -56,6 +60,17 @@ CDVDDemux* CDVDFactoryDemuxer::CreateDemuxer(CDVDInputStream* pInputStream)
   if (pInputStream->IsStreamType(DVDSTREAM_TYPE_HTSP))
   {
     auto_ptr<CDVDDemuxHTSP> demuxer(new CDVDDemuxHTSP());
+    if(demuxer->Open(pInputStream))
+      return demuxer.release();
+    else
+      return NULL;
+  }
+#endif
+
+#ifdef HAS_INTEL_SMD
+  if(pInputStream->IsStreamType(DVDSTREAM_TYPE_TV))
+  {
+    auto_ptr<CDVDDemuxSMD> demuxer(new CDVDDemuxSMD());
     if(demuxer->Open(pInputStream))
       return demuxer.release();
     else

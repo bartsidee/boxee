@@ -33,8 +33,11 @@ public:
   virtual bool OnMessage(CGUIMessage& message);
   virtual bool OnAction(const CAction &action);
   void HandleFeedsSettings();
- private:
 
+ private:
+  bool ShowLegal();
+
+  CStdString m_legalString;
   int m_iSelectedControl;
   int m_iSelectedItem;
 };

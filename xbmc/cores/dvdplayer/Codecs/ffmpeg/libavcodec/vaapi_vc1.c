@@ -24,7 +24,7 @@
 #include "vc1.h"
 #include "vc1data.h"
 
-/** Translates FFmpeg MV modes to VA API */
+/** Translate FFmpeg MV modes to VA API */
 static int get_VAMvModeVC1(enum MVModes mv_mode)
 {
     switch (mv_mode) {
@@ -37,7 +37,7 @@ static int get_VAMvModeVC1(enum MVModes mv_mode)
     return 0;
 }
 
-/** Checks whether the MVTYPEMB bitplane is present */
+/** Check whether the MVTYPEMB bitplane is present */
 static inline int vc1_has_MVTYPEMB_bitplane(VC1Context *v)
 {
     if (v->mv_type_is_raw)
@@ -48,7 +48,7 @@ static inline int vc1_has_MVTYPEMB_bitplane(VC1Context *v)
               v->mv_mode2 == MV_PMODE_MIXED_MV)));
 }
 
-/** Checks whether the SKIPMB bitplane is present */
+/** Check whether the SKIPMB bitplane is present */
 static inline int vc1_has_SKIPMB_bitplane(VC1Context *v)
 {
     if (v->skip_is_raw)
@@ -57,7 +57,7 @@ static inline int vc1_has_SKIPMB_bitplane(VC1Context *v)
             (v->s.pict_type == FF_B_TYPE && !v->bi_type));
 }
 
-/** Checks whether the DIRECTMB bitplane is present */
+/** Check whether the DIRECTMB bitplane is present */
 static inline int vc1_has_DIRECTMB_bitplane(VC1Context *v)
 {
     if (v->dmb_is_raw)
@@ -65,7 +65,7 @@ static inline int vc1_has_DIRECTMB_bitplane(VC1Context *v)
     return v->s.pict_type == FF_B_TYPE && !v->bi_type;
 }
 
-/** Checks whether the ACPRED bitplane is present */
+/** Check whether the ACPRED bitplane is present */
 static inline int vc1_has_ACPRED_bitplane(VC1Context *v)
 {
     if (v->acpred_is_raw)
@@ -117,17 +117,18 @@ static inline VAMvModeVC1 vc1_get_MVMODE2(VC1Context *v)
 }
 
 /** Pack FFmpeg bitplanes into a VABitPlaneBuffer element */
-static inline uint8_t vc1_pack_bitplanes(const uint8_t *ff_bp[3], int x, int y, int stride)
+static inline void vc1_pack_bitplanes(uint8_t *bitplane, int n, const uint8_t *ff_bp[3], int x, int y, int stride)
 {
-    const int n = y * stride + x;
+    const int bitplane_index = n / 2;
+    const int ff_bp_index = y * stride + x;
     uint8_t v = 0;
     if (ff_bp[0])
-        v = ff_bp[0][n];
+        v = ff_bp[0][ff_bp_index];
     if (ff_bp[1])
-        v |= ff_bp[1][n] << 1;
+        v |= ff_bp[1][ff_bp_index] << 1;
     if (ff_bp[2])
-        v |= ff_bp[2][n] << 2;
-    return v;
+        v |= ff_bp[2][ff_bp_index] << 2;
+    bitplane[bitplane_index] = (bitplane[bitplane_index] << 4) | v;
 }
 
 static int vaapi_vc1_start_frame(AVCodecContext *avctx, av_unused const uint8_t *buffer, av_unused uint32_t size)
@@ -137,17 +138,17 @@ static int vaapi_vc1_start_frame(AVCodecContext *avctx, av_unused const uint8_t 
     struct vaapi_context * const vactx = avctx->hwaccel_context;
     VAPictureParameterBufferVC1 *pic_param;
 
-    dprintf(avctx, "vaapi_vc1_start_frame()\n");
+    av_dlog(avctx, "vaapi_vc1_start_frame()\n");
 
     vactx->slice_param_size = sizeof(VASliceParameterBufferVC1);
 
     /* Fill in VAPictureParameterBufferVC1 */
-    pic_param = ff_vaapi_alloc_picture(vactx, sizeof(VAPictureParameterBufferVC1));
+    pic_param = ff_vaapi_alloc_pic_param(vactx, sizeof(VAPictureParameterBufferVC1));
     if (!pic_param)
         return -1;
-    pic_param->forward_reference_picture                            = 0xffffffff;
-    pic_param->backward_reference_picture                           = 0xffffffff;
-    pic_param->inloop_decoded_picture                               = 0xffffffff;
+    pic_param->forward_reference_picture                            = VA_INVALID_ID;
+    pic_param->backward_reference_picture                           = VA_INVALID_ID;
+    pic_param->inloop_decoded_picture                               = VA_INVALID_ID;
     pic_param->sequence_fields.value                                = 0; /* reset all bits */
     pic_param->sequence_fields.bits.pulldown                        = v->broadcast;
     pic_param->sequence_fields.bits.interlace                       = v->interlace;
@@ -242,10 +243,10 @@ static int vaapi_vc1_start_frame(AVCodecContext *avctx, av_unused const uint8_t 
 
     switch (s->pict_type) {
     case FF_B_TYPE:
-        pic_param->backward_reference_picture = ff_vaapi_get_surface(&s->next_picture);
+        pic_param->backward_reference_picture = ff_vaapi_get_surface_id(&s->next_picture);
         // fall-through
     case FF_P_TYPE:
-        pic_param->forward_reference_picture = ff_vaapi_get_surface(&s->last_picture);
+        pic_param->forward_reference_picture = ff_vaapi_get_surface_id(&s->last_picture);
         break;
     }
 
@@ -280,18 +281,16 @@ static int vaapi_vc1_start_frame(AVCodecContext *avctx, av_unused const uint8_t 
             break;
         }
 
-        bitplane = ff_vaapi_alloc_bitplane(vactx, s->mb_height * ((s->mb_width + 1) / 2));
+        bitplane = ff_vaapi_alloc_bitplane(vactx, (s->mb_width * s->mb_height + 1) / 2);
         if (!bitplane)
             return -1;
 
         n = 0;
-        for (y = 0; y < s->mb_height; y++) {
-            for (x = 0; x < s->mb_width; x += 2) {
-                bitplane[n] = vc1_pack_bitplanes(ff_bp, x+1, y, s->mb_stride);
-                bitplane[n] |= (vc1_pack_bitplanes(ff_bp, x, y, s->mb_stride) << 4);
-                ++n;
-            }
-        }
+        for (y = 0; y < s->mb_height; y++)
+            for (x = 0; x < s->mb_width; x++, n++)
+                vc1_pack_bitplanes(bitplane, n, ff_bp, x, y, s->mb_stride);
+        if (n & 1) /* move last nibble to the high order */
+            bitplane[n/2] <<= 4;
     }
     return 0;
 }
@@ -309,7 +308,7 @@ static int vaapi_vc1_decode_slice(AVCodecContext *avctx, const uint8_t *buffer, 
     MpegEncContext * const s = &v->s;
     VASliceParameterBufferVC1 *slice_param;
 
-    dprintf(avctx, "vaapi_vc1_decode_slice(): buffer %p, size %d\n", buffer, size);
+    av_dlog(avctx, "vaapi_vc1_decode_slice(): buffer %p, size %d\n", buffer, size);
 
     /* Current bit buffer is beyond any marker for VC-1, so skip it */
     if (avctx->codec_id == CODEC_ID_VC1 && IS_MARKER(AV_RB32(buffer))) {
@@ -327,9 +326,9 @@ static int vaapi_vc1_decode_slice(AVCodecContext *avctx, const uint8_t *buffer, 
 }
 
 #if CONFIG_WMV3_VAAPI_HWACCEL
-AVHWAccel wmv3_vaapi_hwaccel = {
+AVHWAccel ff_wmv3_vaapi_hwaccel = {
     .name           = "wmv3_vaapi",
-    .type           = CODEC_TYPE_VIDEO,
+    .type           = AVMEDIA_TYPE_VIDEO,
     .id             = CODEC_ID_WMV3,
     .pix_fmt        = PIX_FMT_VAAPI_VLD,
     .capabilities   = 0,
@@ -340,9 +339,9 @@ AVHWAccel wmv3_vaapi_hwaccel = {
 };
 #endif
 
-AVHWAccel vc1_vaapi_hwaccel = {
+AVHWAccel ff_vc1_vaapi_hwaccel = {
     .name           = "vc1_vaapi",
-    .type           = CODEC_TYPE_VIDEO,
+    .type           = AVMEDIA_TYPE_VIDEO,
     .id             = CODEC_ID_VC1,
     .pix_fmt        = PIX_FMT_VAAPI_VLD,
     .capabilities   = 0,

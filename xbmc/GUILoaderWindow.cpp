@@ -62,13 +62,13 @@ bool CGUILoaderWindow::OnMessage(CGUIMessage& message)
     {
       delete pList;
     }
-      
+
     CGUIControl* pControl = (CGUIControl*) GetControl(message.GetControlId());
     if (pControl && pControl->IsContainer())
     {
       OnContainersLoadSuccess(*(((CGUIBaseContainer*)pControl)));
     }
-      
+
     return result;
   }
   break;
@@ -82,7 +82,7 @@ bool CGUILoaderWindow::OnMessage(CGUIMessage& message)
   }
   break;
   }
-  
+
   return CGUIWindow::OnMessage(message);
 }
 
@@ -95,10 +95,10 @@ void CGUILoaderWindow::OnInitWindow()
 void CGUILoaderWindow::RegisterContainers()
 {
   CLog::Log(LOGDEBUG,"GUILoaderWindow::RegisterContainers");
-  
+
   std::vector<CGUIControl *> vecContainers;
   GetContainers(vecContainers);
-  
+
   for (size_t i = 0; i < vecContainers.size(); i++) 
   {
     RegisterContainer(vecContainers[i]->GetID());
@@ -133,7 +133,7 @@ void CGUILoaderWindow::ReloadContainer(DWORD containerId, bool clearCacheFirst)
     }
     else
     {
-      CLog::Log(LOGWARNING,"CGUILoaderWindow::ReloadContainer - FAILED to clear cache first. [pContainer=%p][path=%s] (home)",pContainer,pContainer->GetPath().c_str());
+      CLog::Log(LOGWARNING,"CGUILoaderWindow::ReloadContainer - FAILED to clear cache first. [containerId=%d] (home)",containerId);
     }
   }
 

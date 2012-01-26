@@ -29,6 +29,7 @@
 #include <dxdiag.h>
 #include "WinSystemWin32.h"
 #include "RenderSystemDX.h"
+#include "utils/GlobalsHandling.h"
 
 #ifdef HAS_DX
 
@@ -44,9 +45,11 @@ public:
 
 protected:
   virtual void UpdateMonitor();
+  bool UseWindowedDX(bool fullScreen);
 };
 
-extern CWinSystemWin32DX g_RenderSystem;
+XBMC_GLOBAL_REF(CWinSystemWin32DX,g_Windowing);
+#define g_Windowing XBMC_GLOBAL_USE(CWinSystemWin32DX)
 
 #endif
 

@@ -102,7 +102,7 @@ void CGUIMultiSelectTextControl::Render()
     if (!g_graphicsContext.SetClipRegion(m_posX, m_posY, m_width, m_height))
       return; // nothing to render??
   }
-  g_graphicsContext.SetOrigin(-m_scrollOffset, 0);
+  g_graphicsContext.PushTransform(TransformMatrix::CreateTranslation(-m_scrollOffset, 0));
 
   // render the buttons
   for (unsigned int i = 0; i < m_buttons.size(); i++)
@@ -137,7 +137,7 @@ void CGUIMultiSelectTextControl::Render()
       num_selectable++;
   }
 
-  g_graphicsContext.RestoreOrigin();
+  g_graphicsContext.PopTransform();
   if (clip)
     g_graphicsContext.RestoreClipRegion();
 

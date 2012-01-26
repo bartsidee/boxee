@@ -45,6 +45,7 @@ CGUIPassword::CGUIPassword(void)
   iMasterLockRetriesLeft = -1;
   bMasterUser = false;
   m_SMBShare = "";
+  m_AFPShare = "";
 }
 CGUIPassword::~CGUIPassword(void)
 {}
@@ -129,28 +130,109 @@ void CGUIPassword::SetSMBShare(const CStdString &strPath)
   m_SMBShare = strPath;
 }
 
+void CGUIPassword::SetAFPShare(const CStdString &strPath)
+{
+  m_AFPShare = strPath;
+}
+
+void CGUIPassword::SetCIFSShare(const CStdString &strPath)
+{
+  m_CIFSShare = strPath;
+}
+
 CStdString CGUIPassword::GetSMBShare()
 {
   return m_SMBShare;
 }
 
+CStdString CGUIPassword::GetAFPShare()
+{
+  return m_AFPShare;
+}
+
+CStdString CGUIPassword::GetCIFSShare()
+{
+  return m_CIFSShare;
+}
+
 bool CGUIPassword::GetSMBShareUserPassword()
 {
-  CURL url(m_SMBShare);
+  CURI url(m_SMBShare);
   CStdString passcode;
   CStdString username = url.GetUserName();
   CStdString outusername = username;
   CStdString share;
-  url.GetURLWithoutUserDetails(share);
+  share = url.GetWithoutUserDetails();
+
+  if (!CGUIDialogBoxeeUserPassword::ShowAndGetUserAndPassword(outusername,passcode,share))
+    return false;
+
+  CUtil::URLEncode(passcode);
+  url.SetPassword(passcode);
+  url.SetUserName(outusername);
+  m_SMBShare = url.Get();
+
+  return true;
+}
+
+bool CGUIPassword::GetCIFSShareUserPassword()
+{
+  CURI url(m_CIFSShare);
+  CStdString passcode;
+  CStdString username = url.GetUserName();
+  CStdString outusername = username;
+  CStdString share;
+  share = url.GetWithoutUserDetails();
 
   if (!CGUIDialogBoxeeUserPassword::ShowAndGetUserAndPassword(outusername,passcode,share))
     return false;
 
   url.SetPassword(passcode);
   url.SetUserName(outusername);
-  url.GetURL(m_SMBShare);
+  m_CIFSShare = url.Get();
 
   return true;
+}
+
+bool CGUIPassword::GetAFPShareUserPassword()
+{
+  CURI url(m_AFPShare);
+  CStdString passcode;
+  CStdString outusername = "Guest";
+  CStdString share;
+  share = url.GetWithoutUserDetails();
+
+  if (!CGUIDialogBoxeeUserPassword::ShowAndGetUserAndPassword(outusername,passcode,share))
+    return false;
+
+  url.SetPassword(passcode);
+  url.SetUserName(outusername);
+  m_AFPShare = url.Get();
+  return true;
+}
+
+CStdString CGUIPassword::GetCifsPathCredentials(const CStdString& path)
+{
+  CStdString newPath = path;
+  CURI url(path);
+  if(url.GetUserName() == "")
+  {
+    CStdString strKeyPath = url.GetHostName();
+    if(url.GetShareName() != "")
+    {
+      strKeyPath += "/" + url.GetShareName();
+    }
+
+    IMAPUSERNAMEPASSWORDS it;
+    it = m_mapCIFSPasswordCache.find(strKeyPath);
+    if(it != m_mapCIFSPasswordCache.end())
+    {
+      url.SetUserName(m_mapCIFSPasswordCache[strKeyPath].first);
+      url.SetPassword(m_mapCIFSPasswordCache[strKeyPath].second);
+      newPath = url.Get();
+    }
+  }
+  return newPath;
 }
 
 bool CGUIPassword::CheckStartUpLock()
@@ -296,8 +378,7 @@ bool CGUIPassword::IsMasterLockUnlocked(bool bPromptUser, bool& bCanceled)
   {
       LockSources(false);
       bMasterUser = true;
-      g_application.m_guiDialogKaiToast.QueueNotification(g_localizeStrings.Get(20052),
-                                                          g_localizeStrings.Get(20054));
+      g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_EXCLAMATION, g_localizeStrings.Get(20052), g_localizeStrings.Get(20054), TOAST_DISPLAY_TIME, KAI_RED_COLOR, KAI_RED_COLOR);
   }
   return true;
 }
@@ -442,7 +523,7 @@ CStdString CGUIPassword::GetSMBAuthFilename(const CStdString& strAuth)
   /// \brief Gets the path of an authenticated share
   /// \param strAuth The SMB style path
   /// \return Path to share with proper username/password, or same as imput if none found in db
-  CURL urlIn(strAuth);
+  CURI urlIn(strAuth);
   CStdString strPath(strAuth);
 
   CStdString strShare;  // it's only the server\share we're interested in authenticating
@@ -454,13 +535,13 @@ CStdString CGUIPassword::GetSMBAuthFilename(const CStdString& strAuth)
   if(it != m_mapSMBPasswordCache.end())
   {
     // if share found in cache use it to supply username and password
-    CURL url(it->second);  // map value contains the full url of the originally authenticated share. map key is just the share
+    CURI url(it->second);  // map value contains the full url of the originally authenticated share. map key is just the share
     CStdString strPassword = url.GetPassWord();
 
     CStdString strUserName = url.GetUserName();
     urlIn.SetPassword(strPassword);
     urlIn.SetUserName(strUserName);
-    urlIn.GetURL(strPath);
+    strPath = urlIn.Get();
   }
   return strPath;
 }

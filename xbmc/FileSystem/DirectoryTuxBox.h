@@ -22,7 +22,7 @@
 
 #include "IDirectory.h"
 
-class CURL;
+class CURI;
 class TiXmlElement;
 
 namespace DIRECTORY

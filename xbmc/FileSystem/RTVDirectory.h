@@ -23,6 +23,10 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#include "system.h"
+
+#ifdef HAS_FILESYSTEM_RTV
+
 #pragma once
 #include "IDirectory.h"
 
@@ -38,3 +42,5 @@ public:
   virtual bool IsAllowed(const CStdString &strFile) const { return true; };
 };
 }
+
+#endif

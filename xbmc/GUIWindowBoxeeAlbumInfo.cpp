@@ -26,7 +26,9 @@
 #include "GUIDialogFileBrowser.h"
 #include "GUIPassword.h"
 #include "MusicDatabase.h"
+#ifdef HAS_LASTFM
 #include "LastFmManager.h"
+#endif
 #include "MusicInfoTag.h"
 #include "URL.h"
 #include "FileSystem/File.h"
@@ -47,6 +49,7 @@
 #include "LocalizeStrings.h"
 #include "AdvancedSettings.h"
 #include "GUIUserMessages.h"
+#include "log.h"
 
 using namespace XFILE;
 using namespace PLAYLIST;
@@ -76,8 +79,9 @@ using namespace PLAYLIST;
 #include "GUIDialogBoxeeShare.h"
 #include "GUIDialogBoxeeCtx.h"
 #include "BoxeeUtils.h"
+#ifdef HAS_LASTFM
 #include "LastFmManager.h"
-
+#endif
 
 CGUIWindowBoxeeAlbumInfo::CGUIWindowBoxeeAlbumInfo(void) :
   CGUIWindow(WINDOW_BOXEE_ALBUM_INFO, "boxee_album_info.xml"), m_albumItem(new CFileItem) 
@@ -152,7 +156,7 @@ bool CGUIWindowBoxeeAlbumInfo::OnMessage(CGUIMessage& message) {
       if (CGUIDialogBoxeeRate::ShowAndGetInput(bLike)) 
       {
         BoxeeUtils::Rate(m_albumItem.get(), bLike);
-        g_application.m_guiDialogKaiToast.QueueNotification("", "",  g_localizeStrings.Get(51034), 5000);
+        g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_STAR, "", g_localizeStrings.Get(51034), 5000 , KAI_YELLOW_COLOR, KAI_GREY_COLOR);
       }
     } 
     else if (iControl == BTN_RECOMMEND) 
@@ -177,6 +181,7 @@ bool CGUIWindowBoxeeAlbumInfo::OnMessage(CGUIMessage& message) {
         g_windowManager.PreviousWindow();    
       }
     } 
+#ifdef HAS_LASTFM
     else if (iControl == BTN_LASTFM) 
     {
       if (m_albumItem->HasMusicInfoTag()) 
@@ -186,10 +191,11 @@ bool CGUIWindowBoxeeAlbumInfo::OnMessage(CGUIMessage& message) {
         CUtil::URLEncode(strArtist);
         CStdString strLink;
         strLink.Format("lastfm://artist/%s/similarartists", strArtist.c_str());
-        CURL url(strLink);
+        CURI url(strLink);
         CLastFmManager::GetInstance()->ChangeStation(url);
       }
     } 
+#endif
     else if (iControl == CONTROL_LIST) 
     {
       CGUIMessage msg(GUI_MSG_ITEM_SELECTED, GetID(), CONTROL_LIST);
@@ -255,6 +261,7 @@ void CGUIWindowBoxeeAlbumInfo::Update() {
     SET_CONTROL_HIDDEN(CONTROL_TEXTAREA);
   }
 
+#ifdef HAS_LASTFM
   // Disable the last.fm button in case of a missing artist 
   // TODO: Probably should be disabled for compilations as well
   if (!m_albumItem->GetMusicInfoTag()->GetArtist().IsEmpty()
@@ -263,6 +270,7 @@ void CGUIWindowBoxeeAlbumInfo::Update() {
   } else {
     SET_CONTROL_HIDDEN(CONTROL_BTN_LASTFM);
   }
+#endif
   
   const CGUIControl* pControl = GetControl(CONTROL_IMAGE);
   if (pControl)

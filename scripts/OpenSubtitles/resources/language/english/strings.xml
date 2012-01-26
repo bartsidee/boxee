@@ -31,35 +31,35 @@
     <string id="255">Restart</string>
     <string id="256">Later</string>
     <string id="257">OK</string>
-    <string id="258">CANCEL</string>
-    <string id="259">YES</string>
-    <string id="260">NO</string>
-
+    <string id="258">Cancel</string>
+    <string id="259">Yes</string>
+    <string id="260">No</string>
+    
     <!-- Labels -->
     <string id="630">Subtitle file downloaded and extracted as %s</string>
     <string id="631">Extracting %s to %s</string>
     <string id="632">Downloading %s from %s</string>
     <string id="633">Downloading File</string>
-    <string id="634">ERROR! %s</string>
-    <string id="635">CONNECTED</string>
-    <string id="636">CONNECTING ANONYMOUSLY...</string>
-    <string id="637">CONNECTING AS %s...</string>
+    <string id="634">Error! %s</string>
+    <string id="635">Connected</string>
+    <string id="636">Connecting...</string>
+    <string id="637">Connecting as %s...</string>
     <string id="638">What do you want to run this for?</string>
     <string id="639">No music is playing fool!</string>
     <string id="640">Select a video file</string>
     <string id="641">%s Settings</string>
-    <string id="642">SEARCHING SUBTITLES %s</string>
+    <string id="642">Searching Subtitles %s</string>
     <string id="643">If you don't have a user account, please register for free at www.opensubtitles.org/newuser</string>
     <string id="644">Extracted to %s</string>
     <string id="645">Download cancelled</string>
-    <string id="646">CONNECTING...</string>
+    <string id="646">Connecting...</string>
     <string id="647">by hash...</string>
     <string id="648">by name...</string>
     <string id="649">Downloading subtitles...</string>
     <string id="650">Extracting subtitles...</string>
     <string id="651">Subtitles extracted</string>
     <string id="652">Subtitles file downloaded and extracted</string>
-    <string id="653">CONNECTION FAILED</string>
+    <string id="653">Connection Failed</string>
 
     <!-- OSDB Messages -->
     <string id="730">OSDB server name missing</string>

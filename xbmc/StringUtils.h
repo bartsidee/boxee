@@ -47,6 +47,7 @@ public:
   static long TimeStringToSeconds(const CStdString &timeString);
   static void RemoveCRLF(CStdString& strLine);
   static void SecondsToTimeString( long lSeconds, CStdString& strHMS, TIME_FORMAT format = TIME_FORMAT_GUESS);
+  static void MilisecondsToTimeString( long lSeconds, CStdString& strHMS);
   static bool IsNaturalNumber(const CStdString& str);
   static CStdString SizeToString(int64_t size);
   static const CStdString EmptyString;
@@ -54,7 +55,13 @@ public:
   static int FindEndBracket(const CStdString &str, char opener, char closer, int startPos = 0);
   static int DateStringToYYYYMMDD(const CStdString &dateString);
   static void WordToDigits(CStdString &word);
+  static CStdString CreateUUID();
+  static bool ValidateUUID(const CStdString &uuid); // NB only validates syntax
+  static double CompareFuzzy(const CStdString &left, const CStdString &right);
+  static int FindBestMatch(const CStdString &str, const CStdStringArray &strings, double &matchscore);
   static CStdString FormatNumber(__int64 number);
+private:
+  static CStdString m_lastUUID;
 };
 
 #endif

@@ -1,10 +1,25 @@
-
+#if (defined HAVE_CONFIG_H) && (!defined WIN32)
+  #include "config.h"
+#endif
+#if (defined USE_EXTERNAL_PYTHON)
+  #if (defined HAVE_LIBPYTHON2_6)
+    #include <python2.6/Python.h>
+    #include <python2.6/osdefs.h>
+  #elif (defined HAVE_LIBPYTHON2_5)
+    #include <python2.5/Python.h>
+    #include <python2.5/osdefs.h>
+  #elif (defined HAVE_LIBPYTHON2_4)
+    #include <python2.4/Python.h>
+    #include <python2.4/osdefs.h>
+  #else
+    #error "Could not determine version of Python to use."
+  #endif
+#else
 #include "Python/Include/Python.h"
 #include "Python/Include/osdefs.h"
 #include "Python/Include/pystate.h"
-#ifdef _LINUX
-#include "XBPythonDll.h"
 #endif
+
 #include "Util.h"
 #include "xbmcmodule/pyutil.h"
 #include "XBPyPersistentThread.h"
@@ -12,6 +27,7 @@
 #include "FileSystem/SpecialProtocol.h"
 
 #include "utils/log.h"
+#include "lib/libBoxee/boxee.h"
 
 extern "C"
 {
@@ -35,6 +51,8 @@ XBPyPersistentThread::XBPyPersistentThread(XBPython *pExecuter, int id) : XBPyTh
   main_module = NULL;
   global_dict = NULL;
   m_saveState = NULL;
+  m_enableSandbox = false;
+  
 }
 
 XBPyPersistentThread::~XBPyPersistentThread()
@@ -54,7 +72,7 @@ void XBPyPersistentThread::SetAppId(const CStdString &id)
 void XBPyPersistentThread::OnStartup()
 {
   XBPyThread::OnStartup();
-  
+
   // get the global lock
   PyEval_AcquireLock();
 
@@ -74,7 +92,18 @@ void XBPyPersistentThread::OnStartup()
 
   m_strPythonPath = GetPythonPath();
 
-  //CreatePolicy(CThread::GetCurrentThreadId());
+#ifdef HAS_EMBEDDED
+  CStdString enableSandbox = getenv("PYTHON_SANDBOX");
+  if(!enableSandbox.empty())
+  {
+    m_enableSandbox = (enableSandbox.compare("1") == 0);
+  }
+#endif
+
+  if(m_enableSandbox)
+  {
+    CLog::Log(LOGINFO, "XBPyPersistentThread::OnStartup: turning on Python Sandbox");
+  }
 }
 
 bool XBPyPersistentThread::Lock()
@@ -98,12 +127,9 @@ void XBPyPersistentThread::OnExit()
   XBPyThread::OnExit();
   m_done = true;
   m_pExecuter->setDone(m_id);
-
-  //DeletePolicy(CThread::GetCurrentThreadId());
 }
 
-bool XBPyPersistentThread::QueueScript(const std::string& pythonCode,
-    const std::string& path, int argc, const char** argv)
+bool XBPyPersistentThread::QueueScript(const std::string& pythonCode, const std::string& path, const std::vector<CStdString>& params)
 {
   if (!m_pJobs || !IsRunning() || !Lock())
     return false;
@@ -113,9 +139,10 @@ bool XBPyPersistentThread::QueueScript(const std::string& pythonCode,
   job.strPath = path;
   job.isFile = false;
   
-  for (int i = 0; i < argc; i++)
+  for (std::vector<CStdString>::const_iterator cit = params.begin() ; cit != params.end() ; cit++)
   {
-    job.argv.push_back(argv[i]); 
+    CLog::Log(LOGERROR, "XBPyPersistentThread::QueueScript, params");
+    job.argv.push_back(*cit);
   }
   
   m_scriptQueue.push_back(job);
@@ -125,8 +152,7 @@ bool XBPyPersistentThread::QueueScript(const std::string& pythonCode,
   return (SDL_SemPost(m_pJobs) == 0);
 }
 
-bool XBPyPersistentThread::QueueFile(const std::string& file, int argc,
-    const char** argv)
+bool XBPyPersistentThread::QueueFile(const std::string& file, int argc, const char** argv)
 {
   if (!m_pJobs || !IsRunning() || !Lock())
     return false;
@@ -198,6 +224,13 @@ void XBPyPersistentThread::Process()
         break;
       }
       
+#if defined(_LINUX) && !defined(__APPLE__)
+      m_currentThreadId = gettid();
+      CreatePolicy(m_currentThreadId);
+#else
+      m_currentThreadId = CThread::GetCurrentThreadId();
+      CreatePolicy(m_currentThreadId);
+#endif
       XBPythonJob job;
       
       Lock();
@@ -233,7 +266,20 @@ void XBPyPersistentThread::Process()
       std::string strSourceDir = sourcedir;
       std::string strPath = strSourceDir;
       strPath += m_strPythonPath;
-      
+
+#ifdef EXTERNAL_PYTHON_PREFIX
+      CStdString strPath2;
+      strPath2.Format("%s:%s:%s/plat-linux2:%s/lib-dynload:%s/site-packages:", EXTERNAL_PYTHON_ZIP,
+          EXTERNAL_PYTHON_PREFIX, EXTERNAL_PYTHON_PREFIX, EXTERNAL_PYTHON_PREFIX, EXTERNAL_PYTHON_PREFIX);
+      strPath += strPath2;
+      strPath += PTH_IC("special://xbmc/system/python/local:");
+      setenv("PYTHONPATH", strPath.c_str(), 1);
+#endif
+
+#ifdef EXTERNAL_PYTHON_HOME
+      setenv("PYTHONHOME", "/opt/local", 1);
+#endif
+
       // Copy the path to char* so it can be used with Python functions
       char path[1024];
       strcpy(path, strPath.c_str());
@@ -242,9 +288,10 @@ void XBPyPersistentThread::Process()
       char** argv = new char*[argc];
       for (int i = 0; i < argc; i++)
       {
-        //argv[i] = (char*) job.argv[i].c_str();
-        argv[i] = new char[strlen(job.argv[i].c_str())+1];
-        strcpy(argv[i], job.argv[i].c_str());
+        CLog::Log(LOGDEBUG, "XBPyPersistentThread::Process, parameter (%d): %s (python)", i, job.argv[i].c_str());
+        argv[i] = new char[(job.argv[i].size())+1];
+        memset(argv[i], 0, job.argv[i].size()+1);
+        strncpy(argv[i], job.argv[i].c_str(), job.argv[i].size());
       }
       
       PyEval_RestoreThread(m_saveState); 
@@ -286,7 +333,7 @@ void XBPyPersistentThread::Process()
               {
                 PyErr_Print();
                 PyErr_Clear();
-              }
+            }
             }
             else
               CLog::Log(LOGINFO, "Scriptresult: Succes\n");
@@ -312,12 +359,12 @@ void XBPyPersistentThread::Process()
           {
             PyErr_Print();
             PyErr_Clear();
-          }
+        }
         }
         else
           CLog::Log(LOGINFO, "Scriptresult: Success\n");
       }
-
+      
       m_saveState = PyEval_SaveThread(); 
       
       for (int i = 0; i < argc; i++)
@@ -328,7 +375,11 @@ void XBPyPersistentThread::Process()
       delete [] argv;
       
       delete _source;
-
+#if defined(_LINUX) && !defined(__APPLE__)
+      DeletePolicy(gettid());
+#else
+      DeletePolicy(CThread::GetCurrentThreadId());
+#endif
       if (!IsRunning())
       {
         CLog::Log(LOGINFO, "XBPyPersistentThread::Process, not running, return (python)");
@@ -338,12 +389,12 @@ void XBPyPersistentThread::Process()
     } // if there are scripts in the queue
     
   } // while thread is running 
-
+  
   if (m_threadState != NULL)
   {
-    PyEval_RestoreThread(m_saveState); 
+  PyEval_RestoreThread(m_saveState);   
     PyThreadState_Swap(m_threadState);
-
+  
     //
     // if threads are enabled we must kill the threads before destroying the interpreter 
     //
@@ -363,7 +414,7 @@ void XBPyPersistentThread::Process()
             PyThreadState_Swap(NULL);
         }
 
-        m_InterpState->tstate_head = m_threadState;
+        //m_InterpState->tstate_head = m_threadState;
     }
 
     PyThreadState_Swap(m_threadState);
@@ -390,45 +441,164 @@ void XBPyPersistentThread::Process()
 
 void XBPyPersistentThread::CreatePolicy(const ThreadIdentifier threadId)
 {
-  if (PyEval_ThreadsInitialized())
+  if (m_enableSandbox && PyEval_ThreadsInitialized())
   {
 
+    CLog::Log(LOGDEBUG, "XBPyPersistentThread::CreatePolicy -thread id %p", threadId);
     // 
-    // File System policy - read only 
+    // File System policy - no access to all except:
+    //
+    // r/w
+    // userdata/apps/app_id
+    // userdata/profiles/usename/apps/app_id
     // 
+    // r/o
+    // /opt/boxee/system/python
+    // /opt/local/lib/python2.4
+    //
     ThreadPolicy *fsPolicy = TPAllocPolicy(threadId, FILE_SYSTEM);
+    FileRule rule;
+
+    rule.fileName = _P("special://home/profiles/");
+    rule.fileName += BOXEE::Boxee::GetInstance().GetCredentials().GetUserName();
+    rule.fileName += "/apps/";
+    rule.fileName += m_strAppId;
+    rule.accessMode = FILE_ACCESS_READ | FILE_ACCESS_WRITE;
+    
+    TPAddRuleToPolicy(threadId, fsPolicy, &rule);
+
+    rule.fileName = _P("special://home/apps/");
+    rule.fileName += m_strAppId;
+    rule.accessMode = FILE_ACCESS_READ | FILE_ACCESS_WRITE;
+    
+    TPAddRuleToPolicy(threadId, fsPolicy, &rule);
+
+    rule.fileName = "/tmp/boxee/";
+    rule.accessMode = FILE_ACCESS_READ | FILE_ACCESS_WRITE;
+    
+    TPAddRuleToPolicy(threadId, fsPolicy, &rule);
+
+    rule.fileName = "http://";
+    rule.accessMode = FILE_ACCESS_READ | FILE_ACCESS_WRITE;
+    
+    TPAddRuleToPolicy(threadId, fsPolicy, &rule);
+
+    rule.fileName = "https://";
+    rule.accessMode = FILE_ACCESS_READ | FILE_ACCESS_WRITE;
+    
+    TPAddRuleToPolicy(threadId, fsPolicy, &rule);
+
+    rule.fileName = "mms://";
+    rule.accessMode = FILE_ACCESS_READ | FILE_ACCESS_WRITE;
+    
+    TPAddRuleToPolicy(threadId, fsPolicy, &rule);
+
+    rule.fileName = "rss://";
+    rule.accessMode = FILE_ACCESS_READ | FILE_ACCESS_WRITE;
+
+    TPAddRuleToPolicy(threadId, fsPolicy, &rule);
+
+#ifdef HAS_EMBEDDED
+    rule.fileName = "/opt/boxee";
+    rule.accessMode = FILE_ACCESS_READ;
+
+    TPAddRuleToPolicy(threadId, fsPolicy, &rule);
+
+    rule.fileName = "/opt/local/lib/python2.4";
+    rule.accessMode = FILE_ACCESS_READ;
+
+    TPAddRuleToPolicy(threadId, fsPolicy, &rule);
+
+    rule.fileName = "mc.py";
+    rule.accessMode = FILE_ACCESS_READ;
+    
+    TPAddRuleToPolicy(threadId, fsPolicy, &rule);
+
+    rule.fileName = "/etc/hosts";
+    rule.accessMode = FILE_ACCESS_READ;
+
+    TPAddRuleToPolicy(threadId, fsPolicy, &rule);
+
+    rule.fileName = "/dev/urandom";
+    rule.accessMode = FILE_ACCESS_READ;
+
+    TPAddRuleToPolicy(threadId, fsPolicy, &rule);
+
+    rule.fileName = _P(g_settings.GetProfileUserDataFolder());
+    rule.fileName += "/cache";
+    rule.accessMode = FILE_ACCESS_READ | FILE_ACCESS_WRITE;
+
+    TPAddRuleToPolicy(threadId, fsPolicy, &rule);
+
+    rule.fileName = _P(g_settings.GetProfileUserDataFolder());
+    rule.fileName += "/playbackhistory.dmp";
+    rule.accessMode = FILE_ACCESS_READ | FILE_ACCESS_WRITE;
+    
+    TPAddRuleToPolicy(threadId, fsPolicy, &rule);
+
+    rule.fileName = "/opt/local/etc/mdns.allow";
+    rule.accessMode = FILE_ACCESS_READ;
+
+    TPAddRuleToPolicy(threadId, fsPolicy, &rule);
+#endif
 
     TPAddPolicy(threadId, fsPolicy);
-  
+    
     // 
     // Shared library policy
     // 
     ThreadPolicy *slPolicy = TPAllocPolicy(threadId,SHARED_LIBRARY);
-    FileRule rule;
 
     rule.fileName = _P("special://xbmc/system/python");
     rule.accessMode = FILE_ACCESS_READ;
 
     TPAddRuleToPolicy(threadId, slPolicy, &rule);
 
+    rule.fileName = _P("special://home/apps/");
+    rule.fileName += m_strAppId;
+    rule.accessMode = FILE_ACCESS_READ;
+
+    TPAddRuleToPolicy(threadId, slPolicy, &rule);
+
+#ifdef HAS_EMBEDDED
+    rule.fileName = "/opt/local/lib/python2.4";
+    rule.accessMode = FILE_ACCESS_READ;
+   	
+    TPAddRuleToPolicy(threadId, slPolicy, &rule);
+#endif
+
     TPAddPolicy(threadId, slPolicy);
 
     //
-    // ProcessExec policy
+    // Disallow policy
     //
-    ThreadPolicy *pePolicy = TPAllocPolicy(threadId,PROCESS_EXEC);
+    ThreadPolicy *pePolicy = TPAllocPolicy(threadId, DISALLOW);
 
     TPAddPolicy(threadId, pePolicy);
 
-  }
+    }
 }
 
 void XBPyPersistentThread::DeletePolicy(const ThreadIdentifier threadId)
 {
-  TPDeletePolicy(threadId, NULL);
+  if(m_enableSandbox)
+  {
+    CLog::Log(LOGDEBUG, "XBPyPersistentThread::DeletePolicy -thread id %p", threadId);
+    TPDeletePolicy(threadId, NULL);
+  }
+}
+   
+void XBPyPersistentThread::SetPartnerId(const CStdString& partnerId)
+{
+  m_partnerId = partnerId;
 }
 
-void XBPyPersistentThread::SetSecurityLevel(const CStdString& securityLevel)
+ThreadIdentifier XBPyPersistentThread::GetCurrentThreadId()
 {
-  m_securityLevel = securityLevel;
+  return m_currentThreadId;
+}
+
+CStdString XBPyPersistentThread::GetPartnerId()
+{
+  return m_partnerId;
 }

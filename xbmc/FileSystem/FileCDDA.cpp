@@ -47,10 +47,10 @@ CFileCDDA::~CFileCDDA(void)
   Close();
 }
 
-bool CFileCDDA::Open(const CURL& url)
+bool CFileCDDA::Open(const CURI& url)
 {
   CStdString strURL;
-  url.GetURLWithoutFilename(strURL);
+  strURL = url.GetWithoutFilename();
 
   if (!g_mediaManager.IsDiscInDrive(strURL) || !IsValidFile(url))
     return false;
@@ -85,7 +85,7 @@ bool CFileCDDA::Open(const CURL& url)
   return true;
 }
 
-bool CFileCDDA::Exists(const CURL& url)
+bool CFileCDDA::Exists(const CURI& url)
 {
   if (!IsValidFile(url))
     return false;
@@ -102,7 +102,7 @@ bool CFileCDDA::Exists(const CURL& url)
   return (iTrack > 0 && iTrack <= iLastTrack);
 }
 
-int CFileCDDA::Stat(const CURL& url, struct __stat64* buffer)
+int CFileCDDA::Stat(const CURI& url, struct __stat64* buffer)
 {
   if (Open(url))
   {
@@ -193,10 +193,10 @@ int64_t CFileCDDA::GetLength()
   return ((m_lsnEnd -m_lsnStart)*CDIO_CD_FRAMESIZE_RAW);
 }
 
-bool CFileCDDA::IsValidFile(const CURL& url)
+bool CFileCDDA::IsValidFile(const CURI& url)
 {
   CStdString strFileName;
-  url.GetURL(strFileName);
+  strFileName = url.Get();
 
   // Only .cdda files are supported
   CStdString strExtension;
@@ -206,10 +206,10 @@ bool CFileCDDA::IsValidFile(const CURL& url)
   return (strExtension == ".cdda");
 }
 
-int CFileCDDA::GetTrackNum(const CURL& url)
+int CFileCDDA::GetTrackNum(const CURI& url)
 {
   CStdString strFileName;
-  url.GetURL(strFileName);
+  strFileName = url.Get();
 
   // get track number from "cdda://local/01.cdda"
   return atoi(strFileName.substr(13, strFileName.size() - 13 - 5).c_str());

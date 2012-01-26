@@ -19,12 +19,14 @@
  *
  */
 
+#include "system.h"
 #include "DVDSubtitlesLibass.h"
 #include "DVDClock.h"
 #include "FileSystem/SpecialProtocol.h"
 #include "utils/SingleLock.h"
 #include "GUISettings.h"
 #include "utils/log.h"
+#include "utils/CharsetConverter.h"
 
 using namespace std;
 
@@ -79,7 +81,11 @@ CDVDSubtitlesLibass::CDVDSubtitlesLibass()
 
   //Setting default font to the Arial in \media\fonts (used if FontConfig fails)
   strPath = "special://xbmc/media/Fonts/";
+#ifndef HAS_EMBEDDED
   strPath += g_guiSettings.GetString("subtitles.font");
+#else
+  strPath += g_charsetConverter.getSubtitleFontByCharsetName(g_guiSettings.GetString("subtitles.charset"));
+#endif
 
   m_dll.ass_set_margins(m_renderer, 0, 0, 0, 0);
   m_dll.ass_set_use_margins(m_renderer, 0);

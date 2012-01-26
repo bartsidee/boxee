@@ -27,7 +27,7 @@
 #include <vector>
 #include <string>
 
-#if defined(HAS_GL) || defined(HAS_GLES)
+#if defined(HAS_GL2) || defined(HAS_GLES)
 
 namespace Shaders {
 
@@ -40,7 +40,7 @@ namespace Shaders {
   {
   public:
     CShader() { m_compiled = false; }
-    virtual ~CShader() { }
+    virtual ~CShader() {}
     virtual bool Compile() = 0;
     virtual void Free() = 0;
     virtual GLuint Handle() = 0;
@@ -139,8 +139,8 @@ namespace Shaders {
     virtual ~CShaderProgram()
       {
         Free();
-          delete m_pFP;
-          delete m_pVP;
+        delete m_pFP;
+        delete m_pVP;
       }
 
     // enable the shader
@@ -185,7 +185,7 @@ namespace Shaders {
   };
 
 
-  class CGLSLShaderProgram 
+  class CGLSLShaderProgram
     : virtual public CShaderProgram
   {
   public:
@@ -217,11 +217,12 @@ namespace Shaders {
 
   protected:
     GLint         m_lastProgram;
+    bool          m_validated;
   };
 
 
 #ifndef HAS_GLES
-  class CARBShaderProgram 
+  class CARBShaderProgram
     : virtual public CShaderProgram
   {
   public:

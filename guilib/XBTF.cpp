@@ -29,6 +29,9 @@ CXBTFFrame::CXBTFFrame()
   m_unpackedSize = 0;
   m_offset = 0;
   m_format = XB_FMT_UNKNOWN;
+  m_initialWidth = 0;
+  m_initialHeight = 0;
+
 }
 
 uint32_t CXBTFFrame::GetWidth() const
@@ -36,9 +39,19 @@ uint32_t CXBTFFrame::GetWidth() const
   return m_width;
 }
 
+uint32_t CXBTFFrame::GetInitialWidth() const
+{
+  return m_initialWidth;
+}
+
 void CXBTFFrame::SetWidth(uint32_t width)
 {
   m_width = width;
+}
+
+void CXBTFFrame::SetInitialWidth(uint32_t initialWidth)
+{
+  m_initialWidth= initialWidth;
 }
 
 uint32_t CXBTFFrame::GetHeight() const
@@ -46,9 +59,19 @@ uint32_t CXBTFFrame::GetHeight() const
   return m_height;
 }
 
+uint32_t CXBTFFrame::GetInitialHeight() const
+{
+  return m_initialHeight;
+}
+
 void CXBTFFrame::SetHeight(uint32_t height)
 {
   m_height = height;
+}
+
+void CXBTFFrame::SetInitialHeight(uint32_t initialHeight)
+{
+  m_initialHeight = initialHeight;
 }
 
 uint64_t CXBTFFrame::GetPackedSize() const
@@ -115,7 +138,9 @@ uint64_t CXBTFFrame::GetHeaderSize() const
     sizeof(m_packedSize) +
     sizeof(m_unpackedSize) +
     sizeof(m_offset) + 
-    sizeof(m_duration); 
+    sizeof(m_duration) +
+    sizeof(m_initialWidth) +
+    sizeof(m_initialHeight);
   
   return result;
 }

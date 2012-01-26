@@ -4,7 +4,7 @@
 <!-- Link:                                                -->
 <!-- http://www.worldtimezone.com/ -->
 
-<language>
+<language code="fr">
   <charsets>
     <gui>CP1252</gui>
     <subtitle>CP1252</subtitle>
@@ -48,6 +48,7 @@
 
   <sorttokens>
     <token>The</token>
+    <token>A</token>
     <token>Le</token>
     <token>La</token>
     <token>Les</token>

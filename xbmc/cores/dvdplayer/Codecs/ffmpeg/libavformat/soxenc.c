@@ -24,7 +24,7 @@
 
 /**
  * SoX native format muxer
- * @file libavformat/soxenc.c
+ * @file
  * @author Daniel Verkamp
  * @sa http://wiki.multimedia.cx/index.php?title=SoX_native_intermediate_format
  */
@@ -112,7 +112,7 @@ static int sox_write_trailer(AVFormatContext *s)
     return 0;
 }
 
-AVOutputFormat sox_muxer = {
+AVOutputFormat ff_sox_muxer = {
     "sox",
     NULL_IF_CONFIG_SMALL("SoX native format"),
     NULL,

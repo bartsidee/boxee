@@ -65,7 +65,7 @@
 #include "Settings.h"
 #include "LocalizeStrings.h"
 
-#include "GUIWindowBoxeeBrowse.h"
+#include "GUIWindowBoxeeBrowseSimpleApp.h"
 #include "FileSystem/DirectoryCache.h"
 
 #include "lib/libBoxee/boxee.h"
@@ -151,7 +151,7 @@ namespace PYXBMC
       iLevel = LOGNOTICE;
     CLog::Log(iLevel, "%s", s_line);
 
-    ThreadMessage tMsg = {TMSG_WRITE_SCRIPT_OUTPUT};
+    ThreadMessage tMsg (TMSG_WRITE_SCRIPT_OUTPUT);
     tMsg.strParam = s_line;
     g_application.getApplicationMessenger().SendMessage(tMsg);
 
@@ -216,7 +216,7 @@ namespace PYXBMC
 
   PyObject* XBMC_Shutdown(PyObject *self, PyObject *args)
   {
-    ThreadMessage tMsg = {TMSG_SHUTDOWN};
+    ThreadMessage tMsg (TMSG_SHUTDOWN);
     g_application.getApplicationMessenger().SendMessage(tMsg);
 
     Py_INCREF(Py_None);
@@ -232,7 +232,7 @@ namespace PYXBMC
 
   PyObject* XBMC_Dashboard(PyObject *self, PyObject *args)
   {
-    ThreadMessage tMsg = {TMSG_DASHBOARD};
+    ThreadMessage tMsg (TMSG_DASHBOARD);
     g_application.getApplicationMessenger().SendMessage(tMsg);
 
     Py_INCREF(Py_None);
@@ -248,7 +248,7 @@ namespace PYXBMC
 
   PyObject* XBMC_Restart(PyObject *self, PyObject *args)
   {
-    ThreadMessage tMsg = {TMSG_RESTART};
+    ThreadMessage tMsg (TMSG_RESTART);
     g_application.getApplicationMessenger().SendMessage(tMsg);
 
     Py_INCREF(Py_None);
@@ -269,7 +269,7 @@ namespace PYXBMC
     char *cLine = NULL;
     if (!PyArg_ParseTuple(args, (char*)"s", &cLine)) return NULL;
 
-    ThreadMessage tMsg = {TMSG_EXECUTE_SCRIPT};
+    ThreadMessage tMsg (TMSG_EXECUTE_SCRIPT);
     tMsg.strParam = cLine;
     g_application.getApplicationMessenger().SendMessage(tMsg);
 
@@ -790,7 +790,7 @@ namespace PYXBMC
   PyObject* XBMC_GetFileHash(PyObject *self, PyObject *args)
   {
     PyObject *pObjectText;
-    if (!PyArg_ParseTuple(args, "O", &pObjectText)) return NULL;
+    if (!PyArg_ParseTuple(args, (char*) "O", &pObjectText)) return NULL;
  
     string strText;
     if (!PyGetUnicodeString(strText, pObjectText, 1)) return NULL;
@@ -806,7 +806,7 @@ namespace PYXBMC
     memset(strHash,0,17);
     snprintf(strHash, 17, "%016"PRIx64, hash);
     
-    return Py_BuildValue("s", strHash);
+    return Py_BuildValue((char*) "s", strHash);
   }
 
   PyDoc_STRVAR(getFileSize__doc__,
@@ -820,7 +820,7 @@ namespace PYXBMC
   PyObject* XBMC_GetFileSize(PyObject *self, PyObject *args)
   {
     PyObject *pObjectText;
-    if (!PyArg_ParseTuple(args, "O", &pObjectText)) return NULL;
+    if (!PyArg_ParseTuple(args, (char*) "O", &pObjectText)) return NULL;
  
     string strText;
     if (!PyGetUnicodeString(strText, pObjectText, 1)) return NULL;
@@ -832,7 +832,7 @@ namespace PYXBMC
       fileSize = f.GetLength();
       f.Close();
     }
-    return Py_BuildValue("l", fileSize);
+    return Py_BuildValue((char*) "l", fileSize);
   }
 
   PyDoc_STRVAR(getBoxeeCookieJar__doc__,
@@ -843,7 +843,7 @@ namespace PYXBMC
   
   PyObject* XBMC_GetBoxeeCookieJar(PyObject *self, PyObject *args)
   {
-    return Py_BuildValue("s", BOXEE::BXCurl::GetCookieJar().c_str());
+    return Py_BuildValue((char*) "s", BOXEE::BXCurl::GetCookieJar().c_str());
   }
   
   PyDoc_STRVAR(showNotification__doc__,
@@ -892,12 +892,12 @@ namespace PYXBMC
   PyObject* XBMC_OpenBrowse(PyObject *self, PyObject *args)
   {
     PyObject *pObjectText;
-    if (!PyArg_ParseTuple(args, "O", &pObjectText)) return NULL;
+    if (!PyArg_ParseTuple(args, (char*) "O", &pObjectText)) return NULL;
     
     string strText;
     if (!PyGetUnicodeString(strText, pObjectText, 1)) return NULL;
 
-    CGUIWindowBoxeeBrowse::Show(strText.c_str(), "other");
+    CGUIWindowBoxeeBrowseSimpleApp::Show(strText.c_str(), "other");
     
     Py_INCREF(Py_None);
     return Py_None;
@@ -914,7 +914,7 @@ namespace PYXBMC
   PyObject* XBMC_NoCachePath(PyObject *self, PyObject *args)
   {
     PyObject *pObjectText;
-    if (!PyArg_ParseTuple(args, "O", &pObjectText)) return NULL;
+    if (!PyArg_ParseTuple(args, (char*) "O", &pObjectText)) return NULL;
     
     string strText;
     if (!PyGetUnicodeString(strText, pObjectText, 1)) return NULL;
@@ -1007,6 +1007,28 @@ namespace PYXBMC
     return Py_BuildValue((char*)"b", exists);
   }
 
+
+  extern "C"
+  {
+    char* xbp_getcwd(char* buf, int len);
+  }
+
+  PyDoc_STRVAR(getCwd__doc__,
+    "getCwd() -- Returns the current dir.\n");
+
+  PyObject* XBMC_GetCwd(PyObject *self, PyObject *args, PyObject *kwds)
+  {
+    char buf[2048];
+    int bufLen;
+
+    if (!xbp_getcwd(buf, bufLen))
+    {
+      strcpy(buf, "");
+    }
+
+    return Py_BuildValue((char*)"s", buf);
+  }
+
   // define c functions to be used in python here
   PyMethodDef xbmcMethods[] = {
     {(char*)"output", (PyCFunction)XBMC_Output, METH_VARARGS|METH_KEYWORDS, output__doc__},
@@ -1052,6 +1074,9 @@ namespace PYXBMC
     {(char*)"getSupportedMedia", (PyCFunction)XBMC_GetSupportedMedia, METH_VARARGS|METH_KEYWORDS, getSupportedMedia__doc__},
 
     {(char*)"skinHasImage", (PyCFunction)XBMC_SkinHasImage, METH_VARARGS|METH_KEYWORDS, skinHasImage__doc__},
+
+    {(char*)"getcwd", (PyCFunction)XBMC_GetCwd, METH_VARARGS, getCwd__doc__},
+
     {NULL, NULL, 0, NULL}
   };
 

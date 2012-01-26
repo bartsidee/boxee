@@ -43,6 +43,8 @@ public:
   static bool Exists(const CStdString& strPath);
   static bool Remove(const CStdString& strPath);
   static bool IsCached(const CStdString& strPath);
+
+  static bool CreateRecursive(const CStdString& strDirectory);
   
   static BOXEE::BXBGProcess s_thumbCreatorProcess;
   

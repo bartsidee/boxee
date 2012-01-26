@@ -44,6 +44,8 @@
 #include "NptList.h"
 #include "NptDebug.h"
 
+#include "../../../../../placement_new.h"
+
 /*----------------------------------------------------------------------
 |   constants
 +---------------------------------------------------------------------*/
@@ -64,7 +66,6 @@ public:
     NPT_String(const NPT_String& str);
     NPT_String(const char* str);
     NPT_String(const char* str, NPT_Size length);
-    NPT_String(const char* str, NPT_Ordinal first, NPT_Size length);
     NPT_String(char c, NPT_Cardinal repeat = 1);
     NPT_String() : m_Chars(NULL) {}
    ~NPT_String() { if (m_Chars) delete GetBuffer(); }
@@ -131,7 +132,7 @@ public:
     // editing
     void Insert(const char* s, NPT_Ordinal where = 0);
     void Erase(NPT_Ordinal start, NPT_Cardinal count = 1);
-    void Replace(NPT_Ordinal start, NPT_Cardinal count, const char* s);
+    void Replace(const char* before, const char* after, bool ignore_case = false);
     void TrimLeft();
     void TrimLeft(char c);
     void TrimLeft(const char* chars);
@@ -188,8 +189,12 @@ protected:
     public:
         // class methods
         static Buffer* Allocate(NPT_Size allocated, NPT_Size length) {
+#ifdef WIN32_MEMORY_LEAK_DETECT
+			void* mem = _malloc_dbg(sizeof(Buffer)+allocated+1, _NORMAL_BLOCK , __FILE__ , __LINE__ );
+#else
             void* mem = ::operator new(sizeof(Buffer)+allocated+1);
-            return new(mem) Buffer(allocated, length);
+#endif
+            return PLACEMENT_NEW(mem) Buffer(allocated, length);
         }
         static char* Create(NPT_Size allocated, NPT_Size length=0) {
             Buffer* shared = Allocate(allocated, length);

@@ -37,16 +37,37 @@ struct SActorInfo
   CScraperUrl thumbUrl;
 };
 
-class CVideoInfoTag : public ISerializable
+struct SRottenTomatoInfo
+{
+  SRottenTomatoInfo()
+  {
+    iCriticsScore = -1;
+    iAudienceScore = -1;
+    bValidCriticsDetails = false;
+    bValidAudienceDetails = false;
+  }
+
+  int iCriticsScore;
+  int iAudienceScore;
+  CStdString strCriticsRating;
+  CStdString strAudienceRating;
+  bool       bValidCriticsDetails;
+  bool       bValidAudienceDetails;
+};
+
+class CVideoInfoTag : public IArchivable, public ISerializable
 {
 public:
   CVideoInfoTag() { Reset(); };
   void Reset();
   bool Load(const TiXmlElement *movie, bool chained = false);
   bool Save(TiXmlNode *node, const CStdString &tag, bool savePathInfo = true);
-  virtual void Serialize(CArchive& ar);
+  virtual void Archive(CArchive& ar);
+  virtual void Serialize(CVariant& value);
   const CStdString GetCast(bool bIncludeRole = false) const;
   bool HasStreamDetails() const;
+  bool IsEmpty() const;
+  void MergeFieldsFrom(const CVideoInfoTag& other);
 
   void Dump() const;
 
@@ -58,6 +79,8 @@ public:
   CStdString m_strTrailer;
   CStdString m_strPlot;
   CScraperUrl m_strPictureURL;
+  CStdString m_strCountry;
+  CStdString m_strShowLink;
   CStdString m_strTitle;
   CStdString m_strSortTitle;
   CStdString m_strVotes;
@@ -97,7 +120,10 @@ public:
   int m_iBookmarkId;
   CFanart m_fanart;
   CStreamDetails m_streamDetails;
-
+  CStdString  m_strNFOPath;
+  int         m_iNfoAccessTime;
+  int         m_iNfoModifiedTime;
+  SRottenTomatoInfo m_rottenTomatoDetails;
 private:
   void ParseNative(const TiXmlElement* movie);
   void ParseMyMovies(const TiXmlElement* movie);

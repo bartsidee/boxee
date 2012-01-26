@@ -31,8 +31,12 @@
 #include "WindowingFactory.h"
 #include "utils/log.h"
 #include "utils/SingleLock.h"
+#include "Shader.h"
 #include "Application.h"
 
+#if defined(HAS_GL) || defined(HAS_GLES)
+using namespace Shaders;
+#endif
 using namespace std;
 
 #define IMMEDIATE_TRANSISTION_TIME          20
@@ -43,6 +47,80 @@ using namespace std;
 #define PICTURE_VIEW_BOX_BACKGROUND 0xff000000 // BLACK
 
 #define FPS                                 25
+
+#if defined(HAS_GLES) || defined(HAS_GL) 
+
+static std::string g_TextureVertexShader =
+"uniform mat4 u_matModelView;\n"
+"uniform mat4 u_matProjection;\n"
+"// Input vertex parameters\n"
+"attribute vec3 a_vertex;\n"
+"attribute vec2 a_texCoord0;\n"
+"varying vec2 v_texCoord0;\n"
+"void main() \n"
+"{\n"
+"v_texCoord0 = a_texCoord0;\n"
+"gl_Position = u_matProjection * u_matModelView * vec4(a_vertex,1.0);\n"
+"}\n";
+
+static std::string g_TexturePixelShader = 
+#ifndef HAS_GL2
+"precision mediump float;\n"
+#endif
+"varying vec2 v_texCoord0;\n"
+"uniform vec4 u_diffuseColor;\n"
+"uniform sampler2D u_texture0;\n"
+"void main()\n"
+"{\n"
+"vec4 texture0Color;\n"
+"texture0Color = texture2D(u_texture0, v_texCoord0) * u_diffuseColor;\n"
+#if defined (HAS_GLES) && defined(_WIN32)
+"gl_FragColor.rgba = texture0Color.bgra;\n"
+#else
+"gl_FragColor = texture0Color;\n"
+#endif
+"}\n";
+
+static std::string g_TexturePixelShaderNoDiffuse = 
+#ifndef HAS_GL2
+"precision mediump float;\n"
+#endif
+"varying vec2 v_texCoord0;\n"
+"uniform sampler2D u_texture0;\n"
+"void main()\n"
+"{\n"
+"vec4 texture0Color;\n"
+"texture0Color = texture2D(u_texture0, v_texCoord0);\n"
+#if defined (HAS_GLES) && defined(_WIN32)
+"gl_FragColor.rgba = texture0Color.bgra;\n"
+#else
+"gl_FragColor = texture0Color;\n"
+#endif
+"}\n";
+
+static std::string g_NoTexturePixelShader = 
+#ifndef HAS_GL2
+"precision mediump float;\n"
+#endif
+"varying vec2 v_texCoord0;\n"
+"uniform vec4 u_diffuseColor;\n"
+"uniform sampler2D u_texture0;\n"
+"void main()\n"
+"{\n"
+"vec4 texture0Color;\n"
+"texture0Color = u_diffuseColor;\n"
+#if defined (HAS_GLES) && defined(_WIN32)
+"gl_FragColor.rgba = texture0Color.bgra;\n"
+#else
+"gl_FragColor = texture0Color;\n"
+#endif
+"}\n";
+
+static Shaders::CGLSLShaderProgram* g_pTextureShadersProgram;
+static Shaders::CGLSLShaderProgram* g_pNoTextureShadersProgram;
+static Shaders::CGLSLShaderProgram* g_pTextureShadersProgramNoDiffuse;
+
+#endif
 
 static float zoomamount[10] = { 1.0f, 1.2f, 1.5f, 2.0f, 2.8f, 4.0f, 6.0f, 9.0f, 13.5f, 20.0f };
 
@@ -66,29 +144,29 @@ void CSlideShowPic::Close()
   if (!g_application.IsCurrentThread())
   {
     // must close from main thread because textures are getting deleted
-    ThreadMessage tMsg = {TMSG_CLOSE_SLIDESHOWPIC};
+    ThreadMessage tMsg(TMSG_CLOSE_SLIDESHOWPIC);
     tMsg.lpVoid = this;
     g_application.getApplicationMessenger().SendMessage(tMsg, true);      
   }
   else
   {
-    CSingleLock lock(g_graphicsContext);
-    if (m_pImage)
-    {
-      delete m_pImage;
-      m_pImage = NULL;
-    }
-    m_bIsLoaded = false;
-    m_bIsFinished = false;
-    m_bDrawNextImage = false;
-    m_bTransistionImmediately = false;
+  CSingleLock lock(m_textureAccess);
+  if (m_pImage)
+  {
+    delete m_pImage;
+    m_pImage = NULL;
   }
+  m_bIsLoaded = false;
+  m_bIsFinished = false;
+  m_bDrawNextImage = false;
+  m_bTransistionImmediately = false;
+}
 }
 
 void CSlideShowPic::SetTexture(int iSlideNumber, CBaseTexture* pTexture, DISPLAY_EFFECT dispEffect, TRANSISTION_EFFECT transEffect)
 {
   Close();
-  CSingleLock lock(g_graphicsContext);
+  CSingleLock lock(m_textureAccess);
   m_bPause = false;
   m_bNoEffect = false;
   m_bTransistionImmediately = false;
@@ -99,6 +177,10 @@ void CSlideShowPic::SetTexture(int iSlideNumber, CBaseTexture* pTexture, DISPLAY
   m_fHeight = (float)pTexture->GetHeight();
   // reset our counter
   m_iCounter = 0;
+#if defined(HAS_GLES) || defined(HAS_GL) 
+  //transEffect = CROSSFADE;
+#endif
+
   // initialize our transistion effect
   m_transistionStart.type = transEffect;
   m_transistionStart.start = 0;
@@ -110,6 +192,9 @@ void CSlideShowPic::SetTexture(int iSlideNumber, CBaseTexture* pTexture, DISPLAY
   if(m_bScreenSaverMode)
   {
     m_transistionStart.length = max((int)(g_infoManager.GetFPS() * 5), 180);
+#ifdef HAS_INTEL_SMD
+    m_transistionStart.length = 150;
+#endif
     m_transistionEnd.start    = m_transistionStart.length;
     m_transistionEnd.length   = m_transistionStart.length;
   }
@@ -189,7 +274,7 @@ int CSlideShowPic::GetOriginalHeight()
 
 void CSlideShowPic::UpdateTexture(CBaseTexture* pTexture)
 {
-  CSingleLock lock(g_graphicsContext);
+  CSingleLock lock(m_textureAccess);
   if (m_pImage)
   {
     delete m_pImage;
@@ -422,7 +507,7 @@ void CSlideShowPic::Move(float fDeltaX, float fDeltaY)
 
 void CSlideShowPic::Render()
 {
-  CSingleLock lock(g_graphicsContext);
+  CSingleLock lock(m_textureAccess);
   if (!m_pImage || !m_bIsLoaded || m_bIsFinished) return ;
   // update the image
   Process();
@@ -484,6 +569,11 @@ void CSlideShowPic::Render()
     fScale *= m_fPosZ;
   // zoom image
   fScale *= m_fZoomAmount;
+
+#ifdef HAS_EMBEDDED
+  if(m_bScreenSaverMode)
+    fScale = 1.25;
+#endif
 
   // calculate the resultant coordinates
   for (int i = 0; i < 4; i++)
@@ -620,6 +710,11 @@ void CSlideShowPic::Render()
 
 void CSlideShowPic::Render(float *x, float *y, CBaseTexture* pTexture, color_t color)
 {
+  if(GET_A(color) == 255)
+    g_Windowing.EnableBlending(false);
+  else if(m_bBlend)
+    g_Windowing.EnableBlending(true);
+
 #ifdef HAS_DX
   struct VERTEX
   {
@@ -690,17 +785,14 @@ void CSlideShowPic::Render(float *x, float *y, CBaseTexture* pTexture, color_t c
   g_Windowing.Get3DDevice()->DrawPrimitiveUP( pTexture ? D3DPT_TRIANGLEFAN : D3DPT_LINESTRIP, pTexture ? 2 : 4, vertex, sizeof(VERTEX) );
   if (pTexture) g_Windowing.Get3DDevice()->SetTexture(0, NULL);
 
-#elif defined(HAS_GL)
+#elif defined(HAS_GL_1) 
   g_graphicsContext.BeginPaint();
   if (pTexture)
   {
     pTexture->LoadToGPU();
     glBindTexture(GL_TEXTURE_2D, pTexture->GetTextureObject());
     glEnable(GL_TEXTURE_2D);
-    
-    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_BLEND);          // Turn Blending On
-       
+         
     // diffuse coloring
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
     glTexEnvf(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
@@ -742,10 +834,180 @@ void CSlideShowPic::Render(float *x, float *y, CBaseTexture* pTexture, color_t c
     
   glEnd();
   g_graphicsContext.EndPaint();
-#elif defined(HAS_GLES)
-  // TODO: GLES
+#elif defined(HAS_GLES) || defined(HAS_GL)
+  struct ImageVertex
+  {
+    float x, y, z;
+    unsigned char r, g, b, a;    
+    float u1, v1;
+  };
+
+  ImageVertex v[6];
+
+  if(g_pTextureShadersProgram == NULL)
+  {
+    g_pTextureShadersProgram = new CGLSLShaderProgram();
+    g_pTextureShadersProgram->VertexShader()->SetSource(g_TextureVertexShader);
+    g_pTextureShadersProgram->PixelShader()->SetSource(g_TexturePixelShader);
+    g_pTextureShadersProgram->CompileAndLink();
+  }
+
+  if(g_pNoTextureShadersProgram == NULL)
+  {
+    g_pNoTextureShadersProgram = new CGLSLShaderProgram();
+    g_pNoTextureShadersProgram->VertexShader()->SetSource(g_TextureVertexShader);
+    g_pNoTextureShadersProgram->PixelShader()->SetSource(g_NoTexturePixelShader);
+    g_pNoTextureShadersProgram->CompileAndLink();
+  }
+
+  if(g_pTextureShadersProgramNoDiffuse == NULL)
+  {
+    g_pTextureShadersProgramNoDiffuse = new CGLSLShaderProgram();
+    g_pTextureShadersProgramNoDiffuse->VertexShader()->SetSource(g_TextureVertexShader);
+    g_pTextureShadersProgramNoDiffuse->PixelShader()->SetSource(g_TexturePixelShaderNoDiffuse);
+    g_pTextureShadersProgramNoDiffuse->CompileAndLink();
+  }
+
+  GLuint progObj = -1;
+
+  if(pTexture)
+  {
+    g_pTextureShadersProgram->Enable();
+    progObj = g_pTextureShadersProgram->ProgramHandle();
+  }
+  else
+  {
+    g_pNoTextureShadersProgram->Enable();
+    progObj = g_pNoTextureShadersProgram->ProgramHandle();
+  }
+
+  if(GET_A(color) == 255)
+  {
+    g_pTextureShadersProgramNoDiffuse->Enable();
+    progObj = g_pTextureShadersProgramNoDiffuse->ProgramHandle();
+  }
+
+  if(progObj == (GLuint) -1)
+    return;
+  
+  m_uniMatProjection  = glGetUniformLocation(progObj, "u_matProjection");
+  m_uniMatModelView  = glGetUniformLocation(progObj, "u_matModelView");
+  m_uniTexture0 = glGetUniformLocation(progObj, "u_texture0");
+  m_attribTextureCoord0 = glGetAttribLocation(progObj, "a_texCoord0");
+  m_attribVertex = glGetAttribLocation(progObj, "a_vertex");
+  m_uniColor = glGetUniformLocation(progObj, "u_diffuseColor");
+
+  glEnableVertexAttribArray(m_attribVertex); 
+  glEnableVertexAttribArray(m_attribTextureCoord0);
+  
+  g_graphicsContext.BeginPaint();
+
+  if (pTexture)
+  {
+    pTexture->LoadToGPU();
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, pTexture->GetTextureObject());
+    glEnable(GL_TEXTURE_2D);
+  } 
+  else
+  {
+    glDisable(GL_TEXTURE_2D);
+  }
+
+  if (m_uniColor != -1)
+  {
+    GLfloat diffuseColor[4];
+    diffuseColor[0] = (GLfloat)GET_R(color) / 255.0f;
+    diffuseColor[1] = (GLfloat)GET_G(color) / 255.0f;
+    diffuseColor[2] = (GLfloat)GET_B(color) / 255.0f;
+    diffuseColor[3] = (GLfloat)GET_A(color) / 255.0f;
+    glUniform4fv(m_uniColor, 1, diffuseColor);
+
+    if(diffuseColor[3] == 0.0f)
+    {
+      g_graphicsContext.EndPaint();
+      return;
+    }
+  }
+
+  g_graphicsContext.PushTransform(TransformMatrix(), true);
+
+  TransformMatrix* matModelView = g_Windowing.GetHardwareTransform(MATRIX_TYPE_MODEL_VIEW);
+  TransformMatrix* matProjection = g_Windowing.GetHardwareTransform(MATRIX_TYPE_PROJECTION);
+
+  glUniformMatrix4fv(m_uniMatModelView, 1, GL_FALSE, (GLfloat *)matModelView->m);
+  glUniformMatrix4fv(m_uniMatProjection, 1, GL_FALSE, (GLfloat *)matProjection->m);
+
+  glUniform1i(m_uniTexture0, 0);
+
+  // Set the texture's stretching properties
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  float u1 = 0, u2 = 1, v1 = 0, v2 = 1;
+  if (pTexture)
+  {
+    u2 = (float)pTexture->GetWidth() / pTexture->GetTextureWidth();
+    v2 = (float)pTexture->GetHeight() / pTexture->GetTextureHeight();
+  }
+
+  v[0].x = x[0];
+  v[0].y = y[0];
+  v[0].z = 0.0f;
+  v[0].u1 = u1;
+  v[0].v1 = v1;
+
+  v[1].x = x[1];
+  v[1].y = y[1];
+  v[1].z = 0.0f;
+  v[1].u1 = u2;
+  v[1].v1 = v1;
+
+  v[2].x = x[2];
+  v[2].y = y[2];
+  v[2].z = 0.0f;
+  v[2].u1 = u2;
+  v[2].v1 = v2;
+
+  v[3].x = x[2];
+  v[3].y = y[2];
+  v[3].z = 0.0f;
+  v[3].u1 = u2;
+  v[3].v1 = v2;
+
+  v[4].x = x[3];
+  v[4].y = y[3];
+  v[4].z = 0.0f;
+  v[4].u1 = u1;
+  v[4].v1 = v2;
+
+  v[5].x = x[0];
+  v[5].y = y[0];
+  v[5].z = 0.0f;
+  v[5].u1 = u1;
+  v[5].v1 = v1;
+
+  glVertexAttribPointer(m_attribVertex, 3, GL_FLOAT, GL_FALSE, sizeof(ImageVertex), (char*)v + offsetof(ImageVertex, x));
+  glVertexAttribPointer(m_attribTextureCoord0, 2, GL_FLOAT, GL_FALSE, sizeof(ImageVertex), (char*)v + offsetof(ImageVertex, u1));
+   
+if(pTexture)
+  glDrawArrays(GL_TRIANGLES, 0, 6);
+else
+  glDrawArrays(GL_LINE_LOOP, 0, 6);
+
+  g_graphicsContext.PopTransform();
+  g_graphicsContext.EndPaint();
 #else
 // SDL render
   g_Windowing.BlitToScreen(m_pImage, NULL, NULL);
 #endif
+}
+
+void CSlideShowPic::CopyLocationAndZoom(const CSlideShowPic& pic)
+{
+  m_fPosX = pic.m_fPosX;
+  m_fPosY = pic.m_fPosY;
+  m_fZoomLeft = pic.m_fZoomLeft;
+  m_fZoomTop = pic.m_fZoomTop;
+  m_fZoomAmount = pic.m_fZoomAmount;
 }

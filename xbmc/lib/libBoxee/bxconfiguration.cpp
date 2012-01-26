@@ -53,7 +53,11 @@ bool BXConfiguration::Getline(std::string& fLine,FILE *fFile)
 
 bool BXConfiguration::Load() 
 {
+#ifdef HAS_EMBEDDED
+        FILE *fConfig = fopen("/data/etc/boxee.config", "r");
+#else
 	FILE *fConfig = fopen("boxee.config", "r");
+#endif
 	if (!fConfig)
 	{
 #ifdef __APPLE__

@@ -18,17 +18,17 @@ public:
 class CGUIDialogBoxeeDropdown : public CGUIDialog
 {
 public:
-  CGUIDialogBoxeeDropdown();
+  CGUIDialogBoxeeDropdown(int id = WINDOW_DIALOG_BOXEE_DROPDOWN, const CStdString &xmlFile = "boxee_dropdown.xml");
   virtual ~CGUIDialogBoxeeDropdown();
-
-  static bool Show(CFileItemList& items, const CStdString& title, CStdString& value, int type = 1, ICustomDropdownLabelCallback* cdlCallback = NULL);
-  static bool Show(CFileItemList& items, const CStdString& title, CStdString& value, float posX, float posY, int type = 1, ICustomDropdownLabelCallback* cdlCallback = NULL);
 
   virtual void OnInitWindow();
   virtual bool OnMessage(CGUIMessage& message);
   virtual bool OnAction(const CAction& action);
 
   void SetTitle(const CStdString& title);
+
+  virtual bool Show(CFileItemList& items, const CStdString& title, CStdString& value, int type = 1, ICustomDropdownLabelCallback* cdlCallback = NULL);
+  virtual bool Show(CFileItemList& items, const CStdString& title, CStdString& value, float posX, float posY, int type = 1, ICustomDropdownLabelCallback* cdlCallback = NULL);
 
 private:
 
@@ -44,6 +44,13 @@ private:
   CStdString m_title;
 
   ICustomDropdownLabelCallback* m_getDropdownLabelCallback;
+};
+
+class CGUIDialogBoxeeBrowserDropdown : public CGUIDialogBoxeeDropdown
+{
+public:
+  CGUIDialogBoxeeBrowserDropdown();
+  virtual ~CGUIDialogBoxeeBrowserDropdown();
 };
 
 #endif //GUIDIALOGBOXEEDROPDOWN_H

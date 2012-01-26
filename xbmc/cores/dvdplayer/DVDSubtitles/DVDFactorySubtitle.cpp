@@ -34,7 +34,7 @@
 
 using namespace std;
 
-bool CDVDFactorySubtitle::GetSubtitles(VecSubtitleFiles& vecSubtitles, string& strFile)
+bool CDVDFactorySubtitle::GetSubtitles(VecSubtitleFiles& vecSubtitles, string& strFile, const string& content)
 {
   CLog::Log(LOGINFO, "CDVDFactorySubtitle::GetSubtitles, searching subtitles");
 
@@ -43,7 +43,7 @@ bool CDVDFactorySubtitle::GetSubtitles(VecSubtitleFiles& vecSubtitles, string& s
 
   CStdString strExtensionCached;
 
-  CUtil::CacheSubtitles(strFile, strExtensionCached);
+  CUtil::CacheSubtitles(strFile, content, strExtensionCached);
   int iSize = strExtensionCached.size();
   int iStart = 0;
 

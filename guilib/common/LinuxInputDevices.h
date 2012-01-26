@@ -1,5 +1,3 @@
-#ifdef __linux__
-
 /*
  *      Copyright (C) 2005-2009 Team XBMC
  *      http://www.xbmc.org
@@ -27,6 +25,7 @@
 #include <string>
 #include "XBMC_events.h"
 #include "XBMC_keyboard.h"
+#include "utils/SingleLock.h"
 
 struct KeymapEntry
 {
@@ -41,8 +40,9 @@ class CLinuxInputDevice
 {
 public:
   CLinuxInputDevice(const std::string fileName, int index);
+  ~CLinuxInputDevice();
   XBMC_Event ReadEvent();
-
+ 
 private:
   XBMCKey TranslateKey(unsigned short code);
   bool KeyEvent(const struct input_event& levt, XBMC_Event& devt);
@@ -75,19 +75,21 @@ private:
   int m_deviceMinKeyCode;
   int m_deviceMaxKeyCode;
   int m_deviceMaxAxis;
+  bool m_bSkipNonKeyEvents;
+  unsigned int m_repeatTime;
 };
 
 class CLinuxInputDevices
 {
 public:
-  bool CheckDevice(const char *device);
   void InitAvailable();
   XBMC_Event ReadEvent();
-
+  bool IsRemoteLowBattery();
+  bool IsRemoteNotPaired();
 private:
+  CCriticalSection m_devicesListLock;
+  bool CheckDevice(const char *device);
   std::vector<CLinuxInputDevice*> m_devices;
 };
 
 #endif /* LINUXINPUTDEVICES_H_ */
-
-#endif

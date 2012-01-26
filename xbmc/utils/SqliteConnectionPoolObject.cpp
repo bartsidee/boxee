@@ -7,6 +7,7 @@
 #include "FileSystem/SpecialProtocol.h"
 #include "lib/sqLite/sqlitedataset.h"
 #include "Database.h"
+#include "log.h"
 
 using namespace dbiplus;
 
@@ -21,6 +22,13 @@ CSqliteConnectionPoolObject::CSqliteConnectionPoolObject( const CStdString& strD
 
 CSqliteConnectionPoolObject::~CSqliteConnectionPoolObject()
 {
+  if (m_pDB)
+  {
+    m_pDB->commit_transaction();
+    m_pDB->disconnect();
+  }
+
+  Release();
 }
 
 

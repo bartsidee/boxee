@@ -39,18 +39,21 @@ public:
 
 private:
 
+	void UpdateResolveLabel(const CStdString& path);
+
   int ResolveMusicFolder(BOXEE::BXMetadataScannerJob* pJob);
 	int ResolveVideoFolder(BOXEE::BXMetadataScannerJob* pJob);
 
   void PurgeDeletedVideosFromDatabase(const CStdString& strFolderPath, const CFileItemList& items);
   bool ResolveDvdFolder(const CStdString& strFolderPath, int iFolderId, const CFileItemList& items, int& iResult);
   bool ResolveTwoVideoFolder(std::vector<CFileItemPtr>& items);
+  bool ResolveBlurayFolder(const CStdString& strFolderPath, int iFolderId, const CFileItemList& items, int& iResult);
 
   //void UpdateMovieHash(const CStdString& strPath, int64_t iLength, std::map<std::string, std::pair<std::string, std::string> >& mapHashSizeToImdbId);
 
 	void CleanDeletedVideos(const std::map<std::string, BOXEE::BXMetadata*> &mapDeletedVideos);
 	void CleanDeletedFolders(const std::set<std::string> &setFolders);
-
+	
 };
 
 #endif /*METADATARESOLVER_H_*/

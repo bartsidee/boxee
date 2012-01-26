@@ -414,7 +414,7 @@ void CHALManager::UpdateDevice(const char *udi)
         if (g_advancedSettings.m_useHalMount)  // If the device was mounted by XBMC before it's still mounted by XBMC.
             dev.MountedByXBMC = m_Volumes[i].MountedByXBMC;
         if (!dev.Mounted && m_Volumes[i].Mounted)
-          g_application.m_guiDialogKaiToast.QueueNotification(g_localizeStrings.Get(13023), dev.FriendlyName.c_str());
+          g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_EXCLAMATION, g_localizeStrings.Get(13027), dev.FriendlyName.c_str() , TOAST_DISPLAY_TIME , KAI_ORANGE_COLOR, KAI_ORANGE_COLOR);
         m_Volumes[i] = dev;
 
         break;
@@ -480,7 +480,7 @@ void CHALManager::HandleNewVolume(CStorageDevice *dev)
         {
           CLog::Log(LOGINFO, "HAL: mounted %s on %s", dev->FriendlyName.c_str(), dev->MountPoint.c_str());
           if (m_Notifications)
-            g_application.m_guiDialogKaiToast.QueueNotification(g_localizeStrings.Get(13021), dev->FriendlyName.c_str());
+            g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_CHECK, g_localizeStrings.Get(13026), dev->FriendlyName.c_str(), TOAST_DISPLAY_TIME, KAI_GREEN_COLOR, KAI_GREEN_COLOR);
         }
       }
       libhal_free_string_array(capability);
@@ -579,7 +579,7 @@ bool CHALManager::RemoveDevice(const char *udi)
         if (g_advancedSettings.m_useHalMount)
           UnMount(m_Volumes[i]);
         if (m_Notifications)
-          g_application.m_guiDialogKaiToast.QueueNotification(g_localizeStrings.Get(13022), m_Volumes[i].FriendlyName.c_str());
+          g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_EXCLAMATION,g_localizeStrings.Get(13022), m_Volumes[i].FriendlyName.c_str(), TOAST_DISPLAY_TIME, KAI_RED_COLOR, KAI_RED_COLOR);
         CLog::Log(LOGNOTICE, "HAL: Unsafe drive removal");
       }
       m_Volumes.erase(m_Volumes.begin() + i);

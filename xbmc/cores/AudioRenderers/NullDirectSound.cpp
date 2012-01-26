@@ -24,6 +24,7 @@
 #include "Application.h"
 #include "utils/log.h"
 #include "utils/TimeUtils.h"
+#include "LocalizeStrings.h"
 
 #define BUFFER CHUNKLEN * 20
 #define CHUNKLEN 512
@@ -41,7 +42,7 @@ void CNullDirectSound::DoWork()
 CNullDirectSound::CNullDirectSound()
 {
 }
-bool CNullDirectSound::Initialize(IAudioCallback* pCallback, int iChannels, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec, bool bIsMusic, bool bPassthrough)
+bool CNullDirectSound::Initialize(IAudioCallback* pCallback, int iChannels, enum PCMChannels* channelMap, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec, bool bIsMusic, bool bPassthrough, bool bTimed, AudioMediaFormat audioMediaFormat)
 {
   CLog::Log(LOGERROR,"Creating a Null Audio Renderer, Check your audio settings as this should not happen");
   if (iChannels == 0)
@@ -51,7 +52,7 @@ bool CNullDirectSound::Initialize(IAudioCallback* pCallback, int iChannels, unsi
   g_audioContext.SetupSpeakerConfig(iChannels, bAudioOnAllSpeakers, bIsMusic);
   g_audioContext.SetActiveDevice(CAudioContext::DIRECTSOUND_DEVICE);
 
-  g_application.m_guiDialogKaiToast.QueueNotification("Failed to initialize audio device", "Check your audiosettings");
+  g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_EXCLAMATION,g_localizeStrings.Get(13424),g_localizeStrings.Get(13425), TOAST_DISPLAY_TIME, KAI_RED_COLOR, KAI_RED_COLOR);
   m_timePerPacket = 1.0f / (float)(iChannels*(uiBitsPerSample/8) * uiSamplesPerSec);
   m_packetsSent = 0;
   m_paused = 0;
@@ -130,7 +131,7 @@ unsigned int CNullDirectSound::GetSpace()
 }
 
 //***********************************************************************************************
-unsigned int CNullDirectSound::AddPackets(const void* data, unsigned int len)
+unsigned int CNullDirectSound::AddPackets(const void* data, unsigned int len, double pts, double duration)
 {
   if (m_paused || GetSpace() == 0)
     return 0;

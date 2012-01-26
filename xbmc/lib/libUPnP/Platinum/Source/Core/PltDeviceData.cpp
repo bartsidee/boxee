@@ -2,7 +2,7 @@
 |
 |   Platinum - Device Data
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -78,7 +78,7 @@ PLT_DeviceData::~PLT_DeviceData()
 void
 PLT_DeviceData::Cleanup()
 {
-    m_Services.Apply(NPT_ObjectDeref<PLT_Service>());
+    m_Services.Apply(NPT_ObjectDeleter<PLT_Service>());
     m_Services.Clear();
     m_EmbeddedDevices.Clear();
     m_Icons.Clear();
@@ -132,7 +132,7 @@ PLT_DeviceData::SetURLBase(NPT_HttpUrl& url)
         if (index < 0) return NPT_FAILURE;
         path.SetLength(index+1);
     }
-    m_URLBase.SetPath(path);
+    m_URLBase.SetPath(path, true);
 
     return NPT_SUCCESS;
 }    
@@ -156,9 +156,9 @@ PLT_DeviceData::NormalizeURL(const NPT_String& url)
 
     NPT_HttpUrl norm_url = m_URLBase;
     if (url.StartsWith("/")) {
-        norm_url.SetPathPlus(url);
+        norm_url.ParsePathPlus(url);
     } else {
-        norm_url.SetPathPlus(norm_url.GetPath() + url);
+        norm_url.ParsePathPlus(norm_url.GetPath() + url);
     }
 
     return norm_url;
@@ -194,14 +194,15 @@ PLT_DeviceData::GetIconUrl(const char* mimetype,
     if (icon.m_UrlPath == "") return "";
 
     return NormalizeURL(icon.m_UrlPath).ToString();
-        }
+}
 /*----------------------------------------------------------------------
 |   PLT_DeviceData::SetLeaseTime
 +---------------------------------------------------------------------*/
 NPT_Result   
 PLT_DeviceData::SetLeaseTime(NPT_TimeInterval lease_time) 
 {
-    m_LeaseTime = lease_time;
+    // Enforce 10 seconds lease time
+    m_LeaseTime = (lease_time.ToSeconds()>=10)?lease_time:PLT_Constants::GetInstance().m_DefaultDeviceLease;
     NPT_System::GetCurrentTimeStamp(m_LeaseTimeLastUpdate);
     return NPT_SUCCESS;
 }
@@ -268,15 +269,30 @@ PLT_DeviceData::RemoveEmbeddedDevice(PLT_DeviceDataReference& device)
 NPT_Result
 PLT_DeviceData::AddService(PLT_Service* service)
 {
-    if (service->m_ServiceType == "" ||
-        service->m_ServiceID   == "" ||
-        service->m_SCPDURL     == "" ||
-        service->m_ControlURL  == "" ||
-        service->m_EventSubURL == "") {
+    if (service->GetServiceType() == "" ||
+        service->GetServiceID()   == "" ||
+        service->GetSCPDURL()     == "" ||
+        service->GetControlURL()  == "" ||
+        service->GetEventSubURL() == "") {
         return NPT_ERROR_INVALID_PARAMETERS;
     }
 
     return m_Services.Add(service);
+}
+
+/*----------------------------------------------------------------------
+|   PLT_DeviceData::RemoveService
++---------------------------------------------------------------------*/
+NPT_Result
+PLT_DeviceData::RemoveService(PLT_Service* service)
+{
+	for (NPT_Cardinal i=0;
+         i<m_Services.GetItemCount();
+         i++) {
+        if (m_Services[i] == service) return m_Services.Erase(i);
+    }
+
+    return NPT_ERROR_NO_SUCH_ITEM;
 }
 
 /*----------------------------------------------------------------------
@@ -298,7 +314,7 @@ private:
 };
 
 /*----------------------------------------------------------------------
-|   PLT_DeviceData::ToXML
+|   PLT_DeviceData::GetDescription
 +---------------------------------------------------------------------*/
 NPT_Result
 PLT_DeviceData::GetDescription(NPT_XmlElementNode* root, NPT_XmlElementNode** device_out)
@@ -321,7 +337,7 @@ PLT_DeviceData::GetDescription(NPT_XmlElementNode* root, NPT_XmlElementNode** de
     NPT_CHECK_SEVERE(PLT_XmlHelper::AddChildText(device, "modelNumber", m_ModelNumber));
     NPT_CHECK_SEVERE(PLT_XmlHelper::AddChildText(device, "serialNumber", m_SerialNumber));
     NPT_CHECK_SEVERE(PLT_XmlHelper::AddChildText(device, "UDN", "uuid:" + m_UUID));
-
+    
     if (!m_PresentationURL.IsEmpty()) {
         NPT_CHECK_SEVERE(PLT_XmlHelper::AddChildText(device, "presentationURL", m_PresentationURL));
     }
@@ -366,10 +382,10 @@ PLT_DeviceData::GetDescription(NPT_XmlElementNode* root, NPT_XmlElementNode** de
 
     // PS3 support
     if (!m_AggregationFlags.IsEmpty()) {
-    NPT_XmlElementNode* aggr = new NPT_XmlElementNode("av", "aggregationFlags");
-    NPT_CHECK_SEVERE(aggr->SetNamespaceUri("av", "urn:schemas-sonycom:av"));
+        NPT_XmlElementNode* aggr = new NPT_XmlElementNode("av", "aggregationFlags");
+        NPT_CHECK_SEVERE(aggr->SetNamespaceUri("av", "urn:schemas-sonycom:av"));
         aggr->AddText(m_AggregationFlags);
-    device->AddChild(aggr);
+        device->AddChild(aggr);
     }
 
     // embedded devices
@@ -408,7 +424,7 @@ PLT_DeviceData::GetDescription(NPT_String& desc)
     NPT_CHECK_LABEL_SEVERE(res = GetDescription(root), cleanup);
 
     // serialize node
-    NPT_CHECK_LABEL_SEVERE(res = PLT_XmlHelper::Serialize(*root, desc), cleanup);
+    NPT_CHECK_LABEL_SEVERE(res = PLT_XmlHelper::Serialize(*root, desc, true, 2), cleanup);
 
 cleanup:
     delete root;
@@ -419,15 +435,15 @@ cleanup:
 |   PLT_DeviceData::SetDescription
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_DeviceData::SetDescription(const char*          description, 
-                               const NPT_IpAddress& local_iface_ip)
+PLT_DeviceData::SetDescription(const char*                   description, 
+                               const NPT_HttpRequestContext& context)
 {
-    NPT_XmlParser parser;
-    NPT_XmlNode*  tree = NULL;
-    NPT_Result    res;
+    NPT_XmlParser       parser;
+    NPT_XmlNode*        tree = NULL;
+    NPT_Result          res;
     NPT_XmlElementNode* root = NULL;
     NPT_String          URLBase;
-
+    
     res = parser.Parse(description, tree);
     NPT_CHECK_LABEL_SEVERE(res, cleanup);
 
@@ -444,6 +460,11 @@ PLT_DeviceData::SetDescription(const char*          description,
     // look for optional URLBase element
     if (NPT_SUCCEEDED(PLT_XmlHelper::GetChildText(root, "URLBase", URLBase))) {
         NPT_HttpUrl url(URLBase);
+		// Some devices like Connect360 try to be funny - not so
+        if (url.GetHost().ToLowercase() == "localhost" ||
+            url.GetHost().ToLowercase() == "127.0.0.1") {
+            url.SetHost(context.GetRemoteAddress().GetIpAddress().ToString());
+        }
         SetURLBase(url);
     }
 
@@ -459,7 +480,7 @@ cleanup:
     // delete the tree
     delete tree;
 
-    m_LocalIfaceIp = local_iface_ip;
+    m_LocalIfaceIp = context.GetLocalAddress().GetIpAddress();
     return res;
 }
 
@@ -516,13 +537,21 @@ PLT_DeviceData::SetDescriptionDevice(NPT_XmlElementNode* device_node)
     if (serviceList) {
         NPT_Array<NPT_XmlElementNode*> services;
         PLT_XmlHelper::GetChildren(serviceList, services, "service");
-        for( int k = 0 ; k < (int)services.GetItemCount(); k++) {    
-            PLT_Service* service = new PLT_Service(this);
-            PLT_XmlHelper::GetChildText(services[k], "serviceType", service->m_ServiceType);
-            PLT_XmlHelper::GetChildText(services[k], "serviceId", service->m_ServiceID);
-            PLT_XmlHelper::GetChildText(services[k], "SCPDURL", service->m_SCPDURL);
-            PLT_XmlHelper::GetChildText(services[k], "controlURL", service->m_ControlURL);
-            PLT_XmlHelper::GetChildText(services[k], "eventSubURL", service->m_EventSubURL);
+        for( int k = 0 ; k < (int)services.GetItemCount(); k++) {
+            NPT_String type, id, url;
+            PLT_XmlHelper::GetChildText(services[k], "serviceType", type);
+            PLT_XmlHelper::GetChildText(services[k], "serviceId", id);    
+            PLT_Service* service = new PLT_Service(this, type, id, NULL);
+            
+            PLT_XmlHelper::GetChildText(services[k], "SCPDURL", url);
+            service->SetSCPDURL(url);
+            
+            PLT_XmlHelper::GetChildText(services[k], "controlURL", url);
+            service->SetControlURL(url);
+            
+            PLT_XmlHelper::GetChildText(services[k], "eventSubURL", url);
+            service->SetEventSubURL(url);
+            
             if (NPT_FAILED(res = AddService(service))) {
                 delete service;
                 return res;
@@ -535,7 +564,7 @@ PLT_DeviceData::SetDescriptionDevice(NPT_XmlElementNode* device_node)
     if (deviceList) {
         NPT_Array<NPT_XmlElementNode*> devices;
         PLT_XmlHelper::GetChildren(deviceList, devices, "device");
-        for( int k = 0 ; k < (int)devices.GetItemCount(); k++) {    
+        for (int k = 0; k<(int)devices.GetItemCount(); k++) {    
             PLT_DeviceDataReference device(new PLT_DeviceData(m_URLDescription, "", m_LeaseTime));
             NPT_CHECK_SEVERE(device->SetDescriptionDevice(devices[k]));
             AddEmbeddedDevice(device);
@@ -576,8 +605,8 @@ PLT_DeviceData::FindEmbeddedDeviceByType(const char*              type,
                                          PLT_DeviceDataReference& device)
 {
     NPT_Result res = NPT_ContainerFind(m_EmbeddedDevices, 
-                             PLT_DeviceDataFinderByType(type), 
-                             device);
+        PLT_DeviceDataFinderByType(type), 
+        device);
     if (NPT_SUCCEEDED(res)) return res;
 
     for (int i=0; i<(int)m_EmbeddedDevices.GetItemCount(); i++) {
@@ -585,7 +614,7 @@ PLT_DeviceData::FindEmbeddedDeviceByType(const char*              type,
             type, 
             device);
         if (NPT_SUCCEEDED(res)) return res;
-}
+    }
 
     return NPT_FAILURE;
 }
@@ -599,9 +628,9 @@ PLT_DeviceData::FindServiceById(const char* id, PLT_Service*& service)
     // do not try to find it within embedded devices, since different
     // embedded devices could have an identical service
     return NPT_ContainerFind(m_Services, 
-                             PLT_ServiceIDFinder(id),
-                             service);
-    }
+        PLT_ServiceIDFinder(id),
+        service);
+}
 
 /*----------------------------------------------------------------------
 |   PLT_DeviceData::FindServiceByType
@@ -612,23 +641,49 @@ PLT_DeviceData::FindServiceByType(const char* type, PLT_Service*& service)
     // do not try to find it within embedded devices, since different
     // embedded devices could have an identical service
     return NPT_ContainerFind(m_Services, 
-                             PLT_ServiceTypeFinder(type), 
-                             service);
-    }
+        PLT_ServiceTypeFinder(type), 
+        service);
+}
+
+/*----------------------------------------------------------------------
+|   PLT_DeviceData::FindServiceByName
++---------------------------------------------------------------------*/
+NPT_Result
+PLT_DeviceData::FindServiceByName(const char* name, PLT_Service*& service)
+{
+    // do not try to find it within embedded devices, since different
+    // embedded devices could have an identical service
+    return NPT_ContainerFind(m_Services, 
+        PLT_ServiceNameFinder(name), 
+        service);
+}
 
 /*----------------------------------------------------------------------
 |   PLT_DeviceData::FindServiceBySCPDURL
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_DeviceData::FindServiceBySCPDURL(const char* url, PLT_Service*& service)
+PLT_DeviceData::FindServiceBySCPDURL(const char*   url,
+                                     PLT_Service*& service, 
+                                     bool          recursive /* = false */)
 {
-    // do not try to find it within embedded devices, since different
-    // embedded devices could have an identical service
-    return NPT_ContainerFind(
+    NPT_Result res = NPT_ContainerFind(
         m_Services, 
         PLT_ServiceSCPDURLFinder(url), 
         service);
+    if (NPT_SUCCEEDED(res)) return res;
+
+    if (recursive) {
+		for (int i=0; i<(int)m_EmbeddedDevices.GetItemCount(); i++) {
+            res = m_EmbeddedDevices[i]->FindServiceBySCPDURL(
+                url, 
+                service,
+                recursive);
+            if (NPT_SUCCEEDED(res)) return res;
+        }
     }
+
+    return NPT_FAILURE;
+}
 
 /*----------------------------------------------------------------------
 |   PLT_DeviceData::FindServiceByControlURL
@@ -644,13 +699,13 @@ PLT_DeviceData::FindServiceByControlURL(const char*   url,
     if (NPT_SUCCEEDED(res)) return res;
 
     if (recursive) {
-    for (int i=0; i < (int)m_EmbeddedDevices.GetItemCount(); i++) {
-        res = m_EmbeddedDevices[i]->FindServiceByControlURL(
-            url, 
+		for (int i=0; i<(int)m_EmbeddedDevices.GetItemCount(); i++) {
+            res = m_EmbeddedDevices[i]->FindServiceByControlURL(
+                url, 
                 service,
                 recursive);
-        if (NPT_SUCCEEDED(res)) return res;
-    }
+            if (NPT_SUCCEEDED(res)) return res;
+        }
     }
 
     return NPT_FAILURE;
@@ -667,16 +722,16 @@ PLT_DeviceData::FindServiceByEventSubURL(const char*   url,
     NPT_Result res = NPT_ContainerFind(m_Services, 
         PLT_ServiceEventSubURLFinder(url), 
         service);
-   if (NPT_SUCCEEDED(res)) return res;
+    if (NPT_SUCCEEDED(res)) return res;
 
     if (recursive) {
-    for (int i=0; i < (int)m_EmbeddedDevices.GetItemCount(); i++) {
-        res = m_EmbeddedDevices[i]->FindServiceByEventSubURL(
-            url, 
+        for (int i=0; i<(int)m_EmbeddedDevices.GetItemCount(); i++) {
+            res = m_EmbeddedDevices[i]->FindServiceByEventSubURL(
+                url, 
                 service,
                 recursive);
-        if (NPT_SUCCEEDED(res)) return res;
-    }
+            if (NPT_SUCCEEDED(res)) return res;
+        }
     }
 
     return NPT_FAILURE;

@@ -1,4 +1,4 @@
-#if defined(_DLL) || defined(_USRDLL)
+#if 1//defined(_DLL) || defined(_USRDLL)
 #include "ximage.h"
 #include "ximajpg.h"
 
@@ -109,7 +109,7 @@ int DetectFileType(const BYTE* pBuffer, int nBufSize)
     return CXIMAGE_FORMAT_PNG;
   if (pBuffer[0] == 'B' && pBuffer[1] == 'M')
     return CXIMAGE_FORMAT_BMP;
-  if (pBuffer[0] == 0xFF && pBuffer[1] == 0xD8 && pBuffer[2] == 0xFF && pBuffer[3] == 0xE0)
+  if (pBuffer[0] == 0xFF && pBuffer[1] == 0xD8 && pBuffer[2] == 0xFF && (pBuffer[3] == 0xE0 || pBuffer[3] == 0xE1))
     return CXIMAGE_FORMAT_JPG;
   return CXIMAGE_FORMAT_UNKNOWN;
 }
@@ -206,13 +206,20 @@ int ResampleKeepAspectArea(CxImage &image, unsigned int area)
 
 bool SaveThumb(CxImage &image, const char *file, const char *thumb, int maxWidth, int maxHeight, bool bNeedToConvert = true, bool autoRotate = true)
 {
+  long nBkgndIndex;
+  RGBQUAD nBkgndColor;
+
+  nBkgndIndex = image.GetTransIndex();
+  nBkgndColor = image.GetTransColor();
+
   // ok, now resample the image down if necessary
   int ret = ResampleKeepAspectArea(image, maxWidth * maxHeight);
   if (ret < 0) return false;
   if (ret) bNeedToConvert = true;
 
   // if we don't have a png but have a < 24 bit image, then convert to 24bits
-  if ( image.GetNumColors())
+  // also check if we have background color. If so we need to create alpha channel
+  if ( image.GetNumColors() || nBkgndIndex != -1)
   {
     if (!image.IncreaseBpp(24) || !image.IsValid())
     {
@@ -220,6 +227,36 @@ bool SaveThumb(CxImage &image, const char *file, const char *thumb, int maxWidth
       return false;
     }
     bNeedToConvert = true;
+  }
+
+  if (nBkgndIndex != -1)
+  {
+    printf("Found background %s\n", file);
+
+    if(!image.AlphaIsValid())
+      image.AlphaCreate();
+
+    BYTE* buffer = image.GetBits();
+    RGBQUAD srcRGB;
+
+    int width = image.GetWidth();
+    int height = image.GetHeight();
+
+    for (unsigned int y = 0; y < height; y++)
+    {
+      for (unsigned int x = 0; x < width; x++)
+      {
+        srcRGB = image.GetPixelColor(x, y, false);
+        if(srcRGB.rgbBlue == nBkgndColor.rgbBlue &&
+           srcRGB.rgbGreen == nBkgndColor.rgbGreen &&
+           srcRGB.rgbRed == nBkgndColor.rgbRed)
+        {
+          printf("Found matching background color %d %d %d\n",
+              nBkgndColor.rgbBlue, nBkgndColor.rgbGreen, nBkgndColor.rgbRed);
+          image.AlphaSet(x, y, 0x00);
+        }
+      }
+    }
   }
 
   if ( autoRotate && image.GetExifInfo()->Orientation > 1)
@@ -232,6 +269,19 @@ bool SaveThumb(CxImage &image, const char *file, const char *thumb, int maxWidth
   ::DeleteFile(thumb);
 #else
   unlink(thumb);
+#endif
+
+#undef SAVE_THUMB_AS_DXT
+#ifdef SAVE_THUMB_AS_DXT
+
+ //  printf("SaveThumb: File: %s Width: %ld Height: %ld\n", thumb, image.GetWidth(), image.GetHeight());
+
+  if (image.DDS_SaveAsDXT5(thumb))
+  {
+    return true;
+  }
+
+  // Fallback to non DXT processing...
 #endif
 
   // only resave the image if we have to (quality of the JPG saver isn't too hot!)
@@ -255,6 +305,7 @@ bool SaveThumb(CxImage &image, const char *file, const char *thumb, int maxWidth
       return false;
     }
   }
+
   return true;
 }
 
@@ -324,12 +375,21 @@ extern "C"
       delete image;
       return false;
     }
+    
     // ok, now resample the image down if necessary
     if (ResampleKeepAspect(*image, maxwidth, maxheight) < 0)
     {
       printf("PICTURE::LoadImage: Unable to resample picture: %s\n", file);
       delete image;
       return false;
+    }
+
+    if (info->width && info->height)
+    {
+      CxImage *resampledImage = new CxImage();
+      image->Resample(info->width, info->height, 1, resampledImage);
+      delete image;
+      image = resampledImage;
     }
 
     // make sure our image is 24bit minimum
@@ -349,10 +409,28 @@ extern "C"
     return (info->texture != NULL);
   };
 
+#ifndef WIN32
+  #include <pthread.h>
+  static pthread_mutex_t a_mutex = PTHREAD_MUTEX_INITIALIZER;
+
   bool __declspec(dllexport) LoadImage(const char *file, unsigned int maxwidth, unsigned int maxheight, ImageInfo *info)
   {
-    return LoadImageWithCT(file, "", maxwidth, maxheight, info);
+    pthread_mutex_lock( &a_mutex );
+    bool result = LoadImageWithCT(file, "", maxwidth, maxheight, info);
+    pthread_mutex_unlock( &a_mutex );
+    return result;
   }
+#else
+static HANDLE a_mutex = CreateMutex(NULL, FALSE, NULL); // TODO: Need to release this resource...
+bool __declspec(dllexport) LoadImage(const char *file, unsigned int maxwidth, unsigned int maxheight, ImageInfo *info)
+{
+  if (WAIT_OBJECT_0 != WaitForSingleObject( a_mutex, INFINITE ))
+    return false;
+  bool result = LoadImageWithCT(file, "", maxwidth, maxheight, info);
+  ReleaseMutex( a_mutex );
+  return result;
+}
+#endif
 
   bool __declspec(dllexport) CreateThumbnailWithCT(const char *file, const char* contentType, const char *thumb, int maxWidth, int maxHeight, bool rotateExif)
   {
@@ -377,7 +455,7 @@ extern "C"
       }
 #endif
 
-      if (!image.Load(file, dwImageType, actualwidth, actualheight) || !image.IsValid())
+      if (!image.Load(file, dwImageType, maxWidth, maxHeight) || !image.IsValid())
       {
         printf("PICTURE::CreateThumbnail: Unable to open image: %s Error:%s\n", file, image.GetLastError());
         return false;
@@ -636,6 +714,17 @@ extern "C"
     }
     return 0;
   };
+
+  bool __declspec(dllexport) GetBackgroundColor(ImageInfo *info, RGBQUAD* rgbQuad, long*  nBkgndIndex)
+  {
+    if(!info || !rgbQuad || !nBkgndIndex)
+      return false;
+
+    CxImage *cxImage = (CxImage *)info->context;
+    *nBkgndIndex = cxImage->GetTransIndex();
+    *rgbQuad = cxImage->GetTransColor();
+    return true;
+  }
 }
 
 #endif

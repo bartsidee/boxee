@@ -1,25 +1,16 @@
-﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<!--Language file translated with Team XBMC Translator-->
-<!--Translator: NFA (necipfazil)-->
-<!--Email: necipfazil@gmail.com-->
-<!--Date of translation: 06/07/2006-->
-<!--Translator: Özgür BASKIN (queeup)-->
-<!--Email: ozgur.baskin@gmail.com-->
-<!--Date of translation: 05/03/2009-->
-<!--Based on english strings revision 19506-->
-<!--$Revision: 20040 $-->
+﻿<!--$Revision: 10303 $-->
 <strings>
-  <string id="0">Programlar</string>
+  <string id="0">Yetişkin</string>
   <string id="1">Resimler</string>
   <string id="2">Müzik</string>
   <string id="3">Videolar</string>
   <string id="4">TV-Rehberi</string>
   <string id="5">Ayarlar</string>
   <string id="6">XBMC SVN</string>
-  <string id="7">Dosya Yöneticisi</string>
+  <string id="7">Dosya yöneticisi</string>
   <string id="8">Hava Durumu</string>
-  <string id="9">xbmc media center</string>
-  
+  <string id="9">xbmc medya merkezi</string>
+
   <string id="11">Pazartesi</string>
   <string id="12">Salı</string>
   <string id="13">Çarşamba</string>
@@ -27,7 +18,7 @@
   <string id="15">Cuma</string>
   <string id="16">Cumartesi</string>
   <string id="17">Pazar</string>
-  
+
   <string id="21">Ocak</string>
   <string id="22">Şubat</string>
   <string id="23">Mart</string>
@@ -40,7 +31,15 @@
   <string id="30">Ekim</string>
   <string id="31">Kasım</string>
   <string id="32">Aralık</string>
-  
+
+  <string id="41">Pzt</string>
+  <string id="42">Sal</string>
+  <string id="43">Çar</string>
+  <string id="44">Per</string>
+  <string id="45">Cum</string>
+  <string id="46">Cmt</string>
+  <string id="47">Paz</string>
+
   <string id="98">Görünüm: Otomatik</string>
   <string id="99">Görünüm: Otomatik büyük</string>
   <string id="100">Görünüm: Simge</string>
@@ -54,7 +53,7 @@
   <string id="108">Slayt Gösterisi</string>
   <string id="109">Küçük resim oluştur</string>
   <string id="110">Küçük resim oluştur</string>
-  <string id="111">Kısa Yollar</string>
+  <string id="111">Kısa yollar</string>
   <string id="112">Duraklatıldı</string>
   <string id="113"></string>
   <string id="114"></string>
@@ -78,11 +77,11 @@
   <string id="132">Albümler</string>
   <string id="133">Sanatçılar</string>
   <string id="134">Parçalar</string>
-  <string id="135">Tarzlar</string>
+  <string id="135">Türler</string>
   <string id="136">Çalma Listeleri</string>
   <string id="137">Ara</string>
   <string id="138">Sistem Bilgisi</string>
-  <string id="139">Isı:</string>
+  <string id="139">Sıcaklıklar:</string>
   <string id="140">CPU:</string>
   <string id="141">GPU:</string>
   <string id="142">Zaman:</string>
@@ -90,14 +89,14 @@
   <string id="144">Versiyon:</string>
   <string id="145">Ağ:</string>
   <string id="146">Türü:</string>
-  <string id="147">Statik</string>
+  <string id="147">Static</string>
   <string id="148">DHCP</string>
   <string id="149">MAC adresi</string>
   <string id="150">IP adresi</string>
   <string id="151">Bağlantı: </string>
-  <string id="152">Half duplex</string>
-  <string id="153">Full duplex</string>
-  <string id="154">Depolama</string>
+  <string id="152">Yarım dupleks</string>
+  <string id="153">Tam dupleks</string>
+  <string id="154">Kapasite</string>
   <string id="155">Sürücü</string>
   <string id="156">Boş</string>
   <string id="157">Video</string>
@@ -105,7 +104,7 @@
   <string id="159">Bağlantı yok</string>
   <string id="160">Boş</string>
   <string id="161">Mevcut değil</string>
-  <string id="162">DVD-Rom açık</string>
+  <string id="162">Tepsi açık</string>
   <string id="163">Okuyor</string>
   <string id="164">Disk yok</string>
   <string id="165">Disk hazır</string>
@@ -135,7 +134,7 @@
   <string id="189">Ortam bilgisi aranıyor</string>
   <string id="190">Kaydet</string>
   <string id="191">Karışık</string>
-  <string id="192">Temizle</string>
+  <string id="192">Açık</string>
   <string id="193">Tara</string>
   <string id="194">Aranıyor...</string>
   <string id="195">Bilgi bulunamadı!</string>
@@ -146,16 +145,16 @@
   <string id="200"></string>
   <string id="201"></string>
   <string id="202">Hakkında</string>
-  <string id="203">İçerik</string>
+  <string id="203">Konu özeti</string>
   <string id="204"></string>
   <string id="205">Toplam Oy:</string>
   <string id="206">Oyuncular</string>
-  <string id="207">İçerik</string>
+  <string id="207">Konu</string>
   <string id="208">Oynat</string>
   <string id="209">Sonraki</string>
   <string id="210">Önceki</string>
   <string id="213">Kullanıcı arayüzü ayarı...</string>
-  <string id="214">Video ayarı...</string>
+  <string id="214">Ekran formatı ve kenarı...</string>
   <string id="215">Yumuşak Görüntü</string>
   <string id="216">Yakınlaştırma miktarı</string>
   <string id="217">Piksel oranı</string>
@@ -165,8 +164,8 @@
   <string id="221">Ağ bağlantısı yok</string>
   <string id="222">İptal</string>
   <string id="224">Hız</string>
-  <string id="225">Geçiş zamanı</string>
-  <string id="226">Desenleri test et...</string>
+  <string id="225">Görüntüler arasında geçiş zamanı</string>
+  <string id="226">Test Desenleri...</string>
   <string id="227">Ses CD'lerini İnternet'te ara</string>
   <string id="228">Çalma listesini karıştır</string>
   <string id="229">Sabit diski kapat</string>
@@ -177,20 +176,20 @@
   <string id="234">Anisotropic</string>
   <string id="235">Quincunx</string>
   <string id="236">Gaussian Cubic</string>
-  <string id="237">Küçültmek</string>
-  <string id="238">Büyültmek</string>
+  <string id="237">Küçültme</string>
+  <string id="238">Büyütme</string>
   <string id="239">Oynatma bittiğinde çalma listesini temizle</string>
-  <string id="240">Otomatik Başlat DVD-Video</string>
-  <string id="241">Otomatik Başlat VCD/SVCD</string>
-  <string id="242">Otomatik Başlat Audio-CD</string>
-  <string id="243">Otomatik Başlat XBOX oyunlarını</string>
-  <string id="244">Otomatik Başlat Videoları</string>
-  <string id="245">Otomatik Başlat Müzikleri</string>
-  <string id="246">Otomatik Başlat Resimleri</string>
+  <string id="240">DVD-Video Otomatik Başlat</string>
+  <string id="241">VCD/SVCD Otomatik Başlat</string>
+  <string id="242">Ses CD'si Otomatik Başlat</string>
+  <string id="243">XBOX Oyunlarını Otomatik Başlat</string>
+  <string id="244">Videoları Otomatik Başlat</string>
+  <string id="245">Müzikleri Otomatik Başlat</string>
+  <string id="246">Resimleri Otomatik Başlat</string>
   <string id="247">Betikler</string>
   <string id="248">Dil</string>
   <string id="249">Müzik</string>
-  <string id="250">Görsel ögeler</string>
+  <string id="250">Görselleştirme</string>
   <string id="251">Hedef klasörü seç</string>
   <string id="252">Bütün kolonlara stereo ses ver</string>
   <string id="253">Kanal sayısı</string>
@@ -198,11 +197,11 @@
   <string id="255">CDDB</string>
   <string id="256">CD bilgileri alınıyor</string>
   <string id="257">Hata</string>
-  <string id="258">Etiket okumasını etkinleştir</string>
+  <string id="258">Etiket okumayı etkinleştir</string>
   <string id="259">Açılıyor</string>
   <string id="260">Shoutcast</string>
-  <string id="261">Başlamayı bekle...</string>
-  <string id="262">Betik çıktısı</string>
+  <string id="261">Başlatılması bekleniyor...</string>
+  <string id="262">Scripts output</string>
   <string id="263">Web sunucusunu etkinleştir</string>
   <string id="264">Kaydet</string>
   <string id="265">Kaydı Durdur</string>
@@ -212,33 +211,36 @@
   <string id="269">Sırala: Sanatçı</string>
   <string id="270">Sırala: Albüm</string>
   <string id="271">En İyi 100</string>
-  <string id="272">Sol Üst Köşe Resim Ayarı</string>
-  <string id="273">Sağ Alt Köşe Resim Ayarı</string>
+  <string id="272">Sol Üst Köşe Kenar Ayarı</string>
+  <string id="273">Sağ Alt Köşe Kenar Ayarı</string>
   <string id="274">Altyazı Pozisyonu Ayarı</string>
   <string id="275">Piksel Oranı Ayarı</string>
-  <string id="276">Oku resmi ayarlamak için kaydır</string>
-  <string id="277">Sütunu altyazı pozisyonunu ayarlamak için kaydır</string>
-  <string id="278">Dörtgeni tam olarak kare olacak şekilde ayarla</string>
+  <string id="276">Kenar miktarını değiştirmek için oku kaydır</string>
+  <string id="277">Altyazı pozisyonunu ayarlamak için sütunu kaydır</string>
+  <string id="278">Dökdörtgeni tam olarak kare olacak şekilde ayarla</string>
   <string id="279">Ayarlar yüklenemiyor</string>
   <string id="280">Varsayılan ayarlar kullanılıyor</string>
   <string id="281">Lütfen XML dosyalarını kontrol edin</string>
-  <string id="282">%i öge bulundu</string>
+  <string id="282">%i öğe bulundu</string>
   <string id="283">Arama sonuçları</string>
   <string id="284">Hiçbir sonuç bulunamadı</string>
   <string id="286">Post-processing filtre</string>
   <string id="287">Altyazılar</string>
-  <string id="288">Yazı tipi</string>
-  <string id="289">- Boyut</string>
+  <string id="288">Yazı tipi</string>  <!-- Subtitles font -->
+  <string id="289">Boyut</string>  <!-- Subtitles size --> 
   <string id="290">Dinamik aralık sıkıştırma</string>
   <string id="291">Video</string>
   <string id="292">Ses</string>
-  <string id="293">Atlyazılara gözat</string>
+  <string id="293">Altyazılara gözat</string>
   <string id="294">Yer imi oluştur</string>
   <string id="296">Yer imlerini temizle</string>
   <string id="297">Ses gecikmesi</string>
   <string id="298">Yer İmleri</string>
-  <string id="303">Geciktirme</string>
-  <string id="304">Lisan</string>
+  <string id="299">Yeni parça getir</string>
+  <string id="300">Yeni küçük resim getir</string>
+  <string id="301">Uygulamalar klasörünü getir</string>
+  <string id="303">Beklet</string>
+  <string id="304">Dil</string>
   <string id="305">Aktif</string>
   <string id="306">Non-Interleaved</string>
   <string id="307">- Otomatik Postprocessing</string>
@@ -256,8 +258,8 @@
   <string id="319">Şarkılar temizlenirken hata oluştu</string>
   <string id="320">Sanatçılar temizleniyor...</string>
   <string id="321">Sanatçılar temizlenirken hata oluştu</string>
-  <string id="322">Tarzlar temizleniyor...</string>
-  <string id="323">Tarzlar temizlenirken hata oluştu</string>
+  <string id="322">Türler temizleniyor...</string>
+  <string id="323">Türler temizlenirken hata oluştu</string>
   <string id="324">Dizinler siliniyor...</string>
   <string id="325">Dizinler silerken hata oluştu</string>
   <string id="326">Albümler siliniyor...</string>
@@ -277,16 +279,16 @@
   <string id="340">Değişik sanatçılar</string>
   <string id="341">Diski oynat</string>
   <string id="342">Filmler</string>
-  <string id="343">Çerçeve hızını ayarla</string>
+  <string id="343">Kare hızını ayarla</string>
   <string id="344">Aktörler</string>
   <string id="345">Yıl</string>
   <string id="350">Programlar</string>
   <string id="351">Kapalı</string>
   <string id="352">Karart</string>
   <string id="353">Siyah</string>
-  <string id="354">Matrix</string>
+  <string id="354">Matrix trails</string>
   <string id="355">Ekran koruyucu bekleme süresi</string>
-  <string id="356">Ekran Koruyucu</string>
+  <string id="356">Ekran Koruyucu Modu</string>
   <string id="357">Kapatma fonksiyonu zamanlayıcısı</string>
   <string id="358">Bütün albümler</string>
   <string id="359">Yeni eklenen albümler</string>
@@ -297,7 +299,7 @@
   <string id="364">- Dolby Digital (AC3) destekli dekoder</string>
   <string id="365">Sırala: İsim</string>
   <string id="366">Sırala: Yıl</string>
-  <string id="367">Sırala: Beğeni</string>
+  <string id="367">Sırala: Reyting</string>
   <string id="368">IMDb</string>
   <string id="369">Başlık</string>
   <string id="370">Gök gürültülü</string>
@@ -313,7 +315,7 @@
   <string id="380">Yağışlı</string>
   <string id="381">Daha az</string>
   <string id="382">Bazen</string>
-  <string id="383">Rüzgarlı</string>
+  <string id="383">Rüzgar</string>
   <string id="384">Kuvvetli</string>
   <string id="385">Güzel</string>
   <string id="386">Açık</string>
@@ -330,17 +332,17 @@
   <string id="397">Yenileme zamanı</string>
   <string id="398">Sıcaklık Birimi</string>
   <string id="399">Rüzgar Hızı Birimi</string>
-  <string id="400">Hava</string>
+  <string id="400">Hava Durumu</string>
   <string id="401">Hava Sıcaklığı</string>
   <string id="402">Hissedilen Sıcaklık</string>
   <string id="403">UV Değeri</string>
   <string id="404">Rüzgar</string>
-  <string id="405">Donma Noktası</string>
+  <string id="405">Yoğuşma noktası</string>
   <string id="406">Nem Oranı</string>
   <string id="407">ondan</string>
   <string id="408">ile</string>
   <string id="409">Varsayılan</string>
-  
+
   <string id="410">Hava Durumu servisine erişiliyor</string>
   <string id="411">Hava Durumu bilgileri alınıyor:</string>
   <string id="412">Hava Durumu bilgileri alınamıyor</string>
@@ -349,7 +351,7 @@
   <string id="415">Küçük resim indiriliyor...</string>
   <string id="416">Mevcut değil</string>
   <string id="417">Görünüm: Büyük Simgeler</string>
-  <string id="418">Kitaplığı etkinleştir</string>
+  <string id="418"></string>
   <string id="419"></string>
   <string id="420"></string>
   <string id="421"></string>
@@ -359,8 +361,8 @@
   <string id="425">Albüm bilgisi bulunamadı</string>
   <string id="426">CD bilgisi bulunamadı</string>
   <string id="427">Disk</string>
-  <string id="428">Lütfen doğru CD/DVD'yi koyunuz</string>
-  <string id="429">Lütfen sıradaki CD/DVD'yi koyunuz</string>
+  <string id="428">Lütfen doğru CD/DVD'yi yerleştirin</string>
+  <string id="429">Lütfen sıradaki CD/DVD'yi yerleştirin</string>
   <string id="430">Sırala: DVD#</string>
   <string id="431">Önbellek yok</string>
   <string id="432">Filmi kitaplıktan kaldır</string>
@@ -382,10 +384,10 @@
   <string id="448">LCD</string>
   <string id="449">Aktif</string>
   <string id="450">Sütunlar</string>
-  <string id="451">1. Sıra</string>
-  <string id="452">2. Sıra</string>
-  <string id="453">3. Sıra</string>
-  <string id="454">4. Sıra</string>
+  <string id="451">Row 1 address</string>
+  <string id="452">Row 2 address</string>
+  <string id="453">Row 3 address</string>
+  <string id="454">Row 4 address</string>
   <string id="455">Sıralar</string>
   <string id="456">Mode</string>
   <string id="457">Görünümü değiştir</string>
@@ -397,17 +399,17 @@
   <string id="464">Parlaklık</string>
   <string id="465">Kontrast</string>
   <string id="466">Gamma</string>
-  <string id="467">Tip</string>
+  <string id="467">Tür</string>
   <string id="468">OSD pozisyonunu değiştirmek için çubuğu kaydırın</string>
   <string id="469">OSD pozisyonu</string>
   <string id="470">Bilgiler</string>
   <string id="471">Modchip</string>
   <string id="474">Kapalı</string>
   <string id="475">Sadece Müzik</string>
-  <string id="476">Müzik &amp; video</string>
+  <string id="476">Müzik ve video</string>
   <string id="477">Çalma listesi yüklenemedi</string>
   <string id="478">OSD</string>
-  <string id="479">Arayüz &amp; dil</string>
+  <string id="479">Arayüz ve dil</string>
   <string id="480">Görünüm</string>
   <string id="481">Ses ayarları</string>
   <string id="482">XBMC Hakkında</string>
@@ -418,10 +420,10 @@
   <string id="487">Tekrarla: Birini</string>
   <string id="488">Tekrarla: Klasörü</string>
   <string id="489">Otomatik olarak sonraki parçayı çal</string>
-  <string id="491">- Büyük simge kullan</string>
-  <string id="492">Altyazı Büyüklüğünü Ayarla</string>
+  <string id="491">- Büyük simgeler kullan</string>
+  <string id="492">Resize VobSubs</string>
   <string id="493">Gelişmiş ayarlar (Uzmanlar İçin!)</string>
-  <string id="494">Genel ses boşluk payı</string>
+  <string id="494">Overall audio headroom</string>
   <string id="495">Videoları arayüz çözünülürlüğüne yükselt</string>
   <string id="496">Ayarlama</string>
   <string id="497">Dosya uzantılarını gizle</string>
@@ -429,8 +431,8 @@
   <string id="499">Çevrimiçi arama servisine bağlanılamıyor</string>
   <string id="500">Albüm bilgileri indirilemedi</string>
   <string id="501">Albüm adları aranıyor...</string>
-  <string id="502">Açık</string>
-  <string id="503">Meşgul</string>
+  <string id="502">Aç</string>
+  <string id="503">Mşgl</string>
   <string id="504">Boş</string>
   <string id="505">Dosyalardan ortam bilgileri yükleniyor...</string>
   <string id="507">Sırala: Kullanım</string>
@@ -440,10 +442,10 @@
   <string id="513">Menü</string>
   <string id="514">Kişisel ayarlar</string>
   <string id="515">Tarz</string>
-  <string id="516">Sıkıştırılmış dosyaları klasör halinde göster</string>
+  <string id="516">Make stored archives with one file transparent</string>
   <string id="517">Yeni çalınan albümler</string>
   <string id="518">Başlat</string>
-  <string id="519">...Modunda Başlat</string>
+  <string id="519">Launch in...</string>
   <string id="520">XBE başlığını düzenle</string>
   <string id="521">Derleme</string>
   <string id="522">Kaynağı kaldır</string>
@@ -455,7 +457,7 @@
   <string id="528">Başlığı gir</string>
   <string id="529">Hata: Başlık daha önce kullanıldı</string>
   <string id="530">Tarz seçin</string>
-  <string id="531">Yeni tarz</string>
+  <string id="531">Yeni tür</string>
   <string id="532">El ile ekle</string>
   <string id="533">Tarz girin</string>
   <string id="534">Görünüm: %s</string>
@@ -472,8 +474,9 @@
   <string id="545">Ses çıkış aygıtı</string>
   <string id="546">Passthrough çıkış aygıtı</string>
   <string id="547">Bu sanatçı için biyografi yok</string>
-  <string id="548">Çoklu ses kanallarını stereo'ya indirge</string>
-  
+  <string id="548">Çok kanallı sesi stereoya indirge</string>
+  <string id="549">Ana Sesi Kontrol Et</string>
+
   <string id="550">Sırala: %s</string>
   <string id="551">İsim</string>
   <string id="552">Tarih</string>
@@ -487,18 +490,21 @@
   <string id="560">ID</string>
   <string id="561">Dosya</string>
   <string id="562">Yıl</string>
-  <string id="563">Beğeni</string>
+  <string id="563">Reyting</string>
   <string id="564">Tür</string>
   <string id="565">Kullanım</string>
   <string id="566">Albüm sanatçısı</string>
   <string id="567">Çalma sayısı</string>
-  <string id="568">Son çalınan</string>
+  <string id="568">Last played</string>
   <string id="569">Yorum</string>
   <string id="570">Eklenme tarihi</string>
   <string id="571">Varsayılan</string>
   <string id="572">Stüdyo</string>
   <string id="573">Dizin</string>
-  
+  <string id="574">Alt yazılar</string>
+  <string id="575">Gelişmişi Göster</string>
+  <string id="576">Gelişmişi Gizle</string>
+
   <string id="580">Sıralama yönü</string>
   <string id="581">Sıralama yöntemi</string>
   <string id="582">Görünüm biçimi</string>
@@ -517,7 +523,7 @@
   <string id="595">Tekrarlama: Kapalı</string>
   <string id="596">Tekrarlama: Birini</string>
   <string id="597">Tekrarlama: Hepsini</string>
-  
+
   <string id="600">Ses CD'sini Aktar</string>
   <string id="601">Orta</string>
   <string id="602">Standart</string>
@@ -527,10 +533,10 @@
   <string id="606"></string>
   <string id="607">Nereye:</string>
   <string id="608">CD veya parça aktarılamıyor</string>
-  <string id="609">CDDA Aktarma Dizini ayarlanmamış</string>
+  <string id="609">CDDA Aktarma Dizini ayarlanmamış.</string>
   <string id="610">Parçayı aktar</string>
   <string id="611">Numara gir</string>
-  
+
   <string id="620">CD Aktarma</string>
   <string id="621">Kodlayıcı</string>
   <string id="622">Kalite</string>
@@ -544,14 +550,14 @@
   <string id="633">Görüntüyü Oranla: 14:9</string>
   <string id="634">Görüntüyü Oranla: 16:9</string>
   <string id="635">Orijinal Boyut</string>
-  <string id="636">Kişisel</string>
+  <string id="636">Özel</string>
   <string id="637">Replay gain</string>
   <string id="638">Replay gain mode</string>
   <string id="639">Parça seviyesini kullan</string>
   <string id="640">Albüm seviyesini kullan</string>
   <string id="641">PreAmp Level - Replay gained files</string>
   <string id="642">PreAmp Level - Non replay gained files</string>
-  <string id="643">Avoid clipping on replay gained files</string>
+  <string id="643">Kazanılan dosyaları çalma sırasında kesinti yapma</string>
   <string id="644">Siyah yerleri kırp</string>
   <string id="645">Büyük bir dosyayı açmak gerekiyor. Devam edilsin mi?</string>
   <string id="646">Kitaplıktan kaldır</string>
@@ -565,30 +571,31 @@
   <string id="654">Hata ayıklama bilgisini göster</string>
   <string id="655">Çalıştırılabilirlere gözat</string>
   <string id="656">Çalma listesine gözat</string>
-  <string id="657">Klasöre gözat</string>
+  <string id="657">Klasöre Gözat</string>
   <string id="658">Şarkı bilgisi</string>
   <string id="659"></string>
   <string id="660">Ses yükseltici</string>
   <string id="661">Dışa aktarma dizinini seç</string>
   <string id="662">Bu dosya artık mevcut değil.</string>
   <string id="663">Kitaplıktan kaldırmak ister misiniz?</string>
-  
+  <string id="664">Script ara</string>
+
   <string id="700">Kitaplık temizleniyor</string>
   <string id="701">Eski şarkılar kitaplıktan kaldırılıyor</string>
   <string id="702">Bu dizin daha önceden taranmıştı</string>
-  <string id="705">Ağ Bağlantıları</string>
-  <string id="706">HTTP vekil sunucu makinesi</string>
-  <string id="707">HTTP vekil sunucu portu</string>
-  <string id="708">HTTP vekil sunucusunu etkinleştir</string>
-  <string id="709">HTTP vekil sunucu kullanıcı adı</string>
-  <string id="710">HTTP vekil sunucu şifresi</string>
+  <string id="705">Ağ</string>
+  <string id="706">HTTP proxy sunucusu</string>
+  <string id="707">HTTP proxy sunucu portu</string>
+  <string id="708">HTTP proxy sunucusunu etkinleştir</string>
+  <string id="709">HTTP proxy sunucu kullanıcı adı</string>
+  <string id="710">HTTP proxy sunucu şifresi</string>
   <string id="711">İnternet Protokolü (IP)</string>
   <string id="712">Geçersiz port numarası girildi. Değerler 1 ile 65535 arası olmalı.</string>
-  <string id="713">HTTP vekil sunucu</string>
-  <string id="714"></string>
+  <string id="713">HTTP proxy sunucu</string>
+  <string id="714">HTTP proxy sunucusu boş[CR]Proxy devre dışı bırakılacak</string>
   <string id="715">- Atama</string>
   <string id="716">Otomatik (DHCP)</string>
-  <string id="717">Kişisel (Statik)</string>
+  <string id="717">Elle</string>
   <string id="718">Varsayılan (Kontrol Paneli)</string>
   <string id="719">- IP adresi</string>
   <string id="720">- Ağ maskesi</string>
@@ -596,19 +603,19 @@
   <string id="722">- DNS sunucusu</string>
   <string id="723">Kaydet ve yeniden başlat</string>
   <string id="724">Geçersiz adres girildi. Veriler AAA.BBB.CCC.DDD şeklinde olmalı</string>
-  <string id="725"> 0 ile 255 arası bir rakam seçiniz.</string>
+  <string id="725">0 ile 255 arası bir rakam seçiniz.</string>
   <string id="726">Değişiklikler kaydedilmedi. Kaydetmeden çıkmak istiyor musunuz?</string>
   <string id="727">Web sunucusu</string>
   <string id="728">FTP sunucusu</string>
   <string id="729">İnternet zamanı</string>
-  <string id="730">Web sunucusu portu</string>
+  <string id="730">- Web sunucusu portu</string>
   <string id="731">Saat sunucu makinesi</string>
   <string id="732">Kaydet ve uygula</string>
-  <string id="733">Web sunucusu şifresi</string>
+  <string id="733">- Web sunucusu şifresi (kullanıcı adı: boxee)</string>
   <string id="734">Şifre yok</string>
-  <string id="735">- Karakter Kodlaması</string>
-  <string id="736">- Stil</string>
-  <string id="737">- Renk</string>
+  <string id="735">Karakter Seti</string> <!-- Subtitles character set -->
+  <string id="736">Stil</string>         <!-- Subtitles style -->
+  <string id="737">Renk</string>         <!-- Subtitles color -->
   <string id="738">Normal</string>
   <string id="739">Kalın</string>
   <string id="740">İtalik</string>
@@ -620,7 +627,7 @@
   <string id="746">Lütfen kitaplık görünümünü kapatın</string>
   <string id="747">Resim yüklenirken hata oluştu</string>
   <string id="748">Dizini düzenle</string>
-  <string id="749">Resmi aynala</string>
+  <string id="749">Mirror image</string>
   <string id="750">Emin misiniz?</string>
   <string id="751">Kaynak kaldırılıyor</string>
   <string id="752"></string>
@@ -634,23 +641,23 @@
   <string id="760">Sarı</string>
   <string id="761">Beyaz</string>
   <string id="762">Mavi</string>
-  <string id="763">Açık Yeşil</string>
-  <string id="764">Turkuaz</string>
-  <string id="765">Çiyan</string>
+  <string id="763">Parlak Yeşil</string>
+  <string id="764">Sarı Yeşil</string>
+  <string id="765">Turkuaz</string>
   <string id="766">Ayrıldı</string>
   <string id="767">Ayrıldı</string>
   <string id="768">Ayrıldı</string>
   <string id="769">Ayrıldı</string>
   <string id="770">Hata %i: paylaşım mümkün değil</string>
   <string id="771">- Otomatik FATX limitleyici</string>
-  <string id="772">Ses donanımı</string>
+  <string id="772">Ses</string>
   <string id="773">Atla</string>
   <string id="774">Slayt Gösterisi klasörü</string>
   <string id="775">Ağ arayüzü</string>
   <string id="776">- Kablosuz ağın adı (ESSID)</string>
   <string id="777">- Kablosuz ağın şifresi</string>
   <string id="778">- Kablosuz ağın güvenliği</string>
-  <string id="779">Ağ arayüz ayarlarını kaydet ve uygula </string>
+  <string id="779">Ağ arayüz ayarlarını kaydet ve uygula</string>
   <string id="780">Şifreleme yok</string>
   <string id="781">WEP</string>
   <string id="782">WPA</string>
@@ -661,7 +668,7 @@
   <string id="787">Arayüz devre dışı</string>
   <string id="788">Ağ arayüzü başarıyla devre dışı bırakıldı.</string>
   <string id="789">Kablosuz ağın adı (ESSID)</string>
-  
+
   <string id="790">Olay sunucusu</string>
   <string id="791">Olay sunucusunu etkinleştir</string>
   <string id="792">Port</string>
@@ -670,10 +677,11 @@
   <string id="795">Başlangıçtaki tekrar gecikmesi (ms)</string>
   <string id="796">Kesintisiz tekrar gecikmesi (ms)</string>
   <string id="797">Azami istemci sayısı</string>
-  
-  <string id="998"></string>
-  <string id="999"></string>
-  <string id="1000">Ekran Koruyucu önizlemesi</string>
+  <string id="800">Arkadaşlar</string>
+  <string id="801">Yetişkin</string>
+  <string id="802">Karakter Seti</string>
+  <string id="803">AirPlay</string>
+  <string id="1000">Ekran Koruyucu Önizlemesi...</string>
   <string id="1001">Bağlanamıyor</string>
   <string id="1002">XBMC ağda belirtilen klasöre bağlanamıyor.</string>
   <string id="1003">Bu olay ağın bağlı olmamasından kaynaklanabilir.</string>
@@ -707,59 +715,66 @@
   <string id="1031">Resim klasörüne gözat</string>
   <string id="1032">Ağ adresi ekle...</string>
   <string id="1033">Dosyaya gözat</string>
-  <string id="1034">Altmenü</string>
-  <string id="1035">Altmenü tuşlarını etkinleştir</string>
-  <string id="1036">Sık Kullanılanlar</string>
+  <string id="1034">Alt menü</string>
+  <string id="1035">Alt menü tuşlarını etkinleştir</string>
+  <string id="1036">Favoriler</string>
   <string id="1037">Video eklentileri</string>
   <string id="1038">Müzik eklentileri</string>
   <string id="1039">Resim eklentileri</string>
   <string id="1040">Klasör yükleniyor</string>
-  <string id="1041">%i öge alındı</string>
-  <string id="1042">%i ögeden %i tanesi alındı</string>
+  <string id="1041">%i öğe alındı</string>
+  <string id="1042">%i öğeden %i tanesi alındı</string>
   <string id="1043">Program eklentileri</string>
   <string id="1044">Eklenti küçük resimlerini ayarla</string>
   <string id="1045">Eklenti ayarları</string>
   <string id="1046">Giriş noktaları</string>
   <string id="1047">Diğer...</string>
   <string id="1048">Web sunucusu kullanıcı adı</string>
-  
+  <string id="1049">Script ayarları</string>
+  <string id="1050">Singles</string>
+  <string id="1051">Programlar</string>
+  <string id="1052">Ana Bilgisayar Adı</string>
+  <string id="1053">Tanıtımlar</string>
+
   <string id="1200">SMB istemcisi</string>
   <string id="1202">Çalışma grubu</string>
   <string id="1203">Varsayılan kullanıcı adı</string>
   <string id="1204">Varsayılan şifre</string>
-  
+  <string id="1205">SMB kaynakları için tam ağ taraması</string>
+
   <string id="1207">WINS sunucu</string>
   <string id="1208">SMB paylaşımlarını bağla</string>
-  
+  <string id="1209">Sunucu başına bir bağlantı kullan</string>
+
   <string id="1210">Kaldır</string>
   <string id="1211">Müzik</string>
   <string id="1212">Video</string>
   <string id="1213">Resimler</string>
   <string id="1214">Dosyalar</string>
-  <string id="1215">Müzik &amp; video </string>
-  <string id="1216">Müzik &amp; resimler</string>
-  <string id="1217">Müzik &amp; dosyalar</string>
-  <string id="1218">Video &amp; resimler</string>
-  <string id="1219">Video &amp; dosyalar</string>
-  <string id="1220">Resimler &amp; dosyalar</string>
-  <string id="1221">Müzik &amp; video &amp; resimler</string>
-  <string id="1222">Müzik &amp; video &amp; resimler &amp; dosyalar</string>
-  <string id="1223">Kapalı</string>
-  <string id="1226">Dosyalar &amp; müzik &amp; video</string>
-  <string id="1227">Dosyalar &amp; resimler &amp; müzik</string>
-  <string id="1228">Dosyalar &amp; resimler &amp; video</string>
-  <string id="1229">Müzik &amp; programlar</string>
-  <string id="1230">Video &amp; programlar</string>
-  <string id="1231">Resimler &amp; programlar</string>
-  <string id="1232">Müzik &amp; video &amp; resimler &amp; programlar</string>
-  <string id="1233">Programlar &amp; video &amp; müzik</string>
-  <string id="1234">Programlar &amp; resimler &amp; müzik</string>
-  <string id="1235">Programlar &amp; resimler &amp; video</string>
-  
+  <string id="1215">Müzik ve video </string>
+  <string id="1216">Müzik ve resimler</string>
+  <string id="1217">Müzik ve dosyalar</string>
+  <string id="1218">Video ve resimler</string>
+  <string id="1219">Video ve dosyalar</string>
+  <string id="1220">Resimler ve dosyalar</string>
+  <string id="1221">Müzik ve video ve resimler</string>
+  <string id="1222">Müzik ve video ve resimler ve dosyalar</string>
+  <string id="1223">Etkin Değil</string>
+  <string id="1226">Dosyalar ve müzik ve video</string>
+  <string id="1227">Dosyalar ve resimler ve müzik</string>
+  <string id="1228">Dosyalar ve resimler ve video</string>
+  <string id="1229">Müzik ve programlar</string>
+  <string id="1230">Video ve programlar</string>
+  <string id="1231">Resimler ve programlar</string>
+  <string id="1232">Müzik ve video ve resimler ve programlar</string>
+  <string id="1233">Programlar ve video ve müzik</string>
+  <string id="1234">Programlar ve resimler ve müzik</string>
+  <string id="1235">Programlar ve resimler ve video</string>
+
   <string id="1245">FTP kullanıcı adı</string>
   <string id="1246">FTP şifresi</string>
   <string id="1247">Şifre başarıyla ayarlandı</string>
-  
+
   <string id="1250">Otomatik algılama</string>
   <string id="1251">Otomatik sistem algılama</string>
   <string id="1252">Takma İsim</string>
@@ -768,8 +783,11 @@
   <string id="1255">FTP kullanıcı adı ve şifresini gönder</string>
   <string id="1256">Ping süresi</string>
   <string id="1257">Otomatik olarak tanımlanan sistem'e bağlamak ister misiniz?</string>
-  
+
   <string id="1260">Zeroconf yayınlama</string>
+
+  <string id="1300">Özel ses aygıtı</string>
+  <string id="1301">Özel geçiş aygıtı</string>
   
   <string id="1396">Akıntılı</string>
   <string id="1397">ve</string>
@@ -778,57 +796,73 @@
   <string id="1400">Tecrit Edilmiş</string>
   <string id="1401">Sağanak Yağışlı</string>
   <string id="1402">Gök Gürültülü</string>
-  <string id="1403">Güneşli</string>
-  <string id="1404">Sağanak</string>
+  <string id="1403">Paz</string>
+  <string id="1404">Ağır</string>
   <string id="1405">içinde</string>
-  <string id="1406">-</string>
+  <string id="1406">the</string>
   <string id="1407">Görüş Mesafesi</string>
   <string id="1408">Buz</string>
   <string id="1409">Kristal</string>
   <string id="1410">Ilık</string>
   <string id="1411">ile</string>
   <string id="1412">rüzgârlı</string>
-  <string id="1413">çiseleyen</string>
+  <string id="1413">çiseleme</string>
   <string id="1414">Gök gürültülü sağanak</string>
-  <string id="1415">Çiseleyen</string>
+  <string id="1415">Çiseleme</string>
   <string id="1416">Sisli</string>
-  <string id="1417">Grains</string>
-  
+  <string id="1417">Tanecikler</string>
+  <string id="1418">T-Fırtınalar</string>
+  <string id="1419">T-Kar ve yağmur yağışları</string>
+
   <!-- strings through to 1450 reserved for weather translation -->
-  
+
+  <string id="1450">Ekranın kapatılması için boşta bekleme süresi:</string>
+  <!-- strings through to 1470 reserved for power-saving -->
+
   <string id="2050">Süre</string>
-  
+
+  <string id="2100">Script başarısız: %s</string>
+
   <string id="4501">LCD türü</string>
-  
-  <string id="10000">Giriş</string>
+
+  <string id="10000">Ana Sayfa</string>
   <string id="10001">Programlar</string>
   <string id="10002">Resimler</string>
-  <string id="10003">Dosyalar</string>
+  <string id="10003">Dosya yöneticisi</string>
   <string id="10004">Ayarlar</string>
   <string id="10005">Müzik</string>
   <string id="10006">Videolar</string>
   <string id="10007">Sistem bilgisi</string>
-  <string id="10008">Ayarlar - Genel</string>
-  <string id="10009">Ayarlar - Ekran</string>
+  <string id="10008">Genel</string>
+  <string id="10009">Ekran</string>
   <string id="10010">Ayarlar - Görünüm - Ekran Ayarları</string>
   <string id="10011">Ayarlar - Videolar - Resim Ayarları</string>
+  <string id="10012">Resimler</string>
+  <string id="10013">Ebeveyn[CR]Kontrolleri</string>
+  <string id="10014">Sosyal</string>
+  <string id="10015">Müzik</string>
+  <string id="10016">Sistem</string>
+  <string id="10017">Medya</string>
+  <string id="10018">Ağ</string>
+  <string id="10019">Genel</string>
   <string id="10020">Betikler</string>
   <string id="10021"></string>
   <string id="10022"></string>
   <string id="10023"></string>
   <string id="10025"></string>
   <string id="10028">Videolar/Çalma Listesi</string>
-  <string id="10034">Ayarlar - Profiller</string>
-  
+  <string id="10034">Profiller</string>
+  <string id="10035">[B]Ebeveyn kontrolleri[/B]</string>
+
   <string id="10100">Evet/Hayır penceresi</string>
   <string id="10101">İşlem penceresi</string>
-  
+
   <string id="10210">Altyazılara bakılıyor...</string>
-  <string id="10211">Altyazılara bakılıyor veya önbellekleniyor...</string>
+  <string id="10211">Altyazılar alınıyor veya aranıyor…</string>
   <string id="10212">sonlandırılıyor</string>
   <string id="10213">tampon belleğe alınıyor</string>
   <string id="10214">Akış açılıyor</string>
-  
+
   <string id="10500">Müzik/Çalma Listesi</string>
   <string id="10501">Müzik/Dosyalar</string>
   <string id="10502">Müzik/Kitaplık</string>
@@ -854,14 +888,14 @@
   <string id="10522">Şimdi Oynatılıyor - Videolar</string>
   <string id="10523">Albüm bilgisi</string>
   <string id="10524">Film bilgisi</string>
-  
+
   <string id="12000">Seçim penceresi</string>
   <string id="12001">Müzik/Bilgi</string>
   <string id="12002">OK penceresi</string>
   <string id="12003">Videolar/Bilgi</string>
   <string id="12004">Betikler/Bilgi</string>
   <string id="12005">Tam Ekran Video</string>
-  <string id="12006">Müzik görsel ögesi</string>
+  <string id="12006">Ses görsel öğesi</string>
   <string id="12007"></string>
   <string id="12008">Dosya sıralama penceresi</string>
   <string id="12009">İçeriği yenile...</string>
@@ -880,7 +914,17 @@
   <string id="12022">%s pozisyonundan başla</string>
   <string id="12023">Mevcut hileler doğrulanıyor...</string>
   <string id="12024">Kapak resmi olmayan videolar için otomatik olarak küçük resimler oluştur</string>
-  
+  <string id="12025">Bu boyutun altındaki videolar çözümlenmesin (MB)</string>
+  <string id="12026">Çalma ekranından çıkarken videoyu durdur</string>
+  <string id="12027">Video Kalitesi Seç</string>  
+  <string id="12028">Çeşitli kalite seviyeleri mevcuttur</string>  
+  <string id="12029">Tercihimi kaydet</string>  
+  <string id="12030">Kaydet</string>
+  <string id="12031">1080p</string>
+  <string id="12032">720p</string>
+  <string id="12033">Standart</string>
+  <string id="12034">Çok sayıda tanıtım mevcut</string>
+
   <string id="12310">0</string>
   <string id="12311">1</string>
   <string id="12312">2</string>
@@ -898,34 +942,34 @@
   <string id="12326">Şifreyi girin</string>
   <string id="12327">Yönetici şifresini girin</string>
   <string id="12328">Açma şifresini girin</string>
-  <string id="12329">veya çıkmak için "c"' ye basın</string>
-  <string id="12330">Joystick tuş kombinasyonunun girin ve "start"' a basın</string>
-  <string id="12331">"Start"' a basın veya çıkmak için "Back"' e basın</string>
+  <string id="12329">veya çıkmak için C'ye basın</string>
+  <string id="12330">Joystick tuş kombinasyonunu girin ve</string>
+  <string id="12331">Başlat veya iptal için Geri'ye basın</string>
   <string id="12332">Şifreyi ayarla</string>
   <string id="12333">Şifreyi aç</string>
   <string id="12334">Şifreyi sıfırla</string>
   <string id="12335">Şifreyi kaldır</string>
-  <string id="12337">Numetrik şifre</string>
+  <string id="12337">Nümerik şifre</string>
   <string id="12338">Joystick tuş kombinasyonu</string>
   <string id="12339">Klavye şifresi</string>
   <string id="12340">Yeni şifreyi girin</string>
   <string id="12341">Yeni şifreyi tekrar girin</string>
   <string id="12342">Yanlış şifre,</string>
-  <string id="12343"> deneme hakkı kaldı </string>
+  <string id="12343">deneme hakkı kaldı </string>
   <string id="12344">Girilen şifreler aynı değil.</string>
   <string id="12345">Giriş reddedildi</string>
   <string id="12346">Şifre deneme hakkı tükendi.</string>
   <string id="12347">Sistem şimdi kapatılacak.</string>
   <string id="12348">Kilitli</string>
   <string id="12353">Şifreyi devreye sok</string>
-  <string id="12356">Kilidi değiştir</string>
+  <string id="12356">Change lock</string>
   <string id="12357">Kaynak kilidi</string>
   <string id="12358">Boş şifre girildi. Yeniden deneyin.</string>
   <string id="12360">Yönetici kilidi</string>
   <string id="12362">Eğer Yönetici Kilidi denemesi aşılırsa sistemi Kapat</string>
   <string id="12367">Geçersiz yönetici şifresi!</string>
   <string id="12368">Lütfen doğru yönetici şifresini girin!</string>
-  <string id="12373">Ayarlar &amp;  Dosya yöneticisi</string>
+  <string id="12373">Ayarlar ve Dosya yöneticisi</string>
   <string id="12376">Tüm videolar için varsayılan olarak ayarla</string>
   <string id="12377">Bu işlem önceki kayıtları silecek</string>
   <string id="12378">Resimlerin gösterim zamanı</string>
@@ -933,8 +977,8 @@
   <string id="12380">NTSC videoları PAL formatında oynat</string>
   <string id="12381">PAL videoları NTSC formatında oynat</string>
   <string id="12382">NTSC videoları PAL60 formatında oynat</string>
-  <string id="12383">12' li saat sistemi</string>
-  <string id="12384">24' lü saat sistemi</string>
+  <string id="12383">12'li saat sistemi</string>
+  <string id="12384">24'lü saat sistemi</string>
   <string id="12385">Gün/Ay</string>
   <string id="12386">Ay/Gün</string>
   <string id="12387"></string>
@@ -943,46 +987,50 @@
   <string id="12392">Saat</string>
   <string id="12393">Gün</string>
   <string id="12394">Toplam çalışma süresi</string>
-  
+
   <string id="12600">Hava Durumu</string>
-  
+
   <string id="12900">Ekran Koruyucu</string>
   <string id="12901">Tam Ekran OSD</string>
-  
+
   <string id="13000">Sistem</string>
-  <string id="13001">Sabit Diski Durdur</string>
+  <string id="13001">Immediate HD spindown</string>
   <string id="13002">Sadece Video</string>
   <string id="13003">- Bekleme</string>
   <string id="13004">- Minimum dosya süresi</string>
   <string id="13005">Kapat</string>
-  <string id="13006">Kontrol Paneli</string>
+  <string id="13006">Dashboard</string>
   <string id="13007">Kişisel kontrol paneli dizinini kullan</string>
-  <string id="13008">Kapatma fonksiyonu</string>
-  <string id="13009">Çık</string>
-  <string id="13010">Hibernate</string>
-  <string id="13011">Suspend</string>
+  <string id="13008">Kapatma fonksiyonu</string> 
+  <string id="13009">Çık</string> 
+  <string id="13010">Hazırda beklet</string>
+  <string id="13011">Askıya al</string>
   <string id="13012">Çıkış</string>
   <string id="13013">Yeniden Başlat</string>
   <string id="13014">Simge Durumuna</string>
-  
+  <string id="13015">Güç düğmesi eylemi</string>
+
   <string id="13020">Başka bir oturum mu etkin, ssh üzerinden olabilir mi?</string>
   <string id="13021">Çıkarılabilir sabit disk bağlandı</string>
   <string id="13022">Aygıt güvensiz bir şekilde kaldırıldı</string>
   <string id="13023">Aygıt başarıyla kaldırıldı</string>
   <string id="13024">Joystick takılı</string>
   <string id="13025">Joystick takılı değil</string>
-  
+  <string id="13026">Çıkartılabilir disk bağlandı</string>
+  <string id="13027">Çıkartılabilir disk ayrıldı</string>
+  <string id="13028">Çıkartılabilir disk hatalarla ayrıldı</string>
+
   <string id="13100">Titreme filtresi</string>
   <string id="13101">Sürücü seçsin (yeniden başlatmak gerekir)</string>
   <string id="13105">Dikey boşluk senkronizasyonu</string>
   <string id="13106">Etkin Değil</string>
-  <string id="13107">Video oynatılırken etkinleştir</string>
+  <string id="13107">Video oynatılırken etkinleştirildi</string>
   <string id="13108">Her zaman etkin</string>
-  <string id="13109">Çözünürlüğü test et</string>
+  <string id="13109">Çözünürlüğü test et ve uygula</string>
   <string id="13110">Çözünürlük kaydedilsin mi?</string>
   <string id="13111">Bu çözünürlük ayarlarını saklamak ister misiniz?</string>
   
-  <string id="13112">Yüksek kalite yazılım upscaling</string>
+  <string id="13112">Yüksek kalite upscaling</string>
   <string id="13113">Etkin Değil</string>
   <string id="13114">SD içeriği için etkinleştir</string>
   <string id="13115">Her zaman etkin</string>
@@ -991,22 +1039,21 @@
   <string id="13117">Bicubic</string>
   <string id="13118">Lanczos</string>
   <string id="13119">Sinc</string>
-  
-  <string id="13120">Strict Pixmap-Texture Binding (yeniden başlatmak gerekir)</string>
-  
-  <string id="13130">Display blanking</string>
+  <string id="13120">VDPAU</string>
+  <string id="13121">VDPAU HQ Upscaling seviyesi</string>
+  <string id="13122">VDPAU Stüdyo seviyesi renk dönüştürme</string>
+
+  <string id="13130">Ekran karartma</string>
   <string id="13131">Etkin Değil</string>
-  <string id="13132">Blank displays</string>
-  
+  <string id="13132">Ekranları sil</string>
+
   <string id="13140">Aktif bağlantılar saptandı!</string>
-  <string id="13141">Devam ederseniz, XBMC'yi kontrol etmek mümkün olmayabilir.</string>
-  <string id="13142">Olay sunucusunu durdurmak istediğinize emin misiniz?</string>
-  
+  <string id="13141">Devam ederseniz, XBMC'yi kontrol etmek mümkün</string>
+  <string id="13142">any longer. Are you sure you want to stop the Event Server?</string>
   <string id="13144">Apple Kumanda biçimi değiştirilsin mi?</string>
-  <string id="13145">XBMC'yi kontrol etmek için Apple Kumandayı kullanıyorsanız,</string>
-  <string id="13146">bu ayarı değiştirmek kontrol yeteneğini etkileyebilir.</string>
-  <string id="13147">Devam etmek istiyor musunuz?</string>
-  
+  <string id="13145">XBMC'yi kontrol etmek için Apple Kumandayı kullanıyorsanız, bu ayarın değiştirilmesi kontrol becerisini etkileyebilir. Devam etmek istiyor musunuz?</string>
+  <string id="13148">Uzaktan kumanda modu değiştirilsin mi?</string>
+  <string id="13149">Etkinleştirmek için lütfen Boxee'yi yeniden başlatın</string>
   <string id="13150">HDD anahtarı:</string>
   <string id="13151">HDD ısısı:</string>
   <string id="13152">DVD modeli:</string>
@@ -1025,17 +1072,17 @@
   <string id="13164">Klavye</string>
   <string id="13165">Fare</string>
   <string id="13166">Kulaklık/Mikrofon</string>
-  <string id="13167">Bellek birimi</string>
+  <string id="13167">Bellek ünitesi</string>
   <string id="13168">Uzaktan Kumanda</string>
   <string id="13169">Denetleyici portu</string>
   
   
-  <string id="13170">Hiçbir Zaman</string>
+  <string id="13170">Asla</string>
   <string id="13171">Hemen</string>
   <string id="13172">%i saniye sonra</string>
   <string id="13173">HDD yükleme tarihi:</string>
-  <string id="13174">HDD power cycle count:</string>
-  
+  <string id="13174">HDD kullanım döngüsü adedi:</string>
+
   <string id="13200">Profiller</string>
   <string id="13201">'%s' profili silinsin mi?</string>
   <string id="13204">En son yüklenen profil:</string>
@@ -1045,14 +1092,15 @@
   <string id="13209">Çalar Saat Zamanı (dakika şeklinde)</string>
   <string id="13210">Alarm Aktif: %idk</string>
   <string id="13211">Alarm!</string>
-  <string id="13212">%idk:%isn kala iptal edildi</string>
-  
+  <string id="13212">Canceled with %im%is left</string>
+
+  <string id="13248">Varsayılanla etkinleştir</string>
   <string id="13249">Altyazıları sıkıştırılmış klasörlerde ara</string>
   <string id="13250">Altyazıya gözat...</string>
   <string id="13251">Taşı</string>
   <string id="13252">Buraya taşı</string>
   <string id="13253">Taşımayı iptal et</string>
-  
+
   <string id="13270">Donanım:</string>
   <string id="13271">CPU Kullanımı:</string>
   
@@ -1061,7 +1109,7 @@
   <string id="13276">DVD-ROM</string>
   <string id="13277">Kapasite</string>
   <string id="13278">Varsayılan</string>
-  <string id="13279">Ağ Bağlantıları</string>
+  <string id="13279">Ağ</string>
   <string id="13280">Video</string>
   <string id="13281">Donanım</string>
   <string id="13282">_</string>
@@ -1069,16 +1117,16 @@
   <string id="13284">CPU hızı:</string>
   <string id="13285">Yüklenmiş BIOS:</string>
   <string id="13286">Video kodlayıcı:</string>
-  <string id="13287">Ekran çözünülürlüğü:</string>
+  <string id="13287">Ekran çözünülürlüğü</string>
   <string id="13288">Xbox versiyonu:</string>
   <string id="13289">Xbox seri numarası:</string>
   <string id="13290">Xbox üreticisi:</string>
   <string id="13291">Modchip:</string>
   <string id="13292">Görüntü/Ses Kablosu:</string>
-  <string id="13293">Video &amp; XBE bölgesi:</string>
+  <string id="13293">Video ve XBE bölgesi:</string>
   <string id="13294">DVD bölgesi:</string>
   <string id="13295">İnternet:</string>
-  <string id="13296">Bağlı</string>
+  <string id="13296">Bağlandı</string>
   <string id="13297">Bağlı değil. Ağ ayarlarınızı kontrol edin.</string>
   <string id="13298">Xbox Live Anahtarı:</string>
   <string id="13299">Hedef sıcaklık</string>
@@ -1086,12 +1134,12 @@
   <string id="13301">Otomatik ısı kontrolü</string>
   <string id="13302">Fan hız ayarı</string>
   <string id="13303">- Yazı tipleri</string>
-  <string id="13304">Enable Flipping Bi-Directional Strings</string>
+  <string id="13304">Çift yönlü dizilerde çevirmeyi etkinleştir</string>
   <string id="13305">RSS beslemelerini etkinleştir</string>
   <string id="13306">Geri gitme simgesini sakla</string>
   <string id="13307">Parça isim kalıbı</string>
   <string id="13308">Xbox'ı yeniden başlatmak istiyor musunuz?</string>
-  <string id="13309">sadece XBMC' ın yerine mi?</string>
+  <string id="13309">sadece XBMC yerine mi?</string>
   <string id="13310">Yakınlaştırma Efekti</string>
   <string id="13311">Kaydırma efekti</string>
   <string id="13312">Siyah yerleri daralt</string>
@@ -1133,12 +1181,12 @@
   <string id="13349">Yeni içerik için tara</string>
   <string id="13350">Şimdi çalıyor...</string>
   <string id="13351">Albüm bilgisi</string>
-  <string id="13352">Ögeleri kitaplık için tara</string>
+  <string id="13352">Öğeleri kitaplık için tara</string>
   <string id="13353">Taramayı durdur</string>
-  <string id="13354">Görüntüyü işleme yöntemi</string>
-  <string id="13355">Düşük kalite pixel shader</string>
-  <string id="13356">Donanımsal olarak</string>
-  <string id="13357">Yüksek kalite pixel shader</string>
+  <string id="13354">Render yöntemi</string>
+  <string id="13355">Düşük kalite piksel karartma</string>
+  <string id="13356">Donanımsal çakışmalar</string>
+  <string id="13357">Yüksek kalite piksel karartma</string>
   <string id="13358">Oynat</string>
   <string id="13359">Sanatçı küçük resmini ayarla</string>
   <string id="13360">Küçük resimleri oluştur</string>
@@ -1160,14 +1208,14 @@
   <string id="13389">Bu görsel efekt için hazır gelen hiçbir şey yok</string>
   <string id="13390">Bu görsel efekt için hiçbir ayar yok</string>
   <string id="13391">Çıkart/Tak</string>
-  <string id="13392">Eğer müzik çalıyorsa görsel öge kullan</string>
+  <string id="13392">Eğer müzik çalıyorsa görsel öğe kullan</string>
   <string id="13393">Boyutu hesapla</string>
   <string id="13394">Dosya boyutu hesaplanıyor</string>
   <string id="13395">Video ayarları</string>
   <string id="13396">Ses ve altyazı ayarları</string>
   <string id="13397">Altyazıları etkinleştir</string>
-  <string id="13398">Yer İmleri</string>
-  <string id="13399">Sıralarken "The" yı yok say</string>
+  <string id="13398">Kısa yollar</string>
+  <string id="13399">Sıralarken belirteçleri yok say</string>
   <string id="13400">Albüm parçalarında yumuşak geçiş kullan</string>
   <string id="13401">%s gözat</string>
   <string id="13402">Şarkı pozisyonunu göster</string>
@@ -1180,9 +1228,9 @@
   <string id="13409">En İyi 250</string>
   <string id="13410">Last.fm'de bul</string>
   <string id="13411">Asgari fan hızı</string>
-  <string id="13412">- RSS beslemeleri sağdan sola yazı içeriyor</string>
+  <string id="13412"></string>
   <string id="13413">İndiriliyor</string>
-  <string id="13414">Hide artists who appear only on compilations</string>
+  <string id="13414">Sadece derlemelerde görünen sanatçıları gizle</string>
   <string id="13415">Render yöntemi</string>
   <string id="13416">Otomatik algıla</string>
   <string id="13417">Basit gölgeleme (ARB)</string>
@@ -1190,19 +1238,38 @@
   <string id="13419">Yazılım</string>
   <string id="13420">Güvenli kaldır</string>
   <string id="13421">VDPAU</string>
-  
+  <string id="13422">Slayt gösterisini burada başlat</string>
+  <string id="13423">Yeni karakter setini uygula</string>
+  <string id="13424">Ses aygıtı başlatılamadı</string>
+  <string id="13425">Ses ayarlarınızı kontrol edin</string>
+
+  <string id="13500">A/V senkronizasyon yöntemi</string>
+  <string id="13501">Sesli saat</string>
+  <string id="13502">Video clock (Drop/Dupe audio)</string>
+  <string id="13503">Video saat (müzik yeniden örneklendirme)</string>
+  <string id="13504">Maksimum yeniden örneklendirme miktarı (%)</string>
+  <string id="13505">Örneklendirme kalitesi</string>
+  <string id="13506">Low (hızlı)</string>
+  <string id="13507">Orta</string>
+  <string id="13508">Yüksek</string>
+  <string id="13509">Çok yüksek (yavaş)</string>
+  <string id="13510">Çalma-ekran senkronizasyonu</string>
+
   <string id="13600">Apple Kumanda</string>
-  <string id="13601">Biçim</string>
-  <string id="13602">Her zaman çalışan</string>
-  <string id="13603">Sekans gecikme süresi</string>
+  <string id="13601">Kumanda Modu</string>
+  <string id="13602">Her zaman çalışıyor</string>
+  <string id="13603">Sequence delay time</string>
   
   <string id="13610">Etkin Değil</string>
   <string id="13611">Standart</string>
   <string id="13612">Evrensel Kumanda</string>
+  <string id="13613">Çoklu Kumanda (Harmony)</string>
   
   <string id="13620">Apple Kumanda Hatası</string>
   <string id="13621">Apple Kumanda desteği etkinleştirilebilir.</string>
   
+  <string id="13622">Yüksek çözünürlüklü rendering</string>
+
   <string id="14000">Birleştir</string>
   <string id="14001">Ayrı Tut</string>
   <string id="14003">Çalma listesi indiriliyor...</string>
@@ -1214,19 +1281,19 @@
   <string id="14009">Oyun dizini</string>
   <string id="14010">Orijinal küçük resimleri göster</string>
   <string id="14011">Küçük resim görünümüne otomatik değiştirmeyi etkinleştir</string>
-  <string id="14012">- Büyük Simgeler</string>
+  <string id="14012">- Büyük simgeler kullan</string>
   <string id="14013">- Orijinal Boyut</string>
   <string id="14014">- Kişisel Boyut</string>
-  <string id="14015">No Files and at least one Thumb</string>
-  <string id="14016">At least one File and Thumb</string>
+  <string id="14015">Dosya yok en az bir küçük resim</string>
+  <string id="14016">En az bir dosya ve küçük resim</string>
   <string id="14017">Küçük resimlerin boyutu</string>
   <string id="14018">Görünüm ayarları</string>
-  <string id="14019">1. Bölge Kodunu Değiştir</string>
+  <string id="14019">Hava Durumu Konumu</string>
   <string id="14020">2. Bölge Kodunu Değiştir</string>
   <string id="14021">3. Bölge Kodunu Değiştir</string>
   <string id="14022">Kitaplık</string>
   <string id="14023">TV Yok</string>
-  <string id="14024">En yakındaki büyük şehrin ismini veya bölge kodunu girin</string>
+  <string id="14024">En yakındaki şehrin ismini girin</string>
   <string id="14025">Video/Ses/DVD önbelleği - Sabit disk</string>
   <string id="14026">Video önbelleği - DVD-ROM</string>
   <string id="14027">- Yerel Ağ</string>
@@ -1237,11 +1304,11 @@
   <string id="14034">DVD önbelleği - DVD-ROM</string>
   <string id="14035">- Yerel Ağ</string>
   <string id="14036">Sunucular</string>
-  <string id="14037">Görünüm &amp; Kullanım</string>
-  <string id="14038">Ağ ayarları dDeğişti</string>
+  <string id="14037">Genel</string>
+  <string id="14038">Ağ ayarları Değişti</string>
   <string id="14039">Ayarların etkili olabilmesi için yeniden başlatmak gerekli.</string>
-  <string id="14040">XBMC' ı yeniden başlatmak istiyor musunuz?</string>
-  <string id="14041">Post processing</string>
+  <string id="14040">XBMC'ı yeniden başlatmak istiyor musunuz?</string>
+  <string id="14041">Post-processing</string>
   <string id="14042"></string>
   <string id="14043">- Ortam oynatılıyor olsa bile kapat</string>
   <string id="14044">%i dk</string>
@@ -1263,12 +1330,12 @@
   <string id="14060">Bilinmeyen dosya tipi önbelleği - İnternet</string>
   <string id="14061">Otomatik</string>
   <string id="14062">Kullanıcı adı girin</string>
-  <string id="14063">Tarih &amp; saat</string>
+  <string id="14063">Tarih ve saat</string>
   <string id="14064">Tarihi ayarla</string>
   <string id="14065">Saati ayarla</string>
   <string id="14066">Saati 24' lük formatta SS:DD olarak girin</string>
   <string id="14067">Tarihi GG/AA/YYYY olarak girin</string>
-  <string id="14068">IP adresini girin </string>
+  <string id="14068">IP adresini girin</string>
   <string id="14069">Bu ayarlar şimdi uygulansın mı?</string>
   <string id="14070">Değişiklikleri şimdi uygula</string>
   <string id="14071">Dosyaları silmeye ve yeniden adlandırmaya izin ver</string>
@@ -1276,12 +1343,29 @@
   <string id="14073"></string>
   <string id="14074">Saat dilimini ayarla</string>
   <string id="14075">Yaz saati uygulamasını kullan</string>
-  <string id="14076">Sık Kullanılanlara ekle</string>
-  <string id="14077">Sık Kullanılanlardan kaldır</string>
+  <string id="14076">Favori</string>
+  <string id="14077">Kaldır</string>
   <string id="14078">- Renkler</string>
   <string id="14079">Ülke zaman dilimi</string>
   <string id="14080">Zaman dilimi</string>
-  
+  <string id="14081">Dosya listeleri</string>
+  <string id="14082">EXIF resim bilgilerini göster</string>
+  <string id="14083">Büyük ekran yerine büyük ekran penceresi kullan</string>
+  <string id="14084">Seçilen şarkıları sıraya al</string>
+  <string id="14085">Ses CD'lerini otomatik olarak çal</string>
+  <string id="14086">Çalma</string>
+  <string id="14087">DVD'ler</string>
+  <string id="14088">DVD'leri otomatik çal</string>
+  <string id="14089">Alt yazı metinlerinde kullanılacak yazı tipi</string>
+  <string id="14090">Uluslararası</string>
+  <string id="14091">Karakter Seti</string>
+  <string id="14092">Hata ayıklama</string>
+  <string id="14093">Güvenlik</string>
+  <string id="14094">Giriş cihazları</string>
+  <string id="14095">Güç tasarrufu</string>
+  <string id="14096">Saat biçimi</string>
+  <string id="14097">Sıcaklık Birimi</string>
+
   <string id="15000"></string>
   <string id="15001"></string>
   <string id="15002"></string>
@@ -1349,20 +1433,20 @@
   <string id="15102">* Bütün albümler</string>
   <string id="15103">* Bütün sanatçılar</string>
   <string id="15104">* Bütün şarkılar</string>
-  <string id="15105">* Bütün tarzlar</string>
-  <string id="15106">En son seçilen dosyayı hatırla</string>
+  <string id="15105">* Bütün türler</string>
+  <string id="15106"></string>
   <string id="15107">Tampon belleğe alınıyor...</string>
-  <string id="15108">Menü sesleri</string>
+  <string id="15108">Dolaşma sesleri</string>
   <string id="15109">varsayılanı</string>
   <string id="15111">- Tema</string>
   <string id="15112">Varsayılan tema</string>
-  
+
   <string id="15200">Last.fm</string>
   <string id="15201">Şarkıları Last.fm'e gönder</string>
   <string id="15202">Last.fm kullanıcı adı</string>
   <string id="15203">Last.fm şifresi</string>
   <string id="15204">Bağlanamıyor: uyku moduna alınıyor...</string>
-  <string id="15205">Lütfen XBMC' ı güncelleyin</string>
+  <string id="15205">Lütfen XBMC'ı güncelleyin</string>
   <string id="15206">Yetkiniz yok: Kullanıcı adı ve şifreyi kontrol ediniz</string>
   <string id="15207">Bağlandı</string>
   <string id="15208">Bağlanamadı</string>
@@ -1374,7 +1458,12 @@
   <string id="15214">Düzgün Ses/Video senkronizasyonunu kullan</string>
   <string id="15215">Küçük resim görünümünde dosya isimlerini sakla</string>
   <string id="15216">Parti modunda çal</string>
-  
+  <string id="15217">Şarkıları Libre.fm'e gönder</string>
+  <string id="15218">Libre.fm kullanıcı adı</string>
+  <string id="15219">Libre.fm şifresi</string>
+  <string id="15220">Libre.fm</string>
+  <string id="15221">Scrobbler</string>
+
   <string id="15250">Last.fm Radyoya Bağlan</string>
   <string id="15251">Last.fm'e bağlanılıyor...</string>
   <string id="15252">İstasyon seçiliyor...</string>
@@ -1424,21 +1513,22 @@
   <string id="15296">Yasaksız</string>
   <string id="15297">Bu parçayı sevilen parçalardan kaldırmak istiyor musunuz?</string>
   <string id="15298">Bu parçanın yasağını kaldırmak istiyor musunuz?</string>
-  
+
   <string id="15300">Dizin bulunamadı veya geçersiz</string>
   <string id="15301">Ağ sunucusuna bağlanamıyor</string>
   <string id="15302">Sunucu bulunamadı</string>
   <string id="15303">Çalışma grubu bulunamadı</string>
-  
+
   <string id="15310">Çok dizinli kaynak açılıyor</string>
   <string id="15311">Dizin:</string>
-  
+
   <string id="16000">Genel</string>
   <string id="16001">Ses donanımını ayarla...</string>
   <string id="16002">İnternet'te ara</string>
   <string id="16003">Ortam Oynatıcısı</string>
   <string id="16004">Ortamları CD/DVD' den oynat</string>
-  
+  <string id="16005">Gelişmiş</string>
+
   <string id="16008">Yeni başlık giriniz</string>
   <string id="16009">Film adını girin</string>
   <string id="16010">Profil adını girin</string>
@@ -1449,25 +1539,25 @@
   <string id="16015">Dizin girin</string>
   <string id="16016">Geçerli ayarlar: %A, %T, %N, %B, %D, %G, %Y, %F, %S</string>
   <string id="16017">Aranacak terimleri girin</string>
-  <string id="16018">Hayır</string>
+  <string id="16018">Hiçbiri</string>
   <string id="16019">Otomatik seç</string>
   <string id="16020">De-interlace</string>
   <string id="16021">Bob</string>
-  <string id="16022">Bob (inverted)</string>
+  <string id="16022">Bob (çevrilmiş)</string>
   <string id="16023">Resim düzeltme</string>
   <string id="16024">İptal ediliyor...</string>
   <string id="16025">Sanatçı adını girin</string>
   <string id="16026">Çalma listesi durduruldu</string>
   <string id="16027">Çok sayıda hatalı nesne var</string>
   <string id="16028">Değeri girin</string>
-  
+
   <string id="16030">Parti modu durduruldu.</string>
   <string id="16031">Veritabanına uyan sonuç bulunamadı.</string>
   <string id="16032">Veritabanı bilgisine ulaşılamıyor.</string>
   <string id="16033">Veritabanı açılamıyor.</string>
   <string id="16034">Veritabanından şarkılar alınamıyor.</string>
   <string id="16035">Parti modu çalma listesi</string>
-  
+
   <string id="16100">Bütün Videolar</string>
   <string id="16101">Seyredilmeyenler</string>
   <string id="16102">Seyredilenler</string>
@@ -1479,15 +1569,15 @@
   <string id="16108">NTSC-J</string>
   <string id="16109">PAL-60</string>
   <string id="16110">60hz'lik oyunlar için</string>
-  
+
   <string id="16200">İşlem durduruldu</string>
   <string id="16201">Kopyalanamadı</string>
   <string id="16202">En az bir dosya kopyalanamadı</string>
   <string id="16203">Taşınamadı</string>
-  <string id="16204">En az bir dosya taşınamadı</string>
+  <string id="16204">En az bir dosya taşınamadı</string>  
   <string id="16205">Silinemedi</string>
   <string id="16206">En az bir dosya silinemedi</string>
-  
+
   <string id="16300">Video ölçekleme yöntemi</string>
   <string id="16301">En yakın komşu</string>
   <string id="16302">Bilinear</string>
@@ -1497,16 +1587,18 @@
   <string id="16306">Sinc8</string>
   
   <string id="16307">Bicubic (yazılım)</string>
-  <string id="16308">Lanczos (yazılım)</string>
+  <string id="16308">Lanczos (yazılım)</string>  
   <string id="16309">Sinc (yazılım)</string>
-  
+
   <string id="16310">(VDPAU)Temporal</string>
-  <string id="16311">(VDPAU)Temporal/Spatial</string>
-  <string id="16312">(VDPAU)Noise Reduction</string>
-  <string id="16313">(VDPAU)Sharpness</string>
-  <string id="16314">Inverse Telecine</string>
-  <string id="17500">Uyku zaman aşımını göster</string>
-  
+  <string id="16311">(VDPAU)Temporal/uzamsal</string>
+  <string id="16312">(VDPAU)Gürültü Azaltımı</string>
+  <string id="16313">(VDPAU)Netlik</string>
+  <string id="16314">Telecine Çevir</string>
+  <string id="17500">Uyku zaman aşımını göster</string> 
+
+  <string id="19000">Kanala geç</string>
+
   <string id="20000">CDDA aktarma klasörü</string>
   <string id="20001">Harici DVD oynatıcıyı kullan</string>
   <string id="20002">Harici DVD oynatıcı</string>
@@ -1534,9 +1626,9 @@
   <string id="20023">Çakışma</string>
   <string id="20024">Yenileri tara</string>
   <string id="20025">Hepsini tara</string>
-  <string id="20026">Ülke</string>
-  
-  <!-- string id's 20027 thru 20034 are reserved for temperature strings (LocalizeStrings.cpp)-->
+  <string id="20026">Konum</string>
+
+  <!-- string id's 20027 thru 20035 are reserved for temperaturestrings  (LocalizeStrings.cpp)-->
 
   <string id="20038">Müzik penceresini kilitle</string>
   <string id="20039">Video penceresini kilitle</string>
@@ -1556,23 +1648,23 @@
   <string id="20053">Yönetici modundan ayrıl</string>
   <string id="20054">Yönetici moduna giriliyor</string>
   <string id="20055">Allmusic.com küçük resimleri</string>
-  <string id="20056"></string>
+  <string id="20056">Oturum Açma Hatası</string>
   <string id="20057">Küçük resimleri kaldır</string>
   <string id="20058">Profil ekle...</string>
   <string id="20059">Bütün albümler için bilgileri sorgula</string>
   <string id="20060">Ortam bilgisi</string>
   <string id="20061">Ayrı</string>
-  <string id="20062">Varsayılan paylaşımlar</string>
+  <string id="20062">Varsayılanla paylaşır</string>
   <string id="20063">Varsayılan paylaşımlar (salt okunur)</string>
   <string id="20064">Varsayılanı kopyala</string>
   <string id="20065">Profil resmi</string>
   <string id="20066">Ayarları kilitle</string>
   <string id="20067">Profili düzenle</string>
-  <string id="20068">Profil kilidi</string>
+  <string id="20068">Giriş</string>
   <string id="20069">Klasör yaratılamadı</string>
   <string id="20070">Profil dizini</string>
   <string id="20071">Taze ortam kaynaklarıyla başla</string>
-  <string id="20072">Seçili klasörün yazılabilir ve klasör adının </string>
+  <string id="20072">Seçili klasörün yazılabilir ve klasör adının</string>
   <string id="20073">geçerli olduğundan emin olun</string>
   <string id="20074">MPAA</string>
   <string id="20075">Yönetici kilit kodunu gir</string>
@@ -1600,7 +1692,7 @@
   <string id="20097">Albüm bilgileri alınıyor</string>
   <string id="20098">Albüm için bilgiler alınıyor</string>
   <string id="20099">CD'den çalınırken CD veya parça aktarılamaz</string>
-  <string id="20100">Yönetici kilit kodu ve ayarları</string>
+  <string id="20100">Yönetici kilit kodu ve ayarları</string> 
   <string id="20101">Yönetici kilit kodunu girmek her zaman yönetici modu etkinleştirir</string>
   <string id="20102">veya varsayılanı kopyala?</string>
   <string id="20103">Değişiklikler profile kaydedilsin mi?</string>
@@ -1618,15 +1710,16 @@
   <string id="20115">Kullanıcı girişi / Profil seçin</string>
   <string id="20116">Giriş ekranında kilit kullan</string>
   <string id="20117">Geçersiz kilit kodu.</string>
-  <string id="20118">Bunun için yönetici kilit kodunun ayarlanması gerekli</string>
+  <string id="20118">Bunun için yönetici kilit kodunun ayarlanması gerekli.</string>
   <string id="20119">Şimdi ayarlamak ister misiniz?</string>
   <string id="20120">Program bilgisi yükleniyor</string>
-  <string id="20121">Partiye devam!</string>
+  <string id="20121">Party on!</string>
   <string id="20122">Doğru</string>
   <string id="20123">İçecekler karıştırılıyor</string>
   <string id="20124">Bardaklar dolduruluyor</string>
   <string id="20125">Giriş yapıldı</string>
   <string id="20126">Oturumu kapat</string>
+  <string id="20127">Hmm... girdiğiniz şifre sistemimizdekiyle eşleşmedi. Lütfen tekrar deneyin.</string>
   <string id="20128">Kök dizine git</string>
   <string id="20129">Weave</string>
   <string id="20130">Weave (inverted)</string>
@@ -1642,10 +1735,10 @@
   <string id="20140">Ekran koruyucuyu kilitle</string>
   <string id="20141">Ayarla</string>
   <string id="20142">Kullanıcı Adı</string>
-  <string id="20143">Şifreyi gir</string>
+  <string id="20143">Şunun için şifre gir</string>
   <string id="20144">Kapatma zamanlayıcısı</string>
   <string id="20145">Kapatma aralığı (dakika olarak)</string>
-  <string id="20146">%im içinde kapatılacak</string>
+  <string id="20146">Started, shutdown in %im</string>
   <string id="20147">30 dakika içinde kapat</string>
   <string id="20148">60 dakika içinde kapat</string>
   <string id="20149">120 dakika içinde kapat</string>
@@ -1662,7 +1755,7 @@
   <string id="20160">Donanım bilgisi</string>
   <string id="20161">Toplam</string>
   <string id="20162">Kullanılan</string>
-  <string id="20163">onun</string>
+  <string id="20163">/</string>
   <string id="20164">Kilitleme desteklenmiyor</string>
   <string id="20165">Kilitli değil</string>
   <string id="20166">Kilitli</string>
@@ -1692,7 +1785,7 @@
   <string id="20190">Özel</string>
   <string id="20191">Hata ayıklama günlüğünü etkinleştir</string>
   <string id="20192">Kitaplığa ekleyince albüm bilgilerini al</string>
-  <string id="20193">Kitaplığa ekleyince sanatçı bilgilerini al</string>
+  <string id="20193"></string>
   <string id="20194">Varsayılan scraper</string>
   <string id="20195">Scraper'ı değiştir</string>
   <string id="20196">Müzik kitaplığını dışa aktar</string>
@@ -1701,18 +1794,20 @@
   <string id="20199">Sanatçı bilgisi indirilemedi</string>
 
   <!-- string id's 20200 thru 20211 are reserved for speedstrings (LocalizeStrings.cpp)-->
-    
-  <string id="20250">Partiye devam! (videolar)</string>
-  <string id="20251">İçecekler karıştırılıyor (videolar)</string>
-  <string id="20252">Bardaklar dolduruluyor (videolar)</string>
   
+  <string id="20250">Partiye devam! (videolar)</string>
+  <string id="20251">Mixing drinks (videos)</string>
+  <string id="20252">Filling glasses (videos)</string>
+  <string id="20253">Albümü yeniden başlat</string>
+  <string id="20254">Hava ayarları...</string>
+
   <string id="20300">Web sunucu dizini (HTTP)</string>
   <string id="20301">Web sunucu dizini (HTTPS)</string>
-  <string id="20302"></string>
-  <string id="20303"></string>
-  <string id="20304"></string>
+  <string id="20302">Klasöre yazdırılamıyor:</string>
+  <string id="20303">İşlemi atlayıp devam etmek istiyor musunuz?</string>
+  <string id="20304">RSS Beslemesi</string>
   <string id="20305"></string>
-  
+
   <string id="20306">Bilinmiyor. Lütfen MD5'i xbmc.log'dan BiosIDs.ini'ye ekleyiniz.</string>
   <string id="20307">İkincil DNS</string>
   <string id="20308">DHCP sunucusu:</string>
@@ -1724,8 +1819,8 @@
   <string id="20314">Videolar - Kitaplık</string>
   <string id="20315">Oyun kayıtları</string>
   <string id="20316">Sırala: ID</string>
-  <string id="20317">Kayıtları indir</string>
-  <string id="20318">Oyun kayıtları sabit diske yüklendi</string>
+  <string id="20317">İndirilenleri kaydet</string>
+  <string id="20318">HDD’ye kurulu oyunu kaydet</string>
   <string id="20319">Oyun kayıtları indirilemedi</string>
   <string id="20320">İndirilecek ve yüklenecek oyun kayıtlarını seçin</string>
   <string id="20321">Belirtilen oyun için çevrimiçi kayıt bulunamadı</string>
@@ -1747,14 +1842,14 @@
   <string id="20337">Aktör</string>
   <string id="20338">Film</string>
   <string id="20339">Yönetmen</string>
-  <string id="20340">Bu klasör içindeki tüm ögeleri</string>
+  <string id="20340">Bu klasör içindeki tüm öğeleri</string>
   <string id="20341">kitaplıktan kaldırmak istiyor musunuz?</string>
   <string id="20342">Filmler</string>
-  <string id="20343">TV programları</string>
+  <string id="20343">Programlar</string>
   <string id="20344">Bu dizinin içeriği</string>
   <string id="20345">Otomatik taramayı çalıştır</string>
-  <string id="20346">Alt dizinleride tara</string>
-  <string id="20347">-</string>
+  <string id="20346">Alt dizinleri de tara</string>
+  <string id="20347">as</string>
   <string id="20348">Yönetmenler</string>
   <string id="20349">Bu dizinde video dosyası bulunamadı!</string>
   <string id="20350">oylar</string>
@@ -1775,8 +1870,8 @@
   <string id="20365">Bölüm içeriği</string>
   <string id="20366">* Bütün sezonlar</string>
   <string id="20367">İzlenenleri gizle</string>
-  <string id="20368">Üretim kodu</string>
-  <string id="20369">Seyredilmeyen ögeler için içeriği sakla</string>
+  <string id="20368">Prod code</string>
+  <string id="20369">Seyredilmeyen öğeler için içeriği sakla</string>
   <string id="20370">* Gizli spoilerleri önlemek için *</string>
   <string id="20371">Sezon küçük resimlerini ayarla</string>
   <string id="20372">Sezon resmi</string>
@@ -1788,8 +1883,8 @@
   <string id="20378">Tüm bölümlerin bilgileri tazelensin mi?</string>
   <string id="20379">Seçilen klasör tek bir TV programı içerir</string>
   <string id="20380">Seçilen klasörü taramalara dahil etme</string>
-  <string id="20381">Specials</string>
-  <string id="20382">Sezon küçük resimlerini otomatik olarak al</string>
+  <string id="20381">Özeller</string>
+  <string id="20382"></string>
   <string id="20383">Seçilen klasör tek bir video içeriyor</string>
   <string id="20384">TV programına bağlantı</string>
   <string id="20385">TV program bağlantısını kaldır</string>
@@ -1809,7 +1904,7 @@
   <string id="20399">Albümden müzik videosuna git</string>
   <string id="20400">Artiste göre müzik videosuna git</string>
   <string id="20401">Müzik videosunu oynat</string>
-  <string id="20402">Aktör küçük resimlerini otomatik olarak al</string>
+  <string id="20402"></string>
   <string id="20403">Aktör küçük resimlerini ayarla</string>
   <string id="20404"></string>
   <string id="20405">Bölüm yer imini kaldır</string>
@@ -1826,7 +1921,7 @@
   <string id="20416">İlk gösterim</string>
   <string id="20417">Yazar</string>
   <string id="20418">Dosya ve klasör adlarını temizle</string>
-  <string id="20419">Çift TV programlarını istifle</string>
+  <string id="20419"></string>
   <string id="20420">Asla</string>
   <string id="20421">Yalnızca bir sezon ise</string>
   <string id="20422">Her zaman</string>
@@ -1839,7 +1934,11 @@
   <string id="20429">Ayrı</string>
   <string id="20430">Küçük resimler ve fanart dışarı aktarılsın mı?</string>
   <string id="20431">Eski dosyaların üzerine yazılsın mı?</string>
-  <string id="20432">Bu dizini kitaplık güncellemelerine dahil etme</string>
+  <string id="20432">Bu dizini kitaplık güncellemelerine dahil etme</string> 
+  <string id="20433">Medya metadata bilgilerini çıkar</string>
+  <string id="20434">Sets</string>
+  <string id="20435">Ekstralar</string>
+  
   <!-- up to 21329 is reserved for the video db !! !-->
 
   <string id="21330">Gizli dosya ve dizinleri göster</string>
@@ -1847,7 +1946,7 @@
   <string id="21331">TuxBox istemcisi</string>
   <string id="21332">UYARI: Hedef TuxBox aygıtı kayıt modunda!</string>
   <string id="21333">Akış durdurulacak!</string>
-  <string id="21334">Kanalı zapla: %s zaplanamadı!</string>
+  <string id="21334">Zap to channel: %s failed!</string>
   <string id="21335">Akışı başlatmak istediğinize emin misiniz?</string>
   <string id="21336">Bağlanıyor: %s</string>
   <string id="21337">TuxBox aygıtı</string>
@@ -1864,7 +1963,7 @@
   <string id="21364">Ortam paylaşımını düzenle</string>
   <string id="21365">Ortam paylaşımını kaldır</string>
   <string id="21366">Özel altyazı klasörü</string>
-  <string id="21367">Film &amp; alternatif altyazı klasörü</string>
+  <string id="21367">Film ve alternatif altyazı klasörü</string>
   
   <string id="21369">Fareyi etkinleştir</string>
   <string id="21370">Ortam oynatılırken kılavuz seslerini çal</string>
@@ -1883,10 +1982,10 @@
   <string id="21383">Kaydırma çubuklarını etkinleştir</string>
   <string id="21384">Make watched filtering a toggle in video library</string>
   <string id="21385">Aç</string>
-  <string id="21386">Akustik yönetim düzeyi</string>
+  <string id="21386">Acoustic management level</string>
   <string id="21387">Hızlı</string>
   <string id="21388">Sessiz</string>
-  <string id="21389">Özel akraplanları etkinleştir</string>
+  <string id="21389">Özel arkaplanları etkinleştir</string>  
   <string id="21390">Güç yönetimi düzeyi</string>
   <string id="21391">Yüksek güç</string>
   <string id="21392">Düşük güç</string>
@@ -1894,32 +1993,35 @@
   <string id="21394">Düşük bekleme</string>
   <string id="21395">4GB'den büyük dosyalar önbelleğe alınamıyor</string>
   <string id="21396">Bölüm</string>
-  <string id="21397">Yüksek kalite pixel shader v2</string>
+  <string id="21397">Yüksek kalite piksel karartma v2</string>
   <string id="21398">Çalma listesini başlangıçta etkinleştir</string>
   <string id="21399">Ara canlandırmaları kullan</string>
-  <string id="21400">içeriyor</string>
-  <string id="21401">içermiyor</string>
-  <string id="21402">-</string>
-  <string id="21403">-</string>
-  <string id="21404">başlangıçta</string>
-  <string id="21405">bitişte</string>
-  <string id="21406">daha fazla</string>
+  <string id="21400">içerir</string>
+  <string id="21401">içermez</string>
+  <string id="21402"></string>
+  <string id="21403">değil</string>
+  <string id="21404">ile başlar</string>
+  <string id="21405">ile biter</string>
+  <string id="21406">daha büyük</string>
   <string id="21407">daha az</string>
   <string id="21408">sonra</string>
   <string id="21409">önce</string>
-  <string id="21410">sonuncu</string>
-  <string id="21411">en sonuncu değil</string>
+  <string id="21410">sonunda</string>
+  <string id="21411">sonunda değil</string>
   <string id="21412">Scrapers</string>
   <string id="21413">Varsayılan film scraper</string>
   <string id="21414">Varsayılan tv programı scraper</string>
   <string id="21415">Varsayılan müzik video scraper</string>
   <string id="21416">Scraper diline dayalı başvurmayı etkinleştir</string>
-  
+  <string id="21417">- Scraper ayarları</string>
+  <string id="21418">Çok dilli</string>
+  <string id="21419">Bölümler</string>
+
   <string id="21420">Değer eşleşmelidir</string>
   <string id="21421">Akıllı çalma listesi talimatı</string>
-  <string id="21422">Eşleşen ögeler nerede</string>
+  <string id="21422">Öğeleri eşleştir</string>
   <string id="21423">Yeni kural...</string>
-  <string id="21424">Ögeler eşleşmelidir</string>
+  <string id="21424">Öğeler eşleşmelidir</string>
   <string id="21425">tüm kurallar</string>
   <string id="21426">bir veya daha fazla kural</string>
   <string id="21427">Sınırla</string>
@@ -1929,16 +2031,24 @@
   <string id="21431">azalan</string>
   <string id="21432">Akıllı çalma listesini düzenle</string>
   <string id="21433">Çalma listesinin adı</string>
-  <string id="21434">Ögeleri bulun</string>
+  <string id="21434">Öğeleri bul</string>
   <string id="21435">Düzenle</string>
-  <string id="21436">%i ögeleri</string>
+  <string id="21436">%i öğeleri</string>
   <string id="21437">Yeni akıllı çalma listesi...</string>
   <string id="21438">%c Sürücüsü</string>
   <string id="21439">Parti modunun kurallarını düzenle</string>
   <string id="21440">Ana klasör</string>
   <string id="21441">İzlenme sayısı</string>
   <string id="21442">Bölüm başlığı</string>
-  
+  <string id="21443">Video çözünürlüğü</string>
+  <string id="21444">Ses kanalları</string>
+  <string id="21445">Video codec</string>
+  <string id="21446">Müzik codec</string>
+  <string id="21447">Ses dili</string>
+  <string id="21448">Altyazı dili</string>
+  <string id="21449">Uzaktan kumanda klavye tuşları gibi çalışsın</string>
+  <string id="21450">Başlıklar</string>
+
   <string id="21800">Dosya adı</string>
   <string id="21801">Dosya dizini</string>
   <string id="21802">Dosya boyutu</string>
@@ -1948,14 +2058,14 @@
   <string id="21806">Yorum</string>
   <string id="21807">Renkli/B&amp;W</string>
   <string id="21808">JPEG yöntemi</string>
-  
+
   <string id="21820">Tarih/Saat</string>
   <string id="21821">Açıklama</string>
   <string id="21822">Kamera</string>
   <string id="21823">Kamera modeli</string>
   <string id="21824">EXIF yorumu</string>
   <string id="21825">Firmware</string>
-  <string id="21826">Diyafram</string>
+  <string id="21826">Apertür</string>
   <string id="21827">Odak uzaklığı</string>
   <string id="21828">Odak mesafesi</string>
   <string id="21829">Pozlama</string>
@@ -1965,7 +2075,7 @@
   <string id="21833">Flaş kullanımı</string>
   <string id="21834">Beyaz oranı</string>
   <string id="21835">Işık kaynağı</string>
-  <string id="21836">Ölçüm modu</string>
+  <string id="21836">Metering mode</string>
   <string id="21837">ISO</string>
   <string id="21838">Dijital yakınlaştırma</string>
   <string id="21839">CCD genişliği</string>
@@ -1973,7 +2083,7 @@
   <string id="21841">GPS boylam</string>
   <string id="21842">GPS rakım</string>
   <string id="21843">Oryantasyon</string>
-  
+
   <string id="21860">Ek sınıflandırmalar</string>
   <string id="21861">Anahtar sözcük</string>
   <string id="21862">Başlık</string>
@@ -1982,7 +2092,7 @@
   <string id="21865">Özel talimatlar</string>
   <string id="21866">Kategori</string>
   <string id="21867">Byline</string>
-  <string id="21868">Byline title</string>
+  <string id="21868">Byline başlığı</string>
   <string id="21869">Emeği geçenler</string>
   <string id="21870">Kaynak</string>
   <string id="21871">Telif Hakkı Uyarısı</string>
@@ -1990,11 +2100,11 @@
   <string id="21873">Şehir</string>
   <string id="21874">Eyalet</string>
   <string id="21875">Ülke</string>
-  <string id="21876">Orijinal Tx Referansı</string>
+  <string id="21876">Original Tx Reference</string>
   <string id="21877">Oluşturma tarihi</string>
-  <string id="21878">Telif hakkı</string>
+  <string id="21878">Copyright flag</string>
   <string id="21879">Ülke kodu</string>
-  <string id="21880">Referans servisi</string>
+  <string id="21880">Reference service</string>
   <string id="21881">UPnP tarayıcısını etkinleştir</string>
   <string id="21882">DVD menüsünden önceki tanıtımı geçmeyi dene</string>
   <string id="21883">Aktarılmış ses CD'leri</string>
@@ -2021,7 +2131,7 @@
   <string id="22000">Kitaplığı başlangıçta güncelle</string>
   <string id="22001">Kitaplığı her zaman arka planda güncelle</string>
   <string id="22002">- DNS soneki</string>
-  <string id="22003">Düzenleme ve karar listesini etkinleştir</string>
+  <string id="22003">Enable edit and decision lists</string>
   <string id="22004">Geriye :% 2.3fs</string>
   <string id="22005">İleriye: %2.3fs</string>
   <string id="22006">Altyazı gecikmesi</string>
@@ -2039,6 +2149,8 @@
   <string id="22018">Canlı kanallar</string>
   <string id="22019">Başlığa göre kayıtlar</string>
   <string id="22020">Rehber</string>
+  <string id="22021">İzin verilen hata oranı (%)</string>
+  <string id="22022">Video dosyalarını listeleri ekle</string>
 
   <!-- strings 22030 thru 22060 reserved for karaoke -->
   <string id="22030">Yazı tipi</string>
@@ -2056,13 +2168,2027 @@
   <string id="22042">beyaz/mavi</string>
   <string id="22043">siyah/beyaz</string>
 
+  <string id="23000">Hava durumu eklentisi</string>
+  <string id="23001">- Eklenti ayarları</string>
+
+  <string id="23050">Teletext etkinleştir</string>
+
+  <!-- strings 23100 thru 23150 reserved for external player -->
+  <string id="23100">Harici Oynatıcı Etkin</string>
+  <string id="23101">Oynatıcıdan çıkmak için OK'e basın</string>
+  <string id="23102"></string>
+  <string id="23103"></string>
+  <string id="23104">Çalma bitince OK'e basın</string>
+  <string id="23105"></string>
+  <string id="23106"></string>
+
   <!-- strings 29800 thru 29998 reserved strings used only in the default Project Mayhem III skin and not c++ code -->
   <string id="29800">Kitaplık Biçimi</string>
   <string id="29801">QWERTY klavye</string>
+  <string id="29802">Geçiş müziği kullanımda</string>
   
   <string id="29999">Titreme filtresi ayarını oyunlara uygula</string>
 
   <!-- strings 30000 thru 30999 reserved for plugins and plugin settings -->
   <!-- strings 31000 thru 31999 reserved for skins -->
-  <!-- strings 32000 thru 32999 reserved for scripts -->  
+  <!-- strings 32000 thru 32999 reserved for scripts -->
+  
+  <!-- strings 33000 thru 33999 reserved for common strings used in addons -->
+  <string id="33001">Fragman kalitesi</string>
+  <string id="33002">Akış</string>
+  <string id="33003">İndir</string>
+  <string id="33004">İndir ve oynat</string>
+  <string id="33005">İndir ve kaydet</string>
+  <string id="33006">Bugün</string>
+  <string id="33007">Yarın</string>
+  <string id="33008">Kaydediyor</string>
+  <string id="33009">Kopyalıyor</string>
+  <string id="33010">İndirme klasörü seç</string>
+  <string id="30011">Arama süresi</string>
+  <string id="33012">Kısa</string>
+  <string id="33013">Uzun</string>
+  <string id="33014">Normal oynatıcı yerine DVD oynatıcı kullan</string>
+  <string id="33015">Videoyu oynatmadan önce indirme sor</string>
+  <string id="33016">Klipler</string>
+  <string id="33017">Etkinleştirmek için eklentiyi yeniden başlat</string>
+  <string id="33018">Bu gece</string>
+  <string id="33019">Yarın gece</string>
+  <string id="33020">Durum</string>
+  <string id="33021">Yağış</string>
+  <string id="33022">Yağış</string>
+  <string id="33023">Nemli</string>
+  <string id="33024">Hissedilen</string>
+  <string id="33025">Gözlemlenen</string>
+  <string id="33026">Normalden ayrışma</string>
+  <string id="33027">Gün doğumu</string>
+  <string id="33028">Sunset</string>
+  <string id="33029">Detaylar</string>
+  <string id="33030">Outlook</string>
+  <string id="33031">Coverflow</string>
+  <string id="33032">Metni tercüme et</string>
+  <string id="33033">Map list %s category</string>
+  <string id="33034">36 Saat</string>
+  <string id="33035">Haritalar</string>
+  <string id="33036">Saat başı</string>
+  <string id="33037">Hafta sonu</string>
+  <string id="33038">%s day</string>
+  <string id="33049">Alarm</string>
+  <string id="33050">Alarmlar</string>
+  <string id="33051">Seçin</string>
+  <string id="33052">Kontrol</string>
+  <string id="33053">Yapılandırın</string>
+  <string id="33054">Sezonlar</string>
+  <string id="33055">Kullanın</string>
+  <string id="33056">İzleyin</string>
+  <string id="33057">Dinleyin</string>
+  <string id="33058">İzleyin</string>
+  <string id="33059">Yapılandırın</string>
+  <string id="33060">Güç</string>
+  <string id="33061">Menü</string>
+  <string id="33062">Oynatın</string>
+  <string id="33063">Seçenekler</string>
+  <string id="33065">Düzenleyen</string>
+  <string id="33066">Hakkınızda</string>
+  <string id="33067">Yıldız değeri</string>
+  <string id="33068">Arka plan</string>
+  <string id="33069">Arka planlar</string>
+  <string id="33070">Özel arka plan</string>
+  <string id="33071">Özel arka planlar</string>
+  <string id="33072">View Readme</string>
+  <string id="33073">Değiştirme kaydını görüntüle</string>
+  <string id="33074">Bu % versiyonu şunu gerektirir</string>
+  <string id="33075">% XBMC revizyonu veya çalışma için gerekenler.</string>
+  <string id="33076">Lütfen XBMC'yi güncelleyin.</string>
+  <string id="33077">Veri bulunamadı!</string>
+  <string id="33078">Sonraki sayfa</string>
+
+  <!-- strings 50000+ are reserved for Boxee -->
+  <string id="50000">Yeni Ekle...</string>
+  <string id="50001">Network yapılandırması başarısız.</string>
+  <string id="50002">Ayarlarınızı kontrol edip tekrar deneyin.</string>
+  <string id="50003">Network yapılandırması başarılı.</string>
+  <string id="50004">İnternete erişilemiyor.</string>
+  <string id="50005">Lokal İçerik</string>
+  <string id="50006">Kaynakta dosya bulunamadı</string>
+  <string id="50007">Aygıt bulunamadı</string>
+  <string id="50008">Ekran formatı ve kenarı</string>
+  <string id="50009">Varsayılanı Yükle</string>
+  <string id="50010">Kenar</string>
+  <string id="50011">Görüntü Oranı</string>
+  <string id="50012">Gelişmiş</string>
+  <string id="50013">Boxee'yi kapatmak istediğinizden emin misiniz?</string>
+  <string id="51000">İsim</string>
+  <string id="51001">Tarih</string>
+  <string id="51002">Internet Medya</string>
+  <string id="51003">Yükleniyor...</string>
+  <string id="51004">Eksik Kaynaklar</string>
+  <string id="51005">Ortam aracı için kaynak tanımlanmadı.</string>
+  <string id="51006">Şimdi tanımlamak istiyor musunuz?</string>
+  <string id="51007">Çıkart</string>
+  <string id="51008">Durdur</string>
+  <string id="51009">Oynat</string>
+  <string id="51010">Gözat</string>
+  <!--string id="51010">Can't get boxee feed</string-->
+  <string id="51011">DVD sürücü</string>
+
+  <string id="51012">Arkadaşlar (yükleniyor)</string>
+  <string id="51013">Arkadaşlar (%d)</string>
+  <string id="51014">RSS beslemesi okunamadı</string>
+  <string id="51015">Kablo bağlantılarınızı kontrol edin ve alıcı/TV sesinin açık olduğundan emin olun.</string>
+  <string id="51016">Yine ses duyamazsanız, boxee.tv/troubleshooting adresindeki Sorun Giderme sayfasına bakın.</string>
+  <string id="51018">Network Anahtarı sadece şunları içerebilir</string>
+  <string id="51019">onaltılık karakterler</string>
+  <string id="51020">Medya Kaynağı</string>
+  <string id="51021">Silmek istediğinize emin misiniz?:</string>
+  <string id="51022">Video Kaynağı</string>
+  <string id="51023">Müzik Kaynağı</string>
+  <string id="51024">Resim Kaynağı</string>
+  <string id="51025">Bu kaynağı silmek istediğinize emin misiniz?</string>
+  <string id="51026">İndirme Başlatılıyor...</string>
+  <string id="51027">İndir</string>
+  <string id="51028">İndirmeyi sıraya almak ister misiniz?</string>
+  <string id="51029">İndirme Mevcut</string>
+  <string id="51030">Bu indirme zaten sıraya alınmış</string>
+  <string id="51031">Mevcut indirmenin üzerine yaz?</string>
+  <string id="51032">Tümünü Seç</string>
+  <string id="51033">Paylaşılıyor...</string>
+  <string id="51034">Değer veriliyor...</string>
+  <string id="51035">Aynı isimde başka bir kaynak mevcut</string>
+  <string id="51036">Kaynak ismi boş olamaz</string>
+  <string id="51037">Boxee [B]%s[/B] tarayacak</string>
+  <string id="51038">Medya kaynağı başarıyla güncellendi</string>
+  <string id="51039">Medya kaynağı başarıyla silindi</string>
+  <string id="51040">En az bir Medya Türü seçilmeli</string>
+  <string id="51041">Kaynak yolu boş olamaz</string>
+  <string id="51042">En az bir Tarama Türü seçilmeli[CR]</string>
+  <string id="51043">Medya kaynağı yeniden taranacak</string>
+  <string id="51044">Elle IP / İsim gir...</string>
+  <string id="51045">Albüm taranıyor...</string>
+  <string id="51046">Boxee şu anda %s tarıyor</string>
+  <string id="51047">%d nesne bulundu, %s bölümünde.</string>
+  <string id="51048">[CR]Boxee bunları tanımaya çalışacak.</string>
+  
+  <string id="51050">Giriş</string>
+  <string id="51051">Boxee internete bağlanamıyor.</string>
+  <string id="51052">Boxee'yi sınırlı kaynaklarıyla kullanabilirsiniz</string>
+  <string id="51053">bazı kaynaklar kullanılamayacak.</string>
+  <string id="51054">İnternet bağlantısı mevcut değil.</string>
+  <string id="51055">Oturum açma için yeni kullanıcı eklenemedi...</string>
+  <string id="51056">Lütfen internet bağlantınızı kontrol edin.</string>
+  <string id="51057">--------------------------------------</string>
+  <string id="51058">Kullanıcı adı alanı boş.</string>
+  <string id="51059">Şifre alanı boş.</string>
+  <string id="51070">Geri</string>
+  <string id="51075">Giriş başarısız.</string>
+  <string id="51100">Eylem</string>
+  <string id="51101">Macera</string>
+  <string id="51102">Animasyon</string>
+  <string id="51103">Biyografi</string>
+  <string id="51104">Komedi</string>
+  <string id="51105">Polisiye</string>
+  <string id="51106">Belgesel</string>
+  <string id="51107">Dram</string>
+  <string id="51108">Aile</string>
+  <string id="51109">Fantezi</string>
+  <string id="51110">Kara Film</string>
+  <string id="51111">Oyun Gösterisi</string>
+  <string id="51112">En son oynatılanlar</string>
+  <string id="51113">Korku</string>
+  <string id="51114">Müzik</string>
+  <string id="51115">Müzikal</string>
+  <string id="51116">Gizemli</string>
+  <string id="51117">Haberler</string>
+  <string id="51118">Reality programı</string>
+  <string id="51119">Romantik</string>
+  <string id="51120">Bilim Kurgu</string>
+  <string id="51121">Kısa</string>
+  <string id="51122">Sport</string>
+  <string id="51123">Talk-Show</string>
+  <string id="51124">Heyecanlı</string>
+  <string id="51125">Savaş</string>
+  <string id="51126">Western</string>
+  <!--  Views -->
+  <string id="51200">2 satır</string>
+  <string id="51201">3 satır</string>
+  <string id="51202">Ayrıntılı</string>
+  <string id="51203">Satır</string>
+
+  <!--  Protocols -->
+  <string id="51254">Lokal</string>
+
+  <!-- sources -->
+<!--  <string id="51300">Settings / Media Sources / Local / Add New Source</string> -->
+  <string id="51300">Ayarlar / Medya Kaynakları / Yeni Kaynak Ekle</string> 
+  <string id="51301">Ayarlar / Medya Kaynakları / Network / Yeni Kaynak Ekle</string>
+  <string id="51302">Ağ</string>
+  <string id="51303">Ayarlar / Medya Kaynakları / Network Uygulamaları / Yeni Kaynak Ekle</string>
+  <string id="51304">Ayarlar / Medya Kaynakları / Elle Yeni Kaynak Ekle / Yeni Kaynak Ekle</string>
+  <string id="51350">Çıkarılabilir</string>
+  <string id="51360">Ana Klasör</string>
+  <string id="51361">Tanımlanamayan Videolar</string>
+  <string id="51362">Lokal klasörler ve ağ paylaşımları</string>
+  <string id="51363">İsimsiz</string>
+    
+  <!-- browse screen labels -->
+  <string id="51400">Öneriler</string>
+  <string id="51401">Arkadaşlarla Etkinlik</string>
+  <string id="51402">Son Eklenen</string>
+  <string id="51403">Son Kullanılan</string>
+  <string id="51404">Arkadaşlar</string>
+  <string id="51405">Aktivite</string>
+  <string id="51406">Kaynaklarım</string>
+  <string id="51407">Albümler</string>
+  <string id="51408">Sanatçılar</string>
+  <string id="51409">Uygulamalar / müzik</string>
+  <string id="51410">Videolarım</string>
+  <string id="51411">Uygulamalar / video</string>
+  <string id="51412">Resimlerim</string>
+  <string id="51413">Uygulamalar / Resimler</string>
+  <string id="51414">Çözümlenmeyen</string>
+  <string id="51415">Uygulamalar</string>
+  <string id="51416">Sonra İzle</string>
+  <string id="51500">Boxee</string>
+  <string id="51501">Başlatma</string>
+  <string id="51502">Oturum açınca Boxee'yi başlat</string>
+  <string id="51503">Boxee başlatılınca RTorrent istemcisini çalıştır</string>
+  <string id="51504">Kumandayı Devre Dışı Bırak</string>
+  <string id="51505">Apple kumandayı devre dışı bırakmak istiyor musunuz?[CR]OK'i seçerseniz, kumanda çalışmayacak.</string>
+  <string id="51508">Tam ekrana dönmek için %s&apos;e basın</string>
+  <string id="51509">Film adı girin...</string>
+  <string id="51510">Çözümleniyor...</string>
+  <string id="51511">Arada virgül bırakarak albüm adı ve sanatçı adı girin...</string>
+  <string id="51512">Arada virgül bırakarak seri adı, sezon ve bölüm adı girin...</string>
+  <string id="51513">Medya Paylaşımları</string>
+  <string id="51514">Bu klasör, medya paylaşımında değil</string>
+  <string id="51515">Albüm eklendi</string>
+  <string id="51516">Video eklendi</string>
+  <string id="51517">Film adı</string>
+  <string id="51518">TV Show adı, Sezon, Bölüm</string>
+  <string id="51519">Albüm, Sanatçı</string>
+  <string id="51520">Hata</string>
+  <string id="51521">Film eklenemedi.</string>
+  <string id="51522">Film detayları alınamadı</string>
+  <string id="51523">Enable IR Remote Server Suite remote support</string>
+  <string id="51524">Çalma sonunda seçenekler penceresini göster</string>
+  <string id="51525">Ekran</string>
+  <string id="51526">Sesler</string>
+  <string id="51527">Bölgesel ve Dil</string> 
+  <string id="51528">Çalma</string> 
+  <string id="51529">Müzik Görselleştirme</string> 
+  <string id="51530">İçerik Filtreleme</string> 
+  <string id="51531">Tarama bekleniyor</string> 
+  <string id="51532">Taranıyor</string> 
+  <string id="51533">Son Tarama %s</string> 
+  <string id="51534">[COLOR red]Bağlantı kesildi[/COLOR]</string> 
+  <string id="51535">Tanımlanıyor</string>
+  <string id="51536">%d dosya bulundu</string>
+  <string id="51537">%d dosya bulundu. %d eksik kimlik</string>
+  <string id="51538">%d dosya bulundu</string>
+  <string id="51539">%d dosya bulundu. %d eksik kimlik</string>
+
+  <string id="51542">Yeniden tara</string>
+  <string id="51543">Kaynak taranıyor: %d öğe bulundu, %d öğe tanımlandı, %d öğe kaldı...</string>
+  <string id="51544">Kaynak %s tarandı. %d öğe tanımlandı, %d öğe tanımlanmadı. Bir başka tarama programlamak ister misiniz?</string>
+  <string id="51545">Kaynak henüz taranmadı. Taramak ister misiniz?</string>
+  <string id="51546"></string>
+  <string id="51547">Video kaynakları için bir başka tarama programlamak ister misiniz?</string>
+  
+  <string id="51548">İptal et</string>
+  
+  <string id="51550">Dosya Kaynakları</string> 
+  <string id="51551">Medya</string> 
+  <string id="51552">Hakkında</string>
+  <string id="51553">Yasal</string>
+
+  <string id="51555">%d dakika önce</string>
+  <string id="51556">%d saat önce</string>
+  <string id="51557">%d gün önce</string>
+
+  <string id="51560">Medya Bilgilerini Temizle</string>
+  <string id="51561">Kitaplıktaki medya bilgilerini temizlemek istiyor musunuz?[CR](medya dosyaları bozulmayacak )</string>
+  <string id="51562">Eski Küçük Resimleri Temizle</string>
+  <string id="51563">Eski küçük resimleri temizlemek istiyor musunuz?[CR](medya dosyaları bozulmayacak )</string>
+  <string id="51564">[CR][COLOR red]Not: Yeniden baºlatma gerekir[/COLOR]</string>
+
+  <string id="51565">Kendi dosyalarım</string>
+  <string id="51566">İnternetteki içerik</string>
+  <string id="51567">Emin değilim</string>
+  <string id="51568">Bunu daha sonra Ayarlar-&gt;Genel-&gt;Menü üzerinden değiştirebilirsiniz</string>
+  <string id="51569">En çok ne izlemek istersiniz?</string>
+  <string id="51570">Boxee en çok izlediğiniz videolara erişmenizi kolaylaştıracak.</string>
+  <string id="51571">Medya Kaynaklarını Tekrar Tara</string>
+  <string id="51572">Medya kaynaklarını tekrar taramak istediğinize emin misiniz?</string>
+
+  <string id="51577">Varsayılan ayarlara geri yükle...</string>
+  <string id="51578">Varsayılan ayarlara geri yükle</string>
+  <string id="51579">Varsayılan ayarlara geri yüklemek istediğinizden emin misiniz?</string>
+
+  <string id="51582">[COLOR red][B][CR]Not: Yeniden başlatma gereklidir.[/B][/COLOR]</string>
+  <string id="51583">Yeniden Başlat</string>
+  <string id="51585">Yeniden başlatılıyor</string>
+
+  <string id="51590">Arkadaşlarının Paylaştığı Medya</string>
+
+  <!-- Error messages -->
+  <string id="51600">[B]Yükleme Hatası[/B]</string>
+  <string id="51601">Dosyaya, dizine veya aygıta erişilemedi.</string>
+  <string id="51602">Kaynak mevcut değil</string>
+  <string id="51603">Kullanıcı mevcut</string>
+  <string id="51604">Bunun doğru film olmadığını emin misiniz?</string>
+  <string id="51605">Yol mevcut değil</string>
+  <string id="51606">Hiçbir arkadaş seçilmedi</string>
+  <string id="51607">last.fm'e bağlanılamadı</string>
+  <string id="51608">Kullanıcı adı ve şifrenizin doğru olduğundan</string>
+  <string id="51609">emin olun </string>
+  <string id="51610">Dijital ses modunda sesi değiştirme</string>
+  <string id="51611">Yükleme zamanında tamamlanamadı, daha fazla öğe olabilir.</string>
+
+  <!-- Player Error messages -->
+  <string id="51670">Bu videoda eylem desteklenmez</string>
+  <string id="51671">Bu videonun duraklatılması desteklenmez</string>
+  <string id="51672">Bu videoda arama desteklenmez</string>
+  <string id="51673">Bu videoda ses değiştirme desteklenmez</string>
+  <string id="51674">Dosya bozulmuş veya format desteklenmiyor.</string>
+  <string id="51675">Medya kaynağı veya dosya erişilemez.</string>
+  <string id="51676">Çalma Hatası</string>
+  <string id="51677">Video şu anda kullanılamıyor.</string>
+  <string id="51678">Yükleniyor...</string>
+  
+  <string id="51700">Ayarlar-&gt;Medya Kaynakları</string>
+  <string id="51701">Video, müzik ve resim dosyalarınızın bulunduğu konumu belirtin.[CR]Boxee belirtilen konumlarda otomatik olarak medya arayacaktır.</string>
+  <string id="51702">Lokal Videolar</string>
+  <string id="51703">Lokal Müzik</string>
+  <string id="51704">Lokal Resimler</string>
+
+  <!-- boxee_browse menu -->
+  <string id="51710">Sırala</string>
+  <string id="51711">Görüntüle</string>
+  <string id="51712">Gözat</string>
+  <string id="51713">Lokal Medya</string>
+  <string id="51714">Kaynak[CR]Ekle</string>  
+  <string id="51715">Ara veya URL</string>
+
+  <!-- boxee_friends_list -->
+  <string id="51720">Ekle / Yönet</string>
+  
+  <!-- boxee_loading_media_dialog -->
+  <string id="51735">Medya yükleniyor. Lütfen bekleyin.</string>
+    
+  <!-- boxee_logging_in -->
+  <string id="51740">Bağlanıyor...</string>
+  
+  <!-- boxee_main_menu -->
+  <string id="51750">Yenilikler</string>
+  <string id="51751">Videolarım</string>
+  <string id="51752">İnternet Videoları</string>
+  <string id="51753">Müziğim</string>
+  <string id="51754">İnternet Müziği</string>
+  <string id="51755">Resimlerim</string>
+  <string id="51756">Internet Resimleri</string>
+  <string id="51757">Profil</string>
+  <string id="51758">İndirmeler</string>
+  <string id="51759">CD/DVD</string>
+  <string id="51760">Çıkış</string>
+  
+  <!-- boxee_media_source_list -->
+  <string id="51780">Ayarlar / Medya Kaynakları</string>
+  <string id="51781">Menü</string>
+  <string id="51782">Yeni Kaynak Ekle</string>
+  
+  <!-- boxee_media_action -->
+  <string id="51792">Daha Fazla</string>
+  <string id="51793">Tanı</string>
+  <string id="51794">Müzik Videoları</string>
+  <string id="51795">MTV Müzik Videoları</string>
+  <string id="51796">Tanı (yol kaynakta değil)</string>
+    
+  <!-- boxee_media_info -->
+  <string id="51801">Tavsiye et</string>
+  <string id="51816">Daha Fazla Oku</string>
+  <string id="51817">Miktar</string>
+  <string id="51818">dak</string>
+  
+  <!-- boxee_media_source_add_folder -->
+  <string id="51840">Görüntülenecek özel klasör seç.</string>
+  
+  <!--boxee_media_source_add_share -->
+  <string id="51841">Mevcut ağ paylaşımları veya lokal aygıtlar.</string>
+  <string id="51842">Tekrar Kaynak Tara</string>
+  
+  <!-- boxee_media_source_info -->
+  <string id="51845">Lütfen bir ağ konumu veya lokal depolama aygıtı seçin.</string>
+  <string id="51846">Paylaşma Adı</string>
+  <string id="51847">Paylaş Konumu</string>
+  <string id="51848">Medya Türü</string>
+  <string id="51849">Asla</string>
+  <string id="51850">Ekle/güncelle</string>
+  <string id="51851">Değişikliklerin etkin olabilmesi için Boxee'nin yeniden başlatılması gerekebilir.</string>
+  <string id="51852">Tarama Türü</string>
+  <string id="51853">Bir defa</string>
+  <string id="51854">Günde bir</string>
+  <string id="51855">Çok Sık</string>
+  <string id="51856">Saat başı</string>
+  <string id="51857">(taranmayacak)</string>
+  
+  <!-- boxee_video_context -->
+  <string id="51860">İzleme</string>
+  <string id="51861">Duraklatıldı</string>
+  <string id="51862">x2</string>
+  <string id="51863">x4</string>  
+  <string id="51864">x8</string> 
+  <string id="51865">x16</string>  
+  <string id="51866">x32</string>
+  <string id="51867">FFW</string>
+  <string id="51868">RWD</string>
+  <string id="51869">Bilgi</string>
+
+  <!-- boxee_media_sources -->
+  <string id="51870">Kaynak Ekle</string>
+  <string id="51871">Network Kaynakları Ekle</string>
+  <string id="51872">Network[CR]Uygulamaları</string>
+  <string id="51873">Elle[CR]Kaynak Ekle</string>
+  <string id="51874">Tanımlanamayan Dosyalar</string>
+  
+  <!-- boxee_music_context -->
+  <string id="51880">Şarkı sözleri</string>
+  
+  <!-- boxee_rate -->
+  <string id="51886">Beğendim!</string>
+  <string id="51887">Hayır...</string>
+  <string id="51888">Sevmiyorum</string>
+  <string id="51889">Fena değil</string>
+  <string id="51890">Sevdim</string>
+
+  <!-- boxee_user_logon -->
+  <string id="51891">Kullanıcı Adı</string>
+  <string id="51892">Şifre</string>
+  <string id="51893">Şifremi hatırla</string>
+  <string id="51894">Sunucu Adı / IP</string>
+  <string id="51895">E-posta</string>
+  <string id="51896">Şifreyi Onaylayın</string>
+  <string id="51897">şifre[CR]seç</string>
+  
+  <!-- boxee_wizard_network_manual -->
+  <string id="51898">Adım 03</string>
+  <string id="51899">Manuel Yapılandırma</string>
+  <string id="51900">Lütfen IP adreslerini aşağıdaki alanlara girin</string>
+  <string id="51901">IP Adresi</string>
+  <string id="51902">Router Adresi</string>
+  <string id="51903">DNS Adresi</string>
+  <string id="51904">Geri</string>
+  <string id="51905">Sonraki Aşama</string>
+
+  <!-- boxee_wizard_add_source -->
+  <string id="51906">Ayarlar-&gt;Medya Kaynakları-&gt;Kaynak Ekle-&gt;</string>
+  <string id="51907">Lütfen bir ağ veya lokal depolama aygıtı seçin.[CR]Aygıtı seçtikten sonra lütfen erişmek ve isimlendirmek istediğiniz klasörü seçin.</string>
+  <string id="51908">Lokal</string>
+  
+  <!-- boxee_wizard_add_source_manual -->
+  <string id="51909">IP Adresi / Sunucu İsmi:</string>
+  
+  <!-- boxee_wizard_audio -->
+  <string id="51910">Ses Sihirbazı</string>
+  <string id="51911">Adım 02</string>
+  <string id="51912">Kontrol etme</string>
+  <string id="51913">Ses bağlantıları test ediliyor.[CR]Hoparlörlerinizden müzik sesi gelene kadar bekleyin.</string>
+  <string id="51914">Ses yok? Buraya tıklayın.</string>
+  
+  <!-- boxee_wizard_network -->
+  <string id="51915">Ağ Sihirbazı</string>
+  <string id="51916">İnternet ve ağ bağlantılarınız için ağ ayarlarınızı kontrol edin.</string>
+  <string id="51917">Doğrulama tipi:</string>
+  <string id="51918">Bitir</string>
+  
+  <!-- boxee_wizard_resolution -->  
+  <string id="51919">Çözünürlük Sihirbazı</string>
+  <string id="51920">Adım 01</string>
+  <string id="51921">Bazı TV ekranlarında, ekran çözünürlüğünü daha küçük veya daha büyük ayarlayabilirsiniz.</string>
+  <string id="51922">Standart Çözünürlük (SD)</string>
+  <string id="51923">Yüksek Çözünürlük (HD)</string>
+  <string id="51924">Kalibre et</string>
+
+  <!-- boxee_wizard_set_source_name -->
+  <string id="51925">Onaylayın</string>
+  
+  <!-- boxee_browse_window -->
+  <string id="51926">[B]Sonuç bulunamadı.[/B][CR]Bazı içeriklerin bölgenizde bulunmayabileceğini unutmayın.[CR]Coğrafi ayarları[COLOR yellow]Ayarlar / Görünüm / Seçenekleri Göster[/COLOR] menüsünden değiştirebilirsiniz</string>
+  <string id="51927">Sonuç bulunamadı.[CR]Bazı içerikler offline modda bulunmaz.</string>
+
+  <!-- boxee_dialog_confirm -->
+  <string id="51928">6 saniye içinde orijinal çözünürlüğe dönülüyor</string>
+  <string id="51929">Hiçbir sonuç bulunamadı.</string>
+
+  <!-- boxee home -->
+  <string id="51930">Boxee internete bağlandığında içerik tekrar yayınlanır.</string>
+  
+  <!-- custom_boxee_credits -->
+  <string id="51937">Bilgiler</string>
+  <string id="51938">Boxee, XBMC Media Center çalışmasını mümkün kılan aşağıdaki kişiler ve gruplar sayesinde üretilmiştir.</string>
+  
+  <!-- custom_boxee_settings -->
+  <string id="51941">Güncelle</string>
+  <string id="51942">Yazılım Sıfırlama</string>
+  
+  <string id="51943">Donanım Sıfırlama</string>
+  <string id="51944">Medya bilgilerini kitaplıktan temizle (medya dosyaları bozulmayacak)...</string>
+  <string id="51945">Ağı yeniden oluştur</string>
+  <string id="51946">Arkaplan görüntüsünü ayarla</string>
+  <string id="51947">Arkaplan görüntü klasörünü ayarla</string>
+  <string id="51948">UI ekran isimleri</string>
+  <string id="51949">Oluşturma Tarihi</string>
+  <string id="51950">Bilgi</string>
+  <string id="51951">Boxee Sürümü</string>
+  <string id="51952">Toplam bellek</string>
+  <string id="51954">Kapasite</string>
+  <string id="51955">/</string>
+  <string id="51956">Eski küçük resimleri temizle (medya dosyaları bozulmayacak)...</string>
+  <string id="51957">Arkaplan görüntüsünü sıfırla</string>	
+  <string id="51958">Alfabetik sıralamada lokal içerik ön eklerini kullanma</string>
+
+  <string id="51959">Güncelleme indiriliyor.</string>
+  <string id="51960">Bitene kadar Boxee yavaşlayabilir.</string>
+
+  <!-- dialog_button_menu -->
+  <string id="51964">Medya şu anda oynatılıyor.[CR][CR]Çalmayı sıfırlamak ister misiniz?</string>
+  <string id="51965">Çıkış</string>
+
+  <!-- dialog_keyboard -->
+  <string id="51966">Sanal Klavye</string>
+  <string id="51967">@</string>
+  
+  <!-- dialog_message -->
+  <string id="51968">Kablo bağlantılarınızı kontrol edin ve alıcı/TV sesinin açık olduğundan emin olun.[CR][CR]Yine ses duyamazsanız, boxee.tv/troubleshooting adresindeki Sorun Giderme sayfasına bakın</string>
+  
+  <!-- dialog_mute_bug -->
+  <string id="51969">Sesi Kapatma</string>
+  
+  <!-- dialog_numeric -->
+  <string id="51970">C</string>
+  <string id="51971">E</string>
+
+  <!-- dialog_plugin_settings -->
+  <string id="51972">Uygulama Ayarları</string>
+  <string id="51973">Uygula</string>
+
+  <!-- dialog_progress -->
+  <string id="51974">Yükleniyor... Lütfen bekleyin.</string>
+  <string id="51998">Besleme bekleniyor... az kaldı!</string>
+  <string id="51999">Besleme boş... arkadaş ekleyin!</string>
+  <string id="52000">Ağ bağlantısı kesildi...</string>
+  <string id="52001">Ağ bağlantısı kesildi...</string>
+  <string id="52002">Boxee sunucusuna erişilemiyor...</string>
+  <string id="52003">Kurulum Sihirbazı</string>
+  
+  <!-- home -->
+  <string id="52004">Hoş geldiniz</string>
+  <string id="52005">Yenilikler?</string>
+  <string id="52006">Öneriler</string>
+  <string id="52007">Arkadaşlarla Etkinlik</string>
+  <string id="52008">Son Eklenen</string>
+  <string id="52009">Son kullanılan</string>
+  <string id="52010">Yükleme</string>
+  <string id="52011">Offline</string>
+  <string id="52012">Hepsini görüntüle</string>
+  <string id="52013">Online!</string>
+  
+  <!-- music_osd -->
+  <string id="52015">Müzik OSD</string>
+  <string id="52016">Uygulama başarıyla eklendi.[CR][CR]Apps.Kitaplığını şimdi bulabilirsiniz.</string>
+  <string id="52017">Eklenemedi[CR][COLOR green]%s[/COLOR].</string>
+  <string id="52018">Uygulama yükseltilemedi.</string>
+  <string id="52019">Seçilen beslemeyi silmek ister misiniz?</string>
+  <string id="52020">Besleme yüklemesi başarısız.</string>
+  <string id="52021">Ekran ve video çalma ayarları</string>
+  <string id="52022">Müzik çalma ve internet radyosu ayarları</string>
+  <string id="52023">Slayt gösterisi ayarları</string>
+  <string id="52024">Ağ ayarları</string>
+  <string id="52025">Görünüm ve bölgesel ayarlar</string>
+  <string id="52026">Donanım ve sistem ayarları</string>
+  <string id="52027">Lokal ve ağ depolama aygıtlarını bul ve bağla</string>
+  <string id="52028">Başlangıç kurulumu sihirbazını başlat</string>
+  <string id="52029">Tüm türler...</string>
+  <string id="52030">Bu yazılımda emeği geçenler :)</string>
+  <string id="52031">Ayarlamak veya ayarlarını değiştirmek için listeden uygulama seç.</string>
+  <string id="52032">Medya Kaynakları</string>
+  <string id="52033">Uygulamalar</string>
+  <string id="52034">Uygulamalarınızı Yönetin ve Yeni Ekleyin</string>
+  <string id="52035">Özel bilgi URL'si girin</string>
+  <string id="52036">Özel bilgileri alamadı. URL'yi kontrol edip tekrar deneyin.</string>
+  <string id="52037">Özel[CR][COLOR green]%s[/COLOR]temizlemek ister misiniz?</string>
+  <string id="52038">[CR][COLOR green]%s[/COLOR] uygulaması eklemek ister misiniz?</string>
+  <string id="52039">Apps.Kutusu</string>
+
+  <!-- Media Sources and Applications -->  
+
+  <!-- source types -->
+  <string id="52040">Müzik Kaynakları</string>
+  <string id="52041">Video Kaynakları</string>
+  <string id="52042">Resim Kaynakları</string>
+  <string id="52043">Aygıtlar</string>
+  <string id="52044">Kaynaklar</string>
+  
+  <string id="52050"></string>
+  <string id="52051">Çalma eylemi şu anda desteklenmiyor</string>
+
+  <string id="52090">Uygulama [CR][COLOR green]%s[/COLOR] zaten kurulu</string>
+
+  <string id="52100">Dosya Kaynakları</string>
+  <string id="52101">Mevcut ağ paylaşımları veya lokal aygıtlar.</string>
+  <string id="52102">Tekrar Kaynak Tara</string>
+
+  <string id="52104">Favori olarak işaretli web siteniz yok</string>
+  <string id="52105">Geçmişi Sil…</string>
+  <string id="52106">Tamam</string>
+  <string id="52107">Düzenle</string>
+  <string id="52108">Tarayıcı</string>
+  <string id="52109">Geçmiş</string>
+  <string id="52110">Şu anda çalınan</string>
+  <string id="52111">Favoriler</string>
+  <string id="52112">Podcast</string>
+  <string id="52115">Parça Ekle</string>
+  <string id="52116">Hiçbir sonuç bulunamadı</string>
+  <string id="52117">Film ya da TV şovu başlığı gir</string>
+  <string id="52118">Klasördeki tüm dosyalara sezon detaylarını uygula</string>
+  <string id="52119">Kaldır</string>
+  <string id="52120">Film?</string>
+  <string id="52121">TV programı?</string>
+  <string id="52122">Albüm?</string>
+  <string id="52123">Kaldır?</string>
+  <string id="52124">Serileri</string>
+  <string id="52125">tüm klasöre uygula</string>
+  <string id="52126">Tanımla</string>
+  <string id="52127">Hiçbiri, çözmeden bırak</string>
+  <string id="52128">Hiçbiri, sadece kitaplıktan kaldır</string>
+  <string id="52129">Videoyu kitaplıktan kaldır</string>
+  <string id="52130">Tanımla</string>
+  <string id="52131">Sürüm</string>
+  <string id="52132">Etiketler</string>
+  <string id="52133">Alan</string>
+  <string id="52134">Alındığı tarih</string>
+  <string id="52135">Kamera</string>
+  <string id="52136">Model</string>
+  <string id="52137">Apertür</string>
+  <string id="52140">Besleme başarıyla eklendi.[CR][CR]Apps.Kitaplığını şimdi bulabilirsiniz.</string>
+  <string id="52150">Boxee'ye yeni içerik kaynakları eklemek için aşağıdaki seçeneklerden birini seçin.</string>
+  <string id="52151">Uygulamalar</string>
+  <string id="52152">Elle</string>
+  <string id="52155">Yeni Kaynak Ekle</string>
+  <string id="52160">şuna göre</string>
+  <string id="52161">Kanal</string>
+  <string id="52175">Yanlış Albüm?</string>
+  <string id="52176">Albüm başlığı gir</string>
+  <string id="53001">şuna göre</string>
+  <string id="53002">Sezon girin #</string>
+  <string id="53003">Bölüm Girin #</string>
+  <string id="53004">Videoyu[CR]kitaplıktan kaldır</string>
+
+  <!-- music visuallisation -->
+  <string id="53011">Kanal</string>
+
+  <!-- tooltips -->
+  <string id="53021">ana menüyü açmak için[CR]sola gidin</string>
+  <string id="53022">menüyü taramak için[CR]sağa gidin</string>
+  <string id="53023">mevcut oynatılan medyaya[CR]geçmek için buraya tıklayın</string>
+
+  <!-- keyboard -->
+  <string id="53031">QWERT</string>
+  <string id="53032">ABCD</string>
+
+  <!-- user guide -->
+  <string id="53118">Kullanım Kılavuzu</string>
+
+  <string id="53101">Dolaşma</string>
+  <string id="53102">Çalma</string>
+  <string id="53103">Uzaktan</string>
+  <string id="53104">Klavye</string>
+  <string id="53105">Yukarı, aşağı, sağ ve sol tuşlarıyla dolaşın.</string>
+  <string id="53106">Oynat/Duraklat ile seçim yapın.</string>
+  <string id="53107">MENU'yü kullanarak önceki ekrana dönün.</string>
+  <string id="53108">Okları kullanarak dolaşın.</string>
+  <string id="53109">Enter tuşunu kullanarak seçim yapın.</string>
+  <string id="53110">Tam ekranla pencere arasında geçiş için ''\'' kullanın.</string>
+  <string id="53111">S'e tıklayarak Çıkın veya Bekletin.</string>
+  <string id="53112">Önceki ekrana geri dönmek için Esc tuşuna basın.</string>
+  <string id="53113">Ana ekrana dönmek için H tuşuna basın.</string>
+  <string id="53114">+/- tuşlarıyla ses kontrol edin</string>
+  <string id="53115">Ekran görüntüsünü göster ve Oynat/Duraklat ile seçim yapın.</string>
+  <string id="53116">İleri ve geri tuşlarıyla atlayın.</string>
+  <string id="53117">MENÜ'yü kullanarak ekran görüntüsünü saklayın .</string>
+  <string id="53119">Ekran görüntüsünü göster ve Enter ile seçim yapın.</string>
+  <string id="53120">Çalmayı durdurmak için X tuşuna basın.</string>
+  <string id="53121">Space tuşuyla oynatın veya duraklatın.</string>
+  <string id="53122">Sağ-sol ok tuşlarıyla atlayın.</string>
+  <string id="53123">Esc tuşuyla ekran görüntüsünü gizleyin.</string>
+  <string id="53124">Klavye kısa yollarının kısa bir listesi. Tüm liste için http://www.boxee.tv adresindeki SSS bölümüne bakın</string>
+
+  <string id="53130">Arkaplan Görüntüsü</string>
+  <string id="53131">Manzara görüntüleri tavsiye edilir.</string>
+
+  <string id="53135">Kullanım Kılavuzu / Dolaşma</string>
+  <string id="53136">Kullanım Kılavuzu / Oynat</string>
+
+  <string id="53140">Kitaplık Durumu</string>
+  <string id="53141">Şu anda taranıyor:</string>
+  <string id="53142">Boşta</string>
+  <string id="53143">Klasör özeti:</string>
+  <string id="53144">Değişiklik yok</string>
+  <string id="53145">Çözümleniyor:</string>
+  <string id="53146">Özeti Paylaş</string>
+  <string id="53147">Toplam:</string>
+  <string id="53148">Çözümlendi:</string>
+  <string id="53149">Çözümlenmeyen:</string>
+  <string id="53150">Yeni:</string>
+  <string id="53151">Beklemede:</string>
+  <string id="53152">Bırakıldı:</string>
+  <string id="53153">Mevcut değil:</string>
+  <string id="53154">Tanımlanıyor:</string>
+
+  <string id="53155">Favorilerim</string>
+  
+  <string id="53160">Boşta...</string>
+  <string id="53161">Taranıyor:</string>
+  <string id="53162">Tanımlanıyor:</string>
+
+  <!-- Manual Resolve -->
+  <string id="53180">Manuel Çözüm</string>
+  <string id="53181">Bu başlık için mevcut ayrıntı yoktu.</string>
+  <string id="53182">Klasördeki bilgi dosyasını (NFO) kullanarak tanımlamak mı yoksa detayları manuel aramak mı istersiniz?</string>
+  <string id="53183">Medyayı Tanımla</string>
+  <string id="53184">NFO</string>
+  <string id="53185">Elle</string>
+  <string id="53186">NFO dosyası bulundu ancak açılamadı, lütfen dosya yapısını kontrol edin.</string>
+
+  <!-- Update Manager -->
+  <string id="53200">Lütfen OS şifrenizi girin</string>
+  <string id="53205">Güncelleniyor...</string>
+  <string id="53206">Eylem...</string>
+  <string id="53207">Bilinmeyen hata.</string>
+
+  <string id="53210">Şifre doğrulanıyor...</string>
+  <string id="53211">Şifre geçerlidir.</string>
+  <string id="53212">Geçersiz şifre.</string>
+  <string id="53213">Boxee yeniden başlatılıyor...</string>
+  <string id="53214">Volumes altında kurulu bir Boxee var.</string>
+  <string id="53215">Kurulum dosyası bulunamıyor.</string>
+  <string id="53216">Kurulum dosyası eklenemedi.</string>
+  <string id="53217">/Volumes altında eklenmiş kurulum dosyası bulunamadı.</string>
+  <string id="53218">/Volumes altında eklenmiş kurulum dosyası MPKG bulunamadı.</string>
+  <string id="53219">Boxee sürümünüzü yükseltmeniz tavsiye edilir!</string>
+  <string id="53220">[COLOR red]Bu güncelleme gereklidir. Şimdi güncelleyebilir veya kapatabilirsiniz.[/COLOR]</string>
+  <string id="53221">[COLOR red]Bu güncelleme gereklidir.[/COLOR]</string>
+  <string id="53225">Az ayrıntı</string>
+  <string id="53239">Daha sonra</string>
+  <string id="53240">Boxee Güncelle</string>
+  <string id="53241">Güncelleme başarısız.</string>
+  <string id="53242">Hata:</string>
+  <string id="53243">[CR]Boxee yazılım güncellemesi mevcut.[CR]Şimdi kurmak ister misiniz?</string>
+  <string id="53244">[COLOR red]* İptal ederseniz bir sonraki oturumda yeniden hatırlatılacaktır.[/COLOR]</string>
+  <string id="53245">[CR]Boxee yazılım güncellemesi mevcut.[CR]Lütfen Boxee'den çıkın ve Ubuntu Güncelleme Yöneticisi'nden güncelleyin.</string>
+  <string id="53246">[CR]Boxee yazılım güncellemesi mevcut.[CR]Lütfen Boxee'den çıkın ve Apple TV menüsünden güncelleyin.</string>
+  <string id="53247">Boxee yazılım güncellemesi mevcut.</string>
+  <string id="53248">Boxee yazılım güncellemesi mevcut.</string>
+  <string id="53249">Boxee’nin son sürümü zaten yüklü durumda.</string>
+  <string id="53250">0.9.8.4881</string>
+  <string id="53251">Güncelle</string>
+  <string id="53252">Son kontrol</string>
+  <string id="53253">Boxee'nin yeni sürümünü ara...</string>
+  <string id="53254">[CR]Boxee'nin yeni sürümü mevcut.[CR]Şimdi indirmek ister misiniz?</string>
+  <string id="53255">Boxee Güncellemesi Var! </string>
+  <string id="53256">En son Boxee sürümüne güncellemek için "%s" öğesini seç. [CR][CR]Güncelleme tamamlandığında Boxee yeniden başlayacaktır.</string>
+  <string id="53257">Boxee'nin Güncellenmesi</string>
+  <string id="53258">Sıkı durun! Boxee şu anda en güncelini ve en iyisini size taşıyor.[CR]Boxee aygıtınız işlem tamamlanınca yeniden başlayacak.</string>
+  <string id="53259">Yazılımın indirilmesi:</string>
+  <string id="53260">Güncelle</string>
+  <string id="53261">Yeni sürüm mevcut. Buraya tıklayın</string>
+  <string id="53262">Fazla ayrıntı</string>
+  <string id="53263">Yeniden başlat ve Yükselt</string>
+  <string id="53264">Yeni sürüm indiriliyor...</string> 
+  <string id="53265">RSS beslemesi ekle</string>
+  <string id="53266">Ses kitaplığı</string>
+  <string id="53267">PulseAudio</string>
+  <string id="53268">ALSA</string>
+
+  <!-- video for linux -->
+  <string id="53269">Mümkün olduğunda donanım destekli şifre çözmeyi etkinleştir</string>
+
+  <!-- app box labels -->
+  <string id="53270">Apps. Kutusu / Yeni Uygulamalar</string>
+  <string id="53271">Yeni Uygulamalar</string>
+  <string id="53272">Uygulamalarım</string>
+  <string id="53273">Besleme dosyalarım</string>
+  <string id="53274">Özel bilgiler</string>
+  <string id="53275">Şu anda yeni uygulama mevcut değil.</string>
+  <string id="53276">Uygulama mevcut değil.</string>
+  <string id="53277">Uygulama yükseltmesi mevcut</string>
+  <string id="53278">Uygulamanın ayarları var</string>
+  <string id="53279">Özel bilgi ekle</string>
+  <string id="53280">Yeni Besleme ekle</string>
+  <string id="53281">Hiçbir besleme yok</string>
+
+  <string id="53282">Uygulamayı yükselt</string>
+  <string id="53283">Ayarları Değiştir</string>
+  <string id="53284">Uygulamayı Kaldır</string>
+
+  <string id="53285">Besleme URL'si:</string>
+  <string id="53286">Besleme Türü:</string>
+  <string id="53287">Boxee güncelleniyor...</string>
+  <string id="53288">Boxee güncellemeleri kuruyor. Bu işlem birkaç dakika sürebilir.</string>
+  <string id="53289">güncelleniyor:</string>
+
+  <string id="53290">Yetişkin beslemelerini ve uygulamalarını gizle</string>
+  <string id="53291">Yetişkin içeriğine, sadece ülkenizde geçerli yasal yaş sınırının üzerindeyseniz erişebilirsiniz.</string>
+  <string id="53292">Yetişkin içerik kilidi belirt...</string>
+  <string id="53293">Bölgenizde görüntülenemeyecek beslemeleri ve uygulamaları gizle</string>
+  <string id="53294">Girdiğiniz şifre yanlış.</string>
+  <string id="53295">Uyarı</string>
+
+  <string id="53296">Daha az ayrıntı</string>
+  <string id="53297">Kitaplýklar ve uygulamalardaki bazý içerikler bulunduðunuz yerde çalýnamaz, bunu etkinleþtirmek istediðinizden emin misiniz?</string>
+  <string id="53298">Test/beta güncellemeleri kabul edilsin mi (Yalnızca üst düzey kullanıcılar)?</string>
+  
+  <string id="53300">Ekran formatı</string>
+  <string id="53301">Normal (4:3)</string>
+  <string id="53302">LCD TV / Plazma Geniş Ekran (16:9)</string>
+  <string id="53303">Bilgisayar LCD Geniş Ekran (16:10)</string>
+  <string id="53304">Ultra Geniş Ekran (21:9)</string>
+  <string id="53305">Üst üste tarama miktarı</string>
+  <string id="53306">3%</string>
+  <string id="53307">4%</string>
+  <string id="53308">5%</string>
+  <string id="53309">6%</string>
+  <string id="53310">Seçilen kısayolu kaldır?</string>
+  <string id="53311">Bu kısayol zaten var</string>
+  <string id="53400">Ekran Kalibrasyonu</string>
+  <string id="53401">Öncelikle Ekran Kalibrasyonu ayarlamak ister misiniz?[CR][COLOR green]Not:[/COLOR] bu ayarı daha sonra Ayarlar-&gt;Görünüm-&gt;Ekran menüsünden değiştirebilirsiniz</string>
+  <string id="53402">Sil</string>
+  <string id="53403">Boxee'ye hoş geldiniz!</string>
+  <string id="53404">Ek Kullanıcı</string>
+  <string id="53405">Kaldır</string>
+  <string id="53406">[COLOR green]'%s'[/COLOR] kullanıcısı kaldırılsın mı?</string>
+  
+  <string id="53407">Mevcut Kullanıcı</string>
+  <string id="53408">Yeni Kullanıcı</string>
+  
+  <string id="53409">Kaldır</string>
+  <string id="53410">Ek Kullanıcı</string>
+  <string id="53411">Rehber</string>
+  <string id="53412">Ağ</string>
+  <string id="53413">Kapat</string>
+  <string id="53414">Lütfen Onaylayın</string>
+  <string id="53415">Geçmişinizi silmek istediğinizden emin misiniz?</string>
+  <string id="53416">Bu eylem geri alınamaz</string>
+  <string id="53420">ATLA</string>
+  
+  <string id="53425">Tamam</string>
+
+  <string id="53430">Oturum açılıyor...</string>
+  
+  <string id="53432">Kullanım Koşulları alınamadı</string>
+  <string id="53433">Gizlilik Politikası alınamadı</string>
+
+  <string id="53434">'Bitti'ye tıkladığınızda aşağıdakileri kabul edersiniz:</string>
+  <string id="53435">'%s' öğesine tıklayarak aşağıdakileri kabul edersiniz:</string>
+  <string id="53436">Kullanım Şartları</string>
+  <string id="53437">ve</string>
+  <string id="53438">Gizlilik Politikası</string>  
+  <string id="53439">(Boxee kullanımı için).</string>  
+  
+  <string id="53440">Ne yapmak istiyorsunuz?</string>
+  
+  <string id="53442">Boxee'ye Giriliyor</string>
+  <string id="53443">Yeni Boxee kullanıcısı oluştur</string>
+  <string id="53444">Kendi...</string>
+  <string id="53445">Kullanıcı adınız [COLOR green]%s[/COLOR] geçersiz. Sadece harfler (a-z), sayılar (0-9), nokta (.) veya alt çizgi (_) kullanabilirsiniz.</string>
+  <string id="53446">Kullanıcı adınız [COLOR green]%s[/COLOR] mevcut değil. Başka bir isim seçerek tekrar deneyin.</string>
+  <string id="53447">Kullanıcı adı [COLOR green]%s[/COLOR] mevcudiyeti kontrol edilemedi</string>
+  <string id="53449">Tamam</string>
+      
+  <string id="53450">İyi</string>
+  <string id="53451">Geçerli Değil</string>
+  <string id="53452">Kullanıcı adı seçin</string>
+  <string id="53453">Hesap Oluşturuldu</string>
+  <string id="53454">Artık hazırsınız!  Size onayınız için bir e-posta gönderdik - hesabınızı etkinleştirmek ve yüksek kaliteli servisler, RSS desteği, profil fotoğrafı ve diğer ayrıntıları yönetmek için oradaki linkleri takip edin. </string>
+  <string id="53455">Yeni kullanıcı oluşturulamadı</string>
+  <string id="53456">Yeni kullanıcı profili oluşturulamadı</string>
+  <string id="53457">Şifreyi[CR]yeniden girin</string>
+  <string id="53458">İyi</string>
+  <string id="53459">Eşleşme Yok</string>
+  <string id="53485">İzleniyor</string>
+  <string id="53460">%s %s Boxee'de</string>
+  <string id="53461">Mesajınız:</string>
+  <string id="53462">Paylaşın</string>
+  <string id="53463">Beğendim</string>
+  <string id="53464">Özel Metin</string>
+  <string id="53465">Yorumunuzu ekleyin:</string>
+  <string id="53466">(Boxee ile)</string> 
+
+  <string id="53467">E-posta adresi kullanýmda</string>
+  <string id="53468">Şifre çok kısa</string> 
+  <string id="53469">Bitmek üzere!</string> 
+  <string id="53470">Boxee hesabınızı oluşturmayı bitirmek için, şunu kabul etmeniz gerekir...</string> 
+
+  <string id="53471">(Boxee Live TV aracılığıyla)</string>
+
+  <string id="53472">Yeni kullanıcı hizmetleri güncelleştirilemedi</string>
+  <string id="53473">Yeni kullanıcı bilgileri güncelleştirilemedi</string>
+
+  <string id="53480">İnternet bağlantısı geldikten sonra[CR]oturum açılamadı</string>
+
+  <string id="53485">Tittar</string>
+
+  <!-- boxee browse screen panel -->
+  <string id="53501">İnternet ve Lokal</string>
+  <string id="53502">Internet Medya</string>
+  <string id="53503">Lokal Medya</string>
+
+  <string id="53504">En Popüler</string>
+  <string id="53505">A - Z</string>
+  <string id="53506">Son Eklenen</string>
+  <string id="53507">En Sık Kullanılan</string>
+  
+  <string id="53508">Tüm sezonlar</string>
+  
+  <string id="53509">Hepsi</string>
+
+  <string id="53510">Sezonlar</string>
+
+  <string id="53511">Tüm türler</string>
+  <string id="53512">Tüm kaynaklar</string>
+  <string id="53513">Tüm medya</string>
+  <string id="53514">Video</string>
+  <string id="53515">Müzik</string>
+  <string id="53516">Resimler</string>
+  <string id="53517">Sıra</string>
+  <string id="53518">Bulun</string>
+  <string id="53519">Resimler</string>
+  <string id="53520">En son oynatılanlar</string>
+  <string id="53521">TV programlarıma ekle[CR][LOWERCASE](yeni bölümleri sıraya ekleme)[/LOWERCASE]</string>
+  <string id="53522">TV programlarımdan[CR]kaldır</string>
+  <string id="53523">Favorilere ekle</string>
+  <string id="53524">Favorilerden kaldırıldı</string>
+  <string id="53525">Boş</string>
+  <string id="53526">Seyredilmeyenler</string>
+  <string id="53527">Yeni Çıkanlar</string>
+  <string id="53528">Önce En Eskisi</string>
+  <string id="53529">Önce En Yenisi</string>
+  <string id="53530">Tarih</string>
+  <string id="53531">Alfabetik</string>
+  <string id="53532">Değiştirilme Tarihi</string>
+  <string id="53533">Eski</string>
+  <string id="53534">Yeni</string>
+
+  <string id="53535">A-Z</string>
+  <string id="53536">Z-A</string>
+  <string id="53537">Önce En Yenisi</string>
+  <string id="53538">Önce En Eskisi</string>
+  <string id="53539">Yeni Güncellenen</string>
+
+  <!-- dropdown dialog titles -->
+  <string id="53560">Sırala</string>
+  <string id="53561">Türler</string>
+  <string id="53562">Sezonlar</string>
+  <string id="53563">Tipleri</string>
+  <string id="53564">Kullanıcı Adı</string>
+  
+  <!-- channel filter dropdown -->
+  <string id="53580">Kanal Filtresi</string>
+  <string id="53581">Premium</string>
+  <string id="53582">Boş</string>
+
+  <!-- Repository Browse Window -->
+  <string id="53600">Not</string>
+  <string id="53610">[COLOR green]Boxee[/COLOR] özel bilgileri kaldırılamadı</string>
+  <string id="53620">Özel Bilgilerim</string>
+  <string id="53621">Özel Bilgileri Kaldır</string>
+  <string id="53622">Ekstralar</string>
+  <string id="53623">Özel bilgi ekle</string>
+  <string id="53624">Özel bilgi kaldır</string>
+  <string id="53625">Kaldırmayı İptal Et</string>
+ 
+  <!-- network notification -->
+  <string id="53695">Ağ Ayarlarını Düzenle</string>
+  
+   <!-- Media Action Dialog -->
+  <string id="53700">Not</string>
+  <string id="53701">Hata</string>
+  <string id="53702">[B]Son çalınanları temizle[/B]</string>
+  <string id="53709">Teknik Bilgiler</string>
+  <string id="53710">Bilgi</string>
+  <string id="53711">Sonra İzle</string> <!-- Add To Queue -->
+  <string id="53712">Kaldır</string> <!-- Remove From Queue -->
+  <string id="53713">Seyredilenler</string>
+  <string id="53714">Seyredilmeyenler</string>
+  <string id="53715">Kısayol ekle</string>
+  <string id="53716">Kısayolu kaldır</string>
+  <string id="53717">Daha Fazla...</string>
+  <string id="53718">Fragman</string>
+  <string id="53719">Paylaşın</string>
+  <string id="53720">Geçmişten Kaldır</string>
+  <string id="53721">Çıkart</string>
+  <string id="53722">Gözat</string>
+  <string id="53723">Albümü Tekrar Tara</string>
+  <string id="53724">Albüm tekrar taranıyor...</string>
+  <string id="53725">Bu albüm değil mi?</string>
+  <string id="53726">Şarkı Ekle</string>
+  <string id="53727">Küçük Resim Seç</string>
+  <string id="53728">Geri</string>  
+  <string id="53729">Favoriler</string>  <!-- Add To Favorite -->  
+  <string id="53730">Kaldır</string> <!-- Remove from Favorite --> 
+
+  <string id="53731">Öğe, Sonra İzle'ye eklendi</string>
+  <string id="53732">Öğe başarıyla silindi</string>
+  <string id="53733">Öğe, izlendi olarak işaretlendi</string>
+  <string id="53734">Öğe, izlenmedi olarak işaretlendi</string>
+  <string id="53735">Öğe, Sonra İzle listesine eklenemedi</string>
+  <string id="53736">Öğe, Sonra İzle listesinden kaldırılamadı</string>
+  <string id="53737">Öğenin kısayolu Açılır Menüye eklendi</string>
+  <string id="53738">Öğenin kısayolu eklenemedi...</string>
+  <string id="53739">Öğe kısayolu silindi</string>
+  <string id="53740">Geçmişten silinemedi...</string>
+  <string id="53741">Kaynağı tara</string>
+  <string id="53742">Lokal aygıt bulunamadı</string>
+
+  <string id="53743">Boxee offline modda</string>  
+  <string id="53744">İnternete bağlı olmadığınızdan Boxee bu[CR]işlemi gerçekleştiremiyor.</string>
+  <string id="53745">Boxee'nin bu dosyayı çalması için[CR]internete bağlanmanız gerekir.</string>
+  <string id="53746">Boxee'nin bu dosyayı çalması için[CR]internete bağlanmanız gerekir.</string>
+  <string id="53747">İnternet bağlantısı olmadığından[CR]paylaşım yapılamıyor</string>
+  <string id="53748">Boxee internet bağlantısı olmadan bu dosyayı Sonra[CR]İzle listesine ekleyemez.</string>
+  <string id="53749">Boxee internet bağlantısı olmadan bu dosyayı Sonra[CR]İzle listesinden kaldıramaz.</string>
+  <string id="53750">Oynat</string>
+  <string id="53751">Lokal Dosya</string>
+  <string id="53752"></string>     <!-- prefix to provider source in PLAY button (can be "on " or "from ") -->
+  <string id="53753">Lokal</string>  
+  <string id="53755">Gözat</string>
+  <string id="53756">İnternete bağlı olmadığınızdan Boxee beslemeleri yönetemez.</string>
+  <string id="53760">Başlat</string>
+  <string id="53761">Uygulamalarıma Ekle</string>
+  <string id="53762">Uygulamalarımdan Kaldır</string>
+  <string id="53765">[COLOR green]%s[/COLOR] uygulaması başlatılamadı</string>
+  <string id="53766">[COLOR green]%s[/COLOR][CR]başlatılması için internet bağlantısı gereklidir.</string>
+  <string id="53770">Reklam destekli</string>
+  <string id="53771">Klip</string>
+  <string id="53772">Fragman</string>
+  <string id="53773">Abonelik</string>
+  <string id="53774">Abonelik Gerektiriyor</string>
+  <string id="53775">Son Çalınanlar listesi temizlenemedi.</string>
+  <string id="53776">Son Oynatılanlar listesini siler. Emin misiniz?</string>
+  <string id="53777">fragman</string>
+  
+  <!-- Apps/AppBox Browse Window -->
+  <string id="53800">Hepsi</string>
+  <string id="53801">Video</string>
+  <string id="53802">Müzik</string>
+  <string id="53803">Resimler</string>
+  <string id="53804">Spor</string>
+  <string id="53805">Yetişkin</string>
+  <string id="53820">Hata ayıklama</string>
+  <string id="53821">Test uygulaması [COLOR green]%s[/COLOR] sadece manuel kaldırılabilir</string>
+  <string id="53822">Favori Uygulamalardan [COLOR green]%s[/COLOR] çıkarılsın mı ?</string>
+  <string id="53823">[COLOR green]%s[/COLOR] kaldırılamadı</string>
+  <string id="53824">Apps.favorilere eklendi</string>
+  <string id="53825">Favori</string>
+  <string id="53826">Hepsi</string>
+  <string id="53827">Kategoriler</string>
+
+  <string id="53830">Uygulamalarım</string>
+  <string id="53831">Apps. Kitaplığı</string>
+  <string id="53832">Dış Apps</string>
+
+  <string id="53840">En yeni %s uygulaması indiriliyor. Lütfen bekleyin...</string>
+  <string id="53841">Uygulama indirilirken hata</string>
+  <string id="53842">Uygulama kuruluyor...</string>
+  <string id="53843">Uygulama kurulurken hata</string>
+  <string id="53844">Uygulama başarıyla kuruldu</string>
+  <string id="53845">%s imzası doğrulanıyor...</string> 
+  <string id="53846">%s imzası doğrulanamadı</string>
+  <string id="53847">%s imzası doğrulandı</string>
+  <string id="53848">İndiriliyor. Lütfen bekleyin...</string>
+
+ <!-- Home Window-->
+  <string id="53900">Hepsini görüntüle</string>                    <!-- All Queue label -->
+  <string id="53905">Hepsini görüntüle</string>                    <!-- All Recommend label -->
+
+  <string id="53910">Sonra İzle</string>  				  <!-- Home Screen Buttons -->
+  <string id="53911">Ark.lar</string>
+  <string id="53912">Programlar</string>
+  <string id="53913">Filmler</string>
+  <string id="53914">Apps</string>
+  <string id="53915">Dosyalar</string>
+  <string id="53916">Web</string>
+  <string id="53917">Sonra [CR]İzle</string>
+  <string id="53920">FİLM (DOSYALAR)</string>
+  <string id="53921">Prog.lar(Dosyalar)</string>
+
+  <!-- search -->
+  <string id="53950">3</string>                    <!-- search result highlight color [0-none 1-green, 2-red, 3-yellow] -->
+  <string id="53951">Arama Sonuçları:</string>
+  <string id="53952">Şunu ara:</string>
+  <string id="53953">görüntülenen</string>
+  <string id="53957">[B][RENK turuncu]İnternet&apos;te &quot;%s&quot; araması yap[/COLOR][/B]</string>
+
+  <!-- share -->
+  <string id="54000">PAYLAŞ</string>
+  <string id="54001">Paylaşmak sorumluluktur.[CR]Lütfen bir mesaj girin.</string>   
+    
+  <!-- browse menu -->
+  <string id="54010">Ara</string>
+  <string id="54011">Başlık veya Anahtar Kelime</string>
+  <string id="54012">Göster</string>
+  <string id="54013">Sırala</string>
+  <string id="54014">Filtreler</string>
+  <string id="54015">Görüntüle</string>
+  <string id="54016">Küçük resimler</string>
+  <string id="54017">Liste</string>
+  <string id="54018">Ekstralar</string>
+  <string id="54019">Özel bilgiler</string>
+  <string id="54020">Yükleme</string>
+  <string id="54021">Arkadaşlar</string>
+  <string id="54022">En Son Oynatılanlar</string>
+  <string id="54023">Dosya Tarayıcısı</string>
+  <string id="54024">Medya Paylaşımı Ekle</string>
+  <string id="54025">Medya Tara</string>
+  <string id="54026">Filmlerim</string>
+  <string id="54027">Kaynaklara gözat</string>
+  <string id="54028">Medya Klasörlerini Tara</string>
+  <string id="54029">Sadece Ücretsizler</string>
+  <string id="54030">Sadece İzlenmeyenler</string>
+  <string id="54031">Müziğim</string>
+  <string id="54032">Sadece İzlenmeyenler</string>
+  <string id="54033">Uygulamalarım</string>
+  <string id="54034">Apps. Kitaplığı</string>
+  <string id="54035">Yayımlanan</string>
+  <string id="54036">Paylaşın</string>
+  <string id="54037">Resimlerim</string>
+  <string id="54038">Sonra İzle</string>
+  <string id="54039">TV programlarım</string>
+  <string id="54040">TV programı kitaplığı</string>
+  <string id="54041">Prodüktör</string>
+  <string id="54042">Oyuncular</string>
+  <string id="54043">Yayım Yılı</string>
+  <string id="54044">Vizyon Tarihi</string>
+  <string id="54045">Yönetmen</string>
+  <string id="54046">SPONSOR</string>
+  <string id="54047">Şu anda[CR]Oynatılıyor</string>
+  <string id="54048">Apps</string>
+  <string id="54049">Geri</string>
+  <string id="54050">Tavsiye Edilen Kaynak</string>
+  <string id="54051">Diğer Kaynaklar</string>
+  <string id="54052">Paylaşın</string>
+  <string id="54053">Parça Listesi</string>
+  <string id="54054">Yeni Biten</string>
+  <string id="54055">Sırada ne var?</string>
+  <string id="54056">Sıradakini Oynat</string>
+  <string id="54057">Sıradan[CR]Çıkar</string>
+  <string id="54058">Git</string>
+  <string id="54059">Öğeler</string>
+  <string id="54060">Kapat</string>
+  <string id="54061">Çıkış</string>
+  <string id="54062">Uyku Modu</string>
+  <string id="54063">Özellikli</string>
+  <string id="54064">Kaynakları Yönet</string>
+  <string id="54065">Şu Anda Taranıyor</string>
+  <string id="54066">Lokal Dosyalar</string>
+  <string id="54067">Bulunan %d dosyaları</string>
+  <string id="54068">Şu anda tanımlanan</string>
+  <string id="54069">%d dosya bulundu[CR] ve tanımlandı</string>
+
+  <string id="54070">Hiçbiri</string>
+  <string id="54071">İlave Klavye 1</string>
+  <string id="54072">İlave Klavye 2</string>
+  <string id="54073">İlave Klavye 3</string>
+
+  <string id="54074">Apps.Ara</string>
+
+  <string id="54075">Kanallar</string>
+
+  <string id="54076">Yayımlanan </string>
+  <string id="54077">Reyting </string>
+
+  <string id="54083">Toplama Kaydını Etkinleştir</string>
+  <string id="54084">- Syslog Adresi</string>
+  <string id="54085">Syslog'a Raporlamayı Etkinleştir</string>
+
+  <string id="54103">Boxee bilgisayarınızdaki Müziğim klasörünü tarıyor. Müzik dosyasının görüntülenmesi birkaç dakika sürebilir.[CR]Bu sırada şunları yapabilirsiniz:</string>
+  <string id="54104">2. Boxee'nin internet müzik uygulamalarını ayarlayabilirsiniz</string>
+  <string id="54105">Boxee bilgisayarınızdaki TV Programları klasörünü tarıyor. TV programları dosyasının görüntülenmesi birkaç dakika sürebilir.[CR]Bu sırada şunları yapabilirsiniz:</string>
+  <string id="54106">1. TV Programları kitaplığını tarayabilirsiniz</string>
+  <string id="54107">Bilgisayarınızdaki veya ağ üzerindeki diğer klasörleri tarayabilirsiniz</string>
+  <string id="54108">Sorun! Flash eklentisi bulunamadı.</string>
+  <string id="54109">Pek çok[CR]online içeriğin oynatılabilmesi için Flash eklentisi gereklidir.[CR]Bunun için, [COLOR yellow][B]http://www.boxee.tv/flash[/B][/COLOR] adresini ziyaret edin </string>
+  <string id="54110">Boxee, video belleğinizin 128MB'nin altına düştüğünü tespit etti.[CR]Boxee kullanımında sorun yaşayabilirsiniz.</string>
+  <string id="54111">Syslog sunucu adresi geçersiz</string>
+
+  <string id="54120">- Dolby Digital Plus destekli alıcı</string>
+  <string id="54121">- Dolby TrueHD destekli alıcı</string>
+  <string id="54122">- DTS-HD destekli alıcı</string>
+  <string id="54123">Dijital (HDMI)</string>
+  <string id="54124">- LPCM 7.1 destekli alıcı</string>
+  <string id="54150">Uyarı: alıcınız, Dolby Digital veri akışını desteklemiyor</string>
+  <string id="54151">Uyarı: alıcınız, Dolby Digital Plus veri akışını desteklemiyor</string>
+  <string id="54152">Uyarı: alıcınız, Dolby TrueHD veri akışını desteklemiyor</string>
+  <string id="54153">Uyarı: alıcınız, DTS veri akışını desteklemiyor</string>
+  <string id="54154">Uyarı: alıcınız, DTS-HD veri akışını desteklemiyor</string>
+  <string id="54155">Tüm Çıkışlar</string>
+  <string id="54156">Oynatım sırasında sesi kontrol et (mümkünse)</string>
+
+  <string id="54158">Otomatik</string>
+  <string id="54159">Kapalı</string>
+  <string id="54160">Açık</string>
+  <string id="54161">Dolby TrueHD DRC yüzdesi</string><!-- translate only percentage -->
+  <string id="54165">Çıkış Gecikmesini Etkinleştir</string>
+
+  <!-- media source info -->
+  <string id="54200">Tamam</string>
+  <string id="54201">Ekle</string>
+  <string id="54202">Bu dizini ekle</string>
+
+  <!-- boxee browse screen panel part II -->
+  <string id="54250">Son kullanılan</string>
+  
+  <!-- time formats -->
+  <string id="54500">12h</string>
+  <string id="54501">24h</string>
+  <string id="54502">h:mm:ss xx</string>
+  <string id="54503">Sa:dd:sn</string>
+
+  <!-- first time use -->
+  <string id="54550">Listeden bir ağ seç veya başka bir ağa katıl.</string>
+  <string id="54551">Ağa Katıl</string>
+  <string id="54552">Bağlantını kurabilmek için gizli şifreye ihtiyacımız olacak.</string>
+  <string id="54553">Başka Bir Ağa Katıl</string>
+  <string id="54554">Katılmak istediğin ağın adı gerekiyor.</string>
+  <string id="54555">Tüm ağlar aynı şekilde oluşturulmadığı için ağın ne tür güvenlik kullandığını bilmemiz gerekiyor.</string>
+  <string id="54556">İşi biliyorsun! Ne yapman gerektiğini biliyorsun. Bilmiyorsan, zeki arkadaşlarından birine sor.</string>
+  <string id="54558">Boxee Güncellemesi Mevcut</string>
+  <string id="54559">Artık internete girebildiğimize göre, öncelikle Boxee'nin en son sürümünü kullandığından emin olalım.</string>
+  <string id="54560">Oldu!</string>
+  <string id="54561">Boxee internete bağlandı. Hadi git biraz eğlen.</string>
+  <string id="54576">Boxee&apos;niz şu an internete bağlanmıştır.[CR][CR]İnternet erişimi sağlandığına göre Boxee&apos;nin en son versiyonuna sahip olduğunuzdan emin olalım.</string>
+  <string id="54577">Başarıyla Bağlandı</string>
+  <string id="54578">Sürüm Notları</string>
+  <string id="54579">Hımm, yönlendiricinize bağlanamıyoruz. Ağ ayarlarını manuel olarak girmeyi deneyin. </string>
+  <string id="54580">Hımm, yönlendiricinizin İnterneti çalışmıyor. Bağlantıyı kontrol etmek için bilgisayarınız aracılığıyla bağlanmayı deneyin.</string>
+  <string id="54581">Boxee ağınıza bağlanmayı başardı; fakat İnternet erişimi sağlayamıyor.</string>
+  <string id="54582">Yanlış şifre, tekrar deneyin.</string>
+  <string id="54583">Ağ Güvenliği</string>
+  <string id="54584">Ağ adı girin</string>
+  <string id="54585">Kablosuz ağı seçin</string>
+  <string id="54586">Boxee&apos;im kablosuz bir ağa bağlanacak</string>
+  <string id="54587">Boxee&apos;im yönlendiriciye Ethernet kablosuyla bağlı</string>
+  <string id="54588">Güncellemeyi yapabilmemiz için Boxee’nin internete bağlanması gerekiyor.</string>
+  <string id="54589">Bağlanamadı</string>
+  <string id="54590">Şimdi [B][COLOR blue]oku 2[/COLOR][/B] ekranın sağ alt köşesine hizalayın.[CR][CR]İşiniz bitince, [B][COLOR boxeegreenheidi]ortadaki[/COLOR][/B] düğmeye basın.</string>
+  <string id="54591">Şimdi [B][COLOR blue]oku 1[/COLOR][/B] ekranın sağ alt köşesine hizalayın.[CR][CR]İşiniz bitince, [B][COLOR boxeegreenheidi]ortadaki[/COLOR][/B] düğmeye basın.</string>
+  <string id="54592">Ekranını Ayarla</string>
+  <string id="54593">Ekranın çevresindeki[B][UPPERCASE][COLOR boxeegreenheidi]yeşil[/COLOR][/UPPERCASE][/B] kenarlığı görebiliyor musunuz?</string>
+  <string id="54594">Ekran görüntüsünü kontrol etme</string>
+  <string id="54595">TV çözünürlüğünü ölçün</string>
+  <string id="54596">Boxee&apos;nin en iyi kalitede görüntü verdiğinden emin olmak için TV çözünürlüğünü seçin.</string>
+  <string id="54597">Ekran Ayarı</string>
+  <string id="54598">[/B]&apos;ye[B][UPPERCASE]Hoşgeldiniz[/UPPERCASE] </string>
+  <string id="54599">Katıl</string>
+  <string id="54600">Dil</string>
+  <string id="54601">Arayüz dilini seçin:</string>
+  <string id="54605">Harika görünüyor mu?</string>
+  <string id="54610">Hoş Geldiniz!</string>
+  <string id="54611">Sadece birkaç dakika içinde İnternet ve ev ağınızdaki binlerce Film, TV programı ve Klibi izleyebileceksiniz. Başlamak için uzaktan kumandanızda [UPPERCASE][COLOR boxeegreenheidi][B]ortadaki [/UPPERCASE][/COLOR][/B]düğmeye basın.</string>
+  <string id="54612">Başlat</string>
+  <string id="54615">[UPPERCASE]Dil[/UPPERCASE]</string>
+  <string id="54616">Bir dil seçmelisiniz</string>
+  <string id="54617">Dil ayarlanamıyor</string>
+  <string id="54618">[COLOR green]%s[/COLOR] şifre</string>
+  <string id="54619">Ağ bir şifre gerektiriyor</string>  
+  <string id="54620">Çözünürlük</string>
+  <string id="54621">Ekran çözünürlüğünüzü seçin:</string>
+  <string id="54622">Bunun görüntülenmesi başarılı oldu mu?</string>
+  <string id="54623">Bir çözünürlük seçmelisiniz</string>
+  <string id="54624">Boxee en iyi, ekranınız doğru ayarlandığında izlenebilir. Bu basittir:</string>
+  <string id="54625">Kumandanızı kullanarak ok 1'i ekranın sol üst köşesine getirin.</string>  
+  <string id="54626">Görüntü güzel olduğunda Seç tuşuna basın.</string>
+  <string id="54627">Sağ alt köşe için aynı adımı ok 2'yle tekrarlayın.</string>
+  <string id="54628">Harika görünüyor!</string>  
+  <string id="54629">[UPPERCASE]Çözünürlük[/UPPERCASE]</string>
+  <string id="54630">Ses Ayarları</string>
+  <string id="54631">Ses çıkışınızı seçin:</string>
+  <string id="54632">HDMI</string>
+  <string id="54633">Optik</string>
+  <string id="54634">Analog Stereo</string>
+  <string id="54635">Ağa başarıyla bağlanıldı</string>
+  <string id="54636">Kablosuz ağa başarıyla bağlanıldı</string>
+  <string id="54637">Ethernet kablosu takılmamış.</string>
+  <string id="54638">Ethernet kablosu takılı ancak internete bağlanamıyoruz.</string>
+  <string id="54639">Kablosuz ağ yapılandırması başarısız</string>
+  <string id="54640">Tekrar deneyin</string>
+ 
+  <string id="54641">Alıcınız Dolby Digital ve DTS çalabiliyor mu?</string>
+  <string id="54642">Evet</string>
+  <string id="54643">Hayır</string>
+  <string id="54644">Emin değilim</string>
+  <string id="54647">[UPPERCASE]Ses Ayarları[/UPPERCASE]</string>
+  <string id="54648">Bir ses çıkışı seçmelisiniz</string>
+  <string id="54649">Dolby Digital ve DTS seçeneğini seçmelisiniz</string>
+  <string id="54650">[UPPERCASE]Ses Testi[/UPPERCASE]</string>
+  <string id="54651">Hoparlörünüzden müzik sesi[CR]duyabiliyor musunuz?</string>
+  
+  <string id="54652">Ethernet'e geç</string>
+  
+  <string id="54653">Geçersiz IP adresi belirtildi</string>
+  
+  <string id="54654">Doğrulanıyor...</string>
+  <string id="54655">Sonraki</string>
+  <string id="54656">Yükseltme indirilemedi.</string>
+  <string id="54657">Yükseltme başarıyla indirildi.[CR]Yeniden başlatılması gerekiyor</string>
+  <string id="54658">Önyükle</string>
+  <string id="54659">Yeniden başlatılıyor...</string>
+  
+  <string id="54660">Kablolu</string>
+  <string id="54661">Kablolu Ethernet kablosuyla[CR]internete bağlısınız.</string>
+  <string id="54662">Ağın nasıl yapılandırılmasını[CR]istersiniz?</string>
+  <string id="54663">Otomatik olarak</string>
+  <string id="54664">Elle</string>
+  <string id="54665">Kablosuza Geç</string>
+  <string id="54667">Ethernet üzerinden bağlanılamadı</string>
+  <string id="54668">Bir seçenek seçmelisiniz</string>
+  <string id="54669">[UPPERCASE]Kablolu[/UPPERCASE]</string>
+  <string id="54670">Kablosuz</string>
+  <string id="54671">Bağlanılacak bir kablosuz ağ seçin</string>
+  <string id="54672">Kablosuz bir ağ seçmelisiniz</string>
+  <string id="54673">Veya</string>
+  <string id="54674">Başka bir ağa bağlanın...</string>
+  <string id="54675">Gelişmiş</string>
+  <string id="54676">Hiçbir kablosuz ağ bulunamadı</string>
+  <string id="54677">Ağlar aranıyor...</string>
+  <string id="54678">Kablosuz ağ üzerinden bağlanılamadı</string>
+  <string id="54679">[UPPERCASE]Kablosuz[/UPPERCASE]</string>
+  <string id="54680">Ağ Kurulumu</string>
+  <string id="54681">IP Adresi</string>
+  <string id="54682">Ağ maskesi</string>
+  <string id="54683">Varsayılan Ağ Geçidi</string>
+  <string id="54684">DNS Sunucusu</string>
+  <string id="54685">HTTP Proxy</string>
+  <string id="54686">Kablosuz Ağlar</string>
+  <string id="54687">Kablosuz Ağ Şifresi</string>
+  <string id="54688">Kablosuz Ağ Güvenliği</string>
+  <string id="54689">Onaylayın</string>
+  <string id="54690">[COLOR green]%s[/COLOR] için bir şifre gerekiyor.</string>
+  <string id="54691">Şifreyi göster</string>
+  <string id="54692">Başla</string>
+  <string id="54693">Box oluşturulduktan sonra Boxee'nin yeni bir sürümü çıktı.[CR]Hemen yükseltin!</string>
+  <string id="54694">Kablosuz ağ güvenliğini seçin</string>
+  <string id="54695">Sihirbaz</string>
+  <string id="54696">Ethernet kablosu takılı, ancak internet bağlantısı kuramadık.</string>
+  <string id="54697">Kablosuz ağa bağlanıldı, ancak internet bağlantısı kuramadık.</string>
+  <string id="54698">Tekrar deneyin</string>
+  <string id="54699">Kablosuza Geç</string>
+
+  <!-- Settings for BoxeeBox -->
+  <string id="54700">SMB Sunucusu</string>
+  <string id="54702">Windows dosya paylaşımını etkinleştir</string>
+  <string id="54703">- Şifre Paylaş (kullanıcı adı: misafir)</string>
+  <string id="54704">- Çalışma Grubu Paylaş</string>
+  <string id="54705">- Sunucu Adı</string>
+  <string id="54720">Zaman dilimi</string>
+  <string id="54722">Ülke zaman dilimi</string>
+  <string id="54723">Şehir zaman dilimi</string>
+  <string id="54724">WiFi MAC Adresi</string>
+  <string id="54725">Ethernet MAC Adresi</string>
+  <string id="54726">Aygıt</string>
+  <string id="54727">Aygıt Seri Numarası</string>
+  <string id="54728">Donanım Yazılımı Sürümü</string>
+
+  <string id="54729">Ethernet'e geç</string>
+  <string id="54730">Ayarları düzenle...</string>
+  <string id="54731">Şimdi İndiriliyor</string>
+  <string id="54732">%d dakika kaldı</string>
+  <string id="54733">bir dakikadan az süre kaldı</string>
+  <string id="54734">Yükseltme şimdi başlayacak, bu sırada[CR]Box birkaç kez yeniden başlatılacak.</string>
+  <string id="54735">Hesaplanıyor...</string>
+
+  <string id="54736">VPN</string>
+  <string id="54737">Bağlantı Tipi</string>
+  <string id="54738">PPTP</string>
+  <string id="54739">Sunucu</string>
+  <string id="54740">Hesap</string>
+  <string id="54741">Şifre</string>
+  <string id="54742">Şifreleme Gerekiyor</string>
+  <string id="54743">Bağlan...</string>
+  <string id="54744">Bağlantıyı kes...</string>
+  <string id="54745">%s</string>
+  <string id="54746">VPN'e bağlanılıyor...</string>
+  <string id="54747">VPN bağlantısını kes?</string>
+  <string id="54748">VPN bağlantısı başarısız.</string>
+  <string id="54749">Kumanda piliniz bitmek üzere.</string>
+  
+  <string id="54750">Ağ ayarları sihirbazını başlat...</string>
+  <string id="54751">Gelişmiş</string>
+  
+  <string id="54752">Aygıtı Çıkart</string>
+  <string id="54753">iOS aygıtlarından video oynatımını etkinleştir</string>
+  <string id="54754">Boxee'nin ağ üzerinden kontrol edilmesine izin ver</string>
+
+  <string id="54755">Açık</string>  
+  <string id="54758">Boxee'yi Özelleştir</string>  
+
+  <string id="54765">Ayarların etkin olabilmesi için yeniden başlatma gerekiyor.[CR]Yeniden başlatmak ister misiniz?</string>
+  
+  <string id="54770">Bu videodan çıkmak istediğinize emin misiniz? İlerleme kaybedilebilir.</string>  
+  <string id="54771">Bu mesajı bir daha gösterme</string>
+  <string id="54772">Videoyu kapatmadan önce beni uyar</string>  
+  <string id="54775">Bekle</string>  
+  <string id="54776">Ayrıl</string>  
+  <string id="54777">Tarayıcıya git</string> 
+  <string id="54778">Paylaşılmış Adobe Flash nesnelerini temizleyin...</string>
+  <string id="54779">Paylaşılmış Adobe Flash nesneleri temizlensin mi?</string>
+ 
+  <!-- Settings -->
+  <string id="54800">[B]Yetişkin[/B]</string>
+  <string id="54801">Sosyal</string>
+  <string id="54802">Müzik</string>
+  <string id="54803">[B]Sistem[/B]</string>
+  <string id="54804">[B]Medya[/B]</string>
+  <string id="54805">[B]Ağ[/B]</string>
+  <string id="54806">[B]Genel[/B]</string>
+  <string id="54807">Gelişmiş</string>
+  <string id="54808">Aygıtlar</string>
+  <string id="54809">Ebeveyn</string>
+
+  <!-- Charsets -->
+  <string id="54810">Arapça</string>
+  <string id="54811">Baltık Dilleri</string>
+  <string id="54812">Orta Avrupa</string>
+  <string id="54813">Basit Çince (GBK)</string>
+  <string id="54814">Geleneksel Çince (Big5)</string>
+  <string id="54815">Kiril</string>
+  <string id="54816">Yunanca</string>
+  <string id="54817">İbranice</string>
+  <string id="54818">Kantonca (Big5 HKSCS)</string>
+  <string id="54819">Japonca (Shift JIS)</string>
+  <string id="54820">Korece</string>
+  <string id="54821">Tayca</string>
+  <string id="54822">Türkçe</string>
+  <string id="54823">Vietnamca</string>
+  <string id="54824">Batı Avrupa</string>
+  <string id="54825">Unicode (UTF-8)</string>
+
+  <string id="54830">Menü</string>
+  <string id="54831">Programlar için varsayılan görünüm</string>
+  <string id="54832">Filmler için varsayılan görünüm</string>
+  <string id="54833">Apps. için varsayılan görünüm</string>
+  <string id="54834">Favoriler</string>
+  <string id="54835">Dosyalar</string>
+  <string id="54836">Hepsi</string>
+
+  <!-- Test bad pixels -->
+  <string id="54850">Hatalı pikselleri ara...</string>
+  <string id="54851">Hatalı Piksel Arama</string>
+  <string id="54852">Ekran rengi seç:</string>
+  <string id="54855">Kırmızı</string>
+  <string id="54856">Yeşil</string>
+  <string id="54857">Mavi</string>
+  <string id="54858">Beyaz</string>
+  <string id="54859">Siyah</string>
+  <string id="54860">Döngü...</string>
+
+  <!-- Netflix/PlayPause Button -->
+  <string id="54865">Uzaktan kumanda üst düğme işlevi</string>
+
+  <string id="54868">Oynat/Duraklat</string>
+
+  <!-- Black level -->
+  <string id="54870">Siyah seviyesi</string>
+  <string id="54871">PC [0..255]</string>
+  <string id="54872">VIDEO [16..235]</string>
+  
+  <!-- 3D mode -->
+  <string id="54880">- Şu an etkin 3D Modu</string>
+  <string id="54881">Hiçbiri</string>
+  <string id="54882">Yan/Yan</string>
+  <string id="54883">Üst/alt</string>
+  <string id="54884">3D Kare Uyumlu (yan/yan veya üst/alt) TV</string>
+
+  <!-- Services -->
+  <string id="54885">Netflix Verilerini temizle...</string>
+  <string id="54886">VUDU Devre Dışı Bırakma...</string>
+  <string id="54887">Servisler</string>
+  <string id="54888">Yapılandırılacak servis yok.</string>
+  <string id="54889">Servis bilgilerini temizle?</string>
+  <string id="54890">Netflix Aygıtı ESN</string>
+  
+  <!-- Browser -->
+  <!-- more on browser at the bottom of this file -->
+  <string id="54893">Üzgünüz, aradığınız sayfayı bulamadık.</string>
+  <string id="54894">Favoriyi Boşalt</string>
+  <string id="54895">Çerezleri sil…</string>
+  <string id="54896">Önbelleği sil…</string>
+  <string id="54897">Tarayıcı</string>
+  <string id="54898">Tarayıcı çerezleri silinsin mi?</string>
+  <string id="54899">Tarayıcı önbelleği silinsin mi?</string>
+  
+  
+  <!-- Ready to watch dropdown -->
+  <string id="54900">İzlemeye Hazır</string>
+  <string id="54901">Hepsi</string>
+  <string id="54902">Favoriler</string>
+  <string id="54903">Lokal</string>
+  <string id="54904">Abonelikler</string>
+  
+   <!-- Movie Store dropdown -->
+  <string id="54910">Film Dükkanı</string>
+  <string id="54911">Hepsi</string>
+  
+  <!-- Shows Store dropdown -->
+  <string id="54920">Program Dükkanı</string>
+  <string id="54921">Hepsi</string>
+  <string id="54922">Apps. Dükkanı</string>
+  
+  <string id="55000">Gösterilen</string>
+  <string id="55001">başlıklar</string>
+  <string id="55002">dakika</string>
+  <string id="55003">paylaşılan videolar</string>
+  <string id="55004">videolar</string>
+  <string id="55005">Hiçbir sonuç bulunamadı</string>
+
+  <!-- payment -->
+  <string id="55100">Satın al</string>
+  <string id="55101">[COLOR green]%s[/COLOR] bu paketlerin bir parçası olarak[CR]%s üzerinden temin edilebilir:</string>
+  <string id="55102">Ayrıntılı bilgi için tıklayın</string>
+  <string id="55105">Sunucudan bilgi alınamadı.</string>  
+  <string id="55110">Geri</string>  
+  <string id="55111">Paket</string>
+  <string id="55120">Koşulları kabul ediyor musunuz?</string>
+  <string id="55121">%s başına %s ödeyeceksiniz. Dilediğiniz zaman[CR]aboneliğinizi[CR]www.boxee.tv üzerinden yönetebilirsiniz</string>
+  <string id="55122">Şartları ve Koşulları okudum</string>
+  <string id="55123">Şartlar ve Koşullar</string>
+  <string id="55124">Devam etmek için Şartları ve Koşulları kabul etmeniz gerekir.</string>
+  <string id="55125">Kabul Et</string>  
+  <string id="55126">Reddet</string>
+  <string id="55130">Lütfen Boxee şifrenizi girin</string>
+  <string id="55131">Şifre</string>
+  <string id="55132">Boxee şifre alanı boş.</string>
+  <string id="55133">Şifreyi göster</string>
+  <string id="55134">Devam et</string>
+  <string id="55135">Satın alma işlemi başarısız</string>    
+  <string id="55140">Boxee ödeme bilgilerinizi alamadı.</string>
+  <string id="55141">Bekliyor...</string>
+  <string id="55142">Sonra devam edeceğim</string>  
+  <string id="55143">İşlemin online tamamlanması için Boxee %s adresine bir e-posta gönderdi.</string>
+  <string id="55160">OK, işlem tamamlandı!</string>
+  <string id="55161">Şimdi izle</string>
+  <string id="55195">Bu eylem tamamlanamıyor</string>
+  <string id="55196">İnternet bağlantısı yok.[CR]Boxee şu anda offline.</string>
+  <string id="55197">İnternet bağlantısı kuruldu.[CR]Boxee şu anda online.</string>
+  <string id="55198">İnternet bağlantısı yok</string>
+
+  <string id="55200">Hızlı ipucu</string>
+  <string id="55201">"Menü" tuşuna tıklayarak geri dönebilir veya Boxee Menüsünü açabilirsiniz.</string>
+  <string id="55202">Bu pencereyi kapatmak için tıklayın.</string>
+  <string id="55203">MENU düğmesi geri gitmek ve Boxee Menüsünü açmak için kullanılabilir.[CR][CR][B][COLOR blue]Bu pencereyi kapatmak için şimdi düğmeye bas. Boxee Menüsünü açmak için düğmeye yeniden bas.[/COLOR][/B]</string>
+  <string id="55210">Boxee'nin AirPlay özelliği etkin![CR]Artık iPhone veya iPad'inden Boxee aygıtına video ve müzik atabilir ve diğerleriyle birlikte bunların keyfini sürebilirsin.</string>
+
+  <!-- Playback Settings -->
+  <string id="55300">Altyazıları seç</string>
+  <string id="55301">Alt yazýlar…</string>
+  <string id="55302">Ses kanalını seç</string>
+  <string id="55303">Ses kanalı…</string>
+  <string id="55304">Alt yazı karakter setini seçin</string>
+  <string id="55305">Karakter seti...</string>
+
+  <!-- Browser -->
+  <string id="55400">URL veya arama kelimesi girin</string>
+  <string id="55401">Tarayıcıdan Çık</string>  
+  <string id="55402">Seçenekler için "Menü" seçeneğine basın</string>
+  <string id="55403">Tarayıcı</string>
+  <string id="55404">Tarayıcıdan çıkmak istediğinizden emin misiniz?</string>
+  <string id="55405">Geri dön</string>
+  <string id="55406">Çıkış</string>
+  <string id="55407">Kaldırmak istediğinizden emin misiniz?</string>
+  <string id="55408">Favori Ekleme</string>
+  <string id="55409">Boxee’nizde sadece 12 favoriniz bulunabilir.</string>
+  <string id="55410">Yenisini eklemeden önce bir favoriyi çıkarınız.</string>
+  <string id="55411">Favori çıkarılamadı.</string>
+  <string id="55412">Bu uygulamadan çıkmak istediğinizden emin misiniz?</string>
+  <string id="55414">Ups!</string>
+
+  <string id="55416">Açılır Pencere Kontrolü</string>
+  <string id="55417">Site &apos;%s&apos;i açmayı talep ediyor</string>
+  <string id="55418">İzin ver</string>
+  <string id="55419">Reddet</string>
+
+  <!-- Settings for pairing -->
+  <string id="55500">Şifre</string>
+  <string id="55501">Bu cihazı Boxee ile eşleştirmek için yukarıdaki şifreyi '%s'e girin</string>
+  <string id="55502">[COLOR red]Girilen þifre yanlýþ.[CR]Tekrar deneyiniz.[/COLOR]</string>
+  <string id="55503">[COLOR green]Başarılı![CR]Cihaz Eşlenmiş Cihazlarınıza eklendi.[/COLOR]</string>
+  <string id="55510">Eşlenmiş Cihazlar</string>
+  <string id="55511">Aygıtlar</string>
+  <string id="55512">Kaldır</string>  
+  <string id="55515">Cihaz eşleşmesi kaldırılsın mı?[CR]Bu Boxee ile yeniden kullanmak isterseniz '%s'i yeniden tanıtmanız gerekecektir.</string>
+  <string id="55516">'%s' cihazı eşleşmesi başarısız</string>
+  <string id="55520">Cihazlar Boxee’ye eşlenmiş durumda...</string>
+  
+  <!-- Login Wizard -->
+   <string id="55610">Yeni bir hesap oluşturarak veya mevcut hesabınızla giriş yaparak Boxee'yi kullanmaya başlayın.</string>
+  <string id="55615">Boxee hesabınıza giriş</string>
+  <string id="55620">E-posta</string>
+  <string id="55621">Geçersiz karakterler</string>
+  <string id="55625">Hızlı bir şekilde yeni hesap oluşturmak ve de televizyonunuza arkadaşlarınızdan otomatik olarak gelen video tavsiyelerini almak için Boxee'ye Facebook aracılığıyla bağlanın.  Ya da kayıt kısımlarını doldurup ileri'yi tıklayın. </string>
+  <string id="55630">Cinsiyet:</string>
+  <string id="55631">Doğum tarihi</string>
+  <string id="55632">Gönder</string>
+  <string id="55635">Cinsiyet Seçin</string>
+  <string id="55636">Erkek</string>
+  <string id="55637">Bayan</string>
+  <string id="55638">Belirtmek istemiyorum...</string>
+  <string id="55645">Ek Bilgiler</string>
+  <string id="55646">Neredeyse bitti. Bu bilgiler sizi daha iyi anlamamıza yardımcı olur.  Onları güvence altında tutarız ve paylaşmayız. </string>
+  <string id="55650">Cinsiyet:</string>
+  <string id="55651">Yıl</string>
+  <string id="55652">Ay</string>
+  <string id="55653">Gün</string>
+  <string id="55660">Yasal Konular... [CR]Sıkıcııı</string>
+  <string id="55661">Boxee hesabınızın kurulumunu tamamlamak için Kullanım Şartlarımızı ve Gizlilik Politikamızı kabul etmelisiniz.</string>
+  <string id="55670">Sosyal Boxee</string>
+  <string id="55671">TV'nize doğrudan gönderilen video tavsiyelerini alın, yeni çıkan virüslü videoyu gözden kaçırmayın ve favorilerinizi paylaşın! </string>
+  <string id="55672">Devam etmek için bütün alanlar doldurulmalıdır.</string>
+  <string id="55673">Üzgünüz, Boxee hesabı açabilmek için en az 13 yaşında olmalısın.Seni bekliyor olacağız!</string>
+  <string id="55690">Hesabı Kaldır</string>
+  <string id="55691">Bu aygıttan [COLOR white]%s[/COLOR]kaldırmak istediğinizden emin misiniz? [CR][CR] Hesabınızı silinmeyecek.İstediğiniz zaman geri döndürebilirsiniz.</string>
+
+  <string id="55695">Boxee'nizi ayarlayın</string>
+  <string id="55696">Boxee’ye çoğunlukla neler izleyeceğinizi söyleyin ki, biz de o videoları TV Programları ve Filmler kitaplıklarında göstererek deneyiminizi özelleştirelim. [CR][CR]Not: İstediğiniz zaman Ayarlar Menüsüne girip seçiminizi değiştirebilirsiniz.</string>
+  <string id="55699">Boxee'yi kullanmaya başlayın</string>
+
+  <!-- Empty Browse Screens -->
+  <string id="56000">Sonra İzle listeniz boş.</string>
+  <string id="56001">Seçtiğiniz TV programlarının yeni bölümleri burada gösterilecek; dilerseniz videoyu Sonra İzle bölümüne sürükleyerek ekleyebilirsiniz.</string>
+  <string id="56002">Ayrıca web üzerinden de video ekleyebilirsiniz. Talimatlar için [COLOR yellow]http://www.boxee.tv/watchlater[/COLOR] adresini ziyaret edin.</string>
+  <string id="56003">Arkadaş Ekle.</string>
+  <string id="56004">Facebook ve Twitter'da arkadaşlarınız tarafından paylaşılan videoları izleyebilirsiniz. [CR]Facebook ve Twitter hesaplarınızı Boxee'ye bağlayarak bu özelliği etkinleştirebilirsiniz.</string>
+  <string id="56005">Favori apps.ekleyin</string>
+  <string id="56006">Favorilerinize bir apps.eklemek için Favorilerim simgesine tıklayın.</string>
+  <string id="56007">Gösterilecek geçmiş yok</string>
+  <string id="56008">Oynattığınız öğeler, kolayca bulup tekrar oynatabilmeniz için bu listede görüntülenecektir.</string>
+  <string id="56009">Yerel resim yok</string>
+  <string id="56010">Resimlerinizi Boxee'de görüntülemek için, sabit diskinizden veya ağ kaynağınızdan bir klasör ekleyin.</string>
+  <string id="56011">Resim Uyg.larına gözat</string>
+  <string id="56012">Favori programınızı ekleyin</string>
+  <string id="56013">Beğendiğiniz programı favorilerinize eklemek için program bölümü ekranındaki Favorilerim simgesine tıklayın.</string>
+  <string id="56014">Henüz Lokal Müzik Yok</string>
+  <string id="56015">Müziğinizi Boxee'de dinlemek için, sabit [CR]disk veya ağ kaynağınızdan klasör ekleyin.</string>
+  <string id="56016">veya...</string>
+  <string id="56017">Kaynaklara gözat</string>
+  <string id="56018">Müzik apps. gözat</string>
+  <string id="56019">Görüntülenecek öğe yok</string>
+  <string id="56020">Boxee bu kategoride oynatılabilecek bir video bulamıyor.</string>
+  <string id="56021">Henüz dosya yok</string>
+  <string id="56022">Lokal dosyalarınıza Boxee'den erişmek için, hard diskinizden veya ağ kaynağınızdan bir klasör ekleyin.</string>
+  <string id="56023">Yerel Medya Yok</string>
+  <string id="56024">Lokal dosyalarınızı Boxee'de oynatmak için, hard diskinizden veya ağ kaynağınızdan bir klasör ekleyin.</string>
+  <string id="56025">NOT. Kaynağınızın boyutuna bağlı olarak, Boxee'nin klasörü taraması birkaç dakika sürebilir.</string>
+  <string id="56026">Henüz özel bilgi yok</string>
+  <string id="56027">Özel bilgiler, üçüncü şahıslardan alınan apps.kitaplıklarıdır. Bunları, internette arayarak bulabilirsiniz.</string>
+  <string id="56028">Özel bilgi ekle</string>
+  <string id="56029">Henüz lokal medya kaynağı tanımlanmamış.</string>
+  <string id="56030">Lokal dosyalarınızı Boxee'de oynatmak için, hard diskinizden veya ağ kaynağınızdan bir klasör ekleyin.</string>
+  <string id="56031">Eklemeye hazır olduğunuzda, aşağıdaki düğmeye tıklayarak URL'sini ekleyin.</string>
+  <string id="56032">[COLOR yellow]www.boxee.tv/services[/COLOR] adresini ziyaret edin. </string>
+  <string id="56033">Boxee Offline...</string>
+  <string id="56034">Boxee internete bağlı olmadığından, görmek istediğiniz içerik şu anda mevcut değil.</string>
+  <string id="56035">Ağ Sihirbazı</string>
+  <string id="56036">Görüntülenecek bölüm yok.</string>
+  <string id="56037">Favoriler yok.</string>
+  <string id="56038">Özel bilgiler boş.</string>
+  <string id="56039">Bu özel bilgiler klasöründe apps.yok.</string>
+  <string id="56040">Geçerli filtre için mevcut film yok.</string>
+  <string id="56041">Boxee internet’e bağlı olmadığında tanıtımlar mevcut olmaz.</string>
+  <string id="56042">Boxee oynatılacak bir tanıtım bulamadı.</string>
+  <string id="56043">Daha sonra izlemek üzere bir film, program ya da internet videosu listesi hazırlayın.[CR][CR]Youtube, Vimeo ve binlerce başka sayfadan Boxee Bookmarklet&apos;i kullanarak videolar indirin.[CR][CR]Yıldız düğmesi aracılığıyla herhangi bir bölümünü Sıranıza eklemek istediğiniz programı favori olarak seçin.</string>
+  <string id="56044">Daha fazlası için</string>
+  <string id="56046">Başlayın</string>
+  <string id="56047">Harika!</string>
+  <string id="56048">[COLOR green]%s[/COLOR] adresine nasıl başlayabileceğinizi gösteren bir e-posta gönderdik.</string>
+  <string id="56049">Henüz Lokal Kaynak Yok</string>
+  <string id="56050">Lokal dosyalara Boxee&apos;de göz atmak için hard diskinizden veya ağ kaynağınızdan bir klasör ekleyin.</string>
+
+  <string id="56051">Seçtiğiniz TV programlarının yeni bölümleri burada gösterilecek; dilerseniz videoyu Sonra İzle bölümüne sürükleyerek ekleyebilirsiniz.[CR]Ayrıca web üzerinden de video ekleyebilirsiniz. Talimatlar için [COLOR yellow]http://www.boxee.tv/watchlater[/COLOR] adresini ziyaret edin.</string>
+
+  <string id="56061">Lokal medya yok...</string>
+  <string id="56062">Hiç öğe yok...</string>
+
+  <string id="56070">Henüz kaynak yok...</string>
+  <string id="56071">Bilgisayarların veya ağ sürücülerinden video, şarkı veya resimlere eriş.[CR][CR]Kaynak eklemek için, dosyalarının içinde dolaş ve medyalarının bulunduğu klasörü bul. Daha sonra, ekranın sağ üst tarafından[COLOR boxeegreenheidi]+ düğmesini[/COLOR] seç.</string>
+
+  <string id="56080">Arkadaşlarının paylaştığı videolar alınıyor...</string>
+  <string id="56081">Bu bazen biraz vakit alabilir, bu nedenle Boxee sihrini gösterirken lütfen sabırlı ol.</string>
+  <string id="56085">Daha sonra izlemek için</string>
+
+  <!-- queue/watch later screen -->
+  <string id="57000">Eklendiği kaynak: </string>
+  <string id="57001">Web </string>
+  <string id="57002">Kitaplık </string>
+  <string id="57003">Bugün</string>
+  <string id="57004">...gün önce</string>
+  <string id="57005">...gün önce</string>
+  <string id="57006">Favori Program</string>
+  <string id="57007">Dün</string>
+  <string id="57008">Daha eski</string>
+  <string id="57010">Ana Ekrana geri dön</string>
+
+  <!-- history screen -->
+  <string id="57040">Seyredilenler </string> 
+  <string id="57041">Oynatılanlar </string> 
+
+  <string id="57100">Kablosuz ağ kurulamadı.[CR]Lütfen şifrenizi kontrol edip tekrar deneyin.</string>
+  <string id="57101">Site SSL sertifikası geçerlenemedi</string>
+
+  <!-- short versions of months (string 21) -->
+  <string id="57121">Ock</string>
+  <string id="57122">Şub</string>
+  <string id="57123">Mar</string>
+  <string id="57124">Nis</string>
+  <string id="57125">Mayıs</string>
+  <string id="57126">Haz</string>
+  <string id="57127">Tem</string>
+  <string id="57128">Ağu</string>
+  <string id="57129">Eyl</string>
+  <string id="57130">Eki</string>
+  <string id="57131">Kas</string>
+  <string id="57132">Ara</string>
+
+  <!-- subtitles settings -->
+  <string id="57200">Varsayılan</string>
+  <string id="57201">57235</string>
+  <string id="57202">Arapça,ara</string>
+  <string id="57203">Katalanca,cat</string>
+  <string id="57204">Çince (basit),chi</string>
+  <string id="57205">Çince (geleneksel),zho</string>
+  <string id="57206">Hırvatça,cos</string>
+  <string id="57207">Çekce,ces</string>
+  <string id="57208">Danca,dan</string>
+  <string id="57209">Almanca,deu</string>
+  <string id="57210">Flemenkçe,dut</string>
+  <string id="57211">Estonca,est</string>
+  <string id="57212">İngilizce,eng</string>
+  <string id="57213">Fince,fin</string>
+  <string id="57214">Fransızca,fra</string>
+  <string id="57215">Yunanca,gre</string>
+  <string id="57216">İbranice,heb</string>
+  <string id="57217">Macarca,hun</string>
+  <string id="57218">Endonezce,ind</string>
+  <string id="57219">İtalyanca,ita</string>
+  <string id="57220">Japonca,jpn</string>
+  <string id="57221">Korece,kor</string>
+  <string id="57222">Litvanyaca,lit</string>
+  <string id="57223">Norveççe,nor</string>
+  <string id="57224">Farsça,fas</string>
+  <string id="57225">Lehçe,pol</string>
+  <string id="57226">Portekizce,por</string>
+  <string id="57227">Portekizce (Brezilya),por</string>
+  <string id="57228">Rusça,rus</string>
+  <string id="57229">Sırpça,srp</string>
+  <string id="57230">Slovakça,slk</string>
+  <string id="57231">Slovence,slv</string>
+  <string id="57232">İspanyolca,spa</string>
+  <string id="57233">İsveçce,swe</string>
+  <string id="57234">Türkçe,tur</string>
+  <string id="57235">Ukrayna Rusçası,ukr</string>
+
+  <string id="57290">Tercih Edilen Dil</string> <!-- Audio & Subtitles Preferred Language -->
+  
+  <string id="57300">Ara geçiş politikası</string>
+  <string id="57301">Otomatik</string>
+  <string id="57302">Video</string>
+  <string id="57303">Film</string>
+  <string id="57304">Sadece uzamsal</string>
+  <string id="57305">Sadece üst kısım</string>
+  <string id="57306">Derecelendirme olmadıkça asla</string>
+  <string id="57307">Asla</string>
+  
+  <string id="57310">Halka açma filtresi</string>
+  <string id="57315">Gaussian filtresi</string>
+
+  <string id="57400">Dil</string>
+  <string id="57401">Dilinizi %s olarak değiştirmek istiyor musunuz?[CR]Değişimin geçerli olması için bir yeniden başlatma gerekecektir.</string>
+  
+  <!-- afp settings --> 
+  <string id="57500">AFP istemci</string>
+
+  <!-- browse menu -->
+  <!-- Movie screen -->
+  <string id="57600">Sıram</string>
+  <string id="57601">Film Kitaplığı</string>
+  <string id="57605">TV Programı Kitaplığı</string>
+  <string id="57606">TV Programlarım</string>
+  <!-- Files screen -->
+  <string id="57610">Tanımlanmamış</string>
+
+  <!-- Live TV -->
+  <string id="58000">Canlı TV</string>
+  <string id="58001">Kanallar aranıyor</string>
+  <string id="58002">Arama tamamlandı. [CR]%dkanallar bulundu. </string>
+  <string id="58003">Arama tamamlandı. [CR]kanal bulunamadı. </string>
+  <string id="58004">Bütün Kanallar</string>
+  <string id="58005">Boxee Canlı TV</string>
+  <string id="58006">Birkaç dakika içinde Boxee'nin eşsiz sosyal arayüzüyle favori TV kanallarınızın keyfini çıkarmaya başlayacaksınız.[CR][CR]Lütfen Canlı TV adaptörüne bir anten veya kablo çıkışı bağlayın ve [COLOR boxeegreenheidi] İleri öğesini seçin[/COLOR].</string>
+  <string id="58007">Canlı TV adaptörüne bir anten veya TV kablosu bağlayın.</string>
+  <string id="58010">Şu anda </string>
+  <string id="58011">Prog. Rehberi</string>
+  <string id="58012">Bölgeniz için en doğru program rehberini bulmak için konumunuzu belirlememiz gerekmektedir. </string>
+  <string id="58013">Ülkenizi belirtin</string>
+  <string id="58014">Şehrinizi belirtin</string>
+  <string id="58015">Kanal Listeleme</string>
+  <string id="58016">Boxee size tanımladığınız konumun kanal listelerini sunacak.[CR][CR]Boxee'ye TV sinyallerinin nereden geldiğini tanımlayın, böylece doğru kanal listelerine ulaşabiliriz.</string>
+  <string id="58018">İlinizi belirtin</string>
+  <string id="58019">Anten</string>
+  <string id="58020">Kanal dizisini yeniden ara. %s şu anda bulunan kanallar...</string>
+  <string id="58021">İzleyiciliğimi arkadaşlarımla paylaş</string>
+  <string id="58022">Canlı TV Ayarı'nı yeniden yapılandırın...</string>
+  <string id="58023">Yeniden Aramayı Başlatın</string>
+  <string id="58024">Açılış Ayarı</string>
+  <string id="58025">Durum</string>
+  <string id="58026">Bağlandı</string>
+  <string id="58027">Bağlantı kesildi</string>
+  <string id="58028">Aygıt</string>
+  <string id="58029">Konum</string>
+  <string id="58030">Kablo</string>
+  <string id="58031">Geçersiz posta kodu lütfen tekrar deneyin</string>
+  <string id="58032">Canlı TV[CR]Yükleniyor...</string>
+  <string id="58033">YENİ</string>
+  <string id="58034">CANLI</string>
+  <string id="58036">Favori Yayınlarınızı Takip Edin</string>
+  <string id="58037">Yeni bölümleri yayına girdiğinde otomatik olarak size ulaştırılmasını[CR] istediğiniz TV programlarını seçin. </string>
+  <string id="58040">Boxee, izlediğiniz şeyleri Facebook Zaman Çizelgesinde arkadaşlarınız &amp; aileniz ile paylaşabilirsiniz.[CR][CR]İstediğiniz zaman Ayarlar &gt; Live TV öğesinden kapatabilirsiniz.</string>
+  <string id="58041">[CR]Boxee&apos;i Sosyalleştirin</string>
+  <string id="58042">Atla</string>
+  <string id="58045">Bildirimler</string>
+  <string id="58046">Harika - bütün favorilerinizi kaydettik. [CR][CR]Boxee şimdi favori programlarınızın yeni online bölümlerini TV sıranıza ekleyecek ve size Canlı TV'de bu hafta nelerin olduğunu gösteren haftalık bir e-posta gönderecek. </string>
+  <string id="58047">Bana seçtiklerim hakkında e-posta gönder:</string>
+  <string id="58048">Yeni Bölümler</string>
+  <string id="58049">Bütün Bölümler</string>
+  <string id="58050">[B]Canlı TV[/B]</string>
+  <string id="58051">[B]Zayıf ya da sinyal yok[B]</string>
+  <string id="58052">Sinyal Yok</string>
+  <string id="58053">Kanal Yok</string>
+  <string id="58054">Tarıyor</string>
+  <string id="58055">%d Kanallar</string>
+  <string id="58056">Rehber</string>
+  <string id="58057">Ekran görüntü oranını 4:3&apos;e ayarla</string>
+  <string id="58058">İzlediğin şeyleri Facebook Timeline'de arkadaşların ve &amp; ailen ile paylaş.[CR][CR]Yapman gereken tek şey Boxee'ye izlediklerini paylaşma izni vermek.[CR][CR]İstediğin zaman bunu Ayarlar &gt; Live TV'den kapatabilirsin.</string>
+  <string id="58059">İzinleri Güncelle</string>
+  <string id="58060">TV görüntüleme oranına sınır koyun</string>
+  <string id="58061">Bir TV Görüntüleme Oranı Sınırı Seçin</string>
+  <string id="58062">TV programlarının yerel kütüphanelerde ve internet kütüphanelerinde gösterimini kısıtlayacak sınırı belirleyin.[CR]Eğer Boxee Canlı TV'niz varsa, programlar listede görüntülenir; ancak görüntülemek için bir şifre gerekir. [CR]Tanımlanamayan yerel dosyalar filtrelenemez. </string>
+  <string id="58063">Bir Film Görüntüleme Oranı Sınırı Seçin</string>
+  <string id="58064">Filmlerin talep üzerine, lokal ve internet kitaplığında görüntülenmesine kısıtlama getirmek için bir sınır seçin.[CR]Eğer Boxee Live TV&apos;niz varsa, filmler listede gözükecektir; fakat izlemek için şifreye ihtiyacınız olacaktır.[CR]Tanımlanamayan lokal dosyalar filtrelenemez.</string>
+  <string id="58065">Şifre belirle</string>
+  <string id="58066">Atadığınız görüntüleme oranı sınırının ötesindeki içeriği görüntülemek ve ayrıca ebeveyn kontrolleri üzerinde değişiklik yapma için bu şifreyi girmeniz gerekir. </string>
+  <string id="58067">Sınırlanmış İçerik</string>
+  <string id="58068">Bu videoyu görüntülemeniz için bir şifre gerekli....</string>
+  <string id="58069">Hmm... bu o şifre değil. Tekrar deneyin.</string>
+  <string id="58070">Film görüntüleme oranına sınır koyun...</string>
+  <string id="58071">Yetişkin içeriği için bir şifre belirleyin...</string>
+  <string id="58072">Yetişkin içeriğinin şifresini değiştirin...</string>
+  <string id="58073">Şifreyi değiştirin</string>
+  <string id="58074">Devam etmek için mevcut şifrenizi girin...</string>
+  <string id="58075">Doğrulandı, şimdi yeni şifrenizi girin.</string>
+  <string id="58076">Bölgenizdeki kanallar aranırken keyfinize bakın.</string>
+  <string id="58077">Live TV sayfasına gidin</string>
+  <string id="58078">Hımm, kanal bulunamadı…Tekrar deneyin ya da iptal edin</string>
+  <string id="58079">Taramayı iptal mi etmek istiyorsunuz?</string>
+  <string id="58080">Kanal aramayı durdurmak istediğinizden emin misiniz?</string>
+  <string id="58081">İnternet yok</string>
+  <string id="58082">Kanal taraması için internet bağlantısı gerekli.</string>
+  <string id="58083">Kapat</string>
+  <string id="58084">Taramayı iptal et</string>
+  <string id="58085">Live TV'yi kapatmadan önce beni uyar</string>
+  <string id="58090">Hiç kanal bulunamadı</string>
+  <string id="58091">Anteni başka bir yöne döndürüp öyle dene. Doğru şekilde bağlı olduğundan emin ol.[CR][CR]Ücretsiz QAM kanalları alabilmek için internet/kablo sağlayıcından gelen koaksiyel kabloyu da bağlayabilirsin.</string>
+  <string id="58092">Kablonun USB ayarlayıcıya düzgün şekilde bağlı olduğundan ve set üstü kutudan gelmediğinden emin ol (splitter kullan).[CR][CR]USB ayarlayıcın ile birlikte gelen anteni de kullanabilirsin (veya başka anteni).</string>
+  <string id="58093">Kablo Kullan</string>
+  <string id="58094">Anten Kullan</string>
+  <string id="58095">Live TV'yi[CR]Yeniden yapılandır</string>
+  <string id="58096">Anten veya Kablo hattının USB ayarlayıcıya bağlı olduğundan emin ol.[CR][CR]Mevcut kanal sıralamana yaptığın değişiklik kaybolacak.</string>
+
+  <!--strings through from 80000-80999 reserved for server definitions -->
+  <string id="80000">Şuradan Al </string>
+  <string id="80001">Etkinleştirmek için şuraya git:</string>
+  <string id="80002">Video beslemelerinize dahil etmek istediğiniz servisleri seçin</string>
+  <string id="80003">Beslemeyle Facebook, Twitter ve Google Buzz streams üzerinden video [CR]oynatabilirsiniz.[CR][CR]Bu özelliği açmak için, internet sitemizi ziyaret ederek hesaplarınızı etkinleştirmeniz [CR]gerekir:</string>
+  <string id="80004">Facebook Connect devre dışı</string>
+  
+  <!--strings through from 81000-81099 reserved for payment server errors -->
+  <string id="81000">Sunucu hatası nedeniyle eylem tamamlanamıyor.</string>
+  <string id="81001">Hatalı şifre.</string>
+  <string id="81002">Ödeme Gerekiyor</string>
+  <string id="81003">Etkin olmayan ürünlere abone olunmaya çalışılıyor</string>
+  <string id="81004">Bu ürüne zaten abone oldunuz</string>
+  <string id="81005">Doğrulama hatası. Lütfen başka bir kredi kartı deneyin.</string>
+  <string id="81006">Bu ürüne şu anda abone değilsiniz</string>
+  
+  <!--strings from 82000-82099 reserved for item summary -->
+  
+  <string id="82000"> ...göre filtrele </string>
+  <string id="82001"> ...göre sırala </string>
+  <string id="82002"> tür </string>
+  <string id="82003">Albümler </string>
+  <string id="82004"> şuna göre </string>
+  <string id="82005">Sanatçıya Göre Müzik</string>
+  <string id="82006">Albüme Göre Müzik</string>
+
+  <!-- strings from 90000 - 90020 reserved for language templates -->
+
+  <string id="90000">%sort%%filter%%source%%media%</string> <!-- apps -->
+  <string id="90001">%sort%%channel%%filter%%source%%media%</string> <!-- movies -->
+  <string id="90002">%sort%%channel%%filter%%source%%media%</string> <!-- shows -->
+  <string id="90003">%sort%%filter%%media%</string> <!-- albums -->
+  <string id="90004">%sort%%media%</string> <!-- photos -->
+  <string id="90005">%sort%%media%</string> <!-- local -->
+  <string id="90006"></string> <!-- a prefix for sort (used in other languages) -->
+  <string id="90007"></string> <!-- a prefix for channel (used in other languages) -->
+  <string id="90008">%sort%%channel%%filter%%source%%media%</string> <!-- trailers -->
+  
+  <!-- strings from 90040 - 90080 reserved for window descriptions -->
+  
+  <string id="90040">Apps</string><!--  usually copied from 53914 -->
+  <string id="90041">Film</string><!--  usually copied from 342 -->
+  <string id="90042">Program</string><!--  usually copied from 1051 -->
+  <string id="90043">Albüm</string><!--  usually copied from 51407 -->
+  <string id="90044">Resim</string><!--  usually copied from 53516/53519 -->
+  <string id="90045">Tanıtım</string><!--  usually copied from 1053 -->
+  <string id="90046">Sanatçı</string><!--  usually copied from 51408 -->
+  <string id="90047">Video</string><!--  usually copied from 10006 -->
+  <string id="90048">Bölüm</string><!--  usually copied from 20360 -->
+  <string id="90049">Tanımlanamayan Video</string><!--  usually copied from 51361 -->
+  <string id="90051">Öğe</string>
+
+  <!-- strings from 90100 - 90130 reserved for Advanced settings -->
+  <string id="90040">Apps</string><!-- 53914 is the title and was already translated in the past-->
+  <string id="90041">Film</string><!-- 342 is the title and was already translated in the past-->
+  <string id="90042">Program</string><!-- 1051 is the title and was already translated in the past-->
+  <string id="90043">Albüm</string><!-- 51407 is the title and was already translated in the past-->
+  <string id="90044">Resim</string><!-- 53516/53519 is the title and was already translated in the past-->
+  <string id="90045">Tanıtım</string><!-- 1053 is the title and was already translated in the past-->
+  <string id="90046">Sanatçı</string><!-- 51408 is the title and was already translated in the past-->
+  <string id="90047">Video</string><!-- 10006 is the title and was already translated in the past-->
+  <string id="90048">Bölüm</string><!-- 20360 is the title and was already translated in the past-->
+  <string id="90049">Tanımlanamayan Video</string><!-- 51361 is the title and was already translated in the past-->
+  <string id="90050">Öğe</string><!-- 54059 is the title and was already translated in the past-->
+
+  <string id="90100">Sunucu ortamı</string>
+  <string id="90101">Test</string>
+  <string id="90102">Üretim</string>
+  <string id="90103">Sunucu ortamını seçin:</string>
+  <string id="90104">Sunucu ortamı</string>
+  <string id="90105">Sunucu ortamını değiştirmek istediğinizden emin misiniz?</string>
+  
+  <!-- strings from 90130 - 90180 reserved for EPG -->
+  <string id="90131">[B]SABAH[/B]</string>
+  <string id="90132">[B]ÖĞLEDEN SONRA[/B]</string>
+  <string id="90133">[B]AKŞAM[/B]</string>
+  <string id="90134">[B]GECE[/B]</string>
+  <string id="90135">Bugün</string>
+  <string id="90136">Yarın</string>
+  <string id="90137"> ve </string> <!-- keep space at the begining and end-->
+  <string id="90138">%d diğerleri izliyor.</string> <!-- place the %d where the number should appear, do no translate the %d, keep as is -->
+
+  <!-- more Browser -->
+  <string id="90210">Yerel hafızayı temizle...</string>
+  <string id="90211">Tarayıcının yerel hafızasını temizle? </string>
+
+  <!-- VIDEO OSD -->
+  <string id="90212">Gelişmiş Ayarlar</string>
+  <string id="90213">Videodan Çık</string>
+  <string id="90214">Kapalı</string>
+  <string id="90215">Ana klasöre geri dön</string>
+  <string id="90216">Lokal olarak tara...</string>
+  <string id="90217">İnternette tara...</string>
+  <string id="90218">Bu video ileri/geri özelliğini desteklemiyor</string>
+
+  <!-- Live TV -->
+  <string id="90310">Canlı TV'ye Geri Dön</string>
+  <string id="90311">Kanal düzenle</string>
+  <string id="90312">Paylaşımı kapat</string>
+  <string id="90313">Paylaşımı aç</string>
+  <string id="90315">Sıralamayı özelleştirmek için kanalları gizle veya yeniden adlandır.</string>
+  <string id="90316">Live TV'den çık</string>
+  <string id="90317">Live TV'den çıkmak istediğinden emin misin?</string>
+  <string id="90318">Kanal adı</string>
+  <string id="90319">Bulunduğun bölge için bir plan listemiz yok.</string>
+  <string id="90320">Eşleşen planı seç:</string>
+  <string id="90321">Plan yok</string>
+
+  <!-- Main Menu -->
+  <string id="90400">Ara yazmaya [B]başlayın[/B]</string>
+
+  <!-- MEDIA ACTION -->
+  <string id="90450">Uygulama</string>
+  <string id="90451">Program</string>
+  <string id="90452">Genel Bakış</string>
+  <string id="90453">Kadro</string>
+  <string id="90454">İlgili</string>
+
+  <!-- HOME SCREEN -->
+  <string id="90550">Şebeke Ayarları</string>
+
 </strings>

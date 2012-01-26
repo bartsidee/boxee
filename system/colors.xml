@@ -139,4 +139,11 @@
 	<color name="whitesmoke">fff5f5f5</color>
 	<color name="yellow">ffffff00</color>
 	<color name="yellowgreen">ff9acd32</color>
+	<color name="whiteheidi">FFF8F8F8</color>
+	<color name="lightgreyheidi">FFB3B8BB</color>
+	<color name="mediumgreyheidi">FF6A7279</color>
+	<color name="darkgreyheidi">FFB3B8BB</color>	
+	<color name="boxeegreenheidi">FF8CC544</color>
+	<color name="activeblueheidi">FF2BB6EA</color>
+	<color name="errorredheidi">FFD8544E</color>
 </colors>

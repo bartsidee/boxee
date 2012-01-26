@@ -64,13 +64,20 @@ static char symbol_map[33] = ")!@#$%^&*([]{}-_=+;:\'\",.<>/?\\|`~";
 #define CTL_BUTTON_IP_ADDRESS 307
 #define CTL_BUTTON_SPACE      32
 
-#define CTL_LABEL_EDIT        310
 #define CTL_LABEL_HEADING     311
 
 #define CTL_BUTTON_BACKSPACE    8
 
 #define SEARCH_DELAY         1000
 #define REMOTE_SMS_DELAY     1000
+
+#define KEYS_IN_ROW           9
+
+#define SYMBOLS_ON               "symbols-on"
+#define CAPS_ON               "caps-on"
+#define THREE_LINES           "3-lines"
+#define FOUR_LINES            "4-lines"
+
 
 using namespace BOXEE;
 
@@ -143,7 +150,7 @@ void CGUIDialogKeyboard::OnInitWindow()
   if (!m_strDoneText.IsEmpty())
   {
     SET_CONTROL_LABEL(CTL_BUTTON_DONE,m_strDoneText);
-  } 
+}
   else
   {
     SET_CONTROL_LABEL(CTL_BUTTON_DONE,g_localizeStrings.Get(20177));
@@ -241,7 +248,7 @@ bool CGUIDialogKeyboard::OnAction(const CAction &action)
       break;
     default:  //use character input
       {
-        //Highlight(action.id & 0xFF);
+      //Highlight(action.id & 0xFF);
         if (action.unicode < 128)
         {
           CAction a(action);
@@ -254,7 +261,7 @@ bool CGUIDialogKeyboard::OnAction(const CAction &action)
           
           a.unicode = newStr[0];
           return m_pEdit->OnAction(a);
-        }
+    }
         else
         {
           return m_pEdit->OnAction(action);
@@ -290,9 +297,15 @@ bool CGUIDialogKeyboard::OnMessage(CGUIMessage& message)
 
     case CTL_BUTTON_CAPS:
       if (m_keyType == LOWER)
+      {
         m_keyType = CAPS;
+        SetProperty(CAPS_ON, true);
+      }
       else if (m_keyType == CAPS)
+      {
         m_keyType = LOWER;
+        SetProperty(CAPS_ON, false);
+      }
       UpdateButtons();
       break;
 
@@ -438,13 +451,13 @@ void CGUIDialogKeyboard::OnClickButton(int iButtonControl)
     {
       CStdString c = btn->GetLabel();    
       g_charsetConverter.utf8ToW(c, newString);
-    }
+  }
     else
     {
       return;
-    }
+}
   }
-  
+
   if (newString.size() > 1)
   {
     CStdStringW text = m_pEdit->GetUnicodeLabel();
@@ -516,7 +529,7 @@ WCHAR CGUIDialogKeyboard::GetCharacter(int iButton)
   if (iButton == CTL_BUTTON_SPACE)
   {
     return 32; // Space
-  }
+    }
   
   CGUIButtonControl *btn = (CGUIButtonControl *)GetControl(iButton);
   if (btn && btn->GetControlType() == GUICONTROL_BUTTON)
@@ -525,7 +538,7 @@ WCHAR CGUIDialogKeyboard::GetCharacter(int iButton)
     CStdStringW newStr;
     g_charsetConverter.utf8ToW(c, newStr);
     return newStr[0];
-  }
+    }
   
   return 0;
 }
@@ -573,8 +586,10 @@ void CGUIDialogKeyboard::UpdateButtons()
   {
     SET_CONTROL_HIDDEN(iButton);
   }
-  
+
   // set correct alphabet characters...
+  int numOfKeys = ((m_keyType == SYMBOLS)?90:(65+g_application.GetKeyboards().GetActiveKeyboard().GetMaxID())) - 64;
+
   for (int iButton = 65; iButton <= ((m_keyType == SYMBOLS)?90:(65+g_application.GetKeyboards().GetActiveKeyboard().GetMaxID())); iButton++)
   {
     SET_CONTROL_VISIBLE(iButton);
@@ -593,10 +608,36 @@ void CGUIDialogKeyboard::UpdateButtons()
       aLabel = g_application.GetKeyboards().GetActiveKeyboard().GetCharacter(iButton - 65,true);
     }
     SetControlLabel(iButton, aLabel);
-  } 
+  }
   
+  // add extra keys for foreign languages
+  int numOfEmptyKeys = KEYS_IN_ROW - (numOfKeys % KEYS_IN_ROW);
+  if (numOfEmptyKeys == KEYS_IN_ROW)
+    numOfEmptyKeys = 0;
+  for (int iButton = 65 + numOfKeys; iButton < 65 + numOfKeys + numOfEmptyKeys; iButton++)
+  {
+    SET_CONTROL_VISIBLE(iButton);
+    SetControlLabel(iButton, "");
+  }
+
+  if (numOfKeys>36)
+  {
+    SetProperty(THREE_LINES, false);
+    SetProperty(FOUR_LINES, false);
+  }
+  else if (numOfKeys>27 && numOfKeys<=36)
+  {
+    SetProperty(THREE_LINES, false);
+    SetProperty(FOUR_LINES, true);
+  }
+  else
+  {
+    SetProperty(THREE_LINES, true);
+    SetProperty(FOUR_LINES, false);
+  }
+
   HideShowButtonLines();
-}
+  }
 
 // Show keyboard with initial value (aTextString) and replace with result string.
 // Returns: true  - successful display and input (empty result may return true or false depending on parameter)
@@ -616,7 +657,7 @@ bool CGUIDialogKeyboard::ShowAndGetInput(CStdString& aTextString, const CStdStri
   pKeyboard->SetText(aTextString);
   
   // do this using a thread message to avoid render() conflicts
-  ThreadMessage tMsg = {TMSG_DIALOG_DOMODAL, WINDOW_DIALOG_KEYBOARD, g_windowManager.GetActiveWindow()};
+  ThreadMessage tMsg(TMSG_DIALOG_DOMODAL, WINDOW_DIALOG_KEYBOARD, g_windowManager.GetActiveWindow());
   g_application.getApplicationMessenger().SendMessage(tMsg, true);
   pKeyboard->Close();
 
@@ -766,7 +807,7 @@ bool CGUIDialogKeyboard::ShowAndGetNewUsername(CStdString& customUsername)
   while(!exit)
   {
     // do this using a thread message to avoid render() conflicts
-    ThreadMessage tMsg = {TMSG_DIALOG_DOMODAL, WINDOW_DIALOG_KEYBOARD, g_windowManager.GetActiveWindow()};
+    ThreadMessage tMsg(TMSG_DIALOG_DOMODAL, WINDOW_DIALOG_KEYBOARD, g_windowManager.GetActiveWindow());
     g_application.getApplicationMessenger().SendMessage(tMsg, true);
 
     if (!pKeyboard->IsConfirmed())
@@ -903,9 +944,15 @@ void CGUIDialogKeyboard::Close(bool forceClose)
 void CGUIDialogKeyboard::OnSymbols()
 {
   if (m_keyType == SYMBOLS)
+  {
     m_keyType = LOWER;
+    SetProperty(SYMBOLS_ON, false);
+  }
   else
+  {
     m_keyType = SYMBOLS;
+    SetProperty(SYMBOLS_ON, true);
+  }
   UpdateButtons();
 }
 
@@ -973,6 +1020,7 @@ void CGUIDialogKeyboard::OnOK()
   }
 
   m_bIsConfirmed = true;
+
   Close();
 }
 

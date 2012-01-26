@@ -30,7 +30,9 @@
 #include "Application.h"
 #include "utils/Network.h"
 #include "utils/RegExp.h"
+#ifndef _BOXEE_
 #include "PartyModeManager.h"
+#endif
 #include "GUIDialogMediaSource.h"
 #include "GUIWindowFileManager.h"
 #include "Favourites.h"
@@ -792,7 +794,7 @@ bool CGUIMediaWindow::OnClick(int iItem)
         Update(m_vecItems->m_strPath);
       return true;
     }
-
+#ifndef _BOXEE_
     if (m_guiState.get() && m_guiState->AutoPlayNextItem() && !g_partyModeManager.IsEnabled() && !pItem->IsPlayList())
     {
       // TODO: music videos!
@@ -850,6 +852,7 @@ bool CGUIMediaWindow::OnClick(int iItem)
       return true;
     }
     else
+#endif
     {
       return OnPlayMedia(iItem);
     }
@@ -889,7 +892,7 @@ void CGUIMediaWindow::ShowShareErrorMessage(CFileItem* pItem)
   if (pItem->m_bIsShareOrDrive)
   {
     int idMessageText=0;
-    const CURL& url=pItem->GetAsUrl();
+    const CURI& url=CURI(pItem->m_strPath);
     const CStdString& strHostName=url.GetHostName();
 
     if (pItem->m_iDriveType != CMediaSource::SOURCE_TYPE_REMOTE) //  Local shares incl. dvd drive
@@ -1265,7 +1268,7 @@ bool CGUIMediaWindow::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
     }
   case CONTEXT_BUTTON_PLUGIN_SETTINGS:
     {
-      CURL url(m_vecItems->Get(itemNumber)->m_strPath);
+      CURI url(m_vecItems->Get(itemNumber)->m_strPath);
       CGUIDialogPluginSettings::ShowAndGetInput(url);
       return true;
     }
@@ -1310,9 +1313,9 @@ bool CGUIMediaWindow::WaitForNetwork() const
   if (!progress)
     return true;
 
-  CURL url(m_vecItems->m_strPath);
+  CURI url(m_vecItems->m_strPath);
   CStdString displayPath;
-  url.GetURLWithoutUserDetails(displayPath);
+  displayPath = url.GetWithoutUserDetails();
   progress->SetHeading(1040); // Loading Directory
   progress->SetLine(1, displayPath);
   progress->ShowProgressBar(false);

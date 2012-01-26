@@ -19,6 +19,7 @@
  *
  */
 
+#include "system.h"
 #include "MusicInfoTagLoaderAAC.h"
 #include "File.h"
 
@@ -52,11 +53,14 @@ int CMusicInfoTagLoaderAAC::ReadDuration(const CStdString& strFileName)
     int tagOffset = ReadID3Length(file);
 
     if ((duration = ReadMP4Duration(file, tagOffset, 0)))
-      ;
+    {
+    }
     else if ((duration = ReadADTSDuration(file, tagOffset)))
-      ;
+    {
+    }
     else if ((duration = ReadADIFDuration(file, tagOffset)))
-      ;
+    {
+    }
     file.Close();
   }
   
@@ -84,6 +88,12 @@ int CMusicInfoTagLoaderAAC::ReadADTSDuration(XFILE::CFile& file, int offset)
   uint64_t totalLength  = 0;
   uint32_t frames       = 0;
   float framesPerSec    = 0.f;
+
+  // FIXME - this takes too long, need to find another way
+  // for now set it to 0
+#if !defined(_LINUX) || defined(__APPLE__)
+  return 0;
+#endif
 
   file.Seek(offset);
   

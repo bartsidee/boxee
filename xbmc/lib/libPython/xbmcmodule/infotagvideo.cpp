@@ -22,6 +22,8 @@
 #include "infotagvideo.h"
 #include "pyutil.h"
 
+#include "../../../placement_new.h"
+
 #ifndef __GNUC__
 #pragma code_seg("PY_TEXT")
 #pragma data_seg("PY_DATA")
@@ -43,7 +45,7 @@ namespace PYXBMC
   {
     InfoTagVideo* self = (InfoTagVideo*)InfoTagVideo_Type.tp_alloc(&InfoTagVideo_Type, 0);
     if (!self) return NULL;
-    new(&self->infoTag) CVideoInfoTag();
+   PLACEMENT_NEW(&self->infoTag) CVideoInfoTag();
     self->infoTag = infoTag;
 
     return self;

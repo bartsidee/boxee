@@ -12,6 +12,10 @@
 #include "bxdatabase.h"
 #include "logger.h"
 #include "time.h"
+#include "../../MetadataResolverMusic.h"
+#include "../../guilib/GUIMessage.h"
+#include "../../guilib/GUIWindowManager.h"
+#include "GUIUserMessages.h"
 
 using namespace std;
 
@@ -85,18 +89,18 @@ bool BXMetadataEngine::Start()
   m_bStarted = true;
 
   { // we need to put this in a block to avoid depleting the database pool
-    BXMediaDatabase pDB;
-    // Reset metadata if required
-    if (BXConfiguration::GetInstance().GetIntParam("Boxee.ResetMetadata",0) == 1)
-    {
-      pDB.ResetMetadata();
-    }
+  BXMediaDatabase pDB;
+  // Reset metadata if required
+  if (BXConfiguration::GetInstance().GetIntParam("Boxee.ResetMetadata",0) == 1)
+  {
+    pDB.ResetMetadata();
+  }
 
-    // Reset all items in intermediate status, such as resolving or unresolved to new
-    if (pDB.ResetUnresolvedFiles() != MEDIA_DATABASE_OK)
-    {
-      LOG(LOG_LEVEL_ERROR, "Boxee Metadata Engine, Could not reset unresolved media files");
-    }
+  // Reset all items in intermediate status, such as resolving or unresolved to new
+  if (pDB.ResetUnresolvedFiles() != MEDIA_DATABASE_OK)
+  {
+    LOG(LOG_LEVEL_ERROR, "Boxee Metadata Engine, Could not reset unresolved media files");
+  }
   }
 
   {
@@ -116,13 +120,10 @@ bool BXMetadataEngine::Start()
 
 bool BXMetadataEngine::Stop()
 {
-  printf("BXMetadataEngine: asked to stop\n");
-  if (!m_bStarted) {
-    printf("BXMetadataEngine: already stopped\n");
+  if (!m_bStarted)
     return true;
-  }
 
-  LOG(LOG_LEVEL_DEBUG,"Boxee Metadata Engine, stopping....");
+  CLog::Log(LOGNOTICE, "Boxee Metadata Engine, stopping....");
 
   // Go over all resolvers and stop them
   std::vector<BXIMetadataResolver*>::iterator it = m_vecMetadataResolvers.begin();
@@ -141,9 +142,10 @@ bool BXMetadataEngine::Stop()
   m_VideoFolderProcessor.SignalStop();
   m_AlbumMetadataProcessor.SignalStop();
 
-  printf("Stopping audio processor\n");
+  CLog::Log(LOGNOTICE, "Stopping audio processor");
   m_AudioFolderProcessor.Stop();  
-  printf("Stopping video processor\n");
+
+  CLog::Log(LOGNOTICE, "Stopping video processor");
   m_VideoFolderProcessor.Stop();
 
   m_AlbumMetadataProcessor.Stop();
@@ -207,8 +209,8 @@ bool BXMetadataEngine::Resolve(BXMetadataScannerJob* pJob)
   // the DataBase handle shouldn't be active the whole function since it hold a db connection in the pool, and
   // we might try to catch another handle in its sub functions.
   {
-    BXMediaDatabase pDB;
-    pDB.UpdateFolderResolving(pMediaFolder);
+  BXMediaDatabase pDB;
+  pDB.UpdateFolderResolving(pMediaFolder);
   }
 
   std::vector<std::vector<BXFolder*> > resolutions;
@@ -231,15 +233,14 @@ bool BXMetadataEngine::Resolve(BXMetadataScannerJob* pJob)
       resolutions.push_back(vecResult);
       bResult &= true;
     }
-    /*
 		else if (iResult == RESOLVER_ABORTED) 
 		{
 			BXMediaDatabase db;
 			db.UpdateFolderAborted(pMediaFolder->GetPath());
 			BXUtils::FreeFolderVec(vecResult);
-			bResult &= false;
+			bResult &= true;
 		}
-
+    /*
 		else if (iResult == RESOLVER_CANT_ACCESS)
 		{
 		  BXMediaDatabase db;
@@ -310,7 +311,7 @@ int BXMetadataEngine::ProcessFolders(const std::string& strType, BXBGProcess& pr
       // This call will block if the processor is at maximum capacity
       // This ensures that the thread will not overload
 
-      //LOG(LOG_LEVEL_INFO,"BXMetadataEngine::ProcessFolders,  queueing job, processor = %s, path = %s (resolver)", processor.GetName().c_str(), pFolder->GetPath().c_str());
+      LOG(LOG_LEVEL_DEBUG,"BXMetadataEngine::ProcessFolders,  queueing job, processor = %s, path = %s (resolver)", processor.GetName().c_str(), pFolder->GetPath().c_str());
       if (!processor.QueueJob(job))
       {
         LOG(LOG_LEVEL_ERROR, "BXMetadataEngine::ProcessFolders, unable to queue job for folder, path = %s (resolver)", pFolder->GetPath().c_str());
@@ -337,20 +338,22 @@ void BXMetadataEngine::ResolveAlbums()
 
   int iResult = pDB.GetUnresolvedAlbums(vecUnresolvedAlbums);
 
+  if (iResult == MEDIA_DATABASE_ERROR)
+    return;
 
-  // TODO: Divide the list into n parts, where n equals the number of threads in the album resolver processor
-
-  // Create BXAlbumResolverJob for each part of the list and feed them into the processor
-  if (iResult != MEDIA_DATABASE_ERROR)
+  for(size_t i = 0; i < vecUnresolvedAlbums.size(); i++)
   {
-    BXAlbumResolverJob* job = new BXAlbumResolverJob(vecUnresolvedAlbums);
+    std::vector<BXAlbum*> vecAlbumBatch;
+    vecAlbumBatch.push_back(vecUnresolvedAlbums[i]);
+    BXAlbumResolverJob* job = new BXAlbumResolverJob(vecAlbumBatch);
     if (!m_AlbumMetadataProcessor.QueueJob(job))
     {
-      for (size_t i = 0; i < vecUnresolvedAlbums.size(); i++) 
+      // If we were not able to queue the job, delete all albums in the batch
+      for (size_t j = 0; j < vecAlbumBatch.size(); j++)
       {
-        delete vecUnresolvedAlbums[i];
+        delete vecAlbumBatch[j];
       }
-      vecUnresolvedAlbums.clear();
+      vecAlbumBatch.clear();
       delete job;
     }
   }
@@ -366,16 +369,6 @@ int BXMetadataEngine::EngineThread(void *pParam)
 #ifdef _WIN32
   ::SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 #endif
-
-  LOG(LOG_LEVEL_DEBUG,"BXMetadataEngine::EngineThread,  Boxee Metadata Engine thread starting 1....(resolver)");
-
-  // Start engine two minutes after boxee startup to allow share availability to achieve steady state
-  //  int count = 120;
-  //  while (count > 0 && Boxee::GetInstance().GetMetadataEngine().m_bStarted)
-  //  {
-  //    SDL_Delay(1000);
-  //    count--;
-  //  }
 
   LOG(LOG_LEVEL_DEBUG,"BXMetadataEngine::EngineThread,  Boxee Metadata Engine thread starting....(resolver)");
 
@@ -418,17 +411,37 @@ BXMetadataScannerJob::~BXMetadataScannerJob()
 
 void BXMetadataScannerJob::DoWork()
 {
-  //time_t start = time(NULL);
-
   LOG(LOG_LEVEL_DEBUG,"BXMetadataScannerJob::DoWork, started resolving: %s (resolver)", m_pFolder->GetPath().c_str());
   BXMetadataEngine &engine  = Boxee::GetInstance().GetMetadataEngine();
 
-  if (!engine.IsStarted()) {
-    return;
-  }
-
   engine.Resolve(this);
 }
+
+// ///////////////////////////////////////
+// Album Rescan Job
+
+BXAlbumRescanJob::BXAlbumRescanJob(BXFolder* pFolder) : BXMetadataScannerJob(pFolder)
+{
+}
+
+void BXAlbumRescanJob::DoWork()
+{
+  std::string folderPath = GetFolderPath();
+  CMetadataResolverMusic::ResolveMusicFolder(this, true);
+
+  BXAlbum album;
+  BOXEE::Boxee::GetInstance().GetMetadataEngine().GetAlbumByPath(folderPath,&album);
+
+  CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_FILE_RESCAN_COMPLETE,album.m_iId);
+  msg.SetStringParam(folderPath);
+  g_windowManager.SendThreadMessage(msg);
+
+  CGUIMessage msg2(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_REFRESH_THUMBS);
+  g_windowManager.SendThreadMessage(msg2);
+}
+
+// ///////////////////////////////////////
+// Album Resolver Job
 
 BXAlbumResolverJob::BXAlbumResolverJob(const std::vector<BXAlbum*>& vecAlbums) : BXBGJob("BXAlbumResolverJob")
 {
@@ -486,10 +499,10 @@ bool BXMetadataEngine::GetTvShows(std::vector<BXMetadata*> &vecMediaFiles, const
   return pDB.GetTvShows(vecMediaFiles, strGenre, strPrefix, vecPathFilter, iItemLimit);
 }
 
-bool BXMetadataEngine::GetLinks(const std::string& strBoxeeId, std::vector<BXPath> & vecLinks)
+bool BXMetadataEngine::GetLinks(const std::string& strBoxeeId, std::vector<BXPath> & vecLinks, const std::vector<std::string>& vecPathFilter)
 {
   BXVideoDatabase pDB;
-  return pDB.GetLinks(strBoxeeId, vecLinks);
+  return pDB.GetLinks(strBoxeeId, vecLinks, vecPathFilter);
 }
 
 bool BXMetadataEngine::SearchTvShowsByTitle(const std::string& strTitle, std::vector<BXMetadata*> &vecTvShows, const std::vector<std::string>& vecPathFilter, int iItemLimit)
@@ -725,6 +738,18 @@ int BXMetadataEngine::GetAudioByPath(const std::string& strPath, BXMetadata* pMe
   return pDB.GetAudioByPath(strPath, pMetadata);
 }
 
+bool BXMetadataEngine::GetLocalShowGenres (std::set<std::string>& output , const std::vector<std::string>& vecPathFilter)
+{
+  BXVideoDatabase pDB;
+  return pDB.GetTvShowsGenres(output, vecPathFilter);
+}
+
+bool BXMetadataEngine::GetLocalMoviesGenres (std::set<std::string>& output , const std::vector<std::string>& vecPathFilter)
+{
+  BXVideoDatabase pDB;
+  return pDB.GetMoviesGenres(output, vecPathFilter);
+}
+
 int BXMetadataEngine::GetVideoByPath(const std::string& strPath, BXMetadata* pMetadata)
 {
   BXVideoDatabase pDB;
@@ -743,6 +768,12 @@ int BXMetadataEngine::AddMediaFolder(const std::string& strPath, const std::stri
   return pDB.AddMediaFolder(strPath, strType, iModTime);
 }
 
+bool BXMetadataEngine::IsMediaFolderBeingResolved(const std::string& strPath)
+{
+  BXMediaDatabase pDB;
+  return pDB.IsFolderBeingResolved(strPath);
+}
+
 int BXMetadataEngine::GetMediaFolderId(const std::string& strPath, const std::string& strType)
 {
   BXMediaDatabase pDB;
@@ -755,10 +786,10 @@ bool BXMetadataEngine::UpdateIfModified(const std::string& strPath, int iModDate
   return pDB.UpdateIfModified(strPath, iModDate, bModified);
 }
 
-int BXMetadataEngine::GetVideosByFolder(std::map<std::string, BXMetadata*> &mapMediaFiles, const std::string& strFolderPath)
+int BXMetadataEngine::GetVideosByFolder(std::map<std::string, BXMetadata*> &mapMediaFiles, const std::string& strFolderPath, bool bGetFiles)
 {
   BXVideoDatabase pDB;
-  return pDB.GetVideosByFolder(mapMediaFiles, strFolderPath);
+  return pDB.GetVideosByFolder(mapMediaFiles, strFolderPath, bGetFiles);
 }
 
 int BXMetadataEngine::RemoveVideoByPath(const std::string& strPath) 
@@ -839,10 +870,10 @@ int BXMetadataEngine::MarkFolderTreeNew(const std::string& strFolderPath)
   return pDB.UpdateFolderTreeNew(strFolderPath);
 }
 
-int BXMetadataEngine::MarkFolderUnresolved(const std::string& strFolderPath) 
+int BXMetadataEngine::MarkFolderUnresolved(const std::string& strFolderPath, bool bDecreaseRescan/* = true*/)
 {
   BXMediaDatabase pDB;
-  return pDB.UpdateFolderUnresolved(strFolderPath);
+  return pDB.UpdateFolderUnresolved(strFolderPath,bDecreaseRescan);
 }
 
 int BXMetadataEngine::MarkFoldersAvailable(const std::string& strFolderPath, bool bAvailable)
@@ -869,10 +900,16 @@ int BXMetadataEngine::DropVideoById(int iId)
   return pDB.DropVideoById(iId);
 }
 
-int BXMetadataEngine::RemoveAlbumById(int iId)
+int BXMetadataEngine::DropAlbumById(int iId)
 {
   BXAudioDatabase pDB;
   return pDB.DropAlbumById(iId);
+}
+
+int BXMetadataEngine::RemoveAlbumById(int iId)
+{
+  BXAudioDatabase pDB;
+  return pDB.RemoveAlbumById(iId);
 }
 
 unsigned int BXMetadataEngine::GetFolderDate(const std::string& strPath)
@@ -967,10 +1004,10 @@ bool BXMetadataEngine::AddMediaShare(const std::string& strLabel, const std::str
   return pDB.AddMediaShare(strLabel, strPath, strType, iScanType);
 }
 
-bool BXMetadataEngine::UpdateMediaShare(const std::string& strLabel, const std::string& strPath, const std::string& strType, int iScanType)
+bool BXMetadataEngine::UpdateMediaShare(const std::string& strOrgLabel, const std::string& strOrgType, const std::string& strLabel, const std::string& strPath, const std::string& strType, int iScanType)
 {
   BXMediaDatabase pDB;
-  return pDB.UpdateMediaShare(strLabel, strPath, strType, iScanType);
+  return pDB.UpdateMediaShare(strOrgLabel, strOrgType, strLabel, strPath, strType, iScanType);
 }
 
 bool BXMetadataEngine::DeleteMediaShare(const std::string& strLabel, const std::string& strPath, const std::string& strType)
@@ -1005,6 +1042,18 @@ int BXMetadataEngine::GetProviderPerfQuality(const std::string& strProvider)
   BXMediaDatabase pDB;
   return pDB.GetProviderPerfQuality(strProvider);
 
+}
+
+int BXMetadataEngine::AddPlayableFolder(const std::string& strPath)
+{
+  BXMediaDatabase pDB;
+  return pDB.AddPlayableFolder(strPath);
+}
+
+bool BXMetadataEngine::IsPlayableFolder(const std::string& strPath)
+{
+  BXMediaDatabase pDB;
+  return pDB.IsPlayableFolder(strPath);
 }
 
 }

@@ -1,5 +1,6 @@
-INCLUDES=-I. -I../ -I../../ -I../../../ -I../../ffmpeg -I../../../linux -I../../../../guilib
+INCLUDES=-I. -I../ -I../../ -I../../../ -I../../../.. -I../../../linux -I../../../../guilib -I../Codecs -I../Codecs/ffmpeg -I../../ffmpeg
 
+CXXFLAGS+=  -D__STDC_CONSTANT_MACROS
 SRCS=	DVDCodecUtils.cpp \
 	DVDFactoryCodec.cpp \
 

@@ -42,6 +42,7 @@
 
 /* ffmpeg */
 #define DLL_PATH_LIBAVCODEC    "special://xbmc/system/players/dvdplayer/avcodec-52.dll"
+#define DLL_PATH_LIBAVCORE     "special://xbmc/system/players/dvdplayer/avcore-0.dll"
 #define DLL_PATH_LIBAVFORMAT   "special://xbmc/system/players/dvdplayer/avformat-52.dll"
 #define DLL_PATH_LIBAVUTIL     "special://xbmc/system/players/dvdplayer/avutil-50.dll"
 #define DLL_PATH_LIBPOSTPROC   "special://xbmc/system/players/dvdplayer/postproc-51.dll"
@@ -55,6 +56,9 @@
 
 /* flashplayer */
 #define DLL_PATH_LIBFLASH      "special://xbmc/system/players/flashplayer/FlashLib-win32.dll"
+
+/* libbluray */
+#define DLL_PATH_LIBBLURAY     "special://xbmc/system/players/dvdplayer/libbluray.dll"
 
 #endif
 

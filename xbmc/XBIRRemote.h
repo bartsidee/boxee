@@ -58,6 +58,9 @@
 #define XINPUT_IR_REMOTE_HASH           41
 #define XINPUT_IR_REMOTE_CLEAR          249
 
+#define XINPUT_IR_REMOTE_BROWSER_TOGGLE_MODE  111
+
+
 // additional keys not defined by xbox remotes but present on generic remotes
 #define XINPUT_IR_REMOTE_TELETEXT       250
 #define XINPUT_IR_REMOTE_RED            251

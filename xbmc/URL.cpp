@@ -40,7 +40,7 @@ CStdString URLEncodeInline(const CStdString& strData)
   return buffer;
 }
 
-CURL::CURL(const CStdString& strURL1)
+CURI::CURI(const CStdString& strURL1)
 {
   m_strHostName = "";
   m_strDomain = "";
@@ -64,23 +64,13 @@ CURL::CURL(const CStdString& strURL1)
   if (!strURL.size()) return ;
   if (strURL.Equals("?", true)) return;
 
-  if (strURL[1] == ':')
-  {
-    // form is drive:directoryandfile
-
-    // set filename and update extension
-
-    SetFileName(strURL);
-    return ;
-  }
-
   // form is format 1 or 2
   // format 1: protocol://[domain;][username:password]@hostname[:port]/directoryandfile
   // format 2: protocol://file
 
   // decode protocol
   int iPos = strURL.Find("://");
-  if (iPos < 0)  
+  if (iPos < 0)
   {
     // This is an ugly hack that needs some work.
     // example: filename /foo/bar.zip/alice.rar/bob.avi
@@ -92,28 +82,10 @@ CURL::CURL(const CStdString& strURL1)
       int extLen = 3;
       if (iPos < 0)
       {
-#ifndef _LINUX  
-    // check for misconstructed protocols
-    iPos = strURL.Find(":");
-    if (iPos == strURL.GetLength() - 1)
-    {
-      m_strProtocol = strURL.Left(iPos);
-      iPos += 1;
-          break;
-    }
-    else
-    {
-      //CLog::Log(LOGDEBUG, "%s - Url has no protocol %s, empty CURL created", __FUNCTION__, strURL.c_str());
-      return;
-    }
-#else
-    {
-      /* set filename and update extension*/
-      SetFileName(strURL);
-      return ;
-    }    
-#endif    
-  }
+        /* set filename and update extension*/
+        SetFileName(strURL);
+        return ;
+      }
       iPos += extLen + 1;
       CStdString archiveName = strURL.Left(iPos);
       struct __stat64 s;
@@ -126,7 +98,7 @@ CURL::CURL(const CStdString& strURL1)
 #endif
         {
           CUtil::URLEncode(archiveName);
-          CURL c((CStdString)"zip" + "://" + archiveName + '/' + strURL.Right(strURL.size() - iPos - 1));
+          CURI c((CStdString)"zip" + "://" + archiveName + '/' + strURL.Right(strURL.size() - iPos - 1));
           *this = c;
           return;
         }
@@ -135,9 +107,10 @@ CURL::CURL(const CStdString& strURL1)
   }
   else
   {
-    m_strProtocol = strURL.Left(iPos);
+    SetProtocol(strURL.Left(iPos));
     iPos += 3;
   }
+
 
   // virtual protocols
   // why not handle all format 2 (protocol://file) style urls here?
@@ -179,11 +152,7 @@ CURL::CURL(const CStdString& strURL1)
        || m_strProtocol.Equals("ftps")
        || m_strProtocol.Equals("ftpx"))
     sep = "?;";
-  else if(m_strProtocol.Equals("rss")
-       || m_strProtocol.Equals("boxee")
-       || m_strProtocol.Equals("apps")
-       || m_strProtocol.Equals("appbox")
-       || m_strProtocol.Equals("playlist"))
+  else if (!m_strProtocol.Equals("flash"))
     sep = "?";
 
   if(sep)
@@ -337,21 +306,21 @@ CURL::CURL(const CStdString& strURL1)
   CUtil::UrlDecode(m_strPassword);
 }
 
-CURL::CURL(const CURL &url)
+CURI::CURI(const CURI &url)
 {
   *this = url;
 }
 
-CURL::CURL()
+CURI::CURI()
 {
   m_iPort = 0;
 }
 
-CURL::~CURL()
+CURI::~CURI()
 {
 }
 
-CURL& CURL::operator= (const CURL& source)
+CURI& CURI::operator= (const CURI& source)
 {
   m_iPort        = source.m_iPort;
   m_strHostName  = source.m_strHostName;
@@ -367,7 +336,7 @@ CURL& CURL::operator= (const CURL& source)
   return *this;
 }
 
-void CURL::SetFileName(const CStdString& strFileName)
+void CURI::SetFileName(const CStdString& strFileName)
 {
   m_strFileName = strFileName;
 
@@ -381,27 +350,27 @@ void CURL::SetFileName(const CStdString& strFileName)
   m_strFileType.Normalize();
 }
 
-void CURL::SetHostName(const CStdString& strHostName)
+void CURI::SetHostName(const CStdString& strHostName)
 {
   m_strHostName = strHostName;
 }
 
-void CURL::SetUserName(const CStdString& strUserName)
+void CURI::SetUserName(const CStdString& strUserName)
 {
   m_strUserName = strUserName;
 }
 
-void CURL::SetPassword(const CStdString& strPassword)
+void CURI::SetPassword(const CStdString& strPassword)
 {
   m_strPassword = strPassword;
 }
 
-void CURL::SetProtocol(const CStdString& strProtocol)
+void CURI::SetProtocol(const CStdString& strProtocol)
 {
   m_strProtocol = strProtocol;
 }
 
-void CURL::SetOptions(const CStdString& strOptions)
+void CURI::SetOptions(const CStdString& strOptions)
 {
   m_strOptions.Empty();
   if( strOptions.length() > 0)
@@ -415,83 +384,83 @@ void CURL::SetOptions(const CStdString& strOptions)
 }
 }
 
-void CURL::SetProtocolOptions(const CStdString& strOptions)
+void CURI::SetProtocolOptions(const CStdString& strOptions)
 {
   m_strProtocolOptions = strOptions;
 }
 
-void CURL::SetPort(int port)
+void CURI::SetPort(int port)
 {
   m_iPort = port;
 }
 
-bool CURL::HasPort() const
+bool CURI::HasPort() const
 {
   return (m_iPort != 0);
 }
 
-int CURL::GetPort() const
+int CURI::GetPort() const
 {
   return m_iPort;
 }
 
 
-const CStdString& CURL::GetHostName() const
+const CStdString& CURI::GetHostName() const
 {
   return m_strHostName;
 }
 
-const CStdString&  CURL::GetShareName() const
+const CStdString&  CURI::GetShareName() const
 {
   return m_strShareName;
 }
 
-const CStdString& CURL::GetDomain() const
+const CStdString& CURI::GetDomain() const
 {
   return m_strDomain;
 }
 
-const CStdString& CURL::GetUserName() const
+const CStdString& CURI::GetUserName() const
 {
   return m_strUserName;
 }
 
-const CStdString& CURL::GetPassWord() const
+const CStdString& CURI::GetPassWord() const
 {
   return m_strPassword;
 }
 
-const CStdString& CURL::GetFileName() const
+const CStdString& CURI::GetFileName() const
 {
   return m_strFileName;
 }
 
-const CStdString& CURL::GetProtocol() const
+const CStdString& CURI::GetProtocol() const
 {
   return m_strProtocol;
 }
 
-const CStdString& CURL::GetFileType() const
+const CStdString& CURI::GetFileType() const
 {
   return m_strFileType;
 }
 
-const CStdString& CURL::GetOptions() const
+const CStdString& CURI::GetOptions() const
 {
   return m_strOptions;
 }
 
-const CStdString& CURL::GetUrlWithoutOptions() const
+const CStdString& CURI::GetUrlWithoutOptions() const
 {
   return m_strWithoutOptions;
 }
 
-const CStdString CURL::GetProtocolOptions() const
+const CStdString CURI::GetProtocolOptions() const
 {
   return m_strProtocolOptions;
 }
 
-const CStdString CURL::GetFileNameWithoutPath() const
+const CStdString CURI::GetFileNameWithoutPath() const
 {
   // *.zip and *.rar store the actual zip/rar path in the hostname of the url
   if ((m_strProtocol == "rar" || m_strProtocol == "zip") && m_strFileName.IsEmpty())
@@ -503,7 +472,7 @@ const CStdString CURL::GetFileNameWithoutPath() const
   return CUtil::GetFileName(file);
 }
 
-char CURL::GetDirectorySeparator() const
+char CURI::GetDirectorySeparator() const
 {
 #ifndef _LINUX
   if ( IsLocal() )
@@ -513,7 +482,7 @@ char CURL::GetDirectorySeparator() const
     return '/';
 }
 
-void CURL::GetURL(CStdString& strURL) const
+CStdString CURI::Get() const
 {
   unsigned int sizeneed = m_strProtocol.length()
                         + m_strDomain.length()
@@ -525,41 +494,43 @@ void CURL::GetURL(CStdString& strURL) const
                         + m_strProtocolOptions.length()
                         + 10;
 
-  if( strURL.capacity() < sizeneed )
-    strURL.reserve(sizeneed);
-
   if (m_strProtocol == "")
-  {
-    strURL = m_strFileName;
-    return ;
-  }
-  GetURLWithoutFilename(strURL);
+    return m_strFileName;
+
+  CStdString strURL;
+  strURL.reserve(sizeneed);
+
+  strURL = GetWithoutFilename();
   strURL += m_strFileName;
 
   if( m_strOptions.length() > 0 )
     strURL += m_strOptions;
   if (m_strProtocolOptions.length() > 0)
     strURL += "|"+m_strProtocolOptions;
+
+  return strURL;
 }
 
-void CURL::GetURLWithoutUserDetails(CStdString& strURL) const
+CStdString CURI::GetWithoutUserDetails() const
 {
+  CStdString strURL;
+
   if (m_strProtocol.Equals("stack"))
   {
     CFileItemList items;
     CStdString strURL2;
-    GetURL(strURL2);
+    strURL2 = Get();
     DIRECTORY::CStackDirectory dir;
     dir.GetDirectory(strURL2,items);
     vector<CStdString> newItems;
     for (int i=0;i<items.Size();++i)
     {
-      CURL url(items[i]->m_strPath);
-      url.GetURLWithoutUserDetails(items[i]->m_strPath);
+      CURI url(items[i]->m_strPath);
+      items[i]->m_strPath = url.GetWithoutUserDetails();
       newItems.push_back(items[i]->m_strPath);
     }
     dir.ConstructStackPath(newItems,strURL);
-    return;
+    return strURL;
   }
 
   unsigned int sizeneed = m_strProtocol.length()
@@ -570,15 +541,10 @@ void CURL::GetURLWithoutUserDetails(CStdString& strURL) const
                         + m_strProtocolOptions.length()
                         + 10;
 
-  if( strURL.capacity() < sizeneed )
-    strURL.reserve(sizeneed);
-
+  strURL.reserve(sizeneed);
 
   if (m_strProtocol == "")
-  {
-    strURL = m_strFileName;
-    return ;
-  }
+    return m_strFileName;
 
   strURL = m_strProtocol;
   strURL += "://";
@@ -586,12 +552,7 @@ void CURL::GetURLWithoutUserDetails(CStdString& strURL) const
   if (m_strHostName != "")
   {
     if (m_strProtocol.Equals("rar") || m_strProtocol.Equals("zip"))
-    {
-      CURL url2(m_strHostName);
-      CStdString strHost;
-      url2.GetURLWithoutUserDetails(strHost);
-      strURL += strHost;
-    }
+      strURL += CURI(m_strHostName).GetWithoutUserDetails();
     else
       strURL += m_strHostName;
 
@@ -610,10 +571,15 @@ void CURL::GetURLWithoutUserDetails(CStdString& strURL) const
     strURL += m_strOptions;
   if( m_strProtocolOptions.length() > 0 )
     strURL += "|"+m_strProtocolOptions;
+
+  return strURL;
 }
 
-void CURL::GetURLWithoutFilename(CStdString& strURL) const
+CStdString CURI::GetWithoutFilename() const
 {
+  if (m_strProtocol == "")
+    return "";
+
   unsigned int sizeneed = m_strProtocol.length()
                         + m_strDomain.length()
                         + m_strUserName.length()
@@ -621,15 +587,8 @@ void CURL::GetURLWithoutFilename(CStdString& strURL) const
                         + m_strHostName.length()
                         + 10;
 
-  if( strURL.capacity() < sizeneed )
-    strURL.reserve(sizeneed);
-
-
-  if (m_strProtocol == "")
-  {
-    strURL.Empty();
-    return ;
-  }
+  CStdString strURL;
+  strURL.reserve(sizeneed);
 
   strURL = m_strProtocol;
   strURL += "://";
@@ -667,19 +626,21 @@ void CURL::GetURLWithoutFilename(CStdString& strURL) const
     }
     strURL += "/";
   }
+
+  return strURL;
 }
 
-bool CURL::IsLocal() const
+bool CURI::IsLocal() const
 {
   return m_strProtocol.IsEmpty() || m_strProtocol == "special";
 }
 
-bool CURL::IsFileOnly(const CStdString &url)
+bool CURI::IsFileOnly(const CStdString &url)
 {
   return url.find_first_of("/\\") == CStdString::npos;
 }
 
-const std::map<CStdString, CStdString> CURL::GetOptionsAsMap() const
+const std::map<CStdString, CStdString> CURI::GetOptionsAsMap() const
 {
   std::map<CStdString, CStdString> result;
   CStdString options = m_strOptions;
@@ -711,7 +672,7 @@ const std::map<CStdString, CStdString> CURL::GetOptionsAsMap() const
   return result;
 }
 
-bool CURL::IsFullPath(const CStdString &url)
+bool CURI::IsFullPath(const CStdString &url)
 {
   if (url.size() && url[0] == '/') return true;     //   /foo/bar.ext
   if (url.Find("://") >= 0) return true;                 //   foo://bar.ext
@@ -719,7 +680,7 @@ bool CURL::IsFullPath(const CStdString &url)
   return false;
 }
 
-CStdString CURL::ValidatePath(const CStdString &path)
+CStdString CURI::ValidatePath(const CStdString &path)
 {
   CStdString result = path;
   

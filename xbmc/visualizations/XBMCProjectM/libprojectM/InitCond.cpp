@@ -44,7 +44,7 @@ InitCond::InitCond( Param * _param, CValue _init_val ):param(_param), init_val(_
 
 
   //  std::cerr <<  "InitCond::InitCond: " << this->param->name << std::endl;
-  
+ 
   assert(param);
   assert(param->engine_val);
 }

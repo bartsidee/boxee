@@ -1,4 +1,5 @@
-INCLUDES=-I. -I../ -I../../ -I../../linux -I../../../guilib -I../../utils -I../dvdplayer -I../paplayer -I../ffmpeg
+INCLUDES=-I. -I../ -I../../ -I../../linux -I../../../guilib -I../../utils -I../dvdplayer -I../paplayer -I../../.. -I../dvdplayer/Codecs -I../dvdplayer/Codecs/ffmpeg
+CXXFLAGS+= -D__STDC_CONSTANT_MACROS
 
 SRCS=PlayerCoreFactory.cpp \
      PlayerSelectionRule.cpp

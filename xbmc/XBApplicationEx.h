@@ -21,8 +21,11 @@
 #ifndef XBAPPLICATIONEX_H
 #define XBAPPLICATIONEX_H
 
+#if !defined(__APPLE__) && !defined(_WIN32)
+#include "common/LinuxInput.h"
+#endif
+
 #include "IWindowManagerCallback.h"
-#include "utils/Thread.h"
 #if !defined(__APPLE__) && !defined(_WIN32)
 #include "common/LinuxInput.h"
 #endif

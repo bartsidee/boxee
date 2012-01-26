@@ -28,7 +28,7 @@ Image::Image(int windowId, int controlId) throw (AppException) : Control(windowI
 //      throw AppException("Control is not an Image");
 //    }
 //  }
-}
+    }
 
 void Image::SetTexture(const std::string& url)
 {

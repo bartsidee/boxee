@@ -293,11 +293,11 @@ void CGUIButtonScroller::AllocResources()
   SetActiveButton(0);
 }
 
-void CGUIButtonScroller::FreeResources()
+void CGUIButtonScroller::FreeResources(bool immediately)
 {
-  CGUIControl::FreeResources();
-  m_imgFocus.FreeResources();
-  m_imgNoFocus.FreeResources();
+  CGUIControl::FreeResources(immediately);
+  m_imgFocus.FreeResources(immediately);
+  m_imgNoFocus.FreeResources(immediately);
   ClearButtons();
 }
 
@@ -330,7 +330,7 @@ void CGUIButtonScroller::Render()
   float posX = m_posX;
   float posY = m_posY;
   // set our viewport
-  g_graphicsContext.SetClipRegion(posX, posY, m_width, m_height);
+  bool clip = g_graphicsContext.SetClipRegion(posX, posY, m_width, m_height);
   // if we're scrolling, update our scroll offset
   if (m_bScrollUp || m_bScrollDown)
   {
@@ -471,7 +471,8 @@ void CGUIButtonScroller::Render()
     RenderItem(posX, posY, iOffset, true);
 
   // reset the viewport
-  g_graphicsContext.RestoreClipRegion();
+  if(clip)
+    g_graphicsContext.RestoreClipRegion();
   CGUIControl::Render();
 }
 

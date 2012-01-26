@@ -210,7 +210,7 @@ bool CGUIWindowMusicInfo::OnMessage(CGUIMessage& message)
         if (CGUIDialogBoxeeRate::ShowAndGetInput(bLike))
         {
           BoxeeUtils::Rate(m_albumItem.get(), bLike);
-          g_application.m_guiDialogKaiToast.QueueNotification("", "", g_localizeStrings.Get(51034), 5000);
+          g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_STAR, "", g_localizeStrings.Get(51034), 5000 , KAI_YELLOW_COLOR, KAI_GREY_COLOR);
         }
       }
       else if (iControl == BTN_RECOMMEND)
@@ -231,6 +231,7 @@ bool CGUIWindowMusicInfo::OnMessage(CGUIMessage& message)
 
         SET_CONTROL_FOCUS(CONTROL_LIST, 1);
       }
+#ifdef HAS_LASTFM
       else if (iControl == BTN_LASTFM)
       {
         if (m_albumItem->HasMusicInfoTag()) {
@@ -239,10 +240,11 @@ bool CGUIWindowMusicInfo::OnMessage(CGUIMessage& message)
           CUtil::URLEncode(strArtist);
           CStdString strLink;
           strLink.Format("lastfm://artist/%s/similarartists", strArtist.c_str());
-          CURL url(strLink);
+          CURI url(strLink);
           CLastFmManager::GetInstance()->ChangeStation(url);
         }
       }
+#endif
       else if (iControl == CONTROL_LIST)
       {
         CGUIMessage msg(GUI_MSG_ITEM_SELECTED, GetID(), CONTROL_LIST);
@@ -275,15 +277,17 @@ bool CGUIWindowMusicInfo::OnMessage(CGUIMessage& message)
         }
 //end Boxee
       }
+#ifdef HAS_LASTFM
       else if (iControl == CONTROL_BTN_LASTFM)
       {
         CStdString strArtist = m_album.strArtist;
         CUtil::URLEncode(strArtist);
         CStdString strLink;
         strLink.Format("lastfm://artist/%s/similarartists", strArtist.c_str());
-        CURL url(strLink);
+        CURI url(strLink);
         CLastFmManager::GetInstance()->ChangeStation(url);
       }
+#endif
       else if (iControl == BTN_MANUAL)
       {
 //        CLog::Log(LOGDEBUG,"CGUIWindowMusicInfo::OnMessage, MANUAL, resolve item manually, path = %s", m_albumItem->m_strPath.c_str());
@@ -487,6 +491,7 @@ void CGUIWindowMusicInfo::Update()
   // disable the GetThumb button if the user isn't allowed it
   CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_GET_THUMB, g_settings.m_vecProfiles[g_settings.m_iLastLoadedProfileIndex].canWriteDatabases() || g_passwordManager.bMasterUser);
 
+#ifdef HAS_LASTFM
   if (!m_album.strArtist.IsEmpty() && CLastFmManager::GetInstance()->IsLastFmEnabled())
   {
     SET_CONTROL_VISIBLE(CONTROL_BTN_LASTFM);
@@ -495,7 +500,7 @@ void CGUIWindowMusicInfo::Update()
   {
     SET_CONTROL_HIDDEN(CONTROL_BTN_LASTFM);
   }
-
+#endif
 }
 
 void CGUIWindowMusicInfo::SetLabel(int iControl, const CStdString& strLabel)

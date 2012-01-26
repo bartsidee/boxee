@@ -35,11 +35,17 @@ d4rk@xbmc.org
 */
 
 #include "xbmc_vis.h"
-#include <GL/glew.h>
+#ifndef CANMORE
 #include "libprojectM/ConfigFile.h"
 #include "libprojectM/projectM.hpp"
 #include "libprojectM/Preset.hpp"
 #include "libprojectM/PCM.hpp"
+#else
+#include "libprojectM.canmore/ConfigFile.h"
+#include "libprojectM.canmore/projectM.hpp"
+#include "libprojectM.canmore/Preset.hpp"
+#include "libprojectM.canmore/PCM.hpp"
+#endif
 #include <string>
 #ifdef WIN32
 #include "libprojectM/win32-dirent.h"
@@ -143,8 +149,10 @@ extern "C" void Create(void* pd3dDevice, int iPosX, int iPosY, int iWidth, int i
   g_configPM.aspectCorrection = true;
   g_configPM.easterEgg = 0.0;
   g_configPM.shuffleEnabled = true;
+#if !HAS_GLES
   g_configPM.windowLeft = iPosX;
   g_configPM.windowBottom = iPosY;
+#endif
 
   {
     FILE *f;
@@ -163,7 +171,9 @@ extern "C" void Create(void* pd3dDevice, int iPosX, int iPosY, int iWidth, int i
       if (config.keyExists("Aspect Correction")) g_configPM.aspectCorrection = config.read<bool> ("Aspect Correction", true);
       if (config.keyExists("Easter Egg")) g_configPM.easterEgg = config.read<float> ("Easter Egg", 0.0);
       if (config.keyExists("Shuffle Enabled")) g_configPM.shuffleEnabled = config.read<bool> ("Shuffle Enabled", true);
+#if !HAS_GLES
       if (config.keyExists("Use FBO")) g_configPM.useFBO = config.read<bool> ("Use FBO", false);
+#endif
     }
     else {
 #ifndef WIN32
@@ -174,7 +184,10 @@ extern "C" void Create(void* pd3dDevice, int iPosX, int iPosY, int iWidth, int i
       f = fopen(g_configFile.c_str(), "w");   // Config does not exist, but we still need at least a blank file.
       fclose(f);
     }
-      projectM::writeConfig(g_configFile, g_configPM);
+#ifdef HAS_EMBEDDED
+    g_configPM.textureSize = 1024;
+#endif
+    projectM::writeConfig(g_configFile, g_configPM);
   }
 
   if (globalPM)
@@ -276,7 +289,7 @@ extern "C" void Stop()
 //-----------------------------------------------------------------------------
 extern "C" void AudioData(short* pAudioData, int iAudioDataLength, float *pFreqData, int iFreqDataLength)
 {
-  globalPM->pcm()->addPCM16Data(pAudioData, iAudioDataLength);
+  globalPM->pcm()->addPCM16Data(pAudioData, (short)iAudioDataLength);
 }
 
 
@@ -285,7 +298,16 @@ extern "C" void AudioData(short* pAudioData, int iAudioDataLength, float *pFreqD
 //-----------------------------------------------------------------------------
 extern "C" void Render()
 {
+#ifdef HAS_GLES
+  glEnable(GL_BLEND);
+  glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
+#endif
+
   globalPM->renderFrame();
+
+#ifdef HAS_GLES
+  glDisable(GL_BLEND);
+#endif
 }
 
 //-- GetInfo ------------------------------------------------------------------
@@ -425,22 +447,30 @@ extern "C" void UpdateSetting(int num, StructSetting*** sSet)
     {
       if ( setting.current == 0 ) // low
       {
+#if !HAS_GLES
         g_configPM.useFBO = false;
+#endif
         g_configPM.textureSize = 256;
 }
       else if ( setting.current == 1 ) // med
       {
+#if !HAS_GLES
         g_configPM.useFBO = false;
+#endif
         g_configPM.textureSize = 512;
       }
       else if ( setting.current == 2 ) // high
       {
+#if !HAS_GLES
         g_configPM.useFBO = false;
+#endif
         g_configPM.textureSize = 1024;
       }
       else if ( setting.current == 3 ) // max
       {
+#if !HAS_GLES
         g_configPM.useFBO = false;
+#endif
         g_configPM.textureSize = 2048;
       }
     }

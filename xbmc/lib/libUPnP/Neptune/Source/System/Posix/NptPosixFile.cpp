@@ -27,6 +27,7 @@
 #include <dirent.h>
 #endif
 
+#include "NptConfig.h"
 #include "NptLogging.h"
 #include "NptFile.h"
 #include "NptUtils.h"
@@ -154,7 +155,7 @@ NPT_File::ListDir(const char*           path,
     
     // list the entries
     DIR *directory = opendir(path);
-    if (directory == NULL) return NPT_ERROR_OUT_OF_MEMORY;
+    if (directory == NULL) return NPT_ERROR_NO_SUCH_ITEM;
     
     NPT_Cardinal count = 0;
     for (;;) {
@@ -226,7 +227,7 @@ NPT_File::GetInfo(const char* path, NPT_FileInfo* info)
     NPT_String _path = path;
     _path.TrimRight("\\/");
     // keep a separator at the end for drive names such as C:<backslash>
-    if (NPT_StringLength(path) ==  2 && path[1] == ':') {
+    if (NPT_StringLength(_path) ==  2 && _path[1] == ':') {
         _path += NPT_FilePath::Separator;
     }
 #else
@@ -252,8 +253,14 @@ NPT_File::GetInfo(const char* path, NPT_FileInfo* info)
         if ((stat_buffer.st_mode & S_IWUSR) == 0) {
             info->m_Attributes &= NPT_FILE_ATTRIBUTE_READ_ONLY;
         }        
-        info->m_Created  = (unsigned long)stat_buffer.st_ctime;
-        info->m_Modified = (unsigned long)stat_buffer.st_mtime;
+#if defined(NPT_CONFIG_HAVE_STAT_ST_BIRTHTIME)
+        info->m_CreationTime.SetSeconds(stat_buffer.st_birthtime);
+#elif defined(NPT_CONFIG_STAT_ST_CTIME_IS_ST_BIRTHTIME)
+        info->m_CreationTime.SetSeconds(stat_buffer.st_ctime);
+#else
+        info->m_CreationTime.SetSeconds(0);
+#endif
+        info->m_ModificationTime.SetSeconds(stat_buffer.st_mtime);
     }
 
     return NPT_SUCCESS;

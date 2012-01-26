@@ -1,22 +1,28 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.10"
+	Version="9.00"
 	Name="libPlatinum"
 	ProjectGUID="{5AAA4F63-3B62-4C93-9BFE-76A42A935262}"
 	RootNamespace="libPlatinum"
-	Keyword="XboxProj">
+	Keyword="XboxProj"
+	TargetFrameworkVersion="131072"
+	>
 	<Platforms>
 		<Platform
-			Name="Xbox"/>
+			Name="Xbox"
+		/>
 	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Debug|Xbox"
 			OutputDirectory="Debug"
 			IntermediateDirectory="Debug"
 			ConfigurationType="4"
-			CharacterSet="2">
+			CharacterSet="2"
+			>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
@@ -36,25 +42,32 @@
 				PrecompiledHeaderFile="$(OutDir)/$(ProjectName).pch"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
-				DebugInformationFormat="3"/>
+				DebugInformationFormat="3"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
+				Name="VCCustomBuildTool"
+			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)/$(ProjectName)d.lib"/>
+				OutputFile="$(OutDir)/$(ProjectName)d.lib"
+			/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+			/>
 			<Tool
-				Name="VCPreBuildEventTool"/>
+				Name="VCPreBuildEventTool"
+			/>
 			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCPreLinkEventTool"
+			/>
 		</Configuration>
 		<Configuration
 			Name="Profile|Xbox"
 			OutputDirectory="Profile"
 			IntermediateDirectory="Profile"
 			ConfigurationType="4"
-			CharacterSet="2">
+			CharacterSet="2"
+			>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="3"
@@ -71,25 +84,32 @@
 				PrecompiledHeaderFile="$(OutDir)/$(ProjectName).pch"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
-				DebugInformationFormat="3"/>
+				DebugInformationFormat="3"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
+				Name="VCCustomBuildTool"
+			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)/$(ProjectName).lib"/>
+				OutputFile="$(OutDir)/$(ProjectName).lib"
+			/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+			/>
 			<Tool
-				Name="VCPreBuildEventTool"/>
+				Name="VCPreBuildEventTool"
+			/>
 			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCPreLinkEventTool"
+			/>
 		</Configuration>
 		<Configuration
 			Name="Profile_FastCap|Xbox"
 			OutputDirectory="Profile_FastCap"
 			IntermediateDirectory="Profile_FastCap"
 			ConfigurationType="4"
-			CharacterSet="2">
+			CharacterSet="2"
+			>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="3"
@@ -107,56 +127,33 @@
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
 				DebugInformationFormat="3"
-				FastCAP="TRUE"/>
+				FastCAP="TRUE"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
+				Name="VCCustomBuildTool"
+			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)/$(ProjectName).lib"/>
+				OutputFile="$(OutDir)/$(ProjectName).lib"
+			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="md ..\..\xbmc\lib\libUPnP
-copy Platinum\ThirdParty\Neptune\Source\Core\*.h ..\..\xbmc\lib\libUPnP
-copy Platinum\ThirdParty\Neptune\Source\Config\*.h ..\..\xbmc\lib\libUPnP
-copy Platinum\ThirdParty\Neptune\Source\Neptune\*.h ..\..\xbmc\lib\libUPnP
-
-copy Platinum\Source\Core\PltAction.h ..\..\xbmc\lib\libUPnP
-copy Platinum\Source\Core\PltArgument.h ..\..\xbmc\lib\libUPnP
-copy Platinum\Source\Core\PltCtrlPoint.h ..\..\xbmc\lib\libUPnP
-copy Platinum\Source\Core\PltDeviceData.h ..\..\xbmc\lib\libUPnP
-copy Platinum\Source\Core\PltDeviceHost.h ..\..\xbmc\lib\libUPnP
-copy Platinum\Source\Core\PltEvent.h ..\..\xbmc\lib\libUPnP
-copy Platinum\Source\Core\PltHttp.h ..\..\xbmc\lib\libUPnP
-copy Platinum\Source\Core\PltHttpClientTask.h ..\..\xbmc\lib\libUPnP
-copy Platinum\Source\Core\PltHttpServerListener.h ..\..\xbmc\lib\libUPnP
-copy Platinum\Source\Core\PltLog.h ..\..\xbmc\lib\libUPnP
-copy Platinum\Source\Core\PltService.h ..\..\xbmc\lib\libUPnP
-copy Platinum\Source\Core\PltSsdpListener.h ..\..\xbmc\lib\libUPnP
-copy Platinum\Source\Core\PltStateVariable.h ..\..\xbmc\lib\libUPnP
-copy Platinum\Source\Core\PltTaskManager.h ..\..\xbmc\lib\libUPnP
-copy Platinum\Source\Core\PltThreadTask.h ..\..\xbmc\lib\libUPnP
-copy Platinum\Source\Core\PltUPnP.h ..\..\xbmc\lib\libUPnP
-copy Platinum\Source\Platinum\Platinum.h ..\..\xbmc\lib\libUPnP
-
-copy Platinum\Source\Devices\MediaServer\PltMediaBrowser.h ..\..\xbmc\lib\libUPnP
-copy Platinum\Source\Devices\MediaServer\PltMediaBrowserListener.h ..\..\xbmc\lib\libUPnP
-copy Platinum\Source\Devices\MediaServer\PltMediaItem.h ..\..\xbmc\lib\libUPnP
-copy Platinum\Source\Devices\MediaServer\PltMediaServer.h ..\..\xbmc\lib\libUPnP
-copy Platinum\Source\Devices\MediaServer\PltSyncMediaBrowser.h ..\..\xbmc\lib\libUPnP
-
-copy Release\libPlatinum.lib ..\..\xbmc\lib\libUPnP
-"/>
+				CommandLine="md ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\ThirdParty\Neptune\Source\Core\*.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\ThirdParty\Neptune\Source\Config\*.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\ThirdParty\Neptune\Source\Neptune\*.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;&#x0D;&#x0A;copy Platinum\Source\Core\PltAction.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\Source\Core\PltArgument.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\Source\Core\PltCtrlPoint.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\Source\Core\PltDeviceData.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\Source\Core\PltDeviceHost.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\Source\Core\PltEvent.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\Source\Core\PltHttp.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\Source\Core\PltHttpClientTask.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\Source\Core\PltHttpServerListener.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\Source\Core\PltLog.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\Source\Core\PltService.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\Source\Core\PltSsdpListener.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\Source\Core\PltStateVariable.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\Source\Core\PltTaskManager.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\Source\Core\PltThreadTask.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\Source\Core\PltUPnP.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\Source\Platinum\Platinum.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;&#x0D;&#x0A;copy Platinum\Source\Devices\MediaServer\PltMediaBrowser.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\Source\Devices\MediaServer\PltMediaBrowserListener.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\Source\Devices\MediaServer\PltMediaItem.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\Source\Devices\MediaServer\PltMediaServer.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;copy Platinum\Source\Devices\MediaServer\PltSyncMediaBrowser.h ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;&#x0D;&#x0A;copy Release\libPlatinum.lib ..\..\xbmc\lib\libUPnP&#x0D;&#x0A;"
+			/>
 			<Tool
-				Name="VCPreBuildEventTool"/>
+				Name="VCPreBuildEventTool"
+			/>
 			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCPreLinkEventTool"
+			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Xbox"
 			OutputDirectory="Release"
 			IntermediateDirectory="Release"
 			ConfigurationType="4"
-			CharacterSet="2">
+			CharacterSet="2"
+			>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="3"
@@ -177,18 +174,24 @@ copy Release\libPlatinum.lib ..\..\xbmc\lib\libUPnP
 				PrecompiledHeaderFile="$(OutDir)/$(ProjectName).pch"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
-				DebugInformationFormat="3"/>
+				DebugInformationFormat="3"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
+				Name="VCCustomBuildTool"
+			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)/$(ProjectName).lib"/>
+				OutputFile="$(OutDir)/$(ProjectName).lib"
+			/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+			/>
 			<Tool
-				Name="VCPreBuildEventTool"/>
+				Name="VCPreBuildEventTool"
+			/>
 			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCPreLinkEventTool"
+			/>
 		</Configuration>
 		<Configuration
 			Name="Release_LTCG|Xbox"
@@ -196,7 +199,8 @@ copy Release\libPlatinum.lib ..\..\xbmc\lib\libUPnP
 			IntermediateDirectory="Release_LTCG"
 			ConfigurationType="4"
 			CharacterSet="2"
-			WholeProgramOptimization="TRUE">
+			WholeProgramOptimization="TRUE"
+			>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="3"
@@ -215,19 +219,25 @@ copy Release\libPlatinum.lib ..\..\xbmc\lib\libUPnP
 				PrecompiledHeaderFile="$(OutDir)/$(ProjectName).pch"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
-				DebugInformationFormat="3"/>
+				DebugInformationFormat="3"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
+				Name="VCCustomBuildTool"
+			/>
 			<Tool
 				Name="VCLibrarianTool"
 				AdditionalOptions="/LTCG"
-				OutputFile="$(OutDir)/$(ProjectName).lib"/>
+				OutputFile="$(OutDir)/$(ProjectName).lib"
+			/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+			/>
 			<Tool
-				Name="VCPreBuildEventTool"/>
+				Name="VCPreBuildEventTool"
+			/>
 			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCPreLinkEventTool"
+			/>
 		</Configuration>
 	</Configurations>
 	<References>
@@ -235,500 +245,655 @@ copy Release\libPlatinum.lib ..\..\xbmc\lib\libUPnP
 	<Files>
 		<Filter
 			Name="Platinum"
-			Filter="">
+			>
 			<File
-				RelativePath=".\Platinum\Source\Core\Platinum.cpp">
+				RelativePath=".\Platinum\Source\Core\Platinum.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\Platinum\Source\Platinum\Platinum.h">
+				RelativePath=".\Platinum\Source\Platinum\Platinum.h"
+				>
 			</File>
 			<Filter
 				Name="Core"
-				Filter="">
+				>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltAction.cpp">
+					RelativePath=".\Platinum\Source\Core\PltAction.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltAction.h">
+					RelativePath=".\Platinum\Source\Core\PltAction.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltArgument.cpp">
+					RelativePath=".\Platinum\Source\Core\PltArgument.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltArgument.h">
+					RelativePath=".\Platinum\Source\Core\PltArgument.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltCtrlPoint.cpp">
+					RelativePath=".\Platinum\Source\Core\PltCtrlPoint.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltCtrlPoint.h">
+					RelativePath=".\Platinum\Source\Core\PltCtrlPoint.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltCtrlPointTask.cpp">
+					RelativePath=".\Platinum\Source\Core\PltCtrlPointTask.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltCtrlPointTask.h">
+					RelativePath=".\Platinum\Source\Core\PltCtrlPointTask.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltDatagramStream.cpp">
+					RelativePath=".\Platinum\Source\Core\PltDatagramStream.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltDatagramStream.h">
+					RelativePath=".\Platinum\Source\Core\PltDatagramStream.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltDeviceData.cpp">
+					RelativePath=".\Platinum\Source\Core\PltDeviceData.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltDeviceData.h">
+					RelativePath=".\Platinum\Source\Core\PltDeviceData.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltDeviceHost.cpp">
+					RelativePath=".\Platinum\Source\Core\PltDeviceHost.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltDeviceHost.h">
+					RelativePath=".\Platinum\Source\Core\PltDeviceHost.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltDownloader.cpp">
+					RelativePath=".\Platinum\Source\Core\PltDownloader.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltDownloader.h">
+					RelativePath=".\Platinum\Source\Core\PltDownloader.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltEvent.cpp">
+					RelativePath=".\Platinum\Source\Core\PltEvent.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltEvent.h">
+					RelativePath=".\Platinum\Source\Core\PltEvent.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltHttp.cpp">
+					RelativePath=".\Platinum\Source\Core\PltHttp.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltHttp.h">
+					RelativePath=".\Platinum\Source\Core\PltHttp.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltHttpClientTask.cpp">
+					RelativePath=".\Platinum\Source\Core\PltHttpClientTask.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltHttpClientTask.h">
+					RelativePath=".\Platinum\Source\Core\PltHttpClientTask.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltHttpServer.cpp">
+					RelativePath=".\Platinum\Source\Core\PltHttpServer.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltHttpServer.h">
+					RelativePath=".\Platinum\Source\Core\PltHttpServer.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltHttpServerListener.h">
+					RelativePath=".\Platinum\Source\Core\PltHttpServerListener.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltHttpServerTask.cpp">
+					RelativePath=".\Platinum\Source\Core\PltHttpServerTask.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltHttpServerTask.h">
+					RelativePath=".\Platinum\Source\Core\PltHttpServerTask.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltMetadataHandler.cpp">
+					RelativePath=".\Platinum\Source\Core\PltMetadataHandler.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltMetadataHandler.h">
+					RelativePath=".\Platinum\Source\Core\PltMetadataHandler.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltService.cpp">
+					RelativePath=".\Platinum\Source\Core\PltService.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltService.h">
+					RelativePath=".\Platinum\Source\Core\PltService.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltSsdp.cpp">
+					RelativePath=".\Platinum\Source\Core\PltSsdp.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltSsdp.h">
+					RelativePath=".\Platinum\Source\Core\PltSsdp.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltSsdpListener.h">
+					RelativePath=".\Platinum\Source\Core\PltSsdpListener.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltStateVariable.cpp">
+					RelativePath=".\Platinum\Source\Core\PltStateVariable.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltStateVariable.h">
+					RelativePath=".\Platinum\Source\Core\PltStateVariable.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltTaskManager.cpp">
+					RelativePath=".\Platinum\Source\Core\PltTaskManager.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltTaskManager.h">
+					RelativePath=".\Platinum\Source\Core\PltTaskManager.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltThreadTask.cpp">
+					RelativePath=".\Platinum\Source\Core\PltThreadTask.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltThreadTask.h">
+					RelativePath=".\Platinum\Source\Core\PltThreadTask.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltUPnP.cpp">
+					RelativePath=".\Platinum\Source\Core\PltUPnP.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltUPnP.h">
+					RelativePath=".\Platinum\Source\Core\PltUPnP.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltUPnPHelper.h">
+					RelativePath=".\Platinum\Source\Core\PltUPnPHelper.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltVersion.h">
+					RelativePath=".\Platinum\Source\Core\PltVersion.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Core\PltXmlHelper.h">
+					RelativePath=".\Platinum\Source\Core\PltXmlHelper.h"
+					>
 				</File>
 			</Filter>
 			<Filter
 				Name="MediaServer"
-				Filter="">
+				>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaServer\PltDidl.cpp">
+					RelativePath=".\Platinum\Source\Devices\MediaServer\PltDidl.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaServer\PltDidl.h">
+					RelativePath=".\Platinum\Source\Devices\MediaServer\PltDidl.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaServer\PltFileMediaServer.cpp">
+					RelativePath=".\Platinum\Source\Devices\MediaServer\PltFileMediaServer.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaServer\PltFileMediaServer.h">
+					RelativePath=".\Platinum\Source\Devices\MediaServer\PltFileMediaServer.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaServer\PltMediaBrowser.cpp">
+					RelativePath=".\Platinum\Source\Devices\MediaServer\PltMediaBrowser.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaServer\PltMediaBrowser.h">
+					RelativePath=".\Platinum\Source\Devices\MediaServer\PltMediaBrowser.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaServer\PltMediaBrowserListener.h">
+					RelativePath=".\Platinum\Source\Devices\MediaServer\PltMediaBrowserListener.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaServer\PltMediaCache.cpp">
+					RelativePath=".\Platinum\Source\Devices\MediaServer\PltMediaCache.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaServer\PltMediaCache.h">
+					RelativePath=".\Platinum\Source\Devices\MediaServer\PltMediaCache.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaServer\PltMediaItem.cpp">
+					RelativePath=".\Platinum\Source\Devices\MediaServer\PltMediaItem.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaServer\PltMediaItem.h">
+					RelativePath=".\Platinum\Source\Devices\MediaServer\PltMediaItem.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaServer\PltMediaServer.cpp">
+					RelativePath=".\Platinum\Source\Devices\MediaServer\PltMediaServer.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaServer\PltMediaServer.h">
+					RelativePath=".\Platinum\Source\Devices\MediaServer\PltMediaServer.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaServer\PltMediaServerSCPDs.cpp">
+					RelativePath=".\Platinum\Source\Devices\MediaServer\PltMediaServerSCPDs.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaServer\PltSyncMediaBrowser.cpp">
+					RelativePath=".\Platinum\Source\Devices\MediaServer\PltSyncMediaBrowser.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaServer\PltSyncMediaBrowser.h">
+					RelativePath=".\Platinum\Source\Devices\MediaServer\PltSyncMediaBrowser.h"
+					>
 				</File>
 			</Filter>
 			<Filter
 				Name="MediaRenderer"
-				Filter="">
+				>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaRenderer\PltMediaController.cpp">
+					RelativePath=".\Platinum\Source\Devices\MediaRenderer\PltMediaController.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaRenderer\PltMediaController.h">
+					RelativePath=".\Platinum\Source\Devices\MediaRenderer\PltMediaController.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaRenderer\PltMediaControllerListener.h">
+					RelativePath=".\Platinum\Source\Devices\MediaRenderer\PltMediaControllerListener.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaRenderer\PltMediaRenderer.cpp">
+					RelativePath=".\Platinum\Source\Devices\MediaRenderer\PltMediaRenderer.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaRenderer\PltMediaRenderer.h">
+					RelativePath=".\Platinum\Source\Devices\MediaRenderer\PltMediaRenderer.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaRenderer\PltMediaRendererSCPDs.cpp">
+					RelativePath=".\Platinum\Source\Devices\MediaRenderer\PltMediaRendererSCPDs.cpp"
+					>
 				</File>
 			</Filter>
 			<Filter
 				Name="MediaConnect"
-				Filter="">
+				>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaConnect\PltMediaConnect.cpp">
+					RelativePath=".\Platinum\Source\Devices\MediaConnect\PltMediaConnect.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaConnect\PltMediaConnect.h">
+					RelativePath=".\Platinum\Source\Devices\MediaConnect\PltMediaConnect.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\Source\Devices\MediaConnect\PltMediaConnectSCPDs.cpp">
+					RelativePath=".\Platinum\Source\Devices\MediaConnect\PltMediaConnectSCPDs.cpp"
+					>
 				</File>
 			</Filter>
 		</Filter>
 		<Filter
 			Name="Neptune"
-			Filter="">
+			>
 			<File
-				RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\Neptune.cpp">
+				RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\Neptune.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\Platinum\ThirdParty\Neptune\Source\Neptune\Neptune.h">
+				RelativePath=".\Platinum\ThirdParty\Neptune\Source\Neptune\Neptune.h"
+				>
 			</File>
 			<File
-				RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptConfig.h">
+				RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptConfig.h"
+				>
 			</File>
 			<File
-				RelativePath=".\Platinum\ThirdParty\Neptune\Source\Neptune\NptVersion.h">
+				RelativePath=".\Platinum\ThirdParty\Neptune\Source\Neptune\NptVersion.h"
+				>
 			</File>
 			<Filter
 				Name="Core"
-				Filter="">
+				>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptArray.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptArray.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptBase64.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptBase64.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptBase64.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptBase64.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptBufferedStreams.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptBufferedStreams.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptBufferedStreams.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptBufferedStreams.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptCommon.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptCommon.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptCommon.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptCommon.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptConsole.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptConsole.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptConsole.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptConsole.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptConstants.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptConstants.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptDataBuffer.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptDataBuffer.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptDataBuffer.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptDataBuffer.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptDebug.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptDebug.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptDebug.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptDebug.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptDefs.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptDefs.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptDirectory.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptDirectory.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptDirectory.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptDirectory.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptFile.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptFile.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptFile.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptFile.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptHttp.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptHttp.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptHttp.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptHttp.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptInterfaces.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptInterfaces.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptList.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptList.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptList.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptList.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptLogging.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptLogging.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptLogging.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptLogging.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptMap.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptMap.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptMessaging.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptMessaging.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptMessaging.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptMessaging.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptNetwork.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptNetwork.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptNetwork.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptNetwork.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptQueue.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptQueue.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptQueue.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptQueue.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptReferences.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptReferences.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptResults.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptResults.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptRingBuffer.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptRingBuffer.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptRingBuffer.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptRingBuffer.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptSelectableMessageQueue.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptSelectableMessageQueue.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptSimpleMessageQueue.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptSimpleMessageQueue.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptSimpleMessageQueue.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptSimpleMessageQueue.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptSockets.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptSockets.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptSockets.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptSockets.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptStack.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptStack.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptStreams.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptStreams.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptStreams.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptStreams.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptStrings.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptStrings.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptStrings.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptStrings.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptSystem.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptSystem.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptSystem.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptSystem.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptThreads.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptThreads.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptThreads.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptThreads.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptTime.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptTime.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptTime.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptTime.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptTypes.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptTypes.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptUri.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptUri.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptUri.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptUri.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptUtils.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptUtils.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptUtils.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptUtils.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptVersion.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptVersion.h"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptXml.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptXml.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptXml.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\Core\NptXml.h"
+					>
 				</File>
 			</Filter>
 			<Filter
 				Name="System"
-				Filter="">
+				>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\System\Bsd\NptBsdSockets.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\System\Bsd\NptBsdSockets.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\System\Win32\NptWin32Debug.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\System\Win32\NptWin32Debug.cpp"
+					>
 					<FileConfiguration
-						Name="Debug|Xbox">
+						Name="Debug|Xbox"
+						>
 						<Tool
 							Name="VCCLCompilerTool"
-							ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+							ObjectFile="$(IntDir)/$(InputName)1.obj"
+						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Profile|Xbox">
+						Name="Profile|Xbox"
+						>
 						<Tool
 							Name="VCCLCompilerTool"
-							ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+							ObjectFile="$(IntDir)/$(InputName)1.obj"
+						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Profile_FastCap|Xbox">
+						Name="Profile_FastCap|Xbox"
+						>
 						<Tool
 							Name="VCCLCompilerTool"
-							ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+							ObjectFile="$(IntDir)/$(InputName)1.obj"
+						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|Xbox">
+						Name="Release|Xbox"
+						>
 						<Tool
 							Name="VCCLCompilerTool"
-							ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+							ObjectFile="$(IntDir)/$(InputName)1.obj"
+						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release_LTCG|Xbox">
+						Name="Release_LTCG|Xbox"
+						>
 						<Tool
 							Name="VCCLCompilerTool"
-							ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+							ObjectFile="$(IntDir)/$(InputName)1.obj"
+						/>
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\System\Win32\NptWin32Directory.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\System\Win32\NptWin32Directory.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\System\Win32\NptWin32Queue.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\System\Win32\NptWin32Queue.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\System\Win32\NptWin32System.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\System\Win32\NptWin32System.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\System\Win32\NptWin32Threads.cpp">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\System\Win32\NptWin32Threads.cpp"
+					>
 				</File>
 				<File
-					RelativePath=".\Platinum\ThirdParty\Neptune\Source\System\Win32\NptWin32Threads.h">
+					RelativePath=".\Platinum\ThirdParty\Neptune\Source\System\Win32\NptWin32Threads.h"
+					>
 				</File>
 			</Filter>
 		</Filter>
 		<File
-			RelativePath=".\ReadMe.txt">
+			RelativePath=".\ReadMe.txt"
+			>
 		</File>
 	</Files>
 	<Globals>

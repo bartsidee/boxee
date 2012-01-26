@@ -52,6 +52,8 @@ private:
     
   private:
     
+    bool CanExecute();
+
     BXFeaturedManager* m_taskHandler;
   };
 };

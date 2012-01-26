@@ -38,6 +38,7 @@
 //  Forward
 class CGUIListItemLayout;
 class CArchive;
+class CVariant;
 
 /*!
  \ingroup controls
@@ -97,7 +98,7 @@ public:
   CGUIListItemLayout *GetFocusedLayout();
 
   void FreeIcons();
-  void FreeMemory();
+  void FreeMemory(bool immediately = false);
   void SetInvalid();
 
   bool m_bIsFolder;     ///< is item a folder or a file
@@ -117,7 +118,8 @@ public:
 
   void ClearProperties();
 
-  void Serialize(CArchive& ar);
+  void Archive(CArchive& ar);
+  void Serialize(CVariant& value);
 
   bool       HasProperty(const CStdString &strKey) const;
   bool       HasProperties() const { return m_mapProperties.size() > 0; };

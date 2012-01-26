@@ -69,7 +69,7 @@ signature_t CCdIoSupport::sigs[] =
     {4, 0, "SUPERVCD", "Chaoji VCD"},
     {0, 0, "MICROSOFT*XBOX*MEDIA", "UDFX CD"},
     {0, 1, "BEA01", "UDF"},
-    { 0 }
+    { 0, 0, 0, 0}
   };
 
 #undef DEBUG_CDIO

@@ -25,7 +25,9 @@
 #include "PlayListM3U.h"
 #include "Application.h"
 #include "PlayListPlayer.h"
+#ifndef _BOXEE_
 #include "PartyModeManager.h"
+#endif
 #include "GUIDialogSmartPlaylistEditor.h"
 #include "GUIWindowManager.h"
 #include "GUIDialogKeyboard.h"
@@ -123,6 +125,7 @@ bool CGUIWindowVideoPlaylist::OnMessage(CGUIMessage& message)
       int iControl = message.GetSenderId();
       if (iControl == CONTROL_BTNSHUFFLE)
       {
+#ifndef _BOXEE_
         if (!g_partyModeManager.IsEnabled())
         {
           g_playlistPlayer.SetShuffle(PLAYLIST_VIDEO, !(g_playlistPlayer.IsShuffled(PLAYLIST_VIDEO)));
@@ -131,6 +134,7 @@ bool CGUIWindowVideoPlaylist::OnMessage(CGUIMessage& message)
           UpdateButtons();
           Update(m_vecItems->m_strPath);
         }
+#endif
       }
       else if (iControl == CONTROL_BTNSAVE)
       {
@@ -316,9 +320,11 @@ void CGUIWindowVideoPlaylist::UpdateButtons()
 bool CGUIWindowVideoPlaylist::OnPlayMedia(int iItem)
 {
   if ( iItem < 0 || iItem >= (int)m_vecItems->Size() ) return false;
+#ifndef _BOXEE_
   if (g_partyModeManager.IsEnabled())
     g_partyModeManager.Play(iItem);
   else
+#endif
   {
     CFileItemPtr pItem = m_vecItems->Get(iItem);
     CStdString strPath = pItem->m_strPath;
@@ -359,7 +365,9 @@ void CGUIWindowVideoPlaylist::RemovePlayListItem(int iItem)
     m_viewControl.SetSelectedItem(iItem - 1);
   }
 
+#ifndef _BOXEE_
   g_partyModeManager.OnSongChange();
+#endif
 }
 
 /// \brief Save current playlist to playlist folder
@@ -388,7 +396,11 @@ void CGUIWindowVideoPlaylist::GetContextButtons(int itemNumber, CContextButtons 
   int itemPlaying = g_playlistPlayer.GetCurrentSong();
   if (m_movingFrom >= 0)
   {
-    if (itemNumber != m_movingFrom && (!g_partyModeManager.IsEnabled() || itemNumber > itemPlaying))
+    if (itemNumber != m_movingFrom 
+#ifndef _BOXEE_
+    && (!g_partyModeManager.IsEnabled() || itemNumber > itemPlaying)
+#endif
+    )
       buttons.Add(CONTEXT_BUTTON_MOVE_HERE, 13252);         // move item here
     buttons.Add(CONTEXT_BUTTON_CANCEL_MOVE, 13253);
 
@@ -402,21 +414,34 @@ void CGUIWindowVideoPlaylist::GetContextButtons(int itemNumber, CContextButtons 
       else
         buttons.Add(CONTEXT_BUTTON_ADD_FAVOURITE, 14076);     // Add To Favourites;
     }
+#ifndef _BOXEE_
     if (itemNumber > (g_partyModeManager.IsEnabled() ? 1 : 0))
+#else
+    if (itemNumber > 0)
+#endif
       buttons.Add(CONTEXT_BUTTON_MOVE_ITEM_UP, 13332);
     if (itemNumber + 1 < m_vecItems->Size())
       buttons.Add(CONTEXT_BUTTON_MOVE_ITEM_DOWN, 13333);
+#ifndef _BOXEE_
     if (!g_partyModeManager.IsEnabled() || itemNumber != itemPlaying)
+#else
+    if (true)
+#endif
+    {
       buttons.Add(CONTEXT_BUTTON_MOVE_ITEM, 13251);
+    }
 
     if (itemNumber != itemPlaying)
       buttons.Add(CONTEXT_BUTTON_DELETE, 15015);
   }
+  
+#ifndef _BOXEE_
   if (g_partyModeManager.IsEnabled())
   {
     buttons.Add(CONTEXT_BUTTON_EDIT_PARTYMODE, 21439);
     buttons.Add(CONTEXT_BUTTON_CANCEL_PARTYMODE, 588);      // cancel party mode
   }
+#endif
 }
 
 bool CGUIWindowVideoPlaylist::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
@@ -454,6 +479,7 @@ bool CGUIWindowVideoPlaylist::OnContextButton(int itemNumber, CONTEXT_BUTTON but
       CFavourites::AddOrRemove(item.get(), GetID());
       return true;
     }
+#ifndef _BOXEE_
   case CONTEXT_BUTTON_CANCEL_PARTYMODE:
     g_partyModeManager.Disable();
     return true;
@@ -468,6 +494,7 @@ bool CGUIWindowVideoPlaylist::OnContextButton(int itemNumber, CONTEXT_BUTTON but
     }
     return true;
   }
+#endif
   default:
     break;
   }

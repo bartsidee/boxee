@@ -87,7 +87,7 @@ void CGUIDialogProgress::StartModal(const std::string &strId)
   ShowProgressBar(false);
 
   if (m_strId.empty())
-    m_strId = strId;
+  m_strId = strId;
   
   lock.Leave();
 

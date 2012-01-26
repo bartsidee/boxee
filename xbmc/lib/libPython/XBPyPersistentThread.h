@@ -51,7 +51,7 @@ public:
   XBPyPersistentThread(XBPython *pExecuter, int id);
   virtual ~XBPyPersistentThread();
   
-  virtual bool QueueScript(const std::string& pythonCode, const std::string& path, int argc, const char** argv);
+  virtual bool QueueScript(const std::string& pythonCode, const std::string& path, const std::vector<CStdString>& params);
   virtual bool QueueFile(const std::string& file, int argc, const char** argv);
   
   virtual void OnStartup();
@@ -63,10 +63,12 @@ public:
   virtual void SignalStop();
   
   void SetAppId(const CStdString &id);
-
+  
   void CreatePolicy(const ThreadIdentifier threadId);
   void DeletePolicy(const ThreadIdentifier threadId);
-  void SetSecurityLevel(const CStdString& securityLevel);
+  void SetPartnerId(const CStdString& partnerId);
+  CStdString GetPartnerId();
+  ThreadIdentifier GetCurrentThreadId();
   
 protected:
   
@@ -90,7 +92,10 @@ protected:
   PyObject* global_dict;
   
   PyThreadState *m_saveState;
-  CStdString m_securityLevel;
+  CStdString m_partnerId;
+  ThreadIdentifier m_currentThreadId;
+
+  bool m_enableSandbox;
 };
 
 #endif /* XBPERSISTENTTHREAD_H_ */

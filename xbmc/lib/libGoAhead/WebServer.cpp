@@ -329,6 +329,10 @@ void CWebServer::Process()
 		sockReady = socketReady(-1);
 		// wait for event or timeout (default 1000 msec)
 		sockSelect = socketSelect(-1, SOCK_DFT_SVC_TIME);
+#ifndef NDEBUG
+		if (sockSelect < 0)
+		  printf("!!!!!! (%lu) %s, error in select. %d\n",time(NULL), __FUNCTION__,errno);
+#endif
 		if (sockReady || sockSelect) {
 			socketProcess(-1);
 		}

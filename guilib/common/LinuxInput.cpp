@@ -1,3 +1,7 @@
+#include "system.h"
+
+#ifdef HAS_LIRC
+
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -175,4 +179,6 @@ bool CLinuxInput::IsHolding()
 {
   return m_isHolding;
 }
+
+#endif
 

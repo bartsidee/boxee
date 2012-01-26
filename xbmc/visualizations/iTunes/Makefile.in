@@ -6,10 +6,11 @@ SLIB=../../../visualisations/iTunes.mvis
 
 $(SLIB): $(OBJS)
 ifeq ($(findstring osx,$(ARCH)), osx)
-	@export MACOSX_DEPLOYMENT_TARGET=10.4
-	$(CXX) $(CXXFLAGS) -framework Carbon -dynamiclib -shared -flat_namespace \
-		-undefined suppress -o $@ $(OBJS) 
-	../../../tools/Mach5/wrapper.rb $@;mv output.so $@
+	@export MACOSX_DEPLOYMENT_TARGET=@OSX@
+	$(CXX) $(CXXFLAGS) -framework Carbon -dynamiclib -shared \
+		-Wl,-alias_list,../../cores/DllLoader/exports/wrapper_mach_alias \
+		../../cores/DllLoader/exports/wrapper.o \
+		-undefined dynamic_lookup -o $@ $(OBJS) 
 endif
 
 include ../../../Makefile.include

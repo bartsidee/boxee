@@ -1,10 +1,6 @@
-﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<!--Language file translated with Team XBMC Translator-->
-<!--Translator: Mika Pirinen -->
-<!--Date of translation: 22/9/2009 -->
-<!--Finnish strings based on English strings revision 23054 -->
+﻿<!--$Revision: 10303 $-->
 <strings>
-  <string id="0">Ohjelmat</string>
+  <string id="0">Aikuinen</string>
   <string id="1">Kuvat</string>
   <string id="2">Musiikki</string>
   <string id="3">Videot</string>
@@ -12,9 +8,9 @@
   <string id="5">Asetukset</string>
   <string id="6">XBMC SVN</string>
   <string id="7">Tiedostonhallinta</string>
-  <string id="8">Säätila</string>
-  <string id="9">xbmc media center</string>
-  
+  <string id="8">Sää</string>
+  <string id="9">xbmc mediakeskus</string>
+
   <string id="11">Maanantai</string>
   <string id="12">Tiistai</string>
   <string id="13">Keskiviikko</string>
@@ -22,7 +18,7 @@
   <string id="15">Perjantai</string>
   <string id="16">Lauantai</string>
   <string id="17">Sunnuntai</string>
-  
+
   <string id="21">tammikuu</string>
   <string id="22">helmikuu</string>
   <string id="23">maaliskuu</string>
@@ -35,7 +31,7 @@
   <string id="30">lokakuu</string>
   <string id="31">marraskuu</string>
   <string id="32">joulukuu</string>
-  
+
   <string id="41">ma</string>
   <string id="42">ti</string>
   <string id="43">ke</string>
@@ -48,62 +44,62 @@
   <string id="99">Autom. suuret</string>
   <string id="100">Kuvakkeet</string>
   <string id="101">Lista</string>
-  <string id="102">Päivitä</string>
+  <string id="102">Hae tiedot</string>
   <string id="103">Järjestä: Nimi</string>
-  <string id="104">Järjestä: Päiväys</string>
+  <string id="104">Järjestä: Pvm</string>
   <string id="105">Järjestä: Koko</string>
   <string id="106">Ei</string>
   <string id="107">Kyllä</string>
   <string id="108">Kuvaesitys</string>
   <string id="109">Luo pienoiskuvakkeet</string>
   <string id="110">Luo pienoiskuvakkeet</string>
-  <string id="111">Kirjanmerkit</string>
-  <string id="112">Tauko</string>
+  <string id="111">Pikavalikot</string>
+  <string id="112">Pysäytetty</string>
   <string id="113"></string>
   <string id="114"></string>
   <string id="115">Kopioi</string>
   <string id="116">Siirrä</string>
   <string id="117">Poista</string>
-  <string id="118">Nimeä uudelleen</string>
+  <string id="118">Nimeä uud.</string>
   <string id="119">Uusi kansio</string>
   <string id="120">Vahvista tiedoston kopiointi</string>
   <string id="121">Vahvista tiedoston siirto</string>
   <string id="122">Vahvista tiedoston poisto</string>
   <string id="123">Kopioidaanko valitut tiedostot?</string>
   <string id="124">Siirretäänkö valitut tiedostot?</string>
-  <string id="125">Poistetaanko valitut tiedostot? &#10;Poistettuja tiedostoja ei voida palauttaa!</string>
+  <string id="125">Poistetaanko valitut tiedostot? Poistettuja tiedostoja ei voida palauttaa!</string>
   <string id="126">Tila</string>
-  <string id="127">Kohdetta</string>
-  <string id="128">Yleiset</string>
+  <string id="127">Kohteet</string>
+  <string id="128">Yleistä</string>
   <string id="129">Kuvaesitys</string>
-  <string id="130">Järjestelmän tiedot</string>
-  <string id="131">Näytönasetukset</string>
+  <string id="130">Järjestelmätiedot</string>
+  <string id="131">Näyttö</string>
   <string id="132">Albumit</string>
   <string id="133">Esittäjät</string>
   <string id="134">Kappaleet</string>
   <string id="135">Lajityypit</string>
   <string id="136">Soittolistat</string>
   <string id="137">Etsi</string>
-  <string id="138">Järjestelmän tiedot</string>
+  <string id="138">Järjestelmätiedot</string>
   <string id="139">Lämpötilat:</string>
   <string id="140">Suoritin:</string>
   <string id="141">Grafiikkapiiri:</string>
   <string id="142">Aika:</string>
-  <string id="143">Tällä hetkellä:</string>
-  <string id="144">Ohjelmaversio:</string>
+  <string id="143">Virta:</string>
+  <string id="144">Versio:</string>
   <string id="145">Verkko:</string>
   <string id="146">Tyyppi:</string>
   <string id="147">Kiinteä IP-osoite</string>
   <string id="148">DHCP</string>
   <string id="149">MAC-osoite</string>
   <string id="150">IP-osoite</string>
-  <string id="151">Yhteys:</string>
+  <string id="151">Yhteys: </string>
   <string id="152">Puoliduplex</string>
   <string id="153">Täysiduplex</string>
-  <string id="154">Asemat</string>
+  <string id="154">Tallennus</string>
   <string id="155">Asema</string>
-  <string id="156">vapaana</string>
-  <string id="157">Näyttö</string>
+  <string id="156">Vapaana</string>
+  <string id="157">Videot</string>
   <string id="158">Muistia vapaana</string>
   <string id="159">Ei yhteyttä</string>
   <string id="160">Vapaana</string>
@@ -115,8 +111,8 @@
   <string id="166">Ulkoasu</string>
   <string id="167">FTP-palvelin käytössä</string>
   <string id="168">Kellonajan päivitys internetistä</string>
-  <string id="169">Näytönresoluutio</string>
-  <string id="170">Säädä päivitysnopeus</string>
+  <string id="169">Resoluutio</string>
+  <string id="170">Säädä päivitysnopeus videoon</string>
   <string id="171"></string>
   <string id="172">Julkaistu</string>
   <string id="173"></string>
@@ -131,9 +127,9 @@
   <string id="182">Kappaleet</string>
   <string id="183">Levyn esittely</string>
   <string id="184">Päivitä</string>
-  <string id="185">Haetaan albumin tietoja</string>
+  <string id="185">Haetaan albumia</string>
   <string id="186">OK</string>
-  <string id="187">Albumia ei löytynyt!</string>
+  <string id="187">Albumeita ei löytynyt!</string>
   <string id="188">Valitse kaikki</string>
   <string id="189">Haetaan median tiedot</string>
   <string id="190">Tallenna</string>
@@ -141,17 +137,17 @@
   <string id="192">Tyhjennä</string>
   <string id="193">Hae tiedot</string>
   <string id="194">Haetaan...</string>
-  <string id="195">Elokuvan tietoja ei löytynyt!</string>
+  <string id="195">Tietoja ei löytynyt!</string>
   <string id="196">Valitse elokuva:</string>
   <string id="197">Haetaan tietoja %s:sta</string>
-  <string id="198">Noudetaan elokuvan tietoja</string>
+  <string id="198">Ladataan elokuvan tietoja</string>
   <string id="199"></string>
   <string id="200"></string>
   <string id="201"></string>
   <string id="202">Iskulause</string>
   <string id="203">Juoni</string>
   <string id="204"></string>
-  <string id="205">Äänestysmäärä:</string>
+  <string id="205">Äänimäärä:</string>
   <string id="206">Näyttelijät</string>
   <string id="207">Juoni</string>
   <string id="208">Toista</string>
@@ -160,21 +156,21 @@
   <string id="213">Käyttöliittymän säätö...</string>
   <string id="214">Kuvaruudun säätö...</string>
   <string id="215">Pehmennä kuvaa</string>
-  <string id="216">Kuvankoko</string>
+  <string id="216">Kuvakoko</string>
   <string id="217">Kuvasuhde</string>
   <string id="218">DVD-asema</string>
   <string id="219">Aseta levy asemaan</string>
-  <string id="220">Verkkojako</string>
+  <string id="220">Etäsijainti</string>
   <string id="221">Verkkoa ei ole kytketty</string>
   <string id="222">Peruuta</string>
-  <string id="224">Näyttöaika</string>
+  <string id="224">Nopeus</string>
   <string id="225">Siirtymäaika</string>
   <string id="226">Testikuviot...</string>
   <string id="227">Hae albumin tiedot internetistä</string>
   <string id="228">Sekoita soittolista ladattaessa</string>
   <string id="229">Kiintolevyn pysäytysaika</string>
   <string id="230">Kuvasuodattimet</string>
-  <string id="231">Ei käytössä</string>
+  <string id="231">Pois</string>
   <string id="232">Pistemäinen</string>
   <string id="233">Lineaarinen</string>
   <string id="234">Anisotrooppinen</string>
@@ -183,10 +179,10 @@
   <string id="237">Pienennys</string>
   <string id="238">Suurennus</string>
   <string id="239">Tyhjennä soittolista lopuksi</string>
-  <string id="240">DVD-levyjen automaattinen käynnistys</string>
-  <string id="241">VCD-/SVCD-levyjen automaattinen käynnistys</string>
-  <string id="242">CD-levyjen automaattinen käynnistys</string>
-  <string id="243">Xbox-levyjen automaattinen käynnistys</string>
+  <string id="240">Toista DVD-levyt automaattisesti</string>
+  <string id="241">Toista VCD-/SVCD-levyt automaattisesti</string>
+  <string id="242">Toista CD-levyt automaattisesti</string>
+  <string id="243">Toista Xbox-levyt automaattisesti</string>
   <string id="244">Toista videot automaattisesti</string>
   <string id="245">Toista musiikki automaattisesti</string>
   <string id="246">Toista kuvat automaattisesti</string>
@@ -219,28 +215,31 @@
   <string id="273">Määritä kuvan oikea alakulma</string>
   <string id="274">Määritä tekstityksen sijainti</string>
   <string id="275">Määritä pikselin muoto</string>
-  <string id="276">Siirtämällä nuolta voit määrittää näkyvän kuva-alan</string>
-  <string id="277">Siirtämällä palkkia voit määrittää tekstityksen sijainnin kuvaruudulla</string>
+  <string id="276">Voit määrittää näkyvän kuva-alan siirtämällä nuolta</string>
+  <string id="277">Voit määrittää tekstityksen sijainnin kuvaruudulla siirtämällä palkkia</string>
   <string id="278">Muuta laatikon sivujen suhdetta siten, että laatikosta tulee täysin neliö</string>
   <string id="279">Asetuksia ei voitu ladata</string>
   <string id="280">Oletusasetukset otettu käyttöön</string>
   <string id="281">Tarkista XML-tiedostot</string>
   <string id="282">%i kpl nimikkeitä löydetty</string>
-  <string id="283">Haun tulos</string>
+  <string id="283">Hakutulos</string>
   <string id="284">Nimikkeitä ei löytynyt</string>
   <string id="286">Jälkikäsittely</string>
   <string id="287">Tekstitys</string>
-  <string id="288">Kirjasin</string>
-  <string id="289">Koko</string>
+  <string id="288">Kirjasin</string>  <!-- Subtitles font -->
+  <string id="289">Koko</string>  <!-- Subtitles size --> 
   <string id="290">Dynamiikan kutistus</string>
-  <string id="291">Video</string>
-  <string id="292">Ääni</string>
+  <string id="291">Videot</string>
+  <string id="292">Äänilaitteisto</string>
   <string id="293">Valitse tekstitys</string>
   <string id="294">Luo kirjanmerkki</string>
   <string id="296">Poista kirjanmerkit</string>
-  <string id="297">Äänen etäisyys</string>
+  <string id="297">Äänen poikkeama</string>
   <string id="298">Kirjanmerkit</string>
-  <string id="303">Tekstityksen viive</string>
+  <string id="299">Etsi uusi kappale</string>
+  <string id="300">Etsi uusi pikkukuvake</string>
+  <string id="301">Etsi uusi sovelluskansio</string>
+  <string id="303">Viive</string>
   <string id="304">Kieli</string>
   <string id="305">Käytössä</string>
   <string id="306">Lomittamaton</string>
@@ -254,7 +253,7 @@
   <string id="314">Valmistellaan...</string>
   <string id="315">Tietokantavirhe</string>
   <string id="316">Etsitään kappaleet...</string>
-  <string id="317">Tietokannan järjestely valmis</string>
+  <string id="317">Tietokannan järjestely onnistui</string>
   <string id="318">Järjestellään kappaleet...</string>
   <string id="319">Virhe kappaleiden päivityksessä</string>
   <string id="320">Järjestellään esittäjät...</string>
@@ -262,9 +261,9 @@
   <string id="322">Järjestellään lajityypit...</string>
   <string id="323">Virhe tyylien päivityksessä</string>
   <string id="324">Järjestellään tiedostopolut...</string>
-  <string id="325">Virhe tiedostopolkujen päivityksessä</string>
+  <string id="325">Virhe tiedostopolkujen järjestämisessä</string>
   <string id="326">Järjestellään albumit...</string>
-  <string id="327">Virhe albumien päivityksessä</string>
+  <string id="327">Virhe albumien järjestämisessä</string>
   <string id="328">Tallennetaan muutokset...</string>
   <string id="329">Virhe muutoksien tallennuksessa</string>
   <string id="330">Odota, tämä kestää jonkin aikaa...</string>
@@ -282,14 +281,14 @@
   <string id="342">Elokuvat</string>
   <string id="343">Sovita kuvataajuus</string>
   <string id="344">Näyttelijät</string>
-  <string id="345">Valmistusvuosi</string>
+  <string id="345">Vuosi</string>
   <string id="350">Ohjelmat</string>
-  <string id="351">Ei käytössä</string>
+  <string id="351">Pois</string>
   <string id="352">Himmeä</string>
   <string id="353">Musta</string>
-  <string id="354">Matriisi viivat</string>
+  <string id="354">Matriisiviivat</string>
   <string id="355">Näytönsäästäjän viive</string>
-  <string id="356">Näytönsäästäjä</string>
+  <string id="356">Näytönsäästäjän tila</string>
   <string id="357">Laitteen sammutusajastus</string>
   <string id="358">Kaikki albumit</string>
   <string id="359">Uusimmat albumit</string>
@@ -302,7 +301,7 @@
   <string id="366">Järjestä: Vuosi</string>
   <string id="367">Järjestä: Arvosana</string>
   <string id="368">IMDb</string>
-  <string id="369">Nimi</string>
+  <string id="369">Kappale</string>
   <string id="370">ukkosmyrskyjä</string>
   <string id="371">osittain</string>
   <string id="372">enimmäkseen</string>
@@ -316,7 +315,7 @@
   <string id="380">sadekuuroja</string>
   <string id="381">joitakin</string>
   <string id="382">hajanaisia</string>
-  <string id="383">tuulta</string>
+  <string id="383">tuuli</string>
   <string id="384">voimakasta</string>
   <string id="385">poutaa</string>
   <string id="386">selkeää</string>
@@ -324,26 +323,26 @@
   <string id="388">aamulla</string>
   <string id="389">kuuroja</string>
   <string id="390">lumikuuroja</string>
-  <string id="391">Alin</string>
-  <string id="392">kohtalaista</string>
-  <string id="393">Ylin</string>
+  <string id="391">alin</string>
+  <string id="392">keski</string>
+  <string id="393">korkea</string>
   <string id="394">sumua</string>
   <string id="395">usvaa</string>
   <string id="396">Valitse sijainti</string>
   <string id="397">Päivitysväli</string>
-  <string id="398">Lämpötilan yksikkö</string>
+  <string id="398">Lämpötilayksikkö</string>
   <string id="399">Tuulen nopeuden yksikkö</string>
   <string id="400">Sää</string>
   <string id="401">Lämpötila</string>
   <string id="402">Tuntuu kuin</string>
   <string id="403">UV-indeksi</string>
-  <string id="404">Tuuli</string>
+  <string id="404">tuuli</string>
   <string id="405">Kastepiste</string>
   <string id="406">Kosteus</string>
   <string id="407">Suunta</string>
   <string id="408">Nopeus</string>
   <string id="409">Oletukset</string>
-  
+
   <string id="410">Yhdistetään sääpalveluun</string>
   <string id="411">Noudetaan säätiedot:</string>
   <string id="412">Säätietoja ei saatu</string>
@@ -352,7 +351,7 @@
   <string id="415">Ladataan pienoiskuvaketta...</string>
   <string id="416">Tietoja ei saatavilla</string>
   <string id="417">Suuret kuvak.</string>
-  <string id="418">Kirjasto käytössä</string>
+  <string id="418"></string>
   <string id="419"></string>
   <string id="420"></string>
   <string id="421"></string>
@@ -378,8 +377,8 @@
   <string id="441">UDF-levy</string>
   <string id="442">Paikallisverkosta</string>
   <string id="443">Internetistä</string>
-  <string id="444">Video</string>
-  <string id="445">Musiikki</string>
+  <string id="444">Videot</string>
+  <string id="445">Äänilaitteisto</string>
   <string id="446">DVD</string>
   <string id="447">Käynnistys</string>
   <string id="448">LCD</string>
@@ -405,7 +404,7 @@
   <string id="469">Kuvaruutuvalikon sijainti</string>
   <string id="470">Tekijät</string>
   <string id="471">Mod-piiri</string>
-  <string id="474">Ei käytössä</string>
+  <string id="474">Pois</string>
   <string id="475">Vain musiikilla</string>
   <string id="476">Musiikki ja videot</string>
   <string id="477">Soittolistaa ei voitu ladata</string>
@@ -421,7 +420,7 @@
   <string id="487">Kappaleen toisto</string>
   <string id="488">Kansion toisto</string>
   <string id="489">Toista seuraava tiedosto automaattisesti</string>
-  <string id="491">Suuret kuvakkeet</string>
+  <string id="491">Käytä suuria kuvakkeita</string>
   <string id="492">Tekstityksen koko</string>
   <string id="493">Lisäasetukset (vain edistyneille käyttäjille!)</string>
   <string id="494">Äänen tilatunne(dB)</string>
@@ -429,11 +428,11 @@
   <string id="496">Kuvaruudun säätö</string>
   <string id="497">Piilota tiedostojen päätteet</string>
   <string id="498">Järjestä: Tyyppi</string>
-  <string id="499">Tietojen hakuosoitteeseen&#10;ei saada yhteyttä</string>
+  <string id="499">Tietojen hakuosoitteeseen ei saada yhteyttä</string>
   <string id="500">Albumin tietojen nouto epäonnistui</string>
   <string id="501">Etsitään albumin nimellä...</string>
-  <string id="502">Avoinna</string>
-  <string id="503">Varattu</string>
+  <string id="502">Avaa</string>
+  <string id="503">Var.</string>
   <string id="504">Ei levyä</string>
   <string id="505">Luetaan tiedostojen mediatiedot...</string>
   <string id="507">Järjestä: Käyttö</string>
@@ -471,12 +470,13 @@
   <string id="541">Albumi-kuvakkeet</string>
   <string id="542">DVD-kuvakkeet</string>
   <string id="543">DVD</string>
-  <string id="544">Mediatiedot</string>
+  <string id="544">Sijaintien tiedot</string>
   <string id="545">Äänen ulostulo</string>
   <string id="546">Äänen ulostulon laite</string>
   <string id="547">Esittäjästä ei ole tietoja</string>
   <string id="548">Yhdistä monikanavaiset äänet stereoksi</string>
- 
+  <string id="549">Säädä päävolyymiä</string>
+
   <string id="550">Järjestä: %s</string>
   <string id="551">Nimi</string>
   <string id="552">Päiväys</string>
@@ -501,9 +501,12 @@
   <string id="571">Oletus</string>
   <string id="572">Studio</string>
   <string id="573">Polku</string>
-  
-  <string id="580">Järjestelyn suunta</string>
-  <string id="581">Järjestelyn peruste</string>
+  <string id="574">Tekstitys</string>
+  <string id="575">Näytä lisätiedot</string>
+  <string id="576">Piilota lisätiedot</string>
+
+  <string id="580">Järjestelysuunta</string>
+  <string id="581">Järjestelyperuste</string>
   <string id="582">Näyttötapa</string>
   <string id="583">Muista jokaisen kansion näyttötapa</string>
   <string id="584">Nouseva</string>
@@ -511,9 +514,9 @@
   <string id="586">Muokkaa soittolistaa</string>
   <string id="587">Suodata</string>
   <string id="588">Keskeytä jukeboksi</string>
-  <string id="589">Jukeboksi </string>
+  <string id="589">Jukeboksi</string>
   <string id="590">Satunnainen</string>
-  <string id="591">Ei käytössä</string>
+  <string id="591">Pois</string>
   <string id="592">Yksi</string>
   <string id="593">Kaikki</string>
   <string id="594">Pois</string>
@@ -522,7 +525,7 @@
   <string id="597">Toisto: Kaikki</string>
 
   <string id="600">Siirrä ääni-CD-levy kiintolevylle</string>
-  <string id="601">Keskimääräinen</string>
+  <string id="601">keski</string>
   <string id="602">Normaali</string>
   <string id="603">Erittäin korkea</string>
   <string id="604">Vakiobittinopeus</string>
@@ -547,17 +550,17 @@
   <string id="633">Venytetty 14:9</string>
   <string id="634">Venytetty 16:9</string>
   <string id="635">Alkuperäinen koko</string>
-  <string id="636">Oma asetus</string>
+  <string id="636">Mukautus</string>
   <string id="637">Tasonkorjaus</string>
-  <string id="638">Tasonkorjaus-tila</string>
+  <string id="638">Tasonkorjaustila</string>
   <string id="639">Käytä kappaletasoja</string>
   <string id="640">Käytä albumitasoja</string>
   <string id="641">Esivahvistustaso - tasokorjatut</string>
   <string id="642">Esivahvistustaso - tasokorjaamattomat</string>
   <string id="643">Vältä äänen leikkautumista tasokorjatuissa tiedostoissa</string>
   <string id="644">Rajaa mustat palkit pois</string>
-  <string id="645">Suuri tiedosto täytyy purkaa ensin. Jatketaanko?</string>
-  <string id="646">Poista tietokannasta</string>
+  <string id="645">Suuri tiedosto täytyy purkaa. Jatketaanko?</string>
+  <string id="646">Poista kirjastosta</string>
   <string id="647">Vie videokirjasto</string>
   <string id="648">Tuo videokirjasto</string>
   <string id="649">Tuodaan</string>
@@ -565,54 +568,54 @@
   <string id="651">Valitse kirjasto</string>
   <string id="652">Vuodet</string>
   <string id="653">Päivitä kirjasto</string>
-  <string id="654">Näytä suoritustiedot</string>
-  <string id="655">Valitse ohjelma</string>
+  <string id="654">Näytä vianmääritystiedot</string>
+  <string id="655">Valitse suoritustiedosto</string>
   <string id="656">Valitse soittolista</string>
-  <string id="657">Valitse kansio</string>
-  <string id="658">Kappaleen tiedot</string>
+  <string id="657">Selaa kansiota</string>
+  <string id="658">Kappaletiedot</string>
   <string id="659"></string>
   <string id="660">Voimakkuuden vahvistus</string>
   <string id="661">Valitse vientikansio</string>
-  <string id="662">Valittu tiedosto ei ole enää saatavilla</string>
+  <string id="662">Tiedosto ei ole enää saatavilla</string>
   <string id="663">Haluatko poistaa sen kirjastosta?</string>
   <string id="664">Valitse skripti</string>
 
   <string id="700">Järjestetään kirjasto</string>
   <string id="701">Poistetaan vanhat kappaleet kirjastosta</string>
   <string id="702">Tämä polku on luettu aiemmin</string>
-  <string id="705">Verkkoasetukset</string>
-  <string id="706">HTTP-välipalvelimen IP-osoite</string>
-  <string id="707">HTTP-välipalvelimen portti</string>
-  <string id="708">HTTP-välipalvelin käytössä</string>
-  <string id="709">HTTP-välipalvelimen käyttäjätunnus</string>
-  <string id="710">HTTP-välipalvelimen salasana</string>
-  <string id="711">Internet-asetukset</string>
+  <string id="705">Verkko</string>
+  <string id="706">HTTP-välityspalvelimen IP-osoite</string>
+  <string id="707">HTTP-välityspalvelimen portti</string>
+  <string id="708">HTTP-välityspalvelin käytössä</string>
+  <string id="709">HTTP-välityspalvelimen käyttäjätunnus</string>
+  <string id="710">HTTP-välityspalvelimen salasana</string>
+  <string id="711">Internet-protokolla</string>
   <string id="712">Portti ei kelpaa. Arvon on oltava 1 ja 65535 välillä.</string>
-  <string id="713">HTTP-välipalvelin</string>
-  <string id="714"></string>
-  <string id="715">Verkko-osoitteen määritys</string>
-  <string id="716">Automaattinen (DHCP)</string>
-  <string id="717">Manuaalinen (Kiinteä)</string>
+  <string id="713">HTTP-välityspalvelin</string>
+  <string id="714">HTTP-välityspalvelimen isäntä on tyhjä[CR]Välityspalvelin poistetaan käytöstä</string>
+  <string id="715">Määritys</string>
+  <string id="716">Automaattisesti (DHCP:n avulla)</string>
+  <string id="717">Manuaalisesti</string>
   <string id="718">Oletusasetukset (Dashboard)</string>
   <string id="719">IP-osoite</string>
-  <string id="720">Aliverkon peite</string>
+  <string id="720">Verkkopeite</string>
   <string id="721">Oletusyhdyskäytävä</string>
-  <string id="722">Nimipalvelin (DNS)</string>
-  <string id="723">Tallenna ja uudelleenkäynnistä</string>
-  <string id="724">Osoite on oltava muodossa AAA.BBB.CCC.DDD</string>
-  <string id="725">ja numerot väliltä 0 - 255.</string>
-  <string id="726">Muutoksia ei ole tallennettu. Poistutaanko tallentamatta?</string>
+  <string id="722">DNS-palvelin</string>
+  <string id="723">Tallenna ja käynnistä</string>
+  <string id="724">Osoite on oltava muotoa AAA.BBB.CCC.DDD</string>
+  <string id="725">ja numerot 0-255.</string>
+  <string id="726">Muutoksia ei ole tallennettu. Jatketaanko tallentamatta?</string>
   <string id="727">Web-palvelin</string>
   <string id="728">FTP-palvelin</string>
   <string id="729">Internet-aika</string>
   <string id="730">Web-palvelimen portti</string>
-  <string id="731">Aikapalvelin</string>
-  <string id="732">Tallenna ja ota käyttöön</string>
-  <string id="733">Web-palvelimen salasana</string>
+  <string id="731">Aikapalvelimen isäntä</string>
+  <string id="732">Tallenna ja käytä</string>
+  <string id="733">- Verkkopalvelimen salasana (käyttäjätunnus: boxee)</string>
   <string id="734">Ei salasanaa</string>
-  <string id="735">Merkistö</string>
-  <string id="736">Tyyli</string>
-  <string id="737">Väri</string>
+  <string id="735">Merkistö</string> <!-- Subtitles character set -->
+  <string id="736">Tyyli</string>         <!-- Subtitles style -->
+  <string id="737">Väri</string>         <!-- Subtitles color -->
   <string id="738">Normaali</string>
   <string id="739">Lihavoitu</string>
   <string id="740">Kursivoitu</string>
@@ -623,15 +626,15 @@
   <string id="745">Tälle tilalle ei ole luettu mediatietoja,</string>
   <string id="746">siirry pois kirjastotilasta</string>
   <string id="747">Kuvan lataus epäonnistui</string>
-  <string id="748">Muokkaa tallennuspolkua</string>
+  <string id="748">Muokkaa polkua</string>
   <string id="749">Peilikuva</string>
-  <string id="750">Oletko varma asiasta?</string>
+  <string id="750">Oletko varma?</string>
   <string id="751">Poistetaan sijainti</string>
   <string id="752"></string>
   <string id="753"></string>
-  <string id="754">Lisää linkki ohjelmaan</string>
-  <string id="755">Muokkaa ohjelman polkua</string>
-  <string id="756">Muokkaa ohjelman nimeä</string>
+  <string id="754">Lisää ohjelmalinkki</string>
+  <string id="755">Muokkaa ohjelmapolkua</string>
+  <string id="756">Muokkaa ohjelmanimeä</string>
   <string id="757">Muokkaa polun syvyyttä</string>
   <string id="758"></string>
   <string id="759">Suuri luettelo</string>
@@ -639,44 +642,45 @@
   <string id="761">Valkoinen</string>
   <string id="762">Sininen</string>
   <string id="763">Kirkkaanvihreä</string>
-  <string id="764">Keltavihreä</string>
-  <string id="765">Sinivihreä</string>
+  <string id="764">Kellanvihreä</string>
+  <string id="765">Syaani</string>
   <string id="766">Varattu</string>
   <string id="767">Varattu</string>
   <string id="768">Varattu</string>
   <string id="769">Varattu</string>
-  <string id="770">Virhe %i: sijaintia ei ole saatavilla</string>
+  <string id="770">Sijaintia ei ole saatavilla</string>
   <string id="771">Automaattinen FATX-rajoitus</string>
   <string id="772">Äänilaitteisto</string>
   <string id="773">Haku</string>
-  <string id="774">Kuvaesitys kansio</string>
+  <string id="774">Kuvaesityskansio</string>
   <string id="775">Verkkoliitäntä</string>
-  <string id="776">Langattoman verkon nimi (ESSID)</string>
+  <string id="776">Langattoman verkon nimi</string>
   <string id="777">Langattoman verkon salasana</string>
   <string id="778">Langattoman verkon suojaus</string>
-  <string id="779">Tallenna ja ota asetukset käyttöön</string>
+  <string id="779">Tallenna ja ota verkon muutokset käyttöön</string>
   <string id="780">Ei salausta</string>
   <string id="781">WEP</string>
   <string id="782">WPA</string>
   <string id="783">WPA2</string>
-  <string id="784">Verkkoliitännän asetukset otetaan käyttöön. Odota hetki.</string>
-  <string id="785">Verkkoliitäntä käynnistetty uudelleen.</string>
-  <string id="786">Verkkoliitännän käynnistys ei onnistunut.</string>
+  <string id="784">Verkon asetukset otetaan käyttöön. Odota hetki.</string>
+  <string id="785">Verkon määritys onnistui.</string>
+  <string id="786">Verkon asetusten määritys ei onnistunut.</string>
   <string id="787">Verkkoliitäntä ei ole käytössä</string>
   <string id="788">Verkkoliitäntä poistettu käytöstä.</string>
-  <string id="789">Langattoman verkon nimi (ESSID)</string>
+  <string id="789">Langattoman verkon nimi</string>
 
-  <string id="790">Ohjaustapahtumat</string>
-  <string id="791">Ohjaustapahtumat käytössä</string>
+  <string id="790">Tapahtumapalvelin</string>
+  <string id="791">Ota tapahtumapalvelin käyttöön</string>
   <string id="792">Portti</string>
   <string id="793">Porttialue</string>
   <string id="794">Salli yhteydet toisista tietokoneista</string>
-  <string id="795">Kerta tapahtuman viive (ms)</string>
-  <string id="796">Jatkuvantoiston viive (ms)</string>
+  <string id="795">Kertatoiston viive (ms)</string>
+  <string id="796">Jatkuvan toiston viive (ms)</string>
   <string id="797">Yhteyksien enimmäismäärä</string>
-
-  <string id="998"></string>
-  <string id="999"></string>
+  <string id="800">Ystävät</string>
+  <string id="801">Aikuiset</string>
+  <string id="802">Merkistö</string>
+  <string id="803">AirPlay</string>
   <string id="1000">Näytönsäästäjän esikatselu</string>
   <string id="1001">Ei saada yhteyttä</string>
   <string id="1002">XBMC ei saanut yhteyttä verkko-osoitteeseen.</string>
@@ -698,51 +702,56 @@
   <string id="1018">Anna portin numero</string>
   <string id="1019">Anna käyttäjätunnus</string>
   <string id="1020">Lisää %s-sijainti</string>
-  <string id="1021">Tiedostojen polku:</string>
-  <string id="1022">Sijainnin nimi</string>
+  <string id="1021">Anna polku tai etsi media:</string>
+  <string id="1022">Anna medialähteen nimi</string>
   <string id="1023">Valitse uusi sijainti</string>
   <string id="1024">Selaa</string>
-  <string id="1025">Ei saatu hakemiston tietoja.</string>
+  <string id="1025">Ei saatu hakemistotietoja.</string>
   <string id="1026">Lisää sijainti</string>
   <string id="1027">Muokkaa sijaintia</string>
   <string id="1028">Muokkaa %s-sijaintia</string>
   <string id="1029">Anna uusi nimi</string>
-  <string id="1030">Valitse kuvaketiedosto</string>
+  <string id="1030">Valitse kuva</string>
   <string id="1031">Valitse kuvakansio</string>
   <string id="1032">Lisää verkko-osoite...</string>
   <string id="1033">Valitse tiedosto</string>
   <string id="1034">Alivalikko</string>
   <string id="1035">Alivalikon painikkeet käytössä</string>
   <string id="1036">Suosikit</string>
-  <string id="1037">Video lisäosat</string>
-  <string id="1038">Musiikki lisäosat</string>
-  <string id="1039">Kuva lisäosat</string>
+  <string id="1037">Videon lisäosat</string>
+  <string id="1038">Musiikin lisäosat</string>
+  <string id="1039">Kuvan lisäosat</string>
   <string id="1040">Hakemiston lataus</string>
   <string id="1041">Noudettu %i kohdetta</string>
-  <string id="1042">Noudettu %i/%i kohdetta</string>
-  <string id="1043">Ohjelma lisäosat</string>
-  <string id="1044">Lisäosan pienoiskuvake</string>
+  <string id="1042">Noudettu %i:ia %i:sta kohteesta</string>
+  <string id="1043">Ohjelman lisäosat</string>
+  <string id="1044">Aseta lisäosan pienoiskuvake</string>
   <string id="1045">Lisäosan asetukset</string>
   <string id="1046">Yhteyspisteet</string>
-  <string id="1047">Jokin muu...</string>
-  <string id="1048">Web-palvelimen käyttäjätunnus</string> 
+  <string id="1047">Muuverkko...</string>
+  <string id="1048">Web-palvelimen käyttäjätunnus</string>
   <string id="1049">Skripti-asetukset</string>
   <string id="1050">Singlet</string>
+  <string id="1051">TV-ohjelmat</string>
+  <string id="1052">Isäntänimi</string>
+  <string id="1053">Trailerit</string>
 
   <string id="1200">SMB-asiakas</string>
   <string id="1202">Työryhmä</string>
   <string id="1203">Oletuskäyttäjätunnus</string>
   <string id="1204">Oletussalasana</string>
-  
+  <string id="1205">Täysi verkkoskannaus SMB-lähteiden etsimiseksi</string>
+
   <string id="1207">WINS-palvelin</string>
   <string id="1208">Liitä SMB-jaot</string>
+  <string id="1209">Käytä yhtä yhteyttä palvelinta kohti</string>
 
   <string id="1210">Poista</string>
   <string id="1211">Musiikki</string>
   <string id="1212">Videot</string>
   <string id="1213">Kuvat</string>
   <string id="1214">Tiedostot</string>
-  <string id="1215">Musiikki ja videot</string>
+  <string id="1215">Musiikki ja videot </string>
   <string id="1216">Musiikki ja kuvat</string>
   <string id="1217">Musiikki ja tiedostot</string>
   <string id="1218">Videot ja kuvat</string>
@@ -750,7 +759,7 @@
   <string id="1220">Kuvat ja tiedostot</string>
   <string id="1221">Musiikki ja videot ja kuvat</string>
   <string id="1222">Musiikki ja videot ja kuvat ja tiedostot</string>
-  <string id="1223">Pois käytöstä</string>
+  <string id="1223">Ei käytössä</string>
   <string id="1226">Tiedostot ja musiikki ja videot</string>
   <string id="1227">Tiedostot ja kuvat ja musiikki</string>
   <string id="1228">Tiedostot ja kuvat ja videot</string>
@@ -761,11 +770,11 @@
   <string id="1233">Ohjelmat ja videot ja musiikki</string>
   <string id="1234">Ohjelmat ja kuvat ja musiikki</string>
   <string id="1235">Ohjelmat ja kuvat ja videot</string>
- 
+
   <string id="1245">FTP-käyttäjätunnus</string>
   <string id="1246">FTP-salasana</string>
   <string id="1247">Salasanan asetus onnistui</string>
-  
+
   <string id="1250">Tunnistus</string>
   <string id="1251">Järjestelmän automaattitunnistus</string>
   <string id="1252">Lempinimi</string>
@@ -774,9 +783,12 @@
   <string id="1255">Lähetä FTP-käyttäjätunnus ja salasana</string>
   <string id="1256">Pingauksen väli</string>
   <string id="1257">Yhdistetäänkö havaittuun järjestelmään?</string>
-  
-  <string id="1260">Zeroconf publishing</string>
 
+  <string id="1260">Zeroconf-julkaisu</string>
+
+  <string id="1300">Mukautettu kuuntelulaite</string>
+  <string id="1301">Mukautettu läpikuuntelulaite</string>
+  
   <string id="1396">kasaantuvaa</string>
   <string id="1397">ja</string>
   <string id="1398">jäätävää</string>
@@ -804,14 +816,15 @@
 
   <!-- strings through to 1450 reserved for weather translation -->
 
-  <string id="1450">Toimettomana virransäästö käytössä</string>
+  <string id="1450">Sulje näyttö, kun käyttämätön</string>
   <!-- strings through to 1470 reserved for power-saving -->
 
   <string id="2050">Kesto</string>
-  <string id="2100">Skripti virhe! : %s</string> 
- 
+
+  <string id="2100">Skriptivirhe! : %s</string>
+
   <string id="4501">LCD:n tyyppi</string>
- 
+
   <string id="10000">Päävalikko</string>
   <string id="10001">Ohjelmat</string>
   <string id="10002">Kuvat</string>
@@ -819,28 +832,37 @@
   <string id="10004">Asetukset</string>
   <string id="10005">Musiikki</string>
   <string id="10006">Videot</string>
-  <string id="10007">Järjestelmän tiedot</string>
-  <string id="10008">Asetukset - Yleiset</string>
-  <string id="10009">Asetukset - Näyttö</string>
+  <string id="10007">Järjestelmätiedot</string>
+  <string id="10008">Yleistä</string>
+  <string id="10009">Näyttö</string>
   <string id="10010">Asetukset - Ulkoasu - Käyttöliittymän kalibrointi</string>
   <string id="10011">Asetukset - Videot - Kuvaruudun kalibrointi</string>
+  <string id="10012">Kuvat</string>
+  <string id="10013">Käyttö-[CR]kontrolli</string>
+  <string id="10014">Sosiaalinen</string>
+  <string id="10015">Musiikki</string>
+  <string id="10016">Järjestelmä</string>
+  <string id="10017">Media</string>
+  <string id="10018">Verkko</string>
+  <string id="10019">Yleistä</string>
   <string id="10020">Skriptit</string>
   <string id="10021"></string>
   <string id="10022"></string>
   <string id="10023"></string>
   <string id="10025"></string>
   <string id="10028">Videot/Soittolista</string>
-  <string id="10034">Asetukset - Profiilit</string>
-  
-  <string id="10100">Kyllä/Ei -dialogi</string>
-  <string id="10101">Tila-dialogi</string>
+  <string id="10034">Profiilit</string>
+  <string id="10035">[B]Käyttö-[CR]kontrolli[/B]</string>
+
+  <string id="10100">Kyllä/Ei-dialogi</string>
+  <string id="10101">Edistysdialogi</string>
 
   <string id="10210">Haetaan tekstityksiä...</string>
-  <string id="10211">Välimuistitetaan tekstityksiä...</string>
+  <string id="10211">Tallentaa välimuistiin tai etsii tekstitystä…</string>
   <string id="10212">keskeytetään</string>
   <string id="10213">puskuroidaan</string>
   <string id="10214">Aloitetaan siirtoa</string>
-  
+
   <string id="10500">Musiikki/Soittolista</string>
   <string id="10501">Musiikki/Tiedostot</string>
   <string id="10502">Musiikki/Kirjasto</string>
@@ -852,20 +874,20 @@
   <string id="10508">Sääennuste</string>
   <string id="10509">Verkkopelaaminen</string>
   <string id="10510">Lisäosat</string>
-  <string id="10511">Järjestelmän tiedot</string>
+  <string id="10511">Järjestelmätiedot</string>
   <string id="10512"></string>
   <string id="10513"></string>
   <string id="10514"></string>
   <string id="10515"></string>
   <string id="10516">Musiikki - Kirjasto</string>
-  <string id="10517">Musiikki - Nyt soitossa</string>
+  <string id="10517">Nyt toistetaan - musiikki</string>
   <string id="10518"></string>
   <string id="10519"></string>
   <string id="10520"></string>
   <string id="10521"></string>
-  <string id="10522">Videot - Nyt soitossa</string>
-  <string id="10523">Albumin tiedot</string>
-  <string id="10524">Elokuvan tiedot</string>
+  <string id="10522">Nyt toistetaan - videot</string>
+  <string id="10523">Albumitiedot</string>
+  <string id="10524">Elokuvatiedot</string>
 
   <string id="12000">Valitse dialogi</string>
   <string id="12001">Musiikki/Tiedot</string>
@@ -875,23 +897,33 @@
   <string id="12005">Kokoruudun video</string>
   <string id="12006">Äanen visualisointi</string>
   <string id="12007"></string>
-  <string id="12008">Yhdistämis-dialogi</string>
+  <string id="12008">Yhdistämisdialogi</string>
   <string id="12009">Luo indeksi uudestaan...</string>
-  <string id="12010">Palaa Musiikki-valikkoon</string>
-  <string id="12011">Palaa Videot-valikkoon</string>
+  <string id="12010">Palaa Musiikki-ikkunaan</string>
+  <string id="12011">Palaa Videot-ikkunaan</string>
   <string id="12012">Päivitä trainer-lista</string>
   <string id="12013">Trainerit</string>
   <string id="12014">Ei trainereita</string>
   <string id="12015">Trainer-asetukset</string>
-  <string id="12016">Kaikki rekisteröidyt trainerit ovat kadonneet. Päivitä lista uudelleen</string>
-  <string id="12017">Jatka pysäytetystä kohdasta</string>
+  <string id="12016">Kaikki rekisteröidyt trainerit ovat kadonneet. Päivitä lista.</string>
+  <string id="12017">Jatka pysäytetystä kohdasta.</string>
   <string id="12018">Ei</string>
   <string id="12019">Kyllä</string>
   <string id="12020">Kysy</string>
   <string id="12021">Aloita alusta</string>
   <string id="12022">Jatka %s:sta</string>
   <string id="12023">Tarkastetaan nykyisiä trainereita...</string>
-  <string id="12024">Luo pienoiskuvakkeet videoille, joilla ei ole kansikuvaa</string>
+  <string id="12024">Luo pienoiskuvakkeet videoille, joilla ei ole kansikuvaa.</string>
+  <string id="12025">Älä luo videoita tämän kokoisiksi (MB)</string>
+  <string id="12026">Keskeytä video, kun poistut toistoruudusta</string>
+  <string id="12027">Valitse videon laatu</string>  
+  <string id="12028">Useita laatutasoja saatavilla</string>  
+  <string id="12029">Tallenna mieltymykset</string>  
+  <string id="12030">Tallenna</string>
+  <string id="12031">1080p</string>
+  <string id="12032">720p</string>
+  <string id="12033">Normaali</string>
+  <string id="12034">Useita trailereita saatavissa</string>
 
   <string id="12310">0</string>
   <string id="12311">1</string>
@@ -903,16 +935,16 @@
   <string id="12317">7</string>
   <string id="12318">8</string>
   <string id="12319">9</string>
-  <string id="12320">C</string>
+  <string id="12320">c</string>
   <string id="12321">OK</string>
   <string id="12322">*</string>
   <string id="12325">Lukittu! Anna koodi...</string>
   <string id="12326">Anna salasana</string>
   <string id="12327">Anna pääkäyttäjän koodi</string>
   <string id="12328">Anna avauskoodi</string>
-  <string id="12329">tai paina C peruuttaaksesi</string>
-  <string id="12330">Anna peliohjaimen painikeyhdistelmä ja&#10;paina lopuksi Start-painiketta.</string>
-  <string id="12331">&#10;Paina Back peruuttaaksesi.</string>
+  <string id="12329">tai peruuta painamalla C</string>
+  <string id="12330">Anna peliohjaimen painikeyhdistelmä ja paina</string>
+  <string id="12331">Start tai peruuta painamalla Back.</string>
   <string id="12332">Aseta lukitus</string>
   <string id="12333">Avaa lukitus</string>
   <string id="12334">Palauta lukitus</string>
@@ -920,7 +952,7 @@
   <string id="12337">Numeerinen salasana</string>
   <string id="12338">Ohjaimen painikeyhdistelmä</string>
   <string id="12339">Tekstimuotoinen salasana</string>
-  <string id="12340">Uusi salasana</string>
+  <string id="12340">Anna uusi salasana</string>
   <string id="12341">Anna salasana uudelleen</string>
   <string id="12342">Väärä salasana,</string>
   <string id="12343">yritystä jäljellä </string>
@@ -934,13 +966,13 @@
   <string id="12357">Sijainnin lukitus</string>
   <string id="12358">Salasana oli tyhjä. Yritä uudelleen.</string>
   <string id="12360">Pääkäyttäjän lukitus</string>
-  <string id="12362">Sammuta laite lukituksen poistoyritysten maksimimäärän jälkeen</string>
-  <string id="12367">Pääkäyttäjän koodi ei ole oikea!</string>
+  <string id="12362">Sammuta laite lukituksen poistoyritysten maksimimäärä ylittyy</string>
+  <string id="12367">Pääkäyttäjän koodi ei kelpaa!</string>
   <string id="12368">Anna oikea pääkäyttäjän koodi!</string>
   <string id="12373">Asetukset ja tiedostonhallinta</string>
   <string id="12376">Aseta oletukseksi kaikille elokuville</string>
-  <string id="12377">Tämä korvaa kaikki edelliset asetukset</string>
-  <string id="12378">Kuvan näyttöaika</string>
+  <string id="12377">Tämä korvaa kaikki aikaisemmin tallennetut arvot</string>
+  <string id="12378">Näytä kukin kuva</string>
   <string id="12379">Siirto- ja zoomaus-tehosteet käytössä</string>
   <string id="12380">NTSC-videot PAL-nopeudella</string>
   <string id="12381">PAL-videot NTSC-nopeudella</string>
@@ -956,27 +988,27 @@
   <string id="12393">päivää</string>
   <string id="12394">Kokonaiskäyntiaika</string>
 
-  <string id="12600">Säätila</string>
+  <string id="12600">Sää</string>
 
   <string id="12900">Näytönsäästäjä</string>
-  <string id="12901">Koko ruudun kuvaruutunäyttö</string>
+  <string id="12901">Koko ruudun näyttö</string>
 
   <string id="13000">Järjestelmä</string>
   <string id="13001">Kiintolevyn välitön pysäytys</string>
-  <string id="13002">Vain videoilla</string>
+  <string id="13002">Vain video</string>
   <string id="13003">Viive</string>
   <string id="13004">Tiedoston vähimmäiskesto</string>
-  <string id="13005">Sammuta laite</string>
+  <string id="13005">Sammutus</string>
   <string id="13006">Käynnistä dashboard</string>
   <string id="13007">Vaihtoehtoinen dashboardin polku</string>
-  <string id="13008">Sammutusmuoto</string>
-  <string id="13009">Poistu</string>
+  <string id="13008">Sammutusmuoto</string> 
+  <string id="13009">Poistu</string> 
   <string id="13010">Horrostila</string>
   <string id="13011">Valmiustila</string>
-  <string id="13012">Lopeta</string> 
-  <string id="13013">Käynnistä uudelleen</string> 
+  <string id="13012">Lopeta</string>
+  <string id="13013">Käynnistä uudelleen</string>
   <string id="13014">Pienennä</string>
-  <string id="13015">Virtakytkimen toiminto</string> 
+  <string id="13015">Virtakytkimen toiminto</string>
 
   <string id="13020">Onko toinen istunto käynnissä, ehkä ssh:n kautta?</string>
   <string id="13021">Liitetty siirrettävä kiintolevy</string>
@@ -984,9 +1016,12 @@
   <string id="13023">Laitteen poisto onnistui</string>
   <string id="13024">Peliohjain liitetty</string>
   <string id="13025">Peliohjain irroitettu</string>
+  <string id="13026">Irrotettava asema liitetty</string>
+  <string id="13027">Irrotettava asema irroitettu</string>
+  <string id="13028">Irroitettava asema irroitettu, virheilmoituksia</string>
 
-  <string id="13100">Näytön välkynnän poisto</string>
-  <string id="13101">Ajuri valitsee (vaatii uudelleenkäynnistyksen)</string> 
+  <string id="13100">Näytön välkynnän suodatin</string>
+  <string id="13101">Ajuri valitsee (vaatii uudelleenkäynnistyksen)</string>
   <string id="13105">Pystytahdistus</string>
   <string id="13106">Ei käytössä</string>
   <string id="13107">Käytössä videoita toistettaessa</string>
@@ -994,10 +1029,10 @@
   <string id="13109">Testaa ja hyväksy resoluutio</string>
   <string id="13110">Tallenna resoluutio?</string>
   <string id="13111">Haluatko säilyttää nämä asetukset?</string>
-
+  
   <string id="13112">Korkealaatuinen skaalaus</string>
   <string id="13113">Ei käytössä</string>
-  <string id="13114">Käytössä normaali tarkkuudella</string>
+  <string id="13114">Käytössä normaalilla tarkkuudella</string>
   <string id="13115">Aina käytössä</string>
   
   <string id="13116">Skaalausmenetelmä</string>
@@ -1013,28 +1048,26 @@
   <string id="13132">Tyhjä näyttö</string>
 
   <string id="13140">Käytössä oleva ohjaus havaittu!</string>
-  <string id="13141">Mikäli jatkat, et välttämättä pysty tämän jälkeen</string>
-  <string id="13142">ohjaamaan XBMC:ia. Haluatko varmasti pysäyttää ohjaustapahtumat?</string>
-
+  <string id="13141">Mikäli jatkat, et ehkä pysty myöhemmin ohjaamaan Boxeeta.</string>
+  <string id="13142">Haluatko varmasti pysäyttää tapahtumapalvelimen?</string>
   <string id="13144">Vaihdetaanko Apple kauko-ohjaukseen?</string>
-  <string id="13145">Mikäli käytät nyt XBMC:in ohjaukseen Apple kauko-ohjausta,</string>
-  <string id="13146">tämän jälkeen et voi jatkaa sillä ohjaamista</string>
-  <string id="13147">Haluatko jatkaa ?</string>
-
+  <string id="13145">Jos vaihdat Apple kauko-ohjaukseen, tämän jälkeen et ehkä voi jatkaa ohjaamista Boxeella.[CR] Haluatko jatkaa?</string>
+  <string id="13148">Vaihdetaanko kauko-ohjauksen tilaa?</string>
+  <string id="13149">Aktivoi käynnistämällä Boxee uudelleen</string>
   <string id="13150">Lukituskoodi:</string>
   <string id="13151">Lämpötila:</string>
-  <string id="13152">Malli:</string>
-  <string id="13153">Firmware:</string>
-  <string id="13154">Malli:</string>
-  <string id="13155">Sarjanro:</string>
-  <string id="13156">Firmware:</string>
-  <string id="13157">Salasana:</string>
-  <string id="13158">Lukitus:</string>
-  <string id="13159">Aliverkon peite</string>
+  <string id="13152">DVD-malli:</string>
+  <string id="13153">DVD-laiteohjelmisto:</string>
+  <string id="13154">HDD-malli:</string>
+  <string id="13155">HDD-sarjanro:</string>
+  <string id="13156">HDD-laiteohjelmisto:</string>
+  <string id="13157">HDD-salasana:</string>
+  <string id="13158">HDD-lukitus:</string>
+  <string id="13159">Verkkopeite</string>
   <string id="13160">Yhdyskäytävä</string>
   <string id="13161">Ensisijainen DNS</string>
   <string id="13162">Alustus epäonnistui</string>
- 
+  
   <string id="13163">Peliohjain</string>
   <string id="13164">Näppäimistö</string>
   <string id="13165">Hiiri</string>
@@ -1050,7 +1083,7 @@
   <string id="13173">Kiintolevyn asennuspäivä:</string>
   <string id="13174">Kiintolevyn käynnistyslaskuri:</string>
 
-  <string id="13200">Käyttäjä profiilit</string>
+  <string id="13200">Profiilit</string>
   <string id="13201">Poistetaanko profiili '%s' ?</string>
   <string id="13204">Viimeksi ladattu profiili:</string>
   <string id="13205">Tuntematon</string>
@@ -1061,6 +1094,7 @@
   <string id="13211">Hälytys!</string>
   <string id="13212">peruutettu, %im%is jäljellä</string>
 
+  <string id="13248">Ota käyttöön oletuksena</string>
   <string id="13249">Etsi tekstitykset RAR-paketeista</string>
   <string id="13250">Valitse tekstitys...</string>
   <string id="13251">Siirrä</string>
@@ -1069,57 +1103,57 @@
 
   <string id="13270">Laitteisto:</string>
   <string id="13271">Suorittimen käyttö:</string>
-
+  
   <string id="13274">Yhdistetty, mutta DNS-tietoja ei ole käytettävissä.</string>
   <string id="13275">Kiintolevy</string>
   <string id="13276">DVD-asema</string>
   <string id="13277">Tallennus</string>
   <string id="13278">Oletus</string>
   <string id="13279">Verkko</string>
-  <string id="13280">Näyttö</string>
+  <string id="13280">Videot</string>
   <string id="13281">Laitteisto</string>
   <string id="13282">_</string>
   <string id="13283">Käyttöjärjestelmä:</string>
   <string id="13284">Suorittimen nopeus:</string>
-  <string id="13285">BIOS:</string>
+  <string id="13285">Havaittu BIOS:</string>
   <string id="13286">Videoenkooderi:</string>
-  <string id="13287">Näyttötarkkuus:</string>
+  <string id="13287">Näytön tarkkuus:</string>
   <string id="13288">Laiteversio:</string>
   <string id="13289">Sarjanumero:</string>
-  <string id="13290">Valmistustiedot:</string>
+  <string id="13290">Valmistajatiedot:</string>
   <string id="13291">Mod-piiri:</string>
   <string id="13292">A/V-kaapeli:</string>
   <string id="13293">Video- ja XBE-alue:</string>
   <string id="13294">DVD-aluekoodi:</string>
   <string id="13295">Internet:</string>
   <string id="13296">Yhdistetty</string>
-  <string id="13297">Ei ole yhdistetty. Tarkista verkkoasetukset.</string>
+  <string id="13297">Ei yhdistetty. Tarkista verkkoasetukset.</string>
   <string id="13298">Xbox Live-avain:</string>
   <string id="13299">Tavoitelämpötila</string>
-  <string id="13300">Tuulettimen pyörintänopeus</string>
-  <string id="13301">Automaattinen lämmönhallinta</string>
-  <string id="13302">Tuulettimen pyörintänopeuden säätö</string>
-  <string id="13303">Kirjasin</string>
+  <string id="13300">Tuulettimen nopeus</string>
+  <string id="13301">Automaattinen lämmönsäätö</string>
+  <string id="13302">Tuulettimen nopeuden säätö</string>
+  <string id="13303">Fontit</string>
   <string id="13304">Käännä kaksisuuntainen merkistö</string>
   <string id="13305">RSS-uutispalvelu käytössä</string>
   <string id="13306">Piilota päähakemisto</string>
   <string id="13307">Kappaleen nimeämistapa</string>
-  <string id="13308">Käynnistetäänkö järjestelmä uudelleen,</string>
+  <string id="13308">Käynnistetäänkö uudelleen,</string>
   <string id="13309">vai pelkkä XBMC?</string>
   <string id="13310">Zoomaus-tehoste</string>
-  <string id="13311">Kellunta tehoste</string>
+  <string id="13311">Kelluntatehoste</string>
   <string id="13312">Mustien reunojen poisto</string>
   <string id="13313">Käynnistä uudelleen</string>
   <string id="13314">Ristiinhäivytys</string>
   <string id="13315">Luo pienoiskuvakkeet</string>
   <string id="13316">Kaikki pienoiskuvakkeet</string>
   <string id="13317">Kuvaesitys</string>
-  <string id="13318">Kaikkien kuvaesitys</string>
+  <string id="13318">Palautuva kuvaesitys</string>
   <string id="13319">Satunnainen</string>
   <string id="13320">Stereo</string>
   <string id="13321">Ainoastaan vasen</string>
   <string id="13322">Ainoastaan oikea</string>
-  <string id="13323">Karaoke-tila käytössä</string>
+  <string id="13323">Karaoketila käytössä</string>
   <string id="13324">Taustan läpinäkyvyys</string>
   <string id="13325">Edustan läpinäkyvyys</string>
   <string id="13326">Äänen viive</string>
@@ -1131,7 +1165,7 @@
   <string id="13332">Siirrä ylöspäin</string>
   <string id="13333">Siirrä alaspäin</string>
   <string id="13334">Muuta nimeä</string>
-  <string id="13335">Aseta oletussijainti</string>
+  <string id="13335">Aseta oletukseksi</string>
   <string id="13336">Poista painike</string>
   <string id="13338">Etupaneelin valo</string>
   <string id="13339">Etupaneelin valon väri</string>
@@ -1141,29 +1175,29 @@
   <string id="13343">Punainen</string>
   <string id="13344">Kierrätä värejä</string>
   <string id="13345">Sammuta etupaneelin valo toistettaessa</string>
-  <string id="13346">Elokuvan tiedot</string>
+  <string id="13346">Elokuvatiedot</string>
   <string id="13347">Lisää toistojonoon</string>
   <string id="13348">Hae IMDb:stä...</string>
   <string id="13349">Etsi uusi sisältö</string>
-  <string id="13350">Nykyinen soittolista...</string>
-  <string id="13351">Albumin tiedot</string>
-  <string id="13352">Lue kaikki kirjastoon</string>
+  <string id="13350">Toistaa parhaillaan...</string>
+  <string id="13351">Albumitiedot</string>
+  <string id="13352">Lisää kohde kirjastoon</string>
   <string id="13353">Keskeytä haku</string>
-  <string id="13354">Renderöintitapa</string>
-  <string id="13355">Pixel Shader (matalalaatu)</string>
-  <string id="13356">Laitteistopohjainen</string>
-  <string id="13357">Pixel Shader (korkea laatu)</string>
+  <string id="13354">Renderöintimenetelmä</string>
+  <string id="13355">Matalalaatupikseli</string>
+  <string id="13356">Laitteiston kerrostukset</string>
+  <string id="13357">Korkealaatupikseli</string>
   <string id="13358">Toista</string>
   <string id="13359">Aseta esittäjän pienoiskuvake</string>
   <string id="13360">Luo pienoiskuvakkeet</string>
   <string id="13361">Puhe käytössä</string>
   <string id="13375">Laite käytössä</string>
   <string id="13376">Äänenvoimakkuus</string>
-  <string id="13377">Oletus näyttötapa</string>
-  <string id="13378">Oletus kirkkaus</string>
-  <string id="13379">Oletus kontrasti</string>
+  <string id="13377">Oletusnäyttötapa</string>
+  <string id="13378">Oletuskirkkaus</string>
+  <string id="13379">Oletuskontrasti</string>
   <string id="13380">Gamman oletusarvo</string>
-  <string id="13381">Jatka toistoa</string>
+  <string id="13381">Jatka videota</string>
   <string id="13382">Äänimaski - Portti 1</string>
   <string id="13383">Äänimaski - Portti 2</string>
   <string id="13384">Äänimaski - Portti 3</string>
@@ -1171,8 +1205,8 @@
   <string id="13386">Käytä aikapohjaista hakua</string>
   <string id="13387">Kappaleen nimeämistapa, oikeanpuoleinen</string>
   <string id="13388">Esiasetukset</string>
-  <string id="13389">Tälle visualisoinnille ei&#10;löytynyt esiasetuksia</string>
-  <string id="13390">Tälle visualisoinnille ei&#10;ole määriteltäviä asetuksia</string>
+  <string id="13389">Tälle visualisoinnille ei löytynyt esiasetuksia</string>
+  <string id="13390">Tälle visualisoinnille ei ole määriteltäviä asetuksia</string>
   <string id="13391">Poista/Lataa</string>
   <string id="13392">Näytön visualisoinnit käytössä musiikkitiedostoilla</string>
   <string id="13393">Laske koko</string>
@@ -1180,66 +1214,72 @@
   <string id="13395">Videoasetukset</string>
   <string id="13396">Ääni- ja tekstitysasetukset</string>
   <string id="13397">Tekstitys käytössä</string>
-  <string id="13398">Pikakäynnistys</string>
-  <string id="13399">Ohita 'The'-sana lajiteltaessa</string>
+  <string id="13398">Pikavalikot</string>
+  <string id="13399">Ohita tunnukset lajiteltaessa</string>
   <string id="13400">Ristiinhäivytä albumin kappaleet</string>
   <string id="13401">Valitse %s</string>
   <string id="13402">Näytä kappaleen sijainti</string>
   <string id="13403">Poista oletussijainti</string>
   <string id="13404">Jatka</string>
   <string id="13405">Pienoiskuvake</string>
-  <string id="13406">Kuvan tiedot</string>
-  <string id="13407">%s:in esiasetukset</string> 
+  <string id="13406">Kuvatiedot</string>
+  <string id="13407">%s:in esiasetukset</string>
   <string id="13408">(IMDb-käyttäjien arvosana)</string>
-  <string id="13409">250 suosituinta</string> 
-  <string id="13410">Aloita Last.fm:n kuuntelu</string> 
+  <string id="13409">250 suosituinta</string>
+  <string id="13410">Aloita Last.fm:n kuuntelu</string>
   <string id="13411">Tuulettimen vähimmäisnopeus</string>
-  <string id="13412">RSS-syötteet sisältävät oikealta vasemmalle -tekstiä</string>
+  <string id="13412"></string>
   <string id="13413">Ladataan</string>
-  <string id="13414">Älä näytä kokoelmilla olevia esittäjiä</string>
+  <string id="13414">Piilota kokoelmilla olevat esittäjät</string>
   <string id="13415">Renderöintimenetelmä</string>
   <string id="13416">Automaattinen tunnistus</string>
   <string id="13417">Basic Shaders (ARB)</string>
   <string id="13418">Advanced Shaders (GLSL)</string>
-  <string id="13419">Ohjelmallinen</string>
-  <string id="13421">VDPAU</string>
+  <string id="13419">Ohjelmisto</string>
   <string id="13420">Poista turvallisesti</string>
+  <string id="13421">VDPAU</string>
+  <string id="13422">Käynnistä kuvaesitys tästä</string>
+  <string id="13423">Käytä uutta merkistöä</string>
+  <string id="13424">Audiolaitteen alustus epäonnistui</string>
+  <string id="13425">Tarkista audioasetukset</string>
 
-  <string id="13500">A/V-tahdistus menetelmä</string>
+  <string id="13500">A/V-tahdistusmenetelmä</string>
   <string id="13501">Äänen kello</string>
   <string id="13502">Videon kello (poista/lisää ääntä)</string>
   <string id="13503">Videon kello (äänen uudelleennäytteistys)</string>
-  <string id="13504">Maksimi uudelleennäytteistys (%)</string>
+  <string id="13504">Maks. uudelleennäytteistys (%)</string>
   <string id="13505">Uudellennäytteistyksen laatu</string>
   <string id="13506">Matala(nopea)</string>
-  <string id="13507">Keski</string>
-  <string id="13508">Korkea</string>
-  <string id="13509">Todella korkea(hidas)</string>
+  <string id="13507">keski</string>
+  <string id="13508">korkea</string>
+  <string id="13509">Todella korkea (hidas)</string>
   <string id="13510">Tahdista toisto näyttöön</string>
 
   <string id="13600">Apple Remote -kauko-ohjain</string>
-  <string id="13601">Toimintatapa</string>
+  <string id="13601">Etätila</string>
   <string id="13602">Aina päällä</string>
   <string id="13603">Jaksottainen viive</string>
   
   <string id="13610">Ei käytössä</string>
   <string id="13611">Normaali</string>
   <string id="13612">Yleiskauko-ohjain</string>
-  <string id="13613">Yleiskauko-ohjain (Harmony)</string>
+  <string id="13613">Monikauko-ohjain (Harmony)</string>
   
-  <string id="13620">Apple Remote -kauko-ohjain virhe</string>
+  <string id="13620">Apple Remote -kauko-ohjaimen virhe</string>
   <string id="13621">Apple Remote -kauko-ohjain voidaan ottaa käyttöön.</string>
- 
-  <string id="14000">Yhdistä osat</string>
-  <string id="14001">Ei yhdistetä osia</string>
-  <string id="14003">Ladataan soittolistatiedostoa...</string>
-  <string id="14004">Ladataan ohjelmaluetteloa..</string>
-  <string id="14005">Tulkitaan ohjelmaluetteloa...</string>
+  
+  <string id="13622">Käytä tarkkaa renderöintiä</string>
+
+  <string id="14000">Yhdistä</string>
+  <string id="14001">Älä yhdistä</string>
+  <string id="14003">Ladataan toistotiedostoa...</string>
+  <string id="14004">Ladataan ohjelmaluetteloa...</string>
+  <string id="14005">Jäsennellään ohjelmaluetteloa...</string>
   <string id="14006">Ohjelmaluettelon lataus epäonnistui</string>
-  <string id="14007">Soittolistan lataus epäonnistui</string>
+  <string id="14007">Toistolistan lataus epäonnistui</string>
   <string id="14008"></string>
   <string id="14009">Pelit-hakemisto</string>
-  <string id="14010">Vaihda pienoiskuvakkeisiin automaattisesti,jos</string>
+  <string id="14010">Vaihda pienoiskuvakkeisiin automaattisesti, jos</string>
   <string id="14011">Näytä pienoiskuvakkeet automaattisesti</string>
   <string id="14012">Käytä suuria kuvakkeita</string>
   <string id="14013">Vaihda mikäli</string>
@@ -1248,29 +1288,29 @@
   <string id="14016">Vähintään yksi tiedosto ja pienoiskuvake</string>
   <string id="14017">Pienoiskuvakkeiden osuus (%)</string>
   <string id="14018">Näyttöasetukset</string>
-  <string id="14019">Sijainti 1</string>
-  <string id="14020">Sijainti 2</string>
-  <string id="14021">Sijainti 3</string>
+  <string id="14019">Sään sijainti</string>
+  <string id="14020">Vaihda aluekoodi 2</string>
+  <string id="14021">Vaihda aluekoodi 3</string>
   <string id="14022">Kirjasto</string>
   <string id="14023">Ei TV:tä</string>
-  <string id="14024">Anna lähin suuri paikkakunta</string>
+  <string id="14024">Anna lähin paikkakunta</string>
   <string id="14025">Video-/Audio-/DVD-välimuisti: Kiintolevy</string>
   <string id="14026">Videovälimuisti: DVD-ROM</string>
-  <string id="14027">Videovälimuisti: Lähiverkko</string>
-  <string id="14028">Videovälimuisti: Internet</string>
+  <string id="14027">Lähiverkko</string>
+  <string id="14028">Internet</string>
   <string id="14030">Audiovälimuisti: DVD-ROM</string>
-  <string id="14031">Audiovälimuisti: Lähiverkko</string>
-  <string id="14032">Audiovälimuisti: Internet</string>
+  <string id="14031">Lähiverkko</string>
+  <string id="14032">Internet</string>
   <string id="14034">DVD-välimuisti: DVD-ROM</string>
-  <string id="14035">DVD-välimuisti: Lähiverkko</string>
+  <string id="14035">Lähiverkko</string>
   <string id="14036">Palvelimet</string>
-  <string id="14037">Ulkoasu</string>
+  <string id="14037">Yleistä</string>
   <string id="14038">Verkkoasetuksia muutettu</string>
-  <string id="14039">XBMC täytyy käynnistää uudelleen, jotta uudet</string>
-  <string id="14040">asetukset tulevat käyttöön. Käynnistetäänkö uudelleen nyt?</string>
+  <string id="14039">Asetukset tulevat voimaan uudelleenkäynnistyksen jälkeen.</string>
+  <string id="14040">Käynnistetäänkö uudelleen nyt?</string>
   <string id="14041">Jälkikäsittely</string>
   <string id="14042"></string>
-  <string id="14043">Sammuta kun toistettu</string>
+  <string id="14043">Sammuta toistettaessa</string>
   <string id="14044">%i min</string>
   <string id="14045">%i s</string>
   <string id="14046">%i ms</string>
@@ -1284,8 +1324,8 @@
   <string id="14054">Internet-haut käytössä</string>
   <string id="14055">Hae taustalla</string>
   <string id="14056">Pysäytä haku</string>
-  <string id="14057">Ei mahdollista median tietoja haettaessa</string>
-  <string id="14058">Filmin rakeisuus-tehoste</string>
+  <string id="14057">Ei mahdollista, kun haetaan mediatietoja</string>
+  <string id="14058">Filmin rakeisuustehoste</string>
   <string id="14059">Etsi pienoiskuvakkeet verkkosijainneista</string>
   <string id="14060">Internet: Muut tiedostotyypit</string>
   <string id="14061">Automaattinen</string>
@@ -1296,18 +1336,35 @@
   <string id="14066">Anna aika 24 tunnin muodossa tunnit:minuutit</string>
   <string id="14067">Anna päivämäärä muodossa päivä/kuukausi/vuosi</string>
   <string id="14068">Anna IP-osoite</string>
-  <string id="14069">Otetaanko asetukset heti käyttöön?</string>
-  <string id="14070">Muutokset otetaan käyttöön</string>
-  <string id="14071">Salli tiedostojen poistaminen ja nimeäminen</string>
+  <string id="14069">Otetaanko asetukset käyttöön nyt?</string>
+  <string id="14070">Ota muutokset käyttöön</string>
+  <string id="14071">Salli tiedostojen nimeäminen ja poistaminen</string>
   <string id="14072"></string>
   <string id="14073"></string>
   <string id="14074">Aseta aikavyöhyke</string>
   <string id="14075">Kesäaika käytössä</string>
-  <string id="14076">Lisää suosikkeihin</string>
-  <string id="14077">Poista suosikeista</string> 
+  <string id="14076">Suosikki</string>
+  <string id="14077">Poista</string>
   <string id="14078">Väritys</string>
   <string id="14079">Aikavyöhyke maa</string>
   <string id="14080">Aikavyöhyke</string>
+  <string id="14081">Tiedostolistat</string>
+  <string id="14082">Näytä EXIF-kuvatiedot</string>
+  <string id="14083">Käytä koko ikkunaa mieluummin kuin todellista ikkunaa</string>
+  <string id="14084">Aseta kappaleet jonoon valitessa</string>
+  <string id="14085">Toista audio-CD:t automaattisesti</string>
+  <string id="14086">Toista</string>
+  <string id="14087">DVD:t</string>
+  <string id="14088">Toistaa DVD:t automaattisesti</string>
+  <string id="14089">Tekstityksissä käytetty fontti</string>
+  <string id="14090">Kansainvälinen</string>
+  <string id="14091">Merkistö</string>
+  <string id="14092">Vianmääritys</string>
+  <string id="14093">Suojaus</string>
+  <string id="14094">Syöttövälineet</string>
+  <string id="14095">Virransäästö</string>
+  <string id="14096">Ajan muoto</string>
+  <string id="14097">Lämpötila-asteikko</string>
 
   <string id="15000"></string>
   <string id="15001"></string>
@@ -1377,7 +1434,7 @@
   <string id="15103">* Kaikki esittäjät</string>
   <string id="15104">* Kaikki kappaleet</string>
   <string id="15105">* Kaikki lajityypit</string>
-  <string id="15106">Muista valittu tiedosto selattaessa eteenpäin</string>
+  <string id="15106"></string>
   <string id="15107">Siirretään puskurimuistiin...</string>
   <string id="15108">Valikkoäänet</string>
   <string id="15109">Oletus</string>
@@ -1389,7 +1446,7 @@
   <string id="15202">Last.fm-käyttäjätunnus</string>
   <string id="15203">Last.fm-salasana</string>
   <string id="15204">Ei saatu yhteyttä: odotetaan...</string>
-  <string id="15205">XBMC täytyy päivittää</string>
+  <string id="15205">Päivitä XBMC</string>
   <string id="15206">Valtuutusvirhe: tarkista käyttäjätunnus ja salasana</string>
   <string id="15207">Yhdistetty</string>
   <string id="15208">Ei yhdistetty</string>
@@ -1406,7 +1463,7 @@
   <string id="15219">Libre.fm-salasana</string>
   <string id="15220">Libre.fm</string>
   <string id="15221">Scrobbler</string>
-  
+
   <string id="15250">Last.fm-radion lähetys käytössä</string>
   <string id="15251">Yhdistetään Last.fm palveluun...</string>
   <string id="15252">Valitaan radioasema...</string>
@@ -1465,11 +1522,12 @@
   <string id="15310">Avataan useapolkuista sijaintia</string>
   <string id="15311">Polku:</string>
 
-  <string id="16000">Yleiset</string>
+  <string id="16000">Yleistä</string>
   <string id="16001">Äänilaitteiston asetukset...</string>
-  <string id="16002">Tietojen internethaku</string>
+  <string id="16002">Tietojen Internethaku</string>
   <string id="16003">Soitin</string>
   <string id="16004">Toista media levyltä</string>
+  <string id="16005">Lisätiedot</string>
 
   <string id="16008">Anna uusi nimi</string>
   <string id="16009">Anna elokuvan nimi</string>
@@ -1480,9 +1538,9 @@
   <string id="16014">Anna kansion nimi</string>
   <string id="16015">Anna hakemisto</string>
   <string id="16016">Käytettävissä: %A, %T, %N, %B, %D, %G, %Y, %F, %S</string>
-  <string id="16017">Anna hakusana</string>
+  <string id="16017">Anna hakujono</string>
   <string id="16018">Pois</string>
-  <string id="16019">Automaattinen</string>
+  <string id="16019">Automaattinen valinta</string>
   <string id="16020">Lomituksenpoisto</string>
   <string id="16021">Synk. parittomat</string>
   <string id="16022">Synk. parilliset</string>
@@ -1516,7 +1574,7 @@
   <string id="16201">Kopiointi epäonnistui</string>
   <string id="16202">Vähintään yhden tiedoston kopiointi epäonnistui</string>
   <string id="16203">Siirto epäonnistui</string>
-  <string id="16204">Vähintään yhden tiedoston siirto epäonnistui</string>
+  <string id="16204">Vähintään yhden tiedoston siirto epäonnistui</string>  
   <string id="16205">Poisto epäonnistui</string>
   <string id="16206">Vähintään yhden tiedoston poisto epäonnistui</string>
 
@@ -1534,43 +1592,43 @@
 
   <string id="16310">(VDPAU)Temporal</string>
   <string id="16311">(VDPAU)Temporal/Spatial</string>
-  <string id="16312">(VDPAU)Noise Reduction</string>
-  <string id="16313">(VDPAU)Sharpness</string>
+  <string id="16312">(VDPAU)Kohinan poisto</string>
+  <string id="16313">(VDPAU)Terävyys</string>
   <string id="16314">Inverse Telecine</string>
-  <string id="17500">Näytön pimennyksen viive</string>
+  <string id="17500">Näytön pimennyksen viive</string> 
 
   <string id="19000">Vaihda kanavalle</string>
- 
+
   <string id="20000">Tallennuskansio</string>
-  <string id="20001">Käytä ulkoista DVD-toisto-ohjelmaa</string>
-  <string id="20002">Ulkoinen DVD-toisto-ohjelma</string>
+  <string id="20001">Käytä ulkoista DVD-soitinta</string>
+  <string id="20002">Ulkoinen DVD-soitin</string>
   <string id="20003">Trainer-kansio</string>
-  <string id="20004">Kuvakaappaus kansio</string>
+  <string id="20004">Kuvakaappauskansio</string>
   <string id="20005">Nauhoituskansio</string>
-  <string id="20006">Soittolistakansio</string>
+  <string id="20006">Toistolistakansio</string>
   <string id="20007">Nauhoitukset</string>
   <string id="20008">Kuvakaappaukset</string>
-  <string id="20009">Käytä XBMC:a</string>
+  <string id="20009">Käytä XBMC:ta</string>
   <string id="20010"></string>
-  <string id="20011">Musiikki soittolistat</string>
-  <string id="20012">Video soittolistat</string>
+  <string id="20011">Musiikkitoistolistat</string>
+  <string id="20012">Videotoistolistat</string>
   <string id="20013">Käynnistetäänkö peli?</string>
-  <string id="20014">Soittolistat</string>
+  <string id="20014">Lajittele: Toistolistat</string>
   <string id="20015">Ulkoinen pienoiskuvake</string>
   <string id="20016">Nykyinen pienoiskuvake</string>
   <string id="20017">Paikallinen pienoiskuvake</string>
   <string id="20018">Ei pienoiskuvaketta</string>
-  <string id="20019">Valitse kuvaketiedosto</string>
+  <string id="20019">Valitse pienoiskuvake</string>
   <string id="20020"></string>
   <string id="20021"></string>
   <!-- string id 20022 will always be set to an empty string (LocalizeStrings.cpp)-->
-  <string id="20022"></string> 
+  <string id="20022"></string>
   <string id="20023">Ei onnistu</string>
   <string id="20024">Etsi uudet</string>
   <string id="20025">Etsi kaikki</string>
-  <string id="20026">Kielialue</string>
- 
-  <!-- string id's 20027 thru 20034 are reserved for temperaturestrings  (LocalizeStrings.cpp)-->
+  <string id="20026">Sijainti</string>
+
+  <!-- string id's 20027 thru 20035 are reserved for temperaturestrings  (LocalizeStrings.cpp)-->
 
   <string id="20038">Lukitse musiikki</string>
   <string id="20039">Lukitse videot</string>
@@ -1590,36 +1648,36 @@
   <string id="20053">Poistuit pääkäyttäjätilaan</string>
   <string id="20054">Siirryit pääkäyttäjätilasta</string>
   <string id="20055">Allmusic.com-pienoiskuvake</string>
-  <string id="20056"></string>
+  <string id="20056">Sisäänkirjautumisvirhe</string>
   <string id="20057">Poista pienoiskuvake</string>
-  <string id="20058">Lisää uusi profiili...</string>
+  <string id="20058">Lisää profiili...</string>
   <string id="20059">Nouda albumien tiedot</string>
-  <string id="20060">Sijaintien tiedot</string>
-  <string id="20061">Omat</string>
-  <string id="20062">Oletukset</string>
-  <string id="20063">Oletukset(vain luku)</string>
-  <string id="20064">Oletukset</string>
-  <string id="20065">Profiilin kuva</string>
-  <string id="20066">Lukitus asetukset</string>
+  <string id="20060">Mediatiedot</string>
+  <string id="20061">Erota</string>
+  <string id="20062">Jaa oletuksin</string>
+  <string id="20063">Jaa oletuksin (vain luku)</string>
+  <string id="20064">Kopioi oletukset</string>
+  <string id="20065">Profiilikuva</string>
+  <string id="20066">Lukitse asetukset</string>
   <string id="20067">Muokkaa profiilia</string>
-  <string id="20068">Profiilin lukitus</string>
+  <string id="20068">Kirjaudu</string>
   <string id="20069">Kansion luonti ei onnistu</string>
-  <string id="20070">Profiilin tallennuskansio</string>
+  <string id="20070">Profiilihakemisto</string>
   <string id="20071">Aloita käyttämällä uutta mediasijaintia</string>
-  <string id="20072">varmista, että valittu kansio on kirjoitettava</string>
-  <string id="20073">ja kansion nimi on käyttökelpoinen</string>
+  <string id="20072">Varmista, että valittuun kansioon voidaan kirjoittaa</string>
+  <string id="20073">ja kansion nimi on voimassa</string>
   <string id="20074">MPAA-luokitus</string>
   <string id="20075">Anna pääkäyttäjän lukituskoodi</string>
-  <string id="20076">Kysy pääkäyttäjän lukituskoodia käynnistyessä</string>
+  <string id="20076">Kysy pääkäyttäjän lukituskoodia käynnistettäessä</string>
   <string id="20077">Ulkoasun asetukset</string>
   <string id="20078">- Linkkiä ei ole -</string>
   <string id="20079">Animoinnit käytössä</string>
   <string id="20080">Älä näytä RSS-tietoja musiikin aikana</string>
-  <string id="20081">Pikakäynnistys painikkeet käytössä</string>
-  <string id="20082">Näytä Ohjelmat-valikko</string>
-  <string id="20083">Näytä Musiikki-tiedot</string>
-  <string id="20084">Näytä Säätila-tiedot</string>
-  <string id="20085">Näytä Järjestelmän tiedot</string>
+  <string id="20081">Pikapainikkeet käytössä</string>
+  <string id="20082">Näytä ohjelmat päävalikossa</string>
+  <string id="20083">Näytä musiikkitiedot</string>
+  <string id="20084">Näytä säätiedot</string>
+  <string id="20085">Näytä järjestelmätiedot</string>
   <string id="20086">Näytä vapaa tila asemissa C: E: F:</string>
   <string id="20087">Näytä vapaa tila asemissa E: F: G:</string>
   <string id="20088">Säätiedot</string>
@@ -1630,18 +1688,18 @@
   <string id="20093">Profiilin nimi</string>
   <string id="20094">Median sijainnit</string>
   <string id="20095">Anna lukituskoodi profiilille</string>
-  <string id="20096">Kirjaudu sisään</string>
+  <string id="20096">Kirjautumisruutu</string>
   <string id="20097">Noudetaan albumin tiedot</string>
   <string id="20098">Noudetaan tietoja albumista</string>
   <string id="20099">Siirtoa ei voida aloittaa kun toisto on käynnissä</string>
-  <string id="20100">Pääkäyttäjän lukituskoodi ja asetukset</string>
-  <string id="20101">Lukituskoodi antamalla siirrytään pääkäyttäjä-tilaan</string>
-  <string id="20102">tai käytä oletuksia</string>
+  <string id="20100">Pääkäyttäjän lukituskoodi ja asetukset</string> 
+  <string id="20101">Lukituskoodi antamalla siirrytään pääkäyttäjätilaan</string>
+  <string id="20102">kopioidaanko oletuksista</string>
   <string id="20103">Tallennetaanko muutokset profiiliin?</string>
   <string id="20104">Vanhat asetukset löydetty.</string>
   <string id="20105">Haluatko käyttää niitä?</string>
   <string id="20106">Vanha median sijainti löytyi.</string>
-  <string id="20107">Omat(lukittu)</string>
+  <string id="20107">Erota (lukittu)</string>
   <string id="20108">Päähakemisto</string>
   <string id="20109">Ulkoasun zoomaus</string>
   <string id="20110">UPnP-asetukset</string>
@@ -1649,18 +1707,19 @@
   <string id="20112">Viimeksi kirjautunut: %s</string>
   <string id="20113">Ei aiemmin kirjautunut</string>
   <string id="20114">Profiili %i / %i</string>
-  <string id="20115">Käyttäjän sisäänkirjautuminen</string>
-  <string id="20116">Lukitse sisäänkirjautumisruutu</string>
-  <string id="20117">Lukituskoodi on väärä.</string>
-  <string id="20118">Tähän täytyy olla pääkäyttäjän lukitus asetettuna.</string>
+  <string id="20115">Käyttäjän kirjautuminen/valitse profiili</string>
+  <string id="20116">Lukitse kirjautumisruutu</string>
+  <string id="20117">Käyttäjätunnus tai salasana ei kelpaa, yritä uudelleen.</string>
+  <string id="20118">Pääkäyttäjän lukitus täytyy olla asetettuna.</string>
   <string id="20119">Haluatko asettaa sen nyt?</string>
-  <string id="20120">Noudetaan ohjelman tiedot</string>
-  <string id="20121">Musiikin soitto alkaa</string>
+  <string id="20120">Ladataan ohjelman tiedot</string>
+  <string id="20121">Musiikki alkaa</string>
   <string id="20122">Nyt voit rentoutua</string>
   <string id="20123">Arvotaan kuunneltavia kappaleita</string>
   <string id="20124">Valmiina nauttimaan musiikista</string>
-  <string id="20125">Kirjautuneena :</string>
-  <string id="20126">Kirjaudu ulos :</string>
+  <string id="20125">Kirjautuneena:</string>
+  <string id="20126">Kirjaudu ulos:</string>
+  <string id="20127">Hmm… antamasi salasana ei täsmää tietokannassamme olevaan salasanaan. Yritä uudelleen.</string>
   <string id="20128">Siirry päähakemistoon</string>
   <string id="20129">Liitä</string>
   <string id="20130">Liitä (käänteisesti)</string>
@@ -1673,19 +1732,19 @@
   <string id="20137">Muistikortti liitetty</string>
   <string id="20138">Muistikorttia ei löydy</string>
   <string id="20139">Portissa %i ja paikassa %i</string>
-  <string id="20140">Lukitse ruudunsäästäjä</string>
+  <string id="20140">Lukitse näytönsäästäjä</string>
   <string id="20141">Aseta</string>
   <string id="20142">Käyttäjätunnus</string>
   <string id="20143">Anna salasana</string>
   <string id="20144">Sammutusajastin</string>
-  <string id="20145">Sammutusajastus(minuuttia)</string>
+  <string id="20145">Sammutusväli (minuuttia)</string>
   <string id="20146">Käynnistetty, sammutetaan %i minuutin kuluttua</string>
-  <string id="20147">Sammuta 30 minuutin kuluttua</string>
-  <string id="20148">Sammuta 60 minuutin kuluttua</string>
-  <string id="20149">Sammuta 120 minuutin kuluttua</string>
+  <string id="20147">Sammuta 30 min. kuluttua</string>
+  <string id="20148">Sammuta 60 min. kuluttua</string>
+  <string id="20149">Sammuta 120 min. kuluttua</string>
   <string id="20150">Aseta aika sammutukseen</string>
   <string id="20151">Keskeytä sammutusajastus</string>
-  <string id="20152">Lukitse %s asetukset</string>
+  <string id="20152">%s:n käyttäjätunnus ja salasana</string>
   <string id="20153">Valitse...</string>
   <string id="20154">Perustiedot</string>
   <string id="20155">Tallennustiedot</string>
@@ -1697,24 +1756,24 @@
   <string id="20161">Yhteensä</string>
   <string id="20162">Käytössä</string>
   <string id="20163">/</string>
-  <string id="20164">Lukitusta ei voida käyttää</string>
+  <string id="20164">Lukitusta ei tueta</string>
   <string id="20165">Lukitsematon</string>
   <string id="20166">Lukittu</string>
   <string id="20167">Jumissa</string>
   <string id="20168">Täytyy resetoida</string>
   <string id="20169">vko</string>
   <string id="20170">, tuotantolinja</string>
-  <string id="20171">Windows verkko(SMB)</string>
+  <string id="20171">Windows-verkko(SMB)</string>
   <string id="20172">XBMSP-Palvelin</string>
   <string id="20173">FTP-Palvelin</string>
   <string id="20174">iTunes-musiikkijako(DAAP)</string>
   <string id="20175">UPnP-palvelin</string>
-  <string id="20176">Näytä Video-tiedot</string>
+  <string id="20176">Näytä Videotiedot</string>
   <string id="20177">Hyväksy</string>
   <string id="20178">Vaihto</string>
-  <string id="20179">Vaihto luk.</string>
+  <string id="20179">Lukitusnäppäin</string>
   <string id="20180">Symbolit</string>
-  <string id="20181">Poisto</string>
+  <string id="20181">Takaisin</string>
   <string id="20182">Välilyönti</string>
   <string id="20183">Virkistä näyttö</string>
   <string id="20184">Käännä kuvat Exif-tietojen mukaisesti</string>
@@ -1724,9 +1783,9 @@
   <string id="20188">Varmuuskopioidaan BIOS:n tiedot</string>
   <string id="20189">Juonen ja esittelyn automaattinen vieritys</string>
   <string id="20190">Mukautus</string>
-  <string id="20191">Suorituslokin tallennus (debug log)</string>
+  <string id="20191">Ota virheenkorjausten kirjaus käyttöön</string>
   <string id="20192">Nouda albumin tiedot kirjastoon lisättäessä</string>
-  <string id="20193">Nouda esittäjän tiedot kirjastoon lisättäessä</string>
+  <string id="20193"></string>
   <string id="20194">Tietojen hakupaikka</string>
   <string id="20195">Vaihda hakupaikkaa</string>
   <string id="20196">Vie musiikkikirjasto</string>
@@ -1734,20 +1793,22 @@
   <string id="20198">Esittäjää ei löydy!</string>
   <string id="20199">Esittäjän tietojen nouto epäonnistui</string>
 
- <!-- string id's 20200 thru 20211 are reserved for speedstrings -->	
- 
+  <!-- string id's 20200 thru 20211 are reserved for speedstrings (LocalizeStrings.cpp)-->
+  
   <string id="20250">Videoesitys alkaa</string>
   <string id="20251">Arvotaan katseltavia videoita</string>
-  <string id="20252">Valmiina aloittamaan elokuvanäytös</string> 
+  <string id="20252">Valmiina aloittamaan elokuvanäytös</string>
+  <string id="20253">Käynnistä albumi uudelleen</string>
+  <string id="20254">Sääasetukset...</string>
 
   <string id="20300">Web-palvelimen hakemisto (HTTP)</string>
   <string id="20301">Web-palvelimen hakemisto (HTTPS)</string>
   <string id="20302">Kansioon kirjoitus epäonnistui:</string>
-  <string id="20303">Ohitetaanko ja jatketaanko suoritusta?</string>
+  <string id="20303">Haluatko ohittaa ja jatkaa?</string>
   <string id="20304">RSS-syöte</string>
   <string id="20305"></string>
 
-  <string id="20306">Ei voida tunnistaa</string>
+  <string id="20306">Ei voida tunnistaa. Lisää MD5 xbmc.logista BiosIDs.ini:iin.</string>
   <string id="20307">Toissijainen DNS</string>
   <string id="20308">DHCP-palvelin:</string>
   <string id="20309">Luo uusi kansio</string>
@@ -1761,19 +1822,19 @@
   <string id="20317">Lataa pelitallennus</string>
   <string id="20318">Pelitallennus asennettu kiintolevylle</string>
   <string id="20319">Pelitallennuksen lataus epäonnistui</string>
-  <string id="20320">Valitse ladattava pelitallennus</string>
+  <string id="20320">Valitse ladattava ja asennetta pelitallennus</string>
   <string id="20321">Pelille ei löytynyt tallennuksia</string>
   <string id="20322">Siirry pelitallennukseen</string>
   <string id="20323">Pelitallennukset</string>
   <string id="20324">Toista osa...</string>
   <string id="20325">Kalibroinnin palautus</string>
-  <string id="20326">Tämä palauttaa asettamasi %s kalibroinnin arvot</string>
+  <string id="20326">Tämä palauttaa asettamasi %s kalibrointiarvot</string>
   <string id="20327">oletusarvoiksi</string>
   <string id="20328">Valitse kohdesijainti</string>
   <string id="20329"></string>
   <string id="20330">Hae kansionimiä</string>
-  <string id="20331">Tiedostonimet</string>
-  <string id="20332">Käytetäänkö haettaessa tiedosto- vai kansionimiä?</string>
+  <string id="20331">Tiedosto</string>
+  <string id="20332">Käytetäänkö haussa tiedosto- vai kansionimiä?</string>
   <string id="20333">Aseta sisältö</string>
   <string id="20334">Kansionimet</string>
   <string id="20335">Haetaanko kaikkien sisältö?</string>
@@ -1801,7 +1862,7 @@
   <string id="20357">Anna TV-ohjelman nimi</string>
   <string id="20358">Tuotantokausi %i</string>
   <string id="20359">Jakso</string>
-  <string id="20360">Jaksot</string>
+  <string id="20360">Jaksoa</string>
   <string id="20361">Noudetaan jakson tietoja</string>
   <string id="20362">Poista jakso kirjastosta</string>
   <string id="20363">Poista TV-ohjelma kirjastosta</string>
@@ -1823,7 +1884,7 @@
   <string id="20379">Valittu kansio sisältää yhden TV-ohjelman</string>
   <string id="20380">Älä käytä valittua kansiota haussa</string>
   <string id="20381">Erikoisuudet</string>
-  <string id="20382">Automaattisesti luodut jakson kuvakkeet</string>
+  <string id="20382"></string>
   <string id="20383">Valittu kansio sisältää yhden videon</string>
   <string id="20384">Lisää pikakuvake TV-ohjelmaan</string>
   <string id="20385">Poista TV-ohjelman pikakuvake</string>
@@ -1843,7 +1904,7 @@
   <string id="20399">Siirry albumin musiikkivideoihin</string>
   <string id="20400">Siirry esittäjän musiikkivideoihin</string>
   <string id="20401">Toista musiikkivideo</string>
-  <string id="20402">Automaattisesti luodut ohjaajan kuvakkeet</string>
+  <string id="20402"></string>
   <string id="20403">Aseta ohjaajan pienoiskuvake</string>
   <string id="20404"></string>
   <string id="20405">Poista jakson kirjanmerkki</string>
@@ -1860,22 +1921,24 @@
   <string id="20416">Ensimmäinen esitys</string>
   <string id="20417">Käsikirjoittaja</string>
   <string id="20418">Siivoa tiedostojen ja kansioiden nimet</string>
-  <string id="20419">Pinoa TV-ohjelmien kaksoiskappaleet</string>
+  <string id="20419"></string>
   <string id="20420">Ei koskaan</string>
   <string id="20421">Jos samalta tuotantokaudelta</string>
   <string id="20422">Aina</string>
   <string id="20423">On esittely</string>
   <string id="20424">Ei ole</string>
-  <string id="20425">Fanikuvien kuvaesitys</string> 
+  <string id="20425">Fanikuvien kuvaesitys</string>
   <string id="20426">Tallennetaanko yhdistettynä tiedostona tai erillisinä</string>
   <string id="20427">tiedostoina? Valitse tallennusmuoto.</string>
   <string id="20428">Yhdistettynä</string>
-  <string id="20429">Erillisinä</string>
+  <string id="20429">Erota</string>
   <string id="20430">Tallennetaanko pienoiskuvat ja fanitaide?</string>
   <string id="20431">Kirjoitetaanko vanhojen päälle?</string>
-  <string id="20432">Ohita polku kirjastoja päivitettäessä</string>  
+  <string id="20432">Ohita polku kirjastoja päivitettäessä</string> 
   <string id="20433">Pura median metadata-tiedot</string>
   <string id="20434">Setit</string>
+  <string id="20435">Extras</string>
+  
   <!-- up to 21329 is reserved for the video db !! !-->
 
   <string id="21330">Näytä piilotetut tiedostot ja kansiot</string>
@@ -1901,10 +1964,10 @@
   <string id="21365">Poista sijainti</string>
   <string id="21366">Omien tekstitysten hakemisto</string>
   <string id="21367">Elokuvien ja vaihtoehtoisten tekstitysten hakemisto</string>
-
+  
   <string id="21369">Hiiri käytössä</string>
   <string id="21370">Ohjauspainikkeiden äänitehosteet käytössä</string>
-  <string id="21371">Pienoiskuvake</string>  
+  <string id="21371">Pienoiskuvake</string>
   <string id="21372">Pakotettu DVD-aluekoodi</string>
   <string id="21373">Videolaitteisto</string>
   <string id="21374">Kuvasuhde</string>
@@ -1918,20 +1981,20 @@
   <string id="21382">Piilota "Lisää sijainti" -painikkeet tiedostolistoista</string>
   <string id="21383">Vierityspalkit käytössä</string>
   <string id="21384">Tee katsotut suodatus vaihdettaessa videokirjastoon</string>
-  <string id="21385">Avaa</string> 
+  <string id="21385">Avaa</string>
   <string id="21386">Äänekkyyden säädöt</string>
   <string id="21387">Nopea</string>
   <string id="21388">Hiljainen</string>
-  <string id="21389">Omavalintainen tausta</string>
+  <string id="21389">Omavalintainen tausta</string>  
   <string id="21390">Energiatehokkuuden säädöt</string>
   <string id="21391">Normaalitila</string>
   <string id="21392">Tehonsäästötila</string>
   <string id="21393">Normaali valmiustila</string>
   <string id="21394">Sähköä säästävä valmiustila</string>
   <string id="21395">Yli 4GB:n tiedostoja ei voida välimuistittaa</string>
-  <string id="21396">Luku</string> 
+  <string id="21396">Luku</string>
   <string id="21397">Pixel Shader V2 (korkealaatu)</string>
-  <string id="21398">Käynnistyessä soittolista käytössä</string>  
+  <string id="21398">Käynnistyessä soittolista käytössä</string>
   <string id="21399">Tween-animointi käytössä</string>
   <string id="21400">sisältää</string>
   <string id="21401">ei sisällä</string>
@@ -1945,13 +2008,15 @@
   <string id="21409">aiemmin</string>
   <string id="21410">viimeisenä</string>
   <string id="21411">ei viimeisenä</string>
-  <string id="21412">Hakupaikat</string> 
-  <string id="21413">Elokuvan tietojen hakupaikka</string> 
-  <string id="21414">TV-ohjelman tietojen hakupaikka</string> 
-  <string id="21415">Musiikkivideon tietojen hakupaikka</string> 
-  <string id="21416">Palaute pohjautuu hakupaikan kieleen</string> 
+  <string id="21412">Hakupaikat</string>
+  <string id="21413">Elokuvan tietojen hakupaikka</string>
+  <string id="21414">TV-ohjelman tietojen hakupaikka</string>
+  <string id="21415">Musiikkivideon tietojen hakupaikka</string>
+  <string id="21416">Palaute pohjautuu hakupaikan kieleen</string>
   <string id="21417">- Hakupaikan asetukset</string>
-  
+  <string id="21418">Monikielinen</string>
+  <string id="21419">Kappaleet</string>
+
   <string id="21420">Ehtoihin sopiva</string>
   <string id="21421">Valikoivan soittolistan ehdot</string>
   <string id="21422">Sopivat kohteet</string>
@@ -1981,17 +2046,19 @@
   <string id="21446">Ääni koodekki</string>
   <string id="21447">Äänen kieli</string>
   <string id="21448">Tekstityskieli</string>
- 
+  <string id="21449">Kaukosäädin lähetään näppäimistön painalluksia</string>
+  <string id="21450">Nimet</string>
+
   <string id="21800">Tiedostonimi</string>
   <string id="21801">Tiedoston sijainti</string>
   <string id="21802">Tiedostokoko</string>
   <string id="21803">Tiedoston päiväys</string>
   <string id="21804">Kuvanumero</string>
-  <string id="21805">Resoluutio</string>
+  <string id="21805">Tarkkuus</string>
   <string id="21806">Kommentti</string>
   <string id="21807">Väri/MV</string>
   <string id="21808">Jpeg-prosessi</string>
-  
+
   <string id="21820">Päiväys</string>
   <string id="21821">Kuvaus</string>
   <string id="21822">Kameran valmistaja</string>
@@ -2067,14 +2134,14 @@
   <string id="22003">EDl-leikkaustietoluettelot käytössä</string>
   <string id="22004">Viivästetty: %2.3fs</string>
   <string id="22005">Aiennettu: %2.3fs</string>
-  <string id="22006">Tekstityksen etäisyys</string>
+  <string id="22006">Tekstityksen poikkeama</string>
   <string id="22007">OpenGL-valmistaja:</string>
   <string id="22008">OpenGL-renderoija:</string>
   <string id="22009">OpenGL-versio:</string>
   <string id="22010">GPU:n lämpötila:</string>
   <string id="22011">CPU:n lämpötila:</string>
   <string id="22012">Kokonaismuisti</string>
-  <string id="22013">Profiilin tiedot</string> 
+  <string id="22013">Profiilin tiedot</string>
   <string id="22014">Himmennä jos videon toisto keskeytetään</string>
   <string id="22015">Kaikki nauhoitukset</string>
   <string id="22016">Nimet</string>
@@ -2095,7 +2162,7 @@
   <string id="22036">Tuo karaoke-kappaleet...</string>
   <string id="22037">Näytä kappaleenvalintaikkuna</string>
   <string id="22038">Vie karaoke-kappaleet...</string>
-  <string id="22039">Anna kappaleen numero</string> 
+  <string id="22039">Anna kappaleen numero</string>
   <string id="22040">valkoinen/vihreä</string>
   <string id="22041">valkoinen/punanen</string>
   <string id="22042">valkoinen/sininen</string>
@@ -2104,25 +2171,28 @@
   <string id="23000">Sää lisäosa</string>
   <string id="23001">- Lisäosan asetukset</string>
 
- <!-- strings 23100 thru 23150 reserved for external player -->
-  <string id="23100">External Player Active</string>
-  <string id="23101">Paina OK sulkeaksesi toisto-ohjelman</string>
+  <string id="23050">Aktivoi Teletext</string>
+
+  <!-- strings 23100 thru 23150 reserved for external player -->
+  <string id="23100">Ulkoinen soitin aktiivinen</string>
+  <string id="23101">Sulje toisto-ohjelma painamalla OK</string>
   <string id="23102"></string>
   <string id="23103"></string>
-  <string id="23104">Paina OK kun toisto päätyttyy</string>
+  <string id="23104">Paina OK kun toisto päättyy</string>
   <string id="23105"></string>
   <string id="23106"></string>
 
-  <!-- strings 29800 thru 29998 reserved strings used only in the default Project Mayhem III skin and not c++ code --> 
-  <string id="29800">Kirjasto-tila</string> 
+  <!-- strings 29800 thru 29998 reserved strings used only in the default Project Mayhem III skin and not c++ code -->
+  <string id="29800">Kirjastotila</string>
   <string id="29801">QWERTY-näppäimistö</string>
   <string id="29802">Läpisyötetty ääni käytössä</string>
   
-  <string id="29999">Näytön välkynnän poisto</string>
-  
-<!-- strings 30000 thru 30999 reserved for plugins and plugin settings -->
+  <string id="29999">Näytön välkynnän poisto peleille</string>
+
+  <!-- strings 30000 thru 30999 reserved for plugins and plugin settings -->
   <!-- strings 31000 thru 31999 reserved for skins -->
   <!-- strings 32000 thru 32999 reserved for scripts -->
+  
   <!-- strings 33000 thru 33999 reserved for common strings used in addons -->
   <string id="33001">Esittelyn kuvanlaatu</string>
   <string id="33002">Katso</string>
@@ -2137,7 +2207,7 @@
   <string id="30011">Haku keston mukaan</string>
   <string id="33012">Lyhyet</string>
   <string id="33013">Pitkät</string>
-  <string id="33014">Käytä DVD Player-soitinta</string>
+  <string id="33014">Käytä DVD-soitinta tavallisen soittimen sijaan</string>
   <string id="33015">Kysy latauksesta ennen toistoa</string>
   <string id="33016">Näytteet</string>
   <string id="33017">Lisäosa on käynnistettävä uudelleen</string>
@@ -2171,7 +2241,7 @@
   <string id="33055">Käytä</string>
   <string id="33056">Katso</string>
   <string id="33057">Kuuntele</string>
-  <string id="33058">Näytä</string>
+  <string id="33058">Ohjelma</string>
   <string id="33059">Määritä</string>
   <string id="33060">Virta</string>
   <string id="33061">Valikko</string>
@@ -2191,4 +2261,1946 @@
   <string id="33076">Päivitä XBMC uudempaan versioon.</string>
   <string id="33077">Tietoja ei löydy!</string>
   <string id="33078">Seuraava sivu</string>
+
+  <!-- strings 50000+ are reserved for Boxee -->
+  <string id="50000">Lisää uusi...</string>
+  <string id="50001">Verkon määritys epäonnistui.</string>
+  <string id="50002">Varmista, että asetukset ovat oikein ja yritä uudelleen.</string>
+  <string id="50003">Verkon määritys epäonnistui.</string>
+  <string id="50004">Internetiä ei kuitenkaan tavoiteta.</string>
+  <string id="50005">Paikallinen sisältö.</string>
+  <string id="50006">Tiedostoja ei löydy sijainnista.</string>
+  <string id="50007">Laitteita ei löydy.</string>
+  <string id="50008">Ruudun muoto ja kuva-ala</string>
+  <string id="50009">Palauta oletukset</string>
+  <string id="50010">Kuva-ala</string>
+  <string id="50011">Kuvasuhde</string>
+  <string id="50012">Lisätiedot</string>
+  <string id="50013">Haluatko varmasti sulkea Boxeen nyt?</string>
+  <string id="51000">Nimi</string>
+  <string id="51001">Päiväys</string>
+  <string id="51002">Internet-väline</string>
+  <string id="51003">Ladataan...</string>
+  <string id="51004">Puuttuvat sijainnit</string>
+  <string id="51005">Laitteelle ei ole määritetty sijainteja.</string>
+  <string id="51006">Haluatko määrittää ne nyt?</string>
+  <string id="51007">Poista</string>
+  <string id="51008">Pysäytä</string>
+  <string id="51009">Toista</string>
+  <string id="51010">Selaa</string>
+  <!--string id="51010">Can't get boxee feed</string-->
+  <string id="51011">DVD-asema</string>
+
+  <string id="51012">Ystävät (ladataan)</string>
+  <string id="51013">Ystävät (%d)</string>
+  <string id="51014">RSS-syötteiden luku epäonnistui</string>
+  <string id="51015">Tarkasta kaapelin yhteyden ja varmista, että vastaanotin/TV ei ole mykistetty.</string>
+  <string id="51016">Jos ääntä ei vieläkään kuulu, tarkasta vianmäärityssivu osoitteesta boxee.tv/troubleshooting.</string>
+  <string id="51018">Verkon avain saa sisältää vain</string>
+  <string id="51019">heksadesimaalisia merkkejä</string>
+  <string id="51020">Medialähde</string>
+  <string id="51021">Haluatko varmasti poistaa:</string>
+  <string id="51022">Videosijainti</string>
+  <string id="51023">Musiikkisijainti</string>
+  <string id="51024">Valokuvasijainti</string>
+  <string id="51025">Haluatko varmasti poistaa tämän sijainnin?</string>
+  <string id="51026">Latausta käynnistetään...</string>
+  <string id="51027">Lataa</string>
+  <string id="51028">Lisätäänkö lataus jonoon?</string>
+  <string id="51029">Lataus on olemassa</string>
+  <string id="51030">Lataus on jo jonossa</string>
+  <string id="51031">Korvataanko nykyinen lataus?</string>
+  <string id="51032">Valitse kaikki</string>
+  <string id="51033">Jaetaan...</string>
+  <string id="51034">Arvostellaan...</string>
+  <string id="51035">Samanniminen sijainti on jo olemassa</string>
+  <string id="51036">Sijainnin nimi ei saa olla tyhjä</string>
+  <string id="51037">Boxee hakee kohdetta [B]%s[/B]</string>
+  <string id="51038">Mediasijainnin päivitys onnistui</string>
+  <string id="51039">Mediasijainnin poisto onnistui</string>
+  <string id="51040">Vähintään yksi mediatyyppi täytyy valita</string>
+  <string id="51041">Sijainnin polku ei saa olla tyhjä</string>
+  <string id="51042">Vähintään yksi hakutyyppi täytyy [CR]valita</string>
+  <string id="51043">Sijainnin lähde täytyy hakea uudelleen</string>
+  <string id="51044">Anna IP/Nimi manuaalisesti...</string>
+  <string id="51045">Albumia etsitään...</string>
+  <string id="51046">Boxee hakee parhaillaan %s</string>
+  <string id="51047">%d kohdetta löytyi sijainnissa %s.</string>
+  <string id="51048">[CR]Boxee yrittää tunnistaa niitä.</string>
+  
+  <string id="51050">Kirjaudu</string>
+  <string id="51051">Boxee ei voi yhdistää Internetiin.</string>
+  <string id="51052">Voit silti käyttää joitakin Boxeeta, mutta</string>
+  <string id="51053">jotkin ominaisuudet eivät toimi.</string>
+  <string id="51054">Internet-yhteys ei ole käytettävissä.</string>
+  <string id="51055">Kirjautumiseen ei pystytty lisäämään uutta käyttäjää...</string>
+  <string id="51056">Tarkasta Internet-yhteytesi.</string>
+  <string id="51057">--------------------------------------</string>
+  <string id="51058">Käyttäjänimikenttä on tyhjä.</string>
+  <string id="51059">Salasanakenttä on tyhjä.</string>
+  <string id="51070">Takaisin</string>
+  <string id="51075">Kirjautuminen epäonnistui.</string>
+  <string id="51100">Toiminto</string>
+  <string id="51101">Seikkailu</string>
+  <string id="51102">Animaatio</string>
+  <string id="51103">Henkilökuvaus</string>
+  <string id="51104">Komedia</string>
+  <string id="51105">Rikos</string>
+  <string id="51106">Dokumenttielokuva</string>
+  <string id="51107">Draama</string>
+  <string id="51108">Perhe-elokuva</string>
+  <string id="51109">Fantasia</string>
+  <string id="51110">Film-Noir</string>
+  <string id="51111">Game Show</string>
+  <string id="51112">Viimeksi toistetut</string>
+  <string id="51113">Kauhu</string>
+  <string id="51114">Musiikki</string>
+  <string id="51115">Musikaali</string>
+  <string id="51116">Mysteeri</string>
+  <string id="51117">Uutiset</string>
+  <string id="51118">Tosi-TV</string>
+  <string id="51119">Romantiikka</string>
+  <string id="51120">Tieteiselokuva</string>
+  <string id="51121">Lyhytelokuva</string>
+  <string id="51122">Urheilu</string>
+  <string id="51123">Talk-Show</string>
+  <string id="51124">Jännäri</string>
+  <string id="51125">Sota</string>
+  <string id="51126">Länkkäri</string>
+  <!--  Views -->
+  <string id="51200">2 riviä</string>
+  <string id="51201">3 riviä</string>
+  <string id="51202">Yksityiskohdat</string>
+  <string id="51203">, tuotantolinja</string>
+
+  <!--  Protocols -->
+  <string id="51254">Paikallinen</string>
+
+  <!-- sources -->
+  <!--  <string id="51300">Settings / Media Sources / Local / Add New Source</string> -->
+  <string id="51300">Asetukset / Mediasijainnit / Lisää uusi sijainti</string> 
+  <string id="51301">Asetukset / Mediasijainnit / Verkko / Lisää uusi sijainti</string>
+  <string id="51302">Verkko</string>
+  <string id="51303">Asetukset / Mediasijainnit / Verkkosovellukset/ Lisää uusi sijainti</string>
+  <string id="51304">Asetukset / Mediasijainnit / Lisää manuaalisesti sijainti / Lisää uusi sijainti</string>
+  <string id="51350">Irrotettava</string>
+  <string id="51360">Kotikansio</string>
+  <string id="51361">Tunnistamattomat videot</string>
+  <string id="51362">Paikalliset kansiot ja verkon sijainnit</string>
+  <string id="51363">Nimeämätön</string>
+    
+  <!-- browse screen labels -->
+  <string id="51400">Suositukset</string>
+  <string id="51401">Ystävien toiminnot</string>
+  <string id="51402">Viimeksi lisätyt</string>
+  <string id="51403">Viimeksi käytetyt</string>
+  <string id="51404">Ystävät</string>
+  <string id="51405">Toiminnot</string>
+  <string id="51406">Omat sijainnit</string>
+  <string id="51407">Albumit</string>
+  <string id="51408">Esittäjät</string>
+  <string id="51409">Sovellusta / Musiikki</string>
+  <string id="51410">Omat videot</string>
+  <string id="51411">Sovellusta / Videot</string>
+  <string id="51412">Omat kuvat</string>
+  <string id="51413">Sovellusta / kuvat</string>
+  <string id="51414">Ratkaisemattomat</string>
+  <string id="51415">Sovellusta</string>
+  <string id="51416">Myöhemmin</string>
+  <string id="51500">Boxee</string>
+  <string id="51501">Käynnistys</string>
+  <string id="51502">Käynnistä Boxee kirjautumisen yhteydessä</string>
+  <string id="51503">Aja RTorrent-asiakas, kun Boxee käynnistyy</string>
+  <string id="51504">Poista kauko-ohjain käytöstä</string>
+  <string id="51505">Haluatko varmasti poistaa Apple remote -kaukosäätimen pois käytöstä?[CR]jos valitset OK, kaukosäädin lakkaa toimimasta.</string>
+  <string id="51508">Palaa koko näytön tilaan painamalla %s.</string>
+  <string id="51509">Anna elokuvan nimi...</string>
+  <string id="51510">Ratkaisee...</string>
+  <string id="51511">Anna albumin nimi ja esittäjän nimi eroteltuja pilkulla...</string>
+  <string id="51512">Anna sarjan nimi, kausi ja episodin numero eroteltuna pilkulla...</string>
+  <string id="51513">Medialähteet</string>
+  <string id="51514">Tämä kansio ei ole minkään mediasijainnin alla</string>
+  <string id="51515">Lisättiin albumi</string>
+  <string id="51516">Lisättiin video</string>
+  <string id="51517">Elokuvan nimi</string>
+  <string id="51518">TV-esityksen nimi, kausi, episodi</string>
+  <string id="51519">Albumin esittäjä</string>
+  <string id="51520">Virhe</string>
+  <string id="51521">Elokuvaa ei voitu lisätä.</string>
+  <string id="51522">Elokuvan tietoja ei voitu lisätä.</string>
+  <string id="51523">Ota käyttöön IR-etäpalvelinpaketin etätuki</string>
+  <string id="51524">Näytä asetusten ponnahdukset toiston lopussa</string>
+  <string id="51525">Näyttö</string>
+  <string id="51526">Äänet</string>
+  <string id="51527">Alueet &amp; kieli</string> 
+  <string id="51528">Toista</string> 
+  <string id="51529">Musiikin visualisointi</string> 
+  <string id="51530">Sisällön suodatus</string> 
+  <string id="51531">Odotetaan hakua</string> 
+  <string id="51532">Haetaan</string> 
+  <string id="51533">Haettu viimeksi %s</string> 
+  <string id="51534">[COLOR red]Irrotettu[/COLOR]</string> 
+  <string id="51535">Tunnistaa</string>
+  <string id="51536">%d tiedosto löydetty</string>
+  <string id="51537">%d tiedosto löydetty. %d puuttuu identiteetti</string>
+  <string id="51538">%d tiedostoa löydetty</string>
+  <string id="51539">%d tiedostoa löydetty. %d puuttuu identiteetti</string>
+
+  <string id="51542">Uusi haku</string>
+  <string id="51543">Sijaintia haetaan parhaillaan: %d kohdetta löydetty, %d kohdetta tunnistettu, %d kohdetta jäljellä...</string>
+  <string id="51544">Sijainnista etsittiin aikaisemmin kohdetta %s. %d kohdetta tunnistettiin, %d kohdetta ei. Haluatko ajoittaa toisen haun?</string>
+  <string id="51545">Sijaintia ei ole vielä haettu. Haluatko hakea sen?</string>
+  <string id="51546"></string>
+  <string id="51547">Haluatko ajoittaa toisen haun videosijainneille?</string>
+  
+  <string id="51548">Ohita</string>
+  
+  <string id="51550">Lähteet</string>
+  <string id="51551">Media</string> 
+  <string id="51552">Tietoja</string>
+  <string id="51553">Lakiasiat</string>
+
+  <string id="51555">%d minuuttia sitten</string>
+  <string id="51556">%d tuntia sitten</string>
+  <string id="51557">%d päivää sitten</string>
+
+  <string id="51560">Tyhjennä mediatiedot</string>
+  <string id="51561">Haluatko varmasti tyhjentää mediatiedot kirjastosta?[CR](mediatiedostot pysyvät koskemattomina)</string>
+  <string id="51562">Tyhjennä vanhat pikkukuvakkeet</string>
+  <string id="51563">Haluatko varmasti tyhjentää mediatiedot kirjastosta?[CR](mediatiedostot pysyvät koskemattomina)</string>
+  <string id="51564">[CR][COLOR red]Huomaa: Uudelleenkäynn. vaaditaan[/COLOR]</string>
+
+  <string id="51565">Omat tiedostot</string>
+  <string id="51566">Juttuja netistä</string>
+  <string id="51567">En ole varma</string>
+  <string id="51568">Voit vaihtaa tämän myöhemmin kohdasta Asetukset-&gt;Yleistä-&gt;Valikko</string>
+  <string id="51569">Mitä katsot eniten?</string>
+  <string id="51570">Boxeen avulla on helpoin katsoa lempivideoitasi.</string>
+  <string id="51571">Hae mediasijainteja uudelleen</string>
+  <string id="51572">Haluatko varmasti hakea uudelleen mediasijainnista?</string>
+
+  <string id="51577">Palauta oletusasetukset...</string>
+  <string id="51578">Palauta oletusasetukset</string>
+  <string id="51579">Haluatko varmasti palauttaa oletusasetukset?</string>
+
+  <string id="51582">[COLOR red][B][CR]HUOM: Vaatii uudelleenkäynnistyksen.[/B][/COLOR]</string>
+  <string id="51583">Käynnistä uudelleen</string>
+  <string id="51585">Käynnistetään uudelleen</string>
+  <string id="51590">Ystävien kanssa jaettu media </string>
+
+  <!-- Error messages -->
+  <string id="51600">[B]Latausvirhe[/B]</string>
+  <string id="51601">Tiedoston, hakemiston tai laitteen käyttäminen ei onnistu</string>
+  <string id="51602">Resurssi ei ole käytettävissä</string>
+  <string id="51603">Käyttäjä on jo olemassa</string>
+  <string id="51604">Oletko varma, että tämä ei ole oikea elokuva?</string>
+  <string id="51605">Polku ei ole käytettävissä</string>
+  <string id="51606">Ystäviä ei ole valittu</string>
+  <string id="51607">Yhdistäminen last.fm:ään ei onnistu</string>
+  <string id="51608">Varmista, että käyttäjänimi ja salasana</string>
+  <string id="51609">on määritetty oikein. </string>
+  <string id="51610">Ei voimakkuuden muutosta digitaalisessa äänitilassa</string>
+  <string id="51611">Lataaminen ei valmistunut ajoissa, lisää kohteita voi olla saatavissa.</string>
+
+  <!-- Player Error messages -->
+  <string id="51670">Toiminto ei mahdollinen tälle videolle</string>
+  <string id="51671">Tätä videota ei voi keskeyttää.</string>
+  <string id="51672">Tätä videota ei voi hakea.</string>
+  <string id="51673">Tämän videon äänenvoimakkuutta ei voi muuttaa.</string>
+  <string id="51674">Joko muotoa ei tueta tai tiedosto on viallinen.</string>
+  <string id="51675">Mediasijaintia tai tiedostoa ei voi käyttää.</string>
+  <string id="51676">Toistovirhe</string>
+  <string id="51677">Tämä video ei ole parhaillaan käytettävissä.</string>
+  <string id="51678">Ladataan...</string>
+  
+  <string id="51700">Asetukset-&gt;Mediasijainnit</string>
+  <string id="51701">Määritä sijainnit, joissa videot, musiikki ja kuvat on tallennettu.[CR]Boxee etsii automaattisesti määrätyt kansiot median osalta.</string>
+  <string id="51702">Paikalliset videot</string>
+  <string id="51703">Paikallinen musiikki</string>
+  <string id="51704">Paikalliset valokuvat</string>
+
+  <!-- boxee_browse menu -->
+  <string id="51710">Lajittele</string>
+  <string id="51711">Näkymä</string>
+  <string id="51712">Selaa</string>
+  <string id="51713">Paikallinen media</string>
+  <string id="51714">Lisää[CR]lähde</string>  
+  <string id="51715">Etsi/URL</string>
+
+  <!-- boxee_friends_list -->
+  <string id="51720">Lisää / hallitse</string>
+  
+  <!-- boxee_loading_media_dialog -->
+  <string id="51735">Mediaa ladataan. Odota.</string>
+    
+  <!-- boxee_logging_in -->
+  <string id="51740">Yhdistetään...</string>
+  
+  <!-- boxee_main_menu -->
+  <string id="51750">Mitä uutta</string>
+  <string id="51751">Omat videot</string>
+  <string id="51752">Internet-videot</string>
+  <string id="51753">Oma musiikki</string>
+  <string id="51754">Internet-musiikki</string>
+  <string id="51755">Omat kuvat</string>
+  <string id="51756">Internet-kuvat</string>
+  <string id="51757">Profiili</string>
+  <string id="51758">Lataukset</string>
+  <string id="51759">CD/DVD</string>
+  <string id="51760">Lopeta</string>
+  
+  <!-- boxee_media_source_list -->
+  <string id="51780">Asetukset / Mediasijainnit</string>
+  <string id="51781">Valikko</string>
+  <string id="51782">Lisää uusi sijainti</string>
+  
+  <!-- boxee_media_action -->
+  <string id="51792">Lisää</string>
+  <string id="51793">Tunnista</string>
+  <string id="51794">Musiikkivideot</string>
+  <string id="51795">MTV-musiikkivideot</string>
+  <string id="51796">Tunnista (polku ei sijainnissa)</string>
+    
+  <!-- boxee_media_info -->
+  <string id="51801">Suosittele</string>
+  <string id="51816">Lue lisää</string>
+  <string id="51817">Arvostele</string>
+  <string id="51818">min.</string>
+  
+  <!-- boxee_media_source_add_folder -->
+  <string id="51840">Valitse tietty kansio valvoaksesi.</string>
+  
+  <!--boxee_media_source_add_share -->
+  <string id="51841">Käytettävissä olevat verkon sijainnit tai käytettävissä olevat paikalliset laitteet.</string>
+  <string id="51842">Hae uudelleen</string>
+  
+  <!-- boxee_media_source_info -->
+  <string id="51845">Valitse verkon sijainti tai paikallisesti liitetty tallennuslaite.</string>
+  <string id="51846">Sijainnin nimi</string>
+  <string id="51847">Sijainnin paikka</string>
+  <string id="51848">Mediatyyppi</string>
+  <string id="51849">Ei koskaan</string>
+  <string id="51850">Lisää/päivitä</string>
+  <string id="51851">Boxee saatetaan joutua käynnistämään uudelleen, että nämä muutokset astuvat voimaan.</string>
+  <string id="51852">Haun tyyppi</string>
+  <string id="51853">Kerran</string>
+  <string id="51854">Päivittäin</string>
+  <string id="51855">Hyvin usein</string>
+  <string id="51856">Tunneittain</string>
+  <string id="51857">(ei hae)</string>
+  
+  <!-- boxee_video_context -->
+  <string id="51860">Toistaa</string>
+  <string id="51861">Pysäytetty</string>
+  <string id="51862">x2</string>
+  <string id="51863">x4</string>  
+  <string id="51864">x8</string> 
+  <string id="51865">x16</string>  
+  <string id="51866">x32</string>
+  <string id="51867">Eteenkelaus</string>
+  <string id="51868">Taaksekelaus</string>
+  <string id="51869">Tiedot</string>
+
+  <!-- boxee_media_sources -->
+  <string id="51870">Lisää sijainnit</string>
+  <string id="51871">Lisää verkon sijainnit</string>
+  <string id="51872">Verkon[CR]sovellukset</string>
+  <string id="51873">Lisää[CR]sijainti manuaalisesti</string>
+  <string id="51874">Tunnistamattomat tiedostot</string>
+  
+  <!-- boxee_music_context -->
+  <string id="51880">Sanoitukset</string>
+  
+  <!-- boxee_rate -->
+  <string id="51886">Pidän tästä</string>
+  <string id="51887">En tiedä...</string>
+  <string id="51888">En pidä tästä</string>
+  <string id="51889">Tämä on OK</string>
+  <string id="51890">Pidän tästä</string>
+
+  <!-- boxee_user_logon -->
+  <string id="51891">Käyttäjätunnus</string>
+  <string id="51892">Salasana</string>
+  <string id="51893">Muista salasana</string>
+  <string id="51894">Isännän nimi / IP</string>
+  <string id="51895">Sähköposti</string>
+  <string id="51896">Vahvista salasana</string>
+  <string id="51897">valitse[CR]salasana</string>
+  
+  <!-- boxee_wizard_network_manual -->
+  <string id="51898">Vaihe 03</string>
+  <string id="51899">Manuaalinen konfigurointi</string>
+  <string id="51900">Täytä IP-osoitteet alla oleviin kenttiin</string>
+  <string id="51901">IP-osoite</string>
+  <string id="51902">Reitittimen osoite</string>
+  <string id="51903">DNS-osoite</string>
+  <string id="51904">Takaisin</string>
+  <string id="51905">Seuraava vaihe</string>
+
+  <!-- boxee_wizard_add_source -->
+  <string id="51906">Asetukset-&gt;Mediasijainnit-&gt;Lisää sijainti-&gt;</string>
+  <string id="51907">Valitse verkon sijainti tai paikallisesti liitetty tallennuslaite.[CR]Kun olet valinnut laitteen, valitse tietty kansio, jota haluat käyttää ja anna sille nimi.</string>
+  <string id="51908">Paikallinen</string>
+  
+  <!-- boxee_wizard_add_source_manual -->
+  <string id="51909">IP-osoite / Isännän nimi:</string>
+  
+  <!-- boxee_wizard_audio -->
+  <string id="51910">Äänen ohjattu toiminto</string>
+  <string id="51911">Vaihe 02</string>
+  <string id="51912">Tarkastetaan</string>
+  <string id="51913">Testataan ääniyhteyksiä.[CR]Odota, kunnes kuulet useita nuotteja kaiuttimistasi.</string>
+  <string id="51914">Ääntä ei kuulu? Napsauta tästä.</string>
+  
+  <!-- boxee_wizard_network -->
+  <string id="51915">Verkon ohjattu toiminto</string>
+  <string id="51916">Valitse yksi verkon asetuksista Internetille ja verkon yhteyksille.</string>
+  <string id="51917">Todennustyyppi:</string>
+  <string id="51918">Lopeta</string>
+  
+  <!-- boxee_wizard_resolution -->  
+  <string id="51919">Tarkkuuden ohjattu toiminto</string>
+  <string id="51920">Vaihe 01</string>
+  <string id="51921">Joillekin TV-näytöille on mahdollista säätää ruudun tarkkuutta niin, että se näyttää kuvat suurempina tai pienempinä.</string>
+  <string id="51922">Vakiomääritys (SD)</string>
+  <string id="51923">Teräväpiirto (HD)</string>
+  <string id="51924">Kalibroi</string>
+
+  <!-- boxee_wizard_set_source_name -->
+  <string id="51925">Vahvista</string>
+  
+  <!-- boxee_browse_window -->
+  <string id="51926">[B]Tuloksia ei löydy.[/B][CR]Huomaa, että osa sisällöstä ei ehkä ole saatavilla alueellasi.[CR]Maantieteelliset asetukset on mahdollista muuttaa kohdassa [COLOR yellow]Asetukset / Ulkoasu / Näytä asetukset[/COLOR]</string>
+  <string id="51927">Tuloksia ei löydy.[CR]Osa sisällöstä ei ole saatavilla offline-tilassa.</string>
+
+  <!-- boxee_dialog_confirm -->
+  <string id="51928">Palataan takaisin alkuperäiseen tarkkuuteen 6 sekunnissa.</string>
+  <string id="51929">Tuloksia ei löytynyt.</string>
+
+  <!-- boxee home -->
+  <string id="51930">Sisältö palaa, kun Boxee voi muodostaa yhteyden internetiin.</string>
+  
+  <!-- custom_boxee_credits -->
+  <string id="51937">Tekijät</string>
+  <string id="51938">Boxee perustuu seuraavien yksilöiden ja ryhmien inspiroivaan työhön, jotka tekivät XBMC-keskuksen mahdolliseksi.</string>
+  
+  <!-- custom_boxee_settings -->
+  <string id="51941">Päivitä</string>
+  <string id="51942">Pehmeä palautus</string>
+  
+  <string id="51943">Kova palautus</string>
+  <string id="51944">Tyhjennä mediatiedot kirjastosta (mediatiedostot pysyvät koskemattomina)...</string>
+  <string id="51945">Renetwork</string>
+  <string id="51946">Aseta taustakuva</string>
+  <string id="51947">Aseta taustakuvakansio</string>
+  <string id="51948">Käyttöliittymän ruudun nimet</string>
+  <string id="51949">Version päiväys</string>
+  <string id="51950">Tiedot</string>
+  <string id="51951">Boxeen versio</string>
+  <string id="51952">Kokonaismuisti</string>
+  <string id="51954">Tallennus</string>
+  <string id="51955">/</string>
+  <string id="51956">Tyhjennä vanhat pikkukuvakkeet (mediatiedostoihin ei kosketa)...</string>
+  <string id="51957">Palauta taustakuva</string>	
+  <string id="51958">Ohita paikallisen sisällön etuliitteet aakkoslajittelussa</string>
+
+  <string id="51959">Ladataan päivitystä</string>
+  <string id="51960">Boxee ehkä hidas, kunnes valmis.</string>
+
+  <!-- dialog_button_menu -->
+  <string id="51964">Media toistaa parhaillaan.[CR][CR]Haluatko käynnistää toiston uudelleen?</string>
+  <string id="51965">Kirjaudu ulos</string>
+
+  <!-- dialog_keyboard -->
+  <string id="51966">Virtuaalinen näppäimistö</string>
+  <string id="51967">@</string>
+  
+  <!-- dialog_message -->
+  <string id="51968">Tarkasta kaapelin kytkennät ja varmista, että vastaanotin/TV ei ole mykistetty.[CR][CR]Jos ääntä ei vieläkään kuulu, tarkasta vianmäärityssivu osoitteessa boxee.tv/troubleshooting</string>
+  
+  <!-- dialog_mute_bug -->
+  <string id="51969">Mykistä</string>
+  
+  <!-- dialog_numeric -->
+  <string id="51970">C</string>
+  <string id="51971">E</string>
+
+  <!-- dialog_plugin_settings -->
+  <string id="51972">Sovelluksen asetukset</string>
+  <string id="51973">Ota käyttöön</string>
+
+  <!-- dialog_progress -->
+  <string id="51974">Ladataan... Odota</string>
+  <string id="51998">Syötteitä ladataan... odota hetki!</string>
+  <string id="51999">Syöte tyhjä... lisää joitakin ystäviä!</string>
+  <string id="52000">Verkkoyhteys katkaistu...</string>
+  <string id="52001">Verkkoyhteys katkaistu...</string>
+  <string id="52002">Boxee-palvelimeen ei saada yhteyttä...</string>
+  <string id="52003">Asetuksen ohjattu toiminto</string>
+  
+  <!-- home -->
+  <string id="52004">Tervetuloa</string>
+  <string id="52005">Mitä uutta?</string>
+  <string id="52006">Suositukset</string>
+  <string id="52007">Ystävien toiminnot</string>
+  <string id="52008">Viimeksi lisätyt</string>
+  <string id="52009">Viimeksi käytetyt</string>
+  <string id="52010">Ladataan</string>
+  <string id="52011">Offline</string>
+  <string id="52012">Näytä kaikki</string>
+  <string id="52013">Verkossa</string>
+  
+  <!-- music_osd -->
+  <string id="52015">Musiikkivalikko</string>
+  <string id="52016">Sovelluksen lisäys onnistui.[CR][CR]Voit nyt löytää sen sovelluskirjastosta.</string>
+  <string id="52017">Ei voitu lisätä [CR][COLOR green]%s[/COLOR].</string>
+  <string id="52018">Ei voitu päivittää sovellusta.</string>
+  <string id="52019">Haluatko poistaa valitun syötteen?</string>
+  <string id="52020">Syötteen lataaminen epäonnistui.</string>
+  <string id="52021">Näytön ja videon toiston asetukset</string>
+  <string id="52022">Musiikin toiston ja internetradion asetukset</string>
+  <string id="52023">Kuvaesityksen asetukset</string>
+  <string id="52024">Verkon liittyvät asetukset</string>
+  <string id="52025">Ulkoasun asetukset sekä alueelliset asetukset</string>
+  <string id="52026">Laitteisto- ja järjestelmäasetukset</string>
+  <string id="52027">Havaitse ja yhdistä paikallisen ja verkon tallennuslaitteiden kanssa</string>
+  <string id="52028">Käynnistä alkuasetuksen ohjattu toiminto</string>
+  <string id="52029">Kaikki lajit...</string>
+  <string id="52030">Katso kenen idea on tämä makea ohjelmisto :)</string>
+  <string id="52031">Valitse sovellus listasta tai määritä tai vaihda sen asetukset.</string>
+  <string id="52032">Median sijainnit</string>
+  <string id="52033">Sovellusta</string>
+  <string id="52034">Hallitse sovelluksia ja lisää uusia</string>
+  <string id="52035">Anna kommenttivaraston URL</string>
+  <string id="52036">Ei saatu kommenttivaraston tietoja. Varmista, että URL on oikein ja yritä uudelleen.</string>
+  <string id="52037">Haluatko poistaa [CR][COLOR green]%s[/COLOR] kommenttivaraston?</string>
+  <string id="52038">Haluatko lisätä [CR][COLOR green]%s[/COLOR] sovelluksen?</string>
+  <string id="52039">App Box</string>
+
+  <!-- Media Sources and Applications -->  
+
+  <!-- source types -->
+  <string id="52040">Musiikin sijainnit</string>
+  <string id="52041">Videoiden sijainnit</string>
+  <string id="52042">Kuvien sijainnit</string>
+  <string id="52043">Laitteet</string>
+  <string id="52044">Sijainnit</string>
+  
+  <string id="52050"></string>
+  <string id="52051">Toistolaitetta ei parhaillaan tueta</string>
+
+  <string id="52090">Sovellus [CR][COLOR green]%s[/COLOR] on jo asennettu</string>
+
+  <string id="52100">Lähteet</string>
+  <string id="52101">Käytettävissä olevat verkon sijainnit tai käytettävissä olevat paikalliset laitteet.</string>
+  <string id="52102">Hae uudelleen</string>
+
+  <string id="52104">Sinulla ei ole Suosikeiksi merkittyjä verkkosivustoja</string>
+  <string id="52105">Tyhjennä historia…</string>
+  <string id="52106">Hyväksy</string>
+  <string id="52107">Muokkaa</string>
+  <string id="52108">Selain</string>
+  <string id="52109">Historia</string>
+  <string id="52110">Toistaa parhaillaan</string>
+  <string id="52111">Suosikit</string>
+  <string id="52112">Podcastit</string>
+  <string id="52115">Lisää osat</string>
+  <string id="52116">Nimikkeitä ei löytynyt</string>
+  <string id="52117">Syötä elokuvan tai TV-sarjan nimi</string>
+  <string id="52118">Yritä soveltaa kauden tietoja kaikkiin kansion tiedoistoihin</string>
+  <string id="52119">Poista</string>
+  <string id="52120">Elokuva?</string>
+  <string id="52121">TV-ohjelma?</string>
+  <string id="52122">Albumi?</string>
+  <string id="52123">Poista?</string>
+  <string id="52124">Käytä sarjaa</string>
+  <string id="52125">koko kansioon</string>
+  <string id="52126">Tunnista</string>
+  <string id="52127">Ei mikään yllä, jätä ratkaisematta</string>
+  <string id="52128">Ei mikään yllä, poista kirjastosta</string>
+  <string id="52129">Poista video kirjastosta</string>
+  <string id="52130">Tunnista</string>
+  <string id="52131">Vapauta</string>
+  <string id="52132">Tunnisteet</string>
+  <string id="52133">Kuvaaja</string>
+  <string id="52134">Kuvauspäivä</string>
+  <string id="52135">Kamera</string>
+  <string id="52136">Malli</string>
+  <string id="52137">Aukko</string>
+  <string id="52140">Syötteen lisäys onnistui.[CR][CR]Voit nyt löytää sen sovelluskirjastosta.</string>
+  <string id="52150">Lisää uusia sijainteja Boxeen valitsemalla seuraavista vaihtoehdoista.</string>
+  <string id="52151">Sovellusta</string>
+  <string id="52152">Manuaalisesti</string>
+  <string id="52155">Lisää uusi sijainti</string>
+  <string id="52160">mukaan</string>
+  <string id="52161">kanava</string>
+  <string id="52175">Väärä albumi?</string>
+  <string id="52176">Anna albumin nimi</string>
+  <string id="53001">mukaan</string>
+  <string id="53002">Anna kausi #</string>
+  <string id="53003">Anna jakso #</string>
+  <string id="53004">Poista video[CR]kirjastosta</string>
+
+  <!-- music visuallisation -->
+  <string id="53011">kanava</string>
+
+  <!-- tooltips -->
+  <string id="53021">avaa päävalikko siirtymällä vasemmalle[CR]</string>
+  <string id="53022">selaa valikkoa siirtymällä oikealle[CR]</string>
+  <string id="53023">siirry toistamaan mediaa napsauttamalla tästä[CR]</string>
+
+  <!-- keyboard -->
+  <string id="53031">QWERT</string>
+  <string id="53032">ABCD</string>
+
+  <!-- user guide -->
+  <string id="53118">Käyttäjäopas</string>
+
+  <string id="53101">Siirtyminen</string>
+  <string id="53102">Toista</string>
+  <string id="53103">Kauko-ohjain</string>
+  <string id="53104">Näppäimistö</string>
+  <string id="53105">Siirry käyttämällä ylös, alas, oikealle ja vasemmalle</string>
+  <string id="53106">Valitse käyttämällä Toista/Keskeytä.</string>
+  <string id="53107">Siirry edelliseen näyttöön VALIKON avulla.</string>
+  <string id="53108">Siirry nuolinäppäinten avulla.</string>
+  <string id="53109">Valitse Enter-painikkeella.</string>
+  <string id="53110">Vaihda koko ruudun ja ikkunan välillä ''\''-painikkeen avulla.</string>
+  <string id="53111">Poistu tai keskeytä napsauttamalla S.</string>
+  <string id="53112">Siirry edelliseen näyttöön napsauttamalla Esc.</string>
+  <string id="53113">Siirry etusivulle napsauttamalla H.</string>
+  <string id="53114">Säädä äänenvoimakkuutta +/- painikkeilla.</string>
+  <string id="53115">Näytä valinnat ruudulla ja tee valinnat Toista/Keskeytä-painikkeiden avulla.</string>
+  <string id="53116">Ohita taakse- ja eteenpäin-painikkeiden avulla.</string>
+  <string id="53117">Piilota ruudulla näkyvät valinnat VALIKON avulla.</string>
+  <string id="53119">Näytä valinnat ruudulla ja tee valinnat Enter-painikkeen avulla.</string>
+  <string id="53120">Pysäytä toisto napsauttamalla X.</string>
+  <string id="53121">Toista tai keskeytä tilapalkilla.</string>
+  <string id="53122">Ohita oikea/vasen-nuolinäppäinten avulla.</string>
+  <string id="53123">Piilota ruudulla näkyvät valinnat napsauttamalla Esc.</string>
+  <string id="53124">Tämä on vain näppäimistön pikapainikkeiden peruslista. Täydellinen lista usein kysytyistä kysymyksistä osoitteessa http://www.boxee.tv</string>
+
+  <string id="53130">Taustakuva</string>
+  <string id="53131">Huomaa, että taustakuvia suositellaan.</string>
+
+  <string id="53135">Käyttäjäopas / Siirry</string>
+  <string id="53136">Käyttäjäopas / Toista</string>
+
+  <string id="53140">Kirjaston tila</string>
+  <string id="53141">Nyt etsii:</string>
+  <string id="53142">Vapaa</string>
+  <string id="53143">Kansion yhteenveto:</string>
+  <string id="53144">Ei muutoksia</string>
+  <string id="53145">Ratkaisee:</string>
+  <string id="53146">Sijainnin yhteenveto</string>
+  <string id="53147">Yhteensä:</string>
+  <string id="53148">Ratkaistu:</string>
+  <string id="53149">Ratkaisemattomat:</string>
+  <string id="53150">Uusi:</string>
+  <string id="53151">Odoittaa:</string>
+  <string id="53152">Poistettu:</string>
+  <string id="53153">Ei saatavilla:</string>
+  <string id="53154">Tunnistetaan:</string>
+
+  <string id="53155">Omat suosikit</string>
+  
+  <string id="53160">Seisonta-aika…</string>
+  <string id="53161">Skannaus:</string>
+  <string id="53162">Tunnistetaan</string>
+
+  <!-- Manual Resolve -->
+  <string id="53180">Manuaalinen ratkaisu</string>
+  <string id="53181">Tällä nimikkeellä ei tietoja saatavilla.</string>
+  <string id="53182">Haluatko määrittää käyttämällä kansiosta löytyvää info-tiedostoa (NFO) tai hakea tietoja manuaalisesti?</string>
+  <string id="53183">Määritä media</string>
+  <string id="53184">NFO</string>
+  <string id="53185">Manuaalisesti</string>
+  <string id="53186">NFO-tiedosto löytyy, mutta ei avaudu. Tarkista tiedoston rakenne.</string>
+
+  <!-- Update Manager -->
+  <string id="53200">Anna OS-salasana</string>
+  <string id="53205">Päivitetään...</string>
+  <string id="53206">Toiminto...</string>
+  <string id="53207">Tuntematon virhe.</string>
+
+  <string id="53210">Vahvistetaan salasanaa...</string>
+  <string id="53211">Salasana ei kelpaa.</string>
+  <string id="53212">Salasana ei kelpaa.</string>
+  <string id="53213">Boxeeta käynnistetään uudelleen...</string>
+  <string id="53214">Boxee-asennus on jo olemassa liitettynä kohdassa /Asemat.</string>
+  <string id="53215">Asennustiedostoa ei löydy.</string>
+  <string id="53216">Asennustiedoston liittäminen epäonnistui.</string>
+  <string id="53217">Liitettyä asennustiedostoa ei löytynyt kohdassa /Asemat.</string>
+  <string id="53218">Liitettyä MPKG-asennustiedostoa ei löytynyt kohdassa /Asemat.</string>
+  <string id="53219">Boxee suosittelee päivittämistä nyt -- se on hyvä juttu!</string>
+  <string id="53220">[COLOR red]Tämä päivitys on pakollinen. Voit päivittää nyt tai sammutuksen yhteydessä.[/COLOR]</string>
+  <string id="53221">[COLOR red]Tämä päivitys on pakollinen.[/COLOR]</string>
+  <string id="53225">Karsi tietoja</string>
+  <string id="53239">Myöhemmin</string>
+  <string id="53240">Boxeen päivitys</string>
+  <string id="53241">Päivitys epäonnistui.</string>
+  <string id="53242">Virhe:</string>
+  <string id="53243">[CR]Boxeen ohjelmistopäivitys on käytettävissä.[CR]Haluatko asentaa sen nyt?</string>
+  <string id="53244">[COLOR red]* Jos valitse nyt peruuta, sinua pyydetään asentamaan seuraavan kirjautumisen yhteydessä.[/COLOR]</string>
+  <string id="53245">[CR]Boxeen ohjelmistopäivitys saatavilla.[CR]Poistu Boxeesta ja päivitä Ubuntu päivityksen hallintaohjelmasta.</string>
+  <string id="53246">[CR]Boxeen ohjelmistopäivitys saatavilla.[CR]Poistu Boxeesta ja päivitä AppleTV -valikosta.</string>
+  <string id="53247">Boxeen ohjelmistopäivitys saatavilla.</string>
+  <string id="53248">Boxeen ohjelmistopäivitys saatavilla.</string>
+  <string id="53249">Sinulla on jo Boxeen uusin versio asennettuna.</string>
+  <string id="53250">0.9.8.4881</string>
+  <string id="53251">Päivitä</string>
+  <string id="53252">Viimeksi tarkastettu</string>
+  <string id="53253">Tarkasta uuden Boxeen version varalta...</string>
+  <string id="53254">[CR]Uusi Boxeen versio on saatavilla.[CR]Haluatko ladata sen nyt?</string>
+  <string id="53255">Boxee-päivitys saatavilla!</string>
+  <string id="53256">Valitse "%s" ja käynnistä päivitys uusimpaan Boxee-versioon.[CR][CR]Boxee käynnistyy uudelleen päivityksen asennuksen jälkeen.</string>
+  <string id="53257">Boxeeta päivitetään </string>
+  <string id="53258">Odota hetki! Boxee hakee nyt uusinta ja parasta. [CR] Boxee-laitteesi käynnistyy uudelleen valmistuttuaan.</string>
+  <string id="53259">Ladataan ohjelmaa:</string>
+  <string id="53260">Päivitä nyt</string>
+  <string id="53261">Uusi versio on saatavilla. Napsauta tästä.</string>
+  <string id="53262">Lisätietoja</string>
+  <string id="53263">Käynnistä uudelleen ja päivitä</string>
+  <string id="53264">Ladataan uutta versiota...</string> 
+  <string id="53265">Lisää RSS-syöte</string>
+  <string id="53266">Äänikirjasto</string>
+  <string id="53267">PulseAudio</string>
+  <string id="53268">ALSA</string>
+
+  <!-- video for linux -->
+  <string id="53269">Ota käyttöön laitteistoavustettu koodaus, kun mahdollista</string>
+
+  <!-- app box labels -->
+  <string id="53270">App Box/ Uudet sovellukset</string>
+  <string id="53271">Uudet sovellukset</string>
+  <string id="53272">Omat sovellukset</string>
+  <string id="53273">Omat syötteet</string>
+  <string id="53274">Kommenttivarastot</string>
+  <string id="53275">Parhaillaan ei ole saatavilla uusia sovelluksia</string>
+  <string id="53276">Ei sovelluksia saatavilla.</string>
+  <string id="53277">Sovelluspäivitys saatavilla</string>
+  <string id="53278">Sovelluksella on asetukset</string>
+  <string id="53279">Lisää kommenttivarasto</string>
+  <string id="53280">Lisää uutissyöte</string>
+  <string id="53281">Ei syötteitä saatavilla</string>
+
+  <string id="53282">Päivitä sovellus</string>
+  <string id="53283">Vaihda asetukset</string>
+  <string id="53284">Poista sovellus</string>
+
+  <string id="53285">Syötteen URL:</string>
+  <string id="53286">Syötteen tyyppi:</string>
+  <string id="53287">Boxee päivittää...</string>
+  <string id="53288">Boxee asentaa päivityksiä. Tämä saattaa kestää muutamia minuutteja.</string>
+  <string id="53289">päivitetään:</string>
+
+  <string id="53290">Kätke aikuisten syötteet ja sovellukset</string>
+  <string id="53291">Voit käyttää ainoastaan aikuisviihdettä, jos olet vähintään täysi-ikäinen oikeusalueella, jossa asut tai jossa käytät sisältöä.</string>
+  <string id="53292">Aseta aikuisviihdelukko...</string>
+  <string id="53293">Piilota syötteet ja sovellukset, joita ei voida toistaa sinun sijainnissasi</string>
+  <string id="53294">Syöttämäsi salasana on virheellinen.</string>
+  <string id="53295">Varoitus</string>
+
+  <string id="53296">Vähemmän tietoja</string>
+  <string id="53297">Osa kirjastojen ja sovellusten sisällöstä ei ole toistettavissa sijainnissasi, haluatko varmasti ottaa sen käyttöön?</string>
+
+  <string id="53298">Hyväksyäkö testi/beetapäivitykset (vain edistyneet käyttäjät)?</string>
+  
+  <string id="53300">Ruudun muoto</string>
+  <string id="53301">Normaali (4:3)</string>
+  <string id="53302">LCD TV / Plasma laajakuva (16:9)</string>
+  <string id="53303">Tietokoneen laajakuvanestekidenäyttö (16:10)</string>
+  <string id="53304">Ultralaajakuvanäyttö (21:9)</string>
+  <string id="53305">Näkyvän kuva-alan määrä</string>
+  <string id="53306">3%</string>
+  <string id="53307">4%</string>
+  <string id="53308">5%</string>
+  <string id="53309">6%</string>
+  <string id="53310">Poistetaanko valittu pikakuvake?</string>
+  <string id="53311">Pikakuvake on jo olemassa</string>
+  <string id="53400">Ruudunb kalibrointi</string>
+  <string id="53401">Haluatko määrittää ruudun kalibroinnin ensin?[CR][COLOR green]Huomautus:[/COLOR] voit aina määrittää sen myöhemmin kohdassa Asetukset-&gt;Ulkoasu-&gt;Ruutu</string>
+  <string id="53402">Poista</string>
+  <string id="53403">Tervetuloa käyttämään Boxeeta!</string>
+  <string id="53404">Käyttäjä</string>
+  <string id="53405">Poista</string>
+  <string id="53406">Poista käyttäjä [COLOR green]'%s'[/COLOR]?</string>
+  
+  <string id="53407">Nykyinen käyttäjä</string>
+  <string id="53408">Uusi käyttäjä</string>
+  
+  <string id="53409">Poista</string>
+  <string id="53410">Lisää käyttäjä</string>
+  <string id="53411">Ohjelmaopas</string>
+  <string id="53412">Verkko</string>
+  <string id="53413">Sammutus</string>
+  <string id="53414">Vahvista</string>
+  <string id="53415">Haluatko varmasti tyhjentää historiasi?</string>
+  <string id="53416">Tätä toimintoa ei voi kumota</string>
+  <string id="53420">OHITA</string>
+
+  <string id="53425">Hyväksy</string>
+
+  <string id="53430">Kirjautuu sisään…</string>
+  
+  <string id="53432">Käyttöehtojen nouto epäonnistui</string>
+  <string id="53433">Tietosuojalausunnon haku epäonnistui</string>
+
+  <string id="53434">Napsauttamalla ’Valmis’ hyväksyt seuraavan:</string>
+  <string id="53435">Napsauttamalla '%s' hyväksyt seuraavan:</string>
+  <string id="53436">Käyttöehdot</string>
+  <string id="53437">ja</string>
+  <string id="53438">Tietosuojalausunto</string>  
+  <string id="53439">Boxeen käyttämiselle</string>  
+  
+  <string id="53440">Mitä haluat tehdä?</string>
+  
+  <string id="53442">Kirjaudu sisään Boxeen</string>
+  <string id="53443">Luo uusi Boxee-käyttäjä</string>
+  <string id="53444">Oma...</string>
+  <string id="53445">Käyttäjänimi [COLOR green]%s[/COLOR] ei kelpaa. Käytä vain kirjaimia (a-z),numeroita (0-9), pistettä(.) tai alaviivaa(_).</string>
+  <string id="53446">Käyttäjätunnus [COLOR green]%s[/COLOR] ei ole käytettävissä. Valitse toinen nimi ja yritä uudelleen.</string>
+  <string id="53447">Käyttäjänimen tarkistus epäonnistui [COLOR green]%s[/COLOR] saatavuus</string>
+  <string id="53449">Hyväksy</string>
+      
+  <string id="53450">Hyvä</string>
+  <string id="53451">Ei pätevä</string>
+  <string id="53452">Valitse käyttäjänimi</string>
+  <string id="53453">Tili luotu</string>
+  <string id="53454">Olet valmis! Olemme juuri lähettäneet sinulle vahvistussähköpostin – seuraa siinä olevaa linkkiä aktivoidaksesi käyttäjätilisi ja hallitaksesi yksityiskohtia, kuten Premium-palveluita, RSS-syötettä, profiilikuvaa ja muita.</string>
+  <string id="53455">Uuden käyttäjän luominen epäonnistui</string>
+  <string id="53456">Uuden profiilin luominen epäonnistui</string>
+  <string id="53457">Kirjoita salasana uudelleen[CR]</string>
+  <string id="53458">Hyvä</string>
+  <string id="53459">Ei paria</string>
+  <string id="53460">%s %s Boxeessa</string>
+  <string id="53461">Viestisi:</string>
+  <string id="53462">Jaa</string>
+  <string id="53463">Pidetty</string>
+  <string id="53464">Mukautettu teksti</string>
+  <string id="53465">Lisää komenttisi:</string>
+  <string id="53466">(Boxeen kautta)</string> 
+
+  <string id="53467">Sähköpostiosoite on jo käytössä</string>
+  <string id="53468">Salasana on liian lyhyt</string> 
+  <string id="53469">Melkein valmis!</string> 
+  <string id="53470">Päättääksesi Boxee-tilisi asetuksen, sinun tulee hyväksyä meidän…</string> 
+
+  <string id="53471">(Boxee Live TV:n kautta)</string>
+
+  <string id="53472">Uusien käyttäjäpalveluiden päivitys epäonnistui</string>
+  <string id="53473">Uusien käyttäjätietojen päivitys epäonnistui</string>
+  <string id="53480">Kirjautuminen Internetyhteyden palauttamisen jälkeen[CR]</string>
+  <string id="53485">Katsotaan</string>
+
+  <!-- boxee browse screen panel -->
+  <string id="53501">Internet ja paikallinen</string>
+  <string id="53502">Internet-väline</string>
+  <string id="53503">Paikallinen media</string>
+
+  <string id="53504">Suosituimmat</string>
+  <string id="53505">A-Z</string>
+  <string id="53506">Viimeksi lisätyt</string>
+  <string id="53507">Käytetyin</string>
+  
+  <string id="53508">Kaikki kaudet</string>
+  
+  <string id="53509">Kaikki</string>
+
+  <string id="53510">Kaudet</string>
+
+  <string id="53511">Kaikki lajit</string>
+  <string id="53512">Kaikki sijainnit</string>
+  <string id="53513">Kaikki media</string>
+  <string id="53514">Videot</string>
+  <string id="53515">Musiikki</string>
+  <string id="53516">Kuvat</string>
+  <string id="53517">Jono</string>
+  <string id="53518">Löydä</string>
+  <string id="53519">Kuvat</string>
+  <string id="53520">Viimeksi toistetut</string>
+  <string id="53521">Lisää omiin ohjelmiin[CR][PIENET KIRJAIMET](Aseta uudet episodit jonoon)[/PIENET KIRJAIMET]</string>
+  <string id="53522">Poista[CR]omista ohjelmista</string>
+  <string id="53523">Lisätty suosikkeihin</string>
+  <string id="53524">Poistettu suosikeista</string>
+  <string id="53525">Vapaana</string>
+  <string id="53526">Katsomattomat</string>
+  <string id="53527">Uudet julkaisut</string>
+  <string id="53528">Vanhimmat ensin</string>
+  <string id="53529">Uusimmat ensin</string>
+  <string id="53530">Päiväys</string>
+  <string id="53531">Aakkosjärjestykset</string>
+  <string id="53532">Muokkauspäivä</string>
+  <string id="53533">Vanhimmat</string>
+  <string id="53534">Uusimmat</string>
+
+  <string id="53535">A-Z</string>
+  <string id="53536">A-Z</string>
+  <string id="53537">Uusimmat ensin</string>
+  <string id="53538">Vanhimmat ensin</string>
+  <string id="53539">Viimeksi päivitetyt</string>
+
+  <!-- dropdown dialog titles -->
+  <string id="53560">Lajittele</string>
+  <string id="53561">Lajityypit</string>
+  <string id="53562">Kaudet</string>
+  <string id="53563">Tyypit</string>
+  <string id="53564">Käyttäjänimi</string>
+
+  <!-- channel filter dropdown -->
+  <string id="53580">Kanavasuodatin</string>
+  <string id="53581">Premium</string>
+  <string id="53582">Vapaa</string>
+  
+  <!-- Repository Browse Window -->
+  <string id="53600">Huomautus</string>
+  <string id="53610">[COLOR green]Boxee[/COLOR] kommenttivarastoa ei voida poistaa.</string>
+  <string id="53620">Omat kommenttivarastot</string>
+  <string id="53621">Irrota kommenttivarastot</string>
+  <string id="53622">Extrat</string>
+  <string id="53623">Lisää kommenttivarasto</string>
+  <string id="53624">Poista kommenttivarastot</string>
+  <string id="53625">Kumoa siirto</string>
+ 
+  <!-- network notification -->
+  <string id="53695">Muokkaa verkon asetuksia</string>
+  
+   <!-- Media Action Dialog -->
+  <string id="53700">Huomautus</string>
+  <string id="53701">Virhe</string>
+  <string id="53702">[B]Poista viimeiset toistot[/B]</string>
+  <string id="53709">Tekn. tiedot</string>
+  <string id="53710">Tiedot</string>
+  <string id="53711">Myöhemmin</string> <!-- Add To Queue -->
+  <string id="53712">Poista</string> <!-- Remove From Queue -->
+  <string id="53713">Katsotut</string>
+  <string id="53714">Katsomattomat</string>
+  <string id="53715">Lisää pikakuvakkeet</string>
+  <string id="53716">Poista pikakuvake</string>
+  <string id="53717">Lisää...</string>
+  <string id="53718">Esittely</string>
+  <string id="53719">Jaa</string>
+  <string id="53720">Poista historiasta</string>
+  <string id="53721">Poista</string>
+  <string id="53722">Selaa</string>
+  <string id="53723">Etsi albumi uudelleen</string>
+  <string id="53724">Etsitään albumia uudelleen...</string>
+  <string id="53725">Ei tämä albumi?</string>
+  <string id="53726">Lisää kappale</string>
+  <string id="53727">Valitse pikakuvake</string>
+  <string id="53728">Takaisin</string>  
+  <string id="53729">Suosikki</string>  <!-- Add To Favorite -->  
+  <string id="53730">Poista</string> <!-- Remove from Favorite --> 
+
+  <string id="53731">Kohde on lisätty kohtaa Katso myöhemmin</string>
+  <string id="53732">Kohteen poistaminen onnistui</string>
+  <string id="53733">Kohde merkitty katsotuksi</string>
+  <string id="53734">Kohde merkitty katsomattomaksi</string>
+  <string id="53735">Kohteen lisääminen Katsottu myöhemmin -listaan epäonnistui</string>
+  <string id="53736">Kohteen poistaminen Katsottu myöhemmin -listasta epäonnistui</string>
+  <string id="53737">Kohteen pikakuvake lisättiin ponnahdusvalikkoon</string>
+  <string id="53738">Kohteen pikakuvakkeen lisääminen epäonnistui...</string>
+  <string id="53739">Kohteen pikakuvake poistettu</string>
+  <string id="53740">Historiasta poistaminen epäonnistui...</string>
+  <string id="53741">Etsi sijainnista</string>
+  <string id="53742">Laitteita ei löydy.</string>
+
+  <string id="53743">Boxee on offline-tilassa</string>  
+  <string id="53744">Boxee ei voi saada tätä tapahtumaan[CR]koska et ole yhteydessä Internetiin.</string>
+  <string id="53745">Boxee tarvitsee Internet-yhteyden toistaakseen[CR]tämän sinulle.</string>
+  <string id="53746">Boxee tarvitsee Internet-yhteyden toistaakseen[CR]tämän sinulle.</string>
+  <string id="53747">Sijaintia ei voidan käynnistää, koska [CR]internetyhteys ei ole saatavilla.</string>
+  <string id="53748">Boxee ei voi lisätä tätä Katso[CR]myöhemmin -luetteloon ilman ilman Internet-yhteyttä.</string>
+  <string id="53749">Boxee ei voi poistaa tätä Katso[CR]myöhemmin -luettelosta ilman ilman Internet-yhteyttä.</string>
+  <string id="53750">Toista</string>
+  <string id="53751">Paikallinen tiedosto</string>
+  <string id="53752"></string>     <!-- prefix to provider source in PLAY button (can be "on " or "from ") -->
+  <string id="53753">Paikalliset</string>  
+  <string id="53755">Selaa</string>
+  <string id="53756">Boxee ei hallita syötteitä, koska et ole yhteydessä Internetiin.</string>
+  <string id="53760">Aloita</string>
+  <string id="53761">Lisää omiin sovelluksiin</string>
+  <string id="53762">Poista omista sovelluksista</string>
+  <string id="53765">[COLOR green]%s[/COLOR] sovelluksen käynnistys epäonnistui</string>
+  <string id="53766">[COLOR green]%s[/COLOR] tarvitsee internyhteyden käynnistykseen.</string>
+  <string id="53770">Ilmoitus tuettu</string>
+  <string id="53771">Videoleike</string>
+  <string id="53772">Esittely</string>
+  <string id="53773">Tilaus</string>
+  <string id="53774">Tilaus pakollinen</string>
+  <string id="53775">Äskettäin toistettujen luettelon tyhjentäminen epäonnistui</string>
+  <string id="53776">Tämä tyhjentää Äskettäin toistettujen luettelon. Oletko varma?</string>
+  <string id="53777">esittely</string>
+  
+  <string id="53779">icons/icon_media_action_identify</string>
+  <string id="53780">icons/icon_action_menu_queue_add_kai.png</string>
+  <string id="53781">icons/icon_action_menu_queue_remove_kai.png</string>
+  <string id="53782">icons/icon_action_menu_shortcut_add_kai.png</string>
+  <string id="53783">icons/icon_action_menu_shortcut_remove_kai.png</string>
+
+  <string id="53784">icons/icon_media_action_favorite_on</string>
+  <string id="53785">icons/icon_media_action_favorite_off</string> 
+  <string id="53786">icons/icon_media_action_eject</string>
+  <string id="53787">icons/icon_media_action_browse_dvd</string>   
+  <string id="53788">icons/icon_media_action_identify</string>   
+  <!-- string id="53789">icons/icon_action_menu_history_remove.png</string -->
+  <string id="53789">icons/icon_action_menu_mark_remove.png</string>
+  <string id="53790">icons/icon_media_action_info</string>
+  <string id="53791">icons/icon_media_action_watch_later</string>
+  <string id="53792">icons/icon_media_action_watched</string>
+  <string id="53793">icons/icon_action_menu_shortcut_add.png</string>
+  <string id="53794">icons/icon_media_action_trailer</string>
+  <string id="53795">icons/icon_action_menu_shortcut_remove.png</string>
+  <string id="53796">icons/icon_media_action_watch_later_remove</string>
+  <string id="53797">icons/icon_media_action_goto_show</string>
+  <string id="53798">icons/icon_media_action_share</string>
+  <string id="53799">icons/icon_media_action_unwatched</string>
+ 
+  <!-- Apps/AppBox Browse Window -->
+  <string id="53800">Kaikki</string>
+  <string id="53801">Videot</string>
+  <string id="53802">Musiikki</string>
+  <string id="53803">Kuvat</string>
+  <string id="53804">Urheilu</string>
+  <string id="53805">Aikuinen</string>
+  <string id="53820">Vianmääritys</string>
+  <string id="53821">Testaa sovellus [COLOR green]%s[/COLOR] voidaan poistaa vain manuaalisesti</string>
+  <string id="53822">Poista [COLOR green]%s[/COLOR] suosikkisovelluksista?</string>
+  <string id="53823">[COLOR green]%s[/COLOR] poistaminen epäonnistui</string>
+  <string id="53824">Sovellus lisättiin suosikkeihin</string>
+  <string id="53825">Suosikki</string>
+  <string id="53826">Kaikki</string>
+  <string id="53827">Luokat</string>
+
+  <string id="53830">Omat sovellukset</string>
+  <string id="53831">Sovelluskirjasto</string>
+  <string id="53832">Ulkoiset sovellukset</string>
+
+  <string id="53840">Ladataan viimeisin %s sovellus. Odota...</string>
+  <string id="53841">Virhe sovellusta ladattaessa</string>
+  <string id="53842">Asennetaan sovellusta...</string>
+  <string id="53843">Virhe sovellusta asennettaessa</string>
+  <string id="53844">Sovelluksen asennus onnistui</string>
+  <string id="53845">Vahvistetaan %s allekirjoitusta...</string> 
+  <string id="53846">%s allekirjoituksen vahvistus onnistui</string>
+  <string id="53847">%s allekirjoitus vahvistettu</string>
+  <string id="53848">Ladataan Odota...</string>
+
+ <!-- Home Window-->
+  <string id="53900">Näytä kaikki</string>                    <!-- All Queue label -->
+  <string id="53905">Näytä kaikki</string>                    <!-- All Recommend label -->
+
+  <string id="53910">Myöhemmin</string>  				  <!-- Home Screen Buttons -->
+  <string id="53911">Ystävät</string>
+  <string id="53912">TV-ohjelmat</string>
+  <string id="53913">Elokuvat</string>
+  <string id="53914">Sovellusta</string>
+  <string id="53915">Tiedostot</string>
+  <string id="53916">Netti</string>
+  <string id="53917">Katso [CR] myöhemmin</string>
+  <string id="53920">Elokuvat</string>
+  <string id="53921">Ohjelmat</string>
+
+  <!-- search -->
+  <string id="53950">3</string>                    <!-- search result highlight color [0-none 1-green, 2-red, 3-yellow] -->
+  <string id="53951">Hakutulokset:</string>
+  <string id="53952">Haku:</string>
+  <string id="53953">katsottu</string>
+  <string id="53957">[B][COLOR orange]Hae netistä: &quot;%s&quot;[/COLOR][/B]</string>
+
+  <!-- share -->
+  <string id="54000">JAA</string>
+  <string id="54001">Jakaminen in välittämistä.[CR]Syötä viesti</string>   
+    
+  <!-- browse menu -->
+  <string id="54010">Etsi</string>
+  <string id="54011">Nimi tai salasana</string>
+  <string id="54012">Näytä minulle</string>
+  <string id="54013">Lajittele</string>
+  <string id="54014">Suodattimet</string>
+  <string id="54015">Näkymä</string>
+  <string id="54016">Pienoiskuvakkeet</string>
+  <string id="54017">Lista</string>
+  <string id="54018">Extrat</string>
+  <string id="54019">Kommenttivarastot</string>
+  <string id="54020">Ladataan</string>
+  <string id="54021">Ystävät</string>
+  <string id="54022">Viimeksi toistetut</string>
+  <string id="54023">Tiedostoselain</string>
+  <string id="54024">Lisää mediasijainti</string>
+  <string id="54025">Etsi mediaa</string>
+  <string id="54026">Omat elokuvat</string>
+  <string id="54027">Etsi sijainteja</string>
+  <string id="54028">Etsi mediakansioita</string>
+  <string id="54029">Vapaana vain</string>
+  <string id="54030">Vain katsomattomat</string>
+  <string id="54031">Oma musiikki</string>
+  <string id="54032">Vain katsomattomat</string>
+  <string id="54033">Omat sovellukset</string>
+  <string id="54034">Sovelluskirjasto</string>
+  <string id="54035">Julkaistut</string>
+  <string id="54036">Jaa</string>
+  <string id="54037">Omat kuvat</string>
+  <string id="54038">Myöhemmin</string>
+  <string id="54039">Omat TV-ohjelmat</string>
+  <string id="54040">TV-ohjelmakirjasto</string>
+  <string id="54041">Tuottaja</string>
+  <string id="54042">Pääosissa</string>
+  <string id="54043">Julkaisuvuosi</string>
+  <string id="54044">Lähetyspäivä</string>
+  <string id="54045">Ohjaaja</string>
+  <string id="54046">TOTEUTTAJA</string>
+  <string id="54047">Parhaillaan[CR]toistaa</string>
+  <string id="54048">Sovellusta</string>
+  <string id="54049">Takaisin</string>
+  <string id="54050">Suositeltu sijainti</string>
+  <string id="54051">Muut sijainnit</string>
+  <string id="54052">Jakaminen</string>
+  <string id="54053">Kappalelista</string>
+  <string id="54054">Juuri lopetettu</string>
+  <string id="54055">Mitä seuraavaksi?</string>
+  <string id="54056">Toista seuraavaksi</string>
+  <string id="54057">Poista[CR]jonosta</string>
+  <string id="54058">Siirry</string>
+  <string id="54059">Kohteet</string>
+  <string id="54060">Sammutus</string>
+  <string id="54061">Kirjaudu ulos</string>
+  <string id="54062">Lepo</string>
+  <string id="54063">Esittely</string>
+  <string id="54064">Hallitse sijainteja</string>
+  <string id="54065">Etsii parhaillaan</string>
+  <string id="54066">Paikalliset tiedostot</string>
+  <string id="54067">Löydetty %d tiedostoa</string>
+  <string id="54068">Niitä tunnistetaan nyt</string>
+  <string id="54069">%d tiedostoa löydetty[CR] ja tunnistettu</string>
+
+  <string id="54070">Pois</string>
+  <string id="54071">Lisänäppäimistö 1</string>
+  <string id="54072">Lisänäppäimistö 2</string>
+  <string id="54073">Lisänäppäimistö 3</string>
+
+  <string id="54074">Esti sovelluksia</string>
+
+  <string id="54075">Kanavat</string>
+
+  <string id="54076">Julkaistu </string>
+  <string id="54077">Arvosana </string>
+
+  <string id="54083">Ota käyttöön Curl-kirjaus</string>
+  <string id="54084">- järjestelmätiedoston osoite</string>
+  <string id="54085">Ota käyttöön raportointi järjestelmätiedostoon</string>
+
+  <string id="54103">Boxee hakee musiikkikansiota tietokoneeltasi. Saattaa kestää hetken, ennen kuin se tulee esiin.[CR]Tällä välin voit:</string>
+  <string id="54104">2. Kokeilla Boxeen Internet-musiikkisovelluksia</string>
+  <string id="54105">Boxee hakee TV-ohjelmia tietokoneeltasi. Saattaa kestää hetken, ennen kuin TV-ohjelmat tulevat esiin.[CR]Tällä välin voit:</string>
+  <string id="54106">1. Selata TV-ohjelmakirjastoa</string>
+  <string id="54107">Hakea muista kansioista tietokoneelta tai verkosta</string>
+  <string id="54108">Tiedotus! Muistitikun lisäosaa ei löydy</string>
+  <string id="54109">Huomaa, että suurin osa[CR]verkkosisällöstä vaatii muistitikun lisäosan.[CR]Voit korjata tämä käymällä osoitteessa [COLOR yellow][B]http://www.boxee.tv/flash[/B][/COLOR] </string>
+  <string id="54110">Boxee havaitsi, että sinulla on alle 128Mt videomuistia.[CR]Boxeen käyttämisessä voi olla ongelmia.</string>
+  <string id="54111">Järj.lokin kohdepalvelimen osoite ei kelpaa.</string>
+
+  <string id="54120">AC3-yhteensopiva plus-vastaanotin</string>
+  <string id="54121">AC3-yhteensopiva vastaanotin</string>
+  <string id="54122">DTS-yhteensopiva vastaanotin</string>
+  <string id="54123">Digitaalinen (HDMI)</string>
+  <string id="54124">- LPCM 7.1 yhteensopiva vastaanotin</string>
+  <string id="54150">Varoitus: kun vastaanottajasi ilmaisee, että se ei saa tukea Dolby Digital -bittivirtauksesta</string>
+  <string id="54151">Varoitus: kun vastaanottajasi ilmaisee, että se ei saa tukea Dolby Digital Plus -bittivirtauksesta</string>
+  <string id="54152">Varoitus: kun vastaanottajasi ilmaisee, että se ei saa tukea Dolby TrueHD -bittivirtauksesta</string>
+  <string id="54153">Varoitus: kun vastaanottajasi ilmaisee, että se ei saa tukea DTS-bittivirtauksesta</string>
+  <string id="54154">Varoitus: kun vastaanottajasi ilmaisee, että se ei saa tukea DTS-HD-bittivirtauksesta</string>
+  <string id="54155">Kaikki ulostulot</string>
+  <string id="54156">Säädä äänenvoimakkuutta toiston aikana (jos mahdollista)</string>
+
+  <string id="54158">Automaattinen</string>
+  <string id="54159">Pois</string>
+  <string id="54160">Päällä</string>
+  <string id="54161">Dolby TrueHD DRC prosentti</string><!-- translate only percentage -->
+  <string id="54165">Ota käyttöön toiston viive</string>
+
+  <!-- media source info -->
+  <string id="54200">OK</string>
+  <string id="54201">Lisää</string>
+  <string id="54202">Lisää tämä hakemisto</string>
+
+  <!-- boxee browse screen panel part II -->
+  <string id="54250">Viimeksi käytetyt</string>
+  
+  <!-- time formats -->
+  <string id="54500">12 h</string>
+  <string id="54501">24 h</string>
+  <string id="54502">h:mm:ss xx</string>
+  <string id="54503">h:mm:ss xx</string>
+
+  <!-- first time use -->
+  <string id="54550">Valitse verkko luettelosta tai liity toiseen verkkoon.</string>
+  <string id="54551">Liity verkkoon</string>
+  <string id="54552">Tarvitsemme salasanan, jotta yhteys voidaan muodostaa.</string>
+  <string id="54553">Liity toiseen verkkoon</string>
+  <string id="54554">Tarvitsemme sen verkon nimen, johon haluat liittyä.</string>
+  <string id="54555">Kaikkia verkkoa ei luotu tasa-arvoisiksi, joten meidän täytyy tietää, minkä tyyppistä suojausta se käyttää.</string>
+  <string id="54556">Oho, ammattilainen! Sinä tiedät, mitä tarvitsemme sinulta. Jos et, kysy fiksuilta kavereiltasi.</string>
+  <string id="54558">Boxee-päivitys saatavilla</string>
+  <string id="54559">Nyt kun yhteys internetiin on luotu, varmistetaan, että sinulla on Boxee-ohjelmiston uusin versio.</string>
+  <string id="54560">Onnistui!</string>
+  <string id="54561">Boxee on muodostanut yhteyden internetiin. Nyt voit pitää hauskaa.</string>
+  <string id="54576">Boxee on nyt yhdistetty Internetiin.[CR][CR]Nyt kun Internetiin on yhteys, varmistetaan, että sinulla on Boxeen uusin versio.</string>
+  <string id="54577">Yhteys muodostettu</string>
+  <string id="54578">Versiotiedot</string>
+  <string id="54579">Hmm, emme pysty muodostamaan yhteyttä reitittimeen. Kokeile verkkoasetusten syöttämistä manuaalisesti.</string>
+  <string id="54580">Hmm, reitittimen Internet ei toimi. Tarkista yhteys kokeilemalla yhteyden muodostamista tietokoneesi kautta.</string>
+  <string id="54581">Boxee pystyi muodostamaan yhteyden verkkoosi mutta ei pysty muodostamaan Internet-yhteyttä.</string>
+  <string id="54582">Virheellinen salasana, yritä uudelleen.</string>
+  <string id="54583">Verkkosuojaus</string>
+  <string id="54584">Anna verkon nimi</string>
+  <string id="54585">Valitse langaton verkko</string>
+  <string id="54586">Boxee muodostaa yhteyden langattomaan verkkoon</string>
+  <string id="54587">Boxee on yhdistetty reitittimeen Ethernet-kaapelilla</string>
+  <string id="54588">Boxee tarvitsee Internet-yhteyden, jotta asetus voidaan tehdä.</string>
+  <string id="54592">Säädä näyttö</string>
+  <string id="54590">Kohdista nyt [B][COLOR blue]nuoli 2[/COLOR][/B] näytön oikean alakulman kanssa.[CR][CR]Kun olet valmis, paina [B][COLOR boxeegreenheidi]keski[/COLOR][/B]painiketta.</string>
+  <string id="54591">Kohdista [B][COLOR blue]nuoli 1[/COLOR][/B] näytön vasemman yläkulman kanssa kaukosäätimen suuntapainikkeen avulla.[CR][CR]Kun olet valmis, paina [B][COLOR boxeegreenheidi]keski[/COLOR][/B]painiketta.</string>
+  <string id="54592">Näytön säätäminen</string>
+  <string id="54593">Näetkö [B][UPPERCASE][COLOR boxeegreenheidi]vihreän[/COLOR][/UPPERCASE][/B] reunan näytön ympärillä?</string>
+  <string id="54594">Näytön tarkastaminen</string>
+  <string id="54595">Valitse TV:n tarkkuus</string>
+  <string id="54596">Valitse TV:n tarkkuus, jotta voit varmistaa, että Boxee tarjoaa parhaan mahdollisen kuvan.</string>
+  <string id="54597">Näytön asetus</string>
+  <string id="54598">[B][UPPERCASE]Tervetuloa[/UPPERCASE] [/B]</string>
+  <string id="54599">Liity</string>
+  <string id="54600">Kieli</string>
+  <string id="54601">Valitse liittymäkieli:</string>
+  <string id="54605">Näyttääkö hyvältä?</string>
+  <string id="54610">Tervetuloa</string>
+  <string id="54611">Hetken päästä voit toistaa tuhansia elokuvia, ohjelmia ja videoleikkeitä Internetistä ja kotiverkostasi.[CR][CR]Paina kaukosäätimesi [UPPERCASE][COLOR boxeegreenheidi][B]keskipainiketta[/UPPERCASE][/COLOR][/B] ja voit aloittaa.</string>
+  <string id="54612">Aloita</string>
+  <string id="54615">[ISOT KIRJAIMET]Kieli[/ISOT KIRJAIMET]</string>
+  <string id="54616">Valitse kieli</string>
+  <string id="54617">Kielen asetus ei onnistu</string>
+  <string id="54618">[COLOR green]%s[/COLOR] salasana</string>
+  <string id="54619">Verkko vaatii salasanan</string>  
+  <string id="54620">Tarkkuus</string>
+  <string id="54621">Valitse näytön tarkkuus:</string>
+  <string id="54622">Näetkö näytön oikein?</string>
+  <string id="54623">Sinun täytyy valita tarkkuus</string>
+  <string id="54624">Boxee näyttää parhaimmalta, kun ruudun koko on oikea. Helppoa:</string>
+  <string id="54625">Linjaa nuoli #1 ruudun vasempaa yläosaan kauko-ohjaimella.</string>  
+  <string id="54626">Piana kauko-ohjaimella Valitse, kun tämä on hyvä.</string>
+  <string id="54627">Toista oikealla alhaalla nuolen #2 kanssa.</string>
+  <string id="54628">Näyttää hyvältä!</string>  
+  <string id="54629">[ISOT KIRJAIMET]Tarkkuus[/ISOT KIRJAIMET]</string>
+  <string id="54630">Ääniasetukset</string>
+  <string id="54631">Valitse äänilähtö</string>
+  <string id="54632">HDMI</string>
+  <string id="54633">Valinnainen</string>
+  <string id="54634">Analoginen stereo</string>
+  <string id="54635">Yhdistäminen verkkoon onnistui</string>
+  <string id="54636">Yhdistäminen langattomaan verkkoon onnistui</string>
+  <string id="54637">Ethernet-kaapelia ei ole kytketty.</string>
+  <string id="54638">Ethernet-kaapeli on kytketty, mutta internet-yhteyttä ei voi muodostaa.</string>
+  <string id="54639">Langattoman verkon konfigurointi epäonnistui.</string>
+  <string id="54640">Yritä uudelleen</string>
+ 
+  <string id="54641">Voiko vastaanottimesi toistaa Dolby Digital - ja DTS-bittiä?</string>
+  <string id="54642">Kyllä</string>
+  <string id="54643">Ei</string>
+  <string id="54644">En ole varma</string>
+  <string id="54647">[ISOT KIRJAIMET]Ääniasetukset[/ISOT KIRJAIMET]</string>
+  <string id="54648">Valitse äänilähtö</string>
+  <string id="54649">Valitse Dolby Digital - ja DTS-asetus</string>
+  <string id="54650">[ISOT KIRJAIMET]Äänitesti[/ISOT KIRJAIMET]</string>
+  <string id="54651">Kuuluuko[CR]kaiuttimistasi nyt musiikkia?</string>
+  
+  <string id="54652">Vaihda Ethernetiin</string>
+  
+  <string id="54653">Annettu IP-osoite ei kelpaa</string>
+  
+  <string id="54654">Vahvistetaan...</string>
+  <string id="54655">Seuraava</string>
+  <string id="54656">Latauksen päivitys epäonnistui.</string>
+  <string id="54657">Latauksen päivitys onnistui.[CR]Laite täytyy käynnistää uudelleen.</string>
+  <string id="54658">Buuttaa</string>
+  <string id="54659">Käynnistetään uudelleen...</string>
+  
+  <string id="54660">Langallinen</string>
+  <string id="54661">Olet yhteydessä verkkoon[CR]Ethetnet-kaapelilla.</string>
+  <string id="54662">Kuinka haluat määrittää verkon[CR]?</string>
+  <string id="54663">Automaattisesti</string>
+  <string id="54664">Manuaalisesti</string>
+  <string id="54665">Vaihtaa langattomaan</string>
+  <string id="54667">Yhdistäminen Ethernetiin epäonnistui</string>
+  <string id="54668">Sinun täytyy valita asetus</string>
+  <string id="54669">[ISOT KIRJAIMET]Langallinen[/ISOT KIRJAIMET]</string>
+  <string id="54670">Langaton</string>
+  <string id="54671">Valitse langallinen verkko, johon liittyä</string>
+  <string id="54672">Sinun on valittava langallinen verkko</string>
+  <string id="54673">tai</string>
+  <string id="54674">Muuverkko</string>
+  <string id="54675">Lisätiedot</string>
+  <string id="54676">Langattomia verkkoja ei löydy</string>
+  <string id="54677">Haetaan verkkoja...</string>
+  <string id="54678">Yhdistäminen langattomaan verkkoon epäonnistui</string>
+  <string id="54679">[ISOT KIRJAIMET]langatonkko[/ISOT KIRJAIMET]</string>
+  <string id="54680">Verkon asetus</string>
+  <string id="54681">IP-osoite</string>
+  <string id="54682">Verkkopeite</string>
+  <string id="54683">Oletusyhdyskäytävä</string>
+  <string id="54684">DNS-palvelin</string>
+  <string id="54685">HTTP-välityspalvelin</string>
+  <string id="54686">Langattomant verkot</string>
+  <string id="54687">Langattoman verkon salasana</string>
+  <string id="54688">Langattoman verkon suojaus</string>
+  <string id="54689">Vahvista</string>
+  <string id="54690">[COLOR green]%s[/COLOR] vaatii salasanan.</string>
+  <string id="54691">Näytä salasana</string>
+  <string id="54692">Aloita</string>
+  <string id="54693">Sen jälkeen kun sinun Boxisi valmistui, uusi Boxee-ohjelmisto on tullut markkinoille.[CR]Päivitetäänpä!</string>
+  <string id="54694">Valitse langattoman verkon suojaus</string>
+  <string id="54695">Ohjattu toiminto</string>
+  <string id="54696">Ethernet-kaapeli on kytketty, mutta Internet-yhteyden luominen ei onnistunut.</string>
+  <string id="54697">Yhteys langattomaan verkkoon luotiin, mutta Internet-yhteyden luominen ei onnistunut.</string>
+  <string id="54698">Yritä uudelleen</string>
+  <string id="54699">Vaihtaa langattomaan</string>
+
+  <!-- Settings for BoxeeBox -->
+  <string id="54700">SMB-palvelin</string>
+  <string id="54702">Ota käyttöön Windows-tiedoston jakaminen</string>
+  <string id="54703">- Jaa salasana (käyttäjänimi: vieras)</string>
+  <string id="54704">- Jaa työryhmä</string>
+  <string id="54705">- Isäntänimi</string>
+  <string id="54720">Aikavyöhyke</string>
+  <string id="54722">Aikavyöhyke maa</string>
+  <string id="54723">Aikavyöhyke kapunki</string>
+  <string id="54724">WiFi MAC-osoite</string>
+  <string id="54725">Ethernet MAC-osoite</string>
+  <string id="54726">Laite</string>
+  <string id="54727">Laitteen sarjanumero</string>
+  <string id="54728">Laitteistoversio</string>
+
+  <string id="54729">Vaihda Ethernetiin</string>
+  <string id="54730">Säädä asetuksia...</string>
+  <string id="54731">Ladataan nyt</string>
+  <string id="54732">%d minuuttia jäljellä</string>
+  <string id="54733">alle minuutti jäljellä</string>
+  <string id="54734">Päivitys alkaa nyt, jonka aikana[CR]Box käynnistyy uudelleen useita kertoja.</string>
+  <string id="54735">Lasketaan...</string>
+
+  <string id="54736">VPN</string>
+  <string id="54737">Yhteyden tyyppi</string>
+  <string id="54738">PPTP</string>
+  <string id="54739">Palvelin</string>
+  <string id="54740">Tili</string>
+  <string id="54741">Salasana</string>
+  <string id="54742">Salaus vaaditaan</string>
+  <string id="54743">Yhdistetään...</string>
+  <string id="54744">Yhteys katkaistaan...</string>
+  <string id="54745">%s</string>
+  <string id="54746">Yhdistetään VPN:ään...</string>
+  <string id="54747">Yhteys katkaistaan VPN:stä?</string>
+  <string id="54748">Yhteys VPN:ään epäonnistui.</string>
+  <string id="54749">Kaukosäätimen patteri on lähes tyhjä.</string>
+  
+  <string id="54750">Käynnistä verkon asetusten ohjattu toiminto...</string>
+  <string id="54751">Lisätiedot</string>
+  
+  <string id="54752">Poista laite</string>
+  <string id="54753">Ota käyttöön videon suoratoisto iOS-laitteista</string>
+  <string id="54754">Salli paikallisverkon Boxee-kontrolli</string>
+  
+  <string id="54755">Päällä</string>  
+  <string id="54758">Mukauta Boxee</string>  
+
+  <string id="54765">Vaaditaan uudelleenkäynnistys, jotta asetukset astuvat voimaan.[CR]Haluatko käynnistää nyt?</string>
+  
+  <string id="54770">Oletko varma, että haluat poistua videosta? Saatat menettää edistymisesi.</string>  
+  <string id="54771">Älä näytä tätä viestiä uudelleen.</string>
+  <string id="54772">Varoita minua ennen kuin video suljetaan.</string>  
+  <string id="54775">Jää</string>  
+  <string id="54776">Poistu</string>  
+  <string id="54777">Siirry hakuun</string>  
+  <string id="54778">Poista Adobe Flash jaetut objektit</string>
+  <string id="54779">Poistaakko Adobe Flash jaetut objektit?</string>
+
+  <!-- Settings -->
+  <string id="54800">[B]Aikuinen[/B]</string>
+  <string id="54801">Sosiaalinen</string>
+  <string id="54802">Musiikki</string>
+  <string id="54803">[B]Järjestelmä[/B]</string>
+  <string id="54804">[B]Media[/B]</string>
+  <string id="54805">[B]Verkko[/B]</string>
+  <string id="54806">[B]Yleistä[/B]</string>
+  <string id="54807">Lisätiedot</string>
+  <string id="54808">Laitteet</string>
+  <string id="54809">Vanhemmat</string>
+
+  <!-- Charsets -->
+  <string id="54810">Arabia</string>
+  <string id="54811">Baltialainen</string>
+  <string id="54812">Keski-Euroopan</string>
+  <string id="54813">Yksinkertaistettu kiina (GBK)</string>
+  <string id="54814">Perinteinen kiina (Big5)</string>
+  <string id="54815">Kyrillinen</string>
+  <string id="54816">Kreikka</string>
+  <string id="54817">Hebrea</string>
+  <string id="54818">Kantoninkiina (Big5 HKSCS)</string>
+  <string id="54819">Japani (Shift JIS)</string>
+  <string id="54820">Korea</string>
+  <string id="54821">Thai</string>
+  <string id="54822">Turkki</string>
+  <string id="54823">Vietnam</string>
+  <string id="54824">Länsi-Euroopan</string>
+  <string id="54825">Unicode (UTF-8)</string>
+
+  <string id="54830">Valikko</string>
+  <string id="54831">Ohjelmien oletusnäkymä</string>
+  <string id="54832">Elokuvien oletusnäkymä</string>
+  <string id="54833">Sovellusten oletusnäkymä</string>
+  <string id="54834">Suosikit</string>
+  <string id="54835">Tiedostot</string>
+  <string id="54836">Kaikki</string>
+
+  <!-- Test bad pixels -->
+  <string id="54850">Tarkista viallisten pikseleiden osalta...</string>
+  <string id="54851">Viallisten pikseleiden tarkistus</string>
+  <string id="54852">Valitse värinäyttö:</string>
+  <string id="54855">Punainen</string>
+  <string id="54856">Vihreä</string>
+  <string id="54857">Sininen</string>
+  <string id="54858">Valkoinen</string>
+  <string id="54859">Musta</string>
+  <string id="54860">Kierrätä värejä...</string>
+  <string id="54865">Kaukosäätimen yläpainikkeen käyttö</string>
+  <string id="54868">Toista/Keskeytä </string>
+
+  <!-- Black level -->
+  <string id="54870">Musta taso</string>
+  <string id="54871">PC [0..255]</string>
+  <string id="54872">VIDEO [16..235]</string>
+  
+  <!-- 3D mode -->
+  <string id="54880">- Tällä hetkellä aktiivinen 3D-tila</string>
+  <string id="54881">Pois</string>
+  <string id="54882">Sivu/Sivu</string>
+  <string id="54883">Ylä/Ala</string>
+  <string id="54884">3D-kehyksen kanssa yhteensopiva (Sivu/Sivu tai Ylä/Ala) TV</string>
+
+  <!-- Services -->
+  <string id="54885">Tyhjennä Netflix-tiedot...</string>
+  <string id="54886">VUDU:n aktivoinnin poisto...</string>
+  <string id="54887">Palvelut</string>
+  <string id="54888">Ei määritettäviä palveluita</string>
+  <string id="54889">Tyhjennetäänkö palvelutiedot?</string>
+  <string id="54890">Netflix-laitteen ESN</string>
+  
+  <!-- Browser -->
+  <!-- more on browser at the bottom of this file -->
+  <string id="54893">Emme löytäneet sivua, jota etsit.</string>
+  <string id="54894">Tyhjä suosikki</string>
+  <string id="54895">Tyhjennä evästeet…</string>
+  <string id="54896">Tyhjennä välimuisti…</string>
+  <string id="54897">Selain</string>
+  <string id="54898">Tyhjennä selaimen evästeet?</string>
+  <string id="54899">Tyhjennä selaimen välimuisti?</string>
+  
+  
+  <!-- Ready to watch dropdown -->
+  <string id="54900">Valmis katsomaan</string>
+  <string id="54901">Kaikki</string>
+  <string id="54902">Suosikit</string>
+  <string id="54903">Paikallinen</string>
+  <string id="54904">Tilaukset</string>
+  
+   <!-- Movie Store dropdown -->
+  <string id="54910">Elokuvakauppa</string>
+  <string id="54911">Kaikki</string>
+  
+  <!-- Shows Store dropdown -->
+  <string id="54920">Ohjelmakauppa</string>
+  <string id="54921">Kaikki</string>
+  <string id="54922">Sovelluskauppa</string>
+  
+  <string id="55000">Näytetään</string>
+  <string id="55001">nimet</string>
+  <string id="55002">minuuttia</string>
+  <string id="55003">jaetut videot</string>
+  <string id="55004">videot</string>
+  <string id="55005">Nimikkeitä ei löytynyt</string>
+
+  <!-- payment -->
+  <string id="55100">Osta</string>
+  <string id="55101">[COLOR green]%s[/COLOR] on käytettävissä[CR]näiden pakettien osana kohteesta %s:</string>
+  <string id="55102">Lisätietoja napsauttamalla tästä</string>
+  <string id="55105">Tietojen haku palvelimelta epäonnistui.</string>  
+  <string id="55110">Takaisin</string>  
+  <string id="55111">Paketti</string>
+  <string id="55120">Hyväksytkö ehdot?</string>
+  <string id="55121">Sinua veloitetaan %s per %s. Voit peruuttaa[CR]milloin tahansa hallitsemalla tilaustasi verkkosivustoltallamme osoitteessa[CR]www.boxee.tv</string>
+  <string id="55122">Olen lukenut määräykset ja ehdot.</string>
+  <string id="55123">Määräykset ja ehdot</string>
+  <string id="55124">Sinun täytyy hyväksyä määräykset ja ehdot, ennen kuin voit jatkaa.</string>
+  <string id="55125">Hyväksy</string>  
+  <string id="55126">Kiellä</string>
+  <string id="55130">Anna Boxee-salasana</string>
+  <string id="55131">Salasana</string>
+  <string id="55132">Boxee-salasana on tyhjä.</string>
+  <string id="55133">Näytä salasana</string>
+  <string id="55134">Jatka</string>
+  <string id="55135">Ostoprosessin suorittaminen epäonnistui.</string>    
+  <string id="55140">Boxeella ei ole maksutietojasi.</string>
+  <string id="55141">Odotetaan...</string>
+  <string id="55142">Teen tämän myöhemmin</string>  
+  <string id="55143">Boxee lähetti linkin kohteeseen %s tämän liiketoimen suorittamiseksi verkossa.</string>
+  <string id="55160">OK, kaikki valmista!</string>
+  <string id="55161">Katso nyt</string>
+  <string id="55195">Toiminnon suorittaminen ei onnistu</string>
+  <string id="55196">Internet-yhteyttä ei ole.[CR]Boxee on offline.</string>
+  <string id="55197">Internet-yhteys palautettu.[CR]Boxee on verkossa.</string>
+  <string id="55198">Internetiin ei ole yhteyttä</string>
+
+  <string id="55200">Pikavinkki</string>
+  <string id="55201">Siirry taaksepäin napsauttamalla "Valikko"-painiketta ja käynnistä Boxee-valikko.</string>
+  <string id="55202">Sulje tämä ikkuna painamalla sitä nyt.</string>
+  <string id="55203">MENU (Valikko) -painiketta voidaan käyttää taaksepäin navigointiin ja myös käynnistämään Boxee-valikko.[CR][CR][B][COLOR blue]Paina sitä nyt ja sulje tämä ikkuna. Paina sitä uudelleen ja käynnistä Boxee-valikko.[/COLOR][/B]</string>
+  <string id="55210">Boxee on AirPlay-yhteensopiva![CR]Voit nyt siirtää videoita ja musiikkia iPhonelta tai iPadistä Boxee-laitteeseen ja nauttia niistä kaikkien kanssa.</string>
+
+
+  <!-- Playback Settings -->
+  <string id="55300">Valitse tekstitys</string>
+  <string id="55301">Tekstitys…</string>
+  <string id="55302">Valitse äänivirta</string>
+  <string id="55303">Äänivirta…</string>
+  <string id="55304">Valitse tekstityksen merkistö</string>
+  <string id="55305">Merkistö...</string>
+
+  <!-- Browser -->
+  <string id="55400">Anna URL tai hakutermi</string>
+  <string id="55401">Jätä haku</string>  
+  <string id="55402">Saat vaihtoehdot napsauttamalla "Valikko"</string>
+  <string id="55403">Selain</string>
+  <string id="55404">Haluatko varmasti poistua selaimesta?</string>
+  <string id="55405">Palaa</string>
+  <string id="55406">Lopeta</string>
+  <string id="55407">Haluatko varmasti poistaa</string>
+  <string id="55408">Lisää suosikkeja</string>
+  <string id="55409">Sinulla voi olla vain 12 suosikkia boxeessasi.</string>
+  <string id="55410">Poista suosikki ennen uuden avaamista.</string>
+  <string id="55411">Suosikin poistaminen epäonnistui.</string>
+  <string id="55412">Haluatko varmasti poistua tästä sovelluksesta?</string>
+  <string id="55414">Oho!</string>
+
+  <string id="55416">Ponnahdusvalikon säätö</string>
+  <string id="55417">Sivusto pyysi avaamaan: &apos;%s&apos;</string>
+  <string id="55418">Salli</string>
+  <string id="55419">Älä salli</string>
+
+  <!-- Settings for pairing -->
+  <string id="55500">Salasana</string>
+  <string id="55501">Syötä yllä oleva salasana kohtaan '%s' yhdistääksesi tämän laitteen Boxeen kanssa</string>
+  <string id="55502">[COLOR red]Syötetty salasana oli virheellinen.[CR]Yritä uudestaan.[/COLOR]</string>
+  <string id="55503">[COLOR green]Onnistui![CR]Laite on lisätty Yhdistettyihin laitteisiisi.[/COLOR]</string>
+  <string id="55510">Yhdistetyt laitteet</string>
+  <string id="55511">Laitteet</string>
+  <string id="55512">Poista</string>  
+  <string id="55515">Haluatko varmasti irrottaa laitteen?[CR]Sinun tulee varmentaa '%s' uudestaan, jos haluat käyttää sitä tämän Boxeen kanssa uudestaan.</string>
+  <string id="55516">Laitteen '%s' irrottaminen epäonnistui</string>
+  <string id="55520">Boxeen ei ole tällä hetkellä yhdistetty laitteita…</string>
+
+  <!-- Login Wizard -->
+  <string id="55610">Pääset alkuun Boxeen kanssa luomalla uuden tilin tai kirjautumalla jo olemassa olevaan Boxee-tiliin.</string>
+  <string id="55615">Kirjaudu sisään Boxee-tiliisi</string>
+  <string id="55620">Sähköposti</string>
+  <string id="55621">Virheelliset merkit</string>
+  <string id="55625">Yhdistä Boxee-palveluun Facebookin kautta luodaksesi nopeasti uuden tilin ja saadaksesi  videosuosituksia ystäviltäsi  automaatisesti lähetettynä TV:seesi. Täytä muutoin kirjautumiskentät ja valitse Seuraava.</string>
+  <string id="55630">Sukupuoli</string>
+  <string id="55631">Syntymäpäivä</string>
+  <string id="55632">Lähetä</string>
+  <string id="55635">Valitse sukupuoli</string>
+  <string id="55636">Mies</string>
+  <string id="55637">Nainen</string>
+  <string id="55638">En halua kertoa…</string>
+  <string id="55645">Lisätiedot</string>
+  <string id="55646">Olet melkein valmis. Nämä jutut auttavat meitä ymmärtämään sinua paremmin. Tämän sanottuamme, me pidämme ne turvassa emmekä jaa niitä.</string>
+  <string id="55650">Sukupuoli</string>
+  <string id="55651">Vuosi</string>
+  <string id="55652">Kuukausi</string>
+  <string id="55653">Päivä</string>
+  <string id="55660">Lakijuttuja… [CR] Tylsääää</string>
+  <string id="55661">Viimeistelläksesi Boxee-tilisi asetukset hyväksy Käyttöehtomme ja yksityisyyssuojamme.</string>
+  <string id="55670">Tee Boxeesta sosiaalinen</string>
+  <string id="55671">Saat videosuosituksia ystäviltäsi lähetettynä suoraan TV:seesi, etkä koskaan missaa uusimpia internetvideoita ja voit jakaa suosikkisi!</string>
+  <string id="55672">Kaikki kentät täytyy täyttää, jotta voit jatkaa.</string>
+  <string id="55673">Sinun täytyy olla vähintään 13-vuotias, jotta voit luoda Boxee-tilin. Odotamme sinua!</string>
+  <string id="55690">Poista tili</string>
+  <string id="55691">Oletko varma, että haluat poistaa [COLOR white]%s[/COLOR tältä laitteelta? [CR][CR] Huom: Tämä ei poista tiliäsi. Voit lisätä sen takaisin koska tahansa.</string>
+
+  <string id="55695">Hienosäädä Boxeesi</string>
+  <string id="55696">Kerro Boxeelle, mitä aiot katsoa eniten, ja me mukautamme kokemuksesi näyttämällä ne videot TV-ohjelmat ja elokuvat -kirjastossa.[CR][CR]Huom: Voit aina muuttaa tätä asetusta myöhemmin Asetukset-valikossa.</string>
+  <string id="55699">Aloita Boxeen käyttö</string>
+
+  <!-- Empty Browse Screens -->
+  <string id="56000">Katso myöhemmin -listasi on tyhjä</string>
+  <string id="56001">Uudet TV-episodit, jotka merkitsit suosikiksi, ilmestyvät tähän. Voit myös lisätä kaikki videot manuaalisesti napsauttamalla sen Katso myöhemmin -kuvaketta.</string>
+  <string id="56002">Voit myös lisätä videot verkosta. Katso ohjeet osoitteesta [COLOR yellow]http://www.boxee.tv/watchlater[/COLOR].</string>
+  <string id="56003">Lisää ystäviä.</string>
+  <string id="56004">Voit katsoa ystäviesi jakamia videoita Facebookissa ja Twitterissä. [CR]Aktivoi tämä ominaisuus yhdistämällä Facebook- ja Twitter-tilit Boxeehen.</string>
+  <string id="56005">Lisää suosikkisovellus</string>
+  <string id="56006">Lisää suosikkeihin napsauttamalla suosikkikuvaketta, ennen kuin käynnistät sovelluksen.</string>
+  <string id="56007">Näytettävää historiaa ei vielä ole.</string>
+  <string id="56008">Toistettavat kohteet näkyvät tässä listassa, jotta ne on helppo löytää, kun haluat toistaa ne myöhemmin uudelleen.</string>
+  <string id="56009">Eipaikallisiakuvia</string>
+  <string id="56010">Voit katsoa kuvia Boxeessa lisäämällä kansion kiintolevyltä tai verkkolähteestä.</string>
+  <string id="56011">Hae kuvasovelluksia</string>
+  <string id="56012">Lisää suosikkiohjelma</string>
+  <string id="56013">Lisää ohjelma suosikkeihin napsauttamalla suosikkikuvaketta sellaisen ohjelman episodiruudulla, josta pidät.</string>
+  <string id="56014">Eipaikallistamusiikkia</string>
+  <string id="56015">Kuuntele musiikkia Boxeessa lisäämällä kansio[CR] kiintolevyltä tai verkkolähteestä.</string>
+  <string id="56016">tai</string>
+  <string id="56017">Etsi sijainteja</string>
+  <string id="56018">Etsi musiikkisovelluksia</string>
+  <string id="56019">Ei mitään nähtävää</string>
+  <string id="56020">Boxee ei löydä yhtään videoita tässä luokassa, joita voitaisiin toistaa alueellasi.</string>
+  <string id="56021">Ei vielä tiedostoja.</string>
+  <string id="56022">Voit käyttää paikallisia tiedostoja Boxeessa lisäämällä kansion kiintolevyltä tai verkkolähteestä.</string>
+  <string id="56023">Eipaikallistamediaa</string>
+  <string id="56024">Voit toistaa paikallisia mediaa Boxeessa lisäämällä kansion kiintolevyltä tai verkkolähteestä.</string>
+  <string id="56025">PS. Sijainnin koosta riippuen saattaa kestää jonkin aikaa etsiä koko Boxee.</string>
+  <string id="56026">Ei kommenttivarastoja vielä.</string>
+  <string id="56027">Kommenttivarastot ovat sovelluskirjastoja, jotka ovat saatavilla ulkopuolisilta. Niitä löytyy Internetistä hakemalla.</string>
+  <string id="56028">Lisää kommenttivarasto</string>
+  <string id="56029">Ei vielä määritetty paikallista mediaa.</string>
+  <string id="56030">Voit toistaa paikallisia mediaa Boxeessa lisäämällä kansion kiintolevyltä tai verkkolähteestä.</string>
+  <string id="56031">Kun olet valmis lisäämän yhden, lisää sen URL napsauttamalla painiketta alla.</string>
+  <string id="56032">Käy osoitteessa [COLOR yellow]www.boxee.tv/services[/COLOR]. </string>
+  <string id="56033">Boxee on Offline...</string>
+  <string id="56034">Sisältö, jonka haluat nähdä, ei ole saatavilla, koska Boxee ei ole kytkettynä Internetiin.</string>
+  <string id="56035">Verkon ohjattu toiminto</string>
+  <string id="56036">Katsottivia episodeja ei ole.</string>
+  <string id="56037">Ei suosikkeja.</string>
+  <string id="56038">Kommenttivarasto on tyhjä.</string>
+  <string id="56039">Tässä kommenttivarastossa ei ole parhaillaan sovelluksia saatavilla.</string>
+  <string id="56040">Tämänhetkiselle suodattimelle ei ole saatavissa elokuvia.</string>
+  <string id="56041">Trailereita ei ole saatavissa, kun Boxeeta ei ole yhdistetty Internetiin.</string>
+  <string id="56042">Boxee ei löydä trailereita toistettavaksi.</string>
+  <string id="56043">Tee toistolista elokuvista, ohjelmista ja web-videoista, joita voit katsella myöhemmin.[CR][CR]Tallenna videoita YouTubesta, Vimeosta ja useilta muilta sivustoilta käyttämällä Boxee Bookmarkletia.[CR][CR]Tee ohjelmasta suosikkisi tähtipainikkeella, jotta uudet jaksot lisätään automaattisesti jonoosi.</string>
+  <string id="56044">Lue lisää</string>
+  <string id="56046">Aloita</string>
+  <string id="56047">Upeaa!</string>
+  <string id="56048">Olemme lähettäneet osoitteeseen [COLOR green]%s[/COLOR] sähköpostin, joka sisältää ohjeet aloittamiseen.</string>
+  <string id="56049">Eipaikallisia lähteitä</string>
+  <string id="56050">Voit selata paikallisia lähteitä Boxeessa lisäämällä kansion kiintolevyltä tai verkkolähteestä.</string>
+
+  <string id="56051">Uudet TV-episodit, jotka merkitsit suosikiksi, ilmestyvät tähän. Voit myös lisätä kaikki videot manuaalisesti napsauttamalla sen Katso myöhemmin -kuvaketta.[CR]Voit myös lisätä videot verkosta. Katso ohjeet osoitteesta [COLOR yellow]http://www.boxee.tv/watchlater[/COLOR].</string>
+
+  <string id="56061">Ei paikallista mediaa...</string>
+  <string id="56062">Ei kohteita...</string>
+  <string id="56070">Ei lähteitä vielä...</string>
+  <string id="56071">Käytä videoita, musiikka tai kuvia tietokoneiltasi tai verkkoasemilta.[CR][CR]Lisää lähde selaamalla tiedostojasi ja navigoi hakemistoon, jossa mediasi on. Valitse sitten [COLOR boxeegreenheidi]+ -painike[/COLOR] näytön oikeasta yläkulmasta.</string>
+  <string id="56080">Haetaan videoita, joita olet jakanut ystäviesi kanssa...</string>
+  <string id="56081">Tämä voi joskus kestää jonkin aikaa, joten odota kärsivällisesti, kun Boxee tekee taikojaan.</string>
+  <string id="56085">Takaisin etusivulle</string>
+
+
+  <!-- queue/watch later screen -->
+  <string id="57000">Lisätty kohteesta </string>
+  <string id="57001">Verkko </string>
+  <string id="57002">Kirjasto </string>
+  <string id="57003">Tänään</string>
+  <string id="57004">päivä sitten</string>
+  <string id="57005">päivää sitten</string>
+  <string id="57006">Suosikkiohjelma</string>
+  <string id="57007">Eilen</string>
+  <string id="57008">Vanhempi</string>
+  <string id="57010">katsottavaksi myöhemmin</string>
+
+  <!-- history screen -->
+  <string id="57040">Katsotut </string> 
+  <string id="57041">Toistetut </string> 
+
+  <string id="57100">Langattoman verkon määritys ei onnistu.[CR]Tarkasta salasana ja yritä uudelleen.</string>
+  <string id="57101">Sivuston SSL-sertifikaattia ei voitu vahvistaa.</string>
+
+  <!-- short versions of months (string 21) -->
+  <string id="57121">Tam</string>
+  <string id="57122">Hel</string>
+  <string id="57123">Maa</string>
+  <string id="57124">Huh</string>
+  <string id="57125">toukokuu</string>
+  <string id="57126">Kes</string>
+  <string id="57127">Hei</string>
+  <string id="57128">Elo</string>
+  <string id="57129">Syy</string>
+  <string id="57130">Lok</string>
+  <string id="57131">Mar</string>
+  <string id="57132">Jou</string>
+
+  <!-- subtitles settings -->
+  <string id="57200">Oletus</string>
+  <string id="57201">57235</string>
+  <string id="57202">Arabia,ara</string>
+  <string id="57203">Catalan,cat</string>
+  <string id="57204">Kiina (Yksinkertaistettu),chi</string>
+  <string id="57205">Kiina (Perinteinen),zho</string>
+  <string id="57206">Kroatian,cos</string>
+  <string id="57207">Tsekki,ces</string>
+  <string id="57208">Tanska,dan</string>
+  <string id="57209">Saksa,deu</string>
+  <string id="57210">Hollanti,dut</string>
+  <string id="57211">Viro,est</string>
+  <string id="57212">Englanti,eng</string>
+  <string id="57213">Suomi,fin</string>
+  <string id="57214">Ranska,fra</string>
+  <string id="57215">Kreikka,gre</string>
+  <string id="57216">Heprea,heb</string>
+  <string id="57217">Unkari,hun</string>
+  <string id="57218">Indonesia,ind</string>
+  <string id="57219">Italia,ita</string>
+  <string id="57220">Japani,jpn</string>
+  <string id="57221">Korea,kor</string>
+  <string id="57222">Liettua,lit</string>
+  <string id="57223">Norja,nor</string>
+  <string id="57224">Persia,fas</string>
+  <string id="57225">Puola,pol</string>
+  <string id="57226">Portugali,por</string>
+  <string id="57227">Portugali (Brasilia),por</string>
+  <string id="57228">Venäjä,rus</string>
+  <string id="57229">Serbia,srp</string>
+  <string id="57230">Slovakia,slk</string>
+  <string id="57231">Slovenia,slv</string>
+  <string id="57232">Espanja,spa</string>
+  <string id="57233">Ruotsi,swe</string>
+  <string id="57234">Turkki,tur</string>
+  <string id="57235">Ukrania,ukr</string>
+
+  <string id="57290">Valittu kieli</string> <!-- Audio & Subtitles Preferred Language -->
+
+  <string id="57300">Lomituksen poisto</string>
+  <string id="57301">Automaattinen</string>
+  <string id="57302">Videot</string>
+  <string id="57303">Filmi</string>
+  <string id="57304">Vain spatiaalinen</string>
+  <string id="57305">Vain yläkenttä</string>
+  <string id="57306">Ei koskaan, ellei skaalausta</string>
+  <string id="57307">Ei koskaan</string>
+
+  <string id="57310">Soitonpoisto suodatin</string>
+  <string id="57315">Gaussian-suodatin</string>
+
+  <string id="57400">Kieli</string>
+  <string id="57401">Haluatko varmasti vaihtaa kieleksi '%s'?[CR]Uudelleenkäynnistämistä tarvitaan, jotta muutokset tulevat voimaan.</string>
+
+  <!-- afp settings --> 
+  <string id="57500">AFP-asiakas</string>
+
+  <!-- browse menu -->
+  <!-- Movie screen -->
+  <string id="57600">Oma jono</string>
+  <string id="57601">Elokuvakirjasto</string>
+  <string id="57605">Näytä kirjasto</string>
+  <string id="57606">Omat ohjelmat</string>
+  <string id="57610">Tunnistamaton</string>
+
+
+  <!-- Live TV -->
+  <string id="58000">Live TV</string>
+  <string id="58001">Etsitään kanavia</string>
+  <string id="58002">Etsintä suoritettu. [CR]%d kanavaa löydettiin.</string>
+  <string id="58003">Etsintä suoritettu. [CR] Kanavia ei löydetty.</string>
+  <string id="58004">Kaikki kanavat</string>
+  <string id="58005">Boxee Live TV</string>
+  <string id="58006">Muutamassa hetkessä nautit TV:n suosikkiasemiasi Boxeen ainutlaatuisen sosiaalisen liittymän kautta. [CR][CR]Yhdistä antenni tai kaapeliliitin Live TV -dongeliin ja valitse [COLOR boxeegreenheidi] Seuraava[/COLOR].</string>
+  <string id="58007">Yhdistä antenni tai TV-kaapeli Live TV -dongeliin.</string>
+  <string id="58010">Oletko tällä hetkellä </string>
+  <string id="58011">Ohjelmaopas</string>
+  <string id="58012">Jotta voimme löytää oikean ohjelmaoppaan alueellesi, meidän on määritettävä sijaintisi.</string>
+  <string id="58013">Valitse maasi</string>
+  <string id="58014">Valitse kaupunkisi</string>
+  <string id="58015">Kanavalistaus</string>
+  <string id="58016">Boxee hakee nyt kanavalistat valitsemallesi alueelle. [CR][CR] Kerro Boxeelle, mistä TV-signaalit tulevat, jotta saamme oikean kanavalistan.</string>
+  <string id="58018">Valitse osavaltiosi</string>
+  <string id="58019">Antenni</string>
+  <string id="58020">Etsi kanavalista uudelleen. %s kanavaa löytynyt…</string>
+  <string id="58021">Jaa katselutietoni ystävieni kanssa </string>
+  <string id="58022">Määritä uudelleen Live TV -asetukset…</string>
+  <string id="58023">Aloita etsintä uudelleen </string>
+  <string id="58024">Käynnistä asetukset</string>
+  <string id="58025">Tila</string>
+  <string id="58026">Yhdistetty</string>
+  <string id="58027">Kytketty irti </string>
+  <string id="58028">Laite</string>
+  <string id="58029">Sijainti</string>
+  <string id="58030">Kaapeli</string>
+  <string id="58031">Virheellinen postinumero, yritä uudelleen</string>
+  <string id="58032">Live TV[CR]Ladataan…</string>
+  <string id="58033">UUSI</string>
+  <string id="58034">LIVE</string>
+  <string id="58036">Seuraa suosikkiohjelmiasi</string>
+  <string id="58037">Valitse suosikkiohjelmasi, jotta uudet jaksot toimitetaan[CR] automaattisesti, kun ne ovat saatavilla.</string>
+  <string id="58040">Boxee on esitellyt uuden tavan jakaa sitä, mitä katsot ystävien ja perheen kanssa Facebook Timelinessa.[CR][CR]Voit ottaa sen pois käytöstä milloin tahansa Asetukset &gt; Live TV -kohdassa.</string>
+  <string id="58041">Tee Boxeesta[CR]sosiaalinen</string>
+  <string id="58042">Ohita</string>
+  <string id="58045">Ilmoitukset</string>
+  <string id="58046">Mahtavaa – olemme tallentaneet kaikki suosikkisi. [CR][CR]Boxee lisää nyt suosikkiesi uusia online-jaksoja TV-jonoosi ja lähettää sinulle viikoittaisen sähköpostin, joka kertoo mitä Live TV:ssä on tällä viikolla. </string>
+  <string id="58047">Lähettäkää minulle sähköpostia aiheista:</string>
+  <string id="58048">Uudet jaksot</string>
+  <string id="58049">Kaikki jaksot</string>
+  <string id="58050">[B]Live TV[/B]</string>
+  <string id="58051">[B]Heikko signaali tai ei signaalia[B]</string>
+  <string id="58052">Ei signaalia</string>
+  <string id="58053">Ei kanavia</string>
+  <string id="58054">Haetaan</string>
+  <string id="58055">%d Kanavat</string>
+  <string id="58056">Ohjelmaopas</string>
+  <string id="58057">Säilytä 4:3 näytön kuvasuhde </string>
+  <string id="58058">Jaa, mitä katsot ystävien ja perheen kanssa Facebook Timelinessa.[CR][CR]Sinun tarvitsee vain antaa Boxeelle lupa julkaista katsottuja tapahtumia.[CR][CR]Voit ottaa sen pois käytöstä milloin tahansa Asetukset &gt; Live TV -kohdassa.</string>
+  <string id="58059">Päivitä luvat</string>
+
+  <string id="58060">Aseta TV-rajoitus…</string>
+  <string id="58061">Valitse TV-rajoitus</string>
+  <string id="58062">Valitse rajoitus TV-ohjelmille rajoittaaksesi niiden näkymistä On-demand, paikallisissa tai web-kirjastoissa. [CR]Jos sinulla on Boxee Live TV, ohjelmat näkyvät listoilla, mutta niiden katseluun tarvitaan salasana. [CR]Tuntemattomia paikallisia kansioita ei voida suodattaa.  </string>
+  <string id="58063">Valitse elokuvan rajoitus</string>
+  <string id="58064">Valitse rajoitus elokuville rajoittaaksesi niiden näkymistä On-demand, paikallisissa tai web-kirjastoissa. [CR] Jos sinulla on Boxee Live TV, elokuvat näkyvät listoilla, mutta niiden katseluun tarvitaan salasana. [CR]Tuntemattomia paikallisia kansioita ei voida suodattaa.</string>
+  <string id="58065">Aseta salasana</string>
+  <string id="58066">Sinun täytyy syöttää salasana, jotta voit katsoa sisältöä, joka ylittää rajoituksesi ja tehdessäsi muutoksia lapsilukkoasetuksiin.</string>
+  <string id="58067">Rajoitettu sisältö</string>
+  <string id="58068">Tarvitset salasanan katsoaksesi tämän videon…</string>
+  <string id="58069">Hmm… tämä ei ole oikea salasana. Yritä uudelleen.</string>
+  <string id="58070">Aseta elokuvan rajoitus…</string>
+  <string id="58071">Aseta salasana aikuissisällölle…</string>
+  <string id="58072">Vaihda salasana aikuissisällölle…</string>
+  <string id="58073">Vaihda salasana</string>
+  <string id="58074">Syötä nykyinen salasana jatkaaksesi…</string>
+  <string id="58075">Varmistettu, syötä nyt uusi salasanasi.</string>
+  <string id="58076">Odota hetki, niin etsimme käytettävissä olevia kanavia alueeltasi.</string>
+  <string id="58077">Mene Live TV:seen</string>
+  <string id="58078">Kanavia ei löydy. Yritä uudelleen tai peruuta näppäämällä takaisin</string>
+  <string id="58079">Peruutetaanko etsintä?</string>
+  <string id="58080">Haluatko varmasti pysäyttää kanavien skannauksen?</string>
+  <string id="58081">Peruuta etsintä</string>
+  <string id="58081">Ei Internetiä</string>
+  <string id="58082">Internet-yhteys vaaditaan kanavien etsintään.</string>
+  <string id="58083">Sulje</string>
+  <string id="58084">Peruuta etsintä</string>
+  <string id="58085">Varoita minua ennen kuin Live TV suljetaan.</string>
+  <string id="58090">Kanavia ei löydy</string>
+  <string id="58091">Kokeile antennin siirtämistä toiseen paikkaan. Varmista, että se on liitetty oikein.[CR][CR]Voit myös liittää koaksiaalikaapelin, joka tulee asuntoosi internet-/kaapelipalveluntarjoajalta, jotta saat maksuttomat QAM-kanavat.</string>
+  <string id="58092">Varmista, että kaapeli on liitetty USB-virittimeen ja että se ei tule ulos set-top-boxista (käytä jakajaa).[CR][CR]Voit myös liittää antennin, joka toimitettiin USB-virittimesi kanssa (jos sellainen on).</string>
+  <string id="58093">Käytä kaapelia</string>
+  <string id="58094">Käytä antennia</string>
+  <string id="58095">Määritä[CR]Live TV uudelleen</string>
+  <string id="58096">Varmista, että antenni tai kaapeli on liitetty USB-virittimeen.[CR][CR]Nykyiseen kanavalistaan tekemäsi muutokset menetetään.</string>
+
+
+  <!--strings through from 80000-80999 reserved for server definitions -->
+  <string id="80000">Import From </string>
+  <string id="80001">Aktivoi siirtymällä tänne:</string>
+  <string id="80002">Vaihda niiden palveluiden välillä, jotka haluat ottaa mukaan videosyötteisiin.</string>
+  <string id="80003">Syötteet voivat näyttää videoita Facebook-, Twitter- ja Google[CR]Buzz - virtauksista.[CR][CR]Tämä ominaisuus voidaan kytkeä päälle aktivoimalla tilit vierailemalla[CR]verkkosivustollamme:</string>
+  <string id="80004">Facebook Connect on pois käytöstä</string>
+  
+  <!--strings through from 81000-81099 reserved for payment server errors -->
+  <string id="81000">Toiminto ei onnistu palvelinvirheen vuoksi.</string>
+  <string id="81001">Virheellinen salasana.</string>
+  <string id="81002">Maksu vaaditaan</string>
+  <string id="81003">Yritetään tilata ei-aktiivisia tuotteita</string>
+  <string id="81004">Olet jo tilannut tämän tuotteen</string>
+  <string id="81005">Todennusvirhe. Yritä toisella luottokortilla.</string>
+  <string id="81006">Sinulla ei ole tällä hetkellä tuotteen voimassa olevaa tilausta.</string>
+  
+  <!--strings from 82000-82099 reserved for item summary -->
+  
+  <string id="82000"> suodatinperuste </string>
+  <string id="82001"> suodattaja </string>
+  <string id="82002"> laji </string>
+  <string id="82003">Albumit </string>
+  <string id="82004"> tuottaja </string>
+  <string id="82005">Musiikki esittäjittäin</string>
+  <string id="82006">Musiikki albumeittain</string>
+
+  <!-- strings from 90000 - 90100 reserved for language templates -->
+
+  <string id="90000">%sort%%filter%%source%%media%</string> <!-- apps -->
+  <string id="90001">%sort%%channel%%filter%%source%%media%</string> <!-- movies -->
+  <string id="90002">%sort%%channel%%filter%%source%%media%</string> <!-- shows -->
+  <string id="90003">%sort%%filter%%media%</string> <!-- albums -->
+  <string id="90004">%sort%%media%</string> <!-- photos -->
+  <string id="90005">%sort%%media%</string> <!-- local -->
+  <string id="90006"></string> <!-- a prefix for sort (used in other languages) -->
+  <string id="90007"></string> <!-- a prefix for channel (used in other languages) -->
+  <string id="90008">%sort%%channel%%filter%%source%%media%</string> <!-- trailers -->
+
+  <!-- strings from 90040 - 90080 reserved for window descriptions -->
+
+  <string id="90040">Sovellusta</string><!-- 53914 is the title and was already translated in the past-->
+  <string id="90041">Elokuvaa</string><!-- 342 is the title and was already translated in the past-->
+  <string id="90042">TV-ohjelmaa</string><!-- 1051 is the title and was already translated in the past-->
+  <string id="90043">Albumia</string><!-- 51407 is the title and was already translated in the past-->
+  <string id="90044">Valokuvaa</string><!-- 53516/53519 is the title and was already translated in the past-->
+  <string id="90045">Traileria</string><!-- 1053 is the title and was already translated in the past-->
+  <string id="90046">Esittäjää</string><!-- 51408 is the title and was already translated in the past-->
+  <string id="90047">Videota</string><!-- 10006 is the title and was already translated in the past-->
+  <string id="90048">Jaksoa</string><!-- 20360 is the title and was already translated in the past-->
+  <string id="90049">Tunnistamatonta videota</string><!-- 51361 is the title and was already translated in the past-->
+  <string id="90050">Kohdetta</string><!-- 54059 is the title and was already translated in the past-->
+  <string id="90051">Kohde</string>
+  
+  <!-- strings from 90100 - 90130 reserved for Advanced settings -->
+
+  <string id="90100">Palvelinympäristö</string>
+  <string id="90101">Valmistelu</string>
+  <string id="90102">Tuotanto</string>
+  <string id="90103">Valitse palvelinympäristö</string>
+  <string id="90104">Palvelinympäristö</string>
+  <string id="90105">Haluatko varmasti vaihtaa palvelinympäristöä?</string>
+
+  <!-- strings from 90130 - 90180 reserved for EPG -->
+  <string id="90131">[B]AAMU[/B]</string>
+  <string id="90132">[B]ILTAPÄIVÄ[/B]</string>
+  <string id="90133">[B]ILTA[/B]</string>
+  <string id="90134">[B]YÖ[/B]</string>
+  <string id="90135">Tänään</string>
+  <string id="90136">Huomenna</string>
+  <string id="90137"> ja </string> <!-- keep space at the begining and end-->
+  <string id="90138">%d muuta katsoo.</string> <!-- place the %d where the number should appear, do no translate the %d, keep as is -->
+
+  <!-- more Browser -->
+  <string id="90210">Tyhjennä paikallinen tallennus…</string>
+  <string id="90211">Tyhjennetäänkö selaimen paikallinen tallennus?</string>
+
+  <!-- VIDEO OSD -->
+  <string id="90212">Lisäasetukset</string>
+  <string id="90213">Poistutaanko videosta</string>
+  <string id="90214">Pois</string>
+  <string id="90215">Palaa päähakemistoon</string>
+  <string id="90216">Selaa paikallisesti...</string>
+  <string id="90217">Selaa online...</string>
+  <string id="90218">Tämä video ei tue hakua</string>
+
+  <!-- Live TV -->
+  <string id="90310">Takaisin Live TV:seen</string>
+  <string id="90311">Muokkaa kanavia</string>
+  <string id="90312">Jakaminen pois käytöstä</string>
+  <string id="90313">Jakaminen käyttöön</string>
+  <string id="90315">Mukauta kanavaluettelo piilottamalla tai uudelleen nimeämällä kanavat.</string>
+  <string id="90316">Poistu Live TV:stä</string>
+  <string id="90317">Haluatko varmasti poistua Live TV:stä nyt?</string>
+  <string id="90318">Kanavan nimi</string>
+  <string id="90319">Meillä ei ole aikataululuetteloa alueellesi.</string>
+  <string id="90320">Valitse vastaava aikataulu:</string>
+  <string id="90321">Ei aikataulua</string>
+
+
+  <!-- Main Menu -->
+  <string id="90400">[B]Aloitahakukirjoitus[/B]</string>
+
+  <!-- MEDIA ACTION -->
+  <string id="90450">Sovellus</string>
+  <string id="90451">Ohjelma</string>
+  <string id="90452">Yleiskatsaus</string>
+  <string id="90453">Henkilöstö</string>
+  <string id="90454">Liittyvät</string>
+
+  <!-- HOME SCREEN -->
+  <string id="90550">Verkkoasetukset</string>
+
 </strings>

@@ -32,8 +32,15 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <sys/param.h>
+#ifndef __APPLE__
+#include <sys/statfs.h>
+#else
+#include <sys/param.h>
+#include <sys/mount.h>
 #endif
-
+#endif
 #include "Application.h"
 #include "AutoPtrHandle.h"
 #include "Util.h"
@@ -70,6 +77,7 @@
 #ifdef _WIN32
 #include <shlobj.h>
 #include "WIN32Util.h"
+#include "win32/dirent.h"
 #endif
 #include "GUIDialogYesNo.h"
 #include "GUIUserMessages.h"
@@ -98,11 +106,20 @@
 #ifdef HAS_IRSERVERSUITE
   #include "common/IRServerSuite/IRServerSuite.h"
 #endif
+#if defined(HAS_EMBEDDED) && !defined(__APPLE__)
+#include <HalServices.h>
+#include <ucontext.h>
+#include <dlfcn.h>
+#include <cxxabi.h>
+#include <execinfo.h>
+using __cxxabiv1::__cxa_demangle;
+#endif
 #include "WindowingFactory.h"
 #include "LocalizeStrings.h"
 #include "utils/TimeUtils.h"
-
+#include "bxoemconfiguration.h"
 #include "utils/md5.h"
+#include "BoxeeUtils.h"
 
 #include "Picture.h"
 
@@ -111,6 +128,11 @@
 #include <openssl/pem.h>
 #include <openssl/bio.h>
 #include "utils/Base64.h"
+
+#ifdef _WIN32
+#define MAXPATHLEN MAX_PATH
+#define lstat stat
+#endif
 
 using namespace std;
 using namespace DIRECTORY;
@@ -141,7 +163,7 @@ const CStdString CUtil::GetExtension(const CStdString& strFileName)
 {
   if(strFileName.Find("://") >= 0)
   {
-    CURL url(strFileName);
+    CURI url(strFileName);
     return CUtil::GetExtension(url.GetFileName());
   }
 
@@ -173,7 +195,7 @@ const CStdString CUtil::GetFileName(const CStdString& strFileNameAndPath)
 {
   if(strFileNameAndPath.Find("://") >= 0)
   {
-    CURL url(strFileNameAndPath);
+    CURI url(strFileNameAndPath);
     return CUtil::GetFileName(url.GetFileName());
   }
   
@@ -197,7 +219,7 @@ const CStdString CUtil::GetFileName(const CStdString& strFileNameAndPath)
 }
 CStdString CUtil::GetTitleFromBoxeePath(const CStdString& strFileNameAndPath, bool bIsFolder /* = false */)
 {
-  CURL url(strFileNameAndPath);
+  CURI url(strFileNameAndPath);
   CStdString strHostname = url.GetHostName();
 
   CStdString path(strFileNameAndPath);
@@ -228,12 +250,15 @@ CStdString CUtil::GetTitleFromPath(const CStdString& strFileNameAndPath, bool bI
 
   // use above to get the filename
   CStdString path(strFileNameAndPath);
+  
+  if (CUtil::IsHD(path))
+     CUtil::HideExternalHDPath(path, path);
+
   RemoveSlashAtEnd(path);
   CStdString strFilename = GetFileName(path);
 
-  CURL url(strFileNameAndPath);
+  CURI url(strFileNameAndPath);
   CStdString strHostname = url.GetHostName();
-
 #ifdef HAS_UPNP
   // UPNP
   if (url.GetProtocol() == "upnp")
@@ -248,7 +273,10 @@ CStdString CUtil::GetTitleFromPath(const CStdString& strFileNameAndPath, bool bI
     else
       strFilename = g_localizeStrings.Get(15200) + " - " + strFilename;
   }
-
+  else if (strFilename.IsEmpty() && (url.GetProtocol() == "afp" || url.GetProtocol() == "nfs"))
+  {
+    strFilename = strHostname;
+  }
   // Shoutcast
   else if (url.GetProtocol() == "shout")
   {
@@ -395,11 +423,11 @@ void CUtil::RemoveExtension(CStdString& strFileName)
 {
   if(strFileName.Find("://") >= 0)
   {
-    CURL url(strFileName);
+    CURI url(strFileName);
     strFileName = url.GetFileName();
     RemoveExtension(strFileName);
     url.SetFileName(strFileName);
-    url.GetURL(strFileName);
+    strFileName = url.Get();
     return;
   }
 
@@ -515,11 +543,40 @@ void CUtil::GetCommonPath(CStdString& strParent, const CStdString& strPath)
   }
 }
 
+bool CUtil::GetRecursiveParentPath(const CStdString& strChildPath, std::vector<CStdString>& output, unsigned int countHowManyLevels /* = 0 - means all levels */)
+{
+  CStdString strCurrentParent = "";
+  CStdString strCurrentPath = strChildPath;
+  unsigned int i = 0;
+
+  if (strChildPath.IsEmpty())
+    return false;
+
+  while (GetParentPath(strCurrentPath, strCurrentParent))
+  {
+    if (strCurrentParent.IsEmpty())
+    {
+      return false;
+    }
+
+    output.push_back(strCurrentParent);
+    strCurrentPath = strCurrentParent;
+    strCurrentParent.clear();
+
+    i++;
+
+    if (i == countHowManyLevels)
+      return true;
+  }
+
+  return true;
+}
+
 bool CUtil::GetParentPath(const CStdString& strPath, CStdString& strParent)
 {
   strParent = "";
 
-  CURL url(strPath);
+  CURI url(strPath);
   CStdString strFile = url.GetFileName();
   if ( ((url.GetProtocol() == "rar") || (url.GetProtocol() == "zip")) && strFile.IsEmpty())
   {
@@ -558,19 +615,19 @@ bool CUtil::GetParentPath(const CStdString& strPath, CStdString& strParent)
     if (!url.GetOptions().IsEmpty())
     {
       url.SetOptions("");
-      url.GetURL(strParent);
+      strParent = url.Get();
       return true;
     }
     if (!url.GetFileName().IsEmpty())
     {
       url.SetFileName("");
-      url.GetURL(strParent);
+      strParent = url.Get();
       return true;
     }
     if (!url.GetHostName().IsEmpty())
     {
       url.SetHostName("");
-      url.GetURL(strParent);
+      strParent = url.Get();
       return true;
     }
     return true;  // already at root
@@ -589,7 +646,7 @@ bool CUtil::GetParentPath(const CStdString& strPath, CStdString& strParent)
       // we have an share with only server or workgroup name
       // set hostname to "" and return true to get back to root
       url.SetHostName("");
-      url.GetURL(strParent);
+      strParent = url.Get();
       return true;
     }
     return false;
@@ -610,7 +667,7 @@ bool CUtil::GetParentPath(const CStdString& strPath, CStdString& strParent)
   if (iPos < 0)
   {
     url.SetFileName("");
-    url.GetURL(strParent);
+    strParent = url.Get();
     return true;
   }
 
@@ -619,15 +676,15 @@ bool CUtil::GetParentPath(const CStdString& strPath, CStdString& strParent)
   CUtil::AddSlashAtEnd(strFile);
 
   url.SetFileName(strFile);
-  url.GetURL(strParent);
+  strParent = url.Get();
   return true;
 }
 
 void CUtil::GetQualifiedFilename(const CStdString &strBasePath, CStdString &strFilename)
 {
   //Make sure you have a full path in the filename, otherwise adds the base path before.
-  CURL plItemUrl(strFilename);
-  CURL plBaseUrl(strBasePath);
+  CURI plItemUrl(strFilename);
+  CURI plBaseUrl(strBasePath);
   int iDotDotLoc, iBeginCut, iEndCut;
 
   if (plBaseUrl.IsLocal()) //Base in local directory
@@ -747,10 +804,10 @@ void CUtil::ReplaceExtension(const CStdString& strFile, const CStdString& strNew
 {
   if(strFile.Find("://") >= 0)
   {
-    CURL url(strFile);
+    CURI url(strFile);
     ReplaceExtension(url.GetFileName(), strNewExtension, strChangedFile);
     url.SetFileName(strChangedFile);
-    url.GetURL(strChangedFile);
+    strChangedFile = url.Get();
     return;
   }
 
@@ -813,7 +870,7 @@ bool CUtil::IsRemote(const CStdString& strFile)
     return false;
   }
 
-  CURL url(strFile);
+  CURI url(strFile);
   if(IsInArchive(strFile))
     return IsRemote(url.GetHostName());
 
@@ -863,7 +920,7 @@ bool CUtil::IsOnLAN(const CStdString& strPath)
   if(IsUPnP(strPath))
     return true;
 
-  CURL url(strPath);
+  CURI url(strPath);
   if(IsInArchive(strPath))
     return CUtil::IsOnLAN(url.GetHostName());
 
@@ -958,13 +1015,13 @@ bool CUtil::IsInArchive(const CStdString &strFile)
 
 bool CUtil::IsInZIP(const CStdString& strFile)
 {
-    CURL url(strFile);
+    CURI url(strFile);
   return url.GetProtocol() == "zip" && url.GetFileName() != "";
   }
 
 bool CUtil::IsInRAR(const CStdString& strFile)
 {
-    CURL url(strFile);
+    CURI url(strFile);
   return url.GetProtocol() == "rar" && url.GetFileName() != "";
   }
 
@@ -1012,6 +1069,21 @@ bool CUtil::IsUPnP(const CStdString& strFile)
     return strFile.Left(5).Equals("upnp:");
 }
 
+bool CUtil::IsNfs(const CStdString& strFile)
+{
+    return strFile.Left(4).Equals("nfs:");
+}
+
+bool CUtil::IsAfp(const CStdString& strFile)
+{
+    return strFile.Left(4).Equals("afp:");
+}
+
+bool CUtil::IsBms(const CStdString& strFile)
+{
+    return strFile.Left(4).Equals("bms:");
+}
+
 bool CUtil::IsRSS(const CStdString& strFile)
 {
     return strFile.Left(4).ToLower().Equals("rss:");
@@ -1057,6 +1129,11 @@ bool CUtil::IsMythTV(const CStdString& strFile)
   return strFile.Left(5).Equals("myth:");
 }
 
+bool CUtil::IsDVB(const CStdString& strFile)
+{
+  return strFile.Left(4).Equals("dvb:");
+}
+
 bool CUtil::IsHDHomeRun(const CStdString& strFile)
 {
   return strFile.Left(10).Equals("hdhomerun:");
@@ -1069,7 +1146,9 @@ bool CUtil::IsShoutCast(const CStdString& strFile)
 }
 bool CUtil::IsLastFM(const CStdString& strFile)
 {
+#ifdef HAS_LASTFM
   if (strstr(strFile.c_str(), "lastfm:") ) return true;
+#endif
   return false;
 }
 
@@ -1085,12 +1164,15 @@ bool CUtil::IsHTSP(const CStdString& strFile)
 
 bool CUtil::IsLiveTV(const CStdString& strFile)
 {
-  CURL url(strFile);
+  CURI url(strFile);
 
   if (IsTuxBox(strFile) || IsVTP(strFile) || IsHDHomeRun(strFile) || IsHTSP(strFile))
     return true;
 
   if (IsMythTV(strFile) && url.GetFileName().Left(9) == "channels/")
+    return true;
+
+  if(IsDVB(strFile))
     return true;
 
   return false;
@@ -1136,7 +1218,7 @@ void CUtil::GetFileAndProtocol(const CStdString& strURL, CStdString& strDir)
   if (!IsRemote(strURL)) return ;
   if (IsDVD(strURL)) return ;
 
-  CURL url(strURL);
+  CURI url(strURL);
   strDir.Format("%s://%s", url.GetProtocol().c_str(), url.GetFileName().c_str());
 }
 
@@ -1226,6 +1308,61 @@ bool CUtil::GetDirectoryName(const CStdString& strFileName, CStdString& strDescr
   return true;
 }
 
+bool CUtil::ConstructStringFromTemplate(const CStdString& strTemplate, const std::map<CStdString , CStdString>& mapTemplateKeyToValue, CStdString& output, const CStdString& delimiter)
+{
+  if (strTemplate.IsEmpty() || mapTemplateKeyToValue.empty())
+  {
+    return false;
+  }
+
+  output = strTemplate;
+
+  size_t firstTag=0;
+
+  while ((firstTag = output.Find(delimiter,firstTag)) != CStdString::npos)
+  {
+    if (firstTag != CStdString::npos && firstTag+1 < output.size())
+    {
+      //find the postfix delimiter
+      size_t secondTag = output.Find(delimiter , firstTag+1);
+
+      //make sure the postfix is after the prefix
+      if (secondTag != CStdString::npos && secondTag > firstTag)
+      {
+        int iTagNameLength = secondTag-firstTag-1;
+
+        //get the key name from the string
+        CStdString tagName = output.substr(firstTag+1, iTagNameLength);
+
+        //delete the variable from the string
+        output.Delete(firstTag, iTagNameLength+2);
+
+        //try finding it in the
+        std::map<CStdString , CStdString>::const_iterator it = mapTemplateKeyToValue.find(tagName);
+        if (it != mapTemplateKeyToValue.end())
+        {
+          //if we found a value for that key, we insert it into the string instead of the variable
+          CStdString strInjected = " " + it->second;
+          output.Insert(firstTag , strInjected);
+          firstTag += strInjected.size();
+        }
+      }
+      else
+      {
+        return false;
+      }
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  output.Trim();
+
+  return true;
+}
+
 void CUtil::GetDVDDriveIcon( const CStdString& strPath, CStdString& strIcon )
 {
   if ( !g_mediaManager.IsDiscInDrive() )
@@ -1290,7 +1427,7 @@ void CUtil::RemoveTempFiles()
 
 bool CUtil::IsHD(const CStdString& strFileName)
 {
-  CURL url(_P(strFileName));
+  CURI url(_P(strFileName));
   return url.IsLocal();
   }
 
@@ -1326,7 +1463,7 @@ void CUtil::ClearSubtitles()
 
 static const char * sub_exts[] = { ".utf", ".utf8", ".utf-8", ".sub", ".srt", ".smi", ".rt", ".txt", ".ssa", ".aqt", ".jss", ".ass", ".idx", NULL};
 
-void CUtil::CacheSubtitles(const CStdString& strMovie, CStdString& strExtensionCached, XFILE::IFileCallback *pCallback )
+void CUtil::CacheSubtitles(const CStdString& strMovie, const CStdString& strContent, CStdString& strExtensionCached, XFILE::IFileCallback *pCallback )
 {
   unsigned int startTimer = CTimeUtils::GetTimeMS();
   CLog::Log(LOGDEBUG,"%s: START", __FUNCTION__);
@@ -1351,20 +1488,42 @@ void CUtil::CacheSubtitles(const CStdString& strMovie, CStdString& strExtensionC
 
   ClearSubtitles();
 
-  CFileItem item(strMovie, false);
-  if (item.IsInternetStream()) return ;
-  if (item.IsHDHomeRun()) return ;
-  if (item.IsPlayList()) return ;
-  if (!item.IsVideo()) return ;
-
   vector<CStdString> strLookInPaths;
 
   CStdString strFileName;
   CStdString strFileNameNoExt;
   CStdString strPath;
 
-  CUtil::Split(strMovie, strPath, strFileName);
-  ReplaceExtension(strFileName, "", strFileNameNoExt);
+  if (strContent == "bluray/folder" || strContent == "dvd/folder")
+  {
+    CUtil::Split(strMovie, strPath, strFileName);
+   
+    strFileNameNoExt = strFileName = "index";
+  }
+  else if(strContent == "bluray/iso")
+  {
+    CStdString strParent;
+
+    GetParentPath(strMovie, strPath);
+    GetParentPath(strPath, strParent);
+
+    RemoveSlashAtEnd(strParent);
+    CUtil::Split(strParent, strPath, strFileName);
+    ReplaceExtension(strFileName, "", strFileNameNoExt);   
+  }
+  else
+  {
+    CFileItem item(strMovie, false);
+    if (item.IsInternetStream()) return ;
+    if (item.IsHDHomeRun()) return ;
+    if (item.IsPlayList()) return ;
+    if (!item.IsVideo()) return ;
+
+
+    CUtil::Split(strMovie, strPath, strFileName);
+    ReplaceExtension(strFileName, "", strFileNameNoExt);
+  }
+
   strLookInPaths.push_back(strPath);
 
   if (!g_stSettings.iAdditionalSubtitleDirectoryChecked && !g_guiSettings.GetString("subtitles.custompath").IsEmpty()) // to avoid checking non-existent directories (network) every time..
@@ -1385,7 +1544,7 @@ void CUtil::CacheSubtitles(const CStdString& strMovie, CStdString& strExtensionC
 
   if (strMovie.substr(0,6) == "rar://") // <--- if this is found in main path then ignore it!
   {
-    CURL url(strMovie);
+    CURI url(strMovie);
     CStdString strArchive = url.GetHostName();
     CUtil::Split(strArchive, strPath, strFileName);
     strLookInPaths.push_back(strPath);
@@ -1396,7 +1555,7 @@ void CUtil::CacheSubtitles(const CStdString& strMovie, CStdString& strExtensionC
 
   vector<CStdString> token;
   Tokenize(strPath,token,"/\\");
-  if (token[token.size()-1].size() == 3 && token[token.size()-1].Mid(0,2).Equals("cd"))
+  if (token.size() > 0 && token[token.size()-1].size() == 3 && token[token.size()-1].Mid(0,2).Equals("cd"))
   {
     CStdString strPath2;
     GetParentPath(strPath,strPath2);
@@ -1621,10 +1780,10 @@ void CUtil::AddFileToFolder(const CStdString& strFolder, const CStdString& strFi
   {
   if(strFolder.Find("://") >= 0)
   {
-    CURL url(strFolder);
+    CURI url(strFolder);
     AddFileToFolder(url.GetFileName(), strFile, strResult);
     url.SetFileName(strResult);
-    url.GetURL(strResult);
+    strResult = url.Get();
     return;
   }
 
@@ -1633,7 +1792,7 @@ void CUtil::AddFileToFolder(const CStdString& strFolder, const CStdString& strFi
     AddSlashAtEnd(strResult);
 
   // Remove any slash at the start of the file
-  if (!strResult.IsEmpty() && strFile.size() && strFile[0] == '/' || strFile[0] == '\\')
+  if (!strResult.IsEmpty() && strFile.size() && (strFile[0] == '/' || strFile[0] == '\\'))
     strResult += strFile.Mid(1);
   else
     strResult += strFile;
@@ -1653,14 +1812,14 @@ void CUtil::AddSlashAtEnd(CStdString& strFolder)
 {
   if(strFolder.Find("://") >= 0)
   {
-    CURL url(strFolder);
+    CURI url(strFolder);
     strFolder = url.GetFileName();
     if(!strFolder.IsEmpty())
     {
       AddSlashAtEnd(strFolder);
       url.SetFileName(strFolder);
     }
-    url.GetURL(strFolder);
+    strFolder = url.Get();
     return;
   }
 
@@ -1677,14 +1836,14 @@ void CUtil::RemoveSlashAtEnd(CStdString& strFolder)
 {
   if(strFolder.Find("://") >= 0)
   {
-    CURL url(strFolder);
+    CURI url(strFolder);
     strFolder = url.GetFileName();
     if (!strFolder.IsEmpty())
     {
       RemoveSlashAtEnd(strFolder);
       url.SetFileName(strFolder);
     }
-    url.GetURL(strFolder);
+    strFolder = url.Get();
     return;
   }
 
@@ -1830,6 +1989,21 @@ CStdString CUtil::GetNextFilename(const CStdString &fn_template, int max)
   return "";
   }
 
+CStdString CUtil::GetNextPathname(const CStdString &path_template, int max)
+{
+  if (!path_template.Find("%04d"))
+    return "";
+
+  for (int i = 0; i <= max; i++)
+  {
+    CStdString name;
+    name.Format(path_template.c_str(), i);
+    if (!CFile::Exists(name))
+      return name;
+  }
+  return "";
+}
+
 void CUtil::InitGamma()
 {
 #ifdef HAS_DX
@@ -1930,53 +2104,53 @@ void CUtil::FlashScreen(bool bImmediate, bool bOn)
 void CUtil::TakeScreenshot(const char* fn, bool flashScreen)
 {
 #ifdef HAS_DX
-  LPDIRECT3DSURFACE9 lpSurface  = NULL;
+    LPDIRECT3DSURFACE9 lpSurface = NULL;
 	LPDIRECT3DDEVICE9 lpD3dDevice = NULL;
 	HRESULT hr;
 
-  g_graphicsContext.Lock();
-  if (g_application.IsPlayingVideo())
-  {
+    g_graphicsContext.Lock();
+    if (g_application.IsPlayingVideo())
+    {
 #ifdef HAS_VIDEO_PLAYBACK
-    g_renderManager.SetupScreenshot();
+      g_renderManager.SetupScreenshot();
 #endif
-  }
-  if (0)
-  { // reset calibration to defaults
-    OVERSCAN oscan;
-    memcpy(&oscan, &g_settings.m_ResInfo[g_graphicsContext.GetVideoResolution()].Overscan, sizeof(OVERSCAN));
-    g_graphicsContext.ResetOverscan(g_graphicsContext.GetVideoResolution(), g_settings.m_ResInfo[g_graphicsContext.GetVideoResolution()].Overscan);
-    g_application.Render();
-    memcpy(&g_settings.m_ResInfo[g_graphicsContext.GetVideoResolution()].Overscan, &oscan, sizeof(OVERSCAN));
-  }
-  // now take screenshot
-  g_application.RenderNoPresent();
+    }
+    if (0)
+    { // reset calibration to defaults
+      OVERSCAN oscan;
+      memcpy(&oscan, &g_settings.m_ResInfo[g_graphicsContext.GetVideoResolution()].Overscan, sizeof(OVERSCAN));
+      g_graphicsContext.ResetOverscan(g_graphicsContext.GetVideoResolution(), g_settings.m_ResInfo[g_graphicsContext.GetVideoResolution()].Overscan);
+      g_application.Render();
+      memcpy(&g_settings.m_ResInfo[g_graphicsContext.GetVideoResolution()].Overscan, &oscan, sizeof(OVERSCAN));
+    }
+    // now take screenshot
+    g_application.RenderNoPresent();
 	
 	lpD3dDevice = g_Windowing.Get3DDevice();
 
   if(lpD3dDevice)
-  {
+    {
     D3DVIEWPORT9 d3dvViewport;
 
     hr = lpD3dDevice->GetViewport(&d3dvViewport);
 
-    if(SUCCEEDED(hr))
-    {
+		if (SUCCEEDED(hr))
+      {
       D3DDISPLAYMODE displayMode;
 
       hr = lpD3dDevice->GetDisplayMode(0, &displayMode);    
 
-      if(SUCCEEDED(hr))
-      {
+			if (SUCCEEDED(hr))
+			{
         hr = lpD3dDevice->CreateOffscreenPlainSurface(displayMode.Width, displayMode.Height,
                               D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &lpSurface, NULL);
 
         if(SUCCEEDED(hr))
         {
-          hr = lpD3dDevice->GetFrontBufferData(0, lpSurface);
+				hr = lpD3dDevice->GetFrontBufferData(0, lpSurface);
 
-          if(SUCCEEDED(hr))
-          {
+				if (SUCCEEDED(hr))
+				{
             POINT WindowPoint = {0,0};
             RECT WindowRect;
             HWND hWnd = g_Windowing.GetHwnd();
@@ -1994,9 +2168,9 @@ void CUtil::TakeScreenshot(const char* fn, bool flashScreen)
             if(FAILED(hr))
             {
               CLog::Log(LOGERROR, "D3DXSaveSurfaceToFile failed, error code 0x%x\n", hr);
-            }
-          }
-        }
+			}
+		}
+	}
       }
     }
   }
@@ -2004,26 +2178,26 @@ void CUtil::TakeScreenshot(const char* fn, bool flashScreen)
 	if (FAILED(hr))
 	{
 		CLog::Log(LOGERROR, "Failed to Generate Screenshot, error = 0x%x", hr);
-	}
-	else 
-	{
-		CLog::Log(LOGINFO, "Screen shot saved as %s", fn);
-	}
+      }
+      else
+      {
+        CLog::Log(LOGINFO, "Screen shot saved as %s", fn);
+      }
 
 
 
 	if (lpSurface)
 	{
-		lpSurface->Release();
-	}
+      lpSurface->Release();
+    }
 
-  g_graphicsContext.Unlock();
-  if (flashScreen)
-  {
-    FlashScreen(true, true);
-    Sleep(10);
-    FlashScreen(true, false);
-  }
+    g_graphicsContext.Unlock();
+    if (flashScreen)
+    {
+      FlashScreen(true, true);
+      Sleep(10);
+      FlashScreen(true, false);
+    }
 #else
 
 #endif
@@ -2071,7 +2245,7 @@ void CUtil::TakeScreenshot()
     if (!file.IsEmpty())
     {
       TakeScreenshot(file.c_str(), true);
-    }
+          }
     else
     {
       CLog::Log(LOGWARNING, "Too many screen shots or invalid folder");
@@ -2203,7 +2377,7 @@ bool CUtil::CreateDirectoryEx(const CStdString& _strPath)
     return false;
   }
 
-  CURL url(strPath);
+  CURI url(strPath);
   // silly CStdString can't take a char in the constructor
   CStdString sep(1, url.GetDirectorySeparator());
   
@@ -2213,7 +2387,7 @@ bool CUtil::CreateDirectoryEx(const CStdString& _strPath)
   
   // we start with the root path
   CStdString dir;
-  url.GetURLWithoutFilename(dir);
+  dir = url.GetWithoutFilename();
   unsigned int i = 0;
   if (dir.IsEmpty())
   { // local directory - start with the first dirs member so that
@@ -2301,6 +2475,8 @@ void CUtil::SplitExecFunction(const CStdString &execString, CStdString &function
   function.Trim();
   if( function.Left(5).Equals("xbmc.", false) )
     function.Delete(0, 5);
+  if( function.Left(6).Equals("boxee.", false) )
+    function.Delete(0, 6);
 
   // now split up our parameters - we may have quotes to deal with as well as brackets and whitespace
   bool inQuotes = false;
@@ -2376,7 +2552,7 @@ int CUtil::GetMatchingSource(const CStdString& strPath1, VECSOURCES& VECSOURCES,
   CStdString strPath = strPath1;
 
   // Check for special protocols
-  CURL checkURL(strPath);
+  CURI checkURL(strPath);
 
   // stack://
   if (checkURL.GetProtocol() == "stack")
@@ -2429,10 +2605,10 @@ int CUtil::GetMatchingSource(const CStdString& strPath1, VECSOURCES& VECSOURCES,
 
   // remove user details, and ensure path only uses forward slashes
   // and ends with a trailing slash so as not to match a substring
-  CURL urlDest(strPath);
+  CURI urlDest(strPath);
   CStdString strDest;
   urlDest.SetOptions("");
-  urlDest.GetURLWithoutUserDetails(strDest);
+  strDest = urlDest.GetWithoutUserDetails();
   ForceForwardSlashes(strDest);
   if (!HasSlashAtEnd(strDest))
     strDest += "/";
@@ -2447,7 +2623,7 @@ int CUtil::GetMatchingSource(const CStdString& strPath1, VECSOURCES& VECSOURCES,
     // does it match a source name?
     if (share.strPath.substr(0,8) == "shout://")
     {
-      CURL url(share.strPath);
+      CURI url(share.strPath);
       if (strPath.Equals(url.GetHostName()))
         return i;
     }
@@ -2467,19 +2643,30 @@ int CUtil::GetMatchingSource(const CStdString& strPath1, VECSOURCES& VECSOURCES,
     {
       // remove user details, and ensure path only uses forward slashes
       // and ends with a trailing slash so as not to match a substring
-      CURL urlShare(_P(vecPaths[j]));
+      CURI urlShare(_P(vecPaths[j]));
       CStdString strShare;
       urlShare.SetOptions("");
-      urlShare.GetURLWithoutUserDetails(strShare);
+      strShare = urlShare.GetWithoutUserDetails();
       ForceForwardSlashes(strShare);
+
+      if (strShare.IsEmpty())
+        continue;
+
       if (!HasSlashAtEnd(strShare))
+      {
         strShare += "/";
+      }
+      else if (strShare.Left(7) == "upnp://")
+      {
+        RemoveSlashAtEnd(strShare);
+      }
+
       int iLenShare = strShare.size();
-      //CLog::Log(LOGDEBUG,"CUtil::GetMatchingSource, comparing url [%s]", strShare.c_str());
+      //CLog::Log(LOGDEBUG,"CUtil::GetMatchingSource, comparing url [%s] with share [%s]",strDest.c_str(), strShare.c_str());
 
       if ((iLenPath >= iLenShare) && (strDest.Left(iLenShare).Equals(strShare)) && (iLenShare > iLength))
       {
-        //CLog::Log(LOGDEBUG,"Found matching source at index %i: [%s], Len = [%i]", i, strShare.c_str(), iLenShare);
+        //CLog::Log(LOGDEBUG,"CUtil::GetMatchingSource, Found matching source at index %i: [%s], Len = [%i]", i, strShare.c_str(), iLenShare);
 
         // if exact match, return it immediately
         if (iLenPath == iLenShare)
@@ -2798,7 +2985,7 @@ bool CUtil::AutoDetectionPing(CStdString strFTPUserName, CStdString strFTPPass, 
     WORD wVer;
     WSADATA wData;
     PHOSTENT hostinfo;
-    wVer = MAKEWORD( 2, 0 );
+    wVer = MAKEWORD( 2, 2 );
     if (WSAStartup(wVer,&wData) == 0)
     {
 #else
@@ -2823,17 +3010,21 @@ bool CUtil::AutoDetectionPing(CStdString strFTPUserName, CStdString strFTPPass, 
   // setup UDP socket
   if( !inited )
   {
+      
     int tUDPsocket  = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
     char value      = 1;
     setsockopt( tUDPsocket, SOL_SOCKET, SO_BROADCAST, &value, value );
     struct sockaddr_in addr;
+    
     memset(&(addr),0,sizeof(addr));
     addr.sin_family       = AF_INET;
     addr.sin_addr.s_addr  = INADDR_ANY;
     addr.sin_port         = htons(iUDPPort);
-    bind(tUDPsocket,(struct sockaddr *)(&addr),sizeof(addr));
+    
+    ::bind(tUDPsocket,(struct sockaddr *)(&addr),sizeof(addr));
     udp_server_socket = tUDPsocket;
     inited = 1;
+   
   }
   FD_ZERO(&readfds);
   FD_SET(udp_server_socket, &readfds);
@@ -3338,6 +3529,7 @@ bool CUtil::SupportsFileOperations(const CStdString& strPath)
     return true;
   if (IsSmb(strPath))
     return true;
+#ifdef HAS_FILESYSTEM_MYTH
   if (IsMythTV(strPath))
   {
     /*
@@ -3347,6 +3539,7 @@ bool CUtil::SupportsFileOperations(const CStdString& strPath)
      */
     return CCMythDirectory::SupportsFileOperations(strPath);
   }
+#endif
   if (IsStack(strPath))
   {
     CStackDirectory dir;
@@ -3680,46 +3873,70 @@ int CUtil::VersionCompare(const CStdString version1, const CStdString version2)
 /**
  * Runs the job in the background, always waits in for the job to finish
  */
-bool CUtil::RunInBG(IRunnable* pJob)
+Job_Result CUtil::RunInBG(IRunnable* pJob, bool deleteJob)
 {
- DWORD locks = ExitCriticalSection(g_graphicsContext);
+  Job_Result jobResult = JOB_FAILED;
+  DWORD locks = ExitCriticalSection(g_graphicsContext);
 
-  CGUIDialogProgress* progress = (CGUIDialogProgress *)g_windowManager.GetWindow(WINDOW_DIALOG_PROGRESS);
   CStdString strId;
   strId.Format("RunInBG-%p",pJob);
-  if (progress) 
+
+  CGUIDialogProgress* progress = NULL;
+  if (!pJob->m_IsSilent)
   {
+    progress = (CGUIDialogProgress *)g_windowManager.GetWindow(WINDOW_DIALOG_PROGRESS);
+    progress->SetCanCancel(pJob->m_allowAbort);
     progress->StartModal(strId);
     progress->Progress();
   }
-  
+
   CThread *thread = new CThread(pJob);
   thread->Create();
   
   while (!thread->WaitForThreadExit(50))
   {
-    if (progress->IsCanceled() || !progress->IsDialogRunning())
+    if (progress)
     {
-      pJob->m_IsCanceled = true;
-      thread->Detach();
-      progress->Close();
-      RestoreCriticalSection(g_graphicsContext, locks);
-      return false;
+      if (progress->IsCanceled() || !progress->IsDialogRunning())
+      {
+        pJob->m_IsCanceled = true;
+        jobResult = JOB_ABORTED;
+
+        //CLog::Log(LOGDEBUG,"CUtil::RunInBG, Got Cancelled (utils)");
+        thread->Detach();
+        progress->Close();
+        RestoreCriticalSection(g_graphicsContext, locks);
+
+        return jobResult;
+      }
+
+      progress->Progress();
     }
-    
-    progress->Progress();
   }
-  
+
   pJob->m_IsCanceled = false;
   RestoreCriticalSection(g_graphicsContext, locks);
-  progress->EndProgressOperation(strId);
-  
+
+  if (progress)
+    progress->EndProgressOperation(strId);
+
   delete thread;
   
   bool bResult = pJob->m_bJobResult;
-  delete pJob;
 
-  return bResult;
+  if (bResult)
+  {
+    jobResult = JOB_SUCCEEDED;
+  }
+
+  if (!bResult || deleteJob)
+  {
+    // delete job if going to return FALSE OR specifically asked to
+    delete pJob;
+    pJob = NULL;
+  }
+
+  return jobResult;
 }
 
 bool CUtil::IsFrontMost()
@@ -3769,12 +3986,21 @@ CStdString CUtil::MD5File(const CStdString& _strFilePath)
   return res;
 }
 
+bool CUtil::IsEmbedded()
+{
+#ifdef HAS_EMBEDDED
+  return true;
+#else
+  return false;
+#endif
+}
+
 CStdString CUtil::GetPlatform()
 {
   CStdString platform;
-  
-#if defined(BOXEE_DEVICE)
-  platform = BOXEE_DEVICE;  
+
+#if defined(DEVICE_PLATFORM)
+  platform = DEVICE_PLATFORM;
 #elif defined(_LINUX) && !defined(__APPLE__)
   platform = "linux";
 #elif defined(__APPLE__)
@@ -3826,8 +4052,8 @@ CStdString CUtil::GetSpecialPathPrefix(const CStdString& specialPath)
 }
 
 bool CUtil::IsCountryAllowed(const CStdString& _countries, bool allow)
-{
-  if (!g_guiSettings.GetBool("filelists.filtergeoip"))
+{  
+  if (!g_guiSettings.GetBool("filelists.filtergeoip2"))
   {
     return true;
   }
@@ -3837,7 +4063,7 @@ bool CUtil::IsCountryAllowed(const CStdString& _countries, bool allow)
   {
     return true;
   }
-
+   
   CStdString countries = _countries;
   countries.ToLower();
 
@@ -3890,26 +4116,67 @@ void CUtil::FilterUnallowedItems(std::vector<CGUIListItemPtr>& items)
   }
 }
 
-bool CUtil::RemovePasswordFromPath(CStdString &path)
+#define HIDDEN_PASSWORD "//******@"
+
+bool CUtil::IsPasswordHidden(CStdString& path)
+{
+  return (path.Find(HIDDEN_PASSWORD) > 0);
+}
+
+bool CUtil::RemovePasswordFromPath(CStdString &path,bool completelyRemove)
 {
   bool passwordWasRemoved = false;
-  
-  CRegExp reg;
-  if (reg.RegComp("(//.*?@)"))
+
+  CRegExp regPass;
+  CRegExp regPath;
+
+  if (regPath.RegComp("(//.*?/.*?@)"))
   {
-    if (reg.RegFind(path.c_str()) >= 0)
+    if (regPath.RegFind(path.c_str()) >= 0)
+      return passwordWasRemoved;
+  }
+
+  if (regPass.RegComp("(//.*?@)"))
+  {
+    if (regPass.RegFind(path.c_str()) >= 0)
     {
-      char *rep = reg.GetReplaceString("\\1");
+      char *rep = regPass.GetReplaceString("\\1");
       if (rep)
       {
-        path.Replace(rep, "//******@");
+        if(completelyRemove)
+          path.Replace(rep,"//");
+        else
+          path.Replace(rep, HIDDEN_PASSWORD);
         passwordWasRemoved = true;
         free(rep);
       }
     }
   }
-  
+
   return passwordWasRemoved;
+}
+
+void CUtil::CreateTempDirectory(const CStdString &origPath)
+{
+#ifdef _WIN32
+  CDirectory::Create(origPath);
+#else
+  CStdString p = origPath;
+  
+  p.Replace("special://masterprofile/profiles/","");
+  p.Replace("special://masterprofile/","");
+  p.Replace("special://home/profiles/","");
+  p.Replace("special://home/","");
+  if (g_settings.m_iLastLoadedProfileIndex < (int) g_settings.m_vecProfiles.size() && g_settings.m_iLastLoadedProfileIndex > 0) 
+    p.Replace("special://profile", g_settings.m_vecProfiles[g_settings.m_iLastLoadedProfileIndex].getID());
+  else
+    p.Replace("special://profile", "");
+  
+  CStdString folder = "/tmp/profile/" + p;
+  CDirectory::Create(folder);
+  
+  symlink(folder.c_str(), CSpecialProtocol::TranslatePath(origPath).c_str());
+#endif
 }
 
 bool CUtil::MatchesPlatform(const CStdString& platform)
@@ -3923,8 +4190,8 @@ bool CUtil::MatchesPlatform(const CStdString& platform)
   
   if (myPlatform.length() == 0)
   {
-#if defined(BOXEE_DEVICE)
-      myPlatform = BOXEE_DEVICE;
+#if defined(DEVICE_PLATFORM)
+      myPlatform = DEVICE_PLATFORM;
 #elif defined(__APPLE__)
     if (CSysInfo::IsAppleTV())
       myPlatform = "atv";
@@ -3940,10 +4207,17 @@ bool CUtil::MatchesPlatform(const CStdString& platform)
   CStdStringArray platforms;
   bool found = false;
   StringUtils::SplitString(platform, ",", platforms);
-  
+
   for (size_t i = 0; i < platforms.size(); i++)
   {
     if (platforms[i] == myPlatform)
+    {
+      found = true;
+      break;
+    }
+
+   if (BOXEE::BXOEMConfiguration::GetInstance().HasParam("Boxee.Device.Name") &&
+      platforms[i] == BOXEE::BXOEMConfiguration::GetInstance().GetStringParam("Boxee.Device.Name"))
     {
       found = true;
       break;
@@ -4000,6 +4274,296 @@ Uint32 CUtil::GetDirSize(const CStdString& path) {
   return value;
 }
 
+bool CUtil::IsDVDFolder(const CStdString& strPath, const CFileItemList* pPathItems)
+{
+  bool bDVDFolder = false;
+  CFileItemList pathItems;
+
+  if(!BoxeeUtils::IsPathLocal(strPath))
+    return false;
+
+  // optimization for network pathes
+  // for protocol://hostname no need to search for dvd folder
+  if(!CUtil::IsHD(strPath))
+  {
+    CURI u(strPath);
+    if(u.GetFileName().IsEmpty())
+      return false;
+  }
+
+  pathItems.SetProperty("notOpenPassword",true);
+  if (!pPathItems)
+  {
+    CDirectory::GetDirectory(strPath, pathItems);
+    pPathItems = &pathItems;
+  }
+
+#ifdef __APPLE__
+  return CFile::Exists(strPath + "/VIDEO_TS/VIDEO_TS.IFO");
+#endif
+
+  for(int i=0; pPathItems && i<pPathItems->Size() && !bDVDFolder; i++)
+  {
+    CStdString strPath;
+    CUtil::GetDirectory(pPathItems->Get(i)->m_strPath,strPath);
+    CUtil::RemoveSlashAtEnd(strPath);
+
+    if(CUtil::GetFileName(strPath) == "VIDEO_TS")
+    {
+      CFileItemList videoTsItems;
+      CDirectory::GetDirectory(pPathItems->Get(i)->m_strPath, videoTsItems);
+
+      for(int j=0; j<videoTsItems.Size() && !bDVDFolder; j++)
+      {
+        if(videoTsItems[j]->m_strPath.Find("VIDEO_TS.IFO") != -1)
+        {
+          bDVDFolder = true;
+          break;
+        }
+      }
+    }
+  }
+
+  return bDVDFolder;
+}
+
+bool CUtil::IsBlurayFolder(const CStdString& strPath, const CFileItemList* pPathItems)
+{
+  bool bBlurayFolder = false;
+  CFileItemList pathItems;
+
+  if(!BoxeeUtils::IsPathLocal(strPath))
+    return false;
+
+  // optimization for network pathes
+  // for protocol://hostname no need to search for bluray folder
+  if(!CUtil::IsHD(strPath))
+  {
+    CURI u(strPath);
+    if(u.GetFileName().IsEmpty())
+      return false;
+  }
+
+  pathItems.SetProperty("notOpenPassword",true);
+  if (!pPathItems)
+  {
+    CDirectory::GetDirectory(strPath, pathItems);
+    pPathItems = &pathItems;
+  }
+
+#ifdef __APPLE__
+  return CFile::Exists(strPath + "/BDMV/index.bdmv");
+#endif
+
+  for(int i=0; pPathItems && i<pPathItems->Size() && !bBlurayFolder; i++)
+  {
+    CStdString strPath;
+    CUtil::GetDirectory(pPathItems->Get(i)->m_strPath,strPath);
+    CUtil::RemoveSlashAtEnd(strPath);
+
+    if(CUtil::GetFileName(strPath) == "BDMV")
+    {
+      CFileItemList bdmvItems;
+      CDirectory::GetDirectory(pPathItems->Get(i)->m_strPath, bdmvItems);
+
+      for(int j=0; j<bdmvItems.Size() && !bBlurayFolder; j++)
+      {
+        if(bdmvItems[j]->m_strPath.Find("index.bdmv") != -1)
+        {
+          bBlurayFolder = true;
+          break;
+        }
+      }
+    }
+  }
+
+  return bBlurayFolder;
+}
+
+bool CUtil::GetIsoDiskType(const CStdString& strIsoPath, CStdString& strDiskType)
+{
+  CStdString strFilename = strIsoPath;
+
+  CUtil::RemoveSlashAtEnd(strFilename);
+
+  if(!CUtil::GetExtension(strFilename).Equals(".iso"))
+  {
+    return false;
+  } 
+
+  CStdString strDVDDir = strFilename + "/VIDEO_TS";
+  CUtil::URLEncode(strDVDDir);
+  strDVDDir.Format("udf://%s", strDVDDir);
+
+  CFileItemList items;
+  CDirectory::GetDirectory(strDVDDir, items);
+
+  strDiskType = "";
+
+  // DVD
+  if(items.Size() > 0)
+  {
+    for(int i=0; i<items.Size(); i++)
+    {
+      if(items[i]->m_strPath.Find("VIDEO_TS.IFO"))
+      {
+        strDiskType = "DVD";
+        break;
+      }
+    }
+  }
+  
+  // not DVD, probe for Bluray
+  if(strDiskType.empty())
+  {
+    CStdString strBDDir = strFilename + "/BDMV";
+    CUtil::URLEncode(strBDDir);
+    strBDDir.Format("udf://%s", strBDDir);
+
+    CFileItemList items;
+    CDirectory::GetDirectory(strBDDir, items); 
+    
+    for(int i=0; i<items.Size(); i++)
+    {
+      if(items[i]->m_strPath.Find("index.bdmv"))
+      {
+        strDiskType = "BD";
+        break;
+      }
+    }
+  }
+
+  return !strDiskType.empty();
+}
+
+bool CUtil::IsValidIp(const CStdString& ip)
+{
+#define IP_REGEXP "^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+
+  CRegExp reg;
+  reg.RegComp(IP_REGEXP);
+  if (reg.RegFind(ip.c_str()) == -1)
+    return false;
+
+  return true;
+}
+
+#if defined(HAS_EMBEDDED) && !defined(__APPLE__)
+CStdString CUtil::DumpStack(bool bPrintStack)
+{
+  CStdString line, stack;
+  unsigned int max_frames = 63;
+  void* addresses[max_frames+1];
+  size_t funcnamesize;
+  int f = 0, status;
+
+  int addrlen = backtrace(addresses, sizeof(addresses) / sizeof(addresses[0]));
+  if(addrlen == 0)
+  {
+    CLog::Log(LOGERROR, "backtrace is empty, possibly currupt");
+    return "";
+  }
+
+  char** symbollist = backtrace_symbols(addresses, addrlen);
+  char* funcname = (char*)malloc(funcnamesize);
+
+  for (int i = 1; i < addrlen; i++)
+  {
+    char *begin_name = 0, *begin_offset = 0, *end_offset = 0;
+
+    for (char *p = symbollist[i]; *p; ++p)
+    {
+      if (*p == '(')
+        begin_name = p;
+      else if (*p == '+')
+        begin_offset = p;
+      else if (*p == ')' && begin_offset)
+      {
+        end_offset = p;
+        break;
+      }
+    }
+
+    if (begin_name && begin_offset && end_offset && begin_name < begin_offset)
+    {
+      *begin_name++ = '\0';
+      *begin_offset++ = '\0';
+      *end_offset = '\0';
+    }
+
+    char * tmp = __cxa_demangle(begin_name, funcname, &funcnamesize, &status);
+
+    if (status == 0 && tmp)
+    {
+      funcname = tmp;
+      line.Format("% 2d: %p <%s+%s> (%s)\n", ++f, addresses[i], funcname, begin_offset, symbollist[i]);
+    }
+    else
+    {
+      line.Format("% 2d: %p <%s+%s> (%s)\n", ++f, addresses[i], symbollist[i], begin_name, symbollist[i]);
+    }
+
+    stack += line;
+  }
+
+  free(funcname);
+  free(symbollist);
+
+  if(bPrintStack)
+    printf("%s\n", stack.c_str());
+
+  return stack;
+}
+#endif
+
+/*
+ * Hide the mount point and replace it with something nicer
+ */
+
+bool CUtil::HideExternalHDPath(CStdString inputPath, CStdString& outputPath)
+{
+#ifdef HAS_EMBEDDED
+  if (inputPath.Find(HAL_MOUNT_POINT, 0) == 0)
+  {
+    CStdString label("");
+
+    VECSOURCES devices;
+    CMediaManager::GetInstance().GetLocalDrives(devices);
+
+    bool found = false;
+    for (size_t i = 0; i < devices.size(); i++)
+    {
+      if (inputPath.find(devices[i].strPath) == 0)
+      {
+        label = devices[i].strName;
+        found = true;
+        break;
+      }
+    }
+
+    if (!found)
+      return false;
+
+    if (label == "")
+    {
+      label = g_localizeStrings.Get(51363);
+    }
+
+    int rc = inputPath.find_first_of('/', strlen(HAL_MOUNT_POINT));
+    if (rc == -1)
+    {
+      inputPath = label;
+    }
+    else
+    {
+      inputPath.replace(0, rc, label);
+    }
+  }
+#endif
+  outputPath = inputPath;
+  return true;
+}
+
 bool CUtil::CheckFileSignature(const CStdString &file, const CStdString &validSig)
 {
   SHA_CTX context;
@@ -4034,8 +4598,7 @@ bool CUtil::CheckFileSignature(const CStdString &file, const CStdString &validSi
     {
       bool bOk = RSA_verify(NID_sha1, hash, SHA_DIGEST_LENGTH, (unsigned char*)sig.data(), sig.size(), rsa);
       RSA_free(rsa);
-      if (!bOk)
-        return false;
+      return bOk;
     }
     else
       return false;
@@ -4043,3 +4606,308 @@ bool CUtil::CheckFileSignature(const CStdString &file, const CStdString &validSi
   else
     return false;
 }
+
+bool CUtil::GetHDDDirectory(const CStdString& path, CFileItemList& items)
+{
+  struct stat stDirInfo;
+  struct dirent * stFiles;
+  DIR * stDirIn;
+  char szFullName[MAXPATHLEN];
+  struct stat stFileInfo;
+  //short int mode;
+
+  if (lstat( path.c_str(), &stDirInfo) < 0)
+    return false;
+
+  if (!S_ISDIR(stDirInfo.st_mode))
+      return false;
+
+  if ((stDirIn = opendir( path.c_str())) == NULL)
+      return false;
+
+  while (( stFiles = readdir(stDirIn)) != NULL)
+  {
+    if(CUtil::HasSlashAtEnd(path))
+      sprintf(szFullName, "%s%s", path.c_str(), stFiles->d_name);
+    else
+      sprintf(szFullName, "%s/%s", path.c_str(), stFiles->d_name);
+
+    if (lstat(szFullName, &stFileInfo) < 0 || strlen(stFiles->d_name) == 0)
+      continue;
+
+    if (stFiles->d_name[0] == '.' || !strcmp(stFiles->d_name, "..") || !strcmp(stFiles->d_name, "."))
+      continue;
+
+    CFileItemPtr pItem(new CFileItem(stFiles->d_name));
+
+    pItem->m_strPath = szFullName;
+    pItem->m_bIsFolder = S_ISDIR(stFileInfo.st_mode);
+
+    if (pItem->m_bIsFolder)
+    {
+      CUtil::AddSlashAtEnd(pItem->m_strPath);
+    }
+    else
+    {
+      pItem->m_dwSize = stFileInfo.st_size;
+    }
+    pItem->m_dateTime = stFileInfo.st_mtime;
+
+    items.Add(pItem);
+  }
+
+  closedir(stDirIn);
+
+  return true;
+}
+
+#if defined(HAS_EMBEDDED) && !defined(__APPLE__)
+void CUtil::MemLeakDetectorStart()
+{
+  typedef void (*MemLeakDetectorStartFunc)(void);
+  MemLeakDetectorStartFunc MemLeakDetectorStart =NULL;
+
+  void* handle = dlopen("./leakdetector.so", RTLD_LAZY);
+   
+  if(handle)
+  {
+    MemLeakDetectorStart = (MemLeakDetectorStartFunc)dlsym(handle, "BxLeakDetectorStart");
+  }
+
+  if(MemLeakDetectorStart != NULL)
+  {
+    CLog::Log(LOGDEBUG, "Starting memory leak detector\n");
+
+    MemLeakDetectorStart();
+  }
+
+  if(handle)
+  {
+    dlclose(handle);
+  }
+}
+
+
+void CUtil::MemLeakDetectorStop()
+{
+  typedef void (*MemLeakDetectorStopFunc)(void);
+
+  MemLeakDetectorStopFunc MemLeakDetectorStop = NULL;
+
+  void* handle = dlopen("./leakdetector.so", RTLD_LAZY);
+
+  if(handle)
+  {
+    MemLeakDetectorStop = (MemLeakDetectorStopFunc)dlsym(handle, "BxLeakDetectorStop");
+  }
+
+  if(MemLeakDetectorStop != NULL)
+  {
+    CLog::Log(LOGDEBUG,"Stopping memory leak detector\n");
+    MemLeakDetectorStop();
+  }
+
+  if(handle)
+  {
+    dlclose(handle);
+  }
+}
+
+
+void CUtil::MemLeakDetectorReport(const CStdString& reportFile)
+{
+  typedef void (*MemLeakDetectorReportFunc)(const char* file);
+
+  MemLeakDetectorReportFunc MemLeakDetectorReport = NULL;
+
+  CUtil::MemLeakDetectorStop();
+
+  void* handle = dlopen("./leakdetector.so", RTLD_LAZY);
+
+  if(handle)
+  {
+    MemLeakDetectorReport = (MemLeakDetectorReportFunc)dlsym(handle, "BxLeakDetectorPrintReport");
+  }
+
+  if(MemLeakDetectorReport != NULL)
+  {
+    CLog::Log(LOGDEBUG,"Reporting leaks to file %s\n", reportFile.c_str());
+    MemLeakDetectorReport(reportFile.c_str());
+  }
+
+  if(handle)
+  {
+    dlclose(handle);
+  }
+}
+#endif
+
+IsPlayableFolderJob::IsPlayableFolderJob(CStdString path)
+{
+  m_strPath = path;
+  m_result = CPlayableFolderType::PF_NO;
+}
+
+IsPlayableFolderJob::~IsPlayableFolderJob()
+{
+
+}
+
+void IsPlayableFolderJob::Run()
+{
+  m_bJobResult = CUtil::IsBlurayFolder(m_strPath);
+
+  if (m_bJobResult)
+  {
+    m_result = CPlayableFolderType::PF_BLURAY;
+  }
+  else
+  {
+    m_bJobResult = CUtil::IsDVDFolder(m_strPath);
+
+    if (m_bJobResult)
+    {
+      m_result = CPlayableFolderType::PF_DVD;
+    }
+  }
+}
+
+bool CUtil::FindFile(const CStdString& filename, const CStdString& directory, std::vector<CStdString>& vecResult)
+{
+  bool bFound = false;
+  CFileItemList items;
+
+  CDirectory::GetDirectory(directory, items);
+
+  for(int i=0; i<items.Size(); i++)
+  {
+    if(items[i]->m_bIsFolder)
+    {
+      bFound = FindFile(filename, items[i]->m_strPath, vecResult);
+    }
+    else
+    {
+      CStdString strFilename = CUtil::GetFileName(items[i]->m_strPath);
+
+      if(strFilename == filename)
+      {
+        vecResult.push_back(items[i]->m_strPath);
+      }
+    }
+  }
+
+  return vecResult.size() != 0;
+}
+
+#ifdef _LINUX
+bool CUtil::IsMountpoint(const CStdString& strPath)
+{
+  struct stat path_stat;
+  bool result = false;
+
+  if(stat(strPath.c_str(), &path_stat) == 0 && S_ISDIR(path_stat.st_mode))
+  {
+    CStdString parent = strPath + "/..";
+    struct stat parent_stat;
+
+    if(stat(parent.c_str(), &parent_stat) == 0)
+    {
+      result = (path_stat.st_dev != parent_stat.st_dev);
+    }
+  }
+
+  return result;
+}
+
+int CUtil::GetFsMagic(const CStdString& strPath)
+{
+  struct statfs st;
+
+  int res = statfs(strPath.c_str(), &st);
+  if(res)
+    return -1;
+
+  return st.f_type;
+}
+
+bool CUtil::ValidateIpAddress(const CStdString& ipAddress)
+{
+  struct sockaddr_in sa;
+  int result = inet_pton(AF_INET, ipAddress.c_str(), &(sa.sin_addr));
+  return result != 0;
+}
+
+#endif
+
+bool CUtil::GetHostByName(const CStdString& strHostName, CStdString& strHostIp)
+{
+  struct hostent *hp = NULL;
+  bool bSuccess = false;
+
+  hp = gethostbyname(strHostName.c_str());
+  if(hp)
+  {
+    strHostIp = inet_ntoa( *( struct in_addr*)( hp->h_addr_list[0]));
+
+    if(!strHostIp.IsEmpty())
+      bSuccess = true;
+  }
+
+  return bSuccess;
+}
+
+#ifdef _WIN32
+
+/*
+ * ascii-to-longlong conversion
+ *
+ * no error checking; assumes decimal digits
+ *
+ * efficient conversion: 
+ *   start with value = 0
+ *   then, starting at first character, repeat the following
+ *   until the end of the string:
+ *
+ *     new value = (10 * (old value)) + decimal value of next character
+ *
+ */
+
+long long atoll(const char *instr)
+{
+  long long retval;
+  int i;
+
+  retval = 0;
+  for (; *instr; instr++) {
+    retval = 10*retval + (*instr - '0');
+  }
+  return retval;
+}
+
+//struct tm * 
+//localtime_r (const time_t *timer, struct tm *result) 
+//{ 
+//   struct tm *local_result; 
+//   local_result = localtime (timer); 
+//
+//   if (local_result == NULL || result == NULL) 
+//     return NULL; 
+//
+//   memcpy (result, local_result, sizeof (result)); 
+//   return result; 
+//} 
+
+struct tm * 
+gmtime_r (const time_t *timer, struct tm *result) 
+{ 
+   struct tm *local_result; 
+   local_result = gmtime (timer); 
+
+   if (local_result == NULL || result == NULL) 
+     return NULL; 
+
+   memcpy (result, local_result, sizeof (result)); 
+   return result; 
+} 
+
+#endif

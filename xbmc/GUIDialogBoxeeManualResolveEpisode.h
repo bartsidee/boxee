@@ -26,7 +26,7 @@ protected:
 private:
 
   CFileItemPtr m_videoItem;
-
+  
   bool m_bConfirmed;
   
 };

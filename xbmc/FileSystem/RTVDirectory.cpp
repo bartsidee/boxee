@@ -24,6 +24,9 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "RTVDirectory.h"
+
+#ifdef HAS_FILESYSTEM_RTV
+
 #include "Util.h"
 #include "SectionLoader.h"
 #include "URL.h"
@@ -54,7 +57,7 @@ CRTVDirectory::~CRTVDirectory(void)
 //*********************************************************************************************
 bool CRTVDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items)
 {
-  CURL url(strPath);
+  CURI url(strPath);
 
   CStdString strRoot = strPath;
   CUtil::AddSlashAtEnd(strRoot);
@@ -107,7 +110,7 @@ bool CRTVDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
       pos = strURL.ReverseFind('/');
       strRTV = strURL.Left(pos + 1);
       strRTV.Replace("*", strURL.Mid(pos + 1));
-      CURL tmpURL(strRTV);
+      CURI tmpURL(strRTV);
 
       // Force the newly constructed share into the right variables to
       // be further processed by the remainder of GetDirectory.
@@ -324,3 +327,5 @@ bool CRTVDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
 
   return true;
 }
+
+#endif

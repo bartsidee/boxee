@@ -26,16 +26,19 @@
 
 #ifdef _WIN32
 #include "Win32DirectSound.h"
+#include "Win32WASAPI.h"
 #endif
 #ifdef __APPLE__
 #include "CoreAudioRenderer.h"
-#elif defined(_LINUX)
+#elif defined(HAS_INTEL_SMD)
+#include "IntelSMDAudioRenderer.h"
+#elif defined(HAS_ALSA)
 #include "ALSADirectSound.h"
 #endif
 
 #define ReturnOnValidInitialize()          \
 {                                          \
-  if (audioSink->Initialize(pCallback, iChannels, uiSamplesPerSec, uiBitsPerSample, bResample, strAudioCodec, bIsMusic, bPassthrough))  \
+  if (audioSink->Initialize(pCallback, iChannels, channelMap, uiSamplesPerSec, uiBitsPerSample, bResample, strAudioCodec, bIsMusic, bPassthrough, bTimed, audioMediaFormat))  \
     return audioSink;                      \
   else                                     \
   {                                        \
@@ -45,27 +48,36 @@
   }                                        \
 }\
 
-IAudioRenderer* CAudioRendererFactory::Create(IAudioCallback* pCallback, int iChannels, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec, bool bIsMusic, bool bPassthrough)
+IAudioRenderer* CAudioRendererFactory::Create(IAudioCallback* pCallback, int iChannels, enum PCMChannels* channelMap, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec, bool bIsMusic, bool bPassthrough, bool bTimed, AudioMediaFormat audioMediaFormat)
 {
-  IAudioRenderer *audioSink = CreateAudioRenderer(pCallback, iChannels, uiSamplesPerSec, uiBitsPerSample, bResample, strAudioCodec, bIsMusic, bPassthrough);
+  IAudioRenderer *audioSink = CreateAudioRenderer(pCallback, iChannels, channelMap, uiSamplesPerSec, uiBitsPerSample, bResample, strAudioCodec, bIsMusic, bPassthrough, bTimed, audioMediaFormat);
 
   return audioSink;
 }
 
-IAudioRenderer* CAudioRendererFactory::CreateAudioRenderer(IAudioCallback* pCallback, int iChannels, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec, bool bIsMusic, bool bPassthrough)
+IAudioRenderer* CAudioRendererFactory::CreateAudioRenderer(IAudioCallback* pCallback, int iChannels, enum PCMChannels* channelMap, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec, bool bIsMusic, bool bPassthrough, bool bTimed, AudioMediaFormat audioMediaFormat)
 {
   IAudioRenderer* audioSink = NULL;
 
-/* incase none in the first pass was able to be created, fall back to os specific */
+/* in case none in the first pass was able to be created, fall back to os specific */
 
 #ifdef WIN32
+/*  if (bPassthrough)
+  {
+    audioSink = new CWin32WASAPI();
+    ReturnOnValidInitialize();
+  }
+  else
+  {*/
   audioSink = new CWin32DirectSound();
   ReturnOnValidInitialize();
-#endif
-#ifdef __APPLE__
+#elif defined(__APPLE__)
   audioSink = new CCoreAudioRenderer();
   ReturnOnValidInitialize();
-#elif defined(_LINUX)
+#elif defined(HAS_INTEL_SMD)
+  audioSink = new CIntelSMDAudioRenderer();
+  ReturnOnValidInitialize();
+#elif defined(HAS_ALSA)
   int requestedLibrary = g_guiSettings.GetInt("audiooutput.library");
   if (requestedLibrary == AUDIO_LIBRARY_ALSA)
   {
@@ -75,6 +87,6 @@ IAudioRenderer* CAudioRendererFactory::CreateAudioRenderer(IAudioCallback* pCall
 #endif
 
   audioSink = new CNullDirectSound();
-  audioSink->Initialize(pCallback, iChannels, uiSamplesPerSec, uiBitsPerSample, bResample, strAudioCodec, bIsMusic, bPassthrough);
+  audioSink->Initialize(pCallback, iChannels, channelMap, uiSamplesPerSec, uiBitsPerSample, bResample, strAudioCodec, bIsMusic, bPassthrough, bTimed, audioMediaFormat);
   return audioSink;
 }

@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/8svx.c
+ * @file
  * 8svx audio decoder
  * @author Jaikrishnan Menon
  * supports: fibonacci delta encoding
@@ -88,13 +88,13 @@ static av_cold int eightsvx_decode_init(AVCodecContext *avctx)
         default:
           return -1;
     }
-    avctx->sample_fmt = SAMPLE_FMT_S16;
+    avctx->sample_fmt = AV_SAMPLE_FMT_S16;
     return 0;
 }
 
-AVCodec eightsvx_fib_decoder = {
+AVCodec ff_eightsvx_fib_decoder = {
   .name           = "8svx_fib",
-  .type           = CODEC_TYPE_AUDIO,
+  .type           = AVMEDIA_TYPE_AUDIO,
   .id             = CODEC_ID_8SVX_FIB,
   .priv_data_size = sizeof (EightSvxContext),
   .init           = eightsvx_decode_init,
@@ -102,9 +102,9 @@ AVCodec eightsvx_fib_decoder = {
   .long_name      = NULL_IF_CONFIG_SMALL("8SVX fibonacci"),
 };
 
-AVCodec eightsvx_exp_decoder = {
+AVCodec ff_eightsvx_exp_decoder = {
   .name           = "8svx_exp",
-  .type           = CODEC_TYPE_AUDIO,
+  .type           = AVMEDIA_TYPE_AUDIO,
   .id             = CODEC_ID_8SVX_EXP,
   .priv_data_size = sizeof (EightSvxContext),
   .init           = eightsvx_decode_init,

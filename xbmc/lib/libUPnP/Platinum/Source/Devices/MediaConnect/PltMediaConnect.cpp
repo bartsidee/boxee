@@ -2,7 +2,7 @@
 |
 |      Platinum - AV Media Connect Device
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -44,18 +44,19 @@ NPT_SET_LOCAL_LOGGER("platinum.devices.mediaconnect")
 |       forward references
 +---------------------------------------------------------------------*/
 extern NPT_UInt8 X_MS_MediaReceiverRegistrarSCPD[];
+extern NPT_UInt8 MS_ContentDirectorySCPD[];
 
 /*----------------------------------------------------------------------
 |       PLT_MediaConnect::PLT_MediaConnect
 +---------------------------------------------------------------------*/
-PLT_MediaConnect::PLT_MediaConnect(const char*  path, 
-                                   const char*  friendly_name, 
-                                   bool         show_ip     /* = false */, 
-                                   const char*  uuid        /* = NULL */, 
-                                   NPT_UInt16   port        /* = 0 */,
-                                   bool         port_rebind /* = false */) :	
-    PLT_FileMediaServer(path, friendly_name, show_ip, uuid, port, port_rebind),
-    m_RegistrarService(NULL)
+PLT_MediaConnect::PLT_MediaConnect(const char*  friendly_name, 
+                                   bool         add_hostname     /* = true */, 
+                                   const char*  uuid             /* = NULL */, 
+                                   NPT_UInt16   port             /* = 0 */,
+                                   bool         port_rebind      /* = false */) :	
+    PLT_MediaServer(friendly_name, false, uuid, port, port_rebind),
+    m_RegistrarService(NULL),
+    m_AddHostname(add_hostname)
 {
 }
 
@@ -70,23 +71,25 @@ PLT_MediaConnect::~PLT_MediaConnect()
 |   PLT_MediaConnect::SetupServices
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaConnect::SetupServices(PLT_DeviceData& data)
+PLT_MediaConnect::SetupServices()
 {
-    m_RegistrarService = new PLT_Service(
-        &data,
-        "urn:microsoft.com:service:X_MS_MediaReceiverRegistrar:1", 
-        "urn:microsoft.com:serviceId:X_MS_MediaReceiverRegistrar");
+	{
+		m_RegistrarService = new PLT_Service(
+			this,
+			"urn:microsoft.com:service:X_MS_MediaReceiverRegistrar:1", 
+			"urn:microsoft.com:serviceId:X_MS_MediaReceiverRegistrar",
+			"X_MS_MediaReceiverRegistrar");
 
-    NPT_CHECK_FATAL(m_RegistrarService->SetSCPDXML((const char*) X_MS_MediaReceiverRegistrarSCPD));
-    NPT_CHECK_FATAL(m_RegistrarService->InitURLs("X_MS_MediaReceiverRegistrar", data.GetUUID()));
-    NPT_CHECK_FATAL(data.AddService(m_RegistrarService));
-    
-    m_RegistrarService->SetStateVariable("AuthorizationGrantedUpdateID", "0");
-    m_RegistrarService->SetStateVariable("AuthorizationDeniedUpdateID", "0");
-    m_RegistrarService->SetStateVariable("ValidationSucceededUpdateID", "0");
-    m_RegistrarService->SetStateVariable("ValidationRevokedUpdateID", "0");
+		NPT_CHECK_FATAL(m_RegistrarService->SetSCPDXML((const char*) X_MS_MediaReceiverRegistrarSCPD));
+		NPT_CHECK_FATAL(AddService(m_RegistrarService));
 
-    return PLT_FileMediaServer::SetupServices(data);
+		m_RegistrarService->SetStateVariable("AuthorizationGrantedUpdateID", "0");
+		m_RegistrarService->SetStateVariable("AuthorizationDeniedUpdateID", "0");
+		m_RegistrarService->SetStateVariable("ValidationSucceededUpdateID", "0");
+		m_RegistrarService->SetStateVariable("ValidationRevokedUpdateID", "0");
+	}
+
+    return PLT_MediaServer::SetupServices();
 }
 
 /*----------------------------------------------------------------------
@@ -97,55 +100,95 @@ PLT_MediaConnect::ProcessGetDescription(NPT_HttpRequest&              request,
                                         const NPT_HttpRequestContext& context,
                                         NPT_HttpResponse&             response)
 {
-    NPT_String m_OldModelName   = m_ModelName;
-    NPT_String m_OldModelNumber = m_ModelNumber;
-    NPT_String m_OldModelURL         = m_ModelURL;
-    NPT_String m_OldManufacturerURL  = m_ManufacturerURL;
-    NPT_String m_OldDlnaDoc          = m_DlnaDoc;
-    NPT_String m_OldDlnaCap          = m_DlnaCap;
-    NPT_String m_OldAggregationFlags = m_AggregationFlags;
+	// lock to make sure another request is not modifying the device while we are already
+	NPT_AutoLock lock(m_Lock);
 
-    // change some things based on User-Agent header
-    NPT_HttpHeader* user_agent = request.GetHeaders().GetHeader(NPT_HTTP_HEADER_USER_AGENT);
-    if (user_agent && user_agent->GetValue().Find("Xbox", 0, true)>=0) {
-        m_ModelName        = "Windows Media Connect";
-        m_ModelNumber      = "2.0";
-        m_ModelURL         = "http://www.microsoft.com/";
+	NPT_Result res				   = NPT_SUCCESS;
+    NPT_String oldModelName        = m_ModelName;
+    NPT_String oldModelNumber      = m_ModelNumber;
+    NPT_String oldModelURL         = m_ModelURL;
+    NPT_String oldManufacturerURL  = m_ManufacturerURL;
+    NPT_String oldDlnaDoc          = m_DlnaDoc;
+    NPT_String oldDlnaCap          = m_DlnaCap;
+    NPT_String oldAggregationFlags = m_AggregationFlags;
+    NPT_String oldFriendlyName     = m_FriendlyName;
+    
+    NPT_String hostname;
+    NPT_System::GetMachineName(hostname);
+
+    if (PLT_HttpHelper::GetDeviceSignature(request) == PLT_XBOX) {
+        // XBox needs to see something behind a ':'
+        if (m_AddHostname && hostname.GetLength() > 0) {
+            m_FriendlyName += ": " + hostname;
+        } else if (m_FriendlyName.Find(":") == -1) {
+            m_FriendlyName += ": 1";
+        }
+    } else if (m_AddHostname && hostname.GetLength() > 0) {
+        m_FriendlyName += " (" + hostname + ")";
+    }
+
+    // change some things based on device signature from request
+    if (PLT_HttpHelper::GetDeviceSignature(request) == PLT_XBOX || 
+        PLT_HttpHelper::GetDeviceSignature(request) == PLT_WMP) {
+        m_ModelName        = "Windows Media Player Sharing";
+        m_ModelNumber      = "12.0";
+        m_ModelURL         = "http://go.microsoft.com/fwlink/?LinkId=105926";
+        m_Manufacturer     = "Microsoft Corporation";
         m_ManufacturerURL  = "http://www.microsoft.com/";
-        m_DlnaDoc          = "";
+        m_DlnaDoc          = "DMS-1.50";
         m_DlnaCap          = "";
         m_AggregationFlags = "";
-        if (m_FriendlyName.Find(":") == -1)
-            m_FriendlyName += ": 1";
-        if (!m_FriendlyName.EndsWith(": Windows Media Connect")) 
-            m_FriendlyName += ": Windows Media Connect";
-    } else if (user_agent && user_agent->GetValue().Find("Sonos", 0, true)>=0) {
-        m_ModelName        = "Windows Media Player Sharing";
-        m_ModelNumber      = "3.0";
-    }
+        // TODO: http://msdn.microsoft.com/en-us/library/ff362657(PROT.10).aspx
+        // TODO: <serialNumber>GUID</serialNumber>
 
-    // PS3
-    NPT_HttpHeader* client_info = request.GetHeaders().GetHeader("X-AV-Client-Info");
-    if (client_info && client_info->GetValue().Find("PLAYSTATION 3", 0, true)>=0) {
-        m_DlnaDoc = "DMS-1.50";
-        m_DlnaCap = "av-upload,image-upload,audio-upload";
-        m_AggregationFlags = "10";
-    }
+        // return description with modified params
+        res = PLT_MediaServer::ProcessGetDescription(request, context, response);
+    } else {
+        if (PLT_HttpHelper::GetDeviceSignature(request) == PLT_PS3) {
+           m_DlnaDoc = "DMS-1.50";
+           m_DlnaCap = "av-upload,image-upload,audio-upload";
+           m_AggregationFlags = "10";
+        }
 
-    NPT_Result res = PLT_FileMediaServer::ProcessGetDescription(request, context, response);
+        // return description with modified params
+        res = PLT_MediaServer::ProcessGetDescription(request, context, response);
+    }
     
-        // reset to old values now
-        m_ModelName   = m_OldModelName;
-        m_ModelNumber = m_OldModelNumber;
-    m_ModelURL         = m_OldModelURL;
-    m_ManufacturerURL  = m_OldManufacturerURL;
-    m_DlnaDoc          = m_OldDlnaDoc;
-    m_DlnaCap          = m_OldDlnaCap;
-    m_AggregationFlags = m_OldAggregationFlags;
-
+    // reset to old values now
+    m_FriendlyName     = oldFriendlyName;
+    m_ModelName        = oldModelName;
+    m_ModelNumber      = oldModelNumber;
+    m_ModelURL         = oldModelURL;
+    m_ManufacturerURL  = oldManufacturerURL;
+    m_DlnaDoc          = oldDlnaDoc;
+    m_DlnaCap          = oldDlnaCap;
+    m_AggregationFlags = oldAggregationFlags;
+    
     return res;
+}
+
+/*----------------------------------------------------------------------
+|   PLT_MediaConnect::ProcessGetSCPD
++---------------------------------------------------------------------*/
+NPT_Result 
+PLT_MediaConnect::ProcessGetSCPD(PLT_Service*                  service,
+                                 NPT_HttpRequest&              request,
+                                 const NPT_HttpRequestContext& context,
+                                 NPT_HttpResponse&             response)
+{
+    // Override SCPD response by providing an SCPD without a Search action
+    // to all devices except XBox or WMP which need it
+    if (service->GetServiceType() == "urn:schemas-upnp-org:service:ContentDirectory:1" &&
+        PLT_HttpHelper::GetDeviceSignature(request) != PLT_XBOX &&
+        PLT_HttpHelper::GetDeviceSignature(request) != PLT_WMP) {
+        NPT_HttpEntity* entity;
+        PLT_HttpHelper::SetBody(response, (const char*) MS_ContentDirectorySCPD, &entity);    
+        entity->SetContentType("text/xml; charset=\"utf-8\"");
+        return NPT_SUCCESS;
     }
 
+    return PLT_MediaServer::ProcessGetSCPD(service, request, context, response);
+}
 
 /*----------------------------------------------------------------------
 |       PLT_MediaConnect::Authorize
@@ -182,7 +225,7 @@ NPT_Result
 PLT_MediaConnect::OnAction(PLT_ActionReference&          action, 
                            const PLT_HttpRequestContext& context)
 {
-      PLT_MediaConnectInfo* mc_info = NULL;
+    PLT_MediaConnectInfo* mc_info = NULL;
 
     /* parse the action name */
     NPT_String name = action->GetActionDesc().GetName();
@@ -198,7 +241,7 @@ PLT_MediaConnect::OnAction(PLT_ActionReference&          action,
         return OnIsValidated(action, mc_info);
     }  
 
-    return PLT_FileMediaServer::OnAction(action, context);
+    return PLT_MediaServer::OnAction(action, context);
 }
 
 /*----------------------------------------------------------------------
@@ -300,23 +343,93 @@ PLT_MediaConnect::OnIsValidated(PLT_ActionReference&  action,
 }
 
 /*----------------------------------------------------------------------
-|   PLT_MediaConnect::GetFilePath
+|   PLT_MediaConnect::GetMappedObjectId
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaConnect::GetFilePath(const char* object_id, 
-                              NPT_String& filepath) 
+PLT_MediaConnect::GetMappedObjectId(const char* object_id, NPT_String& mapped_object_id) 
+{
+    if (!object_id) return NPT_ERROR_INVALID_PARAMETERS;
+    
+    // Reroute XBox 360 and WMP requests to our route
+    if (NPT_StringsEqual(object_id, "15")) {
+        mapped_object_id = "0/Videos"; // Videos
+    } else if (NPT_StringsEqual(object_id, "16")) {
+        mapped_object_id = "0/Photos"; // Photos
+    } else {
+        mapped_object_id = object_id;
+    }
+    
+    return NPT_SUCCESS;
+}
+
+/*----------------------------------------------------------------------
+|   PLT_FileMediaConnectDelegate::GetFilePath
++---------------------------------------------------------------------*/
+NPT_Result
+PLT_FileMediaConnectDelegate::GetFilePath(const char* object_id, NPT_String& filepath) 
 {
     if (!object_id) return NPT_ERROR_INVALID_PARAMETERS;
 
-    // Reroute XBox360 and WMP requests to our route
+    // Reroute XBox 360 and WMP requests to our route
     if (NPT_StringsEqual(object_id, "15")) {
-        return PLT_FileMediaServer::GetFilePath("", filepath); // Videos
+        return PLT_FileMediaServerDelegate::GetFilePath("", filepath); // Videos
     } else if (NPT_StringsEqual(object_id, "16")) {
-        return PLT_FileMediaServer::GetFilePath("", filepath); // Photos
-    } else if (NPT_StringsEqual(object_id, "13")) {
-        return PLT_FileMediaServer::GetFilePath("", filepath); // Music
+        return PLT_FileMediaServerDelegate::GetFilePath("", filepath); // Photos
+    } else if (NPT_StringsEqual(object_id, "13") || NPT_StringsEqual(object_id, "4")) {
+        return PLT_FileMediaServerDelegate::GetFilePath("", filepath); // Music
     }
 
-    return PLT_FileMediaServer::GetFilePath(object_id, filepath);;
+    return PLT_FileMediaServerDelegate::GetFilePath(object_id, filepath);;
 }
 
+/*----------------------------------------------------------------------
+|   PLT_FileMediaConnectDelegate::OnSearchContainer
++---------------------------------------------------------------------*/
+NPT_Result
+PLT_FileMediaConnectDelegate::OnSearchContainer(PLT_ActionReference&          action, 
+                                                const char*                   object_id, 
+                                                const char*                   search_criteria,
+                                                const char*                   filter,
+                                                NPT_UInt32                    starting_index,
+                                                NPT_UInt32                    requested_count,
+                                                const char*                   sort_criteria,
+                                                const PLT_HttpRequestContext& context)
+{
+    /* parse search criteria */
+    
+    /* TODO: HACK TO PASS DLNA */
+    if (search_criteria && NPT_StringsEqual(search_criteria, "Unknownfieldname")) {
+        /* error */
+        NPT_LOG_WARNING_1("Unsupported or invalid search criteria %s", search_criteria);
+        action->SetError(708, "Unsupported or invalid search criteria");
+        return NPT_FAILURE;
+    }
+    
+    /* locate the file from the object ID */
+    NPT_String dir;
+    if (NPT_FAILED(GetFilePath(object_id, dir))) {
+        /* error */
+        NPT_LOG_WARNING("ObjectID not found.");
+        action->SetError(710, "No Such Container.");
+        return NPT_FAILURE;
+    }
+    
+    /* retrieve the item type */
+    NPT_FileInfo info;
+    NPT_Result res = NPT_File::GetInfo(dir, &info);
+    if (NPT_FAILED(res) || (info.m_Type != NPT_FileInfo::FILE_TYPE_DIRECTORY)) {
+        /* error */
+        NPT_LOG_WARNING("No such container");
+        action->SetError(710, "No such container");
+        return NPT_FAILURE;
+    }
+    
+    /* hack for now to return something back to XBox 360 */
+    return OnBrowseDirectChildren(action, 
+                                  object_id, 
+                                  filter, 
+                                  starting_index, 
+                                  requested_count, 
+                                  sort_criteria, 
+                                  context);
+}

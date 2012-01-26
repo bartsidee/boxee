@@ -2,7 +2,7 @@
 |
 |   Platinum - UPnP Engine
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -29,7 +29,7 @@
 | 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 | http://www.gnu.org/licenses/gpl-2.0.html
 |
- ****************************************************************/
+****************************************************************/
 
 /*----------------------------------------------------------------------
 |   includes
@@ -129,8 +129,8 @@ PLT_UPnP::PLT_UPnP(NPT_UInt32 port, bool multicast /* = true */) :
     m_SsdpListenTask(NULL),
 	m_IgnoreLocalUUIDs(true)
 {
-    NPT_HttpClient::m_UserAgentHeader = "Platinum/" PLT_PLATINUM_SDK_VERSION_STRING ", DLNADOC/1.50";
-    NPT_HttpServer::m_ServerHeader    = "UPnP/1.0, DLNADOC/1.50, Platinum/" PLT_PLATINUM_SDK_VERSION_STRING;
+    NPT_HttpClient::m_UserAgentHeader = "Windows NT/5.0 Platinum/" PLT_PLATINUM_SDK_VERSION_STRING " DLNADOC/1.50";
+    NPT_HttpServer::m_ServerHeader    = "Windows NT/5.0 UPnP/1.0, DLNADOC/1.50 Platinum/" PLT_PLATINUM_SDK_VERSION_STRING;
 }
     
 /*----------------------------------------------------------------------
@@ -157,16 +157,6 @@ PLT_UPnP::Start()
     if (m_Started == true) return NPT_FAILURE;
 
     NPT_Socket* socket = m_Multicast?new NPT_UdpMulticastSocket(): new NPT_UdpSocket();
-
-    // try to bind harder
-    //NPT_List<NPT_IpAddress> ips;
-    //PLT_UPnPMessageHelper::GetIPAddresses(ips);
-    //NPT_CHECK_SEVERE(socket->Bind(NPT_SocketAddress(*ips.GetFirstItem(), m_Port)));
-
-    //NPT_IpAddress ip;
-    //ip.Parse("127.0.0.1");
-    //NPT_CHECK_SEVERE(socket->Bind(NPT_SocketAddress(ip, m_Port)));
-
     NPT_CHECK_SEVERE(socket->Bind(NPT_SocketAddress(NPT_IpAddress::Any, m_Port)));
 
     /* create the ssdp listener */

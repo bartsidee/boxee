@@ -12,8 +12,8 @@ __version__ = sys.modules[ "__main__" ].__version__
 # comapatble versions
 SETTINGS_VERSIONS = ( "1.0", )
 # base paths
-BASE_DATA_PATH = os.path.join( "special://masterprofile/script_data", __scriptname__ )
-BASE_SETTINGS_PATH = os.path.join( "special://masterprofile/script_data", __scriptname__ )
+BASE_DATA_PATH = xbmc.translatePath( os.path.join( "special://masterprofile/script_data", __scriptname__ ) )
+BASE_SETTINGS_PATH = xbmc.translatePath( os.path.join( "special://masterprofile/script_data", __scriptname__ ) )
 BASE_RESOURCE_PATH = sys.modules[ "__main__" ].BASE_RESOURCE_PATH
 # special action codes
 SELECT_ITEM = ( 11, 256, 61453, )

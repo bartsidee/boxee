@@ -161,12 +161,12 @@ void CKaraokeLyricsCDG::Render()
 
     // Get screen coordinates
   RESOLUTION res = g_graphicsContext.GetVideoResolution();
-  CRect vertCoords((float)g_settings.m_ResInfo[res].Overscan.left,
+  const CRect vertCoords((float)g_settings.m_ResInfo[res].Overscan.left,
                    (float)g_settings.m_ResInfo[res].Overscan.top,
                    (float)g_settings.m_ResInfo[res].Overscan.right,
                    (float)g_settings.m_ResInfo[res].Overscan.bottom);
 
-  CGUITexture::DrawQuad(vertCoords, 0xffffffff, m_pCdgTexture, &texCoords);
+  CGUITexture::DrawQuad(vertCoords, 0xffffffff, false, m_pCdgTexture, &texCoords);
 }
 
 bool CKaraokeLyricsCDG::Load()

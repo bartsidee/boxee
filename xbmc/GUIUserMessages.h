@@ -138,4 +138,14 @@
 #define GUI_MSG_RESET_STATE   GUI_MSG_USER + 44
 #define GUI_MSG_RESTORE_STATE   GUI_MSG_USER + 45
 #define GUI_MSG_FILE_SCANNER_UPDATE   GUI_MSG_USER + 46
+#define GUI_MSG_FILE_RESCAN_COMPLETE  GUI_MSG_USER + 47
+
+// Message indicates what to do with an item used with corresponding GUI_MSG_MANAGE_ITEM in GUIMessage.h
+#define GUI_MSG_ADD_ITEM     GUI_MSG_USER + 48
+#define GUI_MSG_REMOVE_ITEM  GUI_MSG_USER + 49
+#define GUI_MSG_CHANGE_ITEM  GUI_MSG_USER + 50
+
+// Messages indicate changes in containers that should be reflected in the UI using with GUI_MSG_UPDATE
+#define GUI_MSG_APPS_CATEGORIES_UPDATE GUI_MSG_USER + 51
+#define GUI_MSG_MEDIA_CHANNELS_UPDATE GUI_MSG_USER + 52
 

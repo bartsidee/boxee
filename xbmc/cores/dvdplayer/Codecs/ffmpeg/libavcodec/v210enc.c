@@ -102,9 +102,9 @@ static int encode_frame(AVCodecContext *avctx, unsigned char *buf,
         pdst += stride;
         memset(p, 0, pdst - p);
         p = pdst;
-        y += pic->linesize[0]/2 - avctx->width;
-        u += pic->linesize[1]/2 - avctx->width/2;
-        v += pic->linesize[2]/2 - avctx->width/2;
+        y += pic->linesize[0] / 2 - avctx->width;
+        u += pic->linesize[1] / 2 - avctx->width / 2;
+        v += pic->linesize[2] / 2 - avctx->width / 2;
     }
 
     return p - buf;
@@ -117,9 +117,9 @@ static av_cold int encode_close(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec v210_encoder = {
+AVCodec ff_v210_encoder = {
     "v210",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_V210,
     0,
     encode_init,

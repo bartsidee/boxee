@@ -46,18 +46,16 @@ typedef uint32_t color_t;
 typedef std::vector<character_t> vecText;
 typedef std::vector<color_t> vecColors;
 
+#include "system.h"
+
+#ifdef HAS_HARFBUZZ_NG
+#include <hb-ft.h>
+#endif
+
 /*!
  \ingroup textures
  \brief 
  */
-
-typedef struct _SVertex
-{
-  float u, v;
-  unsigned char r, g, b, a;    
-  float x, y, z;
-} SVertex;
-
 
 class CGUIFontTTFBase
 {
@@ -67,16 +65,24 @@ public:
 
   CGUIFontTTFBase(const CStdString& strFileName);
   virtual ~CGUIFontTTFBase(void);
+  static void PrintPixelCount() {}
 
-  void Clear();
-
-  bool Load(const CStdString& strFile, float height = 20.0f, float aspect = 1.0f, float lineSpacing = 1.0f);
-
+  virtual void Render(FontCoordsIndiced& coords, bool useShadow) = 0;
   virtual void Begin() = 0;
   virtual void End() = 0;
+  virtual bool LoadShaders() { return true; }
 
+  void Clear();
+  bool Load(const CStdString& strFilename, float height = 20.0f, float aspect = 1.0f, float lineSpacing = 1.0f);
   const CStdString& GetFileName() const { return m_strFileName; };
-  
+
+  unsigned int GetTextureWidth() { return m_textureWidth; }
+  unsigned int GetTextureHeight() { return m_textureHeight; }
+
+  time_t GetFaceLoadTime() { return m_faceLoadTime; }
+
+  void SetStyle(int style) { m_style = style; }
+
 protected:
   struct Character
   {
@@ -89,35 +95,37 @@ protected:
   void AddReference();
   void RemoveReference();
 
+  void ReloadFace();
   float GetTextWidthInternal(vecText::const_iterator start, vecText::const_iterator end);
   float GetCharWidthInternal(character_t ch);
   float GetTextHeight(float lineSpacing, int numLines) const;
   float GetLineHeight(float lineSpacing) const;
 
-  void DrawTextInternal(float x, float y, const vecColors &colors, const vecText &text,
-                            uint32_t alignment, float maxPixelWidth, bool scrolling);
+  void BuildTextCoordinates(float x, float y, const vecColors &colors, color_t shadowColor, const vecText &text,
+                            uint32_t alignment, float maxPixelWidth, bool scrolling, FontCoordsIndiced& pData);
 
-  void DrawTextInternal(float x, float y, color_t color, const vecText &text,
-                            uint32_t alignment, float maxPixelWidth, bool scrolling)
+  void BuildTextCoordinates(float x, float y, color_t color, color_t shadowColor, const vecText &text,
+                            uint32_t alignment, float maxPixelWidth, bool scrolling, FontCoordsIndiced& pData)
   {
     vecColors colors;
     colors.push_back(color);
-    DrawTextInternal(x, y, colors, text, alignment, maxPixelWidth, scrolling);
+    BuildTextCoordinates(x, y, colors, shadowColor, text, alignment, maxPixelWidth, scrolling, pData);
   }
 
   float m_height;
+  float m_aspect;
   CStdString m_strFilename;
 
   // Stuff for pre-rendering for speed
   inline Character *GetCharacter(character_t letter);
   bool CacheCharacter(wchar_t letter, uint32_t style, Character *ch);
-  void RenderCharacter(float posX, float posY, const Character *ch, color_t color, bool roundX);
+  void BuildCharacterCoordinates(float posX, float posY, const Character *ch, 
+    color_t color, color_t shadowColor, bool roundX, FontCoordsIndiced& pData);
   void ClearCharacterCache();
-  
+
   virtual CBaseTexture* ReallocTexture(unsigned int& newHeight) = 0;
   virtual bool CopyCharToTexture(FT_BitmapGlyph bitGlyph, Character *ch) = 0;
   virtual void DeleteHardwareTexture() = 0;
-  virtual void RenderInternal(SVertex* v) = 0;
 
   // modifying glyphs
   void EmboldenGlyph(FT_GlyphSlot slot);
@@ -126,11 +134,9 @@ protected:
   CBaseTexture* m_texture;        // texture that holds our rendered characters (8bit alpha only)
 
   unsigned int m_textureWidth;       // width of our texture
-  unsigned int m_textureHeight;      // heigth of our texture
+  unsigned int m_textureHeight;      // height of our texture
   int m_posX;                        // current position in the texture
   int m_posY;
-
-  color_t m_color;
 
   Character *m_char;                 // our characters
   Character *m_charquick[256*4];     // ascii chars (4 styles) here
@@ -142,20 +148,16 @@ protected:
   unsigned int m_cellBaseLine;
   unsigned int m_cellHeight;
 
-  unsigned int m_nestedBeginCount;             // speedups
-
   // freetype stuff
   FT_Face    m_face;
+  time_t     m_faceLoadTime;
 
-  float m_originX;
-  float m_originY;
+#ifdef HAS_HARFBUZZ_NG
+  hb_font_t* hb_font;
+#endif
 
   bool m_bTextureLoaded;
   unsigned int m_nTexture;
-
-  SVertex* m_vertex;
-  int      m_vertex_count;
-  int      m_vertex_size;
 
   float    m_textureScaleX;
   float    m_textureScaleY;
@@ -164,8 +166,11 @@ protected:
 
   CStdString m_strFileName;
 
+  float m_originX, m_originY ;
+
 private:
   int m_referenceCount;
+  int m_style;
 };
 
 #if defined(HAS_GL)

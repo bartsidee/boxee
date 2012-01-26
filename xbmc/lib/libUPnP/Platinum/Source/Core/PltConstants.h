@@ -2,7 +2,7 @@
 |
 |   Platinum - UPnP Constants
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -31,6 +31,10 @@
 |
 ****************************************************************/
 
+/** @file
+ UPnP Constants
+ */
+
 #ifndef _PLT_UPNP_CONSTANTS_H_
 #define _PLT_UPNP_CONSTANTS_H_
 
@@ -42,6 +46,10 @@
 /*----------------------------------------------------------------------
 |   PLT_Constants
 +---------------------------------------------------------------------*/
+/**
+ The PLT_Constants class provides a way to globally set or get certain 
+ UPnP constants.
+ */
 class PLT_Constants
 {
 public:

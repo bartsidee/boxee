@@ -27,6 +27,8 @@
 #include "Geometry.h"
 #include "TransformMatrix.h"
 #include "StdString.h"
+#include "FrameBufferObject.h"
+#include "Resolution.h"
 #include <stdint.h>
 
 
@@ -34,8 +36,16 @@
 typedef enum _RenderingSystemType
 {
   RENDERING_SYSTEM_OPENGL,
-  RENDERING_SYSTEM_DIRECTX
+  RENDERING_SYSTEM_DIRECTX,
+  RENDERING_SYSTEM_OPENGLES
 } RenderingSystemType;
+
+typedef enum _TransformMatrixType
+{
+  MATRIX_TYPE_MODEL_VIEW,
+  MATRIX_TYPE_PROJECTION
+} TransformMatrixType;
+
 
 /*
 *   CRenderSystemBase interface allows us to create the rendering engine we use.
@@ -53,6 +63,36 @@ enum
   RENDER_CAPS_RT_NPOT  = (1 << 3)
 };
 
+typedef enum _StencilFunc 
+{
+  STENCIL_FUNC_NEVER  = 0,
+  STENCIL_FUNC_LESS = 1,
+  STENCIL_FUNC_EQUAL = 2,
+  STENCIL_FUNC_LEQUAL = 3,
+  STENCIL_FUNC_GREATER = 4,
+  STENCIL_FUNC_NOTEQUAL = 5,
+  STENCIL_FUNC_GEQUAL = 6,
+  STENCIL_FUNC_ALWAYS = 7
+} StencilFunc;
+
+typedef enum _StencilOp
+{
+  STENCIL_OP_KEEP = 0,
+  STENCIL_OP_REPLACE = 1,
+  STENCIL_OP_INCR = 2,
+  STENCIL_OP_DECR = 3,
+  STENCIL_OP_INVERT = 4,
+  STENCIL_OP_INCR_WRAP = 5,
+  STENCIL_OP_DECR_WRAP = 6,
+} StencilOp;
+
+typedef enum _Mode3D
+{
+  MODE_3D_NONE = 0,
+  MODE_3D_SBS = 1,
+  MODE_3D_OU = 2
+} Mode3D;
+
 class CRenderSystemBase
 {
 public:
@@ -64,13 +104,14 @@ public:
 
   virtual bool InitRenderSystem() = 0;
   virtual bool DestroyRenderSystem() = 0;
-  virtual bool ResetRenderSystem(int width, int height, bool fullScreen, float refreshRate) = 0;
+  virtual bool ResetRenderSystem(int width, int height, bool fullScreen, float refreshRate);
 
-  virtual bool BeginRender() = 0;
-  virtual bool EndRender() = 0;
+  virtual bool BeginRender();
+  virtual bool EndRender();
   virtual bool PresentRender() = 0;
-  virtual bool ClearBuffers(color_t color) = 0;
-  virtual bool ClearBuffers(float r, float g, float b, float a) = 0;
+  virtual bool ClearBuffers(color_t color) { return false; }
+  virtual bool ClearBuffers(float r, float g, float b, float a) { return false; }
+  virtual void ClearStencilBuffer(int val) {}
   virtual bool IsExtSupported(const char* extension) = 0;
 
   virtual void SetVSync(bool vsync) = 0;
@@ -79,12 +120,15 @@ public:
   virtual void SetViewPort(CRect& viewPort) = 0;
   virtual void GetViewPort(CRect& viewPort) = 0;
 
+  virtual void EnableClipping(bool bEnable) {}
   virtual void CaptureStateBlock() = 0;
   virtual void ApplyStateBlock() = 0;
 
-  virtual void SetCameraPosition(const CPoint &camera, int screenWidth, int screenHeight) = 0;
-  virtual void ApplyHardwareTransform(const TransformMatrix &matrix) = 0;
-  virtual void RestoreHardwareTransform() = 0;
+  virtual void ApplyHardwareTransform(TransformMatrixType type, const TransformMatrix &matrix);
+  virtual TransformMatrix* GetHardwareTransform(TransformMatrixType type);
+ 
+  virtual void ApplyClippingRect(CRect& clipRect) = 0;
+  virtual void GetClipRect(CRect& clipRect) = 0;
 
   virtual bool TestRender() = 0;
 
@@ -92,11 +136,26 @@ public:
   void GetShaderVersion(unsigned int& major, unsigned int& minor) const;
   const CStdString& GetRenderVendor() const { return m_RenderVendor; }
   const CStdString& GetRenderRenderer() const { return m_RenderRenderer; }
+  virtual void* GetRenderContext() { return NULL; }
   bool SupportsDXT() const;
   bool SupportsNPOT(bool dxt) const;
   bool SupportsRT_NPOT() const;
   unsigned int GetMaxTextureSize() const { return m_maxTextureSize; }
   unsigned int GetTextureMemorySize() const { return m_textureMemorySize; } // in MB
+
+  virtual void EnableTexture(bool bEnable) {}
+  virtual void EnableBlending(bool bEnableRGB, bool bEnableAlpha = false) = 0;
+
+  virtual void EnableStencil(bool bEnable) {}
+  virtual void EnableDepthTest(bool bEnable) {}
+  virtual void SetStencilFunc(StencilFunc func, int ref, unsigned int mask) {}
+  virtual void SetStencilOp (StencilOp fail_op, StencilOp fail, StencilOp pass) {}
+  virtual void SetColorMask(bool r, bool g, bool b, bool a) {}
+  
+  virtual void InitializeFBO();
+
+  Mode3D GetMode3D();
+  void SetMode3D(Mode3D mode);
 
   CStdString GetRenderSystemErrorStatus() { return m_strErrorMessage; }
 
@@ -116,7 +175,19 @@ protected:
 
   unsigned int m_renderCaps;
 
+  TransformMatrix m_matModelView;
+  TransformMatrix m_matProjection;
+
+  int        m_width;
+  int        m_height;
+
+  unsigned int        m_minDXTPitch;
+
   CStdString  m_strErrorMessage;
+
+  CFrameBufferObject m_FBO;
+
+  OVERSCAN m_lastOverScan;
 };
 
 #endif // RENDER_SYSTEM_H

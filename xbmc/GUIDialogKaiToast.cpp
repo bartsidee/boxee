@@ -25,16 +25,27 @@
 #include "GUIAudioManager.h"
 #include "utils/SingleLock.h"
 #include "utils/TimeUtils.h"
+#include "guilib/GUIInfoTypes.h"
 
 #define POPUP_ICON                400
 #define POPUP_CAPTION_TEXT        401
 #define POPUP_NOTIFICATION_TEXT   402
+#define POPUP_BACKGROUND          403
 
 CGUIDialogKaiToast::CGUIDialogKaiToast(void) : CGUIDialog(WINDOW_DIALOG_KAI_TOAST, "DialogKaiToast.xml")
 {
-  m_defaultIcon = "";
   m_loadOnDemand = false;
-  m_showImage = false;
+
+  m_mapIconToImage[ICON_STAR] = DEFAULT_ICON;
+  m_mapIconToImage[ICON_CHECK] = "kaidialog/kai-check.png";
+  m_mapIconToImage[ICON_SEARCH] = "kaidialog/kai-search.png";
+  m_mapIconToImage[ICON_EXCLAMATION] = "kaidialog/kai-alert.png";
+  m_mapIconToImage[ICON_ARROWDOWN] = "kaidialog/kai-download.png";
+  m_mapIconToImage[ICON_ARROWUP] = "kaidialog/kai-update.png";
+  m_mapIconToImage[ICON_HEART] = "kaidialog/kai-heart.png";
+  m_mapIconToImage[ICON_SCAN] = "kaidialog/kai-scan.png";
+  m_mapIconToImage[ICON_PLUS] = "kaidialog/kai-plus.png";
+  m_mapIconToImage[ICON_MINUS] = "kaidialog/kai-minus.png";
 }
 
 CGUIDialogKaiToast::~CGUIDialogKaiToast(void)
@@ -46,18 +57,18 @@ bool CGUIDialogKaiToast::OnMessage(CGUIMessage& message)
   switch ( message.GetMessage() )
   {
   case GUI_MSG_WINDOW_INIT:
-  {
-    CGUIDialog::OnMessage(message);
+    {
+      CGUIDialog::OnMessage(message);
 
-    ResetTimer();
-    return true;
-  }
-  break;
+      ResetTimer();
+      return true;
+    }
+    break;
   case GUI_MSG_WINDOW_DEINIT:
-  {
+    {
 
-  }
-  break;
+    }
+    break;
   }
 
   return CGUIDialog::OnMessage(message);
@@ -66,22 +77,22 @@ bool CGUIDialogKaiToast::OnMessage(CGUIMessage& message)
 void CGUIDialogKaiToast::OnWindowLoaded()
 {
   CGUIDialog::OnWindowLoaded();
-  CGUIImage *image = (CGUIImage *)GetControl(POPUP_ICON);
-  if (image)
-    m_defaultIcon = image->GetFileName();
 }
 
 void CGUIDialogKaiToast::OnInitWindow()
 {
   CGUIDialog::OnInitWindow();
+}
 
-  if (m_showImage)
+void CGUIDialogKaiToast::QueueNotification(const CGUIDialogKaiToast::PopupIconEnums& icon , const CStdString& aCaption, const CStdString& aDescription, unsigned int displayTime /*= TOAST_DISPLAY_TIME*/, const CStdString& iconColor /*= ""*/, const CStdString& bgColor /*= ""*/)
+{
+  std::map<PopupIconEnums, CStdString>::iterator it;
+
+  it = m_mapIconToImage.find(icon);
+
+  if (it != m_mapIconToImage.end())
   {
-    SET_CONTROL_VISIBLE(POPUP_ICON);
-  }
-  else
-  {
-    SET_CONTROL_HIDDEN(POPUP_ICON);
+    QueueNotification(it->second, aCaption, aDescription, displayTime, iconColor, bgColor);
   }
 }
 
@@ -90,7 +101,7 @@ void CGUIDialogKaiToast::QueueNotification(const CStdString& aCaption, const CSt
   QueueNotification("", aCaption, aDescription);
 }
 
-void CGUIDialogKaiToast::QueueNotification(const CStdString& aImageFile, const CStdString& aCaption, const CStdString& aDescription, unsigned int displayTime /*= TOAST_DISPLAY_TIME*/)
+void CGUIDialogKaiToast::QueueNotification(const CStdString& aImageFile, const CStdString& aCaption, const CStdString& aDescription, unsigned int displayTime /*= TOAST_DISPLAY_TIME*/ , const CStdString& iconColor /*= ""*/, const CStdString& bgColor /*=""*/)
 {
   if (!IsValid(aImageFile,aCaption,aDescription,displayTime))
   {
@@ -104,6 +115,24 @@ void CGUIDialogKaiToast::QueueNotification(const CStdString& aImageFile, const C
   toast.caption = aCaption;
   toast.description = aDescription;
   toast.displayTime = displayTime > TOAST_MESSAGE_TIME + 500 ? displayTime : TOAST_MESSAGE_TIME + 500;
+  toast.bgColor = bgColor;
+  toast.iconColor = iconColor;
+
+  //set the defaults if nothing was specified
+  if (toast.imagefile.IsEmpty())
+  {
+    toast.imagefile = DEFAULT_ICON;
+  }
+
+  if (toast.bgColor.IsEmpty())
+  {
+    toast.bgColor = DEFAULT_BGCOLOR;
+  }
+
+  if (toast.iconColor.IsEmpty())
+  {
+    toast.iconColor = DEFAULT_BGCOLOR;
+  }
 
   m_notifications.push(toast);
 }
@@ -132,23 +161,23 @@ bool CGUIDialogKaiToast::DoWork()
 
     SET_CONTROL_LABEL(POPUP_NOTIFICATION_TEXT, toast.description);
 
+
     CGUIImage *image = (CGUIImage *)GetControl(POPUP_ICON);
-    if (image)
+    if (image && !toast.imagefile.IsEmpty())
     {
-      if (!toast.imagefile.IsEmpty())
-      {
-        image->SetFileName(toast.imagefile);
-        m_showImage = true;
-      }
-      else
-      {
-        image->SetFileName(m_defaultIcon);
-        m_showImage = false;
-      }
+      CGUIInfoColor iconColor;
+      iconColor.Parse(toast.iconColor);
+
+      image->SetFileName(toast.imagefile);
+      image->SetColorDiffuse(iconColor);
     }
-    else
+
+    CGUIImage *imagebg = (CGUIImage *)GetControl(POPUP_BACKGROUND);
+    if (imagebg)
     {
-      m_showImage = false;
+      CGUIInfoColor bgColor;
+      bgColor.Parse(toast.bgColor);
+      imagebg->SetColorDiffuse(bgColor);
     }
 
     // not playing the sound - currently it causes issues with the gui-sound system on mac (sound is suddanly lost due to overrun of the sound-buffer)

@@ -36,9 +36,9 @@
 using namespace PLAYLIST;
 using namespace XFILE;
 
-#define M3U_START_MARKER  "#EXTM3U"
-#define M3U_INFO_MARKER   "#EXTINF"
-#define M3U_ARTIST_MARKER "#EXTART"
+#define M3U_START_MARKER "#EXTM3U"
+#define M3U_INFO_MARKER  "#EXTINF"
+#define M3U_ARTIST_MARKER  "#EXTART"
 #define M3U_ALBUM_MARKER  "#EXTALB"
 
 // example m3u file:
@@ -91,6 +91,12 @@ bool CPlayListM3U::Load(const CStdString& strFileName)
 
   m_strPlayListName = CUtil::GetFileName(strFileName);
   CUtil::GetParentPath(strFileName, m_strBasePath);
+ 
+  CURI url(m_strBasePath);
+  if(!url.GetOptions().IsEmpty())
+  { 
+    m_strBasePath = url.GetUrlWithoutOptions();
+  }
 
   bool succeeded = LoadM3uFile(strFileName,0);
 
@@ -122,8 +128,10 @@ bool CPlayListM3U::LoadM3uFile(const CStdString& strFileName, unsigned int level
   CStdString encryptionMethod = "";
   CStdString encryptKeyUri = "";
   CStdString encryptIv = "";
-  int startTime = 0;
+  int startTime = -1;
   int numOfUris = 0;
+  bool discontinuity = false;
+  bool readStartTime = false;
 
   //////////////
   // uri tags //
@@ -133,7 +141,7 @@ bool CPlayListM3U::LoadM3uFile(const CStdString& strFileName, unsigned int level
   long lDuration = 0;
 
   CFile file;
-  if (!file.Open(strFileName))
+  if (!file.Open(strFileName) )
   {
     file.Close();
     return false;
@@ -173,7 +181,7 @@ bool CPlayListM3U::LoadM3uFile(const CStdString& strFileName, unsigned int level
       // line is tag or comment //
       ////////////////////////////
 
-      if (strLine.Left((int)strlen(M3U_INFO_MARKER)) == M3U_INFO_MARKER)
+      if (strLine.Left( (int)strlen(M3U_INFO_MARKER) ) == M3U_INFO_MARKER)
       {
         // Handle #EXTINF
         ParseEXTINF(strLine, strInfo, lDuration);
@@ -224,7 +232,7 @@ bool CPlayListM3U::LoadM3uFile(const CStdString& strFileName, unsigned int level
 
         m_endListTagWasRead = true;
       }
-      else if (startTime == 0 && strLine.Left((int)strlen(EXT_X_PROGRAM_DATE_TIME)) == EXT_X_PROGRAM_DATE_TIME)
+      else if (strLine.Left((int)strlen(EXT_X_PROGRAM_DATE_TIME)) == EXT_X_PROGRAM_DATE_TIME)
       {
         CStdStringArray arr;
         StringUtils::SplitString(strLine, "T", arr);
@@ -233,26 +241,13 @@ bool CPlayListM3U::LoadM3uFile(const CStdString& strFileName, unsigned int level
           int nHours=0, nMin=0, nSec=0;
           sscanf(arr[4].c_str(), "%d:%d:%d",&nHours,&nMin,&nSec);
           startTime = nHours*3600 + nMin*60 + nSec;
+          readStartTime = true;
         }
       }
       else if (strLine.Left((int)strlen(EXT_X_DISCONTINUITY)) == EXT_X_DISCONTINUITY)
       {
         // Handle #EXT-X-DISCONTINUITY
-
-        ///////////////////////////////////
-        // reset all playlist parameters //
-        ///////////////////////////////////
-
-        targetDurationTag = "";
-        playlistSequenceNo = -1;
-
-        bandwidth = "";
-        programId = "";
-        codecs = "";
-
-        encryptionMethod = "";
-        encryptKeyUri = "";
-        encryptIv = "";
+        discontinuity = true;
       }
     }
     else
@@ -304,10 +299,17 @@ bool CPlayListM3U::LoadM3uFile(const CStdString& strFileName, unsigned int level
             playlistSequenceNo = 1;
           }
 
+          if(startTime != -1)
+          {
+            if(readStartTime == false)
+              startTime += lDuration;
+
+            newItem->SetProperty("m3u8-startDate",startTime);
+          }
+
           newItem->SetProperty("m3u8-playlistSequenceNo",(unsigned long)playlistSequenceNo);
           newItem->SetProperty("m3u8-durationInSec",(unsigned long)lDuration);
           newItem->SetProperty("m3u8-targetDurationInSec",atoi(targetDurationTag));
-          newItem->SetProperty("m3u8-startDate",startTime);
 
           if (!encryptionMethod.IsEmpty() && (encryptionMethod != "NONE"))
           {
@@ -344,6 +346,11 @@ bool CPlayListM3U::LoadM3uFile(const CStdString& strFileName, unsigned int level
             newItem->SetProperty("m3u8-isPlaylist",true);
           }
 
+          if(discontinuity)
+          {
+            newItem->SetProperty("m3u8-discontinuity", true);
+          }
+
           //CLog::Log(LOGDEBUG,"CPlayListM3U::LoadM3uFile - After set item [path=%s] with [SequenceNo=%lu]. [level=%d][m_isM3U8=%d] (m3u)",newItem->m_strPath.c_str(),newItem->GetPropertyULong("m3u8-playlistSequenceNo"),level,m_isM3U8);
 
           playlistSequenceNo++;
@@ -365,6 +372,13 @@ bool CPlayListM3U::LoadM3uFile(const CStdString& strFileName, unsigned int level
         programId = "";
         codecs = "";
         nextUrlIsPlaylist = false;
+        discontinuity = false;
+        readStartTime = false;
+
+        if(hasEXTM3U == false)
+        {
+          CLog::Log(LOGWARNING,"CPlayListM3U::LoadM3uFile - EXTM3U tag not found (m3u)");
+        }
       }
     }
   }
@@ -396,7 +410,7 @@ void CPlayListM3U::Save(const CStdString& strFileName) const
   if (!file.OpenForWrite(strPlaylist,true))
   {
     CLog::Log(LOGERROR, "Could not save M3U playlist: [%s]", strPlaylist.c_str());
-    return;
+    return ;
   }
   CStdString strLine;
   strLine.Format("%s\n",M3U_START_MARKER);
@@ -651,6 +665,8 @@ bool CPlayListM3U::ParseEXTXKEY(const CStdString& strLine, CStdString& encryptio
       encryptionMethodStr = strLine.Mid(iMethod);
     }
 
+    encryptionMethodStr.Trim();
+
     if (isEncryptionMethodValid(encryptionMethodStr))
     {
       encryptionMethod = encryptionMethodStr;
@@ -673,7 +689,7 @@ bool CPlayListM3U::ParseEXTXKEY(const CStdString& strLine, CStdString& encryptio
     if (iPreIvComma != (-1))
     {
       encryptKeyUri = strLine.Mid(iURI, iPreIvComma - iURI);
-    }
+  }
     else
     {
       encryptKeyUri = strLine.Mid(iURI);
@@ -701,7 +717,7 @@ bool CPlayListM3U::ParseEXTXKEY(const CStdString& strLine, CStdString& encryptio
     RemoveQuotationMark(encryptIv);
   }
 
-  CLog::Log(LOGDEBUG,"CPlayListM3U::ParseEXTXKEY - After set [encryptionMethod=%s][encryptKeyUri=%s][encryptIv=%s]. [m_isM3U8=%d] (m3u)",encryptionMethod.c_str(),encryptKeyUri.c_str(),encryptIv.c_str(),m_isM3U8);
+  //CLog::Log(LOGDEBUG,"CPlayListM3U::ParseEXTXKEY - After set [encryptionMethod=%s][encryptKeyUri=%s][encryptIv=%s]. [m_isM3U8=%d] (m3u)",encryptionMethod.c_str(),encryptKeyUri.c_str(),encryptIv.c_str(),m_isM3U8);
 
   return true;
 }
@@ -717,7 +733,7 @@ bool CPlayListM3U::isEncryptionMethodValid(const CStdString& encryptionMethod)
   if (encryptionMethod == "NONE" ||
       encryptionMethod == "AES-128")
   {
-    CLog::Log(LOGDEBUG,"CPlayListM3U::isEncryptionMethodValid - [EncryptionMethod=%s] is valid (m3u)",encryptionMethod.c_str());
+    //CLog::Log(LOGDEBUG,"CPlayListM3U::isEncryptionMethodValid - [EncryptionMethod=%s] is valid (m3u)",encryptionMethod.c_str());
     return true;
   }
 

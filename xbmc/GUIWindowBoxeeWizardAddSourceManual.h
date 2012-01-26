@@ -16,10 +16,13 @@ public:
   virtual bool OnMessage(CGUIMessage& message);
 
   CStdString GetURL();
-  bool IsConfirmed();  
+  bool IsConfirmed();
+  void SetProtocol(const CStdString newProtocol);
+  CStdString GetProtocol();
   
 private:
   CStdString m_host;
+  CStdString m_protocol;
   CStdString m_user;
   CStdString m_password;
   bool m_IsConfirmed;  

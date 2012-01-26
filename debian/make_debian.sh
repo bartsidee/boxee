@@ -31,7 +31,7 @@ cp -r ${SRC}/language/* ${DEST}/language/
 
 # media
 mkdir ${DEST}/media
-cp ${SRC}/media/defaultrss.png  ${SRC}/media/downloadrss.png  ${SRC}/media/test_sound.mp3  ${SRC}/media/weather.rar ${SRC}/media/icon32x32-linux.png ${SRC}/media/icon.png ${DEST}/media
+cp ${SRC}/media/defaultrss.png  ${SRC}/media/downloadrss.png  ${SRC}/media/test_sound.mp3  ${SRC}/media/icon32x32-linux.png ${SRC}/media/icon.png ${DEST}/media
 chmod 644 ${DEST}/media/*
 mkdir ${DEST}/media/boxee_screen_saver
 cp ${SRC}/media/boxee_screen_saver/* ${DEST}/media/boxee_screen_saver
@@ -41,13 +41,11 @@ chmod 644 ${DEST}/media/Fonts/*
 
 # screensavers
 mkdir ${DEST}/screensavers
-cp ${SRC}/screensavers/Plasma.xbs  ${SRC}/screensavers/Solarwinds.xbs ${SRC}/screensavers/Euphoria.xbs ${DEST}/screensavers
+cp ${SRC}/screensavers/Plasma.xbs  ${SRC}/screensavers/Solarwinds.xbs ${DEST}/screensavers
 
 # scripts
 mkdir ${DEST}/scripts
 # Lyrics
-cp -r ${SRC}/scripts/Lyrics ${DEST}/scripts
-cp -r ${SRC}/scripts/RTorrent ${DEST}/scripts
 cp -r ${SRC}/scripts/OpenSubtitles ${DEST}/scripts
 cp ${SRC}/scripts/autoexec.py ${DEST}/scripts
 
@@ -65,7 +63,7 @@ cp ${SRC}skin/boxee/media/Textures.xbt ${SRC}skin/boxee/media/textures.xml ${DES
 
 # system
 mkdir ${DEST}/system
-cp ${SRC}/system/*-${arch}-linux.so  ${SRC}/system/asound.conf ${SRC}/system/playercorefactory.xml ${SRC}/system/settingsmap.xml  ${DEST}/system
+cp ${SRC}/system/*-${arch}-linux.so  ${SRC}/system/libboxeebrowser-${arch}-linux.so.0 ${SRC}/system/asound.conf ${SRC}/system/playercorefactory.xml ${SRC}/system/settingsmap.xml  ${DEST}/system
 mkdir ${DEST}/system/players
 
 # keymaps
@@ -88,10 +86,12 @@ cp ${SRC}/system/players/paplayer/*-${arch}-linux.so ${DEST}/system/players/papl
 
 # flash player
 mkdir ${DEST}/system/players/flashplayer
-cp ${SRC}/system/players/flashplayer/{bxflplayer-${arch}-linux,FlashLib-${arch}-linux.so,bxoverride-${arch}-linux.so} ${DEST}/system/players/flashplayer
+cp ${SRC}/system/players/flashplayer/{bxflplayer-${arch}-linux,libFlashLib-${arch}-linux.so} ${DEST}/system/players/flashplayer
 chmod 755 ${DEST}/system/players/flashplayer/*
 strip ${DEST}/system/players/flashplayer/*
-cp -r ${SRC}/system/players/flashplayer/xulrunner-${arch}-linux ${DEST}/system/players/flashplayer/
+mkdir ${DEST}/system/qt
+cp -R ${SRC}/system/qt/linux ${DEST}/system/qt
+strip ${DEST}/system/qt/linux/*.so
 mkdir ${DEST}/system/python
 cp ${SRC}/system/python/*-${arch}-linux.so ${DEST}/system/python
 mkdir ${DEST}/system/python/lib
@@ -116,6 +116,7 @@ cp -r ${SRC}/system/scrapers/* ${DEST}/system/scrapers
 # userdata
 mkdir -p ${DEST}/UserData 
 cp ${SRC}system/Lircmap.xml ${DEST}/system
+cp ${SRC}system/charsets.xml ${DEST}/system
 chmod 644 ${DEST}/system/*.xml
 cp ${SRC}UserData/sources.xml.in.linux ${DEST}/UserData
 cp ${SRC}UserData/sources.xml.in.diff.linux ${DEST}/UserData
@@ -135,9 +136,7 @@ mkdir -p ${DEST}/bin
 
 # binary
 cp ${SRC}/Boxee ${DEST}/
-#strip ${DEST}/Boxee
-cp ${SRC}/xbmc-xrandr ${DEST}/
-strip ${DEST}/xbmc-xrandr
+strip ${DEST}/Boxee
 cp ${SRC}/run-boxee-desktop.in ${DEST}/run-boxee-desktop
 
 # desktop stuff
@@ -149,9 +148,8 @@ find tmp -type d -name .svn -exec rm -rf {} \; >/dev/null 2>&1
 
 # update debian control file with version number
 mkdir tmp/DEBIAN
-REV=`svn info  | grep "Revision:" | sed 's/Revision: //'`
-VER=`cat ${SRC}/xbmc/lib/libBoxee/bxversion.h | grep BOXEE_VERSION | awk '{ print $3 }' | sed 's/"//g'`
-cat control | sed s/VER/${VER}/  | sed s/REV/${REV}/ > ${TMP}/DEBIAN/control
+VER=`cat ${SRC}/VERSION`
+cat control | sed s/VER/${VER}/  > ${TMP}/DEBIAN/control
 
 cp -f postinst ${TMP}/DEBIAN/
 chmod 755 ${TMP}/DEBIAN/postinst
@@ -162,6 +160,9 @@ chmod 755 ${TMP}/DEBIAN/postrm
 # chown to root it is packaged correctly
 chown -R root.root ${TMP}
 
-VER=`cat tmp/DEBIAN/control | grep Version | sed 's/Version: //'`
+if [ -f ../VERSION ]
+    then
+        VER=`cat ../VERSION`
+fi
 dpkg-deb --build ./tmp boxee-${VER}.${arch}.deb
 rm -rf tmp

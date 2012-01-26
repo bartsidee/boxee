@@ -37,7 +37,7 @@ public:
   virtual bool Exists(const char* strPath);
   virtual bool Remove(const char* strPath);
 
-  int Open(const CURL &url);
+  int Open(const CURI &url);
 
   //MountShare will try to mount the smb share and return the path to the mount point (or empty string if failed)
   static CStdString MountShare(const CStdString &smbPath, const CStdString &strType, const CStdString &strName, 
@@ -45,10 +45,14 @@ public:
 
   static void UnMountShare(const CStdString &strType, const CStdString &strName);
   static CStdString GetMountPoint(const CStdString &strType, const CStdString &strName);
+  static bool ProcessPath(const CStdString& strPath, CFileItemList &items);
 
   static bool MountShare(const CStdString &strType, CMediaSource &share);
 
 private:
-  int OpenDir(const CURL &url, CStdString& strAuth);
+  int OpenDir(const CURI &url, CStdString& strAuth);
+  static bool GetComputers(CFileItemList &items);
+  static bool GetComputerDevices(const CStdString& strPath,const CStdString& selectedComp, CFileItemList &items);
+  static CStdString GetComputerName(const CStdString& computer);
 };
 }

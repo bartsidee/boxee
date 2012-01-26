@@ -10,6 +10,7 @@
 #include "bximetadataresolver.h"
 #include "bxmediadatabase.h"
 #include "bxbgprocess.h"
+#include "StdString.h"
 
 namespace BOXEE {
 
@@ -30,8 +31,17 @@ public:
 	virtual ~BXMetadataScannerJob();
 	virtual void DoWork();
 	const BXFolder* GetFolder() const {return m_pFolder; }
+	std::string GetFolderPath() const { return m_pFolder->GetPath(); }
+
 private:
 	BXFolder* m_pFolder;
+};
+
+class BXAlbumRescanJob : public BXMetadataScannerJob
+{
+public:
+	BXAlbumRescanJob(BXFolder* pFolder);
+	virtual void DoWork();
 };
 
 /**
@@ -55,6 +65,8 @@ private:
  * 2. It implements the media file resolution mechanisms
  * 
  */
+
+
 class BXMetadataEngine
 {
 public:
@@ -68,6 +80,8 @@ public:
 	bool Resolve(BXMetadataScannerJob* pJob);
 	bool Reset();
 	
+ 	bool Rescan(const std::string& pathToScan) { return m_AudioFolderProcessor.QueueFront(new BXAlbumRescanJob(new BXFolder(pathToScan))); }
+	
 	void ResolveAlbums();
 	void ResolveAlbumMetadata(std::vector<BOXEE::BXAlbum*>& albums);
 
@@ -78,6 +92,7 @@ public:
 	
   int AddMediaFolder(const std::string& strPath, const std::string& strType, int iModTime);
   int GetMediaFolderId(const std::string& strPath, const std::string& strType);
+  bool IsMediaFolderBeingResolved(const std::string& strPath);
 
   void MarkAsWatched(const std::string& strPath, const std::string& strBoxeeId, double iLastPosition);
   void MarkAsUnWatched(const std::string& strPath, const std::string& strBoxeeId);
@@ -101,13 +116,13 @@ public:
 	int RemoveUnresolvedVideoByFolder(const std::string& strPath);
 	int GetUnresolvedVideoFilesByFolder(std::map<std::string, BXMetadata*> &mapMediaFiles, int folderId);
 
-    int AddVideo(const BXMetadata* pVideo);
+  int AddVideo(const BXMetadata* pVideo);
 
-    int AddAudioFile(const std::string& strPath, const std::string& strSharePath, int FolderId, int64_t size);
-    int UpdateAudioFileStatus(const std::string& strPath, int iStatus);
-    int RemoveUnresolvedAudioByPath(const std::string& strPath);
-    int RemoveUnresolvedAudioByFolder(const std::string& strFolder);
-    int GetUnresolvedAudioFilesByFolder(std::map<std::string, BXMetadata*> &mapMediaFiles, int folderId);
+  int AddAudioFile(const std::string& strPath, const std::string& strSharePath, int FolderId, int64_t size);
+  int UpdateAudioFileStatus(const std::string& strPath, int iStatus);
+  int RemoveUnresolvedAudioByPath(const std::string& strPath);
+  int RemoveUnresolvedAudioByFolder(const std::string& strFolder);
+  int GetUnresolvedAudioFilesByFolder(std::map<std::string, BXMetadata*> &mapMediaFiles, int folderId);
 
 	int AddPart(int iVideoId, int iPartNumber, const std::string& strPath);
 	
@@ -121,6 +136,9 @@ public:
 
 	int GetArtists(std::vector<BXMetadata*> &vecMediaFiles, const std::vector<std::string>& vecPathFilter, int iItemLimit);
 	
+	bool GetLocalShowGenres (std::set<std::string>& output , const std::vector<std::string>& vecPathFilter);
+	bool GetLocalMoviesGenres (std::set<std::string>& output , const std::vector<std::string>& vecPathFilter);
+
 	int GetSongsFromAlbum(int iAlbumId, std::vector<BXMetadata*> &vecMediaFiles);
 	int GetAlbumsByArtist(int iArtistId, std::vector<BXMetadata*> &vecMediaFiles, const std::vector<std::string>& vecPathFilter);
 	int GetAlbumsByTitleAndArtist(const std::string& strTitle, int iArtistId, std::vector<BXMetadata*> &vecMediaFiles);
@@ -139,11 +157,11 @@ public:
 	bool GetTvShows(std::vector<BXMetadata*> &vecMediaFiles, const std::string& strGenre, const std::string& strPrefix, const std::vector<std::string>& vecPathFilter, int iItemLimit);
 	bool GetMovies(std::vector<BXMetadata*> &vecMediaFiles, const std::string& strGenre, const std::string& strPrefix, const std::vector<std::string>& vecPathFilter, int iItemLimit);
 	int GetVideosByTitle(std::vector<BXMetadata*> &vecMediaFiles, const std::string& strTitle, const std::vector<std::string>& vecPathFilter, int iItemLimit);
-	int GetVideosByFolder(std::map<std::string, BXMetadata*> &mapMediaFiles, const std::string& strFolderPath);
+	int GetVideosByFolder(std::map<std::string, BXMetadata*> &mapMediaFiles, const std::string& strFolderPath, bool bGetFiles = false);
   int GetUnresolvedVideoFolders(std::vector<BXMetadata*> &vecVideoFolders, const std::vector<std::string>& vecPathFilter, int iItemLimit);
   int GetUnresolvedVideos(std::vector<BXMetadata*> &vecUnresolvedVideos, const std::vector<std::string>& vecPathFilter, int iItemLimit);
 
-  bool GetLinks(const std::string& strBoxeeId, std::vector<BXPath>& vecLinks);
+  bool GetLinks(const std::string& strBoxeeId, std::vector<BXPath>& vecLinks, const std::vector<std::string>& vecPathFilter);
 	
 	//int GetVideoByIMDBId(const std::string& strId, BXMetadata* pMetadata);
 	//int GetVideoByBoxeeId(const std::string& strId, BXMetadata* pMetadata);
@@ -164,7 +182,7 @@ public:
 	// Status changes
 	int MarkFolderNew(const std::string& strFolderPath);
 	int MarkFolderTreeNew(const std::string& strFolderPath);
-	int MarkFolderUnresolved(const std::string& strFolderPath); 
+	int MarkFolderUnresolved(const std::string& strFolderPath, bool bDecreaseRescan = true);
 	int MarkFolderResolved(const std::string& strFolderPath, int iMetadataId);
 	int MarkFoldersAvailable(const std::string& strFolderPath, bool bAvailable);
 	
@@ -184,22 +202,24 @@ public:
 	// Marks album as dropped, which means that it was not recognized correctly 
 	// and should not be displayed. The album is just marked and not completely removed
 	// in order to prevent the system from trying to recognize it again
+	int DropAlbumById(int iId);
 	int RemoveAlbumById(int iId);
 
 	unsigned int GetFolderDate(const std::string& strPath);
   	
 	//int ResolveVideosByHash(std::map<std::string, std::pair<std::string, std::string> >& mapHashToName);
 	
-	bool IsStarted() {
+	bool IsStarted()
+	{
 	  return m_bStarted;
 	}
 	
   void InitializeArtistDataMap();
   void AddArtistToCache(const std::string& strArtist, BXArtist artist);
   bool FindArtistInCache(const std::string& strArtist, BXArtist& artist);
-
+		
   bool AddMediaShare(const std::string& strLabel, const std::string& strPath, const std::string& strType, int iScanType);
-  bool UpdateMediaShare(const std::string& strLabel, const std::string& strPath, const std::string& strType, int iScanType);
+  bool UpdateMediaShare(const std::string& strOrgLabel, const std::string& strOrgType, const std::string& strLabel, const std::string& strPath, const std::string& strType, int iScanType);
   bool DeleteMediaShare(const std::string& strLabel, const std::string& strPath, const std::string& strType);
 
   bool GetScanTime(const std::string& strLabel, const std::string& strPath, const std::string& strType, time_t& iLastScanned);
@@ -208,6 +228,9 @@ public:
   int AddProviderPerf(const std::string& strProvider, int quality);
   int UpdateProviderPerf(const std::string& strProvider, int quality);
   int GetProviderPerfQuality(const std::string& strProvider);
+
+  int AddPlayableFolder(const std::string& strPath);
+  bool IsPlayableFolder(const std::string& strPath);
 
 protected:
 
@@ -229,7 +252,7 @@ private:
 	BXBGProcess m_AlbumMetadataProcessor;
 
 	SDL_Thread *m_thread;
-
+	
   SDL_mutex  * m_ArtistCacheGuard;
   std::map<std::string, BXArtist> m_mapArtistDataCache;
 };

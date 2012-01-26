@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License along
  * with libass; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-*/
+ */
 
 #ifndef LIBASS_UTILS_H
 #define LIBASS_UTILS_H
@@ -34,6 +34,10 @@
 
 #include "ass.h"
 
+#ifdef _WIN32
+#include "config.h"
+#endif
+
 #define MSGL_FATAL 0
 #define MSGL_ERR 1
 #define MSGL_WARN 2
@@ -45,63 +49,77 @@
 #define FFMIN(a,b) ((a) > (b) ? (b) : (a))
 #define FFMINMAX(c,a,b) FFMIN(FFMAX(c, a), b)
 
-#ifdef _WIN32
-#define inline __inline
-#endif
-
 int mystrtoi(char **p, int *res);
 int mystrtoll(char **p, long long *res);
-int mystrtou32(char** p, int base, uint32_t* res);
-int mystrtod(char** p, double* res);
-int strtocolor(ass_library_t *library, char **q, uint32_t *res);
+int mystrtou32(char **p, int base, uint32_t *res);
+int mystrtod(char **p, double *res);
+int strtocolor(ASS_Library *library, char **q, uint32_t *res, int hex);
 char parse_bool(char *str);
 unsigned ass_utf8_get_char(char **str);
-void ass_msg(ass_library_t *priv, int lvl, char *fmt, ...);
+void ass_msg(ASS_Library *priv, int lvl, char *fmt, ...);
 #ifdef CONFIG_ENCA
-void *ass_guess_buffer_cp(ass_library_t *library, unsigned char *buffer,
+void *ass_guess_buffer_cp(ASS_Library *library, unsigned char *buffer,
                           int buflen, char *preferred_language,
                           char *fallback);
 #endif
 
+/* defined in ass_strtod.c */
+double ass_strtod(const char *string, char **endPtr);
+
 static inline int d6_to_int(int x)
 {
-	return (x + 32) >> 6;
+    return (x + 32) >> 6;
 }
 static inline int d16_to_int(int x)
 {
-	return (x + 32768) >> 16;
+    return (x + 32768) >> 16;
 }
 static inline int int_to_d6(int x)
 {
-	return x << 6;
+    return x << 6;
 }
 static inline int int_to_d16(int x)
 {
-	return x << 16;
+    return x << 16;
 }
 static inline int d16_to_d6(int x)
 {
-	return (x + 512) >> 10;
+    return (x + 512) >> 10;
 }
 static inline int d6_to_d16(int x)
 {
-	return x << 10;
+    return x << 10;
 }
 static inline double d6_to_double(int x)
 {
-	return x / 64.;
+    return x / 64.;
 }
 static inline int double_to_d6(double x)
 {
-	return (int)(x * 64);
+    return (int) (x * 64);
 }
 static inline double d16_to_double(int x)
 {
-	return ((double)x) / 0x10000;
+    return ((double) x) / 0x10000;
 }
 static inline int double_to_d16(double x)
 {
-	return (int)(x * 0x10000);
+    return (int) (x * 0x10000);
+}
+static inline double d22_to_double(int x)
+{
+    return ((double) x) / 0x400000;
+}
+static inline int double_to_d22(double x)
+{
+    return (int) (x * 0x400000);
+}
+
+// Calculate cache key for a rotational angle in degrees
+static inline int rot_key(double a)
+{
+    const int m = double_to_d22(360.0);
+    return double_to_d22(a) % m;
 }
 
 #define FNV1_32A_INIT (unsigned)0x811c9dc5
@@ -130,4 +148,4 @@ static inline unsigned fnv_32a_str(char *str, unsigned hval)
     return hval;
 }
 
-#endif /* LIBASS_UTILS_H */
+#endif                          /* LIBASS_UTILS_H */

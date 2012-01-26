@@ -18,10 +18,12 @@
 #include "cores/dvdplayer/DVDFileInfo.h"
 #include "Picture.h"
 
+#include "lib/libBoxee/bxconfiguration.h"
 #include "lib/libBoxee/boxee.h"
 #include "lib/libBoxee/bxconfiguration.h"
 #include "lib/libBoxee/bxutils.h"
 #include "lib/libBoxee/bxmetadataengine.h"
+#include "lib/libBoxee/bxmetadata.h"
 #include "AdvancedSettings.h"
 
 #include "Application.h"
@@ -39,7 +41,7 @@ bool CMetadataResolverMusic::m_bStopped = false;
 
 void CResolvingTrack::LoadTags()
 {
-  //CLog::Log(LOGERROR, "CMetadataResolverMusic::ResolveMusicFolder, loading tags for %s (musicresolver)", strPath.c_str());
+  CLog::Log(LOGDEBUG, "CResolvingTrack::LoadTags, trying to load tags for %s (musicresolver)", strPath.c_str());
   CStdString strResolvedPath = _P(strPath);
 
   CFileItemPtr pTempItem(new CFileItem(strResolvedPath, false));
@@ -70,15 +72,12 @@ void CResolvingTrack::LoadTags()
     strGenre = pTempItem->GetMusicInfoTag()->GetGenre();
     iYear = pTempItem->GetMusicInfoTag()->GetYear();
     iDuration = pTempItem->GetMusicInfoTag()->GetDuration();
-
-    //CDVDFileInfo::GetFileMetaData(strResolvedPath, pTempItem.get());
-    //iDuration = pTempItem->GetPropertyInt("duration-msec") / 1000;
-
-    //pTempItem->Dump();
+    CLog::Log(LOGDEBUG, "CResolvingTrack::LoadTags, resolved audio file path: [%s], album:[%s], album-artist:[%s], artist:[%s], genre:[%s], iYear:[%d], iDuration:[%d], iTrackNumber:[%d] (musicresolver)",
+              strPath.c_str(), strAlbum.c_str(), strAlbumArtist.c_str(), strArtist.c_str(), strGenre.c_str(), iYear, iDuration, iTrackNumber);
   }
   else
   {
-     CLog::Log(LOGDEBUG, "CResolvingTrack::LoadTags, could not load tag for path = %s (musicresolver)", strPath.c_str());
+    CLog::Log(LOGWARNING, "CResolvingTrack::LoadTags, could not load tag for path = %s (musicresolver)", strPath.c_str());
   }
 }
 
@@ -119,24 +118,47 @@ void CMetadataResolverMusic::InitializeAudioResolver()
 
 }
 
-int CMetadataResolverMusic::ResolveMusicFolder(const CStdString& strPath)
+int CMetadataResolverMusic::ResolveMusicFolder(BXMetadataScannerJob* pJob, bool rescan /*=false*/)
 {
+  CStdString strPath = pJob->GetFolder()->GetPath();
+  if (strPath == "")
+  {
+    CLog::Log(LOGERROR, "CMetadataResolver::ResolveMusicFolder, DESIGN ERROR, should not attempt empty path (musicresolver)");
+    return RESOLVER_FAILED;
+  }
 
   CResolvingFolder folder;
 
   // Read folder contents
-  bool status = ReadMusicFolder(strPath, folder);
+  int result = ReadMusicFolder(strPath, folder, pJob);
 
-  if (!status)
+  if (result != RESOLVER_SUCCESS)
   {
     CLog::Log(LOGERROR, "CMetadataResolverMusic::ResolveMusicFolder, could not read music folder  %s (musicresolver)", strPath.c_str()); 
-    return RESOLVER_ABORTED;
+    return result;
   }
 
-  SynchronizeFolderAndDatabase(folder);
+  if (rescan)
+  {
+    // When rescanning we should first remove previous instance of an album in order to avoid duplicates
+    if (BOXEE::Boxee::GetInstance().GetMetadataEngine().RemoveAudioByFolder(strPath)!= MEDIA_DATABASE_OK)
+    {
+      CLog::Log(LOGERROR, "CMetadataResolverMusic::ResolveMusicFolder, failed to remove a previous instance of an album from path %s (musicresolver)", strPath.c_str());
+      return RESOLVER_FAILED;
+    }
+  }
+  else
+  {
+    SynchronizeFolderAndDatabase(folder);
+  }
 
   std::vector<CResolvedAlbum> albums;
-  CreateAlbumsFromFolder(folder, albums);
+  result = CreateAlbumsFromFolder(folder, albums, pJob);
+
+  if (result != RESOLVER_SUCCESS)
+  {
+    return result;
+  }
 
   // Go over resolved albums
   for (size_t i = 0; i < albums.size() && !m_bStopped; i++)
@@ -157,27 +179,28 @@ int CMetadataResolverMusic::ResolveMusicFolder(const CStdString& strPath)
   return RESOLVER_SUCCESS;
 }
 
-bool CMetadataResolverMusic::ReadMusicFolder(const CStdString& strPath, CResolvingFolder& folder)
+int CMetadataResolverMusic::ReadMusicFolder(const CStdString& strPath, CResolvingFolder& folder, BXMetadataScannerJob* pJob)
 {
-  //  if (!g_application.IsPathAvailable(strPath, false))
-  //  {
-  //    return false;
-  //  }
+  CLog::Log(LOGDEBUG,"CMetadataResolverMusic::ReadMusicFolder  reading music folder %s (musicresolver)", strPath.c_str());
+
+  // Update folder path
+  folder.strFolderPath = strPath;
 
   // We wont try to resolve RAR or ZIP folder - in this case the files will stay unresolved
   if (CUtil::IsRAR(strPath) || CUtil::IsZIP(strPath))
   {
-	CLog::Log(LOGDEBUG,"CMetadataResolverMusic::ReadMusicFolder  file %s is compressed file - keep it unresolved", strPath.c_str());
-	return true;
+	  CLog::Log(LOGDEBUG,"CMetadataResolverMusic::ReadMusicFolder  file %s is compressed file - keep it unresolved (musicresolver)", strPath.c_str());
+	  return RESOLVER_SUCCESS;
   }
 
   CFileItemList items;
   if (!DIRECTORY::CDirectory::GetDirectory(strPath, items)) 
   {
-    return false;
+    CLog::Log(LOGDEBUG,"CMetadataResolverMusic::ReadMusicFolder  unable to read directory %s (musicresolver)", strPath.c_str());
+    return RESOLVER_FAILED;
   }
 
-  for (int i=0; i < items.Size(); i++)
+  for (int i=0; i < items.Size() && pJob->IsActive(); i++)
   {
     CFileItemPtr pItem = items[i];
 
@@ -211,19 +234,29 @@ bool CMetadataResolverMusic::ReadMusicFolder(const CStdString& strPath, CResolvi
     }
   }
 
+  if (!pJob->IsActive())
+  {
+    CLog::Log(LOGDEBUG,"CMetadataResolverMusic::ReadMusicFolder  aborted, resolver was paused when reading folder %s (pause) (musicresolver) ", strPath.c_str());
+    return RESOLVER_ABORTED;
+  }
+
   folder.strFolderPath = strPath;
   folder.strEffectiveFolderName = BOXEE::BXUtils::GetEffectiveFolderName(strPath);
 
-  return true;
+  CLog::Log(LOGDEBUG,"CMetadataResolverMusic::ReadMusicFolder  successfully finished reading folder %s (musicresolver) ", strPath.c_str());
+  return RESOLVER_SUCCESS;
 }
 
 
-bool CMetadataResolverMusic::CreateAlbumsFromFolder(const CResolvingFolder& folder, std::vector<CResolvedAlbum>& albums)
+int CMetadataResolverMusic::CreateAlbumsFromFolder(const CResolvingFolder& folder, std::vector<CResolvedAlbum>& albums, BXMetadataScannerJob* pJob)
 {
-  for (size_t i = 0; i < folder.vecTracks.size(); i++)
+  CLog::Log(LOGDEBUG,"CMetadataResolverMusic::CreateAlbumsFromFolder  creating albums from folder %s (musicresolver) ", folder.strFolderPath.c_str());
+  for (size_t i = 0; i < folder.vecTracks.size() && pJob->IsActive(); i++)
   {
     if (g_application.m_bStop)
-      return false;
+    {
+      return RESOLVER_ABORTED;
+    }
     
     CResolvingTrack track = folder.vecTracks[i];
 
@@ -246,11 +279,11 @@ bool CMetadataResolverMusic::CreateAlbumsFromFolder(const CResolvingFolder& fold
     }
 
     // Check if this album already exists in the vector
-    int index = FindAlbumInVector(albums, track.strAlbum, track.strArtist);
+    int index = FindAlbumInVector(albums, track.strAlbum, track.strAlbumArtist.IsEmpty()?track.strArtist:track.strAlbumArtist);
     if (index == -1)
     {
       // Create new resolving album
-      CResolvedAlbum album(track.strAlbum, track.strArtist, track.strFolderPath, track.strGenre, track.iYear);
+      CResolvedAlbum album(track.strAlbum, track.strAlbumArtist.IsEmpty()?track.strArtist:track.strAlbumArtist, track.strFolderPath, track.strGenre, track.iYear);
 
       // Check if local thumb exists for this album
       FindLocalThumbnail(album, folder);
@@ -266,7 +299,14 @@ bool CMetadataResolverMusic::CreateAlbumsFromFolder(const CResolvingFolder& fold
     }
   }
 
-  return true;
+  if (!pJob->IsActive())
+  {
+    CLog::Log(LOGDEBUG,"CMetadataResolverMusic::CreateAlbumsFromFolder  aborted, resolver was paused when resolving %s (pause) (musicresolver)", folder.strFolderPath.c_str());
+    return RESOLVER_ABORTED;
+}
+
+  CLog::Log(LOGDEBUG,"CMetadataResolverMusic::CreateAlbumsFromFolder  successfully created albums from folder %s (musicresolver) ", folder.strFolderPath.c_str());
+  return RESOLVER_SUCCESS;
 }
 
 bool CMetadataResolverMusic::AddAlbumToDatabase(CResolvedAlbum& album)
@@ -275,13 +315,13 @@ bool CMetadataResolverMusic::AddAlbumToDatabase(CResolvedAlbum& album)
 
   CLog::Log(LOGDEBUG,"CMetadataResolverMusic::AddAlbumToDatabase, Adding album: %s (musicresolver)", album.strName.c_str());
 
-  // Add artist
+  // Add artist or album artist
   BOXEE::BXArtist bxArtist;
   bxArtist.m_strName = album.strArtist;
 
   if (!BOXEE::BXUtils::GetArtistData(album.strArtist, &bxArtist))
   {
-    CLog::Log(LOGERROR,"CMetadataResolverMusic::AddAlbumToDatabase, Could not load artist data from network. %s (musicresolver)", album.strArtist.c_str());
+    CLog::Log(LOGWARNING,"CMetadataResolverMusic::AddAlbumToDatabase, Could not load artist data from network. %s (musicresolver)", album.strArtist.c_str());
     //return false;
   }
 
@@ -319,10 +359,14 @@ bool CMetadataResolverMusic::AddAlbumToDatabase(CResolvedAlbum& album)
     CPicture::CreateThumbnail(album.strCover, CUtil::GetCachedAlbumThumb(album.strName, album.strArtist), true);
   }
 
+
+  BOXEE::BXArtist bxTrackArtist;
+  int iTrackArtistId = -1;
   // Add all tracks
   for (size_t i = 0; i < album.vecTracks.size(); i++) 
   {
     const CResolvingTrack& track = album.vecTracks[i];
+
     BOXEE::BXAudio bxAudio;
     bxAudio.m_strPath = track.strPath;
     bxAudio.m_strTitle = track.strTitle;
@@ -330,7 +374,14 @@ bool CMetadataResolverMusic::AddAlbumToDatabase(CResolvedAlbum& album)
     bxAudio.m_iTrackNumber = track.iTrackNumber;
     bxAudio.m_iDuration = track.iDuration;
 
-    bxAudio.m_iArtistId = iArtistId;
+    //avoid accessing the db if the album has sequentially the same artist
+    if (iTrackArtistId == -1 || bxTrackArtist.m_strName != track.strArtist)
+    {
+      bxTrackArtist.m_strName = track.strArtist;
+      iTrackArtistId = BOXEE::Boxee::GetInstance().GetMetadataEngine().AddArtist(&bxTrackArtist);
+    }
+
+    bxAudio.m_iArtistId = iTrackArtistId;
     bxAudio.m_iAlbumId = iAlbumId;
 
     BOXEE::Boxee::GetInstance().GetMetadataEngine().AddAudio(&bxAudio);
@@ -377,6 +428,12 @@ bool CMetadataResolverMusic::FindLocalThumbnail(CResolvedAlbum& album, const CRe
       return true;
     }
 
+    if (strThumbFileName.ToLower() == "folder")
+    {
+      album.strCover = folder.vecThumbs[i];
+      return true;
+    }
+
     // TODO: Add more cases
   }
 
@@ -395,6 +452,7 @@ void CMetadataResolverMusic::ResolveAlbumMetadata(std::vector<BOXEE::BXAlbum*>& 
   for (size_t i = 0; i < albums.size() && !m_bStopped; i++)
   {
     BOXEE::BXAlbum* album = albums[i];
+    BOXEE::BXAlbum AlbumInDB;
 
     CStdString strAlbum = album->m_strTitle;
     CStdString strArtist = album->m_strArtist;
@@ -406,6 +464,15 @@ void CMetadataResolverMusic::ResolveAlbumMetadata(std::vector<BOXEE::BXAlbum*>& 
       BOXEE::BXAlbum* pUpdatedAlbum = (BOXEE::BXAlbum*)metadata.GetDetail(MEDIA_DETAIL_ALBUM);
       pUpdatedAlbum->m_iId = album->m_iId;
       pUpdatedAlbum->m_iStatus = STATUS_RESOLVED;
+      //before writing, there might be already an artwork which was chosen by the user locally
+      //if this is a valid local artwork, override the http:// value
+      BOXEE::Boxee::GetInstance().GetMetadataEngine().GetAlbumById(albums[i]->m_iId,&AlbumInDB);
+
+      if (BoxeeUtils::IsPathLocal( AlbumInDB.m_strArtwork ) && BOXEE::BXUtils::FileExists(AlbumInDB.m_strArtwork))
+      {
+        pUpdatedAlbum->m_strArtwork = AlbumInDB.m_strArtwork;
+      }
+
       BOXEE::Boxee::GetInstance().GetMetadataEngine().UpdateAlbum(pUpdatedAlbum);
     }
     else
@@ -431,14 +498,10 @@ bool CMetadataResolverMusic::ResolveAlbumMetadata(const CStdString& strAlbum, co
 
   CLog::Log(LOGDEBUG, "CMetadataResolverMusic::ResolveAlbumMetadata, Resolving album = %s, artist = %s (musicresolver)", strAlbum.c_str(), strArtist.c_str());
 
-  MUSIC_GRABBER::CMusicAlbumInfo albumInfo;
-  bool bResolved = GetMetadataFromAMG(strAlbum, strArtist, albumInfo);
 
+  bool bResolved = GetMetadataFromServer(strAlbum, strArtist, pMetadata);
   if (bResolved)
   {
-    CLog::Log(LOGDEBUG, "CMetadataResolverMusic::ResolveAlbumMetadata, Resolved album = %s, artist = %s, description = %s (musicresolver)",
-        strAlbum.c_str(), strArtist.c_str(), albumInfo.GetAlbum().strReview.c_str());
-    BoxeeUtils::ConvertAlbumInfoToBXMetadata(albumInfo, pMetadata);
     pMetadata->m_bResolved = true;
   }
   else
@@ -448,6 +511,201 @@ bool CMetadataResolverMusic::ResolveAlbumMetadata(const CStdString& strAlbum, co
 
   return bResolved;
 }
+
+bool CMetadataResolverMusic::GetResultsFromServer(const CStdString& _strAlbum,const CStdString& _strArtist, const int _resultCount, BXXMLDocument& _resultDoc)
+{
+  CStdString strBoxeeServerUrl = BOXEE::BXConfiguration::GetInstance().GetStringParam("Boxee.Resolver.Server","http://res.boxee.tv");
+  CStdString strLink;
+  ListHttpHeaders headers;
+  bool bRetVal = false;
+
+  //_resultDoc.SetCredentials(BOXEE::Boxee::GetInstance().GetCredentials());
+  
+  std::map<CStdString, CStdString> mapOptions;
+
+  if (!_strArtist.IsEmpty())
+  {
+    mapOptions["artist"] = BOXEE::BXUtils::URLEncode(_strArtist);
+  }
+  if (!_strAlbum.IsEmpty())
+  {
+    mapOptions["title"] = BOXEE::BXUtils::URLEncode(_strAlbum);
+  }
+  if (_resultCount > 0)
+  {
+    std::stringstream strInt;
+    strInt << _resultCount;
+    mapOptions["count"] =  BOXEE::BXUtils::URLEncode(strInt.str());
+  }
+
+  strLink = strBoxeeServerUrl;
+  strLink += "/api/album";
+  strLink += BoxeeUtils::BuildParameterString(mapOptions);
+
+  CLog::Log(LOGDEBUG, "CMetadataResolverMusic::GetMetadataFromServer, resolving album %s, by %s [link = %s] (musicresolver) (resolver)",_strAlbum.c_str(),_strArtist.c_str(), strLink.c_str());
+
+  bRetVal = _resultDoc.LoadFromURL(strLink.c_str(), headers);
+
+  return bRetVal;
+}
+
+bool CMetadataResolverMusic::GetMetadataFromServer(const CStdString& _strAlbum, const CStdString& _strArtist, BOXEE::BXMetadata * pMetadata)
+{
+  CLog::Log(LOGDEBUG, "CMetadataResolverMusic::GetMetadataFromServer, resolving album %s, by %s  (musicresolver) (resolver)",_strAlbum.c_str(),_strArtist.c_str());
+
+  BXXMLDocument doc;
+  bool bRetVal = GetResultsFromServer(_strAlbum,_strArtist,1,doc); //we need only one result
+
+  if (!bRetVal)
+  {
+    int nLastErr = doc.GetLastNetworkError();
+    CLog::Log(LOGDEBUG, "CMetadataResolverMusic::GetMetadataFromServer, unable to get results for album %s, by %s, network error = %d (musicresolver) (resolver)", _strAlbum.c_str(), _strArtist.c_str(), nLastErr);
+    return bRetVal;
+	}
+
+  bRetVal = LoadAlbumInfo(doc,*pMetadata); //parse the first result in the doc
+
+  return bRetVal;
+}
+
+bool CMetadataResolverMusic::LoadAlbumInfo(BOXEE::BXXMLDocument& doc,BXMetadata& albumRead)
+{
+  TiXmlElement* pElement = doc.GetDocument().RootElement();
+
+  if (pElement && pElement->ValueStr() == "results" && pElement->FirstChildElement() && pElement->FirstChildElement()->ValueStr() == "album")
+  {
+    //there should be only 1 result from the server in this case
+    return LoadAlbumInfo(pElement->FirstChildElement(),albumRead);
+  }
+  else
+  {
+    return false;
+  }
+}
+
+bool CMetadataResolverMusic::LoadAlbumInfo(TiXmlElement* albumElement, BXMetadata& albumRead)
+{
+  if (albumRead.GetType() != MEDIA_ITEM_TYPE_AUDIO) 
+    return false;
+
+  BXAlbum* pAlbum = (BXAlbum*)albumRead.GetDetail(MEDIA_DETAIL_ALBUM);
+  BXArtist* pArtist = (BXArtist*)albumRead.GetDetail(MEDIA_DETAIL_ARTIST);
+  BXAudio* pAudio = (BXAudio*)albumRead.GetDetail(MEDIA_DETAIL_AUDIO);
+
+  if (!pAlbum || !pArtist || !pAudio)
+  {
+    CLog::Log(LOGERROR, "%s - one of the details is NULL!! album: %p, artist: %p, audio: %p. ", __FUNCTION__, pAlbum, pArtist, pAudio);
+    return false;
+  }
+
+  if (albumElement->ValueStr() == "album")
+    albumElement = albumElement->FirstChildElement();
+
+  if (albumElement->ValueStr() == "title")
+  {
+    if (albumElement->FirstChild())
+      pAlbum->m_strTitle = albumElement->FirstChild()->ValueStr();
+  }
+  else
+    return false;
+
+  albumElement = albumElement->NextSiblingElement();
+
+  if (albumElement->ValueStr() == "notes")
+  {
+    if (albumElement->FirstChild())
+      pAlbum->m_strDescription = albumElement->FirstChild()->ValueStr();
+  }
+  else
+    return false;
+
+  albumElement = albumElement->NextSiblingElement();
+
+  if (albumElement->ValueStr() == "genres")
+  {
+    if (albumElement->FirstChild())
+      pAlbum->m_strGenre = albumElement->FirstChild()->ValueStr();
+  }
+  else
+    return false;
+
+  albumElement = albumElement->NextSiblingElement();
+
+  if (albumElement->ValueStr() == "styles")
+  {
+    if (albumElement->FirstChild())
+      pAudio->m_strGenre = albumElement->FirstChild()->ValueStr();
+    
+  }
+  else
+    return false;
+  
+  albumElement = albumElement->NextSiblingElement();
+
+  if (albumElement->ValueStr() == "date")
+  {
+    if (albumElement->FirstChild())
+      pAlbum->m_iYear = BOXEE::BXUtils::StringToInt(albumElement->FirstChild()->ValueStr());
+  }
+  else
+    return false;
+
+  albumElement = albumElement->NextSiblingElement();
+
+  if (albumElement->ValueStr() == "artist")
+  {
+    if (albumElement->FirstChild())
+      pAlbum->m_strArtist = albumElement->FirstChild()->ValueStr();
+  }
+  else
+    return false;
+
+  albumElement = albumElement->NextSiblingElement();
+
+  if (albumElement->ValueStr() == "image")
+  {
+    if (albumElement->FirstChild())
+      pAlbum->m_strArtwork = albumElement->FirstChild()->ValueStr();
+  }
+  else
+    return false;
+  
+  pAudio->m_strAlbum = pAlbum->m_strTitle;
+  pArtist->m_strName = pAlbum->m_strArtist;
+
+  return true;
+}
+
+bool CMetadataResolverMusic::LoadAlbumsInfo(BOXEE::BXXMLDocument& doc, vectorMetadata& list)
+{
+  TiXmlElement* pRootElement = doc.GetDocument().RootElement();
+  bool bRetVal = true;
+  if (pRootElement->ValueStr() == "results")
+  {
+    TiXmlNode* pTag = 0;
+    BXMetadata album(MEDIA_ITEM_TYPE_AUDIO);
+
+    while ((pTag = pRootElement->IterateChildren(pTag)))
+    {
+      if (pTag && pTag->ValueStr() == "album")
+      {
+        TiXmlElement* pValue = pTag->FirstChildElement();
+
+        if (pValue && (LoadAlbumInfo(pValue,album)))
+          list.push_back(album);
+        else
+           bRetVal = false;
+      }
+      else
+        bRetVal = false;
+    }
+  }
+  else
+    bRetVal = false;
+
+  return bRetVal;
+}
+
 
 bool CMetadataResolverMusic::GetMetadataFromAMG(const CStdString& _strAlbum, const CStdString& _strArtist,MUSIC_GRABBER::CMusicAlbumInfo& album)
 {
@@ -654,7 +912,7 @@ int CMetadataResolverMusic::FindAlbumInVector(const std::vector<CResolvedAlbum> 
 
     if ((strAlbum1 == strAlbum2))
       index = i;
-  }
+    }
   return index;
 }
 
@@ -705,59 +963,6 @@ void CMetadataResolverMusic::CleanDeletedAudiosFromDatabase(const std::map<std::
   }
 }
 
-/*
-CStdString CMetadataResolverMusic::CleanAlbumName(const CStdString& strName)
-{
-  static const char *SEPARATORS = ",.-_/\\{}() ";
-
-  // first thing we do is find where the [] words start.
-  // we ignore the rest of the line from the first [] word. (huristic)
-  CStdString strCopy = strName;
-
-  // Remove everything before the rectangular bracket
-  int idx = strName.Find('[');
-  if (idx >= 3) // sanity
-    strCopy = strName.Mid(0,idx);
-  else if (idx >= 0) // found [] in the begining
-  {
-    // find the first word which is not in [] and remove everything before it
-    CRegExp reg;
-    reg.RegComp(CStdString("][") + SEPARATORS + CStdString("]*[^[]"));
-    int nPos = reg.RegFind(strName);
-    if ( nPos > 0 )
-      strCopy = strName.Mid(nPos);
-  }
-
-
-  // Do the same for the bracket
-  idx = strName.Find('(');
-  if (idx >= 3 ) // sanity
-    strCopy = strName.Mid(0,idx);
-  else if (idx >= 0) // found [] in the begining
-  {
-    // find the first word which is not in [] and remove everything before it
-    CRegExp reg;
-    reg.RegComp(CStdString(")(") + SEPARATORS + CStdString(")*(^()"));
-    int nPos = reg.RegFind(strName);
-    if ( nPos > 0 )
-      strCopy = strName.Mid(nPos);
-  }
-
-  vector<std::string> vecWords = BOXEE::BXUtils::StringTokenize(strCopy, SEPARATORS);
-
-  vector<std::string> vecGoodWords = RemoveBadWords(vecWords);
-
-  CStdString strNewName = "";
-  // Rebuild the name again
-  for (unsigned int i = 0; i < vecGoodWords.size(); i++) {
-    strNewName += vecGoodWords[i];
-    strNewName.Trim();
-    strNewName += " ";
-  }
-
-  return strNewName;
-}
- */
 unsigned int CMetadataResolverMusic::GetLevenshteinDistance(const CStdString& s1, const CStdString& s2)
 {
   const size_t len1 = s1.size(), len2 = s2.size();

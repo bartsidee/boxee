@@ -1,209 +1,165 @@
-﻿<?xml version="1.0"?>
+<?xml version="1.0"?>
 <window>
-	<defaultcontrol always="true">120</defaultcontrol>
-	<allowoverlay>no</allowoverlay>
-	<controls>
-		<control type="group">
-			<posx>20</posx>
-			<posy>20</posy>
-			<control type="image">
-				<description>browse background</description>
-				<posx>0</posx>
-				<posy>0</posy>
-				<width>400</width>
-				<height>560</height>
-				<texture border="32">osd_background.png</texture>
-			</control>
-			<control type="image">
-				<description>page header tab icon</description>
-				<posx>75</posx>
-				<posy>20</posy>
-				<width>250</width>
-				<height>50</height>
-				<texture>logo_opensubtitles.png</texture>
-			</control>
-			<control type="image">
-				<posx>26</posx>
-				<posy>91</posy>
-				<width>44</width>
-				<height>14</height>
-				<texture>icons/icon_sync.png</texture>
-				<colordiffuse>grey</colordiffuse>
-			</control>
-			<control type="label">
-				<posx>80</posx>
-				<posy>90</posy>
-				<width>280</width>
-				<height>14</height>
-				<font>title14b</font>
-				<aligny>center</aligny>
-				<label>[UPPERCASE]marked subtitles work better[/UPPERCASE]</label>
-				<textcolor>grey</textcolor>
-			</control>
-			<control type="group">
-				<control type="group" id="110">
-					<control type="multiimage">
-						<animation effect="fade" time="100">VisibleChange</animation>
-						<description>loading control</description>
-						<posx>130</posx>
-						<posy>320</posy>
-						<width>140</width>
-						<height>17</height>
-						<imagepath>loading</imagepath>
-						<timeperimage>12</timeperimage>
-						<fadetime>4</fadetime>
-						<pauseatend>0</pauseatend>
-						<randomize>false</randomize>
-						<loop>yes</loop>
-						<aspectratio>keep</aspectratio>
-						<colordiffuse>title</colordiffuse>		
-					</control>
-				</control>
-				<control type="label" id="100">
-					<animation effect="fade" time="100">VisibleChange</animation>
-					<description>status</description>
-					<posx>20</posx>
-					<posy>294</posy>
-					<width>360</width>
-					<height>18</height>
-					<font>title16b</font>
-					<aligny>center</aligny>
-					<align>center</align>
-					<label>-</label>
-					<textcolor>title</textcolor>
-				</control>
-				<control type="label">
-					<visible>!Control.IsVisible(100) + Container(120).IsEmpty</visible>
-					<animation effect="fade" time="100">VisibleChange</animation>
-					<posx>20</posx>
-					<posy>294</posy>
-					<width>360</width>
-					<height>18</height>
-					<font>title16b</font>
-					<aligny>center</aligny>
-					<align>center</align>
-					<label>[UPPERCASE]No Subtitles Found[/UPPERCASE]</label>
-					<textcolor>title</textcolor>
-				</control>
-				<control type="group">
-					<animation type="Conditional" condition="Window.IsVisible(DialogProgress.xml)" reversible="true">
-						<effect type="fade" start="100" end="0" time="200"/>
-					</animation>
-					<posx>26</posx>
-					<posy>130</posy>
-					<control type="list" id="120">
-						<posx>-10</posx>
-						<posy>0</posy>
-						<width>368</width>
-						<height>392</height>
-						<onleft>-</onleft>
-						<onright>-</onright>
-						<onup>-</onup>
-						<ondown>-</ondown>
-						<pagecontrol>61</pagecontrol>
-						<scrolltime>200</scrolltime>
-						<offsetx>10</offsetx>
-						<offsety>10</offsety>
-						<itemlayout width="348" height="54">
-							<control type="image">
-								<posx>7</posx>
-								<posy>7</posy>
-								<width>60</width>
-								<height>40</height>
-								<info>ListItem.Thumb</info>
-								<aspectratio>scale</aspectratio>
-							</control>
-							<control type="image">
-								<posx>241</posx>
-								<posy>32</posy>
-								<width>100</width>
-								<height>14</height>
-								<texture>icons/icon_rating_star_$INFO[ListItem.ActualIcon].png</texture>
-							</control>
-							<control type="image">
-								<posx>297</posx>
-								<posy>8</posy>
-								<width>44</width>
-								<height>14</height>
-								<texture>icons/icon_sync.png</texture>
-								<visible>ListItem.property(sync)</visible>
-							</control>
-							<control type="label">
-								<posx>87</posx>
-								<posy>7</posy>
-								<width>250</width>
-								<height>40</height>
-								<font>title24</font>
-								<aligny>center</aligny>
-								<textcolor>white</textcolor>
-								<selectedcolor>white</selectedcolor>
-								<align>left</align>
-								<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
-							</control>
-						</itemlayout>
-						<focusedlayout width="348" height="54">
-							<control type="image">
-								<posx>-10</posx>
-								<posy>-10</posy>
-								<width>368</width>
-								<height>74</height>
-								<texture border="30">button_action_menu_source_on.png</texture>
-							</control>
-							<control type="image">
-								<posx>7</posx>
-								<posy>7</posy>
-								<width>60</width>
-								<height>40</height>
-								<info>ListItem.Thumb</info>
-								<aspectratio>scale</aspectratio>
-							</control>
-							<control type="image">
-								<posx>241</posx>
-								<posy>32</posy>
-								<width>100</width>
-								<height>14</height>
-								<texture>icons/icon_rating_star_$INFO[ListItem.ActualIcon].png</texture>
-							</control>
-							<control type="image">
-								<posx>297</posx>
-								<posy>8</posy>
-								<width>44</width>
-								<height>14</height>
-								<texture>icons/icon_sync.png</texture>
-								<visible>ListItem.property(sync)</visible>
-							</control>
-							<control type="label">
-								<posx>87</posx>
-								<posy>7</posy>
-								<width>250</width>
-								<height>40</height>
-								<font>title24</font>
-								<aligny>center</aligny>
-								<textcolor>white</textcolor>
-								<selectedcolor>white</selectedcolor>
-								<align>left</align>
-								<label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
-							</control>
-						</focusedlayout>
-					</control>
-					<control type="image">
-						<visible>Container(120).HasPrevious</visible>
-						<posx>162</posx>
-						<posy>-18</posy>
-						<width>24</width>
-						<height>24</height>
-						<texture>icons/icon_arrow_up.png</texture>
-					</control>
-					<control type="image">
-						<visible>Container(120).HasNext</visible>
-						<posx>162</posx>
-						<posy>392</posy>
-						<width>24</width>
-						<height>24</height>
-						<texture>icons/icon_arrow_down.png</texture>
-					</control>
-				</control>
-			</control>
-		</control>
-	</controls>
+  <defaultcontrol always="true">120</defaultcontrol>
+  <allowoverlay>no</allowoverlay>
+  <controls>    
+    <control type="group">
+      <posx>342</posx>
+      <posy>126</posy>
+      <control type="image">
+        <posx>0</posx>
+        <posy>0</posy>
+        <width>600</width>
+        <height>412</height>
+        <texture srcborder="51" border="34">background/window-bg-transparent.png</texture>
+      </control>
+      <control type="image">
+        <description>page header tab icon</description>
+        <posx>30</posx>
+        <posy>357</posy>
+        <width>156</width>
+        <height>24</height>
+        <texture>graphic-opensubtitles.png</texture>
+      </control>
+      <control type="group">
+        <control type="label">
+          <posx>18</posx>
+          <posy>30</posy>
+          <width>564</width>
+          <height>20</height>
+          <align>center</align>
+          <aligny>top</aligny>
+          <font>font24b</font>
+          <textcolor>whiteheidi</textcolor>
+          <label>[B][UPPERCASE]$LOCALIZE[293][/B][/UPPERCASE]</label>
+        </control>
+        <control type="group" id="110">
+          <control type="multiimage">
+            <animation effect="fade" time="100">VisibleChange</animation>
+            <description>loading control</description>
+            <posx>250</posx>
+            <posy>156</posy>
+            <width>100</width>
+            <height>100</height>
+            <imagepath>loading</imagepath>
+            <timeperimage>12</timeperimage>
+            <fadetime>4</fadetime>
+            <pauseatend>0</pauseatend>
+            <randomize>false</randomize>
+            <loop>yes</loop>
+            <aspectratio>keep</aspectratio>
+          </control>
+        </control>
+        <control type="label" id="100">
+          <animation effect="fade" time="100">VisibleChange</animation>
+          <description>status</description>
+          <posx>120</posx>
+          <posy>266</posy>
+          <width>360</width>
+          <height>22</height>
+          <font>font22</font>
+          <aligny>center</aligny>
+          <align>center</align>
+          <label>-</label>
+          <textcolor>whiteheidi</textcolor>
+        </control>
+        <control type="label">
+          <visible>!Control.IsVisible(100) + Container(120).IsEmpty</visible>
+          <animation effect="fade" time="100">VisibleChange</animation>
+          <posx>120</posx>
+          <posy>266</posy>
+          <width>360</width>
+          <height>22</height>
+          <font>font22</font>
+          <aligny>center</aligny>
+          <align>center</align>
+          <label>No Subtitles Found</label>
+          <textcolor>whiteheidi</textcolor>
+        </control>
+        <control type="group">
+          <animation type="Conditional" condition="Window.IsVisible(DialogProgress.xml)" reversible="true">
+            <effect type="fade" start="100" end="0" time="200"/>
+          </animation>
+          <control type="fixedlist" id="120">
+            <posx>42</posx>
+            <posy>70</posy>
+            <width>516</width>
+            <height>296</height>
+            <onleft>-</onleft>
+            <onright>-</onright>
+            <onup>-</onup>
+            <ondown>-</ondown>
+            <pagecontrol>61</pagecontrol>
+            <scrolltime>200</scrolltime>
+            <focusposition>2</focusposition>
+            <itemlayout height="56">
+                <control type="image">
+                    <posx>12</posx>
+                    <posy>16</posy>
+                    <width>44</width>
+                    <height>25</height>
+                    <info>Listitem.Thumb</info>
+                  </control>
+              <control type="label">
+                <posx>258</posx>
+                <posy>-1</posy>
+                <width>516</width>
+                <height>56</height>
+                <font>font24b</font>
+                <align>center</align>
+                <aligny>center</aligny>
+                <textcolor>lightgreyheidi</textcolor>
+                <selectedcolor>lightgreyheidi</selectedcolor>
+                <label>$INFO[ListItem.Label]</label>
+              </control>
+              <control type="image">
+                <posx>460</posx>
+                <posy>21</posy>
+                <width>40</width>
+                <height>12</height>
+                <texture>icons/icon_sync.png</texture>
+                <visible>ListItem.property(sync)</visible>
+              </control>
+            </itemlayout>
+            <focusedlayout height="56">
+              <control type="image">
+                <posx>0</posx>
+                <posy>0</posy>
+                <width>516</width>
+                <height>56</height>
+                <texture srcborder="24" border="16">button-focused.png</texture>
+              </control>
+                <control type="image">
+                    <posx>12</posx>
+                    <posy>16</posy>
+                    <width>44</width>
+                    <height>25</height>
+                    <info>Listitem.Thumb</info>
+                  </control>
+              <control type="label">
+                <posx>258</posx>
+                <posy>-1</posy>
+                <width>516</width>
+                <height>56</height>
+                <font>font24b</font>
+                <align>center</align>
+                <aligny>center</aligny>
+                <textcolor>whiteheidi</textcolor>
+                <selectedcolor>whiteheidi</selectedcolor>
+                <label>$INFO[ListItem.Label]</label>
+              </control>
+              <control type="image">
+                <posx>460</posx>
+                <posy>21</posy>
+                <width>40</width>
+                <height>12</height>
+                <texture>icons/icon_sync.png</texture>
+                <visible>ListItem.property(sync)</visible>
+              </control>
+            </focusedlayout>
+          </control>
+        </control>
+      </control>
+    </control>
+  </controls>
 </window>

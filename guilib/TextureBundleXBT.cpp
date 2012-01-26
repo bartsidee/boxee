@@ -136,7 +136,7 @@ void CTextureBundleXBT::GetTexturesFromPath(const CStdString &path, std::vector<
 }
 
 bool CTextureBundleXBT::LoadTexture(const CStdString& Filename, CBaseTexture** ppTexture,
-                                     int &width, int &height)
+                                     int &width, int &initialWidth, int &height, int &initialHeight)
 {
   CStdString name = Normalize(Filename);
 
@@ -155,6 +155,9 @@ bool CTextureBundleXBT::LoadTexture(const CStdString& Filename, CBaseTexture** p
   
   width = frame.GetWidth();
   height = frame.GetHeight();
+  initialWidth = frame.GetInitialWidth();
+  initialHeight = frame.GetInitialHeight();
+
   
   return true;
 }
@@ -221,7 +224,7 @@ bool CTextureBundleXBT::ConvertFrameToTexture(const CStdString& name, CXBTFFrame
       CLog::Log(LOGERROR, "Out of memory unpacking texture: %s (need %llu bytes)", name.c_str(), frame.GetUnpackedSize());
       delete[] buffer;
       return false;
-    }    
+    }
       lzo_uint s = (lzo_uint)frame.GetUnpackedSize();
     if (lzo1x_decompress(buffer, (lzo_uint)frame.GetPackedSize(), unpacked, &s, NULL) != LZO_E_OK ||
           s != frame.GetUnpackedSize())
@@ -259,7 +262,7 @@ bool CTextureBundleXBT::ConvertFrameToTexture(const CStdString& name, CXBTFFrame
   
   // create an xbmc texture
   *ppTexture = new CTexture();
-  (*ppTexture)->LoadFromMemory(frame.GetWidth(), frame.GetHeight(), 0, format, buffer);
+  (*ppTexture)->LoadFromMemory(frame.GetWidth(), frame.GetInitialWidth(), frame.GetHeight(), frame.GetInitialHeight(), 0, format, buffer);
 
   delete[] buffer;
   

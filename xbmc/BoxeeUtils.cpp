@@ -41,11 +41,12 @@
 #include "GUIDialogContextMenu.h"
 #include "GUIWindowManager.h"
 #include "GUIDialogOK.h"
-#include "GUIDialogBoxeeUserInfo.h"
 #include "FileSystem/Directory.h"
 #include "bxconfiguration.h"
 #include "BoxeeObjectCache.h"
+#ifdef HAS_LASTFM
 #include "LastFmManager.h"
+#endif
 #include "Application.h"
 #include "PictureThumbLoader.h"
 #include "GUIDialogYesNo.h"
@@ -63,6 +64,19 @@
 #include "FactoryDirectory.h"
 #include "GUIWindowSlideShow.h"
 #include "GUISettings.h"
+#include "bxoemconfiguration.h"
+#include "DirectoryCache.h"
+#include "BoxeeMediaSourceList.h"
+#include "GUIDialogYesNo2.h"
+#include "GUIDialogOK2.h"
+#include "lib/libBoxee/bxvideodatabase.h"
+#include "lib/libBoxee/bxaudiodatabase.h"
+#include "utils/Weather.h"
+#include "lib/libBoxee/bxcurl.h"
+#include "GUIWindowStateDatabase.h"
+#include "GUILargeTextureManager.h"
+#include "BoxeeBrowseMenuManager.h"
+#include "GUIDialogBoxeeGetFacebookExtraCredential.h"
 
 #define BOXEE_THUMB_GENERAL   "general"
 #define BOXEE_THUMB_LIKE      "like"
@@ -80,6 +94,8 @@
 #define BOXEE_THUMB_RATE      "rate"
 #define BOXEE_THUMB_RECOMMEND "recommend"
 
+#define AVAILABLE_LANG_FILE_PATH "special://xbmc/language/availablelangs.xml"
+
 //#undef GetUserName
 
 using namespace BOXEE;
@@ -89,8 +105,8 @@ using namespace MUSIC_INFO;
 using namespace MUSIC_GRABBER;
 using namespace DIRECTORY;
 
-#ifdef BOXEE_DEVICE
-const char* BOXEE_PLATFORMS[] = {"osx","atv","lin","win", BOXEE_DEVICE};
+#if defined(DEVICE_PLATFORM)
+const char* BOXEE_PLATFORMS[] = {"osx","atv","lin","win", DEVICE_PLATFORM};
 #else
 const char* BOXEE_PLATFORMS[] = {"osx","atv","lin","win"};
 #endif
@@ -113,7 +129,7 @@ BoxeeUtils::~BoxeeUtils()
 }
 
 void BoxeeUtils::InitializeLanguageToCodeMap()
-{
+{  
   if (m_LanguageToCodeWasInit)
   {
     return;
@@ -156,7 +172,7 @@ void BoxeeUtils::InitializeLanguageToCodeMap()
 }
 
 CStdString BoxeeUtils::GetCodeOfLanguage(const CStdString& language)
-{
+{ 
   CStdString languageCode = "";
 
   CStdString tmpLanguage = language;
@@ -302,7 +318,7 @@ CStdString BoxeeUtils::GetFormattedDesc(const BOXEE::BXGeneralMessage &msg, bool
       while ((int)nPos<strDesc.GetLength() && strDesc[nPos] != '=')
         strKey += strDesc[nPos++];
 
-      while (strDesc[nPos] != '"')
+      while ((int)nPos<strDesc.GetLength() && strDesc[nPos] != '"')
         nPos++;
 
       nPos++;
@@ -381,12 +397,12 @@ bool BoxeeUtils::VideoDetailsToObject(const CFileItem *pItem, BXObject &obj)
     return true;
   }
 
-  if (!movieDetails->m_strIMDBNumber.empty())
+  if (!movieDetails->m_strIMDBNumber.empty()) 
   {
     obj.SetValue(MSG_KEY_IMDB_NUM, movieDetails->m_strIMDBNumber);
   }
 
-  if (!movieDetails->m_strGenre.empty())
+  if (!movieDetails->m_strGenre.empty()) 
   {
 
     CStdString strGenre = movieDetails->m_strGenre;
@@ -439,7 +455,7 @@ bool BoxeeUtils::VideoDetailsToObject(const CFileItem *pItem, BXObject &obj)
     obj.SetValue(MSG_KEY_NAME, movieDetails->m_strShowTitle);
   }
 
-  return true;
+  return true;  
 }
 
 bool BoxeeUtils::Recommend(const CFileItem *pItem, const std::vector<BOXEE::BXFriend> &vecRecommendTo)
@@ -517,7 +533,7 @@ bool BoxeeUtils::Recommend(const CFileItem *pItem, const std::vector<BOXEE::BXFr
   return false;
 }
 
-void BoxeeUtils::Drop(const CFileItem *pItem)
+/*void BoxeeUtils::Drop(const CFileItem *pItem)
 {
   pItem->Dump();
   if (pItem->HasProperty("BoxeeDBvideoId"))
@@ -528,13 +544,13 @@ void BoxeeUtils::Drop(const CFileItem *pItem)
   else if (pItem->HasProperty("BoxeeDBalbumId"))
   {
     CLog::Log(LOGDEBUG,"BoxeeUtils::Drop, DROP, MANUAL, drop album, path = %s, id = %d", pItem->m_strPath.c_str(), pItem->GetPropertyInt("BoxeeDBalbumId"));
-    BOXEE::Boxee::GetInstance().GetMetadataEngine().RemoveAlbumById(pItem->GetPropertyInt("BoxeeDBalbumId"));
+    BOXEE::Boxee::GetInstance().GetMetadataEngine().DropAlbumById(pItem->GetPropertyInt("BoxeeDBalbumId"));
   }
   else
   {
     CLog::Log(LOGERROR,"BoxeeUtils::Drop, DROP, MANUAL, unable to drop item. path = %s", pItem->m_strPath.c_str());
   }
-}
+}*/
 
 void BoxeeUtils::Rate(const CFileItem *pItem, bool bThumbsUp) {
   Rate(pItem, std::string(bThumbsUp?"1":"0"));
@@ -611,9 +627,24 @@ bool BoxeeUtils::Queue(CFileItem* pItem, bool runInBG)
 
   CStdString objType = obj.GetType();
 
-  if ((objType == MSG_OBJ_TYPE_UNKNOWN) || (objType == MSG_OBJ_TYPE_UNKNOWN_AUDIO)|| (objType == MSG_OBJ_TYPE_UNKNOWN_VIDEO) || (!obj.IsValid()))
+  if ((pItem->GetProperty("boxeeId").IsEmpty() && pItem->GetPropertyBOOL("hasNFO")) || (objType == MSG_OBJ_TYPE_UNKNOWN) || (objType == MSG_OBJ_TYPE_UNKNOWN_AUDIO)|| (objType == MSG_OBJ_TYPE_UNKNOWN_VIDEO) || (!obj.IsValid()))
   {
     // failed to create the object -> treat it as UNKNOWN item
+
+    if (pItem->m_strPath.IsEmpty())
+    {
+      //use the first link of the item
+      if (!pItem->GetLinksList()->IsEmpty())
+      {
+        pItem->m_strPath = pItem->GetLinksList()->Get(0)->m_strPath;
+      }
+
+      if (pItem->m_strPath.IsEmpty())
+      {
+        CLog::Log(LOGERROR,"BoxeeUtils::Queue - FAILED to queue unknown item since its path is empty. [label=%s][path=%s] (queue)",pItem->GetLabel().c_str(),pItem->m_strPath.c_str());
+        return false;
+      }
+    }
 
     unknownObj.SetName("local content");
 
@@ -671,7 +702,7 @@ bool BoxeeUtils::Queue(CFileItem* pItem, bool runInBG)
     };
 
     AddToQueueJob* addToQueuejob = new AddToQueueJob(action);
-    succeeded = CUtil::RunInBG(addToQueuejob);
+    succeeded = (CUtil::RunInBG(addToQueuejob) == JOB_SUCCEEDED);
 
   }
   else
@@ -680,7 +711,7 @@ bool BoxeeUtils::Queue(CFileItem* pItem, bool runInBG)
   }
 
   // update the queue
-  BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().UpdateQueueNow();
+    BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().UpdateQueueNow();
 
   CLog::Log(LOGDEBUG,"[QUEUE] - Report to server for [%s] returned [succeeded=%d]. [runInBG=%d] (rts)(queue)",action.GetMessageType().c_str(),succeeded,runInBG);
 
@@ -729,7 +760,7 @@ bool BoxeeUtils::Dequeue(const CFileItem* pItem, bool runInBG)
     };
 
     RemoveFromQueueJob* removeFromQueuejob = new RemoveFromQueueJob(action);
-    succeeded = CUtil::RunInBG(removeFromQueuejob);
+    succeeded = (CUtil::RunInBG(removeFromQueuejob) == JOB_SUCCEEDED);
   }
   else
   {
@@ -796,6 +827,8 @@ bool BoxeeUtils::Subscribe(BOXEE::CSubscriptionType::SubscriptionTypeEnums subsc
 
       // in case of Subscribe action ISN'T in BG -> Update the SubscribeList
       BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().UpdateSubscriptionsListNow();
+
+      g_directoryCache.ClearDirectoriesThatIncludeUrl("boxee://subscriptions/?");
     }
 
     CLog::Log(LOGDEBUG,"[SUBSCRIBE] - Report to server for [%s] returned [succeeded=%d]. [runInBG=%d] (rts)(subs)",action.GetMessageType().c_str(),succeeded,runInBG);
@@ -846,6 +879,8 @@ bool BoxeeUtils::Unsubscribe(BOXEE::CSubscriptionType::SubscriptionTypeEnums sub
 
       // in case of Unsubscribe action ISN'T in BG -> Update the SubscribeList
       BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().UpdateSubscriptionsListNow();
+
+      g_directoryCache.ClearDirectoriesThatIncludeUrl("boxee://subscriptions/?");
     }
   }
   else
@@ -870,6 +905,67 @@ bool BoxeeUtils::GetSubscriptions(CSubscriptionType::SubscriptionTypeEnums subsc
 {
   return Boxee::GetInstance().GetBoxeeClientServerComManager().GetSubscriptions(subscriptionType,subscriptionsVec);
 }
+
+bool BoxeeUtils::AddWebFavorite(const CStdString& url, const CStdString& urlTitle, bool runInBG)
+{
+  bool succeeded = false;
+
+  CStdString strMessageBody = "<bookmark><title>"+urlTitle+"</title><url>"+url+"</url></bookmark>";
+  std::string strUrl = BXConfiguration::GetInstance().GetURLParam("Boxee.AddWebFavoritesUrl","http://app.boxee.tv/api/bookmarkpost");
+
+  ListHttpHeaders headers;
+  headers.push_back("Content-Type: text/xml");
+
+  BXXMLDocument doc;
+  BXCredentials credentials = BOXEE::Boxee::GetInstance().GetCredentials();
+  doc.SetCredentials(credentials);
+
+  LOG(LOG_LEVEL_DEBUG,"Boxee::SetNewWebFavorite - Going to call LoadFromURL with [strUrl=%s], [strMessageBody=%s].",strUrl.c_str(),strMessageBody.c_str());
+  succeeded = doc.LoadFromURL(strUrl,headers,strMessageBody);
+  LOG(LOG_LEVEL_DEBUG,"Boxee::SetNewWebFavorite - Call to  return LoadFromURL with [strUrl=%s], [strMessageBody=%s] returned [retVal=%d]. (sua)",strUrl.c_str(),strMessageBody.c_str(),succeeded);
+
+  // in case of AddWebFavorite action ISN'T in BG -> Update the WebFavoritesList
+  BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().UpdateWebFavoritesListNow();
+
+  CLog::Log(LOGDEBUG,"[AddWebFavorite] - Report to server returned [succeeded=%d].",succeeded);
+
+  return succeeded;
+}
+
+bool BoxeeUtils::RemoveWebFavorite(int index)
+{
+  bool succeeded = false;
+  // in case of AddWebFavorite action ISN'T in BG -> Update the WebFavoritesList
+
+  CStdString strIndex = BOXEE::BXUtils::IntToString(index);
+  std::string strUrl = BXConfiguration::GetInstance().GetURLParam("Boxee.RemoveWebFavoriteUrl","http://app.boxee.tv/api/bookmarkremove");
+  strUrl += "?bookmark_index=";
+  strUrl += strIndex;
+
+  ListHttpHeaders headers;
+  headers.push_back("Content-Type: text/xml");
+
+  BXXMLDocument doc;
+  BXCredentials credentials = BOXEE::Boxee::GetInstance().GetCredentials();
+  doc.SetCredentials(credentials);
+
+  succeeded = doc.LoadFromURL(strUrl, headers, " ");
+
+  return succeeded;
+}
+
+// Unused, but don't want to delete, just silence warning
+#if 0
+static bool IsWebFavorite(const std::string& src)
+{
+  return BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().IsInWebFavorites(src);
+}
+
+static bool GetWebFavorites(std::vector<BOXEE::BXObject>& webFavoritesVec)
+{
+  return BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().GetWebFavorites(webFavoritesVec);
+}
+#endif
 
 CStdString BoxeeUtils::BuildParameterString(const std::map<CStdString, CStdString>& mapParameters)
 {
@@ -904,10 +1000,10 @@ CStdString BoxeeUtils::AppendParameters(const CStdString& _strPath, const std::m
 {
   CStdString strPath = _strPath;
 
-  std::map<CStdString, CStdString>::const_iterator it = mapParameters.begin();
+  if (mapParameters.empty()) // map is empty
+     return strPath;
 
-  if (it == mapParameters.end()) // map is empty
-    return "";
+  std::map<CStdString, CStdString>::const_iterator it = mapParameters.begin();
 
   // Add other parameters
   while (it != mapParameters.end())
@@ -931,12 +1027,18 @@ void BoxeeUtils::ReportLaunchApp(const std::string& id, const CFileItem* pItem)
 
   obj.SetType(MSG_OBJ_TYPE_APPLICATION);
   obj.SetValue(MSG_KEY_ID, id);
+
+  if (!pItem->GetProperty("boxeeid").IsEmpty())
+  {
+    obj.SetValue(MSG_KEY_BOXEE_ID, pItem->GetProperty("boxeeid"));
+  }
+
   SetActivatedFromToObj(pItem, obj);
   obj.SetValid(true);
 
   if (obj.IsValid())
   {
-    CLog::Log(LOGDEBUG,"[LAUNCH_APP] - Going to report [%s] to server. [objType=%s][objId=%s][activated_from=%s] (rts)",action.GetMessageType().c_str(),obj.GetType().c_str(),obj.GetValue(MSG_KEY_ID).c_str(),obj.GetValue(MSG_KEY_ACTIVATED_FROM).c_str());
+    CLog::Log(LOGDEBUG,"[LAUNCH_APP] - Going to report [%s] to server. [objType=%s][objId=%s][activated_from=%s][boxeeId=%s] (rts)",action.GetMessageType().c_str(),obj.GetType().c_str(),obj.GetValue(MSG_KEY_ID).c_str(),obj.GetValue(MSG_KEY_ACTIVATED_FROM).c_str(),obj.GetValue(MSG_KEY_BOXEE_ID).c_str());
 
     action.AddObject(obj);
     BOXEE::Boxee::GetInstance().SetUserAction_bg(action);
@@ -980,7 +1082,7 @@ bool BoxeeUtils::ReportInstalledApps(const VECSOURCES& appsVec, bool runInBG)
   {
     BXObject obj(false);
 
-    CURL url(appsVec[i].strPath);
+    CURI url(appsVec[i].strPath);
 
     if (CUtil::IsLastFM(appsVec[i].strPath) || CUtil::IsShoutCast(appsVec[i].strPath))
     {
@@ -1284,12 +1386,212 @@ bool BoxeeUtils::ReportRemoveRepository(const std::string& id, bool runInBG)
   return succeeded;
 }
 
-void BoxeeUtils::Share(const CFileItem* pItem, const std::vector<BOXEE::BXFriend> &vecRecommendTo, bool bInBoxee, const std::string& userText)
+Job_Result BoxeeUtils::GetShareServicesJson(Json::Value& response, int& retCode, bool runInBG)
 {
-  Share(pItem,vecRecommendTo,std::string(bInBoxee?"1":"0"),userText);
+  CStdString strUrl = BOXEE::BXConfiguration::GetInstance().GetURLParam("Boxee.ApiGetSocialServices","http://app.boxee.tv/api/getsocialservices");
+  strUrl += "?format=json";
+
+  Job_Result result;
+
+  if (runInBG)
+  {
+    result = BXUtils::PerformJSONGetRequestInBG(strUrl,response,retCode);
+  }
+  else
+  {
+    result = BXUtils::PerformJSONGetRequest(strUrl,response,retCode) ? JOB_SUCCEEDED : JOB_FAILED;
+  }
+
+  if (result == JOB_SUCCEEDED)
+  {
+    PrecacheShareServicesImages(response);
+  }
+
+  return result;
 }
 
-void BoxeeUtils::Share(const CFileItem* pItem, const std::vector<BOXEE::BXFriend> &vecRecommendTo, const std::string& inBoxee, const std::string& userText)
+int BoxeeUtils::ParseJsonShareServicesToFileItems(const Json::Value& jsonValue, CFileItemList& outputList)
+{
+  outputList.Clear();
+
+  if (jsonValue.isArray())
+  {
+    for (size_t j = 0; j < jsonValue.size(); j++)
+    {
+      Json::Value m = jsonValue[(int) j];
+      Json::Value::Members keys = m.getMemberNames();
+
+      CFileItemPtr jsonItem(new CFileItem("jsonObject"));
+
+      for (size_t i = 0; i < keys.size(); i++)
+      {
+        jsonItem->SetProperty(keys[i], m[keys[i]].asString());
+
+        if (keys[i] == "name")
+        {
+          jsonItem->SetLabel(m[keys[i]].asString());
+        }
+
+        if (keys[i] == "thumb")
+        {
+          jsonItem->SetThumbnailImage(m[keys[i]].asString());
+        }
+
+        if (keys[i] == "id")
+        {
+          jsonItem->SetProperty("serviceId",m[keys[i]].asString());
+        }
+      }
+      outputList.Add(jsonItem);
+    }
+  }
+
+  return outputList.Size();
+}
+
+bool BoxeeUtils::PrecacheShareServicesImages(const Json::Value& response)
+{
+  std::vector<std::string> vecImagesSuffix;
+
+  vecImagesSuffix.push_back("-button-off.png");
+  vecImagesSuffix.push_back("-button-on.png");
+
+  if (response.isArray())
+  {
+    for (size_t j = 0; j < response.size(); j++)
+    {
+      Json::Value m = response[(int) j];
+      Json::Value::Members keys = m.getMemberNames();
+
+      for (size_t i = 0; i < keys.size(); i++)
+      {
+        if (keys[i] == "thumb")
+        {
+          std::string thumbImageBase = m[keys[i]].asString();
+
+          for (std::vector<std::string>::iterator it = vecImagesSuffix.begin(); it != vecImagesSuffix.end() ; it++)
+          {
+            std::string ImageURL = thumbImageBase + (*it);
+
+            CLog::Log(LOGDEBUG,"CGUIDialogBoxeeShare::RequestSocialServices::PrecacheImages, caching social services image: [ImageURL=%s] (share)",ImageURL.c_str());
+            CTextureArray texture;
+            g_largeTextureManager.GetImage(ImageURL,texture,true);
+          }
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
+void BoxeeUtils::LoadSocialShareServicesStatus(CFileItemList& list)
+{
+  CGUIWindowStateDatabase statedb;
+
+  for (int i = 0 ; i < list.Size() ; i++)
+  {
+    CFileItemPtr item = list.Get(i);
+
+    bool isEnabled = item->GetPropertyBOOL("enable");
+    std::string id = item->GetProperty("id");
+    bool dbselected = false;
+
+    if (isEnabled)
+    {
+      std::string dbname = "";
+
+      if (!statedb.GetUserService(id,dbname,dbselected))
+      {
+        //if we couldn't find it in the db, we should add it and it should be selected by default
+        dbselected = isEnabled;
+
+        //means we don't have it in our db, we should add it
+        statedb.AddUserService(id,item->GetProperty("name"),dbselected);
+      }
+    }
+    else
+    { //if the item is disabled, delete it from the database
+      statedb.RemoveUserService(id);
+    }
+
+    item->SetProperty("isSelected", dbselected);
+  }
+}
+
+void BoxeeUtils::GetShareServicesXML(CFileItemList& list)
+{
+  //we need to query the server here to check what's disabled or enabled
+  std::string strUrl = BOXEE::BXConfiguration::GetInstance().GetURLParam("Boxee.ApiGetSocialServices","http://app.boxee.tv/api/getsocialservices");
+
+  BOXEE::BXXMLDocument publishServicesList;
+  bool succeeded = publishServicesList.LoadFromURL(strUrl);
+
+  if (succeeded)
+  {
+    TiXmlDocument xmlDoc = publishServicesList.GetDocument();
+
+    if (!xmlDoc.Error())
+    {
+      TiXmlElement *xmlService = xmlDoc.RootElement();
+
+      if (xmlService || strcmpi(xmlService->Value(), "services") == 0)
+      {
+        xmlService = xmlService->FirstChildElement("service");
+
+        while (xmlService)
+        {
+          const char *id = xmlService->Attribute("id");
+          const char *name = xmlService->Attribute("name");
+          const char *enabled = xmlService->Attribute("enabled");
+          const char *logo = xmlService->Attribute("logo");
+
+          if ((id == NULL) || (name == NULL) || (enabled == NULL) || (logo == NULL))
+          {
+            CLog::Log(LOGERROR,"feeds doesn't contain one of the following attribute : id, name, enabled, logo == NULL - skipping");
+            xmlService = xmlService->NextSiblingElement("service");
+            continue;
+          }
+
+          CFileItemPtr service(new CFileItem(name));
+          service->SetProperty("id",id);
+          service->SetProperty("isEnabled", enabled);
+
+          CGUIWindowStateDatabase statedb;
+          std::string dbname;
+          bool dbselected = false;
+
+          if (!statedb.GetUserService(id,dbname,dbselected))
+          {
+            //if the service is enabled, is should be selected by default
+            dbselected = service->GetPropertyBOOL("isEnabled");
+
+            //means we don't have it in our db, we should add it
+            statedb.AddUserService(id,name,dbselected);
+          }
+
+          service->SetProperty("isSelected", dbselected);
+          service->SetThumbnailImage(logo);
+
+          list.Add(service);
+
+          xmlService = xmlService->NextSiblingElement("service");
+        }
+      }
+    }
+    else
+    {
+      CLog::Log(LOGERROR, "Error loading services, cannot load xml");
+    }
+  }
+}
+
+void BoxeeUtils::Share(const CFileItem* pItem, const std::vector<BOXEE::BXFriend> &vecRecommendTo, CFileItemList& listPublishToServices , bool bInBoxee, const std::string& userText)
+{
+  Share(pItem,vecRecommendTo,listPublishToServices,std::string(bInBoxee?"1":"0"),userText);
+}
+
+void BoxeeUtils::Share(const CFileItem* pItem, const std::vector<BOXEE::BXFriend> &vecRecommendTo, CFileItemList& listPublishToServices, const std::string& inBoxee, const std::string& userText)
 {
   if (!pItem)
   {
@@ -1317,6 +1619,24 @@ void BoxeeUtils::Share(const CFileItem* pItem, const std::vector<BOXEE::BXFriend
     action.AddObject(objFriend);
   }
 
+  CStdString services;
+
+  for (int i = 0 ; i < listPublishToServices.Size() ; i++)
+  {
+    CFileItemPtr fileItem = listPublishToServices[i];
+
+    if (fileItem.get())
+    {
+      if (fileItem->GetPropertyBOOL("isSelected"))
+      {
+        services += fileItem->GetProperty("id");
+        services += " ";
+      }
+    }
+  }
+
+  services.Trim();
+
   BXObject obj;
   const CFileItem* shareItem = pItem;
   if (pItem->HasExternlFileItem())
@@ -1334,6 +1654,7 @@ void BoxeeUtils::Share(const CFileItem* pItem, const std::vector<BOXEE::BXFriend
 
     action.SetValue(MSG_KEY_IN_BOXEE,inBoxee);
     action.SetValue(MSG_KEY_USER_TEXT,userText);
+    action.SetValue(MSG_KEY_FEED_SERVICE,services);
 
     CLog::Log(LOGDEBUG,"BoxeeUtils::Share - Report SHARE with [userText=%s] (share)(rts)",userText.c_str());
 
@@ -1381,7 +1702,7 @@ int BoxeeUtils::DayDiff(time_t tmNow, time_t tmOther) {
 
 time_t BoxeeUtils::GetModTime(const CStdString& strPath)
 {
-  struct __stat64 buffer = {0};
+  struct __stat64 buffer;
   CFile::Stat(strPath, &buffer);
 #ifdef __APPLE__
   struct timespec iModTime = buffer.st_mtimespec;
@@ -1395,12 +1716,15 @@ void BoxeeUtils::OnTuneIn(const BOXEE::BXObject &userObj, bool bForce)
 {
   if (!g_application.IsPlaying() || bForce)
   {
+#ifdef HAS_LASTFM
     if (userObj.GetName() == "lastfm")
     {
       CLastFmManager::GetInstance()->StopRadio();
-      CLastFmManager::GetInstance()->ChangeStation(CURL(userObj.GetValue(MSG_KEY_URL)));
+      CLastFmManager::GetInstance()->ChangeStation(CURI(userObj.GetValue(MSG_KEY_URL)));
     }
-    else if (userObj.GetName() == "shout" || userObj.GetName() == "shoutcast")
+    else
+#endif
+    if (userObj.GetName() == "shout" || userObj.GetName() == "shoutcast")
     {
       CFileItem item(userObj.GetValue(MSG_KEY_STATION));
       item.m_strPath = userObj.GetValue(MSG_KEY_URL);
@@ -1507,14 +1831,14 @@ bool BoxeeUtils::ConvertBXMetadataToAlbumInfo(const BOXEE::BXMetadata* pAlbumMet
 
   // Convert songs
   VECSONGS songs;
-  for (size_t i = 0; i < pAlbum->m_vecSongs.size(); i++)
+  for (size_t i = 0; i < pAlbum->m_vecSongs.size(); i++) 
   {
     BXAudio* pSong = pAlbum->m_vecSongs[i];
     CSong song;
     ConvertBXAudioToCSong(pSong, song);
     song.strArtist = pAlbum->m_strArtist;
     song.strComment = pAlbum->m_strDescription;
-    CLog::Log(LOGDEBUG, "BoxeeUtils::ConvertBXMetadataToAlbumInfo, adding song, title = %s, album = %s, artist = %s",
+    CLog::Log(LOGDEBUG, "BoxeeUtils::ConvertBXMetadataToAlbumInfo, adding song, title = %s, album = %s, artist = %s", 
         song.strTitle.c_str(), song.strAlbum.c_str(), song.strArtist.c_str());
 
     songs.push_back(song);
@@ -1533,21 +1857,21 @@ bool BoxeeUtils::AddUnrecognizedTracksFromPath(const CStdString& strPath, const 
 
   tracks.Clear();
 
-  if (DIRECTORY::CDirectory::GetDirectory(strPath, items))
+  if (DIRECTORY::CDirectory::GetDirectory(strPath, items)) 
   {
     // Sort the retreived files by filename
     items.Sort(SORT_METHOD_FILE, SORT_ORDER_ASC);
 
     // Go over all files in the directory and add those that do not appear in the list of songs
-    for (int i = 0; i < items.Size(); i++)
+    for (int i = 0; i < items.Size(); i++) 
     {
       CFileItemPtr pItem = items[i];
-      if (pItem->IsAudio())
+      if (pItem->IsAudio()) 
       {
         bool bShouldAdd = true;
-        for ( int j = 0; j < songSize; j++)
+        for ( int j = 0; j < songSize; j++) 
         {
-          if (songs[j].strFileName == pItem->m_strPath)
+          if (songs[j].strFileName == pItem->m_strPath) 
           {
             // song already exists in the list of recognized tracks
             bShouldAdd = false;
@@ -1563,7 +1887,7 @@ bool BoxeeUtils::AddUnrecognizedTracksFromPath(const CStdString& strPath, const 
     }
     return true;
   }
-  else
+  else 
   {
     CLog::Log(LOGDEBUG, "BoxeeUtils::AddUnrecognizedTracksFromPath, could not get tracks from path = %s", strPath.c_str());
     return false;
@@ -1599,8 +1923,8 @@ bool BoxeeUtils::UserObjToFileItem(const BOXEE::BXObject &obj, CFileItem* pItem)
 
 bool BoxeeUtils::ObjToFileItem(const BOXEE::BXObject &obj, CFileItem* pItem)
 {
-  if (!pItem) {
-    CLog::Log(LOGERROR, "BoxeeUtils::ObjToFileItem, FEEDLOADER, item is NULL");
+  if (!pItem)
+  {
     return false;
   }
 
@@ -1619,12 +1943,12 @@ bool BoxeeUtils::ObjToFileItem(const BOXEE::BXObject &obj, CFileItem* pItem)
   }
   else
   {
-    pItem->SetLabel(obj.GetName());
+      pItem->SetLabel(obj.GetName());    
   }
 
   if (objType.CompareNoCase(MSG_OBJ_TYPE_MOVIE) == 0 || objType.CompareNoCase(MSG_OBJ_TYPE_TV) == 0)
   {
-    CLog::Log(LOGDEBUG, "BoxeeUtils::ObjToFileItem, FEEDLOADER, obj of movie type");
+    //CLog::Log(LOGDEBUG, "BoxeeUtils::ObjToFileItem, FEEDLOADER, obj of movie type");
     pItem->SetProperty("isvideo",true);
     pItem->SetProperty("isfeedvideo",true);
 
@@ -1698,7 +2022,7 @@ bool BoxeeUtils::ObjToFileItem(const BOXEE::BXObject &obj, CFileItem* pItem)
     if (obj.HasValue(MSG_KEY_TRAILER))
     {
       pItem->SetProperty("HasTrailer", "1");
-      pItem->SetProperty("trailer", obj.GetValue(MSG_KEY_TRAILER).c_str());
+      pItem->SetProperty("trailer", obj.GetValue(MSG_KEY_TRAILER).c_str());      
     }
 
     pItem->SetProperty("IsTVShow",obj.GetType() == MSG_OBJ_TYPE_TV);
@@ -1723,7 +2047,7 @@ bool BoxeeUtils::ObjToFileItem(const BOXEE::BXObject &obj, CFileItem* pItem)
     {
       pItem->SetLabel(obj.GetName());
 
-      videoTag->m_strShowTitle = obj.GetName();
+      videoTag->m_strShowTitle = obj.GetValue(MSG_KEY_SHOW_NAME);
 
       if(obj.HasValue(MSG_KEY_EPISODE_NAME))
       {
@@ -1806,7 +2130,7 @@ bool BoxeeUtils::ObjToFileItem(const BOXEE::BXObject &obj, CFileItem* pItem)
     {
       pItem->SetLabel(obj.GetName());
 
-      tag->m_strShowTitle = obj.GetName();
+      tag->m_strShowTitle = obj.GetValue(MSG_KEY_SHOW_NAME);
 
       if(obj.HasValue(MSG_KEY_EPISODE_NAME))
       {
@@ -1845,13 +2169,19 @@ bool BoxeeUtils::ObjToFileItem(const BOXEE::BXObject &obj, CFileItem* pItem)
     pItem->SetProperty("title", (obj.GetName()).c_str());
     pItem->SetProperty("isPicture", true);
   }
-  /*
   else if (objType.CompareNoCase(MSG_OBJ_TYPE_APPLICATION) == 0  && !obj.GetValue(MSG_KEY_URL).empty())
   {
     pItem->SetProperty("isApp", true);
     pItem->m_strPath = obj.GetValue(MSG_KEY_URL);
   }
-   */
+  else if ( objType.CompareNoCase(MSG_OBJ_TYPE_STREAM) == 0 && !obj.GetValue(MSG_KEY_URL).empty())
+  {
+    pItem->SetProperty("isinternetstream", true);
+    //pItem->SetProperty("isvideo", true);
+    pItem->SetProperty("title", obj.GetValue(MSG_KEY_TITLE).c_str());
+    pItem->m_strPath = obj.GetValue(MSG_KEY_URL);
+    bResult = true;
+  }
 
   // In case BXObject has MSG_KEY_THUMB -> Set the item Thumbnail
   if (!obj.GetValue(MSG_KEY_THUMB).empty())
@@ -1862,7 +2192,7 @@ bool BoxeeUtils::ObjToFileItem(const BOXEE::BXObject &obj, CFileItem* pItem)
 
   // In case BXObject has MSG_KEY_RELEASE_DATE -> Set the item "releasedate" property
   if (obj.HasValue(MSG_KEY_RELEASE_DATE))
-  {
+  {      
     pItem->SetProperty("releasedate",obj.GetValue(MSG_KEY_RELEASE_DATE).c_str());
 
     //CLog::Log(LOGDEBUG,"BoxeeUtils::ObjToFileItem - In Item [path=%s][label=%s] property was set [releasedate=%s] (rdate)",(pItem->m_strPath).c_str(),(pItem->GetLabel()).c_str(),(pItem->GetProperty("releasedate")).c_str());
@@ -1878,7 +2208,7 @@ bool BoxeeUtils::ObjToFileItem(const BOXEE::BXObject &obj, CFileItem* pItem)
 
   // In case BXObject has MSG_KEY_CONTENT_TYPE -> Set the item ContentType
   if (obj.HasValue(MSG_KEY_CONTENT_TYPE))
-  {
+  {      
     pItem->SetContentType(obj.GetValue(MSG_KEY_CONTENT_TYPE));
 
     //CLog::Log(LOGDEBUG,"BoxeeUtils::ObjToFileItem - In Item [path=%s][label=%s] ContentType was set to [%s] (ctype)",(pItem->m_strPath).c_str(),(pItem->GetLabel()).c_str(),(pItem->GetContentType()).c_str());
@@ -1888,7 +2218,7 @@ bool BoxeeUtils::ObjToFileItem(const BOXEE::BXObject &obj, CFileItem* pItem)
   if(obj.HasValue(MSG_KEY_PLAY_PROVIDER_LABEL))
   {
     pItem->SetProperty("play_provider_label",obj.GetValue(MSG_KEY_PLAY_PROVIDER_LABEL));
-    //CLog::Log(LOGDEBUG,"BoxeeUtils::ObjToFileItem - In Item [path=%s][label=%s] after setting property [play_provider_label=%s] (pprov)",(pItem->m_strPath).c_str(),(pItem->GetLabel()).c_str(),(pItem->GetProperty("play_provider_label")).c_str());
+    //CLog::Log(LOGDEBUG,"BoxeeUtils::ObjToFileItem - In Item [path=%s][label=%s] after setting property [play_provider_label=%s] (pprov)",(pItem->m_strPath).c_str(),(pItem->GetLabel()).c_str(),(pItem->GetProperty("play_provider_label")).c_str());    
   }
 
   if(obj.HasValue(MSG_KEY_PROVIDER))
@@ -1900,7 +2230,7 @@ bool BoxeeUtils::ObjToFileItem(const BOXEE::BXObject &obj, CFileItem* pItem)
   if(obj.HasValue(MSG_KEY_PLAY_PROVIDER_THUMB))
   {
     pItem->SetProperty("play_provider_thumb",obj.GetValue(MSG_KEY_PLAY_PROVIDER_THUMB));
-    //CLog::Log(LOGDEBUG,"BoxeeUtils::ObjToFileItem - In Item [path=%s][label=%s] after setting property [play_provider_thumb=%s] (pprov)",(pItem->m_strPath).c_str(),(pItem->GetLabel()).c_str(),(pItem->GetProperty("play_provider_thumb")).c_str());
+    //CLog::Log(LOGDEBUG,"BoxeeUtils::ObjToFileItem - In Item [path=%s][label=%s] after setting property [play_provider_thumb=%s] (pprov)",(pItem->m_strPath).c_str(),(pItem->GetLabel()).c_str(),(pItem->GetProperty("play_provider_thumb")).c_str());    
   }
 
   if(obj.HasValue(MSG_KEY_PLAY_PROVIDER_THUMB_ON))
@@ -1939,6 +2269,11 @@ bool BoxeeUtils::ObjToFileItem(const BOXEE::BXObject &obj, CFileItem* pItem)
     pItem->SetProperty("showname", obj.GetValue(MSG_KEY_SHOW_NAME));
   }
 
+  if (obj.HasValue(MSG_KEY_APP_ID))
+  {
+    pItem->SetProperty("appid", obj.GetValue(MSG_KEY_APP_ID));
+  }
+
   return bResult;
 }
 
@@ -1967,22 +2302,22 @@ bool BoxeeUtils::ConvertAlbumInfoToBXMetadata(const CMusicAlbumInfo& info, BXMet
   pAlbum->m_strDescription = album.strReview;
 
   // Perform some sanity checks, TODO: Limited range, may be problematic
-  if (album.iYear > 0 && album.iYear < 2030)
+  if (album.iYear > 0 && album.iYear < 2030) 
   {
     pAlbum->m_iYear = album.iYear;
   }
-  else
+  else 
   {
     pAlbum->m_iYear = 1970;
   }
 
   pAlbum->m_iNumTracs = info.GetSongs().size();
 
-  if (album.iRating > 0)
+  if (album.iRating > 0) 
   {
     pAlbum->m_iRating = album.iRating;
   }
-  else
+  else 
   {
     pAlbum->m_iRating = 0;
   }
@@ -1992,29 +2327,29 @@ bool BoxeeUtils::ConvertAlbumInfoToBXMetadata(const CMusicAlbumInfo& info, BXMet
 
   // Add songs
   VECSONGS songs = info.GetSongs();
-  for (unsigned int i = 0; i < songs.size(); i++)
+  for (unsigned int i = 0; i < songs.size(); i++) 
   {
     CSong song = songs[i];
 
     // Add another audio detail for the list of songs in the album
     BXAudio* pAudio = new BXAudio();
     pAudio->m_strTitle = song.strTitle;
-    if (song.iDuration > 0)
+    if (song.iDuration > 0) 
     {
       pAudio->m_iDuration = song.iDuration;
     }
-    else
+    else 
     {
       pAudio->m_iDuration = 0;
     }
 
     pAudio->m_iYear = song.iYear;
 
-    if (song.iTrack > 0)
+    if (song.iTrack > 0) 
     {
       pAudio->m_iTrackNumber = song.iTrack;
     }
-    else
+    else 
     {
       pAudio->m_iTrackNumber = 0;
     }
@@ -2026,61 +2361,6 @@ bool BoxeeUtils::ConvertAlbumInfoToBXMetadata(const CMusicAlbumInfo& info, BXMet
 
   return true;
 }
-
-/*
-bool BoxeeUtils::ConvertAlbumInfoToBXFolder(const MUSIC_GRABBER::CMusicAlbumInfo& albumInfo, const CFileItemList& albumFileItems, BOXEE::BXFolder& folder)
-{
-  // Create bxfolder from the album description and the list of files representing the tracks
-  BXMetadata metadata(MEDIA_ITEM_TYPE_AUDIO);
-  ConvertAlbumInfoToBXMetadata(albumInfo, &metadata);
-
-  BXAlbum* pAlbum = (BXAlbum*)metadata.GetDetail(MEDIA_DETAIL_ALBUM);
-  BXArtist* pArtist = (BXArtist*)metadata.GetDetail(MEDIA_DETAIL_ARTIST);
-
-  folder.SetDetail(MEDIA_DETAIL_ALBUM, new BXAlbum(*pAlbum));
-  folder.SetDetail(MEDIA_DETAIL_ARTIST, new BXArtist(*pArtist));
-
-  folder.SetPath(albumFileItems.m_strPath);
-
-  // Create album songs, take only those songs that have a matching file
-  for (size_t i = 0; i < pAlbum->m_vecSongs.size(); i++)
-  {
-    BXMetadata* pTrackMetadata = new BXMetadata(MEDIA_ITEM_TYPE_AUDIO);
-    pTrackMetadata->SetDetail(MEDIA_DETAIL_ALBUM, new BXAlbum(*pAlbum));
-    pTrackMetadata->SetDetail(MEDIA_DETAIL_ARTIST, new BXArtist(*pArtist));
-
-    BXAudio* pSong = pAlbum->m_vecSongs[i];
-
-    // go over album items, and find the one that matches
-    int j = 0;
-    for (; j < albumFileItems.Size(); j++)
-    {
-      if (albumFileItems.Get(j)->HasMusicInfoTag() && pSong->m_iTrackNumber == albumFileItems.Get(j)->GetMusicInfoTag()->GetTrackNumber())
-      {
-        // Set the path to the matched song
-        pSong->m_strPath = albumFileItems.Get(j)->m_strPath;
-
-        pTrackMetadata->SetDetail(MEDIA_DETAIL_AUDIO, new BXAudio(*(pSong)));
-        folder.m_vecFiles.push_back(pTrackMetadata);
-        break;
-      }
-    }
-
-    if (j == albumFileItems.Size())
-    {
-      // song was not matched, add the next path
-      if ((int)i < j) {
-        pSong->m_strPath = albumFileItems.Get(i)->m_strPath;
-        pTrackMetadata->SetDetail(MEDIA_DETAIL_AUDIO, new BXAudio(*(pSong)));
-        folder.m_vecFiles.push_back(pTrackMetadata);
-      }
-    }
-  }
-
-  return true;
-}
- */
-
 
 bool BoxeeUtils::ConvertBXVideoToVideoInfoTag(const BXVideo* pVideo, CVideoInfoTag &info)
 {
@@ -2095,6 +2375,20 @@ bool BoxeeUtils::ConvertBXVideoToVideoInfoTag(const BXVideo* pVideo, CVideoInfoT
   info.m_strStudio = pVideo->m_strStudio;
   info.m_strTagLine = pVideo->m_strTagLine;
   info.m_strWritingCredits = pVideo->m_strCredits;
+
+  if (pVideo->m_iAudienceScore != -1)
+  {
+    info.m_rottenTomatoDetails.iAudienceScore = pVideo->m_iAudienceScore;
+    info.m_rottenTomatoDetails.strAudienceRating = pVideo->m_strAudienceRating;
+    info.m_rottenTomatoDetails.bValidAudienceDetails = true;
+  }
+
+  if (pVideo->m_iCriticsScore != -1)
+  {
+    info.m_rottenTomatoDetails.iCriticsScore = pVideo->m_iCriticsScore;
+    info.m_rottenTomatoDetails.strCriticsRating = pVideo->m_strCriticsRating;
+    info.m_rottenTomatoDetails.bValidCriticsDetails = true;
+  }
 
   if(pVideo->m_iDuration > 0)
   {
@@ -2124,8 +2418,6 @@ bool BoxeeUtils::ConvertBXVideoToVideoInfoTag(const BXVideo* pVideo, CVideoInfoT
   return true;
 
 }
-
-
 
 void BoxeeUtils::FillVideoItemDetails(CFileItemPtr pItem)
 {
@@ -2313,7 +2605,7 @@ bool BoxeeUtils::ParseBoxeeDbUrl(const std::string& strURL, std::string& strDir,
 
   CStdStringArray Path;
 
-  StringUtils::SplitString( strDirectory, "/", Path );
+  StringUtils::SplitString(strDirectory, "/", Path);
   if( Path.size() == 1 )  // only dir, no file
   {
     strFile.clear();
@@ -2321,8 +2613,8 @@ bool BoxeeUtils::ParseBoxeeDbUrl(const std::string& strURL, std::string& strDir,
   }
   else
   {
-    strFile = Path[ Path.size() - 1 ];
-    strDir  = Path[ Path.size() - 2 ];
+  strFile = Path[Path.size() -1];
+  strDir  = Path[Path.size() -2];
   }
 
   return true;
@@ -2331,14 +2623,23 @@ bool BoxeeUtils::ParseBoxeeDbUrl(const std::string& strURL, std::string& strDir,
 
 bool BoxeeUtils::IsUrlPlayableForCustomButton(const CStdString& url)
 {
-  return (url.Left(8) == "flash://" ||
+  return (url.Left(8) == "flash://" || 
       url.Left(7) == "http://"  ||
       url.Left(6) == "app://");
 }
 
 void BoxeeUtils::AddTrailerStrToItemLabel(CFileItem& item)
 {
-  if((item.GetLabel()).Right(8) != "Trailer)")
+  item.Dump();
+
+  CStdString title;
+
+  if (!item.GetProperty("link-title").IsEmpty())
+    title = item.GetProperty("link-title");
+  else
+    title = g_localizeStrings.Get(20410);
+
+  if(title.size() < item.GetLabel().size() && (item.GetLabel()).Right(title.size()) != title)
   {
     CLog::Log(LOGDEBUG,"BoxeeUtils::AddTrailerStrToItemLabel - Going to add (Trailer) to item label. [path=%s][label=%s] (tr)",(item.m_strPath).c_str(),(item.GetLabel()).c_str());
 
@@ -2369,7 +2670,8 @@ void BoxeeUtils::AddTrailerStrToItemLabel(CFileItem& item)
       // Add nothing
     }
 
-    trailerTitle += g_localizeStrings.Get(20410);
+    trailerTitle += title;
+
     trailerTitle += ")";
 
     item.SetLabel(trailerTitle);
@@ -2421,7 +2723,7 @@ bool BoxeeUtils::CreateDirectoryThumbnail(CFileItem& dir,CFileItemList &items)
 
         if((retVal == true) && (picturesQualifyAsThumbnailWasFound == false))
         {
-          picturesQualifyAsThumbnailWasFound = true;
+          picturesQualifyAsThumbnailWasFound = true;  
         }
 
         //CLog::Log(LOGDEBUG,"BoxeeUtils::CreateDirectoryThumbnail - [%d] In directory item [path=%s] check if newItem [path=%s] can be a thumb by calling to IsPictureQulifyAsThumb() returned [%d]. [picturesQualifyAsThumbnailWasFound=%d] (foldert)",i,(dir.m_strPath).c_str(),(newItem->m_strPath).c_str(),retVal,picturesQualifyAsThumbnailWasFound);
@@ -2440,7 +2742,7 @@ bool BoxeeUtils::CreateDirectoryThumbnail(CFileItem& dir,CFileItemList &items)
     }
 
     if(picturesQualifyAsThumbnailWasFound)
-    {
+    {      
       // We found a picture in the directory that qualify as thumbnail
 
       CStdString thumbPath = GetPicturePathQulifyAsThumb(picturesQualifyAsThumbnailArray);
@@ -2451,13 +2753,13 @@ bool BoxeeUtils::CreateDirectoryThumbnail(CFileItem& dir,CFileItemList &items)
       {
         // Error log was written in GetPicturePathQulifyAsThumb()
 
-        return false;
+        return false;        
       }
 
       CLog::Log(LOGDEBUG,"BoxeeUtils::CreateDirectoryThumbnail - In directory item [path=%s] found a picture that can be a thumb [%s] (foldert)",(dir.m_strPath).c_str(),thumbPath.c_str());
 
       if(CPicture::CreateThumbnail(thumbPath, dirCacheThumbPath))
-      {
+      {        
         CLog::Log(LOGDEBUG,"BoxeeUtils::CreateDirectoryThumbnail - For item [path=%s] a thumb [%s] was created (foldert)",(dir.m_strPath).c_str(),dirCacheThumbPath.c_str());
 
         return true;
@@ -2504,7 +2806,7 @@ bool BoxeeUtils::CreateDirectoryThumbnail(CFileItem& dir,CFileItemList &items)
       }
 
       return true;
-    }
+    }    
   }
   else
   {
@@ -2545,7 +2847,7 @@ bool BoxeeUtils::IsPictureQulifyAsThumb(CFileItemPtr item,CStdString* picturesQu
     {
       picturesQualifyAsThumbnailArray[CQualifyPicNameAsThumb::FOLDER_NAME] =  fullPath;
       retVal = true;
-      CLog::Log(LOGDEBUG,"BoxeeUtils::IsPictureQulifyAsThumb - Path of PictureItem [path=%s][picFileNameLower=%s] was entered to array under key [FOLDER_NAME] (foldert)",fullPath.c_str(),picFileName.c_str());
+      CLog::Log(LOGDEBUG,"BoxeeUtils::IsPictureQulifyAsThumb - Path of PictureItem [path=%s][picFileNameLower=%s] was entered to array under key [FOLDER_NAME] (foldert)",fullPath.c_str(),picFileName.c_str());      
     }
     else if(picFileName == "cover.jpg")
     {
@@ -2580,12 +2882,12 @@ CStdString BoxeeUtils::GetPicturePathQulifyAsThumb(CStdString* picturesQualifyAs
       {
       case CQualifyPicNameAsThumb::FOLDER:
       {
-        CLog::Log(LOGDEBUG,"BoxeeUtils::GetPicturePathQulifyAsThumb - In [i=%d=FOLDER] found a picturesQualifyAsThumbnail [%s] (foldert)",picNameAsThumb,picturePathQulifyAsThumb.c_str());
+        CLog::Log(LOGDEBUG,"BoxeeUtils::GetPicturePathQulifyAsThumb - In [i=%d=FOLDER] found a picturesQualifyAsThumbnail [%s] (foldert)",picNameAsThumb,picturePathQulifyAsThumb.c_str());        
       }
       break;
       case CQualifyPicNameAsThumb::PREVIEW:
       {
-        CLog::Log(LOGDEBUG,"BoxeeUtils::GetPicturePathQulifyAsThumb - In [i=%d=PREVIEW] found a picturesQualifyAsThumbnail [%s] (foldert)",picNameAsThumb,picturePathQulifyAsThumb.c_str());
+        CLog::Log(LOGDEBUG,"BoxeeUtils::GetPicturePathQulifyAsThumb - In [i=%d=PREVIEW] found a picturesQualifyAsThumbnail [%s] (foldert)",picNameAsThumb,picturePathQulifyAsThumb.c_str());                
       }
       break;
       case CQualifyPicNameAsThumb::FOLDER_NAME:
@@ -2615,7 +2917,7 @@ CStdString BoxeeUtils::GetPicturePathQulifyAsThumb(CStdString* picturesQualifyAs
 
   CLog::Log(LOGDEBUG,"BoxeeUtils::GetPicturePathQulifyAsThumb - Exit function and return [retVal=%s] (foldert)",picturePathQulifyAsThumb.c_str());
 
-  return picturePathQulifyAsThumb;
+  return picturePathQulifyAsThumb; 
 }
 
 bool BoxeeUtils::SafeDownload(const CStdString &url, const CStdString &target, const CStdString &hash)
@@ -2629,6 +2931,21 @@ bool BoxeeUtils::SafeDownload(const CStdString &url, const CStdString &target, c
 
   BOXEE::BXCurl curl;
   bool bOk = false;
+
+#ifdef HAS_EMBEDDED
+ if (curl.HttpDownloadFile(url.c_str(), target.c_str(), ""))
+  {
+    if (hash != CUtil::MD5File(target))
+    {
+      ::DeleteFile(target);
+      CLog::Log(LOGERROR, "BoxeeUtils::SafeDownload - File %s: MD5 is wrong", target.c_str());
+    }
+    else
+    {
+      bOk = true;
+    }
+  }
+#else
   CStdString tmpFile = _P("special://temp/");
   tmpFile += CUtil::GetFileName(targetPath);
   if (curl.HttpDownloadFile(url.c_str(), tmpFile.c_str(), ""))
@@ -2639,6 +2956,7 @@ bool BoxeeUtils::SafeDownload(const CStdString &url, const CStdString &target, c
       ::DeleteFile(tmpFile);
     }
   }
+#endif
 
   return bOk;
 }
@@ -2666,8 +2984,15 @@ bool BoxeeUtils::RemoveMatchingPatternFromString(CStdString& str, const CStdStri
 
 const char* BoxeeUtils::GetPlatformStr()
 {
-#if defined(BOXEE_DEVICE)
-  return BOXEE_PLATFORMS[4];
+#if defined(DEVICE_PLATFORM)
+  if (BOXEE::BXOEMConfiguration::GetInstance().HasParam("Boxee.Device.Name"))
+  {
+    return BOXEE::BXOEMConfiguration::GetInstance().GetStringParam("Boxee.Device.Name", "").c_str();
+  }
+  else
+  {
+    return BOXEE_PLATFORMS[4];
+  }
 #elif defined(_LINUX) && !defined(__APPLE__)
   return BOXEE_PLATFORMS[2];
 #elif defined(__APPLE__)
@@ -2688,7 +3013,7 @@ bool BoxeeUtils::LogReportToServerAction(const CFileItem& pItem, const BXObject&
 {
   CStdString reportToServerActionTypeStr = "";
 
-  switch(reportToServerActionType)
+  switch(reportToServerActionType) 
   {
   case CReportToServerActionType::PLAY:
     reportToServerActionTypeStr = "PLAY";
@@ -2794,6 +3119,38 @@ CStdString BoxeeUtils::GetShortRssType(CStdString rssType)
   }
 }
 
+bool BoxeeUtils::BuildItemInfo(CFileItem& item,CFileItemList& items, bool loadLocalLinks)
+{
+  CStdString strBoxeeId = item.GetProperty("boxeeid");
+  bool bInfoLoaded = item.GetPropertyBOOL("infoLoaded");
+  bool succeeded = false;
+
+  if (!bInfoLoaded)
+  {
+    succeeded = ResolveItem(strBoxeeId,items);
+  }
+
+  if (succeeded && loadLocalLinks)
+  {
+    for (int j = 0; j < items.Size(); j++)
+    {
+      CFileItemPtr pItem = items[j];
+
+      CStdString itemId = pItem->GetProperty("boxeeId");
+      if (itemId == strBoxeeId)
+      {
+        GetLocalLinks(*pItem);
+      }
+    }
+  }
+  else if (loadLocalLinks)
+  {
+    GetLocalLinks(item);
+  }
+
+  return succeeded;
+}
+
 bool BoxeeUtils::ResolveItem(const CStdString& strBoxeeId, CFileItemList& items)
 {
   // Real production URL
@@ -2813,17 +3170,6 @@ bool BoxeeUtils::ResolveItem(const CStdString& strBoxeeId, CFileItemList& items)
   if (items.Size() == 0)
   {
     return false;
-  }
-
-  for (int j = 0; j < items.Size(); j++)
-  {
-    CFileItemPtr pItem = items[j];
-
-    CStdString itemId = pItem->GetProperty("boxeeId");
-    if (itemId == strBoxeeId)
-    {
-      GetLocalLinks(pItem);
-    }
   }
 
   return true;
@@ -2853,6 +3199,11 @@ bool BoxeeUtils::GetLocalVideoMetadata(CFileItem& item)
     if (!pVideo->m_strShowId.empty())
     {
       item.SetProperty("showId", pVideo->m_strShowId);
+      item.SetProperty("istvshow",true);
+    }
+    else
+    {
+      item.SetProperty("ismovie",true);
     }
 
     item.SetProperty("OriginalThumb", pVideo->m_strCover);
@@ -2863,25 +3214,48 @@ bool BoxeeUtils::GetLocalVideoMetadata(CFileItem& item)
   }
   else
   {
-    CLog::Log(LOGDEBUG,"In CGUIDialogBoxeeMediaAction::OnPlay - file not recognized, path = %s", item.m_strPath.c_str());
+    CLog::Log(LOGDEBUG,"BoxeeUtils::GetLocalVideoMetadata - file not recognized. [path=%s]",item.m_strPath.c_str());
     item.SetProperty("isFolderItem", true);
     return false;
   }
 }
 
-void BoxeeUtils::GetLocalLinks(CFileItemPtr pItem)
+void BoxeeUtils::GetLocalLinks(CFileItem& item)
 {
-  CStdString strBoxeeId = pItem->GetProperty("boxeeId");
+  CStdString strBoxeeId = item.GetProperty("boxeeId");
   // Get all local links to this item from the database
   std::vector<BXPath> vecLinks;
-  BOXEE::Boxee::GetInstance().GetMetadataEngine().GetLinks(strBoxeeId, vecLinks);
+
+  std::vector<std::string> vecPathFilter;
+  CBoxeeDatabaseDirectory::CreateShareFilter("video", vecPathFilter);
+  BOXEE::Boxee::GetInstance().GetMetadataEngine().GetLinks(strBoxeeId, vecLinks, vecPathFilter);
+
   for (size_t i = 0; i < vecLinks.size(); i++)
   {
     CStdString strPath = CBoxeeDatabaseDirectory::ConstructVideoPath(vecLinks[i]);
 
-    CLog::Log(LOGDEBUG, "BoxeeUtils::ResolveItem, add local path = %s (ri)", strPath.c_str());
-    pItem->AddLink(pItem->GetLabel(), strPath, pItem->GetContentType(true), CLinkBoxeeType::LOCAL, "", "", "", "all", true,"",0);
+    if (g_application.IsPathAvailable(strPath))
+    {
+      CFileItemPtr localLink(new CFileItem());
+      if (CFileItem::CreateLink(localLink, item.GetLabel(), strPath, item.GetContentType(true), CLinkBoxeeType::LOCAL, "", "", "", "all", true,"",0,CLinkBoxeeOffer::FREE,""))
+      {
+        CLog::Log(LOGDEBUG, "BoxeeUtils::ResolveItem, add local path = %s (ri)", strPath.c_str());
+        item.AddLink(localLink);
+      }
+      else
+      {
+        //should not happen..
+        CLog::Log(LOGDEBUG, "BoxeeUtils::ResolveItem, failed to create local link for item [path=%s]", strPath.c_str());
+      }
+    }
+    else
+    {
+      CLog::Log(LOGDEBUG, "BoxeeUtils::ResolveItem, didn't add local path = %s because it is not available. (ri)", strPath.c_str());
+    }
   }
+
+  if (vecLinks.size() > 0)
+    item.SetProperty("isMergedItem",true);
 }
 
 void BoxeeUtils::PlayPicture(const CFileItem& itemPath)
@@ -3006,6 +3380,11 @@ BXObject BoxeeUtils::FileItemToObject(const CFileItem *pItem)
     HandleWebUnknownItem(pItem, obj);
   }
   break;
+  case CFileItemTypes::LIVETV:
+  {
+    HandleLiveTvItem(pItem, obj);
+  }
+  break;
   case CFileItemTypes::UNKNOWN:
   {
     HandleUnknownItem(pItem, obj);
@@ -3048,7 +3427,7 @@ void BoxeeUtils::SetActivatedFromToObj(const CFileItem* pItem, BXObject& obj)
   {
     CStdString activateFrom = "";
 
-    CURL url(parentPath);
+    CURI url(parentPath);
     CStdString protocol = url.GetProtocol();
 
     if (protocol.CompareNoCase("feed") == 0)
@@ -3305,7 +3684,7 @@ void BoxeeUtils::HandleWebResolvedVideoItem(const CFileItem *pItem, BOXEE::BXObj
     {
       CLog::Log(LOGERROR,"BoxeeUtils::HandleWebResolvedVideoItem - FAILED to set obj name for item [label=%s][path=%s] (new)",pItem->GetLabel().c_str(),pItem->m_strPath.c_str());
       return;
-    }
+  }
   }
 
   SetObjParametersFromItem(pItem, obj, true/*ContentType*/, true/*Provider*/, true/*AppId*/, true/*StreamType*/, true/*Adult*/, true/*Countries*/, true/*Thumb*/, true/*Genre*/, true/*ReleaseDate*/, true/*Description*/, true/*BoxeeId*/, false/*ShowId*/, false/*ShowName*/, true/*ImdbId*/, true/*Year*/, true/*Runtime*/);
@@ -3353,7 +3732,7 @@ void BoxeeUtils::HandleWebResolvedMovieItem(const CFileItem *pItem, BOXEE::BXObj
     {
       CLog::Log(LOGERROR,"BoxeeUtils::HandleWebResolvedMovieItem - FAILED to set obj name for item [label=%s][path=%s] (new)",pItem->GetLabel().c_str(),pItem->m_strPath.c_str());
       return;
-    }
+  }
   }
 
   SetObjParametersFromItem(pItem, obj, true/*ContentType*/, true/*Provider*/, true/*AppId*/, true/*StreamType*/, true/*Adult*/, true/*Countries*/, true/*Thumb*/, true/*Genre*/, true/*ReleaseDate*/, true/*Description*/, true/*BoxeeId*/, false/*ShowId*/, false/*ShowName*/, true/*ImdbId*/, true/*Year*/, true/*Runtime*/);
@@ -3411,7 +3790,7 @@ void BoxeeUtils::HandleWebResolvedTvShowEpisodeItem(const CFileItem *pItem, BOXE
     {
       CLog::Log(LOGERROR,"BoxeeUtils::HandleWebResolvedTvShowEpisodeItem - FAILED to set obj name for item [label=%s][path=%s] (new)",pItem->GetLabel().c_str(),pItem->m_strPath.c_str());
       return;
-    }
+  }
   }
 
   obj.SetValid(true);
@@ -3516,6 +3895,23 @@ void BoxeeUtils::HandleWebUnknownItem(const CFileItem *pItem, BOXEE::BXObject& o
   obj.SetType(MSG_OBJ_TYPE_STREAM);
   obj.SetValue(MSG_KEY_URL, BoxeeUtils::GetUrlFromItemForRepostToServer(*pItem));
   obj.SetValue(MSG_KEY_NAME, pItem->GetLabel());
+
+  SetObjParametersFromItem(pItem, obj, true/*ContentType*/, true/*Provider*/, true/*AppId*/, true/*StreamType*/, true/*Adult*/, true/*Countries*/, true/*Thumb*/, true/*Genre*/, true/*ReleaseDate*/, true/*Description*/, true/*BoxeeId*/, true/*ShowId*/, true/*ShowName*/, true/*ImdbId*/, true/*Year*/, true/*Runtime*/);
+
+  obj.SetValid(true);
+}
+
+void BoxeeUtils::HandleLiveTvItem(const CFileItem *pItem, BOXEE::BXObject& obj)
+{
+  if (!pItem)
+  {
+    CLog::Log(LOGERROR,"BoxeeUtils::HandleLiveTvItem - Enter function with a NULL item (new)");
+    return;
+  }
+
+  obj.SetType(MSG_OBJ_TYPE_LIVETV_STREAM);
+  obj.SetValue(MSG_KEY_NAME, pItem->GetLabel());
+  obj.SetValue(MSG_KEY_PROGRAM_ID, pItem->GetProperty("program_id"));
 
   SetObjParametersFromItem(pItem, obj, true/*ContentType*/, true/*Provider*/, true/*AppId*/, true/*StreamType*/, true/*Adult*/, true/*Countries*/, true/*Thumb*/, true/*Genre*/, true/*ReleaseDate*/, true/*Description*/, true/*BoxeeId*/, true/*ShowId*/, true/*ShowName*/, true/*ImdbId*/, true/*Year*/, true/*Runtime*/);
 
@@ -3789,9 +4185,9 @@ void BoxeeUtils::SetObjParametersFromItem(const CFileItem* pItem, BOXEE::BXObjec
           strYear.Format("%i", videoInfoTag->m_iYear);
           obj.SetValue(MSG_KEY_RELEASE_YEAR, strYear);
         }
+        }
       }
     }
-  }
 
   if (setRuntime)
   {
@@ -3829,15 +4225,15 @@ CFileItemTypes::FileItemTypesEnums BoxeeUtils::GetRawFileItemType(const CFileIte
   {
     // item doesn't have a path -> links are still in the LinksFileItemList (can be in case of share) -> consider as local=TRUE (because we don't know which link the user will choose)
 
-    isLocal = true;
-  }
+      isLocal = true;
+    }
   else if ( CUtil::IsHD(itemPath) ||
-      CUtil::IsSmb(itemPath) ||
-      CUtil::IsUPnP(itemPath) ||
-      CUtil::IsStack(itemPath) ||
-      CUtil::IsBoxeeDb(itemPath) ||
-      itemPath.Left(6).Equals("rar://") ||
-      itemPath.Left(6).Equals("zip://") )
+            CUtil::IsSmb(itemPath) ||
+            CUtil::IsUPnP(itemPath) ||
+            CUtil::IsStack(itemPath) ||
+            CUtil::IsBoxeeDb(itemPath) ||
+            itemPath.Left(6).Equals("rar://") ||
+            itemPath.Left(6).Equals("zip://") )
   {
     isLocal = true;
   }
@@ -3859,9 +4255,7 @@ CFileItemTypes::FileItemTypesEnums BoxeeUtils::GetRawFileItemType(const CFileIte
   bool isVideo = false;
   bool isMovie = false;
   bool isTvShow = false;
-
   bool isAudio = false;
-
   bool isPicture = false;
 
   CStdString rtsMediaTypeProperty = pItem->GetProperty("rts-mediatype");
@@ -3878,6 +4272,10 @@ CFileItemTypes::FileItemTypesEnums BoxeeUtils::GetRawFileItemType(const CFileIte
   {
     isVideo = true;
     isTvShow = true;
+  }
+  else if (pItem->GetPropertyBOOL("livetv"))
+  {
+    return CFileItemTypes::LIVETV;
   }
   else if (pItem->GetPropertyBOOL("isVideo") || itemHasVideoInfoTag)
   {
@@ -3905,8 +4303,8 @@ CFileItemTypes::FileItemTypesEnums BoxeeUtils::GetRawFileItemType(const CFileIte
     if (itemPath.IsEmpty())
     {
       //CLog::Log(LOGDEBUG,"BoxeeUtils::GetRawFileItemType - For Item [label=%s][path=%s], because the path is empty, going to return [UNKNOWN]. [isLocal=%d][isResolved=%d][isVideo=%d][isMovie=%d][isTvShow=%d][isAudio=%d] (new)",itemLabel.c_str(),itemPath.c_str(),isLocal,isResolved,isVideo,isMovie,isTvShow,isAudio);
-      return CFileItemTypes::UNKNOWN;
-    }
+    return CFileItemTypes::UNKNOWN;
+  }
   }
 
   if (isLocal)
@@ -3943,7 +4341,7 @@ CFileItemTypes::FileItemTypesEnums BoxeeUtils::GetRawFileItemType(const CFileIte
       {
         // should be video under local ?
       }
-       */
+      */
       else if (isAudio)
       {
         //////////////////////////////
@@ -4061,7 +4459,7 @@ CFileItemTypes::FileItemTypesEnums BoxeeUtils::GetRawFileItemType(const CFileIte
         CLog::Log(LOGERROR,"BoxeeUtils::GetRawFileItemType - Item [label=%s][path=%s] is WEB-RESOVED-UNKNOWN. Going to return [UNKNOWN]. [isLocal=%d][isResolved=%d][isVideo=%d][isMovie=%d][isTvShow=%d][isAudio=%d] (new)",itemLabel.c_str(),itemPath.c_str(),isLocal,isResolved,isVideo,isMovie,isTvShow,isAudio);
         return CFileItemTypes::UNKNOWN;
       }
-    }
+      }
     else
     {
       //////////////////////
@@ -4151,14 +4549,17 @@ CStdString BoxeeUtils::GetFileItemTypesEnumsAsString(CFileItemTypes::FileItemTyp
     return "WEB_UNKNOWN_AUDIO";
     break;
   case CFileItemTypes::WEB_UNKNOWN_PICTURE/*15*/:
-    return "WEB_UNKNOWN_AUDIO";
+    return "WEB_UNKNOWN_PICTURE";
     break;
   case CFileItemTypes::WEB_UNKNOWN/*16*/:
     return "WEB_UNKNOWN";
     break;
+  case CFileItemTypes::LIVETV/*18*/:
+    return "LIVETV";
+    break;
   default:
     CLog::Log(LOGDEBUG,"BoxeeUtils::GetFileItemTypesEnumsAsString - Unknown FileItemTypesEnums enum [%d]. Going to return [UNKNOWN] as type (fito)",fileItemTypeEnum);
-    return "UNKNOWN"/*17*/;
+    return "UNKNOWN"/*18*/;
     break;
   }
 }
@@ -4222,18 +4623,25 @@ bool BoxeeUtils::CanEject(const CFileItem& item)
 bool BoxeeUtils::CanRecognize(const CFileItem& item)
 {
   if (item.HasProperty("isfeeditem"))
+  {
     return false;
+  }
+
+  if (item.GetPropertyBOOL("isUnresolvedVideo"))
+  {
+    return true;
+  }
 
   if (item.IsVideo() && item.GetPropertyBOOL("isFolderItem") && g_settings.IsPathOnSource(item.m_strPath))
   {
     return true;
   }
 
-  if (item.IsVideo() && item.HasProperty("boxeeDBvideoId"))
+  if ((item.IsVideo() || item.IsUPnP()) && (item.HasProperty("boxeeDBvideoId") || item.HasProperty("isMergedItem")))
   {
     return true;
   }
-
+  
   return false;
 }
 
@@ -4273,6 +4681,9 @@ bool BoxeeUtils::CanRecommend(const CFileItem& item, bool checkIsLoaded)
     return false;
 
   if (item.GetPropertyBOOL("istvshowfolder"))
+    return false;
+
+  if (item.GetPropertyInt("BoxeeDBAlbumId"))
     return false;
 
   if (item.HasVideoInfoTag() || item.HasMusicInfoTag() || item.IsRSS() || item.IsInternetStream())
@@ -4341,6 +4752,11 @@ bool BoxeeUtils::CanPlay(const CFileItem& item)
     }
   }
 
+  if(item.IsPlayableFolder())
+  {
+    return true;
+  }
+
   if (item.GetPropertyBOOL("isdvd"))
   {
     return true;
@@ -4373,7 +4789,7 @@ bool BoxeeUtils::CanPlay(const CFileItem& item)
     else
     {
       return true;
-    }
+  }
   }
 
   if (item.GetPropertyBOOL("isinternetstream"))
@@ -4397,9 +4813,9 @@ bool BoxeeUtils::CanPlay(const CFileItem& item)
     CStdString albumPath =  item.GetProperty("AlbumFolderPath");
     if (item.GetPropertyBOOL("isplayable") && item.HasProperty("AlbumFolderPath") &&
         g_application.IsPathAvailable(item.GetProperty("AlbumFolderPath")))
-    {
+  {
       return true;
-    }
+  }
     if (item.GetPropertyBOOL("isfeeditem"))
     {
       return false;
@@ -4422,7 +4838,7 @@ bool BoxeeUtils::CanPlay(const CFileItem& item)
 
 bool BoxeeUtils::CanQueue(const CFileItem& item, CStdString& referral)
 {
-  if (BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().IsInQueue(item.GetProperty("boxeeid"),item.m_strPath,referral))
+  if (!item.IsVideo() || !item.GetPropertyBOOL("IsVideo") || BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().IsInQueue(item.GetProperty("boxeeid"),item.m_strPath,referral))
   {
     return false;
   }
@@ -4451,33 +4867,66 @@ bool BoxeeUtils::CanMarkWatched(const CFileItem& item)
   {
     return true;
   }
+
   return false;
 }
 
 void BoxeeUtils::MarkWatched(CFileItem* pItem)
 {
-  if (CanMarkWatched(*pItem))
+  if (!pItem)
   {
-    // get watched status of the item and set the "watched" property
+    CLog::Log(LOGERROR,"BoxeeUtils::MarkWatched - enter function with a NULL item (wchd)");
+    return;
+  }
 
-    CStdString strBoxeeId = pItem->GetProperty("boxeeid");
-    bool bWatched = false;
-    if (strBoxeeId.IsEmpty())
+  if (!CanMarkWatched(*pItem))
+  {
+    //CLog::Log(LOGDEBUG,"BoxeeUtils::MarkWatched - item [label=%s][path=%s] CANNOT be mark as watched (wchd)",pItem->GetLabel().c_str(),pItem->m_strPath.c_str());
+    return;
+  }
+
+  // get watched status of the item and set the "watched" property
+
+  CStdString strBoxeeId = pItem->GetProperty("boxeeid");
+
+  bool bWatched = false;
+
+  if (!strBoxeeId.IsEmpty())
+  {
+    bWatched = BOXEE::Boxee::GetInstance().GetMetadataEngine().IsWatchedById(strBoxeeId);
+  }
+
+  if (!bWatched)
+  {
+    ///////////////////////////////////////////////
+    // FAILED to get by BoxeeId -> try with path //
+    ///////////////////////////////////////////////
+
+    if (!pItem->HasLinksList())
     {
-      bWatched = BOXEE::Boxee::GetInstance().GetMetadataEngine().IsWatchedByPath(pItem->m_strPath);
+      bWatched |= BOXEE::Boxee::GetInstance().GetMetadataEngine().IsWatchedByPath(pItem->m_strPath);
     }
     else
     {
-      bWatched = BOXEE::Boxee::GetInstance().GetMetadataEngine().IsWatchedById(strBoxeeId);
+      const CFileItemList* fileLinksList = pItem->GetLinksList();
+      for (int i=0; i<fileLinksList->Size(); i++)
+      {
+        CFileItemPtr linkItem = fileLinksList->Get(i);
+        CLinkBoxeeType::LinkBoxeeTypeEnums linkType = CFileItemList::GetLinkBoxeeTypeAsEnum(linkItem->GetProperty("link-boxeetype"));
+        if (linkType == CLinkBoxeeType::FEATURE || linkType == CLinkBoxeeType::LOCAL)
+        {
+          bWatched |= BOXEE::Boxee::GetInstance().GetMetadataEngine().IsWatchedByPath(linkItem->m_strPath);
+        }
+      }
     }
-
-    if (bWatched)
-    {
-      CLog::Log(LOGDEBUG,"BoxeeUtils::MarkWatched, watched path = %s (watched)", pItem->m_strPath.c_str());
-    }
-
-    pItem->SetProperty("watched", bWatched);
   }
+
+  if (bWatched)
+  {
+    CLog::Log(LOGDEBUG,"BoxeeUtils::MarkWatched - for item [label=%s][path=%s] going to set property [watched=%d=TRUE] (wchd)",pItem->GetLabel().c_str(),pItem->m_strPath.c_str(),bWatched);
+  }
+
+  pItem->SetProperty("watched", bWatched);
 }
 
 bool BoxeeUtils::HasMoreInfo(const CFileItem& item)
@@ -4491,7 +4940,7 @@ bool BoxeeUtils::HasMoreInfo(const CFileItem& item)
 }
 
 bool BoxeeUtils::HasDescription(const CFileItem& item)
-{
+  {
   if (!item.GetProperty("description").IsEmpty())
   {
     return true;
@@ -4538,7 +4987,7 @@ bool BoxeeUtils::HasTrailer(const CFileItem& item)
 
 bool BoxeeUtils::IsPathLocal(const CStdString& path)
 {
-  if (!CUtil::IsHD(path) && !CUtil::IsSmb(path) && !CUtil::IsUPnP(path))
+  if (!CUtil::IsHD(path) && !CUtil::IsSmb(path) && !CUtil::IsUPnP(path) && !CUtil::IsNfs(path) && !CUtil::IsAfp(path) && !CUtil::IsBms(path))
   {
     return false;
   }
@@ -4593,7 +5042,7 @@ CStdString BoxeeUtils::GetUrlFromItemForRepostToServer(const CFileItem& item)
 }
 
 int BoxeeUtils::StringTokenize(const CStdString& path, std::set<CStdString>& tokens, const CStdString& delimiters, bool shouldTrim, bool shouldLower)
-{
+  {
   // Tokenize ripped from http://www.linuxselfhelp.com/HOWTO/C++Programming-HOWTO-7.html
   // Skip delimiters at beginning.
   std::string::size_type lastPos = path.find_first_not_of(delimiters, 0);
@@ -4601,7 +5050,7 @@ int BoxeeUtils::StringTokenize(const CStdString& path, std::set<CStdString>& tok
   std::string::size_type pos = path.find_first_of(delimiters, lastPos);
 
   while (std::string::npos != pos || std::string::npos != lastPos)
-  {
+    {
     // Found a token, add it to the set.
     CStdString token = path.substr(lastPos, pos - lastPos);
 
@@ -4613,7 +5062,7 @@ int BoxeeUtils::StringTokenize(const CStdString& path, std::set<CStdString>& tok
     if (shouldLower)
     {
       token.ToLower();
-    }
+  }
 
     tokens.insert(token);
 
@@ -4621,12 +5070,12 @@ int BoxeeUtils::StringTokenize(const CStdString& path, std::set<CStdString>& tok
     lastPos = path.find_first_not_of(delimiters, pos);
     // Find next "non-delimiter"
     pos = path.find_first_of(delimiters, lastPos);
-  }
+}
 
   return (int)tokens.size();
 }
 
-CStdString BoxeeUtils::URLEncode(const CURL &url)
+CStdString BoxeeUtils::URLEncode(const CURI &url)
 {
   /* due to smb wanting encoded urls we have to build it manually */
 
@@ -4777,5 +5226,649 @@ void BoxeeUtils::UpdateProfile(int profileIndex, BOXEE::BXObject& userObj)
   {
     CLog::Log(LOGWARNING,"Failed to update user profile because [profileIndex=%d] and [ProfileVecSize=%d] (login)",profileIndex,(int)g_settings.m_vecProfiles.size());
   }
+}
+
+void BoxeeUtils::IndexItems(std::map< CStdString, CFileItemPtr >& indexMap , CFileItemList& vec)
+{
+  CFileItemPtr pItem;
+  // Initialize maps to allow for fast access during update
+  for (int i = 0; i < vec.Size(); i++)
+  {
+    pItem = vec.Get(i);
+    indexMap[pItem->GetProperty("itemid")] = pItem;
+  }
+}
+
+bool BoxeeUtils::GetAvailableLanguages(CFileItemList& listLanguages)
+{
+  CStdString strFile = _P(AVAILABLE_LANG_FILE_PATH);
+
+  CLog::Log(LOGDEBUG,"BoxeeUtils::GetAvailableLanguages - Enter function. Going to parse file [%s] (lang)",strFile.c_str());
+
+  TiXmlDocument xmlDoc;
+  if (!xmlDoc.LoadFile(strFile))
+  {
+    CLog::Log(LOGERROR,"BoxeeUtils::GetAvailableLanguages - FAILED to load file [%s] (lang)",strFile.c_str());
+    return false;
+  }
+
+  TiXmlElement* pRoot = xmlDoc.RootElement();
+  if (!pRoot)
+  {
+    CLog::Log(LOGERROR,"BoxeeUtils::GetAvailableLanguages - FAILED to get root element from file [%s] (lang)",strFile.c_str());
+    return false;
+  }
+
+
+  if (strcmp(pRoot->Value(),"langs") != 0)
+  {
+    CLog::Log(LOGERROR,"BoxeeUtils::GetAvailableLanguages - Root element value isn't <langs>. [%s] (lang)",strFile.c_str());
+    return false;
+  }
+
+  int counter = 0;
+
+  const TiXmlElement* pChild = pRoot->FirstChildElement("lang");
+  while (pChild)
+  {
+    counter++;
+
+    CFileItemPtr langItem(new CFileItem(pChild->Attribute("display_name")));
+    langItem->SetProperty("lang_id",pChild->Attribute("id"));
+    langItem->SetProperty("lang_displayName",pChild->Attribute("display_name"));
+    langItem->SetProperty("lang_dirName",pChild->Attribute("dir_name"));
+
+    listLanguages.Add(langItem);
+
+    CLog::Log(LOGDEBUG,"BoxeeUtils::GetAvailableLanguages - [%d] - After adding item [label=%s] to list for FTULangInfo [id=%s][displayName=%s][dirName=%s]. [ListLanguagesSize=%d] (lang)",counter,langItem->GetLabel().c_str(),langItem->GetProperty("lang_id").c_str(),langItem->GetProperty("lang_displayName").c_str(),langItem->GetProperty("lang_dirName").c_str(),listLanguages.Size());
+
+    pChild = pChild->NextSiblingElement("lang");
+  }
+
+  CLog::Log(LOGDEBUG,"BoxeeUtils::GetAvailableLanguages - Exit function. [ListLanguagesSize=%d] (lang)",listLanguages.Size());
+
+  return true;
+}
+
+bool BoxeeUtils::GetWeatherCitiesResults(const CStdString &strSearch, std::vector<CStdString>& resultVec)
+{
+  CStdString strURL;
+  CStdString strXML;
+  XFILE::CFileCurl httpUtil;
+
+  strURL.Format("http://xoap.weather.com/search/search?where=%s", strSearch);
+
+  if (!httpUtil.Get(strURL, strXML))
+  {
+    CLog::Log(LOGERROR,"BoxeeUtils::GetWeatherCitiesResults - FAILED to get response for [%s] (weather)",strURL.c_str());
+    return false;
+  }
+
+  TiXmlDocument xmlDoc;
+  xmlDoc.Parse(strXML.c_str());
+  if (xmlDoc.Error())
+  {
+    CLog::Log(LOGERROR,"BoxeeUtils::GetWeatherCitiesResults - FAILED to parse XML document (weather)");
+    return false;
+  }
+
+  resultVec.clear();
+
+  TiXmlElement* pRootElement = xmlDoc.RootElement();
+  if (pRootElement)
+  {
+    CStdString strItemTmp;
+    TiXmlElement *pElement = pRootElement->FirstChildElement("loc");
+
+    while (pElement)
+    {
+      if (!pElement->NoChildren())
+      {
+        strItemTmp.Format("%s - %s", pElement->Attribute("id"), pElement->FirstChild()->Value());
+        resultVec.push_back(strItemTmp);
+      }
+
+      pElement = pElement->NextSiblingElement("loc");
+    }
+  }
+  else
+  {
+    CLog::Log(LOGERROR,"BoxeeUtils::GetWeatherCitiesResults - FAILED to get root element (weather)");
+    return false;
+  }
+
+  return true;
+}
+
+bool BoxeeUtils::SetWeatherLocation(const CStdString& cityName, const CStdString& countryCode)
+{
+  if (cityName.IsEmpty() || countryCode.IsEmpty())
+  {
+    CLog::Log(LOGERROR,"BoxeeUtils::SetWeatherLocation - FAILED to set weather city because of an EMPTY data. [cityName=%s][countryCode=%s] (wl)",cityName.c_str(),countryCode.c_str());
+    return false;
+  }
+
+  std::vector<CStdString> citiesVec;
+  CStdString strSearchTerm = cityName + "," + countryCode;
+
+  if (!BoxeeUtils::GetWeatherCitiesResults(strSearchTerm,citiesVec))
+  {
+    CLog::Log(LOGERROR,"MC::SetWeatherLocation - FAILED to get weather cities for [SearchTerm=%s] (wl)",strSearchTerm.c_str());
+    return false;
+  }
+
+  if ((int)citiesVec.size() < 1)
+  {
+    CLog::Log(LOGERROR,"MC::SetWeatherLocation - FAILED to get weather cities [VecSize=%d<1]. [SearchTerm=%s] (wl)",(int)citiesVec.size(),strSearchTerm.c_str());
+    return false;
+  }
+
+  CStdString weatherCity = citiesVec[0];
+
+  CLog::Log(LOGDEBUG,"BoxeeUtils::SetWeatherLocation - going to set [weatherCity=%s]. [cityName=%s][countryCode=%s] (wl)",weatherCity.c_str(),cityName.c_str(),countryCode.c_str());
+
+  g_guiSettings.SetString("weather.areacode1",weatherCity);
+  CWeather::GetInstance().Refresh();
+
+  return true;
+}
+
+bool BoxeeUtils::DoYouWantToScan(const CStdString& path)
+{
+  CLog::Log(LOGDEBUG,"BoxeeUtils::DoYouWantToScan - Enter function with [path=%s] (rescan)",path.c_str());
+
+  CStdString pathToScan = _P(path);
+  CUtil::AddSlashAtEnd(pathToScan);
+
+  CBoxeeMediaSourceList sourceList;
+  CBoxeeMediaSource* pSource = NULL;
+  BoxeeMediaSourceMap::iterator sourcesIterator;
+
+  for (sourcesIterator = sourceList.getMap().begin(); sourcesIterator != sourceList.getMap().end(); sourcesIterator++)
+  {
+    CBoxeeMediaSource& source = (*sourcesIterator).second;
+    CStdString sourcePath = _P(source.path);
+    CUtil::AddSlashAtEnd(sourcePath);
+
+    if (pathToScan.Left(sourcePath.size()) == sourcePath)
+    {
+      CLog::Log(LOGDEBUG,"BoxeeUtils::DoYouWantToScan - Found source for [path=%s] (rescan)",path.c_str());
+      pSource = &source;
+      break;
+    }
+  }
+
+  return DoYouWantToScan(pSource);
+}
+
+bool BoxeeUtils::DoYouWantToScan(CBoxeeMediaSource* source)
+{
+  if (!source)
+  {
+    CLog::Log(LOGERROR,"BoxeeUtils::DoYouWantToScan - Enter function with a NULL CBoxeeMediaSource (rescan)");
+    return false;
+  }
+
+  CLog::Log(LOGDEBUG,"BoxeeUtils::DoYouWantToScan - Enter function with source [name=%s][path=%s] (rescan)",source->name.c_str(),source->path.c_str());
+
+  CStdString header = g_localizeStrings.Get(51542);
+  CStdString message;
+
+  int resolved_count = 0;
+  int unresolved_count = 0;
+  int new_count = 0;
+  int total_count = 0;
+
+  if (!BoxeeUtils::GetSourceTotalScanResolveData(source,resolved_count,unresolved_count,new_count,total_count))
+  {
+    CLog::Log(LOGERROR,"BoxeeUtils::DoYouWantToScan - FAILED to get source total data (rescan)");
+    return false;
+  }
+
+  if (g_application.GetBoxeeFileScanner().IsScanning(source->path))
+  {
+    // source is currently being scan
+
+    CStdString messageStruct = g_localizeStrings.Get(51543);
+    message.Format(messageStruct.c_str(),total_count,resolved_count,unresolved_count);
+
+    CGUIDialogOK2::ShowAndGetInput(header, message);
+
+    CLog::Log(LOGDEBUG,"BoxeeUtils::DoYouWantToScan - Source is currently being scanned -> Return FALSE (rescan)");
+    return false;
+  }
+  else
+  {
+    time_t lastScanned = 0;
+
+    CStdString scanTypeStr = "";
+
+    if (source->isVideo)
+    {
+      time_t lastScannedVideo = 0;
+      BOXEE::Boxee::GetInstance().GetMetadataEngine().GetScanTime(source->name, source->path, "video", lastScannedVideo);
+      lastScanned = lastScannedVideo;
+    }
+
+    if (source->isMusic)
+    {
+      time_t lastScannedMusic = 0;
+      BOXEE::Boxee::GetInstance().GetMetadataEngine().GetScanTime(source->name, source->path, "music", lastScannedMusic);
+
+      if (lastScanned < lastScannedMusic)
+      {
+        lastScanned = lastScannedMusic;
+      }
+    }
+
+    CLog::Log(LOGDEBUG,"BoxeeUtils::DoYouWantToScan - [%s] - [lastScanned=%lu] (rescan)",source->name.c_str(),lastScanned);
+
+    if (lastScanned == SHARE_TIMESTAMP_NOT_SCANNED)
+    {
+      // source was never scan
+
+      message = g_localizeStrings.Get(51545);
+
+      bool bCanceled;
+      if (!CGUIDialogYesNo2::ShowAndGetInput(header,message,g_localizeStrings.Get(51548),g_localizeStrings.Get(51542),bCanceled) || bCanceled)
+      {
+        CLog::Log(LOGDEBUG,"BoxeeUtils::DoYouWantToScan - [%s] -> Return FALSE (rescan)",g_localizeStrings.Get(51548).c_str());
+        return false;
+      }
+    }
+    else if (lastScanned == SHARE_TIMESTAMP_RESOLVING)
+    {
+      // source is currently being scanned
+
+      CStdString messageStruct = g_localizeStrings.Get(51543);
+      message.Format(messageStruct.c_str(),total_count,resolved_count,unresolved_count);
+
+      CGUIDialogOK2::ShowAndGetInput(header, message);
+
+      CLog::Log(LOGDEBUG,"BoxeeUtils::DoYouWantToScan - Source is currently being scanned -> Return FALSE (rescan)");
+      return false;
+    }
+    else
+    {
+      // source was already scan in the past
+
+      CStdString diffStruct = "";
+      CStdString diffLabel = "";
+
+      time_t now = time(NULL);
+      time_t elapsedInSec = now - lastScanned;
+      int elapsedInDays = DayDiff(now, lastScanned);
+
+      if (elapsedInDays == 0)
+      {
+        if (elapsedInSec < 3600)
+        {
+          diffStruct = g_localizeStrings.Get(51555);
+          diffLabel.Format(diffStruct.c_str(),(int)(elapsedInSec/60));
+        }
+        else
+        {
+          diffStruct = g_localizeStrings.Get(51556);
+          diffLabel.Format(diffStruct.c_str(),(int)(elapsedInSec/3600));
+        }
+      }
+      else
+      {
+        diffStruct = g_localizeStrings.Get(51557);
+        diffLabel.Format(diffStruct.c_str(),elapsedInDays);
+      }
+
+      CLog::Log(LOGDEBUG,"BoxeeUtils::DoYouWantToScan - [%s] - [now=%lu][lastScanned=%lu] -> [elapsedInSec=%lu][elapsedInMin=%lu][elapsedInHours=%lu][elapsedInDays=%d] (rescan)",source->name.c_str(),now,lastScanned,elapsedInSec,(elapsedInSec/60),(elapsedInSec/3600),elapsedInDays);
+
+      CStdString messageStruct = g_localizeStrings.Get(51544);
+      message.Format(messageStruct.c_str(),diffLabel.c_str(),resolved_count,unresolved_count);
+
+      bool bCanceled;
+      if (!CGUIDialogYesNo2::ShowAndGetInput(header,message,g_localizeStrings.Get(51548),g_localizeStrings.Get(51542),bCanceled) || bCanceled)
+      {
+        CLog::Log(LOGDEBUG,"BoxeeUtils::DoYouWantToScan - [%s] -> Return FALSE (rescan)",g_localizeStrings.Get(51548).c_str());
+        return false;
+      }
+    }
+  }
+
+  CLog::Log(LOGDEBUG,"BoxeeUtils::DoYouWantToScan - Return TRUE (rescan)");
+
+  return true;
+}
+
+bool BoxeeUtils::GetSourceTotalScanResolveData(CBoxeeMediaSource* source, int& resolved_count, int& unresolved_count, int& new_count, int& total_count)
+{
+  if (!source)
+  {
+    CLog::Log(LOGERROR,"BoxeeUtils::GetSourceData - Enter function with a NULL CBoxeeMediaSource (sdata)(rescan)");
+    return false;
+  }
+
+  resolved_count = 0;
+  unresolved_count = 0;
+  new_count = 0;
+  total_count = 0;
+
+  if (source->isVideo)
+  {
+    // get the resolved/unresolved video files number
+    BOXEE::BXVideoDatabase video_db;
+    resolved_count = video_db.GetShareUnresolvedVideoFilesCount(_P(source->path), STATUS_RESOLVED);
+    unresolved_count = video_db.GetShareUnresolvedVideoFilesCount(_P(source->path), STATUS_UNRESOLVED);
+    new_count = video_db.GetShareUnresolvedVideoFilesCount(_P(source->path), STATUS_NEW);
+    total_count = video_db.GetShareUnresolvedVideoFilesCount(_P(source->path), STATUS_ALL);
+  }
+
+  if (source->isMusic)
+  {
+    // get the resolved/unresolved music files number
+    BOXEE::BXAudioDatabase audio_db;
+    resolved_count += audio_db.GetShareUnresolvedAudioFilesCount(_P(source->path), STATUS_RESOLVED);
+    unresolved_count += 0; // unresolved music file doesnt count in the status
+    new_count += audio_db.GetShareUnresolvedAudioFilesCount(_P(source->path), STATUS_NEW);
+    total_count += audio_db.GetShareUnresolvedAudioFilesCount(_P(source->path), STATUS_ALL);
+  }
+
+  return true;
+}
+
+CStdString BoxeeUtils::GetTimeAddedToDirectoryLabel(int tmAdded)
+{
+  CStdString label = "";
+
+  unsigned long tmNow = (unsigned long)time(NULL);
+
+  int dayDiff = BoxeeUtils::DayDiff(tmNow, tmAdded);
+
+  if (dayDiff == 0)
+  {
+    label += g_localizeStrings.Get(57003);
+  }
+  else
+  {
+    label += BOXEE::BXUtils::IntToString(dayDiff);
+    label += " ";
+
+    if (dayDiff == 1)
+    {
+      label += g_localizeStrings.Get(57004);
+    }
+    else
+    {
+      label += g_localizeStrings.Get(57005);
+    }
+  }
+
+  return label;
+}
+
+bool BoxeeUtils::FindFiles(const CStdString& directory, const CStdString& startsWith, CFileItemList& output, bool lookupHidden, bool lookupVideo, bool lookupAudio, bool lookupPictures, bool insensitive)
+{
+  if (directory.IsEmpty() || startsWith.IsEmpty())
+  {
+    CLog::Log(LOGWARNING,"BoxeeUtils::FindFiles - one of the function inputs is empty directory:[%s], startsWith:[%s]",directory.c_str(),startsWith.c_str());
+    return false;
+  }
+
+  CFileItemList pathItems;
+  CDirectory::GetDirectory(directory, pathItems);
+
+  if (pathItems.IsEmpty())
+  {
+    return false;
+  }
+
+  for (int i=0; i<pathItems.Size(); i++)
+  {
+    CFileItemPtr pItem = pathItems.Get(i);
+
+    //if its not a folder and hidden/visible and one of the types we were asked to search for...
+    if (!pItem->m_bIsFolder && pItem->IsHidden() == !lookupHidden && (pItem->IsVideo() == lookupVideo || pItem->IsAudio() == lookupAudio || pItem->IsPicture() == lookupPictures))
+    {
+      CStdString filename = CUtil::GetFileName(pItem->m_strPath);
+      CStdString lookup = startsWith;
+
+      if (insensitive)
+      {
+        filename.ToLower();
+        lookup.ToLower();
+      }
+
+      if (filename.Find(lookup,0) == 0)
+      {
+        //if it was found, we add it to our output
+        output.Add(pItem);
+      }
+    }
+  }
+
+  return true;
+}
+
+CStdString BoxeeUtils::GetUserVideoThumbPath(const CStdString& videoFilePath, const CFileItemList* pathsList)
+{
+  CStdString userVideoThumbPath = "";
+
+  if (videoFilePath.IsEmpty())
+  {
+    CLog::Log(LOGWARNING,"BoxeeUtils::GetUserVideoThumbPath - enter function with an EMPTY videoFilePath [%s] (uvt)",videoFilePath.c_str());
+    return userVideoThumbPath;
+  }
+
+  CLog::Log(LOGDEBUG,"BoxeeUtils::GetUserVideoThumbPath - enter function with [videoFilePath=%s] (uvt)",videoFilePath.c_str());
+
+  // set <videoFileName>.tbn
+  CStdString userVideoTbnStr = CUtil::GetFileName(videoFilePath);
+  CUtil::RemoveExtension(userVideoTbnStr);
+  userVideoTbnStr += ".tbn";
+
+  CFileItemList pathItems;
+  if (!pathsList || CUtil::IsInArchive(videoFilePath))
+  {
+    CStdString strPath = videoFilePath;
+    CStdString parentPath = "";
+    if (CUtil::IsInArchive(videoFilePath))
+    {
+      CUtil::GetDirectory(videoFilePath,strPath);
+    }
+    CUtil::GetParentPath(strPath,parentPath);
+
+    CLog::Log(LOGDEBUG,"BoxeeUtils::GetUserVideoThumbPath - since for [videoFilePath=%s] got [IsInArchive=%d] or [pathsList=%p=NULL] going to call GetDirectory for [%s] (uvt)",videoFilePath.c_str(),CUtil::IsInArchive(videoFilePath),pathsList,parentPath.c_str());
+
+    CDirectory::GetDirectory(parentPath, pathItems);
+    pathsList = &pathItems;
+  }
+
+  for (int i=0; i<pathsList->Size(); i++)
+  {
+    CFileItemPtr pItem = pathsList->Get(i);
+
+    if (!pItem->m_bIsFolder && !pItem->IsHidden() && pItem->IsPicture())
+    {
+      CStdString picFileStr = CUtil::GetFileName(pItem->m_strPath);
+
+      //if we found folder.jpg or movie.tbn, we use it only as a fallback, we continue searching until we find <videoFileName>.tbn
+      if (strcmp(picFileStr.c_str(),userVideoTbnStr.c_str()) == 0)
+      {
+        userVideoThumbPath = pItem->m_strPath;
+        break;
+      }
+      else if ((stricmp(picFileStr.c_str(),"folder.jpg") == 0) || (stricmp(picFileStr.c_str(),"movie.tbn") == 0))
+      {
+        userVideoThumbPath = pItem->m_strPath;
+      }
+    }
+  }
+
+  if (!userVideoThumbPath.IsEmpty())
+  {
+    CLog::Log(LOGDEBUG,"BoxeeUtils::GetUserVideoThumbPath - SUCCESS - for [%s] found [%s] (uvt)",videoFilePath.c_str(),userVideoThumbPath.c_str());
+  }
+
+  return userVideoThumbPath;
+}
+
+CStdString BoxeeUtils::GetPlatformDefaultHostName()
+{
+  CStdString platformHostNameStr;
+
+#ifdef HAS_EMBEDDED
+  platformHostNameStr = BOXEE::BXOEMConfiguration::GetInstance().GetStringParam("Boxee.Device.Hostname","boxee");
+#else
+  char hostname[255];
+  gethostname(hostname, sizeof(hostname));
+  platformHostNameStr.assign(hostname);
+#endif
+
+  return platformHostNameStr;
+}
+
+bool BoxeeUtils::IsAdult(const std::string& rating,CRating::RatingEnums type)
+{
+  bool isAdult = false;
+
+  switch(type)
+  {
+  case CRating::MPAA:
+    if (stricmp(rating.c_str(), "x") == 0 || stricmp(rating.c_str(), "nc17") == 0 || stricmp(rating.c_str(), "nc-17") == 0)
+      isAdult = true;
+    break;
+  case CRating::TV:
+    if (stricmp(rating.c_str(), "tv-ma") == 0 || stricmp(rating.c_str(), "tvma") == 0)
+      isAdult = true;
+    break;
+  case CRating::V_CHIP:
+    if (stricmp(rating.c_str(), "tv-ma") == 0 || stricmp(rating.c_str(), "tvma") == 0)
+      isAdult = true;
+    break;
+  case CRating::SIMPLE:
+    if (stricmp(rating.c_str(), "adult") == 0)
+      isAdult = true;
+    break;
+  default:
+    CLog::Log(LOGERROR,"BoxeeUtils::IsAdult - enter with unknown rating [rating=%s] (rtg)",rating.c_str());
+  }
+
+  return isAdult;
+}
+
+bool BoxeeUtils::LaunchBrowser(const CStdString& url)
+{
+  CFileItem urlItem("launch browser");
+  urlItem.m_strPath += url;
+  urlItem.SetContentType("text/html");
+  urlItem.SetProperty("url_source", "browser-app");
+  urlItem.SetProperty("launch-as-app", true);
+  return g_application.PlayMedia(urlItem);
+}
+
+bool BoxeeUtils::RefreshCountryCode()
+{
+  CStdString url = "http://app.boxee.tv/api/regiondefaults?full";
+
+  BOXEE::BXCurl curl;
+  CStdString strResp = curl.HttpGetString(url, false);
+
+  BOXEE::BXXMLDocument reader;
+  if (strResp.empty())
+  {
+    CLog::Log(LOGERROR,"BoxeeUtils::RefreshCountryCode - Not handling server response to [url=%s] because it is empty (cc)",url.c_str());
+    return false;
+  }
+
+  if(!reader.LoadFromString(strResp))
+  {
+    CLog::Log(LOGERROR,"BoxeeUtils::RefreshCountryCode  - Not handling server response to [url=%s] because failed to load it to BXXMLDocument (cc)",url.c_str());
+    return false;
+  }
+
+  TiXmlElement* root = reader.GetRoot();
+
+  if(!root)
+  {
+    CLog::Log(LOGERROR,"BoxeeUtils::RefreshCountryCode - Failed to get root from BXXMLDocument of the ping response (cc)");
+    return false;
+  }
+
+  if((strcmp(root->Value(),"boxee") != 0))
+  {
+    CLog::Log(LOGERROR,"BoxeeUtils::RefreshCountryCode - Failed to parse ping response because the root tag ISN'T <boxee> (cc)");
+    return false;
+  }
+
+  TiXmlElement* pingChildElem = NULL;
+  pingChildElem = root->FirstChildElement();
+
+  CStdString countryCode = "";
+
+  while (pingChildElem)
+  {
+    if (strcmp(pingChildElem->Value(),"country_code") == 0)
+    {
+      if (pingChildElem && pingChildElem->FirstChild())
+      {
+        countryCode = pingChildElem->FirstChild()->Value();
+        CLog::Log(LOGINFO,"BoxeeUtils::RefreshCountryCode - found <country_code> element with value [%s] (cc)", countryCode.c_str());
+
+        g_application.SetCountryCode(countryCode);
+        CBoxeeBrowseMenuManager::GetInstance().ClearDynamicMenuButtons();
+
+        break;
+      }
+      else
+      {
+        CLog::Log(LOGERROR,"BoxeeUtils::RefreshCountryCode - FAILED to read <country_code> element (cc)");
+        return false;
+      }
+    }
+
+    pingChildElem = pingChildElem->NextSiblingElement();
+  }
+
+  return true;
+}
+
+CStdString BoxeeUtils::GetFilesButtonPathToExecute()
+{
+  bool hasSources = (!g_settings.GetSourcesFromType("video")->empty() || !g_settings.GetSourcesFromType("music")->empty() || !g_settings.GetSourcesFromType("pictures")->empty());
+  CStdString path = hasSources ? "boxeeui://files/?path=sources://all" : "boxeeui://files/?path=network://protocols";
+  return path;
+}
+
+bool BoxeeUtils::LaunchGetFacebookExtraCredentials(bool queryDataBase /*=true*/)
+{
+  bool credAdded = false;
+
+  CGUIWindowStateDatabase stateDB;
+  CStdString wasLaunched;
+  bool settingExists = true;
+
+  if(queryDataBase)
+  {
+    settingExists = stateDB.GetUserSetting("LaunchGetFacebookExtreCredentials", wasLaunched);
+    if (!settingExists)
+      stateDB.SetUserSetting("LaunchGetFacebookExtreCredentials","true");
+  }
+
+  if(!settingExists || !queryDataBase)
+  {
+    if (g_application.GetBoxeeSocialUtilsManager().IsConnected(FACEBOOK_SERVICE_ID) &&
+        g_application.GetBoxeeSocialUtilsManager().RequiresReconnect(FACEBOOK_SERVICE_ID))
+    {
+      CGUIDialogBoxeeGetFacebookExtraCredential* pDlg = (CGUIDialogBoxeeGetFacebookExtraCredential*)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_GET_FACEBOOK_EXTRA_CRED);
+      if(pDlg)
+      {
+        pDlg->DoModal();
+        if(pDlg->IsConfirmed())
+        {
+          g_application.GetBoxeeSocialUtilsUIManager().HandleUISocialUtilConnect(FACEBOOK_SERVICE_ID);
+          credAdded = true;
+        }
+      }
+    }
+  }
+
+  return credAdded;
 }
 

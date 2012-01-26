@@ -27,6 +27,7 @@
 
 #include "GUIListItem.h"
 #include "utils/Archive.h"
+#include "utils/ISerializable.h"
 #include "DateTime.h"
 #include "SortFileItem.h"
 #include "utils/LabelFormatter.h"
@@ -48,8 +49,6 @@ class CArtist;
 class CSong;
 class CGenre;
 
-class CURL;
-
 class CFileItemList;
 
 // Boxee
@@ -58,15 +57,29 @@ class CLinkBoxeeType
 public:
   enum LinkBoxeeTypeEnums
   {
-    FEATURE=0,
-    CLIP=1,
-    TRAILER=2,
-    RENT=3,
-    BUY=4,
-    SUBSCRIPTION=5,
-    LOCAL=6,
-    NUM_OF_LINK_BOXEE_TYPE=7,
-    UNKNOWN=8
+    NONE=0,
+    FEATURE=1,
+    CLIP=2,
+    TRAILER=3,
+    LOCAL=4,
+    NUM_OF_LINK_BOXEE_TYPE=5,
+    UNKNOWN=6
+  };
+};
+
+class CLinkBoxeeOffer
+{
+public:
+  enum LinkBoxeeOfferEnums
+  {
+    UNAVAILABLE=0,
+    FREE=1,
+    RENT=2,
+    BUY=3,
+    SUBSCRIPTION=4,
+    EXT_SUBSCRIPTION=5,
+    NUM_OF_LINK_BOXEE_OFFER=6,
+    UNKNOWN=7
   };
 };
 //end Boxee
@@ -89,7 +102,7 @@ typedef boost::shared_ptr<CFileItem> CFileItemPtr;
   \sa CFileItemList
   */
 class CFileItem :
-      public CGUIListItem, public ISerializable
+      public CGUIListItem, public IArchivable, public ISerializable
 {
 public:
   CFileItem(void);
@@ -107,7 +120,8 @@ public:
 
   void Reset();
   const CFileItem& operator=(const CFileItem& item);
-  virtual void Serialize(CArchive& ar);
+  virtual void Archive(CArchive& ar);
+  virtual void Serialize(CVariant& value);
   virtual bool IsFileItem() const { return true; };
 
   bool Exists() const;
@@ -118,6 +132,7 @@ public:
   bool IsCUESheet() const;
   bool IsShoutCast() const;
   bool IsLastFM() const;
+  bool IsInternetPlayList() const;
   bool IsInternetStream() const;
   bool IsPlayList(bool bAllowQuery = false) const;
   bool IsSmartPlayList() const;
@@ -158,6 +173,8 @@ public:
   bool IsRemovable() const;
   bool IsTuxBox() const;
   bool IsUPnP() const;
+  bool IsNFS() const;
+  bool IsAFP() const;
   bool IsMythTV() const;
   bool IsHDHomeRun() const;
   bool IsVTP() const;
@@ -171,7 +188,9 @@ public:
   bool IsBoxeeDb() const;
   bool IsHidden() const;
   bool IsApp() const;
-  
+  bool IsPlayableFolder() const;
+  void SetPlayableFolder(bool isDVD);
+
   bool IsAdult() const;
   void SetAdult(bool adult);
 
@@ -188,6 +207,8 @@ public:
 
   static CLinkBoxeeType::LinkBoxeeTypeEnums GetLinkBoxeeTypeAsEnum(const CStdString& boxeeType);
   static CStdString GetLinkBoxeeTypeAsString(CLinkBoxeeType::LinkBoxeeTypeEnums boxeeType);
+  static CLinkBoxeeOffer::LinkBoxeeOfferEnums GetLinkBoxeeOfferAsEnum(const CStdString& boxeeOffer);
+  static CStdString GetLinkBoxeeOfferAsString(CLinkBoxeeOffer::LinkBoxeeOfferEnums boxeeOffer);
 //end Boxee
 
   void RemoveExtension();
@@ -196,7 +217,6 @@ public:
   void SetMusicThumb(bool alwaysCheckRemote = false);
   void SetFileSizeLabel();
   virtual void SetLabel(const CStdString &strLabel);
-  CURL GetAsUrl() const;
   bool IsLabelPreformated() const { return m_bLabelPreformated; }
   void SetLabelPreformated(bool bYesNo) { m_bLabelPreformated=bYesNo; }
 
@@ -298,18 +318,24 @@ public:
 
   bool IsSamePath(const CFileItem *item) const;
 
+  bool IsAlbum() const;
+
   void GetIPhoneXml(CStdString& xmlRes);
   
   void SetExternalFileItem(CFileItemPtr externalFileItem);
   CFileItemPtr GetExternalFileItem() const;
   bool HasExternlFileItem() const;
 
-  bool AddLink(const CStdString& title, const CStdString& url, const CStdString& contentType, CLinkBoxeeType::LinkBoxeeTypeEnums boxeeTypeEnum, const CStdString& provider, const CStdString& providerName, const CStdString& providerThumb, const CStdString& countries, bool countriesRelAllow, const CStdString& qualityLabel, int quality);
+  static bool CreateLink(CFileItemPtr& linkItem ,const CStdString& title, const CStdString& url, const CStdString& contentType, CLinkBoxeeType::LinkBoxeeTypeEnums boxeeTypeEnum, const CStdString& provider, const CStdString& providerName, const CStdString& providerThumb, const CStdString& countries, bool countriesRelAllow, const CStdString &qualityLabel, int quality, CLinkBoxeeOffer::LinkBoxeeOfferEnums boxeeOfferEnum, const CStdString& productsList);
+  bool AddLink(const CFileItemPtr& linkItem , bool bPushBack=true);
+  bool AddLink(const CStdString& title, const CStdString& url, const CStdString& contentType, CLinkBoxeeType::LinkBoxeeTypeEnums boxeeTypeEnum, const CStdString& provider, const CStdString& providerName, const CStdString& providerThumb, const CStdString& countries, bool countriesRelAllow, const CStdString& qualityLabel, int quality, CLinkBoxeeOffer::LinkBoxeeOfferEnums boxeeOfferEnum, const CStdString& productsList , bool bPushBack=true);
   void SetLinksList(const CFileItemList* linksFileItemList);
   void ClearLinksList();
   const CFileItemList* GetLinksList() const;
   bool HasLinksList() const;
   void SortLinkList(CBoxeeSort& boxeeSort) const;
+
+  bool HasPath();
 
   CFileItemPtr GetPrevItem() const;
   CFileItemPtr GetNextItem() const;
@@ -318,12 +344,13 @@ public:
   void         SetNextItem(CFileItemPtr next);
   void         ResetNextItem();
   void         ResetPrevAndNextItems();
-
+  
 private:
   // Gets the previously cached thumb file (with existence checks)
   CStdString GetPreviouslyCachedMusicThumb() const;
 
   void SetPropertyForLinkType(CStdString boxeeTypeStr, CFileItemPtr linkItem);
+  void SetPropertyForLinkOffer(CStdString boxeeOfferStr, CFileItemPtr linkItem);
 
 public:
   CStdString m_strPath;            ///< complete path to item
@@ -345,6 +372,7 @@ public:
   std::vector<CStdString> m_fallbackPaths;  
 private:
 
+  bool m_bPlayableFolder;
   bool m_bIsParentFolder;
   bool m_bCanQueue;
   bool m_bLabelPreformated;
@@ -354,6 +382,7 @@ private:
   CVideoInfoTag* m_videoInfoTag;
   CPictureInfoTag* m_pictureInfoTag;
   CFileItemPtr m_externalFileItem;
+  bool m_bIsAlbum;
 
   CFileItemPtr m_prevItem;
   CFileItemPtr m_nextItem;
@@ -437,7 +466,7 @@ public:
   virtual ~CFileItemList();
 
 
-  virtual void Serialize(CArchive& ar);
+  virtual void Archive(CArchive& ar);
   CFileItemPtr operator[] (int iItem);
   const CFileItemPtr operator[] (int iItem) const;
   CFileItemPtr operator[] (const CStdString& strPath);
@@ -450,10 +479,13 @@ public:
   void Remove(int iItem);
   CFileItemPtr Get(int iItem);
   const CFileItemPtr Get(int iItem) const;
+
   CFileItemPtr Get(const CStdString& strPath);
   CFileItemPtr Get(const CStdString& strPropertyName, const CStdString& strPropertyValue);
   const CFileItemPtr Get(const CStdString& strPath) const;
   const CFileItemPtr Get(const CStdString& strPropertyName, const CStdString& strPropertyValue) const;
+
+  void AssignTo(CFileItemList& outList, unsigned int start, unsigned int end);
   int Size() const;
   bool IsEmpty() const;
   void Append(const CFileItemList& itemlist);
@@ -480,6 +512,7 @@ public:
   void Stack();
   SORT_ORDER GetSortOrder() const { return m_sortOrder; }
   SORT_METHOD GetSortMethod() const { return m_sortMethod; }
+  void SetAtIndex(int iItem, const CFileItemPtr &pItem);
 
   bool Save();
   bool Save(const CStdString& filePath);
@@ -511,7 +544,7 @@ public:
   void SetContent(const CStdString &content) { m_content = content; };
   const CStdString &GetContent() const { return m_content; };
   
-  void SetPageContext(CPageContext& pageContext) {m_pageContext = pageContext;}
+  void SetPageContext(const CPageContext& pageContext) {m_pageContext = pageContext;}
   CPageContext GetPageContext() { return m_pageContext; }
   bool HasPageContext() { return m_pageContext.IsSet(); }
   

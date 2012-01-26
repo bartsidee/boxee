@@ -2,7 +2,7 @@
 |
 |   Platinum - UPnP Constants
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -42,8 +42,8 @@ static PLT_Constants Constants;
 |   PLT_Constants::PLT_Constant
 +---------------------------------------------------------------------*/
 PLT_Constants::PLT_Constants() :
-    m_DefaultDeviceLease(NPT_TimeInterval(1800, 0)),
-    m_DefaultSubscribeLease(NPT_TimeInterval(1800, 0))
+    m_DefaultDeviceLease(NPT_TimeInterval(1800.)),
+    m_DefaultSubscribeLease(NPT_TimeInterval(1800.))
 {
 }
 

@@ -18,7 +18,10 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
-
+#ifndef WIN32
+#include <config.h>
+#endif
+#ifdef HAS_NSF_CODEC
 #include "MusicInfoTagLoaderNSF.h"
 #include "MusicInfoTag.h"
 #include "utils/log.h"
@@ -86,3 +89,4 @@ bool CMusicInfoTagLoaderNSF::Load(const CStdString& strFileName, CMusicInfoTag& 
 
   return tag.Loaded();
 }
+#endif

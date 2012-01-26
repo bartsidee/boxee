@@ -20,6 +20,7 @@
  */
 
 #include "system.h"
+#include "Settings.h"
 #include "Splash.h"
 #include "GUIImage.h"
 #include "FileSystem/File.h"
@@ -51,11 +52,25 @@ void CSplash::Show()
 {
   g_graphicsContext.Lock();
   g_graphicsContext.Clear();
+  g_graphicsContext.Flip();
+#ifndef _WIN32
+  g_graphicsContext.Clear();
+  g_graphicsContext.Flip();
+  g_graphicsContext.Clear();
+  g_graphicsContext.Flip();
+#endif
+  
+  float w = g_graphicsContext.GetWidth();
+  float h = g_graphicsContext.GetHeight();
 
-  g_graphicsContext.SetCameraPosition(CPoint(0, 0));
-  float w = g_graphicsContext.GetWidth() * 0.5f;
-  float h = g_graphicsContext.GetHeight() * 0.5f;
-  CGUIImage* image = new CGUIImage(0, 0, w*0.5f, h*0.5f, w, h, m_ImageName);
+  if(g_graphicsContext.GetRenderLowresGraphics())
+  {
+    RESOLUTION res = g_graphicsContext.GetGraphicsResolution();
+    w = g_settings.m_ResInfo[res].iWidth;
+    h = g_settings.m_ResInfo[res].iHeight;
+  }
+
+  CGUIImage* image = new CGUIImage(0, 0, 0, 0, w, h, m_ImageName);
   image->SetAspectRatio(CAspectRatio::AR_KEEP);
   image->AllocResources();
 
@@ -75,11 +90,11 @@ void CSplash::Show()
 void CSplash::Hide()
 {
 }
-
+  
 void CSplash::Process()
 {
   Show();
-}
+      }
 
 bool CSplash::Start()
 {

@@ -115,14 +115,14 @@ LibraryLoader* DllLoaderContainer::FindModule(const char* sName, const char* sCu
 {
   if (CUtil::IsInArchive(sName))
   {
-    CURL url(sName);
+    CURI url(sName);
     CStdString newName = "special://temp/";
     newName += url.GetFileName();
     CFile::Cache(sName, newName);
     return FindModule(newName, sCurrentDir, bLoadSymbols);
   }
 
-  if (CURL::IsFullPath(sName))
+  if (CURI::IsFullPath(sName))
   { //  Has a path, just try to load
     return LoadDll(sName, bLoadSymbols);
   }

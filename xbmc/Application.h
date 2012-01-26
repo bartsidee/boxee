@@ -30,6 +30,7 @@
 
 class CFileItem;
 class CFileItemList;
+class CHttpServer;
 
 #include "GUIDialogSeekBar.h"
 #include "GUIDialogKaiToast.h"
@@ -68,6 +69,8 @@ class CFileItemList;
 #include "InfoPage.h"
 #include "BoxeeItemsHistory.h"
 #include "BoxeeLoginManager.h"
+#include "BoxeeSocialUtilsManager.h"
+#include "BoxeeSocialUtilsUIManager.h"
 #include "DynamicDll.h"
 #ifdef APP_JS
 #include "XBJavaScript.h"
@@ -77,9 +80,12 @@ class CFileItemList;
 #include "utils/DBConnectionPool.h"
 #include "KeyboardManager.h"
 
+#include "BoxeeDeviceManager.h"
+
 //end Boxee
 
 #include "HttpCacheManager.h"
+#include "ThumbnailsManager.h"
 
 #ifdef HAS_DVD_DRIVE
 using namespace MEDIA_DETECT;
@@ -117,6 +123,21 @@ protected:
   int       m_iPlayList;
 };
 
+class CPlayScheduler : public CThread
+{
+public:
+  CPlayScheduler();
+  virtual ~CPlayScheduler();
+
+  void Process();
+  void Schedule(CBackgroundPlayer* player);
+  void Stop();
+protected:
+  SDL_sem* m_pSem;
+  CCriticalSection m_lock;
+  std::deque<CBackgroundPlayer*> m_queue;
+};
+
 class CApplication : public CXBApplicationEx, public IPlayerCallback, public IMsgTargetCallback, public InfoPageble
 {
 public:
@@ -131,10 +152,14 @@ public:
   virtual HRESULT Create(HWND hWnd);
   virtual HRESULT Cleanup();
   void PostLoginInitializations();
+  void StartAirplayServer();
+  void StopAirplayServer(bool bWait);
   void StartServices();
   void StopServices();
   void StartWebServer();
   void StopWebServer(bool bWait);
+  void StartJSONRPCServer();
+  void StopJSONRPCServer(bool bWait);
   void StartFtpServer();
   void StopFtpServer();
   void StartTimeServer();
@@ -147,6 +172,9 @@ public:
   void StopUPnPClient();
   void StartUPnPServer();
   void StopUPnPServer();
+  void StartSmbServer();
+  void StopSmbServer();
+  void SetHostname();
   void StartEventServer();
   bool StopEventServer(bool bWait, bool promptuser);
   void RefreshEventServer();
@@ -164,20 +192,26 @@ public:
   void DelayLoadSkin();
   void CancelDelayLoadSkin();
   void ReloadSkin();
+  void TogglePlayPause();
   const CStdString& CurrentFile();
   CFileItem& CurrentFileItem();
   virtual bool OnMessage(CGUIMessage& message);
   PLAYERCOREID GetCurrentPlayer();
   virtual void OnPlayBackEnded(bool bError = false, const CStdString& error = "");
   virtual void OnPlayBackStarted();
+  virtual void OnPlayBackPaused();
+  virtual void OnPlayBackResumed();
   virtual void OnPlayBackStopped();
   virtual void OnQueueNextItem();
+  virtual void OnPlayBackSeek(int iTime, int seekOffset);
+  virtual void OnPlayBackSeekChapter(int iChapter);
+  virtual void OnPlayBackSpeedChanged(int iSpeed);
   bool PlayMedia(const CFileItem& item, int iPlaylist = PLAYLIST_MUSIC);
   bool PlayMediaSync(const CFileItem& item, int iPlaylist = PLAYLIST_MUSIC);
   bool ProcessAndStartPlaylist(const CStdString& strPlayList, PLAYLIST::CPlayList& playlist, int iPlaylist);
   bool PlayFile(const CFileItem& item, bool bRestart = false);
   void SaveFileState();
-  void MarkVideoAsWatched(const CStdString& path, const CStdString& boxeeId,const double videoTime)const;
+  void MarkVideoAsWatched(const CStdString& path, const CStdString& boxeeId, double videoTime)const;
   void UpdateFileState();
   void StopPlaying();
   void Restart(bool bSamePosition = true);
@@ -190,9 +224,11 @@ public:
   bool IsPaused() const;
   bool IsPlayingAudio() const ;
   bool IsPlayingVideo() const ;
+  bool IsPlayingLiveTV() const ;
   bool IsCanPause() const;
   bool IsCanSkip() const;
   bool IsCanSetVolume() const;
+  bool IsCanGetTime() const;
   
   bool IsPlayingFullScreenVideo() const ;
   bool IsStartingPlayback() const { return m_bPlaybackStarting; }
@@ -215,6 +251,8 @@ public:
 
   bool IsOfflineMode() const;
   void SetOfflineMode(bool bOffLineMode);
+
+  void NetworkConfigurationChanged();
 
   void Mute(void);
   int GetPlaySpeed() const;
@@ -240,6 +278,10 @@ public:
   
   bool ExecuteXBMCAction(std::string action);
   bool ExecuteAction(CGUIActionDescriptor action);
+
+  void HandlePlayerErrors();
+
+  bool ShouldConnectToInternet(bool checkNow = false);
 
   static bool OnEvent(XBMC_Event& newEvent);
   
@@ -274,7 +316,7 @@ public:
   CWebServer* m_pWebServer;
   CXBFileZilla* m_pFileZilla;
   IPlayer* m_pPlayer;
-
+   
   inline bool IsInScreenSaver() { return m_bScreenSave; };
   int m_iScreenSaveLock; // spiff: are we checking for a lock? if so, ignore the screensaver state, if -1 we have failed to input locks
 
@@ -293,6 +335,10 @@ public:
   void NewFrame();
   bool WaitFrame(unsigned int timeout);
 
+#ifdef HAS_EMBEDDED
+  inline void SetEnableFTU(bool bEnableFTU) { m_bEnableFTU = bEnableFTU; }
+#endif
+
 //Boxee
   CRssSourceManager& GetRssSourceManager()
   {
@@ -306,7 +352,9 @@ public:
 
   inline bool IsConnectedToNet() { return m_network.IsConnected(); }
   inline bool IsConnectedToServer() { return m_watchDog.IsConnectedToServer(); }
-  inline bool IsConnectedToInternet() { return m_watchDog.IsConnectedToInternet(); }
+  inline bool IsConnectedToInternet(bool checkNow = false) { return m_watchDog.IsConnectedToInternet(checkNow); }
+  inline void SetIsConnectedToInternet(bool connected) { m_watchDog.SetIsConnectedToInternet(connected); }
+  inline void SetConnectionToInternetChanged() { m_watchDog.SetConnectionToInternetChanged(); }
   inline bool IsPathAvailable(const CStdString &stdPath, bool bDefault=true) { return m_watchDog.IsPathAvailable(stdPath, bDefault); }
   inline void AddPathToWatch(const CStdString &stdPath) { m_watchDog.AddPathToWatch(stdPath); }
   inline void AddListenerToWatchDog(IWatchDogListener *listener) { m_watchDog.AddListener(listener); }
@@ -314,11 +362,20 @@ public:
 
   inline void SetVerbose(BOOL bVerbose) { m_bVerbose = bVerbose; }
   inline BOOL IsVerbose() { return m_bVerbose; }
+
+  inline void SetDrawControlBorders(BOOL bDrawControlBorders) { m_bDrawControlBorders = bDrawControlBorders; }
+  inline BOOL IsDrawControlBorders() { return m_bDrawControlBorders; }
+
   CBoxeeItemsHistory& GetBoxeeItemsHistoryList();
+  CBoxeeBrowserHistory& GetBoxeeBrowseHistoryList();
   
+  CBoxeeDeviceManager& GetBoxeeDeviceManager();
+
   XBPython &GetPythonManager();
   XBMC::CHttpCacheManager &GetHttpCacheManager() { return m_httpCache; }
   
+  CThumbnailManager &GetThumbnailsManager() { return m_tumbnailsMgr; }
+
 #ifdef APP_JS
   XBJavaScript &GetJavaScriptManager();
 #endif  
@@ -345,10 +402,13 @@ public:
   const CStdString& GetCountryCode();
 
   CBoxeeLoginManager& GetBoxeeLoginManager();
+  CBoxeeSocialUtilsManager& GetBoxeeSocialUtilsManager();
+  CBoxeeSocialUtilsUIManager& GetBoxeeSocialUtilsUIManager();
   void BoxeePostLoginInitializations();
   void BoxeeUserLogoutAction();
   CDBConnectionPool* GetDBConnectionPool();
   CBrowserService*  GetBrowserService();
+  CHttpServer* GetHttpServer();
 //end Boxee
 
   void EnablePlatformDirectories(bool enable=true)
@@ -368,7 +428,11 @@ public:
 
   bool IsStandAlone()
   {
+#if defined (HAS_EMBEDDED) && !defined (__APPLE__)
+    return true;
+#else
     return m_bStandalone;
+#endif
   }
 
   void SetEnableLegacyRes(bool value)
@@ -401,6 +465,13 @@ public:
   
   void StackedMovieBackSeekHandler(__int64 seek);
   bool PlayingStackedMovie();
+
+  void SetRenderingEnabled(bool enabled);
+  bool GetRenderingEnabled() { return m_renderingEnabled; }
+
+  bool IsPlayingStreamPlaylist();
+  double GetStreamPlaylistTimecode();
+
 protected:
   void RenderScreenSaver();
 
@@ -462,6 +533,7 @@ protected:
   static LONG WINAPI UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo);
 
   void SetHardwareVolume(long hardwareVolume);
+  void UpdateVolume();
   void UpdateLCD();
   void FatalErrorHandler(bool WindowSystemInitialized, bool MapDrives, bool InitNetwork);
 
@@ -493,7 +565,17 @@ protected:
   bool IsHomeScreenTimerOn();
   
   void RemoveOldUpdatePackages();
-  
+
+  bool ShouldDeactivateMouse();
+
+  bool CheckKonamiCode(CKey& key);
+#ifdef HAS_EMBEDDED
+  bool CheckEnableEDIDCode(CKey& key);
+  bool CheckGUISettingsCode(CKey& key);
+  bool CheckSwitchTopRemoteButtonFunctionality(CKey& key);
+  void SetLeds();
+#endif
+  bool OnAppMessage(const CStdString& strHandler, const CStdString& strParam);
 //end Boxee
 
   CApplicationMessenger m_applicationMessenger;
@@ -526,9 +608,19 @@ protected:
 //Boxee
   WatchDog m_watchDog;
   BOOL     m_bVerbose;
+  BOOL     m_bDrawControlBorders;
   CBoxeeItemsHistory m_BoxeeItemsHistory;
+  CBoxeeBrowserHistory m_BoxeeBrowserHistory;
   XBPython *m_pPythonManager;
   CBoxeeLoginManager m_BoxeeLoginManager;
+  CBoxeeSocialUtilsManager m_BoxeeSocialUtilsManager;
+  CBoxeeSocialUtilsUIManager m_BoxeeSocialUtilsUIManager;
+  CBoxeeDeviceManager m_boxeeDeviceManager;
+
+#ifdef HAS_EMBEDDED
+  bool m_bEnableFTU;
+#endif
+
 #ifdef APP_JS	
   XBJavaScript *m_pJavaScriptManager;
 #endif	
@@ -557,7 +649,25 @@ protected:
 
   XBMC::CHttpCacheManager m_httpCache;
   XBMC::KeyboardManager m_keyboards;
+  CThumbnailManager     m_tumbnailsMgr;
+
+#ifdef HAS_EMBEDDED
+  bool               m_wasPlaying;
+  bool               m_wasConnectedToInternet;
+  bool               m_dpmsWasActive;
+  bool               m_wasSuspended;
+#endif
+
+  bool               m_renderingEnabled;
+
+  CPlayScheduler    m_playScheduler;
+
+  CHttpServer* m_httpServer;
   //end boxee
+
+  CPoint       m_previosMouseLocation;
+
+  CCriticalSection m_countryCodeLock;
 };
 
 extern CApplication g_application;

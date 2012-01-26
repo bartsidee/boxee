@@ -6,7 +6,9 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <json/json.h>
 #include "bxmetadata.h"
+#include "../../Util.h"
 
 namespace BOXEE
 {
@@ -44,7 +46,9 @@ public:
 	static void StringTrim(std::string& strString);
 	static std::vector<std::string> StringTokenize(const std::string& str,const std::string& delimiters);
 	static std::string IntToString(int iInt);
+	static std::string LongToString(long iLong);
 	static int StringToInt(std::string strString);
+	static unsigned long StringToUnsignedLong(std::string strString);
 	static std::string& StringToUpper(std::string& strString);
 	static std::string& StringToLower(std::string& strString);
 	
@@ -79,7 +83,17 @@ public:
 
   static std::string GetMD5Hex(const unsigned char* bytes, const size_t length);
   static std::string GetMD5Hex(const std::string str);
-		
+
+  static bool PerformJSONGetRequest(const std::string& url, Json::Value& response, int& returnCode, bool useCache = true);
+  static Job_Result PerformJSONGetRequestInBG(const std::string& url, Json::Value& response, int& returnCode, bool silent=false, bool useCache = true);
+
+  static bool PerformJSONPostRequest(const std::string& url, Json::Value& body, Json::Value& response, int& returnCode);
+
+  static bool PerformPostRequest(const std::string& url, std::string& body, std::string& response, int& returnCode);
+
+  static Job_Result PerformPostRequestInBG(const std::string& url, std::string& body, std::string& response, int& returnCode, bool silent=false);
+
+
 private:
   static std::string csUnsafeString;
   static std::string decToHex(char num, int radix);
@@ -93,7 +107,7 @@ public:
 	/**
 	 * Prints vector of strings to log (DEBUG level)
 	 */
-	static void PrintTokens(std::vector<std::string> vecTokens);
+	static std::string VectorTokened(const std::vector<std::string>& vecTokens , const std::string& separator = ", ");
 };
 
 }

@@ -43,7 +43,7 @@ bool CISO9660Directory::GetDirectory(const CStdString& strPath, CFileItemList &i
   if (!m_isoReader.IsScanned())
     m_isoReader.Scan();
 
-  CURL url(strPath);
+  CURI url(strPath);
 
   WIN32_FIND_DATA wfd;
   HANDLE hFind;

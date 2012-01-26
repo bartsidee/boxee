@@ -18,8 +18,6 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
-
-#include "PartyModeManager.h"
 #include "PlayListPlayer.h"
 #include "MusicDatabase.h"
 #include "VideoDatabase.h"
@@ -33,12 +31,17 @@
 #include "Settings.h"
 #include "utils/TimeUtils.h"
 
+#include "PartyModeManager.h"
+
+
 using namespace std;
 using namespace PLAYLIST;
 
 #define QUEUE_DEPTH       10
 
+#ifndef _BOXEE_
 CPartyModeManager g_partyModeManager;
+#endif
 
 CPartyModeManager::CPartyModeManager(void)
 {

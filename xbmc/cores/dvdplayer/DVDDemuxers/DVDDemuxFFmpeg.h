@@ -51,7 +51,10 @@ public:
     : m_parent(parent)
     , m_stream(stream)
   {}
+  std::string m_description;
+
   virtual void GetStreamInfo(std::string& strInfo);
+  virtual void GetStreamName(std::string& strInfo);
 };
 
 class CDemuxStreamSubtitleFFmpeg
@@ -64,7 +67,10 @@ public:
     : m_parent(parent)
     , m_stream(stream)
   {}
+  std::string m_description;
+
   virtual void GetStreamInfo(std::string& strInfo);
+  virtual void GetStreamName(std::string& strInfo);
 };
 
 #define FFMPEG_FILE_BUFFER_SIZE   32768 // default reading size for ffmpeg
@@ -94,9 +100,12 @@ public:
 
   bool SeekChapter(int chapter, double* startpts = NULL);
   int GetChapterCount();
+  virtual int GetChaptersInfo(std::vector<DemuxChapterInfo>& chapters);
   int GetChapter();
   void GetChapterName(std::string& strChapterName);
   virtual void GetStreamCodecName(int iStreamId, CStdString &strName);
+
+  virtual void AudioStreamSelected(int stream);
 
   bool Aborted();
 
@@ -104,6 +113,9 @@ public:
 
   void GetCodecName(std::string &strName, AVCodecContext *pContext);
   virtual int GetStartTime() ;
+
+  AVMetadataTag* AvGetMetaData(AVMetadata *p1, const char *p2, const AVMetadataTag *p3, int p4);
+
 protected:
   friend class CDemuxStreamAudioFFmpeg;
   friend class CDemuxStreamVideoFFmpeg;
@@ -117,22 +129,41 @@ protected:
   double ConvertTimestamp(int64_t pts, int den, int num);
   void UpdateCurrentPTS();
 
+  void av_read_frame_flush(AVFormatContext *s);
+  void flush_packet_queue(AVFormatContext *s);
+
   CRITICAL_SECTION m_critSection;
   // #define MAX_STREAMS 42 // from avformat.h
   CDemuxStream* m_streams[MAX_STREAMS]; // maximum number of streams that ffmpeg can handle
 
   ByteIOContext* m_ioContext;
 
+  DllAvCore   m_dllAvCore;
   DllAvFormat m_dllAvFormat;
   DllAvCodec  m_dllAvCodec;
   DllAvUtil   m_dllAvUtil;
 
   double   m_iCurrentPts; // used for stream length estimation
   bool     m_bMatroska;
+  bool     m_bAVI;
+  bool     m_bASF;
+  bool     m_bBluray;
+  bool     m_swab;
   int      m_speed;
   unsigned m_program;
   DWORD    m_timeout;
 
+  // bluray PTS correction, matroska pts correction
+  double   m_lastVideoDTS;
+  double   m_lastAudioDTS;
+  double   m_dtsCorrection;
+  int      m_currentAudioStream;
+
   CDVDInputStream* m_pInput;
+
+#ifdef _WIN32
+  int url_close(URLContext *h);
+  int url_fclose(ByteIOContext *s);
+#endif
 };
 

@@ -41,8 +41,8 @@ public:
 	// load XML document from a url (HTTP).
 	// listHeaders is a vector of http headers to add to the request
 	// if postData is not empty- the request will use POST and send this data in the request's body
-	virtual bool LoadFromURL(const std::string &strURL, const std::string &postData="");
-	virtual bool LoadFromURL(const std::string &strURL, const ListHttpHeaders &listHeaders, const std::string &postData="");
+	virtual bool LoadFromURL(const std::string &strURL, const std::string &postData="", bool bUseCache = true);
+	virtual bool LoadFromURL(const std::string &strURL, const ListHttpHeaders &listHeaders, const std::string &postData="", bool bUseCache = true);
 
 	void SetCredentials(const BXCredentials &credentials);
 

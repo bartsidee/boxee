@@ -40,6 +40,7 @@ protected:
   void ResetControls();
   void EnableControl(int iControl);
   void UpdateFromControl(int iControl);
+  void CopyOverscan();
   UINT m_iCurRes;
   std::vector<RESOLUTION> m_Res;
   int m_iControl;

@@ -14,11 +14,9 @@ then
 
    /opt/boxee/Boxee -usf 2>&1 > /dev/null
 
-   # if there's a n empy apps dir, delete it. it will be created 
-   # automaticatly later
-   rm -rf $HOME/.boxee/UserData/apps 2>&1 > /dev/null
-   rm -rf $HOME/.boxee/UserData/subtitles 2>&1 > /dev/null
-   rm -f $HOME/.boxee/UserData/rtorrent.rc 2>&1 > /dev/null
+   # this is an upgrade from version without the thumbnails manager to the one with the thumbnails manager 
+   # for each thumbnails directory - if there is no thumb_file.gdbm then it is the old version - delete all the thumbnails
+   find $HOME/.boxee/UserData/ -name Thumbnails -exec sh -c  'if [ ! -f $1"/thumb_files.gdbm" ] ; then a=$1"/*" ; echo rm -rf $a ; rm -rf $a \ ; fi' sh {} \;
    
    if [ -n "$SUDO_USER" ]
    then

@@ -7,27 +7,13 @@
 		<posy>0</posy>
 	</coordinates>
 	<controls>
-		<control type="image" id="997">
-			<description>background top image</description>
-			<posx>0</posx>
-			<posy>-32</posy>
-			<width>360</width>
-			<height>32</height>
-			<texture border="32">action_menu_bg_top.png</texture>
-		</control>
 		<control type="image" id="999">
 			<description>background image</description>
 			<posx>0</posx>
 			<posy>0</posy>
 			<width>360</width>
-			<texture border="32">action_menu_bg_center.png</texture>
-		</control>
-		<control type="image" id="998">
-			<description>background bottom image</description>
-			<posx>0</posx>
-			<width>360</width>
-			<height>32</height>
-			<texture border="32">action_menu_bg_bottom.png</texture>
+			<texture border="20">menu_dialog_background.png</texture>
+			<colordiffuse>FF212121</colordiffuse>
 		</control>
 		<control type="button" id="1000">
 			<description>button template</description>
@@ -37,9 +23,9 @@
 			<height>72</height>
 			<align>center</align>
 			<aligny>center</aligny>
-			<font>font24b</font>
-			<textcolor>grey</textcolor>
-			<focusedcolor>white</focusedcolor>
+			<font>font26</font>
+			<textcolor>white</textcolor>
+			<focusedcolor>black</focusedcolor>
 			<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
 			<texturenofocus>-</texturenofocus>
 		</control>

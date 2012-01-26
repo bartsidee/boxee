@@ -23,6 +23,7 @@
 //
 #include "XBMC_events.h"
 #include "system.h" // for DWORD
+#include <map>
 
 class CKeyboardStat
 {
@@ -60,6 +61,9 @@ private:
   unsigned int m_lastKeyTime;
   unsigned int m_keyHoldTime;
   bool m_bEvdev;
+
+  typedef std::pair<XBMCKey, XBMCMod> keyType;
+  std::map<keyType, XBMCKey> m_translationMap;
 };
 
 extern CKeyboardStat g_Keyboard;

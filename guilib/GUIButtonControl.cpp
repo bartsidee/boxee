@@ -287,7 +287,7 @@ bool CGUIButtonControl::OnMessage(CGUIMessage& message)
     {
       message.SetParam1(m_bSelected ? 1 : 0);
       return true;
-    }
+  }
   }
 
   return CGUIControl::OnMessage(message);
@@ -307,13 +307,13 @@ void CGUIButtonControl::AllocResources()
     m_height = m_imgFocus.GetHeight();
 }
 
-void CGUIButtonControl::FreeResources()
+void CGUIButtonControl::FreeResources(bool immediately)
 {
-  CGUIControl::FreeResources();
-  m_imgFocus.FreeResources();
-  m_imgNoFocus.FreeResources();
+  CGUIControl::FreeResources(immediately);
+  m_imgFocus.FreeResources(immediately);
+  m_imgNoFocus.FreeResources(immediately);
   if (m_imgClick)
-    m_imgClick->FreeResources();
+    m_imgClick->FreeResources(immediately);
 }
 
 void CGUIButtonControl::DynamicResourceAlloc(bool bOnOff)
@@ -343,6 +343,16 @@ void CGUIButtonControl::SetPosition(float posX, float posY)
   m_imgNoFocus.SetPosition(posX, posY);
   if (m_imgClick)
     m_imgClick->SetPosition(posX, posY);
+}
+
+void CGUIButtonControl::SetWidth(float width)
+{
+  CGUIControl::SetWidth(width);
+
+  m_imgFocus.SetWidth(width);
+  m_imgNoFocus.SetWidth(width);
+  if (m_imgClick)
+    m_imgClick->SetWidth(width);
 }
 
 void CGUIButtonControl::SetAlpha(unsigned char alpha)

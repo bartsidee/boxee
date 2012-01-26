@@ -29,15 +29,27 @@
 #include "Util.h"
 #include "GUISettings.h"
 #include "Settings.h"
+#include "WindowingFactory.h"
+#include "Texture.h"
+#include "FrameBufferObject.h"
+#include "PowerManager.h"
+#include "AppManager.h"
 
 using namespace std;
 
 CGUIWindowManager g_windowManager;
+CFrameBufferObject g_WindowManagerFBO;
 
 CGUIWindowManager::CGUIWindowManager(void)
 {
   m_pCallback = NULL;
   m_bShowOverlay = true;
+
+  m_bIsDirty = true;
+
+  m_bUseFBO = false;
+  m_bFBOValid = false;
+  m_bFBOCreated = false;
 }
 
 CGUIWindowManager::~CGUIWindowManager(void)
@@ -47,6 +59,42 @@ CGUIWindowManager::~CGUIWindowManager(void)
 void CGUIWindowManager::Initialize()
 {
   LoadNotOnDemandWindows();
+  InitializeFBO();
+}
+
+void CGUIWindowManager::InitializeFBO()
+{
+  m_bFBOCreated = false;
+  m_bFBOValid = false;
+
+  m_colorBufferSW.StartZero();
+
+  unsigned int width;
+  unsigned int height;
+
+  width = g_graphicsContext.GetWidth();
+  height = g_graphicsContext.GetHeight();
+
+  bool bRenderLowRes = g_graphicsContext.GetRenderLowresGraphics();
+
+  CLog::Log(LOGDEBUG, "CGUIWindowManager::InitializeFBO bRenderLowRes %d", bRenderLowRes);
+
+  if(bRenderLowRes)
+  {
+    RESOLUTION graphicsResolution = g_graphicsContext.GetGraphicsResolution();
+
+    width = g_settings.m_ResInfo[graphicsResolution].iWidth;
+    height= g_settings.m_ResInfo[graphicsResolution].iHeight;
+  }
+
+  g_WindowManagerFBO.Cleanup();
+  g_WindowManagerFBO.Initialize();
+#if defined(HAS_GL) || HAS_GLES == 2
+  if(g_WindowManagerFBO.CreateAndBindToTexture(GL_TEXTURE_2D, (int)width, (int)height))
+  {
+    m_bFBOCreated = true;
+  }  
+#endif
 }
 
 bool CGUIWindowManager::SendMessage(int message, int senderID, int destID, int param1, int param2)
@@ -196,6 +244,20 @@ void CGUIWindowManager::AddCustomWindow(CGUIWindow* pWindow)
   m_vecCustomWindows.push_back(pWindow);
 }
 
+void CGUIWindowManager::RemoveCustomWindow(CGUIWindow* pWindow)
+{
+  CSingleLock lock(g_graphicsContext);
+
+  for (int i = 0; i < (int)m_vecCustomWindows.size(); i++)
+  {
+    if(m_vecCustomWindows[i] == pWindow)
+    {
+      Remove(pWindow->GetID());
+      m_vecCustomWindows.erase(m_vecCustomWindows.begin()+i);
+    }
+  }
+}
+
 void CGUIWindowManager::AddModeless(CGUIWindow* dialog)
 {
   CSingleLock lock(g_graphicsContext);
@@ -216,8 +278,8 @@ void CGUIWindowManager::Remove(int id)
   else
   {
     CLog::Log(LOGWARNING, "Attempted to remove window %u "
-                          "from the window manager when it didn't exist",
-              id);
+        "from the window manager when it didn't exist",
+        id);
   }
 }
 
@@ -324,7 +386,7 @@ void CGUIWindowManager::ActivateWindow(int iWindowID, const CStdString& strPath)
 }
 
 void CGUIWindowManager::ActivateWindow(int iWindowID, const vector<CStdString>& params, bool swappingWindows)
-{
+  {
   if (!g_application.IsCurrentThread())
   {
     // make sure graphics lock is not held
@@ -361,6 +423,13 @@ void CGUIWindowManager::ActivateWindow_Internal(int iWindowID, const vector<CStd
     passParams = false;
   }
 
+  // stop video player when entering home screen
+  if(iWindowID == WINDOW_HOME && g_application.IsPlayingVideo())
+  {
+    CLog::Log(LOGDEBUG,"CGUIWindowManager::ActivateWindow_Internal - [iWindowID=%d=WINDOW_HOME][IsPlayingVideo=TRUE] - Going to stop the video (ev)",iWindowID);
+    g_application.StopPlaying();
+  }
+
   // debug
   CLog::Log(LOGDEBUG, "Activating window ID: %i", iWindowID);
 
@@ -394,7 +463,11 @@ void CGUIWindowManager::ActivateWindow_Internal(int iWindowID, const vector<CStd
   CGUIWindow *pWindow = GetWindow(currentWindow);
   if (pWindow)
   {
-    CloseDialogs();
+    // If we got here from the screen saver, don't close the dialogs as we want to see
+    // them when we come back
+    if (!g_application.GetInSlideshowScreensaver())
+      CloseDialogs();
+
     //  Play the window specific deinit sound
     g_audioManager.PlayWindowSound(pWindow->GetID(), SOUND_DEINIT);
     CGUIMessage msg(GUI_MSG_WINDOW_DEINIT, 0, 0, iWindowID);
@@ -423,50 +496,68 @@ void CGUIWindowManager::ActivateWindow_Internal(int iWindowID, const vector<CStd
 void CGUIWindowManager::CloseDialogs(bool forceClose)
 {
   CSingleLock lock(g_graphicsContext);
-  size_t nSize = m_activeDialogs.size();
-  for (size_t dlg=0; dlg<nSize; dlg++ )
+  std::vector<CGUIWindow*> vecCloseDialogs;
+
+  vecCloseDialogs.insert(vecCloseDialogs.begin(),m_activeDialogs.begin(),m_activeDialogs.end());
+
+  for (size_t dlg=0; dlg < vecCloseDialogs.size(); dlg++)
   {
-    CGUIWindow* win = m_activeDialogs[0];
+    CGUIWindow* win = vecCloseDialogs[dlg];
+
+    //attention: the Close() function below will remove the dialog from m_activeDialogs using this thread, using the same lock.
     win->Close(forceClose);
   }
 }
 
 bool CGUIWindowManager::OnAction(const CAction &action)
 {
-  CSingleLock lock(g_graphicsContext);
-  unsigned int topMost = m_activeDialogs.size();
-  while (topMost)
+  if (g_powerManager.IsSuspended())
   {
-    CGUIWindow *dialog = m_activeDialogs[--topMost];
-    lock.Leave();
-    if (dialog->IsModalDialog())
-    { // we have the topmost modal dialog
-      if (!dialog->IsAnimating(ANIM_TYPE_WINDOW_CLOSE))
+    g_powerManager.Resume();
+    return true;
+  }
+  
+  // If the screen saver is active, it is on top of
+  // existing dialogs. Pass the actions to the screen
+  // saver and not to the dialogs
+  if (!g_application.GetInSlideshowScreensaver()) 
+  {
+    CSingleLock lock(g_graphicsContext);
+    unsigned int topMost = m_activeDialogs.size();
+    while (topMost)
+    {
+      CGUIWindow *dialog = m_activeDialogs[--topMost];
+      lock.Leave();
+      if (dialog->IsModalDialog())
+      { // we have the topmost modal dialog
+        if (!dialog->IsAnimating(ANIM_TYPE_WINDOW_CLOSE))
+        {
+          bool fallThrough = (dialog->GetID() == WINDOW_DIALOG_FULLSCREEN_INFO);
+          if (dialog->OnAction(action))
+            return true;
+          // dialog didn't want the action - we'd normally return false
+          // but for some dialogs we want to drop the actions through
+          if (fallThrough)
+            break;
+          return false;
+        }
+        return true; // do nothing with the action until the anim is finished
+      }
+      // music or video overlay are handled as a special case, as they're modeless, but we allow
+      // clicking on them with the mouse.
+      if (action.id == ACTION_MOUSE && (dialog->GetID() == WINDOW_VIDEO_OVERLAY ||
+                                        dialog->GetID() == WINDOW_MUSIC_OVERLAY))
       {
-        bool fallThrough = (dialog->GetID() == WINDOW_DIALOG_FULLSCREEN_INFO);
         if (dialog->OnAction(action))
           return true;
-        // dialog didn't want the action - we'd normally return false
-        // but for some dialogs we want to drop the actions through
-        if (fallThrough)
-          break;
-        return false;
       }
-      return true; // do nothing with the action until the anim is finished
+      lock.Enter();
+      if (topMost > m_activeDialogs.size())
+        topMost = m_activeDialogs.size();
     }
-    // music or video overlay are handled as a special case, as they're modeless, but we allow
-    // clicking on them with the mouse.
-    if (action.id == ACTION_MOUSE && (dialog->GetID() == WINDOW_VIDEO_OVERLAY ||
-                                       dialog->GetID() == WINDOW_MUSIC_OVERLAY))
-    {
-      if (dialog->OnAction(action))
-        return true;
-    }
-    lock.Enter();
-    if (topMost > m_activeDialogs.size())
-      topMost = m_activeDialogs.size();
+    lock.Leave();
   }
-  lock.Leave();
+
   CGUIWindow* window = GetWindow(GetActiveWindow());
   if (window)
     return window->OnAction(action);
@@ -475,7 +566,7 @@ bool CGUIWindowManager::OnAction(const CAction &action)
 
 void CGUIWindowManager::Render()
 {
- 
+
   if (!g_application.IsCurrentThread())
   {
     // make sure graphics lock is not held
@@ -484,15 +575,196 @@ void CGUIWindowManager::Render()
     RestoreCriticalSection(g_graphicsContext, nCount);
   }
   else
+  {
+    g_graphicsContext.ApplyGuiTransform();
     Render_Internal();
+    g_graphicsContext.RestoreGuiTransform();
+  }
 }
 
 void CGUIWindowManager::Render_Internal()
 {
   CSingleLock lock(g_graphicsContext);
-  CGUIWindow* pWindow = GetWindow(GetActiveWindow());
+
+  int nActive = GetActiveWindow();
+  CGUIWindow* pWindow = GetWindow(nActive);
+  if(!pWindow && (nActive < WINDOW_APPS_START || nActive > WINDOW_APPS_END))
+  {
+    g_graphicsContext.Clear();
+    return;
+  }
+
+  m_bUseFBO = g_WindowManagerFBO.IsSupported() && IsColorBufferActive();
+
+  // FBO don't work in Win32 GLES emulator
+#if defined(_WIN32) && defined(HAS_GLES)
+  m_bUseFBO = false;
+#endif
+
+  if(g_graphicsContext.GetRenderLowresGraphics())
+    m_bUseFBO = false;
+
+#ifdef HAS_EMBEDDED
+  if(g_application.IsPlaying())
+    m_bUseFBO = false;
+#endif
+
+  if(!m_bUseFBO)
+  {
+    m_bFBOValid = false;
+    pWindow->Render();
+  }
+  else
+  {
+    RenderUsingFBO(pWindow);
+  }
+}
+
+void CGUIWindowManager::RenderUsingFBO(CGUIWindow* pWindow)
+{
+  ASSERT(pWindow);
+
+  //Redraw the background every x seconds
+  if(m_colorBufferSW.GetElapsedSeconds() >= 5.0f)
+  {
+    m_bFBOValid = false;
+    m_colorBufferSW.StartZero();
+  }
+
+  unsigned int width = g_graphicsContext.GetWidth();
+  unsigned int height = g_graphicsContext.GetHeight();
+
+  RESOLUTION graphicsResolution = g_graphicsContext.GetGraphicsResolution();
+  bool bRenderLowRes = g_graphicsContext.GetRenderLowresGraphics();
+
+  if(bRenderLowRes)
+  {
+    width = g_settings.m_ResInfo[graphicsResolution].iWidth;
+    height= g_settings.m_ResInfo[graphicsResolution].iHeight;
+  }
+
+  if (width != g_WindowManagerFBO.GetWidth() || height != g_WindowManagerFBO.GetHeight())
+  {
+    m_bFBOValid = false;
+    InitializeFBO();
+  }
+
+  if(!m_bFBOCreated)
+    return;
+
+  if(!m_bFBOValid)
+  {
+    g_WindowManagerFBO.BeginRender();
+    g_graphicsContext.Clear();
+    pWindow->Render();
+    g_WindowManagerFBO.EndRender();
+    m_bFBOValid = true;
+  }
+
+  g_graphicsContext.PushTransform(TransformMatrix(), true);
+  g_graphicsContext.PushViewPort(0, 0, 0, 0, false);
+  bool clip = g_graphicsContext.SetClipRegion(0, 0, 0, 0, false);
+
+  uint32_t diffuseColor = 0xffffffff;
+
+  CTexture texture;
+  texture.LoadFromTexture((int)width, (int)height, XB_FMT_R8G8B8A8, g_WindowManagerFBO.Texture());
+
+  CTextureInfo textureInfo("");
+  textureInfo.blendCenter = true;
+  textureInfo.orientation = 3; // flipy
+  CGUITexture guiTexture(0, 0, (float)width, (float)height, textureInfo, &texture);
+  guiTexture.SetWidth(g_graphicsContext.GetWidth());
+  guiTexture.SetHeight(g_graphicsContext.GetHeight());
+  guiTexture.SetDiffuseColor(diffuseColor);
+  guiTexture.Render();
+
+  g_graphicsContext.PopTransform();
+  g_graphicsContext.PopViewPort();
+  if(clip)
+    g_graphicsContext.RestoreClipRegion();
+}
+
+void CGUIWindowManager::BuildStencilBuffer(CGUIWindow* pWindow)
+{
+#if 0
+  // test rendering the stencil buffer
+  unsigned int width = g_graphicsContext.GetWidth();
+  unsigned int height = g_graphicsContext.GetHeight();
+#endif
+
+  // build the topmost controls mask in the stencil buffer
+
+  g_Windowing.ClearStencilBuffer(0);
+
+  g_Windowing.EnableStencil(true);
+  g_Windowing.SetColorMask(false, false, false, false);
+  g_Windowing.SetStencilFunc(STENCIL_FUNC_ALWAYS, 1, 1);
+  g_Windowing.SetStencilOp(STENCIL_OP_KEEP, STENCIL_OP_INCR, STENCIL_OP_INCR);
+
   if (pWindow)
     pWindow->Render();
+
+  g_Windowing.SetColorMask(true, true, true, true);
+
+  g_Windowing.SetStencilFunc(STENCIL_FUNC_EQUAL, 0, 1);
+  g_Windowing.SetStencilOp(STENCIL_OP_KEEP, STENCIL_OP_KEEP, STENCIL_OP_KEEP);
+
+  if (pWindow)
+    pWindow->Render();
+
+  g_Windowing.EnableStencil(false);
+
+
+  return;
+#if 0
+
+// TEST: render the stencil buffer on screen
+  static unsigned char* stencilBuf = NULL;
+  if(stencilBuf == NULL)
+    stencilBuf = new unsigned char[width * height];
+
+  static unsigned char* rgbBuf = NULL;
+  if(rgbBuf == NULL)
+    rgbBuf = new unsigned char[width * height * 4];
+
+  memset(stencilBuf, 0, width * height);
+  memset(rgbBuf, 0, width * height * 4);
+
+  glPixelStorei(GL_PACK_ALIGNMENT, 1);
+  glReadPixels(0, 0, width, height, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, stencilBuf);
+
+  int scale = 16;
+
+  for(unsigned int j = 0; j < height; j++)
+    for(unsigned int i = 0; i < width; i++)
+    {
+      int pos = j * width + i;
+      rgbBuf[4 * pos + 0] = scale * stencilBuf[pos];
+      rgbBuf[4 * pos + 1] = scale * stencilBuf[pos];
+      rgbBuf[4 * pos + 2] = scale * stencilBuf[pos];
+      rgbBuf[4 * pos + 3] = 255;
+    }
+
+  TransformMatrix mat;
+  g_graphicsContext.PushTransform(mat, true);
+  g_graphicsContext.PushViewPort(0, 0, 0, 0, false);
+  g_graphicsContext.SetClipRegion(0, 0, 0, 0, false);
+
+  CTexture texture;
+  texture.LoadFromMemory((int)width, (int)height, width * 4,  XB_FMT_R8G8B8A8, rgbBuf);
+
+  CTextureInfo textureInfo("");
+  textureInfo.blendCenter = false;
+  textureInfo.orientation = 3; // flipy
+  CGUITexture guiTexture(0, 0, (float)width, (float)height, textureInfo, &texture);
+  guiTexture.SetDiffuseColor(0xffffffff);
+  guiTexture.Render();
+
+  g_graphicsContext.PopTransform();
+  g_graphicsContext.PopViewPort();
+  g_graphicsContext.RestoreClipRegion();
+#endif
 }
 
 bool RenderOrderSortFunction(CGUIWindow *first, CGUIWindow *second)
@@ -500,8 +772,55 @@ bool RenderOrderSortFunction(CGUIWindow *first, CGUIWindow *second)
   return first->GetRenderOrder() < second->GetRenderOrder();
 }
 
+bool CGUIWindowManager::IsColorBufferActive()
+{
+  CGUIWindow* pWindow = GetWindow(GetActiveWindow());
+
+  if(!pWindow)
+    return false;
+
+  if(pWindow->HasDynamicContents())
+    return false;
+
+  if(pWindow->IsAnimating())
+    return false;
+
+  int mode3d = MODE_3D_NONE;
+#ifdef HAS_EMBEDDED
+  mode3d = g_guiSettings.GetInt("videoscreen.mode3d");
+#endif
+
+  if(mode3d != MODE_3D_NONE)
+    return false;
+
+  // find the window with the lowest render order
+  vector<CGUIWindow *> renderList = m_activeDialogs;
+  stable_sort(renderList.begin(), renderList.end(), RenderOrderSortFunction);
+
+  // iterate through all dialogs. If the dialog enable color buffer return true;
+  for (iDialog it = renderList.begin(); it != renderList.end(); ++it)
+  {
+    if ((*it)->IsDialogRunning()) 
+    {
+      if ((*it)->IsAnimating())
+      {
+        return false;
+      }
+      else if((*it)->HasColorBufferActive())
+          return true;
+    }
+  }
+
+  return false;
+}
+
 void CGUIWindowManager::RenderDialogs()
 {
+  // If the screen saver is active, do not render dialogs as
+  // they will appear on top of it
+  if (g_application.GetInSlideshowScreensaver())
+     return;
+
   CSingleLock lock(g_graphicsContext);
 
   // find the window with the lowest render order
@@ -509,11 +828,15 @@ void CGUIWindowManager::RenderDialogs()
   stable_sort(renderList.begin(), renderList.end(), RenderOrderSortFunction);
 
   // iterate through and render if they're running
+  g_graphicsContext.ApplyGuiTransform();
   for (iDialog it = renderList.begin(); it != renderList.end(); ++it)
   {
     if ((*it)->IsDialogRunning())
+    {
       (*it)->Render();
+    }
   }
+  g_graphicsContext.RestoreGuiTransform();
 }
 
 CGUIWindow* CGUIWindowManager::GetWindow(int id) const
@@ -643,6 +966,12 @@ void CGUIWindowManager::RemoveDialog(int id)
 
 bool CGUIWindowManager::HasModalDialog() const
 {
+  // If the screen saver is active, don't tell anyone that there
+  // are any dialogs open, so the window will get the events and
+  // not the dialogs
+  if (g_application.GetInSlideshowScreensaver())
+     return false;
+
   CSingleLock lock(g_graphicsContext);
   for (ciDialog it = m_activeDialogs.begin(); it != m_activeDialogs.end(); ++it)
   {
@@ -665,6 +994,12 @@ bool CGUIWindowManager::HasDialogOnScreen() const
 /// \return id ID of the window or WINDOW_INVALID if no routed window available
 int CGUIWindowManager::GetTopMostModalDialogID() const
 {
+  // If the screen saver is active, don't tell anyone that there
+  // are any dialogs open, so the window will get the events and
+  // not the dialogs
+  if (g_application.GetInSlideshowScreensaver())
+     return WINDOW_INVALID;
+
   CSingleLock lock(g_graphicsContext);
   for (crDialog it = m_activeDialogs.rbegin(); it != m_activeDialogs.rend(); ++it)
   {
@@ -683,7 +1018,9 @@ void CGUIWindowManager::SendThreadMessage(CGUIMessage& message)
 
   CGUIMessage* msg = new CGUIMessage(message);
   m_vecThreadMessages.push_back( pair<CGUIMessage*,int>(msg,0) );
-  Sleep(1); // hopefully causes gui thread to take over and process the message (optimization)
+  lock.Leave();
+
+  Sleep(0); // hopefully causes gui thread to take over and process the message (optimization)
 }
 
 void CGUIWindowManager::SendThreadMessage(CGUIMessage& message, int window)
@@ -851,7 +1188,7 @@ void CGUIWindowManager::AddToWindowHistory(int newWindowID)
   { // didn't find window in history - add it to the stack
     m_windowHistory.push(newWindowID);
   }
-}
+} 
 
 void CGUIWindowManager::GetActiveModelessWindows(vector<int> &ids)
 {
@@ -901,35 +1238,35 @@ void CGUIWindowManager::ClearWindowHistory()
     m_windowHistory.pop();
 }
 
-void CGUIWindowManager::AddWindowObserver(DWORD dwObserverWindow, DWORD dwObervationTarget)
-{
-  std::map<DWORD, std::set<DWORD> >::iterator it = m_mapWindowObservers.find(dwObervationTarget);
-  if (it == m_mapWindowObservers.end())
-  {
-    std::set<DWORD> observers;
-    observers.insert(dwObserverWindow);
-    m_mapWindowObservers[dwObervationTarget] = observers;
-  }
-  else
-  {
-    m_mapWindowObservers[dwObervationTarget].insert(dwObserverWindow);
-  }
+//void CGUIWindowManager::AddWindowObserver(DWORD dwObserverWindow, DWORD dwObervationTarget)
+//{
+//  std::map<DWORD, std::set<DWORD> >::iterator it = m_mapWindowObservers.find(dwObervationTarget);
+//  if (it == m_mapWindowObservers.end())
+//  {
+//    std::set<DWORD> observers;
+//    observers.insert(dwObserverWindow);
+//    m_mapWindowObservers[dwObervationTarget] = observers;
+//  }
+//  else
+//  {
+//    m_mapWindowObservers[dwObervationTarget].insert(dwObserverWindow);
+//  }
+//
+//}
 
-}
-
-std::set<DWORD> CGUIWindowManager::GetWindowObservers(DWORD dwWindowId)
-{
-  std::map<DWORD, std::set<DWORD> >::iterator it = m_mapWindowObservers.find(dwWindowId);
-  if (it != m_mapWindowObservers.end())
-  {
-    return it->second;
-  }
-  else
-  {
-    std::set<DWORD> empty;
-    return empty;
-  }
-}
+//std::set<DWORD> CGUIWindowManager::GetWindowObservers(DWORD dwWindowId)
+//{
+//  std::map<DWORD, std::set<DWORD> >::iterator it = m_mapWindowObservers.find(dwWindowId);
+//  if (it != m_mapWindowObservers.end())
+//  {
+//    return it->second;
+//  }
+//  else
+//  {
+//    std::set<DWORD> empty;
+//    return empty;
+//  }
+//}
 
 #ifdef _DEBUG
 void CGUIWindowManager::DumpTextureUse()
@@ -957,6 +1294,6 @@ bool CGUIWindowManager::IsWindowInHistory(int id) const
     if (top == id) return true;
     temp.pop();
   }
-  
+
   return false;
 }

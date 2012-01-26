@@ -33,6 +33,7 @@ namespace BOXEE {
 #define MSG_OBJ_TYPE_STREAM "stream"
 #define MSG_OBJ_TYPE_VIDEO_STREAM "stream_video"
 #define MSG_OBJ_TYPE_AUDIO_STREAM "stream_audio"
+#define MSG_OBJ_TYPE_LIVETV_STREAM "live_tv"
 #define MSG_OBJ_TYPE_PICTURE "picture"
 #define MSG_OBJ_TYPE_PICTURES "pictures"
 #define MSG_OBJ_TYPE_UNKNOWN_VIDEO "unknown_video"
@@ -64,6 +65,8 @@ namespace BOXEE {
 #define MSG_ACTION_TYPE_UNSUBSCRIBE              "unsubscribe"
 #define MSG_ACTION_TYPE_FEATURED                 "featured"
 #define MSG_ACTION_TYPE_LAUNCH                   "launch"
+#define MSG_ACTION_TYPE_ADD_WEBFAVORITE          "addwebfavorite"
+#define MSG_ACTION_TYPE_REMOVE_WEBFAVORITE       "removewebfavorite"
 //
 // every boxee message is actually a general string map.
 // the user should query the map's values according to the message type.
@@ -115,6 +118,9 @@ namespace BOXEE {
 #define MSG_KEY_STREAM_TYPE  "stream_type"
 #define MSG_KEY_APP_ID  "app_id"
 #define MSG_KEY_RUN_TIME  "run_time"
+#define MSG_KEY_FEED_SERVICE "services"
+#define MSG_KEY_BOOKMARK_INDEX    "bookmark_index"
+#define MSG_KEY_PROGRAM_ID    "program_id"
 
 #define MSG_KEY_PROVIDER                "provider"
 #define MSG_KEY_PLAY_PROVIDER_LABEL     "label"
@@ -164,8 +170,8 @@ public:
 
 protected:
 
-	std::string  m_type;
-	std::string  m_referral;
+	std::string			m_type;
+	 std::string  m_referral;
 	std::string  m_source;
 	std::vector<BXObject> m_objects;
 

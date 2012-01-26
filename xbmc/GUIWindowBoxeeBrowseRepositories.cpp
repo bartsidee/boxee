@@ -11,6 +11,7 @@
 
 #include "utils/log.h"
 #include "LocalizeStrings.h"
+#include "Util.h"
 
 using namespace std;
 using namespace BOXEE;
@@ -19,22 +20,27 @@ using namespace BOXEE;
 #define MENU_ALL       571
 #define MENU_ADD       120
 #define MENU_MANAGE    130
+#define LIST_CONTROL_ID    56
+
+#define ADD_REPOSITORIES 7092
 
 #define SORT_ATOZ 1
 
+#define INIT_SELECT_POS_IN_BROWSE_MENU 5
+
+CRepositoriesWindowState::CRepositoriesWindowState(CGUIWindowBoxeeBrowse* pWindow) : CBrowseWindowState(pWindow)
+{
+  m_sourceController.SetNewSource(new CBrowseWindowSource("repositoriessource", "repositories://external", pWindow->GetID()));
+}
+
 CGUIWindowBoxeeBrowseRepositories::CGUIWindowBoxeeBrowseRepositories() : CGUIWindowBoxeeBrowse(WINDOW_BOXEE_BROWSE_REPOSITORIES,"boxee_browse_repositories.xml")
 {
+  SetWindowState(new CRepositoriesWindowState(this));
   m_manageButtonOn = false;
 }
 
 CGUIWindowBoxeeBrowseRepositories::~CGUIWindowBoxeeBrowseRepositories()
 {
-  
-}
-
-bool CGUIWindowBoxeeBrowseRepositories::OnAction(const CAction &action)
-{
-  return CGUIWindowBoxeeBrowse::OnAction(action);
 }
 
 bool CGUIWindowBoxeeBrowseRepositories::OnMessage(CGUIMessage& message)
@@ -51,22 +57,7 @@ bool CGUIWindowBoxeeBrowseRepositories::OnMessage(CGUIMessage& message)
     }
   }
   break;
-  case GUI_MSG_WINDOW_INIT:
-  {
-    CStdString path = message.GetStringParam();
 
-    if (path.IsEmpty())
-    {
-      m_strPath = "repositories://external";
-    }
-    else
-    {
-      m_strPath = path;
-    }
-
-    CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseRepositories::OnMessage - GUI_MSG_WINDOW_INIT - After set [m_strPath=%s] (bapps)",m_strPath.c_str());
-  }
-  break;
   }// switch
 
   return CGUIWindowBoxeeBrowse::OnMessage(message);
@@ -74,24 +65,8 @@ bool CGUIWindowBoxeeBrowseRepositories::OnMessage(CGUIMessage& message)
 
 void CGUIWindowBoxeeBrowseRepositories::OnInitWindow()
 {
-  CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseRepositories::OnInitWindow - Enter function (bapps)");
-
-  m_windowState->InitState(m_strPath);
-
   m_manageButtonOn = false;
-
-  SetProperty("button-manage-on",0);
-
-  SetProperty("genrelabel", "All");
-
-  SetProperty("manage-label", "");
-
   CGUIWindowBoxeeBrowse::OnInitWindow();
-}
-
-void CGUIWindowBoxeeBrowseRepositories::OnBack()
-{
-  g_windowManager.PreviousWindow();
 }
 
 bool CGUIWindowBoxeeBrowseRepositories::ProcessMenuClick(CGUIMessage& message)
@@ -116,6 +91,14 @@ bool CGUIWindowBoxeeBrowseRepositories::ProcessMenuClick(CGUIMessage& message)
     return HandleMenuAdd();
   }
   break;
+  case ADD_REPOSITORIES:
+  {
+    CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseRepositories::ProcessMenuClick - Handling click on [%s=%d=MENU_ADD] (bapps)",CGUIWindowBoxeeBrowseRepositories::ControlIdAsString(iControl),iControl);
+
+    return HandleMenuAdd();
+  }
+  break;
+
   case MENU_MANAGE:
   {
     CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseRepositories::ProcessMenuClick - Handling click on [%s=%d=MENU_MANAGE] (bapps)",CGUIWindowBoxeeBrowseRepositories::ControlIdAsString(iControl),iControl);
@@ -160,17 +143,23 @@ bool CGUIWindowBoxeeBrowseRepositories::OnClick(int iItem)
         return false;
       }
 
-      CStdString path = "appbox://all/";
-      path += "repository?id=";
-      path += item.GetProperty("id");
+      CStdString strId = item.GetProperty("id");
+      CStdString strLabel = item.GetLabel();
+
+      CUtil::URLEncode(strId);
+      CUtil::URLEncode(strLabel);
+
+      CStdString path = "boxeeui://apps/?";
+      path += "repository=";
+      path += strId;
       path += "&label=";
-      path += item.GetLabel();
+      path += strLabel;
+      path += "&sort=title";
 
-      CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseRepositories::OnClick - [m_manageButtonOn=%d] -> Going to ActivateWindow WINDOW_BOXEE_BROWSE_APPBOX with [strPath=%s]. RepositoryItem [label=%s][id=%s][repo-url=%s] (bapps)",m_manageButtonOn,path.c_str(),item.GetLabel().c_str(),item.GetProperty("id").c_str(),item.GetProperty("repo-url").c_str());
+      //CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseRepositories::OnClick - [m_manageButtonOn=%d] -> Going to ActivateWindow WINDOW_BOXEE_BROWSE_APPBOX with [strPath=%s]. RepositoryItem [label=%s][id=%s][repo-url=%s] (bapps)",m_manageButtonOn,path.c_str(),item.GetLabel().c_str(),item.GetProperty("id").c_str(),item.GetProperty("repo-url").c_str());
 
-      CGUIWindowBoxeeBrowseApps* pWindow = (CGUIWindowBoxeeBrowseApps*)g_windowManager.GetWindow(WINDOW_BOXEE_BROWSE_APPS);
-      pWindow->FromRepositories();
-      pWindow->ShowPanel();
+      //CGUIWindowBoxeeBrowseApps* pWindow = (CGUIWindowBoxeeBrowseApps*)g_windowManager.GetWindow(WINDOW_BOXEE_BROWSE_APPS);
+      //pWindow->FromRepositories();
 
       g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_APPS, path);
 
@@ -179,22 +168,22 @@ bool CGUIWindowBoxeeBrowseRepositories::OnClick(int iItem)
   }
   else
   {
-    CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseRepositories::OnClick - Click on repository [name=%s][id=%s] (bapps)",item.GetLabel().c_str(),item.GetProperty("id").c_str());
+  CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseRepositories::OnClick - Click on repository [name=%s][id=%s] (bapps)",item.GetLabel().c_str(),item.GetProperty("id").c_str());
 
-    if (item.GetProperty("id") == "tv.boxee")
-    {
-      CGUIDialogOK2::ShowAndGetInput(53600, 53610);
-      return true;
-    }
+  if (item.GetProperty("id") == "tv.boxee")
+  {
+    CGUIDialogOK2::ShowAndGetInput(53600, 53610);
+    return true;
+  }
 
-    CStdString heading = g_localizeStrings.Get(117);
-    CStdString line;
-    CStdString str = g_localizeStrings.Get(52037);
-    line.Format(str.c_str(), item.GetLabel());
+  CStdString heading = g_localizeStrings.Get(117);
+  CStdString line;
+  CStdString str = g_localizeStrings.Get(52037);
+  line.Format(str.c_str(), item.GetLabel());
 
-    if (CGUIDialogYesNo2::ShowAndGetInput(heading, line))
-    {
-      CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseRepositories::OnClick - Going to remove repository [name=%s][id=%s] (bapps)",item.GetLabel().c_str(),item.GetProperty("id").c_str());
+  if (CGUIDialogYesNo2::ShowAndGetInput(heading, line))
+  {
+    CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseRepositories::OnClick - Going to remove repository [name=%s][id=%s] (bapps)",item.GetLabel().c_str(),item.GetProperty("id").c_str());
 
       CGUIDialogProgress* progress = (CGUIDialogProgress *)g_windowManager.GetWindow(WINDOW_DIALOG_PROGRESS);
       if (progress)
@@ -210,36 +199,17 @@ bool CGUIWindowBoxeeBrowseRepositories::OnClick(int iItem)
       {
         progress->Close();
       }
-
-      int numOfRepos = (int)CAppManager::GetInstance().GetRepositoriesSize();
-      if (numOfRepos < 2)
-      {
-        // there is only boxee repo -> disable button
-
-        m_manageButtonOn = false;
-        SetProperty("button-manage-on",0);
-        SetProperty("manage-label", "");
-      }
-    }
-
-    return true;
   }
+
+  return true;
 }
-
-CStdString CGUIWindowBoxeeBrowseRepositories::CreatePath()
-{
-  CStdString strPath = m_strPath;
-
-  CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseRepositories::CreatePath - Going to return [strPath=%s] (bapps)",strPath.c_str());
-
-  return strPath;
 }
 
 bool CGUIWindowBoxeeBrowseRepositories::HandleMenuAll()
 {
   CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseRepositories::HandleMenuAll - Going to set FILTER_ALL (bapps)");
 
-  UpdateFileList();
+  Refresh();
 
   return true;
 }
@@ -247,6 +217,7 @@ bool CGUIWindowBoxeeBrowseRepositories::HandleMenuAll()
 bool CGUIWindowBoxeeBrowseRepositories::HandleMenuAdd()
 {
   CStdString repositoryUrl;
+  m_manageButtonOn = false;
 
   if (CGUIDialogKeyboard::ShowAndGetInput(repositoryUrl, g_localizeStrings.Get(52035), false))
   {
@@ -288,25 +259,22 @@ bool CGUIWindowBoxeeBrowseRepositories::HandleMenuAdd()
   return true;
 }
 
+void CGUIWindowBoxeeBrowseRepositories::ShowItems(CFileItemList& list, bool append)
+{
+  CGUIWindowBoxeeBrowse::ShowItems(list,append);
+
+  if (m_vecViewItems.Size() == 1)
+  {
+    CGUIMessage msg(GUI_MSG_SETFOCUS, GetID(), LIST_CONTROL_ID, 0);
+    g_windowManager.SendMessage(msg);
+  }
+}
+
 bool CGUIWindowBoxeeBrowseRepositories::HandleMenuManage()
 {
   m_manageButtonOn = !m_manageButtonOn;
 
-  SetProperty("button-manage-on",(int)m_manageButtonOn);
-
   CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseRepositories::HandleMenuManage - After set [m_manageButtonOn=%d] (bapps)",m_manageButtonOn);
-
-  if (m_manageButtonOn)
-  {
-    SetProperty("sortlabel", g_localizeStrings.Get(53805));
-    SetProperty("manage-label", g_localizeStrings.Get(53621));
-  }
-  else
-  {
-    SetProperty("manage-label", "");
-  }
-
-  SET_CONTROL_FOCUS(GetViewContainerID(),0);
 
   return true;
 }
@@ -324,5 +292,20 @@ const char* CGUIWindowBoxeeBrowseRepositories::ControlIdAsString(int controlId)
   default:
     return "UNKNOWN";
   }
+}
+
+void CGUIWindowBoxeeBrowseRepositories::GetStartMenusStructure(std::list<CFileItemList>& browseMenuLevelList)
+{
+  CStdString category = m_windowState->GetCategory();
+
+  CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseRepositories::GetStartMenusStructure - enter function [category=%s] (bm)",category.c_str());
+
+  CBoxeeBrowseMenuManager::GetInstance().GetFullMenuStructure("mn_library_repository_apps",browseMenuLevelList);
+
+  m_initSelectPosInBrowseMenu = INIT_SELECT_POS_IN_BROWSE_MENU;
+
+  CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseRepositories::GetStartMenusStructure - after set [browseMenuLevelListSize=%zu][m_initSelectPosInBrowseMenu=%d]. [category=%s] (bm)",browseMenuLevelList.size(),m_initSelectPosInBrowseMenu,category.c_str());
+
+  return CGUIWindowBoxeeBrowse::GetStartMenusStructure(browseMenuLevelList);
 }
 

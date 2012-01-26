@@ -11,7 +11,7 @@ typedef enum enumPolicyType
 {
   FILE_SYSTEM = 0,
   SHARED_LIBRARY,
-  PROCESS_EXEC,
+  DISALLOW,
 
   POLICY_TYPE_MAX
 
@@ -55,6 +55,10 @@ bool TPAddPolicy(ThreadIdentifier tid, ThreadPolicy* policy);
 bool TPApplyPolicy(ThreadIdentifier tid, PolicyType type, void* item, bool* safeToOpen);
 bool TPInheritPolicy(ThreadIdentifier tid, ThreadIdentifier tidParent);
 bool TPAddRuleToPolicy(ThreadIdentifier tid, ThreadPolicy* policy, const FileRule* rule);
+bool TPDeleteRuleFromPolicy(ThreadIdentifier tid, ThreadPolicy* policy, const FileRule* rule);
+void TPDisablePolicy(ThreadIdentifier tid, bool bEnable);
+ThreadPolicy* TPGetPolicy(ThreadIdentifier tid, PolicyType type);
+void TPReleasePolicy(ThreadIdentifier tid, ThreadPolicy* policy);
 }
 
 

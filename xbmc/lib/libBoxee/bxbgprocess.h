@@ -41,13 +41,13 @@ class BXBGJob
 public:
   BXBGJob(const std::string& strDescription, bool bCanDelete = true);
   virtual ~BXBGJob();
-
+  
   static int sId;
-
+  
   void ExecuteJob();
   virtual void DoWork() = 0;
   virtual void PostDoWork(){};
-
+  
   virtual bool CanDelete();
   void Pause();
   void Resume();
@@ -55,9 +55,10 @@ public:
   void Lock();
   bool IsActive();
   int GetId();
+  virtual bool Equals (const BXBGJob& other) const { return false; };
 
 private:
-
+  
   bool m_bActive;
   bool m_bCancelled;
   int m_iId;
@@ -79,7 +80,7 @@ class BXBGProcess
 public:
   BXBGProcess(int iCapacity = -1);
   virtual ~BXBGProcess();
-
+  
   bool Start(int nThreads, bool lazy = true);
   void Stop(int nTimeout=-1);
   void SignalStop();
@@ -89,10 +90,10 @@ public:
   bool QueueJobs(std::vector<BXBGJob*> vecJobs);
   bool QueueFront(BXBGJob *pJob);
   void ClearQueue();
-
+  
   void SetName(std::string strName);
   std::string GetName();
-
+  
   // Returns the number of jobs that are currently in the queue
   int GetNumJobs();
   int GetQueueSize() { return GetNumJobs(); }
@@ -110,26 +111,26 @@ protected:
   
   bool Lock();
   bool Unlock();
-
+  
   static void* WorkerPThread( void *pParam );
-  static int   WorkerThread( void *pParam );
+  static int WorkerThread(void *pParam);
   
   void RemoveWorkerThread(THREAD_ID_TYPE thread);
 
   void CreateExecuteThread();
 
   std::string m_strName;
-
+  
   bool m_bRunning;
-
+  
   bool    m_bPaused;
   SDL_mutex  *m_pPauseLock;
   SDL_cond   *m_pPauseCond;
-
+  
   SDL_sem 	*m_pJobs;
   SDL_sem   *m_pCapacity;
   SDL_mutex	*m_pQueueLock;
-
+  
   std::vector< THREAD_HANDLE > m_workingThreads;
   std::deque<BXBGJob *> m_jobQueue;
   std::map<int, BXBGJob *> m_inProgressMap;

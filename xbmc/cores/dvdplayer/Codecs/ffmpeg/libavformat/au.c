@@ -28,7 +28,7 @@
  */
 
 #include "avformat.h"
-#include "raw.h"
+#include "pcm.h"
 #include "riff.h"
 
 /* if we don't know the size in advance */
@@ -44,7 +44,7 @@ static const AVCodecTag codec_au_tags[] = {
     { CODEC_ID_PCM_F32BE, 6 },
     { CODEC_ID_PCM_F64BE, 7 },
     { CODEC_ID_PCM_ALAW, 27 },
-    { 0, 0 },
+    { CODEC_ID_NONE, 0 },
 };
 
 #if CONFIG_AU_MUXER
@@ -139,6 +139,11 @@ static int au_read_header(AVFormatContext *s,
 
     codec = ff_codec_get_id(codec_au_tags, id);
 
+    if (!av_get_bits_per_sample(codec)) {
+        av_log_ask_for_sample(s, "could not determine bits per sample\n");
+        return AVERROR_INVALIDDATA;
+    }
+
     if (size >= 24) {
         /* skip unused data */
         url_fseek(pb, size - 24, SEEK_CUR);
@@ -148,7 +153,7 @@ static int au_read_header(AVFormatContext *s,
     st = av_new_stream(s, 0);
     if (!st)
         return -1;
-    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
     st->codec->codec_tag = id;
     st->codec->codec_id = codec;
     st->codec->channels = channels;
@@ -157,14 +162,16 @@ static int au_read_header(AVFormatContext *s,
     return 0;
 }
 
-#define MAX_SIZE 4096
+#define BLOCK_SIZE 1024
 
 static int au_read_packet(AVFormatContext *s,
                           AVPacket *pkt)
 {
     int ret;
 
-    ret= av_get_packet(s->pb, pkt, MAX_SIZE);
+    ret= av_get_packet(s->pb, pkt, BLOCK_SIZE *
+                       s->streams[0]->codec->channels *
+                       av_get_bits_per_sample(s->streams[0]->codec->codec_id) >> 3);
     if (ret < 0)
         return ret;
     pkt->stream_index = 0;
@@ -176,7 +183,7 @@ static int au_read_packet(AVFormatContext *s,
 }
 
 #if CONFIG_AU_DEMUXER
-AVInputFormat au_demuxer = {
+AVInputFormat ff_au_demuxer = {
     "au",
     NULL_IF_CONFIG_SMALL("SUN AU format"),
     0,
@@ -190,7 +197,7 @@ AVInputFormat au_demuxer = {
 #endif
 
 #if CONFIG_AU_MUXER
-AVOutputFormat au_muxer = {
+AVOutputFormat ff_au_muxer = {
     "au",
     NULL_IF_CONFIG_SMALL("SUN AU format"),
     "audio/basic",

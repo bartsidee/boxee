@@ -33,6 +33,15 @@
 #include "GUITextLayout.h"
 #include "GUIFontManager.h"
 #include "Application.h"
+#include "WindowingFactory.h"
+#include "GUITexture.h"
+#ifdef HAS_GLES
+#include "GUITextureGLES.h"
+#endif
+
+#ifdef _WIN32
+#include "Util.h"
+#endif
 
 using namespace std;
 
@@ -64,7 +73,6 @@ CGUIControl::CGUIControl()
   m_bInvalidated = true;
   m_bAllocated=false;
   m_parentControl = NULL;
-  m_hasCamera = false;
   m_pushedUpdates = false;
   m_pulseOnSelect = false;
 }
@@ -98,7 +106,6 @@ CGUIControl::CGUIControl(int parentID, int controlID, float posX, float posY, fl
   m_bAllocated=false;
   m_hasRendered = false;
   m_parentControl = NULL;
-  m_hasCamera = false;
   m_pushedUpdates = false;
   m_pulseOnSelect = false;
 }
@@ -116,7 +123,7 @@ void CGUIControl::AllocResources()
   m_bAllocated=true;
 }
 
-void CGUIControl::FreeResources()
+void CGUIControl::FreeResources(bool immediately)
 {
   if (m_bAllocated)
   {
@@ -146,17 +153,44 @@ void CGUIControl::DynamicResourceAlloc(bool bOnOff)
 void CGUIControl::DoRender(unsigned int currentTime)
 {
   Animate(currentTime);
-  if (m_hasCamera)
-    g_graphicsContext.SetCameraPosition(m_camera);
+
   if (IsVisible())
   {
     GUIPROFILER_RENDER_BEGIN(this);
-    Render();
+    g_graphicsContext.PushTransform(m_transform);   
+
+    if (PreRender())
+      Render();
+    PostRender();
+
+    g_graphicsContext.PopTransform();
     GUIPROFILER_RENDER_END(this);
   }
-  if (m_hasCamera)
-    g_graphicsContext.RestoreCameraPosition();
-  g_graphicsContext.RemoveTransform();
+}
+
+bool CGUIControl::PreRender()
+{
+  return true;
+}
+
+void CGUIControl::PostRender()
+{
+  // Use this to draw clipping rects
+  if (g_application.IsDrawControlBorders())
+  {
+    CRect finalRect;
+    finalRect.x1 = GetXPosition();
+    finalRect.y1 = GetYPosition();
+    finalRect.x2 = GetXPosition() + GetWidth();
+    finalRect.y2 = GetYPosition() + GetHeight();
+#if defined(HAS_GLES)
+    CGUITextureGLES::DrawQuad(finalRect, 0xffffffff, true);
+#elif defined(HAS_GL)
+    CGUITextureGL::DrawQuad(finalRect, 0xffffffff);
+#elif defined(HAS_DX)
+    CGUITextureD3D::DrawQuad(finalRect, 0xffffffff);
+#endif
+  }
 }
 
 void CGUIControl::Render()
@@ -167,7 +201,7 @@ void CGUIControl::Render()
   if (g_application.IsVerbose())
   {
     CStdStringW strID;
-	strID.Format(L"%d(%d)", GetID(), GetParentID());
+    strID.Format(L"%d(%d)", GetID(), GetParentID());
     CGUITextLayout::DrawOutlineText(g_fontManager.GetFont("font16"), 0, 0, 0xffffffff, 0xff000000, 2, strID);
   }
 }
@@ -794,24 +828,7 @@ void CGUIControl::Animate(unsigned int currentTime)
     UpdateStates(anim.GetType(), anim.GetProcess(), anim.GetState());
     // and render the animation effect
     anim.RenderAnimation(m_transform, center);
-
-/*    // debug stuff
-    if (anim.GetProcess() != ANIM_PROCESS_NONE)
-    {
-      if (anim.effect == EFFECT_TYPE_ZOOM)
-      {
-        if (IsVisible())
-          CLog::DebugLog("Animating control %d with a %s zoom effect %s. Amount is %2.1f, visible=%s", m_controlID, anim.type == ANIM_TYPE_CONDITIONAL ? (anim.lastCondition ? "conditional_on" : "conditional_off") : (anim.type == ANIM_TYPE_VISIBLE ? "visible" : "hidden"), anim.currentProcess == ANIM_PROCESS_NORMAL ? "normal" : "reverse", anim.amount, IsVisible() ? "true" : "false");
-      }
-      else if (anim.effect == EFFECT_TYPE_FADE)
-      {
-        if (IsVisible())
-          CLog::DebugLog("Animating control %d with a %s fade effect %s. Amount is %2.1f. Visible=%s", m_controlID, anim.type == ANIM_TYPE_CONDITIONAL ? (anim.lastCondition ? "conditional_on" : "conditional_off") : (anim.type == ANIM_TYPE_VISIBLE ? "visible" : "hidden"), anim.currentProcess == ANIM_PROCESS_NORMAL ? "normal" : "reverse", anim.amount, IsVisible() ? "true" : "false");
-      }
-    }
-*/      
   }
-  g_graphicsContext.AddTransform(m_transform);
 }
 
 bool CGUIControl::IsAnimating(ANIMATION_TYPE animType)
@@ -819,14 +836,14 @@ bool CGUIControl::IsAnimating(ANIMATION_TYPE animType)
   for (unsigned int i = 0; i < m_animations.size(); i++)
   {
     CAnimation &anim = m_animations[i];
-    if (anim.GetType() == animType)
+    if (anim.GetType() == animType || animType == ANIM_TYPE_ANY)
     {
       if (anim.GetQueuedProcess() == ANIM_PROCESS_NORMAL)
         return true;
       if (anim.GetProcess() == ANIM_PROCESS_NORMAL)
         return true;
     }
-    else if (anim.GetType() == -animType)
+    else if (anim.GetType() == -animType || animType == ANIM_TYPE_ANY)
     {
       if (anim.GetQueuedProcess() == ANIM_PROCESS_REVERSE)
         return true;
@@ -897,12 +914,6 @@ void CGUIControl::SetHitRect(const CRect &rect)
   m_hitRect = rect;
 }
 
-void CGUIControl::SetCamera(const CPoint &camera)
-{
-  m_camera = camera;
-  m_hasCamera = true;
-}
-
 void CGUIControl::ExecuteActions(const vector<CGUIActionDescriptor> &actions)
 {
   // we should really save anything we need, as the action may cause the window to close
@@ -944,4 +955,101 @@ CPoint CGUIControl::GetRenderPosition() const
   if (m_parentControl)
     point += m_parentControl->GetRenderPosition();
   return point;
+}
+
+void CGUIControl::SetProperty(const CStdString &strKey, const char *strValue)
+{
+  m_mapProperties[strKey] = strValue;
+}
+
+void CGUIControl::SetProperty(const CStdString &strKey, const CStdString &strValue)
+{
+  m_mapProperties[strKey] = strValue;
+}
+
+void CGUIControl::SetProperty(const CStdString &strKey, int nVal)
+{
+  CStdString strVal;
+  strVal.Format("%d",nVal);
+  SetProperty(strKey, strVal);
+}
+
+void CGUIControl::SetProperty(const CStdString &strKey, long long nVal)
+{
+  CStdString strVal;
+  strVal.Format("%llu",nVal);
+  SetProperty(strKey, strVal);
+}
+
+void CGUIControl::SetProperty(const CStdString &strKey, bool bVal)
+{
+  SetProperty(strKey, bVal?"1":"0");
+}
+
+void CGUIControl::SetProperty(const CStdString &strKey, double dVal)
+{
+  CStdString strVal;
+  strVal.Format("%f",dVal);
+  SetProperty(strKey, strVal);
+}
+
+CStdString CGUIControl::GetProperty(const CStdString &strKey) const
+{
+  std::map<CStdString,CStdString,icompare>::const_iterator iter = m_mapProperties.find(strKey);
+  if (iter == m_mapProperties.end())
+    return "";
+
+  return iter->second;
+}
+
+int CGUIControl::GetPropertyInt(const CStdString &strKey) const
+{
+  return atoi(GetProperty(strKey).c_str()) ;
+}
+
+long long CGUIControl::GetPropertyInt64(const CStdString &strKey) const
+{
+  return atoll(GetProperty(strKey).c_str()) ;
+}
+
+bool CGUIControl::GetPropertyBOOL(const CStdString &strKey) const
+{
+  return GetProperty(strKey) == "1";
+}
+
+double CGUIControl::GetPropertyDouble(const CStdString &strKey) const
+{
+  return atof(GetProperty(strKey).c_str()) ;
+}
+
+bool CGUIControl::HasProperty(const CStdString &strKey) const
+{
+  std::map<CStdString,CStdString,icompare>::const_iterator iter = m_mapProperties.find(strKey);
+  if (iter == m_mapProperties.end())
+    return false;
+
+  return true;
+}
+
+void CGUIControl::ClearProperty(const CStdString &strKey)
+{
+  std::map<CStdString,CStdString,icompare>::iterator iter = m_mapProperties.find(strKey);
+  if (iter != m_mapProperties.end())
+    m_mapProperties.erase(iter);
+}
+
+void CGUIControl::ClearProperties()
+{
+  m_mapProperties.clear();
+}
+
+void CGUIControl::SetProperties(const std::map<CStdString, CStdString> props)
+{
+  m_mapProperties.clear();
+  std::map<CStdString, CStdString>::const_iterator iter = props.begin();
+  while (iter != props.end())
+  {
+    m_mapProperties[iter->first] = iter->second;
+    iter++;
+  }
 }

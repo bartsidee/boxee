@@ -2,7 +2,7 @@
 |
 |   Platinum - Synchronous Media Browser
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -41,8 +41,8 @@ NPT_SET_LOCAL_LOGGER("platinum.media.server.syncbrowser")
 /*----------------------------------------------------------------------
 |   PLT_SyncMediaBrowser::PLT_SyncMediaBrowser
 +---------------------------------------------------------------------*/
-PLT_SyncMediaBrowser::PLT_SyncMediaBrowser(PLT_CtrlPointReference& ctrlPoint,
-                                           bool                    use_cache /* = false */, 
+PLT_SyncMediaBrowser::PLT_SyncMediaBrowser(PLT_CtrlPointReference&            ctrlPoint,
+                                           bool                               use_cache /* = false */, 
                                            PLT_MediaContainerChangesListener* listener /* = NULL */) :
     PLT_MediaBrowser(ctrlPoint),
     m_ContainerListener(listener),
@@ -78,12 +78,12 @@ PLT_SyncMediaBrowser::OnDeviceAdded(PLT_DeviceDataReference& device)
 {
     NPT_String uuid = device->GetUUID();
 
-        // test if it's a media server
-        PLT_Service* service;
+    // test if it's a media server
+    PLT_Service* service;
     if (NPT_SUCCEEDED(device->FindServiceByType("urn:schemas-upnp-org:service:ContentDirectory:*", service))) {
         NPT_AutoLock lock(m_MediaServers);
-            m_MediaServers.Put(uuid, device);
-        }
+        m_MediaServers.Put(uuid, device);
+    }
     
     return PLT_MediaBrowser::OnDeviceAdded(device);
 }
@@ -96,17 +96,17 @@ PLT_SyncMediaBrowser::OnDeviceRemoved(PLT_DeviceDataReference& device)
 {
     NPT_String uuid = device->GetUUID();
 
-        // Remove from our list of servers first if found
+    // Remove from our list of servers first if found
     {
         NPT_AutoLock lock(m_MediaServers);
         m_MediaServers.Erase(uuid);
     }
 
-        // clear cache for that device
-        if (m_UseCache) m_Cache.Clear(device.AsPointer()->GetUUID());
+    // clear cache for that device
+    if (m_UseCache) m_Cache.Clear(device.AsPointer()->GetUUID());
     
     return PLT_MediaBrowser::OnDeviceRemoved(device);
-    }
+}
 
 /*----------------------------------------------------------------------
 |   PLT_SyncMediaBrowser::Find
@@ -196,13 +196,13 @@ PLT_SyncMediaBrowser::OnMSStateVariablesChanged(PLT_Service*                  se
 +---------------------------------------------------------------------*/
 NPT_Result 
 PLT_SyncMediaBrowser::BrowseSync(PLT_BrowseDataReference& browse_data,
-                             PLT_DeviceDataReference& device, 
-                             const char*              object_id, 
-                             NPT_Int32                index, 
-                             NPT_Int32                count,
-                             bool                     browse_metadata,
-                             const char*              filter, 
-                             const char*              sort)
+                                 PLT_DeviceDataReference& device, 
+                                 const char*              object_id, 
+                                 NPT_Int32                index, 
+                                 NPT_Int32                count,
+                                 bool                     browse_metadata,
+                                 const char*              filter, 
+                                 const char*              sort)
 {
     NPT_Result res;
 
@@ -229,7 +229,7 @@ PLT_SyncMediaBrowser::BrowseSync(PLT_BrowseDataReference& browse_data,
 +---------------------------------------------------------------------*/
 NPT_Result
 PLT_SyncMediaBrowser::BrowseSync(PLT_DeviceDataReference&      device, 
-                             const char*                   object_id, 
+                                 const char*                   object_id, 
                                  PLT_MediaObjectListReference& list,
                                  bool                          metadata, /* = false */
                                  NPT_Int32                     start, /* = 0 */

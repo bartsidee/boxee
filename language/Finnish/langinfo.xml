@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!--Date of translation: 19/4/2009  -->
-<language>
+<language code="fi">
   <charsets>
     <gui>CP1252</gui>
     <subtitle>CP1252</subtitle>
@@ -24,6 +24,7 @@
   </regions>
 
   <sorttokens>
+    <token>A</token>
     <token>The</token>
   </sorttokens>
 

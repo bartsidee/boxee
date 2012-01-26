@@ -18,6 +18,10 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
+#ifndef WIN32
+#include <config.h>
+#endif
+#ifdef HAS_SID_CODEC
 
 #include "SIDFileDirectory.h"
 
@@ -41,3 +45,4 @@ int CSIDFileDirectory::GetTrackCount(const CStdString& strPath)
 
   return m_dll.GetNumberOfSongs(strPath.c_str());
 }
+#endif

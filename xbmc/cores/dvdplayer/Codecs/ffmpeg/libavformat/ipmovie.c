@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavformat/ipmovie.c
+ * @file
  * Interplay MVE file demuxer
  * by Mike Melanson (melanson@pcisys.net)
  * For more information regarding the Interplay MVE file format, visit:
@@ -93,6 +93,7 @@ typedef struct IPMVEContext {
 
     uint64_t frame_pts_inc;
 
+    unsigned int video_bpp;
     unsigned int video_width;
     unsigned int video_height;
     int64_t video_pts;
@@ -270,7 +271,7 @@ static int process_ipmovie_chunk(IPMVEContext *s, ByteIOContext *pb,
     while ((chunk_size > 0) && (chunk_type != CHUNK_BAD)) {
 
         /* read the next chunk, wherever the file happens to be pointing */
-       if (url_feof(pb)) {
+        if (url_feof(pb)) {
             chunk_type = CHUNK_EOF;
             break;
         }
@@ -375,6 +376,11 @@ static int process_ipmovie_chunk(IPMVEContext *s, ByteIOContext *pb,
             }
             s->video_width = AV_RL16(&scratch[0]) * 8;
             s->video_height = AV_RL16(&scratch[2]) * 8;
+            if (opcode_version < 2 || !AV_RL16(&scratch[6])) {
+                s->video_bpp = 8;
+            } else {
+                s->video_bpp = 16;
+            }
             debug_ipmovie("video resolution: %d x %d\n",
                 s->video_width, s->video_height);
             break;
@@ -508,7 +514,7 @@ static int ipmovie_probe(AVProbeData *p)
             return AVPROBE_SCORE_MAX;
     } while (b < b_end);
 
-        return 0;
+    return 0;
 }
 
 static int ipmovie_read_header(AVFormatContext *s,
@@ -560,11 +566,12 @@ static int ipmovie_read_header(AVFormatContext *s,
         return AVERROR(ENOMEM);
     av_set_pts_info(st, 63, 1, 1000000);
     ipmovie->video_stream_index = st->index;
-    st->codec->codec_type = CODEC_TYPE_VIDEO;
+    st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
     st->codec->codec_id = CODEC_ID_INTERPLAY_VIDEO;
     st->codec->codec_tag = 0;  /* no fourcc */
     st->codec->width = ipmovie->video_width;
     st->codec->height = ipmovie->video_height;
+    st->codec->bits_per_coded_sample = ipmovie->video_bpp;
 
     /* palette considerations */
     st->codec->palctrl = &ipmovie->palette_control;
@@ -575,7 +582,7 @@ static int ipmovie_read_header(AVFormatContext *s,
             return AVERROR(ENOMEM);
         av_set_pts_info(st, 32, 1, ipmovie->audio_sample_rate);
         ipmovie->audio_stream_index = st->index;
-        st->codec->codec_type = CODEC_TYPE_AUDIO;
+        st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
         st->codec->codec_id = ipmovie->audio_type;
         st->codec->codec_tag = 0;  /* no tag */
         st->codec->channels = ipmovie->audio_channels;
@@ -613,7 +620,7 @@ static int ipmovie_read_packet(AVFormatContext *s,
     return ret;
 }
 
-AVInputFormat ipmovie_demuxer = {
+AVInputFormat ff_ipmovie_demuxer = {
     "ipmovie",
     NULL_IF_CONFIG_SMALL("Interplay MVE format"),
     sizeof(IPMVEContext),

@@ -396,7 +396,7 @@ bool CDVDVideoCodecVDA::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options)
           {
             // video content is from x264 or from bytestream h264 (AnnexB format)
             // NAL reformating to bitstream format needed
-            if (!m_dllAvUtil.Load() || !m_dllAvFormat.Load())
+            if (!m_dllAvUtil.Load() || m_dllAvCore.Load() || !m_dllAvFormat.Load())
               return false;
 
             ByteIOContext *pb;
@@ -456,7 +456,7 @@ bool CDVDVideoCodecVDA::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options)
     try
     {
       status = m_dll->VDADecoderCreate(decoderConfiguration, NULL,
-                                       (VDADecoderOutputCallback *)&VDADecoderCallback, this, (VDADecoder*)&m_vda_decoder);
+      (VDADecoderOutputCallback *)&VDADecoderCallback, this, (VDADecoder*)&m_vda_decoder);
     }
     catch (...)
     {
@@ -533,6 +533,7 @@ void CDVDVideoCodecVDA::Dispose()
   if (m_convert_bytestream)
   {
     m_dllAvUtil.Unload();
+    m_dllAvCore.Unload();
     m_dllAvFormat.Unload();
   }
   if (m_swcontext)
@@ -549,7 +550,7 @@ void CDVDVideoCodecVDA::SetDropState(bool bDrop)
   m_DropPictures = bDrop;
 }
 
-int CDVDVideoCodecVDA::Decode(BYTE* pData, int iSize, double pts)
+int CDVDVideoCodecVDA::Decode(BYTE* pData, int iSize, double pts, double dts)
 {
   OSStatus status;
   uint32_t avc_flags = 0;
@@ -562,7 +563,7 @@ int CDVDVideoCodecVDA::Decode(BYTE* pData, int iSize, double pts)
     ByteIOContext *pb;
     int demuxer_bytes;
     uint8_t *demuxer_content;
-
+	
     if(m_dllAvFormat.url_open_dyn_buf(&pb) < 0)
       return VC_ERROR;
     demuxer_bytes = avc_parse_nal_units(&m_dllAvFormat, pb, pData, iSize);
@@ -574,7 +575,7 @@ int CDVDVideoCodecVDA::Decode(BYTE* pData, int iSize, double pts)
   {
     avc_demux = CFDataCreate(kCFAllocatorDefault, pData, iSize);
   }
-	
+
   if (m_DropPictures)
     avc_flags = kVDADecoderDecodeFlags_DontEmitFrame;
 

@@ -122,7 +122,7 @@ start_pass_huff_decoder (j_decompress_ptr cinfo)
     if (compptr->component_needed) {
       entropy->dc_needed[blkn] = TRUE;
       /* we don't need the ACs if producing a 1/8th-size image */
-      entropy->ac_needed[blkn] = (compptr->DCT_scaled_size > 1);
+      entropy->ac_needed[blkn] = (min(compptr->DCT_h_scaled_size, compptr->DCT_v_scaled_size) > 1); // TODO: Is this change acceptable?
     } else {
       entropy->dc_needed[blkn] = entropy->ac_needed[blkn] = FALSE;
     }

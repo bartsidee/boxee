@@ -51,7 +51,7 @@ CBoxeeShortcut::CBoxeeShortcut(const CFileItem& fileItem)
   fileItem.GetCountryRestriction(m_country, m_countryAllow);
   m_isFolder = fileItem.m_bIsFolder;
   m_isReadOnly = fileItem.HasProperty("shortcut-readonly");
-
+  
   if (fileItem.HasProperty("shortcut-command"))
   {
     m_command = fileItem.GetProperty("shortcut-command");
@@ -123,7 +123,7 @@ bool CBoxeeShortcut::ToXML(TiXmlElement* rootElement)
   {
     return false;
   }
-
+  
   XMLUtils::SetString(rootElement, "name", m_name);
   TiXmlElement* nameElement = rootElement->FirstChildElement("name");
   if (nameElement && m_isNameLocalize)
@@ -133,18 +133,18 @@ bool CBoxeeShortcut::ToXML(TiXmlElement* rootElement)
 
   XMLUtils::SetString(rootElement, "thumbnail", m_thumbPath);
   XMLUtils::SetBoolean(rootElement, "adult", m_isAdult);
-
+  
   if (!m_path.IsEmpty())
   {
     XMLUtils::SetString(rootElement, "path", m_path);
     XMLUtils::SetBoolean(rootElement, "is-folder", m_isFolder);
   }
-
+  
   if (!m_command.IsEmpty())
   {
     XMLUtils::SetString(rootElement, "command", m_command);
   }
-
+  
   if (!m_type.IsEmpty())
   {
     XMLUtils::SetString(rootElement, "type", m_type);
@@ -160,16 +160,16 @@ bool CBoxeeShortcut::ToXML(TiXmlElement* rootElement)
     XMLUtils::SetString(rootElement, "country", m_country);
     XMLUtils::SetBoolean(rootElement, "country-allow", m_countryAllow);
   }
-
+  
   XMLUtils::SetBoolean(rootElement, "readonly", m_isReadOnly);
-
+  
   return true;
 }
 
 bool CBoxeeShortcut::FromXML(TiXmlElement* rootElement)
 {
   Init();
-
+    
   if (!XMLUtils::GetString(rootElement, "name", m_name))
   {
     CLog::Log(LOGERROR, "Invalid shortcut item, name element not found");
@@ -208,7 +208,7 @@ bool CBoxeeShortcut::FromXML(TiXmlElement* rootElement)
     CLog::Log(LOGERROR,"Shortcut [name=%s] is invalid. path, command and boxeeId are empty. [path=%s][command=%s][boxeeId=%s] (shortcut)", m_name.c_str(), m_path.c_str(), m_command.c_str(), m_boxeeId.c_str());
     return false;    
   }
-
+ 
   return true;
 }
 
@@ -405,7 +405,7 @@ bool CBoxeeShortcutList::Load()
 {
   CStdString inputFile = SHORTCUTS_FILENAME;
   inputFile = _P(inputFile);
-
+  
   if (!XFILE::CFile::Exists(inputFile))
   {
     CLog::Log(LOGWARNING,"CBoxeeShortcutList::Load - Shortcut file [%s] doesn't exist. Going to create a default one (shortcut)",inputFile.c_str());
@@ -418,7 +418,7 @@ bool CBoxeeShortcutList::Load()
     CLog::Log(LOGERROR, "Unable to load %s (row %i column %i)", inputFile.c_str(), doc.Row(), doc.Column());
     return false;
   }
-
+  
   TiXmlElement *root = doc.RootElement();
   if (!root || strcmp(root->Value(), "shortcuts"))
   {
@@ -427,7 +427,7 @@ bool CBoxeeShortcutList::Load()
   }
 
   m_items.clear();
-
+  
   TiXmlElement *shortcut = root->FirstChildElement("shortcut");
   while (shortcut)
   {
@@ -436,10 +436,10 @@ bool CBoxeeShortcutList::Load()
     {
       m_items.push_back(loadedShortcut);
     }
-
+    
     shortcut = shortcut->NextSiblingElement("shortcut");
   }
-
+  
   return true;  
 }
 
@@ -500,8 +500,8 @@ bool CBoxeeShortcutList::AddShortcut(const CBoxeeShortcut& cut)
   {
     CLog::Log(LOGDEBUG,"CBoxeeShortcutList::AddShortcutt - Shortcut with [path=%s][command=%s][boxeeId=%s] already exist (shortcut)",cut.GetPath().c_str(),cut.GetCommand().c_str(),cut.GetBoxeeId().c_str());
     CGUIDialogOK2::ShowAndGetInput(53700, 53311);
-    return false;
-  }
+  return false;
+}
 }
 
 bool CBoxeeShortcutList::RemoveShortcut(const CBoxeeShortcut& cut)
@@ -573,7 +573,7 @@ bool CBoxeeShortcutList::HasShortcutByPath(const CStdString& strPath)
     if (strPath == m_items[i].GetPath())
     {
       return true;
-    }
+  }
   }
 
   return false;
@@ -591,7 +591,7 @@ bool CBoxeeShortcutList::HasShortcutByCommand(const CStdString& strCommand)
     if (strCommand == m_items[i].GetCommand())
     {
       return true;
-    }
+  }
   }
 
   return false;

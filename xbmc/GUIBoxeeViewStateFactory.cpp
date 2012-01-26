@@ -4,7 +4,6 @@
 #include "GUIBoxeeViewStateFactory.h"
 #include "URL.h"
 #include "Util.h"
-#include "BrowseWindowConfiguration.h"
 #include "GUISettings.h"
 #include "utils/log.h"
 
@@ -429,7 +428,7 @@ CGUIBoxeeViewState* CGUIBoxeeViewStateFactory::InitBoxeeViewState(const CFileIte
 
 CGUIBoxeeViewState* CGUIBoxeeViewStateFactory::CreateDefaultBoxeeViewState(const CFileItemList& items)
 {
-  const CURL& url=items.GetAsUrl();
+  const CURI& url=items.GetAsUrl();
   CStdString strUrl;
   url.GetURL(strUrl);
 
@@ -1449,7 +1448,7 @@ CGUIBoxeeViewState* CGUIBoxeeViewStateFactory::InitializeDefaultBrowseModeVideoB
 {
   CGUIBoxeeViewState* defaultBrowseModeVideoBoxeeViewState = new CGUIBoxeeViewState(items.m_strPath);
 
-  const CURL& url=items.GetAsUrl();
+  const CURI& url=items.GetAsUrl();
 
   //////////
   // View //
@@ -1652,7 +1651,7 @@ CGUIBoxeeViewState* CGUIBoxeeViewStateFactory::InitializeDefaultBrowseModeOtherB
 {
   CGUIBoxeeViewState* defaultBrowseModeOtherBoxeeViewState = new CGUIBoxeeViewState(items.m_strPath);
 
-  const CURL& url=items.GetAsUrl();
+  const CURI& url=items.GetAsUrl();
 
   //////////
   // View //

@@ -22,12 +22,12 @@ EUPHORIA-DEP=$(RSXS)/src/euphoria/rs-euphoria
 
 CLEAN_FILES=$(SOLARWINDS-OUT) $(PLASMA-OUT) $(EUPHORIA-OUT)
 
-all: $(SOLARWINDS-OUT) $(PLASMA-OUT) $(EUPHORIA-OUT);
+all: $(SOLARWINDS-OUT) $(PLASMA-OUT);
 
 $(SOLARWINDS-OUT): $(SOLARWINDS-DEP)
 ifeq ($(findstring osx,$(ARCH)), osx)
 	$(CXX) $(CXXFLAGS) -dynamiclib -flat_namespace -undefined suppress -shared \
-		-mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk \
+		@ARCH_DEFINES@ \
 		-o $(SOLARWINDS-OUT) $(RSXS)/src/solarwinds/*.o $(RSXS-OBJS)
 else
 	$(CXX) $(CXXFLAGS) -shared -o $(SOLARWINDS-OUT) $(RSXS)/src/solarwinds/*.o $(RSXS-OBJS) -lXmu
@@ -36,7 +36,7 @@ endif
 $(PLASMA-OUT): $(PLASMA-DEP)
 ifeq ($(findstring osx,$(ARCH)), osx)
 	$(CXX) $(CXXFLAGS) -dynamiclib -flat_namespace -undefined suppress -shared \
-		-mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk \
+		@ARCH_DEFINES@ \
 		-o $(PLASMA-OUT)     $(RSXS)/src/plasma/*.o     $(RSXS-OBJS)
 else
 	$(CXX) $(CXXFLAGS) -shared -o $(PLASMA-OUT)     $(RSXS)/src/plasma/*.o     $(RSXS-OBJS) -lXmu
@@ -45,7 +45,7 @@ endif
 $(EUPHORIA-OUT): $(EUPHORIA-DEP)
 ifeq ($(findstring osx,$(ARCH)), osx)
 	$(CXX) $(CXXFLAGS) -dynamiclib -flat_namespace -undefined suppress -shared \
-		-mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk \
+		@ARCH_DEFINES@ \
 		-o $(EUPHORIA-OUT)   $(RSXS)/src/euphoria/*.o   $(RSXS-OBJS)
 else
 	$(CXX) $(CXXFLAGS) -shared -o $(EUPHORIA-OUT)   $(RSXS)/src/euphoria/*.o   $(RSXS-OBJS) -lXmu

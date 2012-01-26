@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include <pthread.h>
 
 #ifdef __APPLE__
 typedef int64_t   off64_t;
@@ -43,6 +44,13 @@ typedef fpos_t fpos64_t;
 
 #ifdef _LINUX
 #define _stat stat
+#endif
+
+#if defined(_LINUX) && !defined(__APPLE__)
+#include <sys/syscall.h>
+#ifndef gettid
+#define gettid() syscall(__NR_gettid)
+#endif
 #endif
 
 struct mntent;
@@ -100,6 +108,7 @@ int dll_fstatvfs64(int fd, struct statvfs64 *buf);
 FILE* dll_popen(const char *command, const char *mode);
 int dll_setvbuf(FILE *stream, char *buf, int type, size_t size);
 struct mntent *dll_getmntent(FILE *fp);
+int dll_exec(const char *filename, char *const argv[],char *const envp[]);
 
 FILE *__wrap_popen(const char *command, const char *mode)
 {
@@ -404,7 +413,7 @@ struct mntent *__wrap_getmntent(FILE *fp)
 // are actually #defines which are inlined when compiled with -O. Those defines
 // actally call __*chk (for example, __fread_chk). We need to bypass this whole
 // thing to actually call our wrapped functions. 
-#if _FORTIFY_SOURCE > 1
+#if !defined(__APPLE__) && _FORTIFY_SOURCE > 1
 
 size_t __wrap___fread_chk(void * ptr, size_t ptrlen, size_t size, size_t n, FILE * stream)
 {
@@ -447,3 +456,64 @@ size_t __wrap___read_chk(int fd, void *buf, size_t nbytes, size_t buflen)
 }
 
 #endif
+
+#if defined(_LINUX) && !defined(__APPLE__)
+typedef struct tagStartRoutineArgs
+{
+    void* arglist;
+    void* start_address;
+    int tid_parent;
+} StartRoutineArgs;
+
+void* start_routine_fake(
+    void *arglist
+)
+{
+  typedef void* (* StartAddress) (void *);
+
+  StartRoutineArgs* args = (StartRoutineArgs*)arglist;
+  StartAddress start_routine = (StartAddress)args->start_address;
+  void *origarglist = args->arglist;
+  int tidParent = args->tid_parent;
+  int tid = gettid();
+
+  free(args);
+
+  TPInheritPolicy(tid, tidParent);
+
+  return start_routine(origarglist);
+}
+#endif
+
+int __wrap_pthread_create(pthread_t *thread, const pthread_attr_t *attr,
+                          void *(*start_routine) (void *), void *arg)
+{
+  int retVal = 0;
+
+#if defined(_LINUX) && !defined(__APPLE__)
+  StartRoutineArgs* args = (StartRoutineArgs*)malloc(sizeof(*args));
+
+  args->arglist = arg;
+  args->start_address = (void*)start_routine;
+  args->tid_parent = gettid();
+ 
+  retVal = pthread_create(thread, attr, start_routine_fake, args);
+#else
+  retVal = pthread_create(thread, attr, start_routine, arg);
+  if(retVal == 0)
+  {
+    TPInheritPolicy(*thread, pthread_self());
+  }
+#endif
+  return retVal;
+}
+
+int __wrap_execv(const char *filename, char *const argv[])
+{
+  return dll_exec(filename,argv,NULL);
+}
+
+int __wrap_execve(const char *filename, char *const argv[],char *const envp[])
+{
+  return dll_exec(filename,argv,envp);
+}

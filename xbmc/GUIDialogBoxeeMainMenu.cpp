@@ -1,7 +1,6 @@
 
 #include "GUIDialogBoxeeMainMenu.h"
 #include "Profile.h"
-#include "GUIDialogBoxeeUserInfo.h"
 #include "lib/libBoxee/bxobject.h"
 #include "Application.h"
 #include "GUIWindowManager.h"
@@ -13,7 +12,6 @@
 #include "GUIDialogBoxeeShortcutAction.h"
 #include "GUIDialogYesNo2.h"
 #include "BoxeeShortcut.h"
-#include "GUIWindowBoxeeBrowseWithPanel.h"
 #include "GUIDialogBoxeeGlobalSearch.h"
 
 #define BTN_PHOTOS  111
@@ -132,7 +130,7 @@ void CGUIDialogBoxeeMainMenu::OnInitWindow()
   m_manageButtonOn = false;
   SetProperty("manage-set",(int)m_manageButtonOn);
 
-  CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseShortcuts::OnInitWindow - After set [m_manageButtonOn=%d]. [manage-set=%d] (mainmenu)(shortcut)",m_manageButtonOn,GetPropertyInt("manage-set"));
+  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMainMenu::OnInitWindow - After set [m_manageButtonOn=%d]. [manage-set=%d] (mainmenu)(shortcut)",m_manageButtonOn,GetPropertyInt("manage-set"));
 
   m_moveShortcut = false;
 
@@ -172,13 +170,11 @@ bool CGUIDialogBoxeeMainMenu::OnMessage(CGUIMessage& message)
     break;
     case BTN_MUSIC:
     {
-      ((CGUIWindowBoxeeBrowseWithPanel*)g_windowManager.GetWindow(WINDOW_BOXEE_BROWSE_ALBUMS))->ShowPanel();
       ActivateWindow(WINDOW_BOXEE_BROWSE_ALBUMS);
     }
     break;
     case BTN_MOVIES:
     {
-      ((CGUIWindowBoxeeBrowseWithPanel*)g_windowManager.GetWindow(WINDOW_BOXEE_BROWSE_TVSHOWS))->ShowPanel();
       ActivateWindow(WINDOW_BOXEE_BROWSE_MOVIES);
     }
     break;
@@ -189,13 +185,11 @@ bool CGUIDialogBoxeeMainMenu::OnMessage(CGUIMessage& message)
     break;
     case BTN_TVSHOWS:
     {
-      ((CGUIWindowBoxeeBrowseWithPanel*)g_windowManager.GetWindow(WINDOW_BOXEE_BROWSE_TVSHOWS))->ShowPanel();
       ActivateWindow(WINDOW_BOXEE_BROWSE_TVSHOWS);
     }
     break;
     case BTN_APPS:
     {
-      ((CGUIWindowBoxeeBrowseWithPanel*)g_windowManager.GetWindow(WINDOW_BOXEE_BROWSE_APPS))->ShowPanel();
       ActivateWindow(WINDOW_BOXEE_BROWSE_APPS,"apps://all");
     }
     break;
@@ -222,17 +216,17 @@ bool CGUIDialogBoxeeMainMenu::OnMessage(CGUIMessage& message)
     break;
     case BTN_QUEUE:
     {
-      ActivateWindow(WINDOW_BOXEE_BROWSE_QUEUE,"feed://queue/");
+      ActivateWindow(WINDOW_BOXEE_BROWSE_QUEUE);
     }
     break;
     case BTN_FEED:
     {
-      ActivateWindow(WINDOW_BOXEE_BROWSE_DISCOVER,"feed://share/");
+      ActivateWindow(WINDOW_BOXEE_BROWSE_DISCOVER);
     }
     break;
     case BTN_HISTORY:
     {
-      ActivateWindow(WINDOW_BOXEE_BROWSE_HISTORY, "history://all");
+      ActivateWindow(WINDOW_BOXEE_BROWSE_HISTORY);
     }
     break;
     case BTN_PLAYING_VIDEO:
@@ -458,7 +452,7 @@ bool CGUIDialogBoxeeMainMenu::HandleShortcutListClick()
           m_moveShortcut = true;
           SetProperty("manage-set",2);
 
-          CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseShortcuts::OnClick - Move shortcut was chose [m_moveShortcut=%d]. [m_manageButtonOn=%d][manage-set=%d] (mainmenu)(shortcut)",m_moveShortcut,m_manageButtonOn,GetPropertyInt("manage-set"));
+          CLog::Log(LOGDEBUG,"CGUIDialogBoxeeMainMenu::HandleShortcutListClick - Move shortcut was chose [m_moveShortcut=%d]. [m_manageButtonOn=%d][manage-set=%d] (mainmenu)(shortcut)",m_moveShortcut,m_manageButtonOn,GetPropertyInt("manage-set"));
         }
       }
     }
@@ -471,8 +465,6 @@ void CGUIDialogBoxeeMainMenu::HandleShortcutManageButtonClick()
 {
   m_manageButtonOn = !m_manageButtonOn;
   SetProperty("manage-set",(int)m_manageButtonOn);
-
-  CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseShortcuts::OnMessage - GUI_MSG_CLICKED - After set [m_manageButtonOn=%d]. [manage-set=%d] (mainmenu)(shortcut)",m_manageButtonOn,GetPropertyInt("manage-set"));
 
   SET_CONTROL_FOCUS(SHORTCUT_LIST,0);
 }

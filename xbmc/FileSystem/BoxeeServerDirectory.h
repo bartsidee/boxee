@@ -54,9 +54,12 @@ private:
 
   bool HandleTvShows(const CStdString& strRequest, std::map<CStdString, CStdString>& mapOptions, CFileItemList &items);
   bool HandleMovies(const CStdString& strRequest, std::map<CStdString, CStdString>& mapOptions, CFileItemList &items);
-
+  bool HandleTrailers(const CStdString& strRequest, std::map<CStdString, CStdString>& mapOptions, CFileItemList &items);
+  bool HandleClips(const CStdString& strRequest, std::map<CStdString, CStdString>& mapOptions, CFileItemList &items);
+  bool HandleGlobalSearch(const CStdString& strRequest, std::map<CStdString, CStdString>& mapOptions, CFileItemList &items);
+  bool HandleSources(const CStdString& strRequest, std::map<CStdString, CStdString>& mapOptions, CFileItemList &items);
   bool GetTvShowSubscriptions(CFileItemList &items);
-};
+  };
 
 }
 

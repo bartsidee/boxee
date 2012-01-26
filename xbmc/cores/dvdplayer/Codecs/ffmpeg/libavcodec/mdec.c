@@ -22,7 +22,7 @@
  */
 
 /**
- * @file libavcodec/mdec.c
+ * @file
  * Sony PlayStation MDEC (Motion DECoder)
  * This is very similar to intra-only MPEG-1.
  */
@@ -44,7 +44,7 @@ typedef struct MDECContext{
     int mb_width;
     int mb_height;
     int mb_x, mb_y;
-    DECLARE_ALIGNED_16(DCTELEM, block[6][64]);
+    DECLARE_ALIGNED(16, DCTELEM, block)[6][64];
     uint8_t *bitstream_buffer;
     unsigned int bitstream_buffer_size;
     int block_last_index[6];
@@ -201,7 +201,7 @@ static int decode_frame(AVCodecContext *avctx,
     }
 
     p->quality= a->qscale * FF_QP2LAMBDA;
-    memset(p->qscale_table, a->qscale, p->qstride*a->mb_height);
+    memset(p->qscale_table, a->qscale, a->mb_width);
 
     *picture   = a->picture;
     *data_size = sizeof(AVPicture);
@@ -229,9 +229,11 @@ static av_cold int decode_init(AVCodecContext *avctx){
     ff_mpeg12_init_vlcs();
     ff_init_scantable(a->dsp.idct_permutation, &a->scantable, ff_zigzag_direct);
 
-    p->qstride= a->mb_width;
-    p->qscale_table= av_mallocz( p->qstride * a->mb_height);
-    avctx->pix_fmt= PIX_FMT_YUV420P;
+    if( avctx->idct_algo == FF_IDCT_AUTO )
+        avctx->idct_algo = FF_IDCT_SIMPLE;
+    p->qstride= 0;
+    p->qscale_table= av_mallocz(a->mb_width);
+    avctx->pix_fmt= PIX_FMT_YUVJ420P;
 
     return 0;
 }
@@ -239,6 +241,8 @@ static av_cold int decode_init(AVCodecContext *avctx){
 static av_cold int decode_end(AVCodecContext *avctx){
     MDECContext * const a = avctx->priv_data;
 
+    if(a->picture.data[0])
+        avctx->release_buffer(avctx, &a->picture);
     av_freep(&a->bitstream_buffer);
     av_freep(&a->picture.qscale_table);
     a->bitstream_buffer_size=0;
@@ -246,9 +250,9 @@ static av_cold int decode_end(AVCodecContext *avctx){
     return 0;
 }
 
-AVCodec mdec_decoder = {
+AVCodec ff_mdec_decoder = {
     "mdec",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_MDEC,
     sizeof(MDECContext),
     decode_init,

@@ -168,9 +168,9 @@ void CGUIDialogVideoScan::UpdateState()
 
   if (m_ScanState == FETCHING_MOVIE_INFO || m_ScanState == FETCHING_MUSICVIDEO_INFO || m_ScanState == FETCHING_TVSHOW_INFO || m_ScanState == CLEANING_UP_DATABASE)
   {
-    CURL url(m_strCurrentDir);
+    CURI url(m_strCurrentDir);
     CStdString strStrippedPath;
-    url.GetURLWithoutUserDetails(strStrippedPath);
+    strStrippedPath = url.GetWithoutUserDetails();
     CUtil::UrlDecode(strStrippedPath);
 
     SET_CONTROL_LABEL(CONTROL_LABELDIRECTORY, strStrippedPath);

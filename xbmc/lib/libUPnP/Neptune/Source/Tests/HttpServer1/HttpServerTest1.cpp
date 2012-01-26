@@ -95,11 +95,12 @@ public:
 
         NPT_HttpEntity* entity = response.GetEntity();
         entity->SetContentType("text/html");
-        entity->SetInputStream(msg);
-
+        NPT_MemoryStreamReference memory_stream(
+            new NPT_MemoryStream((const void*)msg.GetChars(), msg.GetLength()));
+        entity->SetInputStream(memory_stream, !m_Chunked);
+        
         if (m_Chunked) {
             entity->SetTransferEncoding(NPT_HTTP_TRANSFER_ENCODING_CHUNKED);
-            entity->SetContentLength(0);
         }
         
         return NPT_SUCCESS;

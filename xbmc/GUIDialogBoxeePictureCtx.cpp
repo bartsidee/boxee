@@ -8,6 +8,7 @@
 #include "utils/log.h"
 #include "LocalizeStrings.h"
 #include "GUIUserMessages.h"
+#include "GUIToggleButtonControl.h"
 
 using namespace BOXEE;
 
@@ -25,12 +26,9 @@ using namespace BOXEE;
 #define BTN_PRESET    9020
 
 #define BTN_PREV      9101
-#define BTN_PLAY      9102
+#define BTN_PAUSE     9111
+#define BTN_PLAY      9112
 
-#define BTN_DUMMY_PLAY       9112
-#define BTN_DUMMY_PAUSE      9111
-
-//#define BTN_PAUSE     9103
 #define BTN_NEXT      9104
 #define BTN_ZOOM      9105
 #define BTN_ROTATE    9106
@@ -38,6 +36,7 @@ using namespace BOXEE;
 
 #define BTN_ZOOM_OUT  9211
 #define BTN_ZOOM_IN   9212
+#define BTN_PAN       9213
 
 #define BTN_PAN_UP    9201
 #define BTN_PAN_DOWN  9202
@@ -48,8 +47,7 @@ using namespace BOXEE;
 
 #define INFO_HIDDEN_LIST 5000
 
-CGUIDialogBoxeePictureCtx::CGUIDialogBoxeePictureCtx(void) :
-  CGUIDialogBoxeeCtx(WINDOW_DIALOG_BOXEE_PICTURE_CTX, "boxee_picture_context.xml")
+CGUIDialogBoxeePictureCtx::CGUIDialogBoxeePictureCtx(void) : CGUIDialogBoxeeCtx(WINDOW_DIALOG_BOXEE_PICTURE_CTX, "boxee_picture_context.xml")
 {
   m_bIsZooming = false;
   m_bWasPlaying = false;
@@ -60,6 +58,7 @@ CGUIDialogBoxeePictureCtx::CGUIDialogBoxeePictureCtx(void) :
 
 CGUIDialogBoxeePictureCtx::~CGUIDialogBoxeePictureCtx(void)
 {
+
 }
 
 void CGUIDialogBoxeePictureCtx::Update()
@@ -104,15 +103,19 @@ bool CGUIDialogBoxeePictureCtx::OnAction(const CAction &action)
         newAction.id = ACTION_PAUSE;
         pWindow->OnAction(newAction);
       }
+
+      CGUIToggleButtonControl* pPanButton = (CGUIToggleButtonControl*) GetControl(BTN_PAN);
+      pPanButton->SetSelected(false);
+      SetProperty("is-panning", false);
       return true;
     }
     return CGUIDialogBoxeeCtx::OnAction(action);
   }
   
-  if ((action.id == ACTION_MOVE_RIGHT && GetFocusedControlID() == BTN_PAN_RIGHT) || 
-      (action.id == ACTION_MOVE_UP    && GetFocusedControlID() == BTN_PAN_UP) || 
-      (action.id == ACTION_MOVE_LEFT  && GetFocusedControlID() == BTN_PAN_LEFT) || 
-      (action.id == ACTION_MOVE_DOWN  && GetFocusedControlID() == BTN_PAN_DOWN))
+  if ((action.id == ACTION_MOVE_RIGHT && GetPropertyBOOL("is-panning")) ||
+      (action.id == ACTION_MOVE_UP    && GetPropertyBOOL("is-panning")) ||
+      (action.id == ACTION_MOVE_LEFT  && GetPropertyBOOL("is-panning")) ||
+      (action.id == ACTION_MOVE_DOWN  && GetPropertyBOOL("is-panning")))
   {
     pWindow->OnAction(action);
     return true;
@@ -155,6 +158,9 @@ bool CGUIDialogBoxeePictureCtx::OnMessage(CGUIMessage &message)
         CONTROL_DISABLE(BTN_PAN_UP);
         CONTROL_DISABLE(BTN_PAN_DOWN);
         CLog::Log(LOGDEBUG,"CGUIDialogBoxeePictureCtx::OnMessage - BTN_ZOOM was hit. [m_zoomInFactor=%d][BTN_ZOOM_IN=ENABLE][BTN_ZOOM_OUT=DISABLE][BTN_PAN_UP=DISABLE][BTN_PAN_DOWN=DISABLE] (zoom)",m_zoomInFactor);
+
+        CGUIToggleButtonControl* pPanButton = (CGUIToggleButtonControl*) GetControl(BTN_PAN);
+        pPanButton->SetSelected(false);
  
         m_bIsZooming = true;
         if (!pWindow->IsPaused())
@@ -174,25 +180,34 @@ bool CGUIDialogBoxeePictureCtx::OnMessage(CGUIMessage &message)
         // Swap state to playing
         if (!pWindow->IsPaused()) 
         {
-          SET_CONTROL_VISIBLE(BTN_DUMMY_PLAY);
-          SET_CONTROL_HIDDEN(BTN_DUMMY_PAUSE);
+          //SET_CONTROL_VISIBLE(BTN_DUMMY_PLAY);
+          //SET_CONTROL_HIDDEN(BTN_DUMMY_PAUSE);
         }
         else
         {
-          SET_CONTROL_VISIBLE(BTN_DUMMY_PAUSE);
-          SET_CONTROL_HIDDEN(BTN_DUMMY_PLAY);
+          SET_CONTROL_HIDDEN(BTN_PLAY);
+          SET_CONTROL_VISIBLE(BTN_PAUSE);
+          SET_CONTROL_FOCUS(BTN_PAUSE,0);
         }
      
         action.id = ACTION_PAUSE;
       }
-//      else if (iControl == BTN_PAUSE)
-//      {
-//        // Swap state to paused
-//        SET_CONTROL_VISIBLE(BTN_PLAY);
-//        SET_CONTROL_HIDDEN(BTN_PAUSE);
-//        SET_CONTROL_FOCUS(BTN_PLAY,0);
-//        action.id = ACTION_PAUSE;
-//      }
+      else if (iControl == BTN_PAUSE)
+      {
+        // Swap state to playing
+        if (pWindow->IsPaused())
+        {
+
+        }
+        else
+        {
+          SET_CONTROL_HIDDEN(BTN_PAUSE);
+          SET_CONTROL_VISIBLE(BTN_PLAY);
+          SET_CONTROL_FOCUS(BTN_PLAY,0);
+        }
+
+        action.id = ACTION_PAUSE;
+      }
       else if (iControl == BTN_ZOOM_IN)
       {
         action.id = ACTION_ZOOM_IN;
@@ -202,6 +217,10 @@ bool CGUIDialogBoxeePictureCtx::OnMessage(CGUIMessage &message)
       {
         action.id = ACTION_ZOOM_OUT;
         ZoomOutActionUpdate();
+      }
+      else if (iControl == BTN_PAN)
+      {
+        SetProperty("is-panning", !GetPropertyBOOL("is-panning"));
       }
       else if (iControl == BTN_PAN_DOWN)
       {
@@ -231,9 +250,10 @@ bool CGUIDialogBoxeePictureCtx::OnMessage(CGUIMessage &message)
       pWindow->OnAction(action);
     }
     break;
-  case GUI_MSG_WINDOW_DEINIT:
-  case GUI_MSG_VISUALISATION_UNLOADING:
+    case GUI_MSG_WINDOW_DEINIT:
+    case GUI_MSG_VISUALISATION_UNLOADING:
     {
+
     }
     break;
   case GUI_MSG_VISUALISATION_LOADED:
@@ -259,23 +279,20 @@ void CGUIDialogBoxeePictureCtx::OnInitWindow()
   {
     if (pWindow && pWindow->IsPaused())
     {
-      SET_CONTROL_VISIBLE(BTN_DUMMY_PLAY);
-      SET_CONTROL_HIDDEN(BTN_DUMMY_PAUSE);
+      SET_CONTROL_VISIBLE(BTN_PLAY);
+      SET_CONTROL_HIDDEN(BTN_PAUSE);
       SET_CONTROL_FOCUS(BTN_PLAY,0);
     }
     else 
     {
-      SET_CONTROL_VISIBLE(BTN_DUMMY_PAUSE);
-      SET_CONTROL_HIDDEN(BTN_DUMMY_PLAY);
-      SET_CONTROL_FOCUS(BTN_PLAY,0);
+      SET_CONTROL_VISIBLE(BTN_PAUSE);
+      SET_CONTROL_HIDDEN(BTN_PLAY);
+      SET_CONTROL_FOCUS(BTN_PAUSE,0);
     }
   }
   else
   {
     CONTROL_DISABLE(BTN_PLAY);
-    CONTROL_DISABLE(BTN_DUMMY_PAUSE);
-    CONTROL_DISABLE(BTN_DUMMY_PLAY);
-    SET_CONTROL_HIDDEN(BTN_DUMMY_PAUSE);
     CONTROL_DISABLE(BTN_NEXT);
     CONTROL_DISABLE(BTN_PREV);
     SET_CONTROL_FOCUS(BTN_ZOOM,0);
@@ -297,6 +314,11 @@ void CGUIDialogBoxeePictureCtx::OnInitWindow()
   {
     m_item.SetProperty("ispicture", 1);
   }
+
+  SetProperty("is-panning", false);
+
+  CGUIToggleButtonControl* pPanButton = (CGUIToggleButtonControl*) GetControl(BTN_PAN);
+  pPanButton->SetSelected(false);
 }
 
 void CGUIDialogBoxeePictureCtx::OnMoreInfo()

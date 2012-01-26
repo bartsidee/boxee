@@ -178,30 +178,53 @@ bool CGUIWindowBoxeeWizardAddSource::OnAction(const CAction &action)
          CStdString strPath = m_currentFolder;
 
          // Get the password used to browse this share and store it as well
-         CURL url(m_currentFolder);
+         CURI url(m_currentFolder);
 
          if (url.GetProtocol() == "smb") 
          {
-           /* must url encode this as, auth code will look for the encoded value */
+           CStdString strPassword;
+           CStdString strUserName ;
            CStdString strShare;
-           strShare  = smb.URLEncode(url.GetHostName());
-           strShare += "/";
-           strShare += smb.URLEncode(url.GetShareName());
 
-           IMAPPASSWORDS it = g_passwordManager.m_mapSMBPasswordCache.find(strShare);
-           if (it != g_passwordManager.m_mapSMBPasswordCache.end())
+           //go over cifs map
+           strShare = url.GetHostName();
+           if(url.GetFileName() != "")
            {
-              // if share found in cache use it to supply username and password
-              CURL url2(it->second);		// map value contains the full url of the originally authenticated share. map key is just the share
-              CStdString strPassword = url2.GetPassWord();
-              CStdString strUserName = url2.GetUserName();
-              url.SetPassword(strPassword);
-              url.SetUserName(strUserName);
-           }    
+             strShare  += "/" +url.GetFileName();
+           }
+           IMAPUSERNAMEPASSWORDS it = g_passwordManager.m_mapCIFSPasswordCache.find(strShare);
 
-           // first we encode the url to get the full path including the user/pass.
-           // then we decode it again to get it in human readable format, which is what we store in sources.xml
-           strPath = smb.URLDecode(smb.URLEncode(url));
+           if (it != g_passwordManager.m_mapCIFSPasswordCache.end())
+           {
+             strPassword = g_passwordManager.m_mapCIFSPasswordCache[strShare].second;
+             strUserName =  g_passwordManager.m_mapCIFSPasswordCache[strShare].first;
+             url.SetPassword(strPassword);
+             url.SetUserName(strUserName);
+
+             strPath = url.Get();
+           }
+           else
+           {
+             /* must url encode this as, auth code will look for the encoded value */
+             strShare  = smb.URLEncode(url.GetHostName());
+             strShare += "/";
+             strShare += smb.URLEncode(url.GetShareName());
+
+             IMAPPASSWORDS it = g_passwordManager.m_mapSMBPasswordCache.find(strShare);
+             if (it != g_passwordManager.m_mapSMBPasswordCache.end())
+             {
+               // if share found in cache use it to supply username and password
+               CURL url2(it->second);		// map value contains the full url of the originally authenticated share. map key is just the share
+               strPassword = url2.GetPassWord();
+               strUserName = url2.GetUserName();
+               url.SetPassword(strPassword);
+               url.SetUserName(strUserName);
+             }
+
+             // first we encode the url to get the full path including the user/pass.
+             // then we decode it again to get it in human readable format, which is what we store in sources.xml
+             strPath = smb.URLDecode(smb.URLEncode(url));
+           }
          }
 
          CGUIMessage msg(GUI_MSG_ITEM_SELECTED, GetID(), CONTROL_DEVICES_LIST);
@@ -362,7 +385,7 @@ void CGUIWindowBoxeeWizardAddSource::BrowseDirectory()
    
    
    // Set the path label
-   CURL url(m_currentFolder);
+   CURI url(m_currentFolder);
    CStdString path = "//" + url.GetHostName() + "/" + url.GetFileName();
    CGUILabelControl* pathLabel = (CGUILabelControl*) GetControl(CONTROL_PATH);
    pathLabel->SetLabel(path);

@@ -5,29 +5,36 @@ ARCHIVE=$(SO:.so=.a)
 SYSDIR=../../../system
 SLIB=$(SYSDIR)/$(SO)
 DIRS=CxImage raw jbig
-SLIBS=CxImage/cximage.a raw/raw.a jbig/jbig.a
 
 ifeq ($(findstring osx,$(ARCH)), osx)
-	export MACOSX_DEPLOYMENT_TARGET=10.4
+	export MACOSX_DEPLOYMENT_TARGET=@OSX@
 	export ARCH
-	CFLAGS+=-isysroot /Developer/SDKs/MacOSX10.4u.sdk -mmacosx-version-min=10.4
-	CXXFLAGS+=-isysroot /Developer/SDKs/MacOSX10.4u.sdk -mmacosx-version-min=10.4
+	CFLAGS+=@ARCH_DEFINES@
+	CXXFLAGS+=@ARCH_DEFINES@
 	DIRS+=jasper tiff
-	SLIBS+=jasper/jasper.a tiff/tiff.a
+	SLIBS=CxImage/cximage.a raw/raw.a jbig/jbig.a jasper/jasper.a tiff/tiff.a
+else
+	SLIBS=CxImage/cximage.a raw/raw.a jbig/jbig.a
+	ifneq ($(findstring mips,$(ARCH)),mips)
+		DIRS+=jpeg-turbo
+		SLIBS+=jpeg-turbo/.libs/libturbojpeg.a
+	endif
 endif
+
 
 .PHONY: compile
 
 $(SLIB): $(SLIBS)
 ifeq ($(findstring osx,$(ARCH)), osx)
-	$(CXX) -bundle -flat_namespace -undefined suppress  -fPIC -lpng -L/opt/local/lib \
-		-mmacosx-version-min=10.4 -o $@ \
-		CxImage/*.o jasper/*/*.o jbig/*.o raw/*.o tiff/*.o /opt/local/lib/libjpeg.a
-	../../../tools/Mach5/wrapper.rb $@;mv output.so $@
+	$(CXX) -bundle -undefined dynamic_lookup -fPIC -lpng -L/opt/local/lib \
+		-Wl,-alias_list,../../cores/DllLoader/exports/wrapper_mach_alias \
+		../../cores/DllLoader/exports/wrapper.o \
+		@ARCH_DEFINES@ -o $@ \
+		CxImage/*.o jasper/*/*.o jbig/*.o tiff/*.o /opt/local/lib/libjpeg.a
 	chmod +x $@
 else 
-	$(CXX) $(CFLAGS) -shared -o $(SLIB) -Wl,--whole-archive $(SLIBS) \
-		-Wl,--no-whole-archive -lpng -ljasper -ljpeg -ltiff -lz \
+	$(CXX) $(CFLAGS) $(LDFLAGS) -shared -o $(SLIB) -Wl,--whole-archive $(SLIBS) \
+		-Wl,--no-whole-archive -lpng -ljasper -ltiff -lz \
 		`cat ../../cores/DllLoader/exports/wrapper.def` \
 		../../cores/DllLoader/exports/wrapper.o
 endif
@@ -49,11 +56,11 @@ zlib/libz.a:
 jasper/jasper.a:
 	$(MAKE) -C jasper
 
-jpeg/jpeg.a:
-	$(MAKE) -C jpeg
-
 tiff/tiff.a:
 	$(MAKE) -C tiff
+
+jpeg-turbo/.libs/libturbojpeg.a:
+	$(MAKE) -C jpeg-turbo
 
 -include ../../../Makefile.include
 

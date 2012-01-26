@@ -17,6 +17,11 @@
 * along with this program; if not, write to the Free Software
 * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
+
+#include "system.h"
+
+#ifdef HAS_FILESYSTEM_SAP
+
 #include "IDirectory.h"
 #include "utils/Thread.h"
 #include "utils/CriticalSection.h"
@@ -151,3 +156,5 @@ namespace DIRECTORY
   };
 
 }
+
+#endif

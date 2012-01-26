@@ -21,7 +21,7 @@
 
 /**
  * TIFF image decoder
- * @file libavcodec/tiff.c
+ * @file
  * @author Konstantin Shishkov
  */
 #include "avcodec.h"
@@ -31,7 +31,9 @@
 #include "lzw.h"
 #include "tiff.h"
 #include "faxcompr.h"
-
+#include "libavutil/common.h"
+#include "libavutil/intreadwrite.h"
+#include "libavcore/imgutils.h"
 
 typedef struct TiffContext {
     AVCodecContext *avctx;
@@ -147,8 +149,8 @@ static int tiff_unpack_strip(TiffContext *s, uint8_t* dst, int stride, const uin
         if(!s->fill_order){
             memcpy(src2, src, size);
         }else{
-        for(i = 0; i < size; i++)
-            src2[i] = ff_reverse[src[i]];
+            for(i = 0; i < size; i++)
+                src2[i] = av_reverse[src[i]];
         }
         memset(src2+size, 0, FF_INPUT_BUFFER_PADDING_SIZE);
         switch(s->compr){
@@ -261,6 +263,10 @@ static int tiff_decode_tag(TiffContext *s, const uint8_t *start, const uint8_t *
         s->height = value;
         break;
     case TIFF_BPP:
+        if(count > 4){
+            av_log(s->avctx, AV_LOG_ERROR, "This format is not supported (bpp=%d, %d components)\n", s->bpp, count);
+            return -1;
+        }
         if(count == 1) s->bpp = value;
         else{
             switch(type){
@@ -276,10 +282,6 @@ static int tiff_decode_tag(TiffContext *s, const uint8_t *start, const uint8_t *
                 s->bpp = -1;
             }
         }
-        if(count > 4){
-            av_log(s->avctx, AV_LOG_ERROR, "This format is not supported (bpp=%d, %d components)\n", s->bpp, count);
-            return -1;
-        }
         switch(s->bpp*10 + count){
         case 11:
             s->avctx->pix_fmt = PIX_FMT_MONOBLACK;
@@ -291,7 +293,7 @@ static int tiff_decode_tag(TiffContext *s, const uint8_t *start, const uint8_t *
             s->avctx->pix_fmt = PIX_FMT_RGB24;
             break;
         case 161:
-                s->avctx->pix_fmt = PIX_FMT_GRAY16BE;
+            s->avctx->pix_fmt = PIX_FMT_GRAY16BE;
             break;
         case 324:
             s->avctx->pix_fmt = PIX_FMT_RGBA;
@@ -304,7 +306,7 @@ static int tiff_decode_tag(TiffContext *s, const uint8_t *start, const uint8_t *
             return -1;
         }
         if(s->width != s->avctx->width || s->height != s->avctx->height){
-            if(avcodec_check_dimensions(s->avctx, s->width, s->height))
+            if(av_image_check_size(s->width, s->height, 0, s->avctx))
                 return -1;
             avcodec_set_dimensions(s->avctx, s->width, s->height);
         }
@@ -445,7 +447,7 @@ static int tiff_decode_tag(TiffContext *s, const uint8_t *start, const uint8_t *
         break;
     case TIFF_T6OPTIONS:
         if(s->compr == TIFF_G4)
-        s->fax_opts = value;
+            s->fax_opts = value;
         break;
     }
     return 0;
@@ -506,10 +508,10 @@ static int decode_frame(AVCodecContext *avctx,
         s->bpp = 1;
         avctx->pix_fmt = PIX_FMT_MONOBLACK;
         if(s->width != s->avctx->width || s->height != s->avctx->height){
-            if(avcodec_check_dimensions(s->avctx, s->width, s->height))
-        return -1;
+            if(av_image_check_size(s->width, s->height, 0, s->avctx))
+                return -1;
             avcodec_set_dimensions(s->avctx, s->width, s->height);
-    }
+        }
         if(s->picture.data[0])
             s->avctx->release_buffer(s->avctx, &s->picture);
         if(s->avctx->get_buffer(s->avctx, &s->picture) < 0){
@@ -529,10 +531,19 @@ static int decode_frame(AVCodecContext *avctx,
         else
             ssize = s->stripsize;
 
+        if (ssize > buf_size) {
+            av_log(avctx, AV_LOG_ERROR, "Buffer size is smaller than strip size\n");
+            return -1;
+        }
+
         if(s->stripdata){
             soff = tget(&s->stripdata, s->sot, s->le);
         }else
             soff = s->stripoff;
+        if (soff < 0) {
+            av_log(avctx, AV_LOG_ERROR, "Invalid stripoff: %d\n", soff);
+            return AVERROR(EINVAL);
+        }
         if(tiff_unpack_strip(s, dst, stride, orig_buf + soff, ssize, FFMIN(s->rps, s->height - i)) < 0)
             break;
         dst += s->rps * stride;
@@ -589,9 +600,9 @@ static av_cold int tiff_end(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec tiff_decoder = {
+AVCodec ff_tiff_decoder = {
     "tiff",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_TIFF,
     sizeof(TiffContext),
     tiff_init,

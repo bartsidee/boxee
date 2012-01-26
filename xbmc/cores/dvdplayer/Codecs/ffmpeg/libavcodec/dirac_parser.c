@@ -22,7 +22,7 @@
  */
 
 /**
- * @file libavcodec/dirac_parser.c
+ * @file
  * Dirac Parser
  * @author Marco Gerards <marco@gnu.org>
  */
@@ -33,7 +33,7 @@
 #define DIRAC_PARSE_INFO_PREFIX 0x42424344
 
 /**
- * Finds the end of the current frame in the bitstream.
+ * Find the end of the current frame in the bitstream.
  * @return the position of the first byte of the next frame or -1
  */
 typedef struct DiracParseContext {
@@ -247,7 +247,7 @@ static void dirac_parse_close(AVCodecParserContext *s)
         av_free(pc->buffer);
 }
 
-AVCodecParser dirac_parser = {
+AVCodecParser ff_dirac_parser = {
     { CODEC_ID_DIRAC },
     sizeof(DiracParseContext),
     NULL,

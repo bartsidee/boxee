@@ -20,6 +20,10 @@
  *
  */
 
+#include "system.h"
+
+#ifdef HAS_LASTFM
+
 #include "utils/CriticalSection.h"
 #include "utils/Thread.h"
 #include "URL.h"
@@ -45,7 +49,7 @@ public:
   static CLastFmManager* GetInstance();
 
   //radio
-  bool ChangeStation(const CURL& stationUrl);
+  bool ChangeStation(const CURI& stationUrl);
   void StopRadio(bool bKillSession = true);
   void OnSongChange(CFileItem& newSong);
   bool IsRadioEnabled() {return !m_RadioSession.IsEmpty();}
@@ -58,7 +62,7 @@ public:
   bool Unban(const MUSIC_INFO::CMusicInfoTag& musicinfotag, bool askConfirmation = true);
 
   CStdString GetStation();
-  CURL       GetStationURL();
+  CURI       GetStationURL();
 
   bool LastFmHandShake();
   
@@ -102,7 +106,7 @@ private:
   CStdString m_RadioSubscriber;
   CStdString m_RadioBanned;
 
-  CURL m_stationUrl;
+  CURI m_stationUrl;
 
   LastFmManagerSong m_CurrentSong;
 
@@ -118,3 +122,5 @@ private:
   
   CCriticalSection m_LastFmHandShakelock;
 };
+
+#endif

@@ -41,6 +41,11 @@
 #include "../../xbmc/lib/liblzo/LZO1X.H"
 #endif
 
+#ifdef WITH_PVR
+#include "PVRTexLib/PVRTexLib.h"
+using namespace pvrtexlib;
+#endif
+
 #define DIR_SEPARATOR "/"
 #define DIR_SEPARATOR_CHAR '/'
 
@@ -48,6 +53,8 @@
 #define FLAGS_ALLOW_YCOCG 2
 
 #undef main
+
+typedef enum { NONE, DXT, ETC, PVR } CompressionType;
 
 const char *GetFormatString(unsigned int format)
 {
@@ -67,6 +74,12 @@ const char *GetFormatString(unsigned int format)
     return "BGRA ";
   case XB_FMT_A8:
     return "A8   ";
+  case XB_FMT_ETC:
+    return "ETC  ";
+  case XB_FMT_PVR2:
+    return "PVR2 ";
+  case XB_FMT_PVR4:
+    return "PVR4 ";
   default:
     return "?????";
   }
@@ -151,7 +164,7 @@ void CreateSkeletonHeader(CXBTF& xbtf, std::string fullPath)
   CreateSkeletonHeaderImpl(xbtf, fullPath, temp);
 }
 
-CXBTFFrame appendContent(CXBTFWriter &writer, int width, int height, unsigned char *data, unsigned int size, unsigned int format, unsigned int flags)
+CXBTFFrame appendContent(CXBTFWriter &writer, int width, int initialWidth, int height, int initialHeight, unsigned char *data, unsigned int size, unsigned int format, unsigned int flags)
 {
   CXBTFFrame frame;
   lzo_uint compressedSize = size;
@@ -186,6 +199,8 @@ CXBTFFrame appendContent(CXBTFWriter &writer, int width, int height, unsigned ch
   frame.SetUnpackedSize(size);
   frame.SetWidth(width);
   frame.SetHeight(height);
+  frame.SetInitialHeight(initialHeight);
+  frame.SetInitialWidth(initialWidth);
   frame.SetFormat(format);
   frame.SetDuration(0);
   return frame;
@@ -197,7 +212,7 @@ void CompressImage(const squish::u8 *brga, int width, int height, squish::u8 *co
   squish::ComputeMSE(brga, width, height, compressed, flags | squish::kSourceBGRA, colorMSE, alphaMSE);
 }
 
-CXBTFFrame createXBTFFrame(SDL_Surface* image, CXBTFWriter& writer, double maxMSE, unsigned int flags)
+CXBTFFrame createXBTFFrame(SDL_Surface* image, CXBTFWriter& writer, double maxMSE, unsigned int flags, CompressionType compressTextures)
 {
   // Convert to ARGB
   SDL_PixelFormat argbFormat;
@@ -228,11 +243,27 @@ CXBTFFrame createXBTFFrame(SDL_Surface* image, CXBTFWriter& writer, double maxMS
 
   SDL_Surface *argbImage = SDL_ConvertSurface(image, &argbFormat, 0);
 
+  unsigned int* p;
+  for (int y = 0; y < image->h; y++)
+  {
+    for (int x = 0; x < image->w; x++)
+    {
+      p = (unsigned int*) ((unsigned char*) argbImage->pixels + (y * argbImage->pitch) + (x * 4));
+      if (((*p) & argbFormat.Amask) == 0)
+      {
+//printf("%lu %lu\n", *p, (*p) & argbFormat.Amask);
+        *p = 0;
+      }
+    }
+  }
+
   unsigned int format = 0;
   double colorMSE, alphaMSE;
   squish::u8* argb = (squish::u8 *)argbImage->pixels;
-  unsigned int compressedSize = squish::GetStorageRequirements(image->w, image->h, squish::kDxt5);
-  squish::u8* compressed = new squish::u8[compressedSize];
+  unsigned int compressedSize = 0;
+  squish::u8* compressed = NULL;
+  unsigned int adj_h, adj_w, initialHeight, initialWidth;
+  initialHeight = image->h;  initialWidth = image->w;
 /*
   // first try DXT1, which is only 4bits/pixel
   CompressImage(argb, image->w, image->h, compressed, squish::kDxt1, colorMSE, alphaMSE);
@@ -242,6 +273,7 @@ CXBTFFrame createXBTFFrame(SDL_Surface* image, CXBTFWriter& writer, double maxMS
     format = XB_FMT_DXT1;
   }
 */
+#ifndef _WIN32
   if (!format && alphaMSE == 0 && (flags & FLAGS_ALLOW_YCOCG) == FLAGS_ALLOW_YCOCG)
   { // no alpha channel, so DXT5YCoCg is going to be the best DXT5 format
 /*    CompressImage(argb, image->w, image->h, compressed, squish::kDxt5 | squish::kUseYCoCg, colorMSE, alphaMSE);
@@ -252,8 +284,12 @@ CXBTFFrame createXBTFFrame(SDL_Surface* image, CXBTFWriter& writer, double maxMS
     }
     */
   }
-  if (!format)
+#endif
+  if (!format && compressTextures == DXT)
   { // try DXT3 and DXT5 - use whichever is better (color is the same, but alpha will be different)
+    adj_h = image->h;  adj_w = image->w;
+    compressedSize = squish::GetStorageRequirements(image->w, image->h, squish::kDxt5);
+    compressed = new squish::u8[compressedSize];
     CompressImage(argb, image->w, image->h, compressed, squish::kDxt3, colorMSE, alphaMSE);
     if (colorMSE < maxMSE)
     { // color is fine, test DXT5 as well
@@ -275,18 +311,79 @@ CXBTFFrame createXBTFFrame(SDL_Surface* image, CXBTFWriter& writer, double maxMS
       }
       delete[] compressed2;
     }
+  } 
+#ifdef WITH_PVR
+  else if (!format && compressTextures == PVR) {
+    // get the utilities instance
+
+    // seems like 8 is the min width and height that PVRTexLib can handle
+    adj_h = 8, adj_w = 8;
+    while (adj_h < image->h)
+      adj_h *=2;
+
+    while (adj_w < image->w)
+      adj_w *=2;
+
+    squish::u8* fittedImage = new squish::u8[adj_w * adj_h * 4];
+    memset(fittedImage, 0xff0000ff, adj_w * adj_h * 4);
+    for (int i = 0; i < image->h; i++)
+      memcpy(fittedImage + i * adj_w * 4, argb + i * image->w * 4, image->w * 4);
+
+    PVRTextureUtilities *PVRU = PVRTextureUtilities::getPointer();
+
+    try {
+      CPVRTexture sOriginalTexture(
+        adj_w,   // u32Width,
+        adj_h,                         // u32Height,
+        0,                           // u32MipMapCount,
+        1,                           // u32NumSurfaces,
+        false,                       // bBorder,
+        false,                       // bTwiddled,
+        false,                       // bCubeMap,
+        false,                       // bVolume,
+        false,                       // bFalseMips,
+        true,                        // bHasAlpha
+        false,                       // bVerticallyFlipped
+        DX10_R8G8B8A8_UNORM,              // ePixelType,
+        0.0f,                        // fNormalMap,
+        fittedImage                   // pPixelData
+    );
+    sOriginalTexture.SwapChannels(pvrtexlib::ePIXEL_Blue, pvrtexlib::ePIXEL_Red);
+    CPVRTextureHeader sProcessHeader(sOriginalTexture.getHeader());
+    PVRU->ProcessRawPVR(sOriginalTexture,sProcessHeader);
+    CPVRTexture sCompressedTexture(sOriginalTexture.getHeader());
+    sCompressedTexture.setPixelType(OGL_PVRTC4);
+    //sCompressedTexture.setFlipped(TRUE);
+    PVRU->CompressPVR(sOriginalTexture,sCompressedTexture);
+    compressedSize = sCompressedTexture.getData().getDataSize();
+    compressed = new squish::u8[compressedSize];
+    memcpy(compressed, sCompressedTexture.getData().getData(), sCompressedTexture.getData().getDataSize());
+//    printf("%d %d %d %d %d\n", sCompressedTexture.getData().getDataSize(), compressed[4], compressed[5], compressed[6], compressed[7]);
+//    printf("compressed size %d\n", compressedSize);
+    delete[] fittedImage;
+//    sCompressedTexture.writeIncludeFile32Bits("/home/shay/temp/example2.h", "aa");
+//    sCompressedTexture.writeToFile("/home/shay/temp/example3.pvr");
+    format = XB_FMT_PVR4;
+    }
+    PVRCATCH(myException)
+    {
+            // handle any exceptions here
+            printf("Exception in example 2: %s",myException.what());
+    }
   }
+#endif
   CXBTFFrame frame; 
   if (!format)
   { // none of the compressed stuff works for us, so we use 32bit texture
     format = XB_FMT_B8G8R8A8;
-    frame = appendContent(writer, image->w, image->h, argb, image->w * image->h * 4, format, flags);
+    frame = appendContent(writer, argbImage->w, image->w, image->h, image->h, argb, image->w * image->h * 4, format, flags);
   }
   else
   {
-    frame = appendContent(writer, image->w, image->h, compressed, compressedSize, format, flags);
+    frame = appendContent(writer, adj_w, initialWidth, adj_h, initialHeight, compressed, compressedSize, format, flags);
   }
-  delete[] compressed;
+  if (compressedSize)
+    delete[] compressed;
   SDL_FreeSurface(argbImage);
   return frame;
 }
@@ -297,9 +394,10 @@ void Usage()
   puts("  -help            Show this screen.");
   puts("  -input <dir>     Input directory. Default: current dir");
   puts("  -output <dir>    Output directory/filename. Default: Textures.xpr");
+  puts("  -nocompress      Don't apply compression");
 }
 
-int createBundle(const std::string& InputDir, const std::string& OutputFile, double maxMSE, unsigned int flags)
+int createBundle(const std::string& InputDir, const std::string& OutputFile, double maxMSE, unsigned int flags, CompressionType compressTextures)
 {
   CXBTF xbtf;
   CreateSkeletonHeader(xbtf, InputDir);
@@ -338,13 +436,14 @@ int createBundle(const std::string& InputDir, const std::string& OutputFile, dou
       SDL_Surface* image = IMG_Load(fullPath.c_str());
       if (!image)
       {
-        printf("...unable to load image %s\n", file.GetPath());
+        char *err = IMG_GetError();
+        printf("...unable to load image %s\tError is: %s\n", file.GetPath(), err);
         continue;
       }
 
-      printf(output.c_str());
+      printf("%s", output.c_str());
 
-      CXBTFFrame frame = createXBTFFrame(image, writer, maxMSE, flags);
+      CXBTFFrame frame = createXBTFFrame(image, writer, maxMSE, flags, compressTextures);
 
       printf("%s (%d,%d @ %"PRIu64" bytes)\n", GetFormatString(frame.GetFormat()), frame.GetWidth(), frame.GetHeight(), frame.GetUnpackedSize());
 
@@ -358,13 +457,14 @@ int createBundle(const std::string& InputDir, const std::string& OutputFile, dou
       int gnAG = AG_LoadGIF(fullPath.c_str(), NULL, 0);
       AG_Frame* gpAG = new AG_Frame[gnAG];
       AG_LoadGIF(fullPath.c_str(), gpAG, gnAG);
+      AG_NormalizeSurfacesToDisplayFormat(gpAG, gnAG);
 
       printf("%s\n", output.c_str());
 
       for (int j = 0; j < gnAG; j++)
       {
         printf("    frame %4i                                ", j);
-        CXBTFFrame frame = createXBTFFrame(gpAG[j].surface, writer, maxMSE, flags);
+        CXBTFFrame frame = createXBTFFrame(gpAG[j].surface, writer, maxMSE, flags, compressTextures);
         frame.SetDuration(gpAG[j].delay);
         file.GetFrames().push_back(frame);
         printf("%s (%d,%d @ %"PRIu64" bytes)\n", GetFormatString(frame.GetFormat()), frame.GetWidth(), frame.GetHeight(), frame.GetUnpackedSize());
@@ -394,6 +494,8 @@ int createBundle(const std::string& InputDir, const std::string& OutputFile, dou
 
 int main(int argc, char* argv[])
 {
+  CompressionType compressTextures = DXT;
+
   if (lzo_init() != LZO_E_OK)
     return 1;
 
@@ -430,6 +532,14 @@ int main(int argc, char* argv[])
       while ((c = (char *)strchr(OutputFilename.c_str(), '\\')) != NULL) *c = '/';
 #endif
     }
+    else if (!stricmp(args[i], "-nocompress"))
+    {
+      compressTextures = NONE;
+    }
+    else if (!stricmp(args[i], "-pvr"))
+    {
+      compressTextures = PVR;
+    }
     else
     {
       printf("Unrecognized command line flag: %s\n", args[i]);
@@ -442,11 +552,13 @@ int main(int argc, char* argv[])
     return 1;
   }
 
+  SDL_Init(SDL_INIT_VIDEO);
+
   size_t pos = InputDir.find_last_of(DIR_SEPARATOR);
   if (pos != InputDir.length() - 1)
     InputDir += DIR_SEPARATOR;
 
   double maxMSE = 1.5;    // HQ only please
   unsigned int flags = FLAGS_USE_LZO; // TODO: currently no YCoCg (commandline option?)
-  createBundle(InputDir, OutputFilename, maxMSE, flags);
+  createBundle(InputDir, OutputFilename, maxMSE, flags, compressTextures);
 }

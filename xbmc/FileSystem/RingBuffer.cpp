@@ -1,319 +1,258 @@
-
+/*
+ *      Copyright (C) 2010 Team XBMC
+ *      http://www.xbmc.org
+ *
+ *  This Program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2, or (at your option)
+ *  any later version.
+ *
+ *  This Program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with XBMC; see the file COPYING.  If not, write to
+ *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  http://www.gnu.org/copyleft/gpl.html
+ *
+ */
 
 #include "RingBuffer.h"
+#include "SingleLock.h"
 
+#include <cstring>
+#include <cstdlib>
+#include <algorithm>
+
+/* Constructor */
 CRingBuffer::CRingBuffer()
-  {
-    InitializeCriticalSection(&m_critSection);
-    m_pBuf = NULL;
-    //m_pTmpBuf = NULL;
-    m_nBufSize = 0;
-    m_iReadPtr = 0;
-    m_iWritePtr = 0;
-  }
+{
+  m_buffer = NULL;
+  m_size = 0;
+  m_readPtr = 0;
+  m_writePtr = 0;
+  m_fillCount = 0;
+}
 
+/* Destructor */
 CRingBuffer::~CRingBuffer()
+{
+  Destroy();
+}
+
+/* Create a ring buffer with the specified 'size' */
+bool CRingBuffer::Create(unsigned int size)
+{
+  CSingleLock lock(m_critSection);
+  m_buffer = (char*)malloc(size);
+  if (m_buffer != NULL)
   {
-    Destroy();
-    DeleteCriticalSection(&m_critSection);
+    m_size = size;
+    return true;
   }
+  return false;
+}
 
-BOOL CRingBuffer::Create( int iBufSize )
-  {
-    BOOL bResult = FALSE;
-    ::EnterCriticalSection(&m_critSection );
-    if ( m_pBuf )
-      delete [] m_pBuf;
-
-    m_pBuf = NULL;
-
-    m_pBuf = new char[ iBufSize ];
-    if ( m_pBuf )
-    {
-      m_nBufSize = iBufSize;
-      ZeroMemory( m_pBuf, m_nBufSize );
-
-      bResult = TRUE;
-    }
-    m_iReadPtr = 0;
-    m_iWritePtr = 0;
-    ::LeaveCriticalSection(&m_critSection );
-    return bResult;
-  }
-
-int CRingBuffer::Size()
-  {
-    return m_nBufSize;
-  }
-
+/* Free the ring buffer and set all values to NULL or 0 */
 void CRingBuffer::Destroy()
+{
+  CSingleLock lock(m_critSection);
+  if (m_buffer != NULL)
   {
-    ::EnterCriticalSection(&m_critSection );
-    if ( m_pBuf )
-      delete [] m_pBuf;
-
-    m_pBuf = NULL;
-    m_nBufSize = 0;
-    m_iReadPtr = 0;
-    m_iWritePtr = 0;
-    ::LeaveCriticalSection(&m_critSection );
+    free(m_buffer);
+    m_buffer = NULL;
   }
+  m_size = 0;
+  m_readPtr = 0;
+  m_writePtr = 0;
+  m_fillCount = 0;
+}
 
+/* Clear the ring buffer */
 void CRingBuffer::Clear()
+{
+  CSingleLock lock(m_critSection);
+  m_readPtr = 0;
+  m_writePtr = 0;
+  m_fillCount = 0;
+}
+
+/* Read in data from the ring buffer to the supplied buffer 'buf'. The amount
+ * read in is specified by 'size'.
+ */
+bool CRingBuffer::ReadData(char *buf, unsigned int size)
+{
+  CSingleLock lock(m_critSection);
+  if (size > m_fillCount)
   {
-    ::EnterCriticalSection(&m_critSection );
-    m_iReadPtr = 0;
-    m_iWritePtr = 0;
-    ::LeaveCriticalSection(&m_critSection );
+    return false;
+  }
+  if (size + m_readPtr > m_size)
+  {
+    unsigned int chunk = m_size - m_readPtr;
+    memcpy(buf, m_buffer + m_readPtr, chunk);
+    memcpy(buf + chunk, m_buffer, size - chunk);
+    m_readPtr = size - chunk;
+  }
+  else
+  {
+    memcpy(buf, m_buffer + m_readPtr, size);
+    m_readPtr += size;
+  }
+  if (m_readPtr == m_size)
+    m_readPtr = 0;
+  m_fillCount -= size;
+  return true;
+}
+
+/* Read in data from the ring buffer to another ring buffer object specified by
+ * 'rBuf'.
+ */
+bool CRingBuffer::ReadData(CRingBuffer &rBuf, unsigned int size)
+{
+  CSingleLock lock(m_critSection);
+  if (rBuf.getBuffer() == NULL)
+    rBuf.Create(size);
+
+  bool bOk = size <= rBuf.GetMaxWriteSize() && size <= GetMaxReadSize();
+  if (bOk)
+  {
+    unsigned int chunksize = std::min(size, m_size - m_readPtr);
+    bOk = rBuf.WriteData(&getBuffer()[m_readPtr], chunksize);
+    if (bOk && chunksize < size)
+      bOk = rBuf.WriteData(&getBuffer()[0], size - chunksize);
+    if (bOk)
+      SkipBytes(size);
   }
 
-void CRingBuffer::Lock()
+  return bOk;
+}
+
+/* Write data to ring buffer from buffer specified in 'buf'. Amount read in is
+ * specified by 'size'.
+ */
+bool CRingBuffer::WriteData(char *buf, unsigned int size)
+{
+  CSingleLock lock(m_critSection);
+  if (size > m_size - m_fillCount)
   {
-    ::EnterCriticalSection(&m_critSection );
+    return false;
+  }
+  if (size + m_writePtr > m_size)
+  {
+    unsigned int chunk = m_size - m_writePtr;
+    memcpy(m_buffer + m_writePtr, buf, chunk);
+    memcpy(m_buffer, buf + chunk, size - chunk);
+    m_writePtr = size - chunk;
+  }
+  else
+  {
+    memcpy(m_buffer + m_writePtr, buf, size);
+    m_writePtr += size;
+  }
+  if (m_writePtr == m_size)
+    m_writePtr = 0;
+  m_fillCount += size;
+  return true;
+}
+
+/* Write data to ring buffer from another ring buffer object specified by
+ * 'rBuf'.
+ */
+bool CRingBuffer::WriteData(CRingBuffer &rBuf, unsigned int size)
+{
+  CSingleLock lock(m_critSection);
+  if (m_buffer == NULL)
+    Create(size);
+
+  bool bOk = size <= rBuf.GetMaxReadSize() && size <= GetMaxWriteSize();
+  if (bOk)
+  {
+    unsigned int readpos = rBuf.getReadPtr();
+    unsigned int chunksize = std::min(size, rBuf.getSize() - readpos);
+    bOk = WriteData(&rBuf.getBuffer()[readpos], chunksize);
+    if (bOk && chunksize < size)
+      bOk = WriteData(&rBuf.getBuffer()[0], size - chunksize);
   }
 
-void CRingBuffer::Unlock()
+  return bOk;
+}
+
+/* Skip bytes in buffer to be read */
+bool CRingBuffer::SkipBytes(int skipSize)
+{
+  CSingleLock lock(m_critSection);
+  if (skipSize < 0)
   {
-    ::LeaveCriticalSection(&m_critSection );
+    return false; // skipping backwards is not supported
   }
 
-BOOL CRingBuffer::Append(const CRingBuffer &buf)
+  unsigned int size = skipSize;
+  if (size > m_fillCount)
   {
-	::EnterCriticalSection(&m_critSection);
-	
-    if (m_pBuf == NULL)
-      Create(buf.GetMaxReadSize() + 1);
-
-    if (buf.GetMaxReadSize() > GetMaxWriteSize())
-    {
-      ::LeaveCriticalSection(&m_critSection);
-      return FALSE;
-    }
-
-    int iReadPtr = buf.m_iReadPtr;
-    if (iReadPtr < buf.m_iWritePtr)
-      WriteBinary(&buf.m_pBuf[iReadPtr], buf.m_iWritePtr - iReadPtr);
-    else if (iReadPtr > buf.m_iWritePtr)
-    {
-      WriteBinary(&buf.m_pBuf[iReadPtr], buf.m_nBufSize - iReadPtr);
-      if (buf.m_iWritePtr > 0)
-        WriteBinary(&buf.m_pBuf[0], buf.m_iWritePtr);
-    }
-    
-    ::LeaveCriticalSection(&m_critSection);
-    return TRUE;
+    return false;
   }
-
-BOOL CRingBuffer::ReadBinary( CRingBuffer &buf, int nBufLen )
+  if (size + m_readPtr > m_size)
   {
-    if (buf.m_pBuf == NULL)
-      buf.Create(nBufLen + 1);
-
-    ::EnterCriticalSection(&m_critSection );
-    BOOL bResult = FALSE;
-    if ( nBufLen <= GetMaxReadSize() )
-    {
-      if ( m_iReadPtr + nBufLen <= m_nBufSize )
-      {
-        buf.WriteBinary( &m_pBuf[m_iReadPtr], nBufLen );
-        m_iReadPtr += nBufLen;
-      }
-      else // harder case, buffer wraps
-      {
-        int iFirstChunkSize = m_nBufSize - m_iReadPtr;
-        int iSecondChunkSize = nBufLen - iFirstChunkSize;
-
-        buf.WriteBinary( &m_pBuf[m_iReadPtr], iFirstChunkSize );
-        buf.WriteBinary( &m_pBuf[0], iSecondChunkSize );
-
-        m_iReadPtr = iSecondChunkSize;
-      }
-      bResult = TRUE;
-    }
-    else 
-    {
-      CLog::Log(LOGWARNING,"%s, buffer underflow! max size: %d. trying to read: %d", __FUNCTION__, GetMaxReadSize(), nBufLen);
-    }
-    ::LeaveCriticalSection(&m_critSection );
-    return bResult;
+    unsigned int chunk = m_size - m_readPtr;
+    m_readPtr = size - chunk;
   }
-
-BOOL CRingBuffer::Copy(const CRingBuffer &buf)
+  else
   {
-    Clear();
-    return Append(buf);
+    m_readPtr += size;
   }
+  if (m_readPtr == m_size)
+    m_readPtr = 0;
+  m_fillCount -= size;
+  return true;
+}
 
-int CRingBuffer::GetMaxReadSize() const
-  {
-    int iBytes = 0;
-    ::EnterCriticalSection(&m_critSection );
-    if ( m_pBuf )
-    {
-      if ( m_iReadPtr <= m_iWritePtr )
-        iBytes = m_iWritePtr - m_iReadPtr;
+/* Append all content from ring buffer 'rBuf' to this ring buffer */
+bool CRingBuffer::Append(CRingBuffer &rBuf)
+{
+  return WriteData(rBuf, rBuf.GetMaxReadSize());
+}
 
-      else if ( m_iReadPtr > m_iWritePtr )
-        iBytes = (m_nBufSize - m_iReadPtr) + m_iWritePtr;
-    }
-    ::LeaveCriticalSection(&m_critSection );
-    return iBytes;
-  }
+/* Copy all content from ring buffer 'rBuf' to this ring buffer overwriting any existing data */
+bool CRingBuffer::Copy(CRingBuffer &rBuf)
+{
+  Clear();
+  return Append(rBuf);
+}
 
-int CRingBuffer::GetMaxWriteSize() const
-  {
-    int iBytes = 0;
-    ::EnterCriticalSection(&m_critSection );
-    if ( m_pBuf )
-    {
-      // not all the buffer is for our use. 1 bytes has to be kept as EOF marker. 
-      // otherwise we cant tell if (m_iReadPtr == m_iWritePtr) is full or empty
-      if ( m_iWritePtr < m_iReadPtr )
-        iBytes = m_iReadPtr - m_iWritePtr - 1;
+/* Our various 'get' methods */
+char *CRingBuffer::getBuffer()
+{
+  return m_buffer;
+}
 
-      if ( m_iWritePtr >= m_iReadPtr )
-        iBytes = (m_nBufSize - m_iWritePtr) + m_iReadPtr - 1;
-    }
-    ::LeaveCriticalSection(&m_critSection );
-    return iBytes;
-  }
+unsigned int CRingBuffer::getSize()
+{
+  CSingleLock lock(m_critSection);
+  return m_size;
+}
 
-BOOL CRingBuffer::WriteBinary(const char * pBuf, int nBufLen )
-  {
-    ::EnterCriticalSection(&m_critSection );
-    BOOL bResult = FALSE;
-    {
-      if ( nBufLen <= GetMaxWriteSize() )
-      {
-        // easy case, no wrapping
-        if ( m_iWritePtr + nBufLen < m_nBufSize )
-        {
-          CopyMemory( &m_pBuf[m_iWritePtr], pBuf, nBufLen );
-          m_iWritePtr += nBufLen;
-        }
-        else // harder case we need to wrap
-        {
-          int iFirstChunkSize = m_nBufSize - m_iWritePtr;
-          int iSecondChunkSize = nBufLen - iFirstChunkSize;
+unsigned int CRingBuffer::getReadPtr()
+{
+  return m_readPtr;
+}
 
-          CopyMemory( &m_pBuf[m_iWritePtr], pBuf, iFirstChunkSize );
-          CopyMemory( &m_pBuf[0], &pBuf[iFirstChunkSize], iSecondChunkSize );
+unsigned int CRingBuffer::getWritePtr()
+{
+  CSingleLock lock(m_critSection);
+  return m_writePtr;
+}
 
-          m_iWritePtr = iSecondChunkSize;
-        }
-        bResult = TRUE;
-      }
-      else 
-      {
-        CLog::Log(LOGDEBUG,"%s, buffer overflow! max size: %d. trying to write: %d", __FUNCTION__, GetMaxWriteSize(), nBufLen);
-      }
-    }
-    ::LeaveCriticalSection(&m_critSection );
-    return bResult;
-  }
+unsigned int CRingBuffer::GetMaxReadSize()
+{
+  CSingleLock lock(m_critSection);
+  return m_fillCount;
+}
 
-BOOL CRingBuffer::ReadBinary( char * pBuf, int nBufLen )
-  {
-    ::EnterCriticalSection(&m_critSection );
-    BOOL bResult = FALSE;
-    {
-      if ( nBufLen <= GetMaxReadSize() )
-      {
-        // easy case, no wrapping
-        if ( m_iReadPtr + nBufLen < m_nBufSize )
-        {
-          CopyMemory( pBuf, &m_pBuf[m_iReadPtr], nBufLen );
-          m_iReadPtr += nBufLen;
-        }
-        else // harder case, buffer wraps
-        {
-          int iFirstChunkSize = m_nBufSize - m_iReadPtr;
-          int iSecondChunkSize = nBufLen - iFirstChunkSize;
-
-          CopyMemory( pBuf, &m_pBuf[m_iReadPtr], iFirstChunkSize );
-          if (iSecondChunkSize > 0)
-            CopyMemory( &pBuf[iFirstChunkSize], &m_pBuf[0], iSecondChunkSize );
-
-          m_iReadPtr = iSecondChunkSize;
-        }
-        bResult = TRUE;
-      }
-      else 
-      {
-        CLog::Log(LOGDEBUG,"%s, buffer underflow! max size: %d. trying to read: %d", __FUNCTION__, GetMaxReadSize(), nBufLen);
-      }
-    }
-    ::LeaveCriticalSection(&m_critSection );
-    return bResult;
-  }
-
-BOOL CRingBuffer::PeakBinary( char * pBuf, int nBufLen )
-  {
-    ::EnterCriticalSection(&m_critSection );
-    BOOL bResult = FALSE;
-    int iPrevReadPtr = m_iReadPtr;
-    {
-      if ( nBufLen <= GetMaxReadSize() )
-      {
-        // easy case, no wrapping
-        if ( m_iReadPtr + nBufLen < m_nBufSize )
-        {
-          CopyMemory( pBuf, &m_pBuf[m_iReadPtr], nBufLen );
-          m_iReadPtr += nBufLen;
-        }
-        else // harder case, buffer wraps
-        {
-          int iFirstChunkSize = m_nBufSize - m_iReadPtr;
-          int iSecondChunkSize = nBufLen - iFirstChunkSize;
-
-          CopyMemory( pBuf, &m_pBuf[m_iReadPtr], iFirstChunkSize );
-          if (iSecondChunkSize > 0)
-            CopyMemory( &pBuf[iFirstChunkSize], &m_pBuf[0], iSecondChunkSize );
-
-          m_iReadPtr = iSecondChunkSize;
-        }
-        bResult = TRUE;
-      }
-    }
-    m_iReadPtr = iPrevReadPtr;
-    ::LeaveCriticalSection(&m_critSection );
-    return bResult;
-  }
-
-BOOL CRingBuffer::SkipBytes( int nBufLen )
-  {
-    ::EnterCriticalSection(&m_critSection );
-    BOOL bResult = FALSE;
-    {
-      if ( nBufLen < 0 )
-      {
-        if (m_iReadPtr + nBufLen >= 0)
-        {
-          m_iReadPtr += nBufLen;
-          bResult = TRUE;
-        }
-        else 
-        {
-          CLog::Log(LOGWARNING, "%s - request negative skip which is not supported.", __FUNCTION__);
-        }
-      }
-      else if ( nBufLen <= GetMaxReadSize() )
-      {
-        // easy case, no wrapping
-        if ( m_iReadPtr + nBufLen < m_nBufSize )
-        {
-          m_iReadPtr += nBufLen;
-        }
-        else // harder case, buffer wraps
-        {
-          int iFirstChunkSize = m_nBufSize - m_iReadPtr;
-          int iSecondChunkSize = nBufLen - iFirstChunkSize;
-
-          m_iReadPtr = iSecondChunkSize;
-        }
-        bResult = TRUE;
-      }
-    }
-    ::LeaveCriticalSection(&m_critSection );
-    return bResult;
-  }
+unsigned int CRingBuffer::GetMaxWriteSize()
+{
+  CSingleLock lock(m_critSection);
+  return m_size - m_fillCount;
+}

@@ -2,7 +2,7 @@
 |
 |   Platinum - Control/Event
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -29,7 +29,7 @@
 | 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 | http://www.gnu.org/licenses/gpl-2.0.html
 |
- ****************************************************************/
+****************************************************************/
 
 /*----------------------------------------------------------------------
 |   includes
@@ -50,7 +50,7 @@ NPT_SET_LOCAL_LOGGER("platinum.core.event")
 PLT_EventSubscriber::PLT_EventSubscriber(PLT_TaskManager* task_manager, 
                                          PLT_Service*     service,
                                          const char*      sid,
-                                         int              timeout /* = -1 */) : 
+                                         NPT_Timeout      timeout_secs /* = -1 */) : 
     m_TaskManager(task_manager), 
     m_Service(service), 
     m_EventKey(0),
@@ -58,7 +58,7 @@ PLT_EventSubscriber::PLT_EventSubscriber(PLT_TaskManager* task_manager,
     m_SID(sid)
 {
     NPT_LOG_FINE_1("Creating new subscriber (%s)", m_SID.GetChars());
-    SetTimeout(timeout);
+    SetTimeout(timeout_secs);
 }
 
 /*----------------------------------------------------------------------
@@ -70,7 +70,7 @@ PLT_EventSubscriber::~PLT_EventSubscriber()
     if (m_SubscriberTask) {
         m_SubscriberTask->Kill();
         m_SubscriberTask = NULL;
-}
+    }
 }
 
 /*----------------------------------------------------------------------
@@ -134,17 +134,17 @@ PLT_EventSubscriber::GetExpirationTime()
 |   PLT_EventSubscriber::SetExpirationTime
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_EventSubscriber::SetTimeout(NPT_Cardinal timeout) 
+PLT_EventSubscriber::SetTimeout(NPT_Timeout seconds) 
 {
     NPT_LOG_FINE_2("subscriber (%s) expiring in %d seconds",
         m_SID.GetChars(),
-        timeout);
+        seconds);
 
     // -1 means infinite but we default to 300 secs
-    if (timeout == (NPT_Cardinal)-1) timeout = 300;
+    if (seconds == -1) seconds = 300;
     
-        NPT_System::GetCurrentTimeStamp(m_ExpirationTime);
-        m_ExpirationTime += NPT_TimeInterval(timeout, 0);
+    NPT_System::GetCurrentTimeStamp(m_ExpirationTime);
+    m_ExpirationTime += NPT_TimeInterval((double)seconds);
 
     return NPT_SUCCESS;
 }
@@ -226,33 +226,32 @@ PLT_EventSubscriber::Notify(NPT_List<PLT_StateVariable*>& vars)
     // format request
     NPT_HttpRequest* request = 
         new NPT_HttpRequest(url,
-                                                   "NOTIFY",
+                            "NOTIFY",
                             NPT_HTTP_PROTOCOL_1_1);
+    NPT_HttpEntity* entity;
+    PLT_HttpHelper::SetBody(*request, xml, &entity);
+
     // add the extra headers
-    PLT_HttpHelper::SetContentType(*request, 
-                                   "text/xml; charset=\"utf-8\"");
-    PLT_UPnPMessageHelper::SetNT(*request, 
-                                 "upnp:event");
-    PLT_UPnPMessageHelper::SetNTS(*request, 
-                                  "upnp:propchange");
-    PLT_UPnPMessageHelper::SetSID(*request, 
-                                  m_SID);
-    PLT_UPnPMessageHelper::SetSeq(*request, 
-                                  m_EventKey);
+    entity->SetContentType("text/xml; charset=\"utf-8\"");
+    PLT_UPnPMessageHelper::SetNT(*request, "upnp:event");
+    PLT_UPnPMessageHelper::SetNTS(*request, "upnp:propchange");
+    PLT_UPnPMessageHelper::SetSID(*request, m_SID);
+    PLT_UPnPMessageHelper::SetSeq(*request, m_EventKey);
 
     // wrap around sequence to 1
     if (++m_EventKey == 0) m_EventKey = 1;
-    
-    PLT_HttpHelper::SetBody(*request, xml);
 
     // start the task now if not started already
     if (!m_SubscriberTask) {
+        // TODO: the subscriber task should inform subscriber if
+        // a notification failed to be received so it can be removed
+        // from the list of subscribers inside the device host
         m_SubscriberTask = new PLT_HttpClientSocketTask(request, true);
         
-        NPT_TimeInterval delay(0.2f);
-        // delay start to make sure ctrlpoint receives response to subscription
+        // add initial delay to make sure ctrlpoint receives response to subscription
         // before our first NOTIFY. Also make sure task is not auto-destroy
-        // since we want to destroy it ourselves when the subscriber goes away.
+        // since we want to destroy it manually when the subscriber goes away.
+        NPT_TimeInterval delay(0.2f);
         NPT_CHECK_FATAL(m_TaskManager->StartTask(m_SubscriberTask, &delay, false));
     } else {
         m_SubscriberTask->AddRequest(request);

@@ -1,19 +1,39 @@
 #ifndef __BOXEEVERSIONUPDATEMANAGER__H__
 #define __BOXEEVERSIONUPDATEMANAGER__H__
 
-#include "Thread.h"
+#include "utils/Thread.h"
 #include "utils/CriticalSection.h"
 #include "lib/libBoxee/bxxmldocument.h"
 #include "StdString.h"
 
 typedef enum {VUF_NO,VUF_YES,VUF_NUM_OF_TYPES} VERSION_UPDATE_FORCE;
 typedef enum {VUJS_IDLE,VUJS_READY_FOR_INITIALIZE,VUJS_INITIALIZED,VUJS_WORKING,VUJS_READY_FOR_UPDATE,VUJS_ACQUIRE_FOR_UPDATE,VUJS_UPDATING,VUJS_NUM_OF_STATUS} VERSION_UPDATE_JOB_STATUS;
+typedef enum {VUDS_IDLE,VUDS_PRE_DOWNLOADING,VUDS_DOWNLOADING,VUDS_POST_DOWNLOADING,VUDS_FAILED,VUDS_FINISHED,VUDS_NUM_OF_STATUS} VERSION_UPDATE_DOWNLOAD_STATUS;
+
+class CVersionUpdateOndemandInfo
+{
+public:
+  CStdString m_versionUpdateBuildNum;
+  CStdString m_versionUpdateFilePath;
+  CStdString m_versionUpdateFileHash;
+};
+
+class CDownloadInfo
+{
+public:
+  double m_CurrentDownloadProgress;
+  unsigned int m_EstimatedTimeLeftMS;
+  VERSION_UPDATE_DOWNLOAD_STATUS m_Status;
+};
 
 class CUpdateFilesInfo
 {
 public:
   CStdString m_filePath;
   CStdString m_fileHash;
+#ifdef HAS_EMBEDDED
+  CStdString m_fileSize;
+#endif
 };
 
 class CVersionUpdateInfo
@@ -33,6 +53,9 @@ public:
   CStdString m_UpdateNotesFileName;
   CStdString m_UpdateNotesFileText;
   CStdString m_UpdateVersionNum;
+#ifdef HAS_EMBEDDED
+  CStdString m_ImageFile; 
+#endif
 };
 
 class CBoxeeVersionUpdateJob : public IRunnable
@@ -66,6 +89,13 @@ public:
 
   bool ReadReleaseNoteFile();
 
+#ifdef HAS_EMBEDDED
+  bool SafeDownloadWithProgress(const CStdString& url, const CStdString& target, const CStdString& hash, bool isLast);
+  bool GetDownloadInfo(CDownloadInfo& downloadInfo);
+  void SetVersionUpdateDownloadStatus(VERSION_UPDATE_DOWNLOAD_STATUS versionUpdateDownloadStatus);
+  VERSION_UPDATE_DOWNLOAD_STATUS GetVersionUpdateDownloadStatus();
+#endif
+
 private:
 
   bool IsThisNewVersion(CStdString currentVersion,CStdString newVersion);
@@ -80,6 +110,15 @@ private:
   CStdString m_versionUpdateBuildNum;  
   CStdString m_versionUpdateFilePath;
   CStdString m_versionUpdateFileHash;
+
+#ifdef HAS_EMBEDDED
+  CCriticalSection m_downloadInfoLock;
+  CDownloadInfo m_DownloadInfo;
+  uint64_t m_TotalBytesToDownload;
+  uint64_t m_TotalBytesDownloaded;
+  unsigned int m_DownloadStartTime;
+#endif
+
 };
 
 class CBoxeeVersionUpdateManager
@@ -101,9 +140,20 @@ public:
 #endif
 
   static bool HandleUpdateVersionButton(bool inLoginScreen = false);
-  
+
+#ifdef HAS_EMBEDDED  
+  CStdString GetLastCheckedTime();
+  int  CheckForUpdate(bool& hasNewUpdate, CStdString& versionUpdateBuildNum);
+  bool StartUpdate();
+  bool GetDownloadInfo(CDownloadInfo& downloadInfo);
+  int  InitCheckForUpdateRequest(CStdString& chkupdUrl,CStdString& strChkupdVersion);
+#endif
+
+  bool HandleVersionUpdate(const TiXmlElement* root, const TiXmlElement* updateChildElem, bool startOnDemand = false);
 private:
 
+
+  bool ShouldInstallFromLocal(const CStdString& versionUpdateBuildNum,const CStdString& versionUpdateFilePath,const CStdString& versionUpdateFileHash,const CStdString& directoryForUpdateLocalPath);
   bool PrepareVersionUpdateFromLocal(const CStdString& versionUpdateBuildNum,const CStdString& versionUpdateFilePath,const CStdString& versionUpdateFileHash,const CStdString& directoryForUpdateLocalPath);
   bool PrepareVersionUpdateFromRemote(const CStdString& versionUpdateBuildNum,const CStdString& versionUpdateFilePath,const CStdString& versionUpdateFileHash);
 
@@ -118,6 +168,8 @@ private:
   CBoxeeVersionUpdateJob m_boxeeVerUpdateJob;
 
   CThread* m_prepareBoxeeVerUpdateThread;
+
+  CVersionUpdateOndemandInfo m_savedOnDemandInfo;
   
   class ListenToUpdateScriptJob : public IRunnable
   {
@@ -149,7 +201,6 @@ private:
   HANDLE m_outputHandle;           // pipe
   OVERLAPPED m_overlapped;
 #endif
-  
 };
 
 extern class CBoxeeVersionUpdateManager g_boxeeVersionUpdateManager;

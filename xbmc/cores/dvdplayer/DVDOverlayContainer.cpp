@@ -58,7 +58,7 @@ void CDVDOverlayContainer::Add(CDVDOverlay* pOverlay)
       if(m_overlays[i]->iPTSStopTime <= pOverlay->iPTSStartTime)
         break;
     }
-    if(m_overlays[i]->iPTSStartTime != pOverlay->iPTSStartTime)
+    if(m_overlays[i]->iPTSStartTime != pOverlay->iPTSStartTime && !pOverlay->IsOverlayType(DVDOVERLAY_TYPE_NONE))
       m_overlays[i]->iPTSStopTime = pOverlay->iPTSStartTime;
   }
 

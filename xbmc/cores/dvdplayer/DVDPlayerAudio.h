@@ -56,6 +56,7 @@ typedef struct stDVDAudioFrame
   unsigned int size;
 
   int channels;
+  enum PCMChannels* channel_map;
   int bits_per_sample;
   int sample_rate;
   unsigned char frame_flags;
@@ -98,6 +99,7 @@ public:
   void UnRegisterAudioCallback()                        { m_dvdAudio.UnRegisterAudioCallback(); }
 
   bool OpenStream(CDVDStreamInfo &hints);
+  void OpenStream(CDVDStreamInfo &hints, CDVDAudioCodec* codec);
   void CloseStream(bool bWaitForBuffers);
   
   void SetSpeed(int speed);
@@ -123,9 +125,12 @@ public:
 
   double GetCurrentPts()                            { return m_ptsOutput.Current(); }
 
-  bool IsStalled()                                  { return m_stalled 
-                                                          && m_messageQueue.GetDataSize() == 0;  }
+  bool IsStalled();
   bool IsPassthrough() const;
+  bool IsHWDecode() const;
+
+  bool IsTimed() { return m_bTimed; }
+  void DisablePtsCorrection(bool bDisable) { m_bDisablePtsCorrection = bDisable; }
 protected:
 
   virtual void OnStartup();
@@ -133,11 +138,10 @@ protected:
   virtual void Process();
 
   int DecodeFrame(DVDAudioFrame &audioframe, bool bDropPacket);
-
-  // tries to open a decoder for the given data. 
-  bool OpenDecoder(CDVDStreamInfo &hint, BYTE* buffer = NULL, unsigned int size = 0);
+  void FixContinuity(DVDAudioFrame& audioframe);
 
   double m_audioClock;
+  bool m_bTimed;
   
   // data for audio decoding
   struct
@@ -166,6 +170,15 @@ protected:
       dts  = DVD_NOPTS_VALUE;
     }
   } m_decode;
+
+  // allow running correction of pts data in bad streams
+  struct SContinuityData
+  {
+    double avgptsgap;  // avg span of pts between frames
+    int weight;        // weight of the average (peaks at 5)
+    double lastpts;    // pts of the previous frame, in case we need to correct
+    int rewrites;      // consecutive pts rewrites
+  } m_ContinuityData;
 
   CDVDAudio m_dvdAudio; // audio output device
   CDVDClock* m_pClock; // dvd master clock
@@ -201,6 +214,7 @@ protected:
   int    m_skipdupcount; //counter for skip/duplicate synctype
   bool   m_prevskipped;
   double m_maxspeedadjust;
+  bool   m_bDisablePtsCorrection;
 
   CRITICAL_SECTION m_critCodecSection;
 };

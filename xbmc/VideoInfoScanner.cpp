@@ -1191,7 +1191,7 @@ namespace VIDEO
       if (CUtil::IsInRAR(item->m_strPath)) // we have a rarred item - we want to check outside the rars
       {
         CFileItem item2(*item);
-        CURL url(item->m_strPath);
+        CURI url(item->m_strPath);
         CStdString strPath;
         CUtil::GetDirectory(url.GetHostName(),strPath);
         CUtil::AddFileToFolder(strPath,CUtil::GetFileName(item->m_strPath),item2.m_strPath);

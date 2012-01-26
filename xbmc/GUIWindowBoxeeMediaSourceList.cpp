@@ -195,15 +195,12 @@ void CGUIWindowBoxeeMediaSourceList::LoadAllShares()
 
   if (!m_sourcesExist)
   {
-    CFileItemPtr share ( new CFileItem("No sources currently exist.") );
-    m_sources.Add(share);
-    CGUIMessage msg(GUI_MSG_LABEL_ADD, GetID(), CONTROL_SOURCE_LIST, 0, 0, share);
-    OnMessage(msg);
-
+    SetProperty("sources-exist", false);
     SET_CONTROL_FOCUS(CONTROL_SOURCE_ADD_BUTTON, 0);
   }
   else
   {
+    SetProperty("sources-exist", true);
     SET_CONTROL_FOCUS(CONTROL_SOURCE_LIST, 0);
   }
 }

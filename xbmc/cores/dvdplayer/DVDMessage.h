@@ -22,12 +22,11 @@
 
 #pragma once
 
-#ifndef XBMC_FORCE_INLINE
-#ifndef __GNUC__
-#define XBMC_FORCE_INLINE inline 
+#ifdef __GNUC__
+// under gcc, inline will only take place if optimizations are applied (-O). this will force inline even whith optimizations.
+#define XBMC_FORCE_INLINE __attribute__((always_inline))
 #else
-#define XBMC_FORCE_INLINE __attribute__((always_inline)) inline 
-#endif
+#define XBMC_FORCE_INLINE
 #endif
 
 // include as less is possible to prevent dependencies
@@ -43,54 +42,60 @@ public:
   enum Message
   {
     NONE = 1000,
-    
-    
+
+
     // messages used in the whole system
-    
-    GENERAL_RESYNC,                 // 
-    GENERAL_FLUSH,                  // 
-    GENERAL_STREAMCHANGE,           // 
-    GENERAL_SYNCHRONIZE,            // 
+
+    GENERAL_RESYNC,                 //
+    GENERAL_FLUSH,                  // flush all buffers
+    GENERAL_RESET,                  // reset codecs for new data
+    GENERAL_STREAMCHANGE,           //
+    GENERAL_SYNCHRONIZE,            //
     GENERAL_DELAY,                  //
     GENERAL_GUI_ACTION,             // gui action of some sort
     GENERAL_EOF,                    // eof of stream
-    
-    
+
+
     // player core related messages (cdvdplayer.cpp)
-    
+
     PLAYER_SET_AUDIOSTREAM,         //
     PLAYER_SET_SUBTITLESTREAM,      //
     PLAYER_SET_SUBTITLESTREAM_VISIBLE, //
     PLAYER_SET_STATE,               // restore the dvdplayer to a certain state
     PLAYER_SET_RECORD,              // set record state
-    PLAYER_SEEK,                    // 
+    PLAYER_SEEK,                    //
     PLAYER_SEEK_CHAPTER,            //
     PLAYER_SETSPEED,                // set the playback speed
 
     PLAYER_CHANNEL_NEXT,            // switches to next playback channel
     PLAYER_CHANNEL_PREV,            // switches to previous playback channel
     PLAYER_CHANNEL_SELECT,          // switches to given playback channel
-    
+    PLAYER_STARTED,                 // sent whenever a sub player has finished it's first frame after open
+
     // demuxer related messages
-    
+
     DEMUXER_PACKET,                 // data packet
     DEMUXER_RESET,                  // reset the demuxer
-    
-    
+
+
     // video related messages
-    
+
     VIDEO_NOSKIP,                   // next pictures is not to be skipped by the video renderer
     VIDEO_SET_ASPECT,               // set aspectratio of video
+
+    // audio related messages
+
+    AUDIO_SILENCE,
 
     // subtitle related messages
     SUBTITLE_CLUTCHANGE
   };
-  
+
   CDVDMsg(Message msg)
   {
     m_references = 1;
     m_message = msg;
-    
+
 #ifdef DVDDEBUG_MESSAGE_TRACKER
     g_dvdMessageTracker.Register(this);
 #endif
@@ -100,16 +105,16 @@ public:
   {
     m_references = references;
     m_message = msg;
-    
+
 #ifdef DVDDEBUG_MESSAGE_TRACKER
     g_dvdMessageTracker.Register(this);
 #endif
   }
-  
+
   virtual ~CDVDMsg()
   {
     assert(m_references == 0);
-    
+
 #ifdef DVDDEBUG_MESSAGE_TRACKER
     g_dvdMessageTracker.UnRegister(this);
 #endif
@@ -118,27 +123,27 @@ public:
   /**
    * checks for message type
    */
-  XBMC_FORCE_INLINE bool IsType(Message msg) 
+  inline bool IsType(Message msg) XBMC_FORCE_INLINE
   {
     return (m_message == msg);
   }
-  
-  XBMC_FORCE_INLINE Message GetMessageType() 
+
+  inline Message GetMessageType() XBMC_FORCE_INLINE
   {
     return m_message;
   }
-  
+
   /**
-   * decrease the reference counter by one.   
+   * decrease the reference counter by one.
    */
-  long Acquire()
+  CDVDMsg* Acquire()
   {
-    long count = InterlockedIncrement(&m_references);
-    return count;
+    InterlockedIncrement(&m_references);
+    return this;
   }
-  
+
   /**
-   * increase the reference counter by one.   
+   * increase the reference counter by one.
    */
   long Release()
   {
@@ -171,17 +176,6 @@ public:
   bool m_clock;
 };
 
-class CDVDStreamInfo;
-class CDVDMsgGeneralStreamChange : public CDVDMsg
-{
-public:
-  CDVDMsgGeneralStreamChange(CDVDStreamInfo* pInfo);
-  virtual ~CDVDMsgGeneralStreamChange();
-  CDVDStreamInfo* GetStreamInfo()       { return m_pInfo; }
-private:
-  CDVDStreamInfo* m_pInfo;
-};
-
 #define SYNCSOURCE_AUDIO  0x00000001
 #define SYNCSOURCE_VIDEO  0x00000002
 #define SYNCSOURCE_SUB    0x00000004
@@ -194,7 +188,7 @@ public:
 
   // waits until all threads waiting, released the object
   // if abort is set somehow
-  void Wait(volatile bool *abort, DWORD source); 
+  void Wait(volatile bool *abort, DWORD source);
 private:
   DWORD m_sources;
   long m_objects;
@@ -205,8 +199,8 @@ template <typename T>
 class CDVDMsgType : public CDVDMsg
 {
 public:
-  CDVDMsgType(Message type, T value) 
-    : CDVDMsg(type) 
+  CDVDMsgType(Message type, T value)
+    : CDVDMsg(type)
     , m_value(value)
   {}
   operator T() { return m_value; }
@@ -253,25 +247,28 @@ private:
 class CDVDMsgPlayerSeek : public CDVDMsg
 {
 public:
-  CDVDMsgPlayerSeek(int time, bool backward, bool flush = true, bool accurate = true, bool restore = true)
+  CDVDMsgPlayerSeek(int time, bool backward, bool flush = true, bool accurate = true, bool restore = true, bool trickplay = false)
     : CDVDMsg(PLAYER_SEEK)
     , m_time(time)
     , m_backward(backward)
     , m_flush(flush)
     , m_accurate(accurate)
     , m_restore(restore)
+    , m_trickplay(trickplay)
   {}
   int  GetTime()              { return m_time; }
   bool GetBackward()          { return m_backward; }
   bool GetFlush()             { return m_flush; }
   bool GetAccurate()          { return m_accurate; }
   bool GetRestore()           { return m_restore; }
+  bool GetTrickPlay()         { return m_trickplay; }
 private:
   int  m_time;
   bool m_backward;
   bool m_flush;
   bool m_accurate;
   bool m_restore; // whether to restore any EDL cut time
+  bool m_trickplay;
 };
 
 class CDVDMsgPlayerSeekChapter : public CDVDMsg
@@ -281,11 +278,11 @@ class CDVDMsgPlayerSeekChapter : public CDVDMsg
       : CDVDMsg(PLAYER_SEEK_CHAPTER)
       , m_iChapter(iChapter)
     {}
-    
+
     int GetChapter() const { return m_iChapter; }
-    
+
   private:
-    
+
     int m_iChapter;
 };
 
@@ -303,7 +300,6 @@ public:
   DemuxPacket* GetPacket()      { return m_packet; }
   unsigned int GetPacketSize()  { if(m_packet) return m_packet->iSize; else return 0; }
   bool         GetPacketDrop()  { return m_drop; }
-private:
   DemuxPacket* m_packet;
   bool         m_drop;
 };

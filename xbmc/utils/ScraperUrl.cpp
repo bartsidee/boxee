@@ -75,43 +75,43 @@ bool CScraperUrl::Parse()
 bool CScraperUrl::ParseElement(const TiXmlElement* element)
 {
   if (!element || !element->FirstChild()) return false;
-  
+
   stringstream stream;
   stream << *element;
   m_xml += stream.str();
-  
-  SUrlEntry url;
-  url.m_url = element->FirstChild()->Value();
-  const char* pSpoof = element->Attribute("spoof");
-  if (pSpoof)
-    url.m_spoof = pSpoof;
-  const char* szPost=element->Attribute("post");
-  if (szPost && stricmp(szPost,"yes") == 0)
-    url.m_post = true;
-  else
-    url.m_post = false;
-  const char* szIsGz=element->Attribute("gzip");
-  if (szIsGz && stricmp(szIsGz,"yes") == 0)
-    url.m_isgz = true;
-  else
-    url.m_isgz = false;
-  const char* pCache = element->Attribute("cache");
-  if (pCache)
-    url.m_cache = pCache;
-  
-  const char* szType = element->Attribute("type");
-  url.m_type = URL_TYPE_GENERAL;
+
+    SUrlEntry url;
+    url.m_url = element->FirstChild()->Value();
+    const char* pSpoof = element->Attribute("spoof");
+    if (pSpoof)
+      url.m_spoof = pSpoof;
+    const char* szPost=element->Attribute("post");
+    if (szPost && stricmp(szPost,"yes") == 0)
+      url.m_post = true;
+    else
+      url.m_post = false;
+      const char* szIsGz=element->Attribute("gzip");
+      if (szIsGz && stricmp(szIsGz,"yes") == 0)
+        url.m_isgz = true;
+      else
+        url.m_isgz = false;
+    const char* pCache = element->Attribute("cache");
+    if (pCache)
+      url.m_cache = pCache;
+
+    const char* szType = element->Attribute("type");
+    url.m_type = URL_TYPE_GENERAL;
   url.m_season = -1;
-  if (szType && stricmp(szType,"season") == 0)
-  {
-    url.m_type = URL_TYPE_SEASON;
-    const char* szSeason = element->Attribute("season");
-    if (szSeason)
-      url.m_season = atoi(szSeason);
-  }
-  
-  m_url.push_back(url);
-  
+    if (szType && stricmp(szType,"season") == 0)
+    {
+      url.m_type = URL_TYPE_SEASON;
+      const char* szSeason = element->Attribute("season");
+      if (szSeason)
+        url.m_season = atoi(szSeason);
+    }
+
+    m_url.push_back(url);
+
   return true;
 }
 
@@ -177,7 +177,7 @@ const CScraperUrl::SUrlEntry CScraperUrl::GetSeasonThumb(int season) const
 
 bool CScraperUrl::Get(const SUrlEntry& scrURL, string& strHTML, XFILE::CFileCurl& http)
 {
-  CURL url(scrURL.m_url);
+  CURI url(scrURL.m_url);
   http.SetReferer(scrURL.m_spoof);
   CStdString strCachePath;
 
@@ -211,8 +211,7 @@ bool CScraperUrl::Get(const SUrlEntry& scrURL, string& strHTML, XFILE::CFileCurl
     }
   }
 
-  CStdString strUrl;
-  url.GetURL(strUrl);
+  CStdString strUrl = url.Get();
   CStdString strHTML1(strHTML);
         
   if (scrURL.m_post)
@@ -259,7 +258,7 @@ bool CScraperUrl::DownloadThumbnail(const CStdString &thumb, const CScraperUrl::
   if (entry.m_url.IsEmpty())
     return false;
 
-  CURL url(entry.m_url);
+  CURI url(entry.m_url);
   if (url.GetProtocol() != "http")
   { // do a direct file copy
     try

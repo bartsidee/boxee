@@ -38,14 +38,14 @@ CFileMusicDatabase::~CFileMusicDatabase(void)
   Close();
 }
 
-CStdString CFileMusicDatabase::TranslateUrl(const CURL& url)
+CStdString CFileMusicDatabase::TranslateUrl(const CURI& url)
 {
   CMusicDatabase musicDatabase;
   if (!musicDatabase.Open())
     return "";
 
   CStdString strPath;
-  url.GetURL(strPath);
+  strPath = url.Get();
 
   CStdString strFileName=CUtil::GetFileName(strPath);
   CUtil::RemoveExtension(strFileName);
@@ -70,17 +70,17 @@ CStdString CFileMusicDatabase::TranslateUrl(const CURL& url)
   return song.strFileName; 
 }
 
-bool CFileMusicDatabase::Open(const CURL& url)
+bool CFileMusicDatabase::Open(const CURI& url)
 {
   return m_file.Open(TranslateUrl(url));
 }
 
-bool CFileMusicDatabase::Exists(const CURL& url)
+bool CFileMusicDatabase::Exists(const CURI& url)
 {
   return !TranslateUrl(url).IsEmpty();
 }
 
-int CFileMusicDatabase::Stat(const CURL& url, struct __stat64* buffer)
+int CFileMusicDatabase::Stat(const CURI& url, struct __stat64* buffer)
 {
   return m_file.Stat(TranslateUrl(url), buffer);
 }

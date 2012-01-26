@@ -29,24 +29,22 @@ void CFilePipe::SetLength(int64_t len)
   m_length = len;
 }
 
-bool CFilePipe::Open(const CURL& url)
+bool CFilePipe::Open(const CURI& url)
 {
-  CStdString name;
-  url.GetURL(name);
+  CStdString name = url.Get();
   m_pipe = PipesManager::GetInstance().OpenPipe(name);
   if (m_pipe)
     m_pipe->AddListener(this);
   return (m_pipe != NULL);
 }
 
-bool CFilePipe::Exists(const CURL& url)
+bool CFilePipe::Exists(const CURI& url)
 {
-  CStdString name;
-  url.GetURL(name);
+  CStdString name = url.Get();
   return PipesManager::GetInstance().Exists(name);
 }
 
-int CFilePipe::Stat(const CURL& url, struct __stat64* buffer)
+int CFilePipe::Stat(const CURI& url, struct __stat64* buffer)
 {
   return -1;
 }
@@ -104,8 +102,8 @@ void CFilePipe::Close()
 {
   if (m_pipe)
   {
-    PipesManager::GetInstance().ClosePipe(m_pipe);
     m_pipe->RemoveListener(this);
+    PipesManager::GetInstance().ClosePipe(m_pipe);
   }
   m_pipe = NULL;
 }
@@ -117,12 +115,13 @@ bool CFilePipe::IsClosed()
 
 void CFilePipe::Flush()
 {
+  if (m_pipe)
+    m_pipe->Flush();
 }
 
-bool CFilePipe::OpenForWrite(const CURL& url, bool bOverWrite)
+bool CFilePipe::OpenForWrite(const CURI& url, bool bOverWrite)
 {
-  CStdString name;
-  url.GetURL(name);
+  CStdString name = url.Get();
 
   m_pipe = PipesManager::GetInstance().CreatePipe(name);
   if (m_pipe)
@@ -130,12 +129,12 @@ bool CFilePipe::OpenForWrite(const CURL& url, bool bOverWrite)
   return (m_pipe != NULL);
 }
 
-bool CFilePipe::Delete(const CURL& url)
+bool CFilePipe::Delete(const CURI& url)
 {
   return false;
 }
 
-bool CFilePipe::Rename(const CURL& url, const CURL& urlnew)
+bool CFilePipe::Rename(const CURI& url, const CURI& urlnew)
 {
   return false;
 }
@@ -157,6 +156,11 @@ void CFilePipe::OnPipeOverFlow()
   CSingleLock lock(m_lock);
   for (size_t l=0; l<m_listeners.size(); l++)
     m_listeners[l]->OnPipeOverFlow();
+}
+
+__int64	CFilePipe::GetAvailableRead()
+{
+  return m_pipe->GetAvailableRead();
 }
 
 void CFilePipe::OnPipeUnderFlow()
@@ -188,3 +192,9 @@ void CFilePipe::RemoveListener(IPipeListener *l)
       i++;
   }
 }
+
+void CFilePipe::SetOpenThreashold(int threashold)
+{
+  m_pipe->SetOpenThreashold(threashold);
+}
+

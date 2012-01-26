@@ -9,7 +9,7 @@ URL::URL(string url)
 {
 	m_url = url;
 	
-	CURL *curl;
+	CURI *curl;
 	CURLcode res;
 
 	// Initialize the cURL library

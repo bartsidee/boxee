@@ -135,6 +135,8 @@ static const ActionMapping actions[] =
         {"reloadkeymaps"     , ACTION_RELOAD_KEYMAPS},
         {"volumeup"          , ACTION_VOLUME_UP},
         {"volumedown"        , ACTION_VOLUME_DOWN},
+        {"volumeupcond"      , ACTION_VOLUME_UP_COND},
+        {"volumedowncond"    , ACTION_VOLUME_DOWN_COND},
         {"mute"              , ACTION_MUTE},
         {"backspace"         , ACTION_BACKSPACE},
         {"scrollup"          , ACTION_SCROLL_UP},
@@ -191,7 +193,8 @@ static const ActionMapping actions[] =
         {"red"               , ACTION_TELETEXT_RED},
         {"green"             , ACTION_TELETEXT_GREEN},
         {"yellow"            , ACTION_TELETEXT_YELLOW},
-        {"blue"              , ACTION_TELETEXT_BLUE}};
+        {"blue"              , ACTION_TELETEXT_BLUE},
+        {"browsertogglemode" , ACTION_BROWSER_TOGGLE_MODE}};
 
 CButtonTranslator& CButtonTranslator::GetInstance()
 {
@@ -248,7 +251,7 @@ bool CButtonTranslator::Load()
     return false;
   }
 
-#if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE)
+#if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE) || defined(HAS_REMOTECONTROL)
 #ifdef _LINUX
 #define REMOTEMAP "Lircmap.xml"
 #else
@@ -318,7 +321,7 @@ bool CButtonTranslator::LoadKeymap(const CStdString &keymapPath)
   return true;
 }
 
-#if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE)
+#if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE)  || defined(HAS_REMOTECONTROL)
 bool CButtonTranslator::LoadLircMap(const CStdString &lircmapPath)
 {
 #ifdef _LINUX
@@ -392,7 +395,7 @@ void CButtonTranslator::MapRemote(TiXmlNode *pRemote, const char* szDevice)
 }
 #endif
 
-#if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE)
+#if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE)  || defined(HAS_REMOTECONTROL)
 #ifndef __APPLE__
 void CButtonTranslator::GetLinuxInputDevices(std::vector<CStdString> &arrDevs)
 {
@@ -407,7 +410,7 @@ void CButtonTranslator::GetLinuxInputDevices(std::vector<CStdString> &arrDevs)
 #endif
 #endif
 
-#if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE)
+#if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE) || defined(HAS_REMOTECONTROL)
 bool CButtonTranslator::NeedsLircLongClick(const char* szDevice, const char *szButton)
 {
   // Find the device
@@ -960,11 +963,10 @@ int CButtonTranslator::TranslateWindowString(const char *szWindow)
   else if (strWindow.Equals("picturessettings")) windowID = WINDOW_SETTINGS_MYPICTURES;
   else if (strWindow.Equals("ParentalSettings")) windowID = WINDOW_SETTINGS_PARRENTAL;
   else if (strWindow.Equals("personalsettings")) windowID = WINDOW_SETTINGS_MYPERSONAL;
-  else if (strWindow.Equals("musicsettings")) windowID = WINDOW_SETTINGS_MYMUSIC;
   else if (strWindow.Equals("systemsettings")) windowID = WINDOW_SETTINGS_SYSTEM;
-  else if (strWindow.Equals("videossettings")) windowID = WINDOW_SETTINGS_MYVIDEOS;
   else if (strWindow.Equals("mediasettings")) windowID = WINDOW_SETTINGS_MYMEDIA;
   else if (strWindow.Equals("networksettings")) windowID = WINDOW_SETTINGS_NETWORK;
+  else if (strWindow.Equals("livetvsettings")) windowID = WINDOW_SETTINGS_LIVE_TV;
   else if (strWindow.Equals("appearancesettings")) windowID = WINDOW_SETTINGS_APPEARANCE;
   else if (strWindow.Equals("programssettings")) windowID = -1;                // not in use - reduce ERROR messages from the log - used in gamepad.xml etc ...
   else if (strWindow.Equals("weathersettings")) windowID = -1;                 // not in use - reduce ERROR messages from the log - used in gamepad.xml etc ...
@@ -1024,6 +1026,10 @@ int CButtonTranslator::TranslateWindowString(const char *szWindow)
   else if (strWindow.Equals("karaokelargeselector")) windowID = WINDOW_DIALOG_KARAOKE_SELECTOR;
   else if (strWindow.Equals("sliderdialog")) windowID = WINDOW_DIALOG_SLIDER;
   else if (strWindow.Equals("songinformation")) windowID = WINDOW_DIALOG_SONG_INFO;
+  else if (strWindow.Equals("livetv")) windowID = WINDOW_BOXEE_LIVETV;
+  else if (strWindow.Equals("webdialog")) windowID = WINDOW_DIALOG_WEB;
+  else if (strWindow.Equals("videoctx")) windowID = WINDOW_DIALOG_BOXEE_VIDEO_CTX;
+  else if (strWindow.Equals("ota.country.configure")) windowID = WINDOW_OTA_COUNTRIES_CONFIGURATION;
   else
     CLog::Log(LOGERROR, "Window Translator: Can't find window %s", strWindow.c_str());
 
@@ -1130,6 +1136,7 @@ uint32_t CButtonTranslator::TranslateRemoteString(const char *szButton)
   else if (strButton.Equals("green")) buttonCode = XINPUT_IR_REMOTE_GREEN;
   else if (strButton.Equals("yellow")) buttonCode = XINPUT_IR_REMOTE_YELLOW;
   else if (strButton.Equals("blue")) buttonCode = XINPUT_IR_REMOTE_BLUE;
+  else if (strButton.Equals("browsertogglemode")) buttonCode = XINPUT_IR_REMOTE_BROWSER_TOGGLE_MODE;
   else CLog::Log(LOGERROR, "Remote Translator: Can't find button %s", strButton.c_str());
   return buttonCode;
 }
@@ -1146,23 +1153,23 @@ uint32_t CButtonTranslator::TranslateUniversalRemoteString(const char *szButton)
 
 XBMCMod CButtonTranslator::TranslateKeyboardModifiers(const char *szMod)
 {
-  XBMCMod result = XBMCKMOD_NONE;
+  int result = XBMCKMOD_NONE;
   if (!szMod)
-    return result;
+    return (XBMCMod) result;
 
   CStdString strMod = szMod;
   strMod.ToLower();
 
-  if (strMod.Equals("leftshift")) result = XBMCKMOD_LSHIFT;
-  else if (strMod.Equals("rightshift"))  result = XBMCKMOD_RSHIFT;
-  else if (strMod.Equals("leftctrl"))  result = XBMCKMOD_LCTRL;
-  else if (strMod.Equals("rightctrl"))  result = XBMCKMOD_RCTRL;
-  else if (strMod.Equals("leftalt"))  result = XBMCKMOD_LALT;
-  else if (strMod.Equals("rightalt"))  result = XBMCKMOD_RALT;
-  else if (strMod.Equals("leftmeta"))  result = XBMCKMOD_LMETA;
-  else if (strMod.Equals("rightmeta")) result = XBMCKMOD_RMETA;
+  if (strMod.Find("leftshift") >= 0)   result |= XBMCKMOD_LSHIFT;
+  if (strMod.Find("rightshift") >= 0)  result |= XBMCKMOD_RSHIFT;
+  if (strMod.Find("leftctrl") >= 0)    result |= XBMCKMOD_LCTRL;
+  if (strMod.Find("rightctrl") >= 0)   result |= XBMCKMOD_RCTRL;
+  if (strMod.Find("leftalt") >= 0)     result |= XBMCKMOD_LALT;
+  if (strMod.Find("rightalt") >= 0)    result |= XBMCKMOD_RALT;
+  if (strMod.Find("leftmeta") >= 0)    result |= XBMCKMOD_LMETA;
+  if (strMod.Find("rightmeta") >= 0)   result |= XBMCKMOD_RMETA;
 
-  return result;
+  return (XBMCMod) result;
 }
 
 uint32_t CButtonTranslator::TranslateKeyboardString(const char *szButton)
@@ -1205,6 +1212,9 @@ uint32_t CButtonTranslator::TranslateKeyboardString(const char *szButton)
     else if (strKey.Equals("f10")) buttonCode = 0xF079;
     else if (strKey.Equals("f11")) buttonCode = 0xF07A;
     else if (strKey.Equals("f12")) buttonCode = 0xF07B;
+    else if (strKey.Equals("f13")) buttonCode = 0xF07C;
+    else if (strKey.Equals("f14")) buttonCode = 0xF07D;
+    else if (strKey.Equals("f15")) buttonCode = 0xF07E;
     else if (strKey.Equals("numpadzero") || strKey.Equals("zero")) buttonCode = 0xF060;
     else if (strKey.Equals("numpadone") || strKey.Equals("one")) buttonCode = 0xF061;
     else if (strKey.Equals("numpadtwo") || strKey.Equals("two")) buttonCode = 0xF062;
@@ -1225,7 +1235,6 @@ uint32_t CButtonTranslator::TranslateKeyboardString(const char *szButton)
     else if (strKey.Equals("printscreen")) buttonCode = 0xF02A;
     else if (strKey.Equals("backspace")) buttonCode = 0xF008;
     else if (strKey.Equals("menu")) buttonCode = 0xF05D;
-    else if (strKey.Equals("pause")) buttonCode = 0xF013;
     else if (strKey.Equals("leftshift")) buttonCode = 0xF0A0;
     else if (strKey.Equals("rightshift")) buttonCode = 0xF0A1;
     else if (strKey.Equals("leftctrl")) buttonCode = 0xF0A2;
@@ -1256,12 +1265,17 @@ uint32_t CButtonTranslator::TranslateKeyboardString(const char *szButton)
     else if (strKey.Equals("launch_app1_pc_icon")) buttonCode = 0xF0B6;
     else if (strKey.Equals("launch_media_select")) buttonCode = 0xF0B5;
     else if (strKey.Equals("play_pause")) buttonCode = 0xF0B3;
+    else if (strKey.Equals("play")) buttonCode = 0xF0CF;
     else if (strKey.Equals("stop")) buttonCode = 0xF0B2;
+    else if (strKey.Equals("pause")) buttonCode = 0xF0CD;
+    else if (strKey.Equals("ffw")) buttonCode = 0xF0D0;
+    else if (strKey.Equals("rw")) buttonCode = 0xF0D1;
     else if (strKey.Equals("volume_up")) buttonCode = 0xF0AF;
-    else if (strKey.Equals("volume_mute")) buttonCode = 0xF0AD;
-    else if (strKey.Equals("volume_down")) buttonCode = 0xF0AE;
+    else if (strKey.Equals("volume_mute")) buttonCode = 0xF07C;
+    else if (strKey.Equals("volume_down")) buttonCode = 0xF07D;
     else if (strKey.Equals("prev_track")) buttonCode = 0xF0B1;
     else if (strKey.Equals("next_track")) buttonCode = 0xF0B0;
+    else if (strKey.Equals("back")) buttonCode = 0xF0A6;
     else
       CLog::Log(LOGWARNING, "Keyboard Translator: Can't find button %s", strKey.c_str());
   }
@@ -1292,7 +1306,7 @@ uint32_t CButtonTranslator::TranslateKeyboardButton(TiXmlElement *pButton)
 void CButtonTranslator::Clear()
 {
   translatorMap.clear();
-#if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE)
+#if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE) || defined(HAS_REMOTECONTROL)
   lircRemotesMap.clear();
 #endif
 

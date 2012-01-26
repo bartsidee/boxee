@@ -29,11 +29,15 @@ private:
   
   bool HandleRequestWithLimit(const CStdString& typeToRetrieveForLog,CFileItemList& items,std::map<std::string, std::string>& mapParams, bool sortByDate = true);
   bool ConvertServerResponse(const CStdString& typeToRetrieveForLog,CFileItemList& listItems);
-  bool GetItemsFromServer(const CStdString& typeToRetrieveForLog);
+  bool GetItemsFromServer(const CStdString& typeToRetrieveForLog, std::map<std::string, std::string>& mapParams);
   
   bool HandleQueueRequest(CFileItemList& items,std::map<std::string, std::string>& mapParams);
   int GetTheLastItemIndexById(const CStdString& lastItemId);
-  
+
+  void UpdateItemProperties(const BOXEE::BXGeneralMessage& msg,CFileItemPtr item);
+  void UpdateDiscoverItemProperties(const BOXEE::BXGeneralMessage& msg,CFileItemPtr item);
+  void UpdateQueueItemProperties(const BOXEE::BXGeneralMessage& msg,CFileItemPtr item);
+
   static void SetResponseType(const CStdString& typeToRetrieveForLog,bool& bRecommend, bool& bQueue, bool& bFeatured);
 };
 }

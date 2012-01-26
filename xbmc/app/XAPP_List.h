@@ -103,6 +103,13 @@ public:
    * @param letter the letter to jump to. 
    */
   void JumpToLetter(char letter);
+
+  /**
+   * Updates an existing item.
+   *
+   * @param item to be set in the list.
+   */
+  void UpdateItem(int index, ListItem item);
 };
 
 }

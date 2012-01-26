@@ -12,7 +12,7 @@ rem If Winrar isn't installed under standard programs, SET the path for WinRAR's
 rem and finally set the options for the final rar.
 rem -------------------------------------------------------------
 
-set EXE= "..\VS2008Express\BOXEE\Release (DirectX)\BOXEE.exe"
+set EXE= "..\VS2010Express\BOXEE\Release (DirectX)\BOXEE.exe"
   
   
 ECHO	 MMMMMMMMMMMMMMMMMMMMMMMNmddhhhhddmNMMMMMMMMMMMMMMMMMMMMMMMMM
@@ -138,7 +138,7 @@ ECHO	 M++++++++sNMMMdo/::+smMMNo:hMMMMm+oNMs++++++++NM++++++++oMMM
 
   ECHO Copy system and players...
   xcopy ..\..\system BUILD_WIN32\Boxee\system /E /Q /I /Y /EXCLUDE:exclude.txt  > NUL
-  
+
   ECHO Remove leftover xulrunner directory
   rmdir BUILD_WIN32\Boxee\system\players\flashplayer\xulrunner /S /Q
 

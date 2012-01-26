@@ -55,6 +55,8 @@
 #include "GUIInfoManager.h"
 #include "utils/TimeUtils.h"
 
+#include <map>
+
 using namespace std;
 using namespace MUSIC_INFO;
 using namespace DIRECTORY;
@@ -175,15 +177,21 @@ public:
 /*----------------------------------------------------------------------
 |   CUPnP::CUPnP
 +---------------------------------------------------------------------*/
-class CUPnPServer : public PLT_MediaConnect
+class CUPnPServer : public PLT_MediaServer, public PLT_FileMediaServerDelegate
 {
 public:
-    CUPnPServer(const char* friendly_name, const char* uuid = NULL, int port = 0) :
-        PLT_MediaConnect("", friendly_name, true, uuid, port) {
-        // hack: override path to make sure it's empty
-        // urls will contain full paths to local files
-        m_Path = "";
-    }
+      CUPnPServer(const char*  file_root,
+                      const char*  friendly_name,
+                      bool         show_ip = false,
+                      const char*  uuid = NULL,
+                      NPT_UInt16   port = 0,
+                      bool         port_rebind = false) :
+      PLT_MediaServer(friendly_name,
+                      show_ip,
+                      uuid,
+                      port,
+                      port_rebind),
+      PLT_FileMediaServerDelegate("/", file_root) {SetDelegate(this);}
 
     // PLT_MediaServer methods
     virtual NPT_Result OnBrowseMetadata(PLT_ActionReference&          action, 
@@ -276,7 +284,7 @@ CUPnPServer::GetContentType(const char* filename,
     ext.TrimLeft('.');
     ext = ext.ToLowercase();
 
-    return PLT_MediaObject::GetMimeTypeFromExtension(ext, context);
+    return PLT_MediaObject::GetUPnPClass(ext, context);
 }
 
 /*----------------------------------------------------------------------
@@ -301,7 +309,7 @@ CUPnPServer::GetContentType(const CFileItem& item,
        as it is defined to map extension to DLNA compliant content type
        or custom according to context (who asked for it) */
     if (!ext.IsEmpty()) {
-        content = PLT_MediaObject::GetMimeTypeFromExtension(ext, context);
+        content = PLT_MediaObject::GetUPnPClass(ext, context);
     if (content == "application/octet-stream") content = "";
     }
 
@@ -341,7 +349,7 @@ CUPnPServer::GetProtocolInfo(const CFileItem&              item,
 
     /* fixup the protocol just in case nothing was passed */
     if (proto.IsEmpty()) {
-        proto = item.GetAsUrl().GetProtocol();
+        proto = CURI(item.m_strPath).GetProtocol();
     }
 
     /*
@@ -357,7 +365,7 @@ CUPnPServer::GetProtocolInfo(const CFileItem&              item,
 
     /* we need a valid extension to retrieve the mimetype for the protocol info */
     NPT_String content = GetContentType(item, context);
-    proto += ":*:" + content + ":" + PLT_MediaObject::GetDlnaExtension(content, context);
+    proto += ":*:" + content + ":" + PLT_MediaObject::GetUPnPClass(content, context);
     return proto;
 }
 
@@ -378,7 +386,7 @@ CUPnPServer::PopulateObjectFromTag(CMusicInfoTag&         tag,
 
     StringUtils::SplitString(tag.GetGenre(), " / ", strings);
     for(CStdStringArray::iterator it = strings.begin(); it != strings.end(); it++) {
-        object.m_Affiliation.genre.Add((*it).c_str());
+        object.m_Affiliation.genres.Add((*it).c_str());
     }
 
     object.m_Title = tag.GetTitle();
@@ -425,7 +433,7 @@ CUPnPServer::PopulateObjectFromTag(CVideoInfoTag&         tag,
 
     StringUtils::SplitString(tag.m_strGenre, " / ", strings);
     for(CStdStringArray::iterator it = strings.begin(); it != strings.end(); it++) {
-        object.m_Affiliation.genre.Add((*it).c_str());
+        object.m_Affiliation.genres.Add((*it).c_str());
 }
 
     for(CVideoInfoTag::iCast it = tag.m_cast.begin();it != tag.m_cast.end();it++) {
@@ -531,7 +539,7 @@ CUPnPServer::BuildObject(const CFileItem&              item,
         while (ip) {
                 resource.m_ProtocolInfo = PLT_ProtocolInfo(GetProtocolInfo(item, "http", context));
                 resource.m_Uri = PLT_FileMediaServer::BuildSafeResourceUri(
-                    upnp_server->m_FileBaseUri, (*ip).ToString(), file_path);
+                    upnp_server->m_URLBase, (*ip).ToString(), file_path);
             object->m_Resources.Add(resource);
             ++ip;
         }
@@ -540,7 +548,7 @@ CUPnPServer::BuildObject(const CFileItem&              item,
         // if the item is remote, add a direct link to the item
         if (CUtil::IsRemote((const char*)file_path)) {
             resource.m_ProtocolInfo = PLT_ProtocolInfo(
-                CUPnPServer::GetProtocolInfo(item, item.GetAsUrl().GetProtocol(), context));
+                CUPnPServer::GetProtocolInfo(item, CURI(item.m_strPath).GetProtocol(), context));
             resource.m_Uri = file_path;
 
             // if the direct link can be served directly using http, then push it in front
@@ -630,8 +638,8 @@ CUPnPServer::BuildObject(const CFileItem&              item,
         /* Get the number of children for this container */
         if (with_count && upnp_server) {
             if( object->m_ObjectID.StartsWith("virtualpath://") ) {
-                NPT_Cardinal count = 0;
-                NPT_CHECK_LABEL(NPT_File::GetCount(file_path, count), failure);
+              NPT_LargeSize count = 0;
+                NPT_CHECK_LABEL(NPT_File::GetSize(file_path, count), failure);
                 container->m_ChildrenCount = count;
             } else {
                 /* this should be a standard path */
@@ -656,7 +664,7 @@ CUPnPServer::BuildObject(const CFileItem&              item,
     // set a thumbnail if we have one
     if (item.HasThumbnail() && upnp_server) {
         object->m_ExtraInfo.album_art_uri = PLT_FileMediaServer::BuildSafeResourceUri(
-            upnp_server->m_FileBaseUri,
+            upnp_server->m_URLBase,
             (*ips.GetFirstItem()).ToString(),
             item.GetThumbnailImage());
     }
@@ -1374,7 +1382,7 @@ CUPnPServer::ServeFile(NPT_HttpRequest&              request,
     CLog::Log(LOGDEBUG, "Received request to serve '%s'", (const char*)file_path);
 
     // File requested
-    NPT_String path = m_FileBaseUri.GetPath();
+    NPT_String path = m_URLBase.GetPath();
     if (path.Compare(request.GetUrl().GetPath().Left(path.GetLength()), true) == 0 &&
         file_path.Left(8).Compare("stack://", true) == 0) {
         
@@ -1390,21 +1398,17 @@ CUPnPServer::ServeFile(NPT_HttpRequest&              request,
         NPT_List<NPT_String>::Iterator url = files.GetFirstItem();
         for (;url;url++) {
             output += PLT_FileMediaServer::BuildSafeResourceUri(
-                          m_FileBaseUri, 
+                          m_URLBase,
                           context.GetLocalAddress().GetIpAddress().ToString(),
                           *url);
             output += "\n\r";
         }
 
-        PLT_HttpHelper::SetContentType(response, "audio/x-mpegurl");
         PLT_HttpHelper::SetBody(response, (const char*)output, output.GetLength());
         return NPT_SUCCESS;
     }
-    
-    return PLT_MediaConnect::ServeFile(request, 
-                                       context, 
-                                       response, 
-                                       file_path);
+
+    return PLT_FileMediaServerDelegate::ServeFile(request, context, response,file_path);
 }
 
 /*----------------------------------------------------------------------
@@ -1439,7 +1443,7 @@ public:
     virtual NPT_Result OnSetMute(PLT_ActionReference& action);
 
 private:
-    NPT_Result SetupServices(PLT_DeviceData& data);
+    NPT_Result SetupServices();
     NPT_Result GetMetadata(NPT_String& meta);
     NPT_Result PlayMedia(const char* uri,
                          const char* metadata = NULL,
@@ -1464,9 +1468,9 @@ CUPnPRenderer::CUPnPRenderer(const char*  friendly_name,
 |   CUPnPRenderer::SetupServices
 +---------------------------------------------------------------------*/
 NPT_Result
-CUPnPRenderer::SetupServices(PLT_DeviceData& data)
+CUPnPRenderer::SetupServices()
 {
-    NPT_CHECK(PLT_MediaRenderer::SetupServices(data));
+    NPT_CHECK(PLT_MediaRenderer::SetupServices());
 
     // update what we can play
     PLT_Service* service = NULL;
@@ -1611,7 +1615,7 @@ CUPnPRenderer::ProcessHttpRequest(NPT_HttpRequest&              request,
         }
     }
 
-    return PLT_MediaRenderer::ProcessHttpRequest(request, context, response);
+    return SetupResponse(request, context, response);
 }
 
 /*----------------------------------------------------------------------
@@ -1960,49 +1964,111 @@ class CMediaBrowser : public PLT_SyncMediaBrowser,
                       public PLT_MediaContainerChangesListener
 {
 public:
-    CMediaBrowser(PLT_CtrlPointReference& ctrlPoint)
-      : PLT_SyncMediaBrowser(ctrlPoint, true)
+  CMediaBrowser(PLT_CtrlPointReference& ctrlPoint)
+    : PLT_SyncMediaBrowser(ctrlPoint, true)
+  {
+      SetContainerListener(this);
+      m_nameMapping.clear();
+  }
+
+  // PLT_MediaBrowser methods
+  virtual bool OnMSAdded(PLT_DeviceDataReference& device)
+  {
+    SendMSUpdate(device,GUI_MSG_ADD_ITEM);
+
+    AddFriendlyName( (const char*)device->GetUUID(),(const char*)device->GetUUID(),(const char*)device->GetFriendlyName()); ;
+
+    return PLT_SyncMediaBrowser::OnMSAdded(device);
+  }
+  virtual void OnMSRemoved(PLT_DeviceDataReference& device)
+  {
+    PLT_SyncMediaBrowser::OnMSRemoved(device);
+
+    SendMSUpdate(device,GUI_MSG_REMOVE_ITEM);
+
+    PLT_SyncMediaBrowser::OnMSRemoved(device);
+    m_nameMapping[(const char*)device->GetUUID()].clear();
+  }
+
+  // PLT_MediaContainerChangesListener methods
+  virtual void OnContainerChanged(PLT_DeviceDataReference& device,
+                                  const char*              item_id,
+                                  const char*              update_id)
+  {
+    NPT_String path = "upnp://"+device->GetUUID()+"/";
+
+    if (!NPT_StringsEqual(item_id, "0"))
     {
-        SetContainerListener(this);
+        CStdString id = item_id;
+        CUtil::URLEncode(id);
+        path += id.c_str();
+        path += "/";
     }
 
-    // PLT_MediaBrowser methods
-    virtual bool OnMSAdded(PLT_DeviceDataReference& device)
+    SendMSUpdate(device,GUI_MSG_CHANGE_ITEM,path.GetChars());
+  }
+  void AddFriendlyName( const CStdString& device_id, const CStdString& object_id, const CStdString& friendly_name )
+  {
+    (m_nameMapping[device_id])[object_id] = friendly_name;
+  }
+  bool GetFriendlyName( const CStdString& device_id, const CStdString& object_id, CStdString& friendly_name )
+  {
+    if( m_nameMapping[device_id].size() == 0 ) return false;
+    if( !m_nameMapping[device_id][object_id] ) return false;
+    friendly_name = m_nameMapping[device_id][object_id];
+    return true;
+  }
+  bool GetFriendlyPath( const CStdString& path, CStdString& friendly_path )
+  {
+    if( !path.Left(7).Equals("upnp://") ) return false;
+    if( path.Equals("upnp://all") )
     {
-        CGUIMessage message(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_PATH);
-        message.SetStringParam("upnp://");
-        g_windowManager.SendThreadMessage(message);
-
-        return PLT_SyncMediaBrowser::OnMSAdded(device);
+      friendly_path = path;
+      return true;
     }
-    virtual void OnMSRemoved(PLT_DeviceDataReference& device)
+    
+    CStdString device_id;
+    int slash = path.Find("/", 7);
+    if( -1 == slash ) device_id = path.Right(7);
+    else device_id = path.Mid(7,slash-7);
+    
+    if( !m_nameMapping[device_id].size() ) return false;
+    
+    friendly_path = "upnp://" + m_nameMapping[device_id][device_id];
+    while( -1 != slash )
     {
-        PLT_SyncMediaBrowser::OnMSRemoved(device);
+      int nxt = path.Find("/", slash+1);
+      CStdString object_id;
 
-      CGUIMessage message(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_PATH);
-      message.SetStringParam("upnp://");
-        g_windowManager.SendThreadMessage(message);
+      if( -1 == nxt && slash == (int)path.size()-1 ) break;         // trailing slash
+      else if( -1 == nxt ) object_id = path.Right( slash+1 );  // trailing object id
+      else object_id = path.Mid(slash+1, nxt-slash-1);         // path part object id
 
-        PLT_SyncMediaBrowser::OnMSRemoved(device);
+      friendly_path += "/" + (m_nameMapping[device_id][object_id] ? m_nameMapping[device_id][object_id] : object_id);
+      slash = nxt;
     }
+    if( path.Right(1).Equals("/") ) friendly_path += "/";
+    return true;
+  }
+private:
 
-    // PLT_MediaContainerChangesListener methods
-    virtual void OnContainerChanged(PLT_DeviceDataReference& device,
-                                    const char*              item_id,
-                                    const char*              update_id)
-    {
-        NPT_String path = "upnp://"+device->GetUUID()+"/";
-        if (!NPT_StringsEqual(item_id, "0")) {
-            CStdString id = item_id;
-            CUtil::URLEncode(id);
-            path += id.c_str();
-            path += "/";
-    }
+  void SendMSUpdate(const PLT_DeviceDataReference& device, int iCommandMsg , const CStdString& customPath="")
+  {
+    NPT_String path = "upnp://"+device->GetUUID()+"/";
+    NPT_String friendlyName = device->GetFriendlyName();
+    NPT_String iconURL = device->GetIconUrl("image/jpeg");
 
-        CGUIMessage message(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_PATH);
-        message.SetStringParam(path.GetChars());
-        g_windowManager.SendThreadMessage(message);
-    }
+    vector<CStdString> messageStrings;
+    messageStrings.push_back(customPath.IsEmpty()?path.GetChars():customPath.c_str());
+    messageStrings.push_back(friendlyName.GetChars());
+    messageStrings.push_back(iconURL.GetChars());
+
+    CGUIMessage message(GUI_MSG_MANAGE_ITEM, 0, 0 , iCommandMsg);
+    message.SetStringParams(messageStrings);
+    g_windowManager.SendThreadMessage(message);
+  }
+
+  std::map<CStdString /*device_id*/, std::map<CStdString /*object_id*/, CStdString /*friendly_name*/> > m_nameMapping;
 };
 
 
@@ -2030,7 +2096,10 @@ CUPnP::CUPnP() :
     }
 
     // start upnp monitoring
-    m_UPnP->Start();
+    if( NPT_SUCCESS != m_UPnP->Start() )
+    {
+        CLog::Log(LOGWARNING, "UPnP client failed to start - another application may be preventing access to the UPnP ports");
+}
 }
 
 /*----------------------------------------------------------------------
@@ -2103,6 +2172,8 @@ CUPnP::StartClient()
 
     // start browser
     m_MediaBrowser = new CMediaBrowser(m_CtrlPointHolder->m_CtrlPoint);
+
+    CLog::Log(LOGNOTICE, "starting upnp client");
 }
 
 /*----------------------------------------------------------------------
@@ -2308,13 +2379,14 @@ int CUPnP::PopulateTagFromObject(CMusicInfoTag&          tag,
 {
     tag.SetTitle((const char*)object.m_Title);
     tag.SetArtist((const char*)object.m_Creator);
+    tag.SetAlbum((const char*)object.m_Affiliation.album);
     for(PLT_PersonRoles::Iterator it = object.m_People.artists.GetFirstItem(); it; it++) {
         if     (it->role == "")            tag.SetArtist((const char*)it->name);
         else if(it->role == "Performer")   tag.SetArtist((const char*)it->name);
         else if(it->role == "AlbumArtist") tag.SetAlbumArtist((const char*)it->name);
     }
     tag.SetTrackNumber(object.m_MiscInfo.original_track_number);
-    tag.SetGenre((const char*)JoinString(object.m_Affiliation.genre, " / "));
+    tag.SetGenre((const char*)JoinString(object.m_Affiliation.genres, " / "));
     if(resource)
         tag.SetDuration(resource->m_Duration);
     tag.SetLoaded();
@@ -2326,7 +2398,7 @@ int CUPnP::PopulateTagFromObject(CVideoInfoTag&         tag,
                                  PLT_MediaItemResource* resource /* = NULL */)
 {
     tag.m_strTitle    = object.m_Title;
-    tag.m_strGenre    = JoinString(object.m_Affiliation.genre, " / ");
+    tag.m_strGenre    = JoinString(object.m_Affiliation.genres, " / ");
     tag.m_strDirector = object.m_People.director;
     tag.m_strTagLine  = object.m_Description.description;
     tag.m_strPlot     = object.m_Description.long_description;
@@ -2335,4 +2407,16 @@ int CUPnP::PopulateTagFromObject(CVideoInfoTag&         tag,
     return NPT_SUCCESS;
 }
 
-
+// Media browser fences
+void CUPnP::AddFriendlyName( const CStdString& device_id, const CStdString& object_id, const CStdString& friendly_name )
+{
+  if(m_MediaBrowser) ((CMediaBrowser*)m_MediaBrowser)->AddFriendlyName(device_id,object_id,friendly_name);
+}
+bool CUPnP::GetFriendlyName( const CStdString& device_id, const CStdString& object_id, CStdString& friendly_name )
+{
+  return (m_MediaBrowser ? ((CMediaBrowser*)m_MediaBrowser)->GetFriendlyName(device_id,object_id,friendly_name) : false);
+}
+bool CUPnP::GetFriendlyPath( const CStdString& path, CStdString& friendly_path )
+{
+  return (m_MediaBrowser ? ((CMediaBrowser*)m_MediaBrowser)->GetFriendlyPath( path, friendly_path ) : false);
+}

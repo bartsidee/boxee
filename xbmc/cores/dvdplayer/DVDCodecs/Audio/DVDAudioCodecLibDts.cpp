@@ -18,7 +18,10 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
- 
+#ifndef WIN32
+#include <config.h>
+#endif
+#ifdef HAS_DVD_LIBDTS_CODEC
 #include "AdvancedSettings.h"
 #include "GUISettings.h"
 #include "DVDAudioCodecLibDts.h"
@@ -26,6 +29,8 @@
 #include "utils/log.h"
 
 #define HEADER_SIZE 14
+
+#define MAKE_DWORD(x) ((unsigned int)((x)[0] << 24) | ((x)[1] << 16) | ((x)[2] << 8) | ((x)[3]))
 
 static inline int16_t convert(int32_t i)
 {
@@ -37,112 +42,26 @@ static inline int16_t convert(int32_t i)
     return (i > 32767) ? 32767 : ((i < -32768) ? -32768 : i);
 }
 
-void CDVDAudioCodecLibDts::convert2s16_multi(convert_t * _f, int16_t * s16, int flags)
+/**
+ * \brief Function to convert the "planar" float format used by libdts
+ * into the interleaved int16 format used by us.
+ * \param in the input buffer containing the planar samples.
+ * \param out the output buffer where the interleaved result is stored.
+ * \param channels the total number of channels in the decoded data
+ */
+static int resample_int16(sample_t * in, int16_t *out, unsigned int channels)
 {
-  register int i;
-  register int32_t * f = (int32_t *) _f;
-
-  switch (flags)
+  unsigned int i, ch;
+  int16_t *p = out;
+  for(i = 0; i < 256; ++i)
   {
-    case DTS_MONO:
-      for (i = 0; i < 256; i++)
-      {
-        s16[2*i  ] = convert (f[i]);
-        s16[2*i+1] = convert (f[i]);
-      }
-      break;
-    case DTS_CHANNEL:
-    case DTS_STEREO:
-    case DTS_DOLBY:
-      for (i = 0; i < 256; i++)
-      {
-        s16[2*i  ] = convert (f[i]);
-        s16[2*i+1] = convert (f[i+256]);
-      }
-      break;
-    case DTS_3F:
-      for (i = 0; i < 256; i++)
-      {
-        s16[6*i  ] = convert (f[i+256]);
-        s16[6*i+1] = convert (f[i+512]);
-        s16[6*i+2] = 0;
-        s16[6*i+3] = 0;
-        s16[6*i+4] = convert (f[i]);
-        s16[6*i+4] = 0;
-      }
-      break;
-    case DTS_2F2R:
-      for (i = 0; i < 256; i++)
-      {
-        s16[4*i] = convert (f[i]);
-        s16[4*i+1] = convert (f[i+256]);
-        s16[4*i+2] = convert (f[i+512]);
-        s16[4*i+3] = convert (f[i+768]);
-      }
-      break;
-    case DTS_3F2R:
-      for (i = 0; i < 256; i++)
-      {
-        s16[6*i]   = convert (f[i]);
-        s16[6*i+1] = convert (f[i+256]);
-        s16[6*i+2] = convert (f[i+512]);
-        s16[6*i+3] = convert (f[i+768]);
-        s16[6*i+4] = convert (f[i+1024]);
-        s16[6*i+5] = 0;
-      }
-      break;
-    case DTS_MONO | DTS_LFE:
-      for (i = 0; i < 256; i++)
-      {
-        s16[6*i] = s16[6*i+1] = s16[6*i+2] = s16[6*i+3] = 0;
-        s16[6*i+4] = convert (f[i]);
-        s16[6*i+5] = convert (f[i+256]);
-      }
-      break;
-    case DTS_CHANNEL | DTS_LFE:
-    case DTS_STEREO | DTS_LFE:
-    case DTS_DOLBY | DTS_LFE:
-      for (i = 0; i < 256; i++)
-      {
-        s16[6*i  ] = convert (f[i]);
-        s16[6*i+1] = convert (f[i+256]);
-        s16[6*i+2] = s16[6*i+3] = s16[6*i+4] = 0;
-        s16[6*i+5] = convert (f[i+512]);
-      }
-      break;
-    case DTS_3F | DTS_LFE:
-      for (i = 0; i < 256; i++)
-      {
-        s16[6*i] = convert (f[i+256]);
-        s16[6*i+1] = convert (f[i+512]);
-        s16[6*i+2] = s16[6*i+3] = 0;
-        s16[6*i+4] = convert (f[i]);
-        s16[6*i+5] = convert (f[i+768]);
-      }
-      break;
-    case DTS_2F2R | DTS_LFE:
-      for (i = 0; i < 256; i++)
-      {
-        s16[6*i  ] = convert (f[i]);
-        s16[6*i+1] = convert (f[i+256]);
-        s16[6*i+2] = convert (f[i+512]);
-        s16[6*i+3] = convert (f[i+768]);
-        s16[6*i+4] = 0;
-        s16[6*i+5] = convert (f[i+1024]);
-      }
-      break;
-    case DTS_3F2R | DTS_LFE:
-      for (i = 0; i < 256; i++)
-      {
-        s16[6*i] = convert (f[i+256]);
-        s16[6*i+1] = convert (f[i+512]);
-        s16[6*i+2] = convert (f[i+768]);
-        s16[6*i+3] = convert (f[i+1024]);
-        s16[6*i+4] = convert (f[i]);
-        s16[6*i+5] = convert (f[i+1280]);
-      }
-      break;
+    for(ch = 0; ch < channels; ++ch)
+    {
+      *p = convert( ((int32_t*)in)[i + (ch << 8)] );
+      ++p;
+    }
   }
+  return p - out; 
 }
 
 CDVDAudioCodecLibDts::CDVDAudioCodecLibDts() : CDVDAudioCodec()
@@ -175,6 +94,8 @@ bool CDVDAudioCodecLibDts::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
   // Output will be decided once we query the stream.
   m_iOutputChannels = 0;
   
+  CLog::Log(LOGINFO, "CDVDAudioCodecLibDts::Open successful");
+
   return true;
 }
 
@@ -184,34 +105,75 @@ void CDVDAudioCodecLibDts::Dispose()
   m_pState = NULL;
 }
 
-int CDVDAudioCodecLibDts::GetNrOfChannels(int iFlags)
-{
-  if(iFlags & DTS_LFE)
-    return 6;
-  if(iFlags & DTS_CHANNEL)
-    return 6;
-  else if ((iFlags & DTS_CHANNEL_MASK) == DTS_2F2R)
-    return 4;
-  else
-    return 2;
-}
-
 void CDVDAudioCodecLibDts::SetupChannels(int flags)
 {
-  m_iSourceFlags    = flags;
-  m_iSourceChannels = GetNrOfChannels(flags);
-  if (g_guiSettings.GetBool("audiooutput.downmixmultichannel"))
+  /* These are channel mappings that libdts outputs */
+  static enum PCMChannels channelMaps[14][6] =
+  {
+    /* Without LFE */
+    {/* DTS_MONO    */ PCM_FRONT_CENTER                                                                                             },
+    {/* DTS_STEREO  */ PCM_FRONT_LEFT  , PCM_FRONT_RIGHT                                                                            },
+    {/* DTS_3F      */ PCM_FRONT_CENTER, PCM_FRONT_LEFT   , PCM_FRONT_RIGHT                                                         },
+    {/* DTS_2F1R    */ PCM_FRONT_LEFT  , PCM_FRONT_RIGHT  , PCM_BACK_CENTER                                                         },
+    {/* DTS_3F1R    */ PCM_FRONT_CENTER, PCM_FRONT_LEFT   , PCM_FRONT_RIGHT  , PCM_BACK_CENTER                                      },
+    {/* DTS_2F2R    */ PCM_FRONT_LEFT  , PCM_FRONT_RIGHT  , PCM_SIDE_LEFT    , PCM_SIDE_RIGHT                                       },
+    {/* DTS_3F2R    */ PCM_FRONT_CENTER, PCM_FRONT_LEFT   , PCM_FRONT_RIGHT  , PCM_SIDE_LEFT  , PCM_SIDE_RIGHT                      },
+    /* With LFE */
+    {/* DTS_MONO    */ PCM_FRONT_CENTER, PCM_LOW_FREQUENCY                                                                          },
+    {/* DTS_STEREO  */ PCM_FRONT_LEFT  , PCM_FRONT_RIGHT  , PCM_LOW_FREQUENCY                                                       },
+    {/* DTS_3F      */ PCM_FRONT_CENTER, PCM_FRONT_LEFT   , PCM_FRONT_RIGHT  , PCM_LOW_FREQUENCY                                    },
+    {/* DTS_2F1R    */ PCM_FRONT_LEFT  , PCM_FRONT_RIGHT  , PCM_BACK_CENTER                                                         },
+    {/* DTS_3F1R    */ PCM_FRONT_CENTER, PCM_FRONT_LEFT   , PCM_FRONT_RIGHT  , PCM_BACK_CENTER, PCM_LOW_FREQUENCY                   },
+    {/* DTS_2F2R    */ PCM_FRONT_LEFT  , PCM_FRONT_RIGHT  , PCM_SIDE_LEFT    , PCM_SIDE_RIGHT , PCM_LOW_FREQUENCY                   },
+    {/* DTS_3F2R    */ PCM_FRONT_CENTER, PCM_FRONT_LEFT   , PCM_FRONT_RIGHT  , PCM_SIDE_LEFT  , PCM_SIDE_RIGHT   , PCM_LOW_FREQUENCY},
+  };
+
+  m_iSourceFlags = flags;
+
+  // setup channel map
+  int channels = 0;
+  int chOffset = (flags & DTS_LFE) ? 7 : 0;
+  switch (m_iSourceFlags & DTS_CHANNEL_MASK)
+  {
+    case DTS_MONO   : m_pChannelMap = channelMaps[chOffset + 0]; channels = 1; break;
+    case DTS_CHANNEL:
+    case DTS_DOLBY  :
+    case DTS_STEREO : m_pChannelMap = channelMaps[chOffset + 1]; channels = 2; break;
+    case DTS_3F     : m_pChannelMap = channelMaps[chOffset + 2]; channels = 3; break;
+    case DTS_2F1R   : m_pChannelMap = channelMaps[chOffset + 3]; channels = 3; break;
+    case DTS_3F1R   : m_pChannelMap = channelMaps[chOffset + 4]; channels = 4; break;
+    case DTS_2F2R   : m_pChannelMap = channelMaps[chOffset + 5]; channels = 4; break;
+    case DTS_3F2R   : m_pChannelMap = channelMaps[chOffset + 6]; channels = 5; break;
+    default         : m_pChannelMap = NULL;                                    break;
+  }
+  CLog::Log(LOGINFO, "LIBDTS channels %d LFE %c\n", channels, flags & DTS_LFE ? 't' : 'f');
+  
+  if(m_pChannelMap == NULL)
+    CLog::Log(LOGERROR, "CDVDAudioCodecLibDts::SetupChannels - Invalid channel mapping");
+
+  if( flags & DTS_LFE )
+    channels++;
+
+  if(m_iSourceChannels > 0 && m_iSourceChannels != channels)
+    CLog::Log(LOGWARNING, "%s - Number of channels changed in stream from %d to %d, data might be truncated", __FUNCTION__, m_iOutputChannels, channels);
+
+
+  m_iSourceChannels = channels;
+  m_iOutputChannels = m_iSourceChannels;
+  m_iOutputFlags    = m_iSourceFlags;
+
+  // If we can't support multichannel output downmix
+  if (g_guiSettings.GetBool("audiooutput.downmixmultichannel") || m_pChannelMap == NULL)
+  {
     m_iOutputChannels = 2;
-  else
-    m_iOutputChannels = m_iSourceChannels;
+    m_pChannelMap     = channelMaps[1];
+    m_iOutputFlags    = DTS_STEREO;
+  }
 
-  if (m_iOutputChannels == 1) 
-    m_iOutputFlags = DTS_MONO;
-  else if (m_iOutputChannels == 2)
-    m_iOutputFlags = DTS_STEREO;
-  else
-    m_iOutputFlags = m_iSourceFlags;
+  // dconti- below only seems to come into play if we actually downmix..
 
+  /* adjust level should always be set, to keep samples in proper range */
+  /* after any downmixing has been done */
   m_iOutputFlags |= DTS_ADJUST_LEVEL;
 }
 
@@ -247,6 +209,17 @@ int CDVDAudioCodecLibDts::ParseFrame(BYTE* data, int size, BYTE** frame, int* fr
         return m_inputSize;
       }
     }
+    else if( size >= 10 )
+    {
+      // Check for a DTS-HD frame. If found, we drop it, to save ourselves the scan
+      int frame_size = ParseDTSHDFrame(data, size);
+      if( frame_size > 0 )
+      {
+        *frame = NULL;
+        *framesize = 0;
+        return frame_size;
+      }
+    }
   }
 
   // attempt to fill up to 7 bytes
@@ -271,6 +244,18 @@ int CDVDAudioCodecLibDts::ParseFrame(BYTE* data, int size, BYTE** frame, int* fr
     if(m_iFrameSize > 0)
       break;
 
+    // Scan for DTS-HD
+    if( size >= 10 )
+    {
+      int fs = ParseDTSHDFrame(data, size);
+      if( fs > 0 )
+      {
+        *frame = NULL;
+        *framesize = 0;
+        return (data+fs) - orig;
+      }
+    }
+    
     if(size == 0)
       return data - orig;
 
@@ -302,6 +287,47 @@ int CDVDAudioCodecLibDts::ParseFrame(BYTE* data, int size, BYTE** frame, int* fr
   return data - orig;
 }
 
+int CDVDAudioCodecLibDts::ParseDTSHDFrame(BYTE* buffer, int len)
+{
+  // manually process DTSHD frames
+  // bytes 0-3  syncword (0x64582025
+  //       4    ignored
+  //       5-9  bitfield...
+  //
+  //         2 bits    ignored
+  //         1 bit     large header indicator; if set the remaining header is 32 bytes, otherwise 24
+  //         8 bits    ignored
+  //      if large header:
+  //             4 bits  ignored
+  //            20 bits  frame size
+  //      else
+  //            16 bits  frame size
+
+  // 
+  if( len < 10 ) return 0;
+  
+  unsigned int syncword = MAKE_DWORD( &buffer[0] );
+  int frame_size = 0;
+
+  if( 0x64582025 == syncword )
+  {
+    if( buffer[5] & 0x20 )
+    {
+      unsigned int fs = MAKE_DWORD( &buffer[6] );
+      fs = (fs >> 5) & 0x000fffff;
+      frame_size = (int) fs + 1;
+    }
+    else
+    {
+      unsigned int fs = MAKE_DWORD( &buffer[6] );
+      fs = (fs >> 13) & 0x0000ffff;
+      frame_size = (int) fs + 1;
+    }
+  }
+
+  return frame_size;
+}
+
 int CDVDAudioCodecLibDts::Decode(BYTE* pData, int iSize)
 {
   int len, framesize;
@@ -330,8 +356,7 @@ int CDVDAudioCodecLibDts::Decode(BYTE* pData, int iSize)
       CLog::Log(LOGERROR, "CDVDAudioCodecLibDts::Decode : dts_block != 0");
       break;
     }
-    convert2s16_multi(m_fSamples, (int16_t*)(m_decodedData + m_decodedSize), flags & (DTS_CHANNEL_MASK | DTS_LFE));
-    m_decodedSize += 2 * 256 * m_iOutputChannels;
+    m_decodedSize += 2*resample_int16(m_fSamples, (int16_t*)(m_decodedData + m_decodedSize), m_iOutputChannels);
   }
         
   return len;
@@ -366,3 +391,4 @@ void CDVDAudioCodecLibDts::Reset()
   m_fSamples = m_dll.dts_samples(m_pState);
 }
 
+#endif

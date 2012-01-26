@@ -1,9 +1,9 @@
 /*
  * hdhomerun_pkt.h
  *
- * Copyright © 2005-2006 Silicondust Engineering Ltd. <www.silicondust.com>.
+ * Copyright © 2005-2006 Silicondust USA Inc. <www.silicondust.com>.
  *
- * This library is free software; you can redistribute it and/or
+ * This library is free software; you can redistribute it and/or 
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 3 of the License, or (at your option) any later version.
@@ -138,6 +138,7 @@ extern "C" {
 #define HDHOMERUN_TAG_GETSET_VALUE 0x04
 #define HDHOMERUN_TAG_GETSET_LOCKKEY 0x15
 #define HDHOMERUN_TAG_ERROR_MESSAGE 0x05
+#define HDHOMERUN_TAG_TUNER_COUNT 0x10
 
 #define HDHOMERUN_DEVICE_TYPE_WILDCARD 0xFFFFFFFF
 #define HDHOMERUN_DEVICE_TYPE_TUNER 0x00000001

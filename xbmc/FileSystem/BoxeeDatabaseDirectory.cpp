@@ -22,6 +22,15 @@
 #include "FileSystem/DirectoryCache.h"
 #include "SpecialProtocol.h"
 #include "AdvancedSettings.h"
+#include "../BrowseWindowFilter.h"
+
+#define UNWATCHED_FILTER_ID   601
+#define UNWATCHED_FILTER_NAME "unwatched"
+
+#define SOURCE_FILTER_ID  701
+#define SOURCE_FILTER_NAME  "local-source"
+
+#define ITEMS_FILTERED_OUT_PROPERTY  "FilteredOut"
 
 using namespace BOXEE;
 using namespace XFILE;
@@ -38,6 +47,89 @@ CBoxeeDatabaseDirectory::~CBoxeeDatabaseDirectory()
 {
 }
 
+bool CBoxeeDatabaseDirectory::GetMovies(std::map<std::string, std::string>& mapParams, CFileItemList &items, int iLimit)
+{
+  BXMetadataEngine& MDE = BOXEE::Boxee::GetInstance().GetMetadataEngine();
+
+  std::vector<BXMetadata*> vecVideoFiles;
+  std::vector<std::string> vecPathFilter;
+  std::vector<CBrowseWindowLocalFilter*> vecFilters;
+
+  if (CreateShareFilter("video", vecPathFilter))
+  {
+    CStdString genre = mapParams["genre"];
+    CStdString prefix = mapParams["prefix"];
+    CStdString searchTerm = mapParams["term"];
+
+    if (searchTerm.IsEmpty())
+    {
+      MDE.GetMovies(vecVideoFiles, genre, prefix, vecPathFilter, iLimit);
+    }
+    else
+    {
+      CUtil::UrlDecode(searchTerm);
+      MDE.SearchMoviesByTitle(searchTerm, vecVideoFiles, vecPathFilter, iLimit);
+    }
+
+    if (mapParams.find("unwatched") != mapParams.end())
+    {
+      CStdString strShowUnwatched = mapParams["unwatched"];
+
+      if (strShowUnwatched == "true")
+      {
+        vecFilters.push_back(new CBrowseWindowTvShowUnwatchedFilter(UNWATCHED_FILTER_ID,UNWATCHED_FILTER_NAME, true));
+      }
+    }
+
+    if (mapParams.find("source") != mapParams.end())
+    {
+      CStdString strSourceFilter = mapParams["source"];
+
+      if (!strSourceFilter.IsEmpty())
+      {
+        vecFilters.push_back(new CBrowseWindowLocalSourceFilter(SOURCE_FILTER_ID,SOURCE_FILTER_NAME, strSourceFilter));
+      }
+    }
+
+    CreateFileItemList(vecVideoFiles, items);
+
+    for (int i = 0; i < items.Size(); i++)
+    {
+      bool isFiltered = false;
+
+      for (std::vector<CBrowseWindowLocalFilter*>::iterator it = vecFilters.begin(); it != vecFilters.end() ; it++)
+      {
+        if ((*it)->Apply(&*items[i]) != true)
+        {
+          items.Remove(i);
+          i--;
+          isFiltered = true;
+          break; //we don't continue filtering if we removed that item
+        }
+      }
+
+      if (!isFiltered)
+      {
+        items.Get(i)->SetProperty("value", items.Get(i)->GetLabel());
+      }
+    }
+
+    if (!vecFilters.empty() && items.IsEmpty())
+    {
+      items.SetProperty(ITEMS_FILTERED_OUT_PROPERTY,true);
+    }
+
+    for (std::vector<CBrowseWindowLocalFilter*>::iterator it = vecFilters.begin(); it != vecFilters.end() ; it = vecFilters.erase(it))
+    {
+      delete (*it);
+    }
+
+    ClearMetadataVector(vecVideoFiles);
+  }
+
+  return true;
+}
+
 bool CBoxeeDatabaseDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items)
 {
   BXMetadataEngine& MDE = BOXEE::Boxee::GetInstance().GetMetadataEngine();
@@ -47,15 +139,11 @@ bool CBoxeeDatabaseDirectory::GetDirectory(const CStdString& strPath, CFileItemL
   CStdString strFile;
   std::map<std::string, std::string> mapParams;
 
-//  CURL url(strPath);
-//  CLog::Log(LOGDEBUG, "CBoxeeDatabaseDirectory::GetDirectory, GetHostName = %s, GetShareName = %s, GetDomain = %s, GetFileName = %s, GetOptions = %s (bsd) (browse)",
-//      url.GetHostName().c_str(), url.GetShareName().c_str(), url.GetDomain().c_str(), url.GetFileName().c_str(), url.GetOptions().c_str());
-
   // Parse boxeedb url
-  if( !BoxeeUtils::ParseBoxeeDbUrl( strPath, strDir, strFile, mapParams ) )
+  if (!BoxeeUtils::ParseBoxeeDbUrl(strPath, strDir, strFile, mapParams))
     return false;
 
-  CLog::Log(LOGDEBUG, "CBoxeeDatabaseDirectory::GetDirectory, path = %s, strDir = %s, strFile = %s, strParams = %s (browse)", strPath.c_str(), strDir.c_str(), strFile.c_str(), strParams.c_str());
+  CLog::Log(LOGDEBUG,"CBoxeeDatabaseDirectory::GetDirectory - [path=%s][strDir=%s][strFile=%s][strParams=%s] (browse)(bdbd)", strPath.c_str(), strDir.c_str(), strFile.c_str(), strParams.c_str());
 
   // Set the limit
   int iLimit = BXUtils::StringToInt(mapParams["limit"]);
@@ -99,33 +187,33 @@ bool CBoxeeDatabaseDirectory::GetDirectory(const CStdString& strPath, CFileItemL
     vecMusicFiles.clear();
 
   }
-//  else if( strDir == "album" )
-//  {
-//    // path of type boxeedb://album/101
-//    BXMetadata* pAlbumMetadata = new BXMetadata(MEDIA_ITEM_TYPE_ALBUM);
-//    BXAlbum* pAlbum = (BXAlbum*)pAlbumMetadata->GetDetail(MEDIA_DETAIL_ALBUM);
-//    BXArtist* pArtist = (BXArtist*)pAlbumMetadata->GetDetail(MEDIA_DETAIL_ARTIST);
-//
-//    std::vector<BXMetadata*> vecAlbums;
-//
-//    int iAlbumId = BXUtils::StringToInt(strFile);
-//    if (MDE.GetAlbumById(iAlbumId, pAlbum))
-//    {
-//      // Get artist id
-//      int iArtistId = pAlbum->m_iArtistId;
-//      MDE.GetArtistById(iArtistId, pArtist);
-//      vecAlbums.push_back(pAlbumMetadata);
-//    }
-//
-//    CreateFileItemList(vecAlbums, items);
-//    delete pAlbumMetadata;
-//    vecAlbums.clear();
-//  }
+  //  else if( strDir == "album" )
+  //  {
+  //    // path of type boxeedb://album/101
+  //    BXMetadata* pAlbumMetadata = new BXMetadata(MEDIA_ITEM_TYPE_ALBUM);
+  //    BXAlbum* pAlbum = (BXAlbum*)pAlbumMetadata->GetDetail(MEDIA_DETAIL_ALBUM);
+  //    BXArtist* pArtist = (BXArtist*)pAlbumMetadata->GetDetail(MEDIA_DETAIL_ARTIST);
+  //
+  //    std::vector<BXMetadata*> vecAlbums;
+  //
+  //    int iAlbumId = BXUtils::StringToInt(strFile);
+  //    if (MDE.GetAlbumById(iAlbumId, pAlbum))
+  //    {
+  //      // Get artist id
+  //      int iArtistId = pAlbum->m_iArtistId;
+  //      MDE.GetArtistById(iArtistId, pArtist);
+  //      vecAlbums.push_back(pAlbumMetadata);
+  //    }
+  //
+  //    CreateFileItemList(vecAlbums, items);
+  //    delete pAlbumMetadata;
+  //    vecAlbums.clear();
+  //  }
   else if (strDir == "artist")
   {
     int iArtistId = BXUtils::StringToInt(strFile);
 
-    CLog::Log(LOGDEBUG, "CBoxeeDatabaseDirectory::GetDirectory,Retrieving albums for artist %d (browse)", iArtistId);
+    CLog::Log(LOGDEBUG, "CBoxeeDatabaseDirectory::GetDirectory - Retrieving albums for artist %d (browse)(bdbd)", iArtistId);
 
     std::vector<BXMetadata*> vecMusicFiles;
     std::vector<std::string> vecPathFilter;
@@ -142,9 +230,9 @@ bool CBoxeeDatabaseDirectory::GetDirectory(const CStdString& strPath, CFileItemL
   }
   else if (strDir == "tracks")
   {
-    int iAlbumId = BXUtils::StringToInt(strFile);
+    int iAlbumId = BXUtils::StringToInt(BXUtils::URLDecode(mapParams["albumId"]));
 
-    CLog::Log(LOGDEBUG, "CBoxeeDatabaseDirectory::GetDirectory,Retrieving tracks for album %d (browse)", iAlbumId);
+    CLog::Log(LOGDEBUG, "CBoxeeDatabaseDirectory::GetDirectory - Retrieving tracks for album [id=%d] (browse)(bdbd)", iAlbumId);
 
     // Get album details
     BXMetadata* pAlbumMetadata = new BXMetadata(MEDIA_ITEM_TYPE_ALBUM);
@@ -218,9 +306,11 @@ bool CBoxeeDatabaseDirectory::GetDirectory(const CStdString& strPath, CFileItemL
   //  }
   else if (strDir == "episodes")
   {
-    CStdString strTvShowBoxeeId = strFile;
+    CStdString strTvShowBoxeeId = mapParams["seriesId"];
 
-    CLog::Log(LOGDEBUG, "CBoxeeDatabaseDirectory::GetDirectory, get episodes for %s (browse)", strTvShowBoxeeId.c_str());
+    CUtil::UrlDecode(strTvShowBoxeeId);
+
+    CLog::Log(LOGDEBUG,"CBoxeeDatabaseDirectory::GetDirectory - get episodes for [%s] (browse)(bdbd)", strTvShowBoxeeId.c_str());
 
     std::vector<BXMetadata*> vecEpisodes;
     std::vector<std::string> vecPathFilter;
@@ -229,11 +319,13 @@ bool CBoxeeDatabaseDirectory::GetDirectory(const CStdString& strPath, CFileItemL
       MDE.GetEpisodes(strTvShowBoxeeId, -1 /*all seasons */, vecEpisodes, vecPathFilter);
       CreateFileItemList(vecEpisodes, items);
 
-      CLog::Log(LOGDEBUG, "CBoxeeDatabaseDirectory::GetDirectory, got %d episodes for %s (browse)", items.Size(), strTvShowBoxeeId.c_str());
+      CLog::Log(LOGDEBUG, "CBoxeeDatabaseDirectory::GetDirectory - got [%zu] created [%d] episodes for [%s] (browse)(bdbd)", vecEpisodes.size(), items.Size(), strTvShowBoxeeId.c_str());
 
-      for(size_t i=0; i < vecEpisodes.size(); i++) {
+      for(size_t i=0; i < vecEpisodes.size(); i++)
+      {
         delete vecEpisodes[i];
       }
+
       vecEpisodes.clear();
     }
   }
@@ -248,11 +340,11 @@ bool CBoxeeDatabaseDirectory::GetDirectory(const CStdString& strPath, CFileItemL
     if (CreateShareFilter("music", vecPathFilter))
     {
 
-      CStdString search = mapParams["search"];
-      if (!search.IsEmpty())
+      CStdString searchTerm = mapParams["term"];
+      if (!searchTerm.IsEmpty())
       {
-        CUtil::UrlDecode(search);
-        BOXEE::Boxee::GetInstance().GetMetadataEngine().SearchMusic(search, vecMusic, vecPathFilter, iLimit);
+        CUtil::UrlDecode(searchTerm);
+        BOXEE::Boxee::GetInstance().GetMetadataEngine().SearchMusic(searchTerm, vecMusic, vecPathFilter, iLimit);
       }
 
       CreateFileItemList(vecMusic, items);
@@ -291,7 +383,7 @@ bool CBoxeeDatabaseDirectory::GetDirectory(const CStdString& strPath, CFileItemL
       }
       else
       {
-        CLog::Log(LOGERROR, "CBoxeeDatabaseDirectory::GetDirectory, Can not get videos without titles (browse)");
+        CLog::Log(LOGERROR, "CBoxeeDatabaseDirectory::GetDirectory - Can not get videos without titles (browse)(bdbd)");
       }
 
       CreateFileItemList(vecVideoFiles, items);
@@ -306,21 +398,21 @@ bool CBoxeeDatabaseDirectory::GetDirectory(const CStdString& strPath, CFileItemL
     {
       CStdString genre = mapParams["genre"];
       CStdString prefix = mapParams["prefix"];
-      CStdString search = mapParams["search"];
+      CStdString searchTerm = mapParams["term"];
 
-      if (search.IsEmpty())
+      if (searchTerm.IsEmpty())
       {
-        CLog::Log(LOGDEBUG, "CBoxeeDatabaseDirectory::HandleTvShows, get tv shows, genre = %s, prefix = %s (browse)", genre.c_str(), prefix.c_str());
+        CLog::Log(LOGDEBUG, "CBoxeeDatabaseDirectory::HandleTvShows - get tv shows [genre=%s][prefix=%s] (browse)(bdbd)", genre.c_str(), prefix.c_str());
         MDE.GetTvShows(vecVideoFiles, genre, prefix, vecPathFilter, iLimit);
       }
       else
       {
-        CLog::Log(LOGDEBUG, "CBoxeeDatabaseDirectory::HandleTvShows, search by title = %s (search)", search.c_str());
-        CUtil::UrlDecode(search);
-        MDE.SearchTvShowsByTitle(search, vecVideoFiles, vecPathFilter, iLimit);
+        CLog::Log(LOGDEBUG, "CBoxeeDatabaseDirectory::HandleTvShows, search by title = %s (search)", searchTerm.c_str());
+        CUtil::UrlDecode(searchTerm);
+        MDE.SearchTvShowsByTitle(searchTerm, vecVideoFiles, vecPathFilter, iLimit);
       }
 
-      CLog::Log(LOGDEBUG, "CBoxeeDatabaseDirectory::HandleTvShows, get %d tv shows, genre = %s, prefix = %s (browse)", (int)vecVideoFiles.size(), genre.c_str(), prefix.c_str());
+      CLog::Log(LOGDEBUG, "CBoxeeDatabaseDirectory::HandleTvShows - get [%d] tv shows [genre=%s][prefix=%s] (browse)(bdbd)", (int)vecVideoFiles.size(), genre.c_str(), prefix.c_str());
       CreateFileItemList(vecVideoFiles, items);
 
       for (int i = 0; i < items.Size(); i++)
@@ -333,33 +425,7 @@ bool CBoxeeDatabaseDirectory::GetDirectory(const CStdString& strPath, CFileItemL
   }
   else if (strDir == "movies")
   {
-    std::vector<BXMetadata*> vecVideoFiles;
-    std::vector<std::string> vecPathFilter;
-    if (CreateShareFilter("video", vecPathFilter))
-    {
-      CStdString genre = mapParams["genre"];
-      CStdString prefix = mapParams["prefix"];
-
-      CStdString search = mapParams["search"];
-      if (search.IsEmpty())
-      {
-        MDE.GetMovies(vecVideoFiles, genre, prefix, vecPathFilter, iLimit);
-      }
-      else
-      {
-        CUtil::UrlDecode(search);
-        MDE.SearchMoviesByTitle(search, vecVideoFiles, vecPathFilter, iLimit);
-      }
-
-      CreateFileItemList(vecVideoFiles, items);
-
-      for (int i = 0; i < items.Size(); i++)
-      {
-        items.Get(i)->SetProperty("value", items.Get(i)->GetLabel());
-      }
-
-      ClearMetadataVector(vecVideoFiles);
-    }
+    GetMovies(mapParams,items,iLimit);
   }
   else if (strDir == "unresolvedVideoFolders")
   {
@@ -380,6 +446,13 @@ bool CBoxeeDatabaseDirectory::GetDirectory(const CStdString& strPath, CFileItemL
     {
       MDE.GetUnresolvedVideoFiles(vecUnresolvedVideos, vecPathFilter, iLimit);
       CreateFileItemList(vecUnresolvedVideos, items);
+      for (int i = 0; i < items.Size(); i++)
+      {
+        items.Get(i)->SetProperty("isUnresolvedVideo", true);
+        CStdString label = items.Get(i)->GetLabel();
+        CUtil::UrlDecode(label);
+        items.Get(i)->SetLabel(label);
+      }
       ClearMetadataVector(vecUnresolvedVideos);
     }
   }
@@ -426,7 +499,7 @@ bool CBoxeeDatabaseDirectory::GetDirectory(const CStdString& strPath, CFileItemL
     std::vector<BXMetadata*> vecUnresolvedFolders;
     MDE.GetUnresolvedFoldersByPath(strPath, vecUnresolvedFolders);
 
-    CLog::Log(LOGDEBUG, "STATUS, Got %lu unresolved folders for path %s", vecUnresolvedFolders.size(), strPath.c_str());
+    CLog::Log(LOGDEBUG, "STATUS, Got %zu unresolved folders for path %s", vecUnresolvedFolders.size(), strPath.c_str());
 
     CreateFileItemList(vecUnresolvedFolders, items);
 
@@ -444,6 +517,18 @@ bool CBoxeeDatabaseDirectory::GetDirectory(const CStdString& strPath, CFileItemL
     delete vecMediaItems[i];
   }
   vecMediaItems.clear();
+
+  //remove not allowed content
+  int i = 0;
+  while(i < items.Size())
+  {
+    if(!items[i]->IsAllowed())
+    {
+      items.Remove(i);
+      continue;
+    }
+    i++;
+  }
 
   return true;
 }
@@ -550,10 +635,24 @@ void CBoxeeDatabaseDirectory::FillItemDetails(CFileItem *pItem)
       pItem->GetVideoInfoTag()->m_strPlotOutline = pItem->GetVideoInfoTag()->m_strPlot;
 
     if ( !pItem->GetVideoInfoTag()->m_strPlot.IsEmpty() )
+    {
       pItem->SetProperty ( "HasMoreInfo","1" );
 
+      if (pItem->GetProperty("description").IsEmpty())
+      {
+        pItem->SetProperty("description",pItem->GetVideoInfoTag()->m_strPlot);
+      }
+    }
+
     if ( !pItem->GetVideoInfoTag()->m_strPlotOutline.IsEmpty() )
+    {
       pItem->SetProperty ( "HasDescription","1" );
+
+      if (pItem->GetProperty("description").IsEmpty())
+      {
+        pItem->SetProperty("description",pItem->GetVideoInfoTag()->m_strPlotOutline);
+      }
+    }
 
     if (pItem->GetProperty("rts-mediatype").IsEmpty())
     {
@@ -561,6 +660,10 @@ void CBoxeeDatabaseDirectory::FillItemDetails(CFileItem *pItem)
       {
         pItem->SetProperty("istvshow","1");
         pItem->SetProperty("rts-mediatype","tv_show");
+      }
+      else if (!pItem->GetProperty("boxeeid").IsEmpty())
+      {
+        pItem->SetProperty("rts-mediatype","movie");
       }
       else
       {
@@ -578,15 +681,14 @@ void CBoxeeDatabaseDirectory::FillItemDetails(CFileItem *pItem)
   if ( !pItem->GetThumbnailImage().IsEmpty() || !pItem->GetIconImage().IsEmpty() )
     pItem->SetProperty ( "HasThumb", "1" );
 
-  CURL url ( pItem->m_strPath );
+  CURI url ( pItem->m_strPath );
   if ( url.GetProtocol() == "boxeedb" )
   {
     pItem->SetProperty ( "DisplayPath", "" );
   }
   else
   {
-    CStdString strUrl;
-    url.GetURLWithoutUserDetails ( strUrl );
+    CStdString strUrl = url.GetWithoutUserDetails();
     pItem->SetProperty ( "DisplayPath", strUrl );
   }
 
@@ -633,7 +735,11 @@ bool CBoxeeDatabaseDirectory::CreateAudioItem(const BXMetadata* pMetadata, CFile
 
   pItem->SetThumbnailImage(pAlbum->m_strArtwork);
 
-  if ((pItem->m_strPath == "") || (pItem->GetLabel() == "")) return false;
+  if ((pItem->m_strPath == "") || (pItem->GetLabel() == ""))
+  {
+    CLog::Log(LOGWARNING,"CBoxeeDatabaseDirectory::CreateAudioItem - return FALSE since item [path=%s] or [label=%s] is EMPTY",pItem->m_strPath.c_str(),pItem->GetLabel().c_str());
+    return false;
+  }
 
   return true;
 }
@@ -680,19 +786,35 @@ bool CBoxeeDatabaseDirectory::CreateVideoItem(const BXMetadata* pMetadata, CFile
   pInfoTag->Reset();
   BoxeeUtils::ConvertBXVideoToVideoInfoTag(pVideo, *pInfoTag);
 
+  // IsAdult flag on video
+  bool isAdult = BoxeeUtils::IsAdult(pVideo->m_strMPAARating,CRating::MPAA);
+  pItem->SetAdult(isAdult);
+
   // Title of the video
   pItem->SetLabel(pVideo->m_strTitle);
   pItem->SetProperty("title", pVideo->m_strTitle);
   pItem->SetLabelPreformated(true);
 
-  pItem->m_dateTime = CDateTime(pVideo->m_iReleaseDate);
+  pItem->m_dateTime = CDateTime((time_t)pVideo->m_iReleaseDate);
 
   // Copy certain video info fields to properties
   pItem->SetProperty("showid", pSeries->m_strBoxeeId);
   pItem->SetProperty("duration", pInfoTag->m_strRuntime);
   pItem->SetProperty("videorating", pInfoTag->m_iRating);
-  pItem->SetProperty("free-play", true);
 
+  if (pInfoTag->m_rottenTomatoDetails.bValidAudienceDetails)
+  {
+    pItem->SetProperty("rt-audience-score",pInfoTag->m_rottenTomatoDetails.iAudienceScore);
+    pItem->SetProperty("rt-audience-rating",pInfoTag->m_rottenTomatoDetails.strAudienceRating);
+    pItem->SetProperty("rt-has-audience-info",true);
+  }
+
+  if (pInfoTag->m_rottenTomatoDetails.bValidCriticsDetails)
+  {
+    pItem->SetProperty("rt-critics-score",pInfoTag->m_rottenTomatoDetails.iCriticsScore);
+    pItem->SetProperty("rt-critics-rating",pInfoTag->m_rottenTomatoDetails.strCriticsRating);
+    pItem->SetProperty("rt-has-critics-info",true);
+  }
 
   if (!pSeries->m_strTitle.empty())
   {
@@ -703,6 +825,10 @@ bool CBoxeeDatabaseDirectory::CreateVideoItem(const BXMetadata* pMetadata, CFile
 
   if (pItem->GetProperty("rts-mediatype").IsEmpty())
   {
+    ///////////////////////////////////////////////////////////
+    // 041010 - datebase contain only tv-show or movie items //
+    ///////////////////////////////////////////////////////////
+
     // TODO: Consider changing this check to pVideo->m_iSeriesId;
     if (pInfoTag->m_iEpisode > 0) // hack
     {
@@ -711,7 +837,7 @@ bool CBoxeeDatabaseDirectory::CreateVideoItem(const BXMetadata* pMetadata, CFile
     }
     else
     {
-      pItem->SetProperty("rts-mediatype","video");
+      pItem->SetProperty("rts-mediatype","movie");
     }
   }
 
@@ -720,6 +846,11 @@ bool CBoxeeDatabaseDirectory::CreateVideoItem(const BXMetadata* pMetadata, CFile
 
   pItem->SetProperty("boxeeDBvideoId", pVideo->m_iId);
   pItem->SetProperty("boxeeId", pVideo->m_strBoxeeId);
+
+  if (!pVideo->m_strNfoPath.empty())
+  {
+    pItem->SetProperty("hasNFO",true);
+  }
 
   if (pInfoTag->m_strTrailer != "") 
   {
@@ -732,16 +863,26 @@ bool CBoxeeDatabaseDirectory::CreateVideoItem(const BXMetadata* pMetadata, CFile
   for (size_t i = 0; i < vecLinks.size(); i++)
   {
     CStdString strPath = ConstructVideoPath(vecLinks[i]);
-    pItem->AddLink(pItem->GetLabel(), strPath, pItem->GetContentType(true), CLinkBoxeeType::LOCAL, "", "", "", "all", true,"",0);
+    pItem->AddLink(pItem->GetLabel(), strPath, pItem->GetContentType(true), CLinkBoxeeType::LOCAL, "", "", "", "all", true, "", 0, CLinkBoxeeOffer::FREE, "");
+
+    pItem->SetProperty("haslink-free-local", true);
 
     if (firstPath.empty())
+    {
       firstPath = strPath;
+    }
+  }
+
+  for (std::vector<BXVideoLink>::iterator it = pVideo->m_vecVideoLinks.begin(); it != pVideo->m_vecVideoLinks.end(); it++)
+  {
+    pItem->AddLink(it->m_strTitle.c_str(), it->m_strURL.c_str(), it->m_strType.c_str(), CFileItemList::GetLinkBoxeeTypeAsEnum(it->m_strBoxeeType.c_str()),
+        it->m_strProvider.c_str(), it->m_strProviderName.c_str(), it->m_strProviderThumb.c_str(), it->m_strCountryCodes.c_str(), BXUtils::StringToInt(it->m_strCountryRel),
+        it->m_strQualityLabel.c_str(), BXUtils::StringToInt(it->m_strQuality.c_str()), CFileItemList::GetLinkBoxeeOfferAsEnum(it->m_strOffer.c_str()), "");
   }
 
   // We need to set this field in order to play the file correctly in Boxee Video Main screen
   pInfoTag->m_strFileNameAndPath = firstPath;
   pItem->m_strPath = firstPath;
-
 
   // Date when the file was last modified on the disk
   pItem->m_dateTime = CDateTime(pVideo->m_iDateModified);
@@ -750,7 +891,14 @@ bool CBoxeeDatabaseDirectory::CreateVideoItem(const BXMetadata* pMetadata, CFile
   pItem->SetProperty("dateadded", pVideo->m_iDateAdded);
 
   if (pItem->GetThumbnailImage().IsEmpty() && !pVideo->m_strCover.empty())
+  {
     pItem->SetThumbnailImage(pVideo->m_strCover);
+  }
+
+  if (!pVideo->m_strOriginalCover.empty())
+  {
+    pItem->SetProperty("OriginalThumb",pVideo->m_strOriginalCover);
+  }
 
   CStdString strRatingChar;
   strRatingChar.Format("%d",(int)(pItem->GetVideoInfoTag()->m_fRating));
@@ -759,11 +907,33 @@ bool CBoxeeDatabaseDirectory::CreateVideoItem(const BXMetadata* pMetadata, CFile
 
   pItem->SetProperty("releasedate", relDate.GetAsddMMMYYYYDate());
 
+  if (pVideo->m_iReleaseDate != 0)
+  {
+    pItem->SetProperty("releasedateVal" , pVideo->m_iReleaseDate);
+  }
+  else
+  {
+    CDateTime relYear;
+    relYear.SetDate(pVideo->m_iYear , 12 , 31);
+    time_t epochTime;
+    relYear.GetAsTime(epochTime);
+    unsigned long iEpochTime = (unsigned long) epochTime;
+    pItem->SetProperty("releasedateVal" , iEpochTime);
+  }
+
   // fill more info (properties) on the item based on its values
   FillItemDetails(pItem);
   pItem->FillInDefaultIcon();
 
-  if ((pItem->m_strPath == "") || (pItem->GetLabel() == "")) return false;
+  std::string strActors = BXUtils::VectorTokened(pVideo->m_vecActors);
+  if (!strActors.empty())
+    pItem->SetProperty("cast", strActors);
+
+  if ((pItem->m_strPath == "") || (pItem->GetLabel() == ""))
+  {
+    CLog::Log(LOGWARNING,"CBoxeeDatabaseDirectory::CreateVideoItem - return FALSE since item [path=%s] or [label=%s] is EMPTY",pItem->m_strPath.c_str(),pItem->GetLabel().c_str());
+    return false;
+  }
 
   return true;
 
@@ -802,12 +972,14 @@ bool CBoxeeDatabaseDirectory::CreateArtistItem(const BXMetadata* pMetadata, CFil
 
     FillItemDetails(pItem);
     pItem->SetProperty("IsArtist", true);
-
   }
 
+  if ((pItem->m_strPath == "") || (pItem->GetLabel() == ""))
+  {
+    CLog::Log(LOGWARNING,"CBoxeeDatabaseDirectory::CreateArtistItem - return FALSE since item [path=%s] or [label=%s] is EMPTY",pItem->m_strPath.c_str(),pItem->GetLabel().c_str());
+    return false;
+  }
 
-
-  if ((pItem->m_strPath == "") || (pItem->GetLabel() == "")) return false;
   return true;
 }
 
@@ -816,13 +988,15 @@ bool CBoxeeDatabaseDirectory::CreateAlbumItem(const BXMetadata* pMetadata, CFile
   CMusicInfoTag* pInfoTag = pItem->GetMusicInfoTag();
 
   BXArtist* pArtist = (BXArtist*)pMetadata->GetDetail(MEDIA_DETAIL_ARTIST);
-  if (pArtist) {
+  if (pArtist)
+  {
     pInfoTag->SetArtist(pArtist->m_strName);
     pInfoTag->SetAlbumArtist(pArtist->m_strName);
   }
 
   BXAlbum* pAlbum = (BXAlbum*)pMetadata->GetDetail(MEDIA_DETAIL_ALBUM);
-  if (pAlbum) {
+  if (pAlbum)
+  {
     //CLog::Log(LOGDEBUG, "LIBRARY, DIRECTORY, LIB1, Creating album item for %s, path = %s", pAlbum->m_strTitle.c_str(), pMetadata->GetPath().c_str());
 
     pInfoTag->SetAlbum(pAlbum->m_strTitle);
@@ -852,8 +1026,9 @@ bool CBoxeeDatabaseDirectory::CreateAlbumItem(const BXMetadata* pMetadata, CFile
     pItem->SetProperty("IsAlbum", true);
     pItem->SetProperty("BoxeeDBAlbumId", pAlbum->m_iId);
 
-    if ((pItem->m_strPath == "") || (pItem->GetLabel() == "")) {
-      CLog::Log(LOGERROR, "LIBRARY, DIRECTORY, LIB1, Could not create album item, path or label not set");
+    if ((pItem->m_strPath == "") || (pItem->GetLabel() == ""))
+    {
+      CLog::Log(LOGWARNING,"CBoxeeDatabaseDirectory::CreateAlbumItem - return FALSE since item [path=%s] or [label=%s] is EMPTY",pItem->m_strPath.c_str(),pItem->GetLabel().c_str());
       return false;
     }
 
@@ -868,8 +1043,9 @@ bool CBoxeeDatabaseDirectory::CreateAlbumItem(const BXMetadata* pMetadata, CFile
 
     return true;
   }
-  else {
-    CLog::Log(LOGERROR, "CBoxeeDatabaseDirectory::CreateAlbumItem, Album detail is NULL in metadata");
+  else
+  {
+    CLog::Log(LOGERROR, "CBoxeeDatabaseDirectory::CreateAlbumItem - Album detail is NULL in metadata");
     return false;
   }
 }
@@ -914,16 +1090,24 @@ bool CBoxeeDatabaseDirectory::CreateSeriesItem(const BXMetadata* pMetadata, CFil
     return false;
   }
 
-  if ((pItem->m_strPath == "") || (pItem->GetLabel() == "")) return false;
+  if ((pItem->m_strPath == "") || (pItem->GetLabel() == ""))
+  {
+    CLog::Log(LOGWARNING,"CBoxeeDatabaseDirectory::CreateSeriesItem - return FALSE since item [path=%s] or [label=%s] is EMPTY",pItem->m_strPath.c_str(),pItem->GetLabel().c_str());
+    return false;
+  }
+
   return true;
 }
 
 bool CBoxeeDatabaseDirectory::CreateFileItem(const BXMetadata* pMetadata, CFileItem* pItem)
 {
+  CStdString title = CUtil::GetTitleFromPath(pMetadata->GetPath(),true);
   pItem->m_strPath = pMetadata->GetPath();
   pItem->SetProperty("share", pMetadata->GetFolder());
-  pItem->SetLabel(CUtil::GetTitleFromPath(pMetadata->GetPath(),true));
+  pItem->SetLabel(title);
+  pItem->m_strTitle = title;
   pItem->m_dwSize = pMetadata->GetFileSize();
+  pItem->m_dateTime = CDateTime(pMetadata->m_iDateAdded);
 
   return true;
 }
@@ -956,7 +1140,10 @@ bool CBoxeeDatabaseDirectory::CreateDirectoryItem(const BXMetadata* pMetadata, C
   FillItemDetails(pItem);
 
   if ((pItem->m_strPath == "") || (pItem->GetLabel() == ""))
+  {
+    CLog::Log(LOGWARNING,"CBoxeeDatabaseDirectory::CreateDirectoryItem - return FALSE since item [path=%s] or [label=%s] is EMPTY",pItem->m_strPath.c_str(),pItem->GetLabel().c_str());
     return false;
+  }
 
   return true;
 
@@ -982,7 +1169,12 @@ bool CBoxeeDatabaseDirectory::CreateSeasonItem(const BXMetadata* pMetadata, CFil
   // fill more info (properties) on the item based on its values
   FillItemDetails(pItem);
 
-  if ((pItem->m_strPath == "") || (pItem->GetLabel() == "")) return false;
+  if ((pItem->m_strPath == "") || (pItem->GetLabel() == ""))
+  {
+    CLog::Log(LOGWARNING,"CBoxeeDatabaseDirectory::CreateSeasonItem - return FALSE since item [path=%s] or [label=%s] is EMPTY",pItem->m_strPath.c_str(),pItem->GetLabel().c_str());
+    return false;
+  }
+
   return true;
 }
 
@@ -994,7 +1186,7 @@ void CBoxeeDatabaseDirectory::CreateFileItemList(std::vector<BXMetadata*> vecMet
     pMetadata = vecMetadataItems[i];
     if (!pMetadata)
     {
-      CLog::Log(LOGERROR, "CBoxeeDatabaseDirectory::CreateFileItemList, Can not create FileItem from BXMetadata, the metadata is NULL");
+      CLog::Log(LOGERROR,"CBoxeeDatabaseDirectory::CreateFileItemList - cannot create FileItem from BXMetadata. the metadata is NULL (bdbd)");
       continue;
     }
 
@@ -1016,8 +1208,6 @@ void CBoxeeDatabaseDirectory::CreateFileItemList(std::vector<BXMetadata*> vecMet
         pItem->SetProperty("istvshow", true);
       else
         pItem->SetProperty("ismovie", true);
-	  // Ugly hack for showing metadata provider for local items
-	  pItem->SetProperty("metaprovider","http://s3.boxee.tv/provider/imdb.png");
     }
     else if (strType == MEDIA_ITEM_TYPE_SERIES)
     {
@@ -1064,7 +1254,9 @@ void CBoxeeDatabaseDirectory::CreateFileItemList(std::vector<BXMetadata*> vecMet
       return;
     }
 
-    if (pItem && bCreated && pItem->m_strPath != "") {
+    //pItem->Dump();
+    if (pItem && bCreated && pItem->m_strPath != "")
+    {
       items.Add(pItem);
     }
   }
@@ -1114,7 +1306,4 @@ bool CBoxeeDatabaseDirectory::Exists(const char* strPath)
 }
 
 }
-
-
-
 

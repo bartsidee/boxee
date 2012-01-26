@@ -101,10 +101,19 @@ XBPython g_pythonParser;
 #define PYTHON_DLL "special://xbmc/system/python/python24-arm-none-linux.so"
 //#define PYTHON_DLL "/usr/lib/libpython2.4.so"
 #endif
+#elif defined(CANMORE)
+#if (defined HAVE_LIBPYTHON2_6)
+#define PYTHON_DLL "special://xbmc/system/python/python26-i686-linux.so"
+#elif (defined HAVE_LIBPYTHON2_5)
+#define PYTHON_DLL "special://xbmc/system/python/python25-i686-linux.so"
+#else
+#define PYTHON_DLL "special://xbmc/system/python/python24-i686-linux.so"
+//#define PYTHON_DLL "/usr/lib/libpython2.4.so"
+#endif
 #else /* !__x86_64__ && !__powerpc__ */
 
 #ifdef __x86_64__
-  #if (defined HAVE_LIBPYTHON2_6)
+#if (defined HAVE_LIBPYTHON2_6)
     #define PYTHON_DLL "special://xbmc/system/python/python26-x86_64-linux.so"
   #elif (defined HAVE_LIBPYTHON2_5)
     #define PYTHON_DLL "special://xbmc/system/python/python25-x86_64-linux.so"
@@ -113,12 +122,14 @@ XBPython g_pythonParser;
   #endif
 #else
   #if (defined HAVE_LIBPYTHON2_6)
-    #define PYTHON_DLL "special://xbmc/system/python/python26-i486-linux.so"
-  #elif (defined HAVE_LIBPYTHON2_5)
-    #define PYTHON_DLL "special://xbmc/system/python/python25-i486-linux.so"
-  #else
-    #define PYTHON_DLL "special://xbmc/system/python/python24-i486-linux.so"
-  #endif
+#define PYTHON_DLL "special://xbmc/system/python/python26-i486-linux.so"
+#elif (defined HAVE_LIBPYTHON2_5)
+#define PYTHON_DLL "special://xbmc/system/python/python25-i486-linux.so"
+#elif (defined CANMORE)
+#define PYTHON_DLL "special://xbmc/system/python/python24-i686-linux.so"
+#else
+#define PYTHON_DLL "special://xbmc/system/python/python24-i486-linux.so"
+#endif
 #endif
 
 
@@ -152,7 +163,7 @@ XBPython::XBPython()
   m_mainThreadState = NULL;
   m_hEvent = CreateEvent(NULL, false, false, "pythonEvent");
   m_globalEvent = CreateEvent(NULL, false, false, "pythonGlobalEvent");
-  m_ThreadId = (int)CThread::GetCurrentThreadId();
+  m_ThreadId = (ThreadIdentifier)CThread::GetCurrentThreadId();
   m_vecPlayerCallbackList.clear();
   m_iDllScriptCounter = 0;
 }
@@ -294,12 +305,12 @@ void XBPython::InitializeInterpreter()
   if (PyRun_SimpleString(""
       "import xbmc\n"
       "class xbmcout:\n"
-      "  def write(self, data):\n"
-      "    xbmc.output(data)\n"
-      "  def close(self):\n"
-      "    xbmc.output('.')\n"
-      "  def flush(self):\n"
-      "    xbmc.output('.')\n"
+      "	def write(self, data):\n"
+      "		xbmc.output(data)\n"
+      "	def close(self):\n"
+      "		xbmc.output('.')\n"
+      "	def flush(self):\n"
+      "		xbmc.output('.')\n"
       "\n"
       "import sys\n"
 // BOXEE
@@ -307,10 +318,35 @@ void XBPython::InitializeInterpreter()
 // End BOXEE      
       "sys.stdout = xbmcout()\n"
       "sys.stderr = xbmcout()\n"
-      "print '-->Python Interpreter Initialized<--'\n"
       "") == -1)
   {
     CLog::Log(LOGFATAL, "Python Initialize Error");
+  }
+
+  // Hack for getcwd
+  if (PyRun_SimpleString(""
+      "import os\n"
+      "def getcwd_xbmc():\n"
+      "  import __main__\n"
+      "  return os.path.dirname(__main__.__file__)\n"
+      "\n"
+      "def chdir_xbmc(dir):\n"
+      "  raise RuntimeError(\"os.chdir not supported in xbmc\")\n"
+      "\n"
+      "os_getcwd_original = os.getcwd\n"
+      "os.getcwd          = xbmc.getcwd\n"
+      "os.chdir_orignal   = os.chdir\n"
+      "os.chdir           = chdir_xbmc\n"
+      "") == -1)
+  {
+    CLog::Log(LOGFATAL, "Python Hack Initialize Error ");
+  }
+
+  if (PyRun_SimpleString(""
+      "print '-->Python Interpreter Initialized<--'\n"
+      "") == -1)
+  {
+    CLog::Log(LOGFATAL, "Python Hack Initialize Error ");
   }
 }
 
@@ -334,20 +370,22 @@ void XBPython::Initialize()
 
   m_iDllScriptCounter++;
   CLog::Log(LOGINFO, "XBPython::Initialize, initializing python engine.");
-  if (m_ThreadId == (int)CThread::GetCurrentThreadId())
-  {
-    m_pDll = DllLoaderContainer::LoadModule(PYTHON_DLL, NULL, true);
-
-    if (!m_pDll || !python_load_dll(*m_pDll))
+    if (m_ThreadId == (ThreadIdentifier)CThread::GetCurrentThreadId())
     {
-      CLog::Log(LOGFATAL, "Python: error loading python dll");
-      Finalize();
-      return;
-    }
+#ifdef USE_PYTHON_DLL
+      m_pDll = DllLoaderContainer::LoadModule(PYTHON_DLL, NULL, true);
 
-    // first we check if all necessary files are installed
+      if (!m_pDll || !python_load_dll(*m_pDll))
+      {
+        CLog::Log(LOGFATAL, "Python: error loading python dll");
+        Finalize();
+        return;
+      }
+#endif
+
+      // first we check if all necessary files are installed
 #ifndef _LINUX      
-    if (!FileExist("special://xbmc/system/python/python24.zlib") ||
+      if (!FileExist("special://xbmc/system/python/python24.zlib") ||
         !FileExist("special://xbmc/system/python/DLLs/_socket.pyd") ||
         !FileExist("special://xbmc/system/python/DLLs/_ssl.pyd") ||
         !FileExist("special://xbmc/system/python/DLLs/bz2.pyd") ||
@@ -355,85 +393,98 @@ void XBPython::Initialize()
         !FileExist("special://xbmc/system/python/DLLs/select.pyd") ||
         !FileExist("special://xbmc/system/python/DLLs/unicodedata.pyd") ||
         !FileExist("special://xbmc/system/python/DLLs/zlib.pyd"))
-    {
-      CLog::Log(LOGERROR, "Python: Missing files, unable to execute script");
-      Finalize();
-      return;
-    }
+      {
+        CLog::Log(LOGERROR, "Python: Missing files, unable to execute script");
+        Finalize();
+        return;
+      }
 #endif        
 
-    CStdString path;
-    path += PTH_IC("special://xbmc/system/python/local");
+      CStdString path;
+      path += PTH_IC("special://xbmc/system/python/local");
 #if (!defined USE_EXTERNAL_PYTHON)
-    path += DELIM;
-    path += PTH_IC("special://xbmc/system/python/Lib");
-    path += DELIM;
-    path += PTH_IC("special://xbmc/system/python/python24.zip");
+      path += DELIM;
+      path += PTH_IC("special://xbmc/system/python/Lib");
+      path += DELIM;
+      path += PTH_IC("special://xbmc/system/python/python24.zip");
 #ifdef _LINUX
-
-    // Info about interesting python envvars available
-    // at http://docs.python.org/using/cmdline.html#environment-variables
-
-    // Required for python to find optimized code (pyo) files
-    setenv("PYTHONOPTIMIZE", "1", 1);
-    setenv("PYTHONHOME", _P("special://xbmc/system/python").c_str(), 1);
-    setenv("PYTHONPATH", path.c_str(), 1);
-    //setenv("PYTHONDEBUG", "1", 1);
-    //setenv("PYTHONINSPECT", "1", 1);
-    //setenv("PYTHONVERBOSE", "1", 1);
-    setenv("PYTHONCASEOK", "1", 1);
-    CLog::Log(LOGDEBUG, "Python wrapper library linked with internal Python library");
+    
+      // Info about interesting python envvars available
+      // at http://docs.python.org/using/cmdline.html#environment-variables
+      
+      // Required for python to find optimized code (pyo) files
+      setenv("PYTHONOPTIMIZE", "1", 1);
+      setenv("PYTHONHOME", _P("special://xbmc/system/python").c_str(), 1);      
+      setenv("PYTHONPATH", path.c_str(), 1);
+      //setenv("PYTHONDEBUG", "1", 1);
+      //setenv("PYTHONINSPECT", "1", 1);
+      //setenv("PYTHONVERBOSE", "1", 1);
+      setenv("PYTHONCASEOK", "1", 1);
+      CLog::Log(LOGDEBUG, "Python wrapper library linked with internal Python library");
 #endif /* _LINUX */
 #else
-    /* PYTHONOPTIMIZE is set off intentionally when using external Python.
+      /* PYTHONOPTIMIZE is set off intentionally when using external Python.
          Reason for this is because we cannot be sure what version of Python
          was used to compile the various Python object files (i.e. .pyo,
          .pyc, etc.). */
-    //setenv("PYTHONOPTIMIZE", "1", 1);
-    //setenv("PYTHONDEBUG", "1", 1);
-    //setenv("PYTHONINSPECT", "1", 1);
-    //setenv("PYTHONVERBOSE", "1", 1);
-    setenv("PYTHONCASEOK", "1", 1); //This line should really be removed
-    CLog::Log(LOGDEBUG, "Python wrapper library linked with system Python library");
+      setenv("PYTHONOPTIMIZE", "1", 1);
+      //setenv("PYTHONDEBUG", "1", 1);
+      //setenv("PYTHONINSPECT", "1", 1);
+      //setenv("PYTHONVERBOSE", "1", 1);
+
+#ifdef EXTERNAL_PYTHON_PREFIX
+      path.Format("%s:%s:%s/plat-linux2:%s/lib-dynload:%s/site-packages:", EXTERNAL_PYTHON_ZIP,
+          EXTERNAL_PYTHON_PREFIX, EXTERNAL_PYTHON_PREFIX, EXTERNAL_PYTHON_PREFIX, EXTERNAL_PYTHON_PREFIX);
+      path += PTH_IC("special://xbmc/system/python/local");
+#endif
+
+#ifdef EXTERNAL_PYTHON_HOME
+      setenv("PYTHONHOME", "/opt/local", 1);
+#endif
+
+      setenv("PYTHONPATH", path.c_str(), 1);
+
+      setenv("PYTHONCASEOK", "1", 1); //This line should really be removed
+      CLog::Log(LOGDEBUG, "Python wrapper library linked with system Python library");
 #endif /* USE_EXTERNAL_PYTHON */
 
-    Py_Initialize();
-    PyEval_InitThreads();
+      Py_Initialize();
+      PyEval_InitThreads();
 
-    char* python_argv[1] = { (char*)"" } ;
-    PySys_SetArgv(1, python_argv);
+      char* python_argv[1] = { (char*)"" } ;
+      PySys_SetArgv(1, python_argv);
 
-    InitXBMCTypes();
-    InitGUITypes();
-    InitPluginTypes();
+      InitXBMCTypes();
+      InitGUITypes();
+      InitPluginTypes();      
 
-    m_mainThreadState = PyThreadState_Get();
-    PyThreadState_Swap(m_mainThreadState);
+      m_mainThreadState = PyThreadState_Get();
+      PyThreadState_Swap(m_mainThreadState);
 
-    char *pathCopy = strdup(path.c_str());
-    CLog::Log(LOGDEBUG,"using python path: <%s>", pathCopy);
-    PySys_SetPath(pathCopy);
-    free(pathCopy);
+      char *pathCopy = strdup(path.c_str());
+      CLog::Log(LOGDEBUG,"using python path: <%s>", pathCopy);
+      PySys_SetPath(pathCopy);
+      free(pathCopy);
+ 
+      InitializeInterpreter();
+      PyThreadState_Swap(NULL);
 
-    InitializeInterpreter();
-    PyThreadState_Swap(NULL);
+      // release the lock
+      PyEval_ReleaseLock();
 
-    // release the lock
-    PyEval_ReleaseLock();
+      m_bInitialized = true;
+      PulseEvent(m_hEvent);
+    }
+    else
+    {
+      // only the main thread should initialize python.
+      m_iDllScriptCounter--;
 
-    m_bInitialized = true;
-    PulseEvent(m_hEvent);
+      lock.Leave();
+      WaitForSingleObject(m_hEvent, INFINITE);
+      lock.Enter();
+    }
   }
-  else
-  {
-    // only the main thread should initialize python.
-    m_iDllScriptCounter--;
-
-    lock.Leave();
-    WaitForSingleObject(m_hEvent, INFINITE);
-    lock.Enter();
-  }
-}
 
 /**
  * Should be called when a script is finished
@@ -460,7 +511,7 @@ void XBPython::Finalize()
 
     // first free all dlls loaded by python, after that python24.dll (this is done by UnloadPythonDlls
     DllLoaderContainer::UnloadPythonDlls();
-#ifdef _LINUX
+#ifdef USE_PYTHON_DLL
     // we can't release it on windows, as this is done in UnloadPythonDlls() for win32 (see above).
     // The implementation for linux and os x needs looking at - UnloadPythonDlls() currently only searches for "python24.dll"
     DllLoaderContainer::ReleaseModule(m_pDll);
@@ -671,7 +722,7 @@ bool XBPython::isRunning(int scriptId)
   PyList::iterator it = m_vecPyList.begin();
   while (it != m_vecPyList.end())
   {
-    if (it->id == scriptId)  bRunning = true;
+    if (it->id == scriptId)	bRunning = true;
     ++it;
   }
 
@@ -725,7 +776,7 @@ PyThreadState* XBPython::CreateNewInterpreter()
   return contextState;
 }
 
-XBPythonAppContext* XBPython::GetContext(const std::string& _contextId)
+XBPythonAppContext* XBPython::GetContext(const std::string& _contextId, const CStdString& partnerId = "")
 {
   std::string contextId = _contextId;
   if (contextId == "") {
@@ -753,6 +804,7 @@ XBPythonAppContext* XBPython::GetContext(const std::string& _contextId)
       m_nextid++;
       XBPyPersistentThread *pyThread = new XBPyPersistentThread(this, m_nextid);
       pyThread->SetAppId(contextId);
+      pyThread->SetPartnerId(partnerId);
       pyThread->Create();
       newContext->m_pyThread = pyThread;
       
@@ -790,15 +842,15 @@ void XBPython::RemoveContext(const std::string& _contextId)
   // Check when we can remove the context
   m_contextMap.erase(it);
 
-  appContext->m_pyThread->SignalStop();
+  appContext->m_pyThread->StopThread();
 
-  // TODO: We need to remove thread and context in some other way
   delete appContext->m_pyThread;
   delete appContext;
 }
 
 
-int XBPython::evalStringInContext(const char *pythonCode, const std::string& path, const std::string& contextId , const unsigned int argc, const char ** argv)
+//int XBPython::evalStringInContext(const char *pythonCode, const std::string& path, const std::string& contextId , const CStdString& securityLevel, const unsigned int argc, const char ** argv)
+int XBPython::evalStringInContext(const char *pythonCode, const std::string& path, const std::string& contextId , const CStdString& partnerId, const std::vector<CStdString>& params)
 {
   CLog::Log(LOGDEBUG, "XBPython::evalStringInContext... contextId = %s (python)", contextId.c_str());
   
@@ -810,7 +862,7 @@ int XBPython::evalStringInContext(const char *pythonCode, const std::string& pat
   }
 
   // Get thread state for context id, if context is not found a new one will be allocated
-  XBPythonAppContext* context = GetContext(contextId);
+  XBPythonAppContext* context = GetContext(contextId, contextId);
   XBPyPersistentThread *pyThread = context->m_pyThread;
 
   if (!pyThread) {
@@ -818,12 +870,12 @@ int XBPython::evalStringInContext(const char *pythonCode, const std::string& pat
     return -1;
   }
   
-  pyThread->QueueScript(pythonCode, path, argc, argv);
+  pyThread->QueueScript(pythonCode, path, params);
 
   return m_nextid;
 }
 
-int XBPython::evalFileInContext(const char *src, const std::string& contextId, const unsigned int argc, const char ** argv) 
+int XBPython::evalFileInContext(const char *src, const std::string& contextId, const CStdString& partnerId, const unsigned int argc, const char ** argv)
 {
   CStdString srcStr = _P(src);
   CLog::Log(LOGDEBUG, "XBPython::evalFileInContext... context = %s, path = %s (python)", contextId.c_str(), srcStr.c_str());
@@ -837,7 +889,7 @@ int XBPython::evalFileInContext(const char *src, const std::string& contextId, c
   if (!m_bInitialized) return -1;
   
   // Get thread state for context id, if context is not found a new one will be allocated
-  XBPythonAppContext* context = GetContext(contextId);
+  XBPythonAppContext* context = GetContext(contextId, partnerId);
   XBPyPersistentThread *pyThread = context->m_pyThread;
   
   if (!pyThread) {
@@ -893,9 +945,9 @@ void XBPython::RemoveContextAll()
     {
       XBPythonAppContext* appContext = it->second;
       m_contextMap.erase(it);
-      
-      lock.Leave();
 
+      lock.Leave();
+      
       appContext->m_pyThread->StopThread();
       
       lock.Enter();
@@ -906,5 +958,31 @@ void XBPython::RemoveContextAll()
       it = m_contextMap.begin();
     }
   }
+}
+
+bool XBPython::HasPartnerThreadRunning(const CStdString& partnerId, const ThreadIdentifier& threadId)
+{
+  CSingleLock lock(m_critSection);
+  bool bResult = false;
+
+  if (m_bInitialized)
+  {
+    std::map<std::string, XBPythonAppContext*>::iterator it = m_contextMap.begin();
+    while (it != m_contextMap.end())
+    {
+      XBPythonAppContext* appContext = it->second;
+      XBPyPersistentThread* thread = appContext->m_pyThread;
+
+      if(thread->GetCurrentThreadId() == threadId && thread->GetPartnerId() == partnerId)
+      {
+        bResult = true;
+        break;
+      }
+
+      it++;
+    }
+  }
+
+  return bResult;
 }
 // End BOXEE

@@ -10,6 +10,11 @@ extern "C" {
 #endif
 #include <sys/types.h>
 
+// Key NetBIOS suffixes (byte 16 of the ascii_name in nbname)
+// From http://support.microsoft.com/kb/163409
+#define NBS_FILESERVER    0x20
+#define NBS_DOMAINNAME    0x00 // && group flag is set (0x80 & rr_flags == 0x80)
+
 #define FL_REQUEST		0x8000
 #define FL_QUERY		0x7800
 #define FL_NON_AUTH_ANSWER	0x0400
@@ -107,8 +112,12 @@ typedef struct nb_service {
 	char* service_name;
 } nb_service_t ;
 
-struct nb_host_info* parse_response( char* buff, int buffsize );
+struct nb_host_info* parse_response(char* buff, int buffsize );
+#ifdef __cplusplus
+int send_query( int sock, struct in_addr dest_addr, uint32_t rtt_base, const char* name=NULL, int iponly=0 );
+#else
 int send_query( int sock, struct in_addr dest_addr, uint32_t rtt_base, const char* name, int iponly );
+#endif
 void free_hostinfo( struct nb_host_info* hostinfo );
 
 #ifdef __cplusplus

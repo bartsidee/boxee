@@ -18,6 +18,9 @@
 */
 
 #include "SAPFile.h"
+
+#ifdef HAS_FILESYSTEM_SAP
+
 #include "SAPDirectory.h"
 #include "utils/SingleLock.h"
 
@@ -39,10 +42,9 @@ CSAPFile::~CSAPFile()
 {
 }
 
-bool CSAPFile::Open(const CURL& url)
+bool CSAPFile::Open(const CURI& url)
 {
-  CStdString path;
-  url.GetURL(path);
+  CStdString path = url.Get();
 
   CSingleLock lock(g_sapsessions.m_section);
   for(vector<CSAPSessions::CSession>::iterator it = g_sapsessions.m_sessions.begin(); it != g_sapsessions.m_sessions.end(); it++)
@@ -61,10 +63,9 @@ bool CSAPFile::Open(const CURL& url)
   return true;
 }
 
-bool CSAPFile::Exists(const CURL& url)
+bool CSAPFile::Exists(const CURI& url)
 {
-  CStdString path;
-  url.GetURL(path);
+  CStdString path = url.Get();
 
   CSingleLock lock(g_sapsessions.m_section);
   for(vector<CSAPSessions::CSession>::iterator it = g_sapsessions.m_sessions.begin(); it != g_sapsessions.m_sessions.end(); it++)
@@ -75,10 +76,9 @@ bool CSAPFile::Exists(const CURL& url)
   return false;
 }
 
-int CSAPFile::Stat(const CURL& url, struct __stat64* buffer)
+int CSAPFile::Stat(const CURI& url, struct __stat64* buffer)
 {
-  CStdString path;
-  url.GetURL(path);
+  CStdString path = url.Get();
 
   if(path == "smb://")
   {
@@ -154,10 +154,9 @@ int64_t CSAPFile::GetPosition()
   return m_stream.tellg();
 }
 
-bool CSAPFile::Delete(const CURL& url)
+bool CSAPFile::Delete(const CURI& url)
 {
-  CStdString path;
-  url.GetURL(path);
+  CStdString path = url.Get();
 
   CSingleLock lock(g_sapsessions.m_section);
   for(vector<CSAPSessions::CSession>::iterator it = g_sapsessions.m_sessions.begin(); it != g_sapsessions.m_sessions.end(); it++)
@@ -171,8 +170,9 @@ bool CSAPFile::Delete(const CURL& url)
   return false;
 }
 
-bool CSAPFile::Rename(const CURL& url, const CURL& urlnew)
+bool CSAPFile::Rename(const CURI& url, const CURI& urlnew)
 {
   return false;
 }
 
+#endif

@@ -1,9 +1,9 @@
 /*
  * hdhomerun_pkt.c
  *
- * Copyright © 2005-2006 Silicondust Engineering Ltd. <www.silicondust.com>.
+ * Copyright © 2005-2006 Silicondust USA Inc. <www.silicondust.com>.
  *
- * This library is free software; you can redistribute it and/or
+ * This library is free software; you can redistribute it and/or 
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 3 of the License, or (at your option) any later version.
@@ -129,7 +129,7 @@ uint8_t *hdhomerun_pkt_read_tlv(struct hdhomerun_pkt_t *pkt, uint8_t *ptag, size
 	
 	*ptag = hdhomerun_pkt_read_u8(pkt);
 	*plength = hdhomerun_pkt_read_var_length(pkt);
-	
+
 	if (pkt->pos + *plength > pkt->end) {
 		return NULL;
 	}
@@ -143,7 +143,7 @@ void hdhomerun_pkt_write_u8(struct hdhomerun_pkt_t *pkt, uint8_t v)
 
 	if (pkt->pos > pkt->end) {
 		pkt->end = pkt->pos;
-}
+	}
 }
 
 void hdhomerun_pkt_write_u16(struct hdhomerun_pkt_t *pkt, uint16_t v)
@@ -189,7 +189,7 @@ void hdhomerun_pkt_write_mem(struct hdhomerun_pkt_t *pkt, const void *mem, size_
 
 	if (pkt->pos > pkt->end) {
 		pkt->end = pkt->pos;
-}
+	}
 }
 
 int hdhomerun_pkt_open_frame(struct hdhomerun_pkt_t *pkt, uint16_t *ptype)
@@ -198,7 +198,7 @@ int hdhomerun_pkt_open_frame(struct hdhomerun_pkt_t *pkt, uint16_t *ptype)
 
 	if (pkt->pos + 4 > pkt->end) {
 		return 0;
-}
+	}
 
 	*ptype = hdhomerun_pkt_read_u16(pkt);
 	size_t length = hdhomerun_pkt_read_u16(pkt);
@@ -234,7 +234,7 @@ void hdhomerun_pkt_seal_frame(struct hdhomerun_pkt_t *pkt, uint16_t frame_type)
 	pkt->pos = pkt->start;
 	hdhomerun_pkt_write_u16(pkt, frame_type);
 	hdhomerun_pkt_write_u16(pkt, (uint16_t)length);
-	
+
 	uint32_t crc = hdhomerun_pkt_calc_crc(pkt->start, pkt->end);
 	*pkt->end++ = (uint8_t)(crc >> 0);
 	*pkt->end++ = (uint8_t)(crc >> 8);

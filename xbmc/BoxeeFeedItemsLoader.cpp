@@ -38,22 +38,21 @@ bool CBoxeeFeedItemsLoader::LoadItem(CFileItem* pItem, bool bCanBlock)
     return false;
   }
 
-  CLog::Log(LOGDEBUG, "CBoxeeFeedItemsLoader::LoadItem, going to resolve item label =%s (feedloader) (ri)",
-          pItem->GetLabel().c_str());
+  //CLog::Log(LOGDEBUG, "CBoxeeFeedItemsLoader::LoadItem, going to resolve item label =%s (feedloader) (ri)", pItem->GetLabel().c_str());
 
-  pItem->Dump();
+  bool succeeded = true;
 
   if (pItem->HasProperty("boxeeId"))
   {
     CFileItemList items;
     CStdString strBoxeeId = pItem->GetProperty("boxeeId");
 
-    CLog::Log(LOGDEBUG, "CBoxeeFeedItemsLoader::LoadItem, going to resolve item for boxee id = %s, label =%s (feedloader) (ri)",
-        strBoxeeId.c_str(), pItem->GetLabel().c_str());
-    if (BoxeeUtils::ResolveItem(strBoxeeId, items))
+    succeeded = BoxeeUtils::BuildItemInfo(*pItem,items,true);//BoxeeUtils::ResolveItem(strBoxeeId, items);
+
+    //CLog::Log(LOGDEBUG, "CBoxeeFeedItemsLoader::LoadItem, going to resolve item for boxee id = %s, label =%s (feedloader) (ri)", strBoxeeId.c_str(), pItem->GetLabel().c_str());
+    if (succeeded)
     {
-      CLog::Log(LOGDEBUG, "CBoxeeFeedItemsLoader::LoadItem, resolved item for boxee id = %s, label =%s (feedloader) (ri)",
-              strBoxeeId.c_str(), pItem->GetLabel().c_str());
+      //CLog::Log(LOGDEBUG, "CBoxeeFeedItemsLoader::LoadItem, resolved item for boxee id = %s, label =%s (feedloader) (ri)", strBoxeeId.c_str(), pItem->GetLabel().c_str());
 
       CFileItemPtr resolvedItem = items.Get(0);
 
@@ -87,6 +86,31 @@ bool CBoxeeFeedItemsLoader::LoadItem(CFileItem* pItem, bool bCanBlock)
       CStdString prevItemLabel2 = pItem->GetProperty("PrevItemLabel2");
       CStdString prevItemPath = pItem->GetProperty("PrevItemPath");
       CStdString hasPrevItem = pItem->GetProperty("HasPrevItem");
+      CStdString addToDiscoverDesc = pItem->GetProperty("addToDiscoverDesc");
+      CStdString addToQueueDesc = pItem->GetProperty("addToQueueDesc");
+      CStdString isSubscribe = pItem->GetProperty("IsSubscribe");
+      CStdString isFeedItem = pItem->GetProperty("IsFeedItem");
+      CStdString feedTypeItem = pItem->GetProperty("FeedTypeItem");
+
+      CStdString label = "";
+      CStdString thumb = "";
+      CStdString desc = "";
+      CStdString Plot = "";
+      CStdString PlotOutline = "";
+      bool isFeaturedItem = (feedTypeItem == MSG_ACTION_TYPE_FEATURED);
+      if (isFeaturedItem)
+      {
+        label = pItem->GetLabel();
+        thumb = pItem->GetThumbnailImage();
+        desc = pItem->GetProperty("description");
+
+        CVideoInfoTag* videoInfoTag = pItem->GetVideoInfoTag();
+        if (videoInfoTag)
+        {
+          Plot = videoInfoTag->m_strPlot;
+          PlotOutline = videoInfoTag->m_strPlotOutline;
+        }
+      }
 
       *pItem = *(resolvedItem.get());
 
@@ -121,12 +145,12 @@ bool CBoxeeFeedItemsLoader::LoadItem(CFileItem* pItem, bool bCanBlock)
 
       if (!feedDesc.IsEmpty())
       {
-        pItem->SetProperty("feeddesc", feedDesc);
+      pItem->SetProperty("feeddesc", feedDesc);
       }
 
       if (!formattedDesc.IsEmpty())
       {
-        pItem->SetProperty("formatteddesc", formattedDesc);
+      pItem->SetProperty("formatteddesc", formattedDesc);
       }
 
       if (!originalDesc.IsEmpty())
@@ -225,11 +249,65 @@ bool CBoxeeFeedItemsLoader::LoadItem(CFileItem* pItem, bool bCanBlock)
       {
         pItem->SetProperty("HasPrevItem", hasPrevItem);
       }
+
+      if (!addToDiscoverDesc.IsEmpty())
+      {
+        pItem->SetProperty("addToDiscoverDesc", addToDiscoverDesc);
+      }
+
+      if (!addToQueueDesc.IsEmpty())
+      {
+        pItem->SetProperty("addToQueueDesc", addToQueueDesc);
+      }
+
+      if (!isSubscribe.IsEmpty())
+      {
+        pItem->SetProperty("IsSubscribe", isSubscribe);
+      }
+
+      if (!isFeedItem.IsEmpty())
+      {
+        pItem->SetProperty("IsFeedItem", isFeedItem);
+      }
+
+      if (!feedTypeItem.IsEmpty())
+      {
+        pItem->SetProperty("FeedTypeItem", feedTypeItem);
+      }
+
+      if (isFeaturedItem)
+      {
+        if (!label.IsEmpty())
+        {
+          pItem->SetLabel(label);
+        }
+
+        if (!thumb.IsEmpty())
+        {
+          pItem->SetProperty("ResolveThumb",pItem->GetThumbnailImage());
+          pItem->SetThumbnailImage(thumb);
+        }
+
+        if (!desc.IsEmpty())
+        {
+          pItem->SetProperty("description",desc);
+        }
+
+        CVideoInfoTag* videoInfoTag = pItem->GetVideoInfoTag();
+        if (!Plot.IsEmpty() && videoInfoTag)
+        {
+          videoInfoTag->m_strPlot = Plot;
+        }
+
+        if (!PlotOutline.IsEmpty() && videoInfoTag)
+        {
+          videoInfoTag->m_strPlotOutline = PlotOutline;
+        }
+      }
     }
     else
     {
       CLog::Log(LOGERROR, "CBoxeeFeedItemsLoader::LoadItem - FAILED to resolve item with [boxeeId=%s] (feedloader)(ri)", strBoxeeId.c_str());
-      return false;
     }
   }
   else if (pItem->HasProperty("isfeedalbum"))
@@ -241,14 +319,17 @@ bool CBoxeeFeedItemsLoader::LoadItem(CFileItem* pItem, bool bCanBlock)
     CLog::Log(LOGDEBUG,"CBoxeeFeedItemsLoader::LoadItem - Not handling item [label=%s][showid=%s][boxeeid=%s][isfeedalbum=%s][referral=%s] (feedloader)(ri)",pItem->GetLabel().c_str(),pItem->GetProperty("showId").c_str(),pItem->GetProperty("boxeeId").c_str(),pItem->GetProperty("isfeedalbum").c_str(),pItem->GetProperty("referral").c_str());
   }
 
-  // In case the item has CustomButtons we want to load the remote thumb
-  // and replace the path to the loaded one (local)
-  LoadCustomButtons(pItem,true);
+  if (succeeded)
+  {
+    // In case the item has CustomButtons we want to load the remote thumb
+    // and replace the path to the loaded one (local)
+    LoadCustomButtons(pItem,true);
+  }
 
   // In any case, activate the picture loader to retreive the thumb
   CPictureThumbLoader loader;
-  bool bResult = loader.LoadItem(pItem, bCanBlock);
-  return bResult;
+  succeeded &= loader.LoadItem(pItem, bCanBlock);
+  return succeeded;
 };
 
 bool CBoxeeFeedItemsLoader::HandleAlbum(CFileItem* pItem, bool bCanBlock)

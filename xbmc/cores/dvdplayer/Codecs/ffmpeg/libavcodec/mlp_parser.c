@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/mlp_parser.c
+ * @file
  * MLP parser
  */
 
@@ -176,7 +176,9 @@ static int mlp_parse(AVCodecParserContext *s,
 
         for (i = 0; i < buf_size; i++) {
             mp->pc.state = (mp->pc.state << 8) | buf[i];
-            if ((mp->pc.state & 0xfffffffe) == 0xf8726fba) {
+            if ((mp->pc.state & 0xfffffffe) == 0xf8726fba &&
+                // ignore if we do not have the data for the start of header
+                mp->pc.index + i >= 7) {
                 mp->in_sync = 1;
                 mp->bytes_left = 0;
                 break;
@@ -253,9 +255,9 @@ static int mlp_parse(AVCodecParserContext *s,
 
         avctx->bits_per_raw_sample = mh.group1_bits;
         if (avctx->bits_per_raw_sample > 16)
-            avctx->sample_fmt = SAMPLE_FMT_S32;
+            avctx->sample_fmt = AV_SAMPLE_FMT_S32;
         else
-            avctx->sample_fmt = SAMPLE_FMT_S16;
+            avctx->sample_fmt = AV_SAMPLE_FMT_S16;
         avctx->sample_rate = mh.group1_samplerate;
         avctx->frame_size = mh.access_unit_size;
 
@@ -286,10 +288,10 @@ lost_sync:
     return 1;
 }
 
-AVCodecParser mlp_parser = {
+AVCodecParser ff_mlp_parser = {
     { CODEC_ID_MLP, CODEC_ID_TRUEHD },
     sizeof(MLPParseContext),
     mlp_init,
     mlp_parse,
-    NULL,
+    ff_parse_close,
 };

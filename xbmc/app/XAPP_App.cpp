@@ -4,6 +4,7 @@
 #include "Util.h"
 #include "Application.h"
 #include "GUIWindowManager.h"
+#include "ThreadPolicy.h"
 
 namespace XAPP
 {
@@ -36,10 +37,17 @@ LocalConfig& App::GetLocalConfig()
 
 void App::ActivateWindow(int windowId, const Parameters& parameters)
 {
+#if defined(HAS_EMBEDDED) && !defined(__APPLE__) 
+  TPDisablePolicy(gettid(), false);
+#endif
   CStdString url;
   url.Format("app://%s/%d?", CAppManager::GetInstance().GetLastLaunchedId(), windowId); 
   url += parameters.toQueryString();
   CAppManager::GetInstance().Launch(url);
+#if defined(HAS_EMBEDDED) && !defined(__APPLE__) 
+  TPDisablePolicy(gettid(), true);
+#endif
+
 }
 
 void App::Close()
@@ -53,6 +61,18 @@ void App::RunScript(const std::string& scriptName, const Parameters& parameters)
   url.Format("app://%s/%s?", CAppManager::GetInstance().GetLastLaunchedId(), scriptName.c_str());
   url += parameters.toQueryString();
   CAppManager::GetInstance().Launch(url);  
+}
+
+void App::SendMessage(const std::string& handler, const std::string& parameter)
+{
+  std::vector<CStdString> vecParams;
+  vecParams.push_back(GetId());
+  vecParams.push_back(handler);
+  vecParams.push_back(parameter);
+
+  ThreadMessage tMsg ( TMSG_APP_HANDLE, 0, 0, "", vecParams, "", NULL, NULL );
+  g_application.getApplicationMessenger().SendMessage(tMsg, false);
+
 }
 
 std::string App::GetId()

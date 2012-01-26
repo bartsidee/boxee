@@ -2,7 +2,7 @@
 |
 |   Platinum - UPnP Helper
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -29,7 +29,7 @@
 | 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 | http://www.gnu.org/licenses/gpl-2.0.html
 |
- ****************************************************************/
+****************************************************************/
 
 #ifndef _PLT_UPNP_HELPER_H_
 #define _PLT_UPNP_HELPER_H_
@@ -42,138 +42,195 @@
 /*----------------------------------------------------------------------
 |   NPT_StringFinder
 +---------------------------------------------------------------------*/
+/**
+ The NPT_StringFinder class is used to determine if a string is found 
+ as part of a list of strings.
+ */
 class NPT_StringFinder
 {
 public:
     // methods
-    NPT_StringFinder(const char* value) : m_Value(value) {}
+    NPT_StringFinder(const char* value, bool ignore_case = false) : 
+        m_Value(value), m_IgnoreCase(ignore_case) {}
     virtual ~NPT_StringFinder() {}
     bool operator()(const NPT_String* const & value) const {
-        return value->Compare(m_Value) ? false : true;
+        return value->Compare(m_Value, m_IgnoreCase) ? false : true;
     }
     bool operator()(const NPT_String& value) const {
-        return value.Compare(m_Value) ? false : true;
+        return value.Compare(m_Value, m_IgnoreCase) ? false : true;
     }
 
 private:
     // members
     NPT_String   m_Value;
+    bool         m_IgnoreCase;
 };
+
+/*----------------------------------------------------------------------
+|   NPT_IpAddressFinder
++---------------------------------------------------------------------*/
+/**
+ The NPT_IpAddressFinder class is used to determine if a IP Address is found 
+ as part of a list of IP Addresses.
+ */
+class NPT_IpAddressFinder
+{
+public:
+    // methods
+    NPT_IpAddressFinder(NPT_IpAddress ip) : 
+        m_Value(ip) {}
+    virtual ~NPT_IpAddressFinder() {}
+
+    bool operator()(const NPT_IpAddress* const & value) const {
+        return *value == m_Value;
+    }
+    bool operator()(const NPT_IpAddress& value) const {
+        return value == m_Value;
+    }
+
+private:
+    // members
+    NPT_IpAddress m_Value;
+};
+
 
 /*----------------------------------------------------------------------
 |   PLT_UPnPMessageHelper class
 +---------------------------------------------------------------------*/
+/**
+ The PLT_UPnPMessageHelper class is a set of utility functions for manipulating 
+ specific UPnP HTTP headers.
+ */
 class PLT_UPnPMessageHelper
 {
 public:
     // methods
-    static const NPT_String* GetST(NPT_HttpMessage& message) { 
+    static const NPT_String* GetST(const NPT_HttpMessage& message) { 
         return message.GetHeaders().GetHeaderValue("ST"); 
     }
     static NPT_Result SetST(NPT_HttpMessage& message, 
                             const char*      st) { 
         return message.GetHeaders().SetHeader("ST", st); 
     }
-    static const NPT_String* GetNT(NPT_HttpMessage& message) { 
+    static const NPT_String* GetNT(const NPT_HttpMessage& message) { 
         return message.GetHeaders().GetHeaderValue("NT"); 
     }
     static NPT_Result SetNT(NPT_HttpMessage& message, 
                             const char*      nt) { 
         return message.GetHeaders().SetHeader("NT", nt); 
     }
-    static const NPT_String* GetNTS(NPT_HttpMessage& message) { 
+    static const NPT_String* GetNTS(const NPT_HttpMessage& message) { 
         return message.GetHeaders().GetHeaderValue("NTS"); 
     }
     static NPT_Result SetNTS(NPT_HttpMessage& message, 
                              const char*      nts) { 
         return message.GetHeaders().SetHeader("NTS", nts); 
     }
-    static const NPT_String* GetMAN(NPT_HttpMessage& message) { 
+    static const NPT_String* GetMAN(const NPT_HttpMessage& message) { 
         return message.GetHeaders().GetHeaderValue("MAN"); 
     }
     static NPT_Result SetMAN(NPT_HttpMessage& message, 
                              const char*      man) { 
         return message.GetHeaders().SetHeader("MAN", man); 
     }
-    static const NPT_String* GetLocation(NPT_HttpMessage& message) { 
-        return message.GetHeaders().GetHeaderValue("LOCATION"); 
+    static const NPT_String* GetLocation(const NPT_HttpMessage& message) { 
+        return message.GetHeaders().GetHeaderValue("Location"); 
     }
     static NPT_Result SetLocation(NPT_HttpMessage& message, 
                                   const char*      location) { 
-        return message.GetHeaders().SetHeader("LOCATION", location); 
+        return message.GetHeaders().SetHeader("Location", location); 
     }
-    static const NPT_String* GetServer(NPT_HttpMessage& message) { 
+    static const NPT_String* GetServer(const NPT_HttpMessage& message) { 
         return message.GetHeaders().GetHeaderValue(NPT_HTTP_HEADER_SERVER); 
     }
-    static NPT_Result        SetServer(NPT_HttpMessage& message, 
-                                       const char*      server, 
+    static NPT_Result SetServer(NPT_HttpMessage& message, 
+                                const char*      server, 
                                 bool             replace = true) { 
         return message.GetHeaders().SetHeader(
             NPT_HTTP_HEADER_SERVER, 
             server, 
             replace); 
     }
-    static const NPT_String* GetUSN(NPT_HttpMessage& message) { 
+    static const NPT_String* GetUSN(const NPT_HttpMessage& message) { 
         return message.GetHeaders().GetHeaderValue("USN"); 
     }
     static NPT_Result SetUSN(NPT_HttpMessage& message, 
                              const char*      usn) { 
         return message.GetHeaders().SetHeader("USN", usn); 
     }
-    static const NPT_String* GetCallbacks(NPT_HttpMessage& message) { 
+    static const NPT_String* GetCallbacks(const NPT_HttpMessage& message) { 
         return message.GetHeaders().GetHeaderValue("CALLBACK"); 
     }
     static NPT_Result SetCallbacks(NPT_HttpMessage& message, 
                                    const char*      callbacks) { 
         return message.GetHeaders().SetHeader("CALLBACK", callbacks); 
     }
-    static const NPT_String* GetSID(NPT_HttpMessage& message) { 
+    static const NPT_String* GetSID(const NPT_HttpMessage& message) { 
         return message.GetHeaders().GetHeaderValue("SID"); 
     }
     static NPT_Result SetSID(NPT_HttpMessage& message, 
                              const char*      sid) { 
         return message.GetHeaders().SetHeader("SID", sid); 
     }
-    static NPT_Result GetLeaseTime(NPT_HttpMessage& message, 
-                                   NPT_Timeout&     value) { 
-        value = 0;
+    static NPT_Result GetLeaseTime(const NPT_HttpMessage& message, 
+                                   NPT_TimeInterval&      lease) { 
         const NPT_String* cc = 
-            message.GetHeaders().GetHeaderValue("CACHE-CONTROL");
+            message.GetHeaders().GetHeaderValue("Cache-Control");
         NPT_CHECK_POINTER(cc);
-        return ExtractLeaseTime(*cc, value); 
+        return ExtractLeaseTime(*cc, lease);
     }
-    static NPT_Result SetLeaseTime(NPT_HttpMessage&  message, 
-                                   const NPT_Timeout lease) { 
+    static NPT_Result SetLeaseTime(NPT_HttpMessage&        message, 
+                                   const NPT_TimeInterval& lease) { 
         return message.GetHeaders().SetHeader(
-            "CACHE-CONTROL", 
-            "max-age="+NPT_String::FromInteger(lease)); 
+            "Cache-Control", 
+            "max-age="+NPT_String::FromInteger(lease.ToSeconds())); 
     }
-    static NPT_Result GetTimeOut(NPT_HttpMessage& message, 
-                                 NPT_Int32&       value) { 
-        value = 0;
+    static NPT_Result GetTimeOut(const NPT_HttpMessage& message, 
+                                 NPT_Int32&             seconds) { 
+        seconds = 0;
         const NPT_String* timeout = 
             message.GetHeaders().GetHeaderValue("TIMEOUT"); 
         NPT_CHECK_POINTER(timeout);
-        return ExtractTimeOut(*timeout, value); 
+        return ExtractTimeOut(*timeout, seconds); 
     }
     static NPT_Result SetTimeOut(NPT_HttpMessage& message, 
-                                 const NPT_Int32  timeout) { 
-        if (timeout >=0) {
+                                 const NPT_Int32  seconds) { 
+        if (seconds >= 0) {
             return message.GetHeaders().SetHeader(
                 "TIMEOUT", 
-                "Second-"+NPT_String::FromInteger(timeout)); 
+                "Second-"+NPT_String::FromInteger(seconds)); 
         } else {
             return message.GetHeaders().SetHeader(
-                "TIMEOUT", "Second-infinite"); 
+                "TIMEOUT", 
+                "Second-infinite"); 
         }
     }
-    static NPT_Result GetMX(NPT_HttpMessage& message, 
-                            NPT_UInt32&      value) { 
+    static NPT_Result GetIfModifiedSince(const NPT_HttpMessage& message,
+                                         NPT_DateTime&          date) {
+        
+        const NPT_String* value = 
+            message.GetHeaders().GetHeaderValue("If-Modified-Since");
+        NPT_CHECK_POINTER(value);
+        // Try RFC 1123, RFC 1036, then ANSI
+        if (NPT_SUCCEEDED(date.FromString(*value, NPT_DateTime::FORMAT_RFC_1123))) 
+            return NPT_SUCCESS;
+        if (NPT_SUCCEEDED(date.FromString(*value, NPT_DateTime::FORMAT_RFC_1036)))
+            return NPT_SUCCESS;
+        return date.FromString(*value, NPT_DateTime::FORMAT_ANSI);
+    }            
+    static NPT_Result SetIfModifiedSince(NPT_HttpMessage&    message,
+                                         const NPT_DateTime& date) {
+        return message.GetHeaders().SetHeader(
+            "If-Modified-Since",
+            date.ToString(NPT_DateTime::FORMAT_RFC_1123));
+    }
+    static NPT_Result GetMX(const NPT_HttpMessage& message, 
+                            NPT_UInt32&            value) { 
         value = 0;
         const NPT_String* mx = 
             message.GetHeaders().GetHeaderValue("MX");
         NPT_CHECK_POINTER(mx);
-        return NPT_ParseInteger32(*mx, value);
+        return NPT_ParseInteger32(*mx, value, false); // no relax to be UPnP compliant
     }
     static NPT_Result SetMX(NPT_HttpMessage& message, 
                             const NPT_UInt32 mx) {
@@ -181,7 +238,7 @@ public:
             "MX", 
             NPT_String::FromInteger(mx)); 
     }
-    static NPT_Result GetSeq(NPT_HttpMessage& message,  
+    static NPT_Result GetSeq(const NPT_HttpMessage& message,  
                              NPT_UInt32&      value) { 
         value = 0;
         const NPT_String* seq = 
@@ -215,12 +272,13 @@ public:
         }
         return guid;
     }
-    static NPT_Result ExtractLeaseTime(const char*  cache_control, 
-                                       NPT_Timeout& lease) {
-        int value;
-        if (cache_control && 
-            sscanf(cache_control, "max-age=%d", &value) == 1) {
-            lease = value;
+    static NPT_Result ExtractLeaseTime(const NPT_String& cache_control, 
+                                       NPT_TimeInterval& lease) {
+        NPT_Int32 value;
+        if (cache_control.StartsWith("max-age=", true) &&
+            NPT_SUCCEEDED(NPT_ParseInteger32(cache_control.GetChars()+8, 
+                                             value))) {
+            lease.SetSeconds(value);
             return NPT_SUCCESS;
         }
         return NPT_FAILURE;
@@ -241,20 +299,21 @@ public:
     static NPT_Result GetIPAddresses(NPT_List<NPT_IpAddress>& ips, 
                                      bool with_localhost = false) {
         NPT_List<NPT_NetworkInterface*> if_list;
-        NPT_CHECK(NPT_NetworkInterface::GetNetworkInterfaces(if_list));
+        NPT_CHECK(GetNetworkInterfaces(if_list, with_localhost));
 
         NPT_List<NPT_NetworkInterface*>::Iterator iface = 
             if_list.GetFirstItem();
         while (iface) {
             NPT_IpAddress ip = 
                 (*(*iface)->GetAddresses().GetFirstItem()).GetPrimaryAddress();
-            if (ip.ToString().Compare("0.0.0.0") && ip.ToString().Compare("127.0.0.1")) {
+            if (ip.ToString().Compare("0.0.0.0") && 
+                (with_localhost || ip.ToString().Compare("127.0.0.1"))) {
                 ips.Add(ip);
             }
             ++iface;
         }
 
-        if (ips.GetItemCount() == 0 || with_localhost) {
+        if (with_localhost && !ips.Find(NPT_IpAddressFinder(NPT_IpAddress(127, 0, 0, 1)))) {
             NPT_IpAddress localhost;
             localhost.Parse("127.0.0.1");
             ips.Add(localhost);
@@ -277,7 +336,7 @@ public:
 
 	static NPT_Result GetMACAddresses(NPT_List<NPT_String>& addresses) {
         NPT_List<NPT_NetworkInterface*> if_list;
-        NPT_CHECK(NPT_NetworkInterface::GetNetworkInterfaces(if_list));
+        NPT_CHECK(GetNetworkInterfaces(if_list));
 
         NPT_List<NPT_NetworkInterface*>::Iterator iface = if_list.GetFirstItem();
         while (iface) {
@@ -318,11 +377,16 @@ private:
 
         NPT_NetworkInterface* iface;
         while (NPT_SUCCEEDED(_if_list.PopHead(iface))) {
+            if (iface->GetAddresses().GetItemCount() == 0) {
+                delete iface;
+                continue;
+            }
+            
             NPT_String ip = 
                 iface->GetAddresses().GetFirstItem()->GetPrimaryAddress().ToString();
+
             if (ip.Compare("0.0.0.0") && 
-                ((!only_localhost && ip.Compare("127.0.0.1")) || 
-                 (only_localhost && !ip.Compare("127.0.0.1")))) {
+                ((!only_localhost && ip.Compare("127.0.0.1")) || (only_localhost && !ip.Compare("127.0.0.1")))) {
                 if_list.Add(iface);
 
                 // add localhost only once

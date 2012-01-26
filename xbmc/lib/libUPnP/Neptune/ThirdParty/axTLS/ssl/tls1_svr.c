@@ -84,13 +84,14 @@ int do_svr_handshake(SSL *ssl, int handshake_type, uint8_t *buf, int hs_len)
         case HS_CERTIFICATE:/* the client sends its cert */
             ret = process_certificate(ssl, &ssl->x509_ctx);
 
-            if (ret == SSL_OK)    /* verify the cert */
+            /* GBG: removed (modified process_certificate to do the cert verification for both client and server
+            if (ret == SSL_OK)    
             { 
                 int cert_res;
                 cert_res = x509_verify(
-                        ssl->ssl_ctx->ca_cert_ctx, ssl->x509_ctx);
+                        ssl->ssl_ctx->ca_cert_ctx, ssl->x509_ctx, NULL);
                 ret = (cert_res == 0) ? SSL_OK : SSL_X509_ERROR(cert_res);
-            }
+            }*/
             break;
 
         case HS_CERT_VERIFY:    
@@ -370,7 +371,7 @@ static int send_server_hello_done(SSL *ssl)
  */
 static int process_client_key_xchg(SSL *ssl)
 {
-    uint8_t *buf = ssl->bm_data;
+    uint8_t *buf = &ssl->bm_data[ssl->dc->bm_proc_index];
     int pkt_size = ssl->bm_index;
     int premaster_size, secret_length = (buf[2] << 8) + buf[3];
     uint8_t premaster_secret[MAX_KEY_BYTE_SIZE];
@@ -378,7 +379,11 @@ static int process_client_key_xchg(SSL *ssl)
     int offset = 4;
     int ret = SSL_OK;
     
-    DISPLAY_RSA(ssl, rsa_ctx);
+    if (rsa_ctx == NULL)
+    {
+        ret = SSL_ERROR_NO_CERT_DEFINED;
+        goto error;
+    }
 
     /* is there an extra size field? */
     if ((secret_length - 2) == rsa_ctx->num_octets)
@@ -413,6 +418,7 @@ static int process_client_key_xchg(SSL *ssl)
     ssl->next_state = HS_FINISHED; 
 #endif
 error:
+    ssl->dc->bm_proc_index += rsa_ctx->num_octets+offset;
     return ret;
 }
 
@@ -434,7 +440,7 @@ static int send_certificate_request(SSL *ssl)
  */
 static int process_cert_verify(SSL *ssl)
 {
-    uint8_t *buf = ssl->bm_data;
+    uint8_t *buf = &ssl->bm_data[ssl->dc->bm_proc_index];
     int pkt_size = ssl->bm_index;
     uint8_t dgst_buf[MAX_KEY_BYTE_SIZE];
     uint8_t dgst[MD5_SIZE+SHA1_SIZE];
@@ -443,7 +449,6 @@ static int process_cert_verify(SSL *ssl)
     int n;
 
     PARANOIA_CHECK(pkt_size, x509_ctx->rsa_ctx->num_octets+6);
-
     DISPLAY_RSA(ssl, x509_ctx->rsa_ctx);
 
     /* rsa_ctx->bi_ctx is not thread-safe */

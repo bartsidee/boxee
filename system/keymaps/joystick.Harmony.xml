@@ -411,21 +411,11 @@
       <!-- Prev		-->      <button id="32">PreviousMenu</button>
     </joystick>
   </MyWeatherSettings>
-  <MyMusicSettings>
-    <joystick name="Harmony">
-      <!-- Prev		-->      <button id="32">PreviousMenu</button>
-    </joystick>
-  </MyMusicSettings>
   <SystemSettings>
     <joystick name="Harmony">
       <!-- Prev		-->      <button id="32">PreviousMenu</button>
     </joystick>
   </SystemSettings>
-  <MyVideosSettings>
-    <joystick name="Harmony">
-      <!-- Prev		-->      <button id="32">PreviousMenu</button>
-    </joystick>
-  </MyVideosSettings>
   <NetworkSettings>
     <joystick name="Harmony">
       <!-- Prev		-->      <button id="32">PreviousMenu</button>

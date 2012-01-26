@@ -1,3 +1,9 @@
+//#define WIN32_MEMORY_LEAK_DETECT	// Uncomment this line if you want memory leak detection to be enabled under Windows.
+
+#ifdef WIN32_MEMORY_LEAK_DETECT
+#define _CRTDBG_MAP_ALLOC
+#endif
+
 #pragma once
 #include <vector>
 #include <map>
@@ -22,3 +28,16 @@
 // anything below here should be headers that very rarely (hopefully never)
 // change yet are included almost everywhere.
 #include "StdString.h"
+
+#ifdef WIN32_MEMORY_LEAK_DETECT
+#include <stdlib.h>
+#include <crtdbg.h>
+
+#ifdef _DEBUG
+#ifndef NEW_INLINE_WORKAROUND
+#define NEW_INLINE_WORKAROUND new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )
+#define new NEW_INLINE_WORKAROUND
+#endif
+#endif  // _DEBUG
+
+#endif

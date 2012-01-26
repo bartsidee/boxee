@@ -5,7 +5,7 @@ INCLUDES=-I. -I../ -I../../xbmc -I../../xbmc/linux -I../../xbmc/utils
 ifeq ($(findstring osx,$(ARCH)), osx)
 SRCS=SDLJoystick.cpp
 else
-SRCS=SDLJoystick.cpp LIRC.cpp LinuxInputDevices.cpp
+SRCS=SDLJoystick.cpp LIRC.cpp LinuxInputDevices.cpp IntelCERemote.cpp
 endif
 
 LIB=gui_common.a

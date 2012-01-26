@@ -1,7 +1,12 @@
 #include "PipesManager.h"
 #include "utils/SingleLock.h"
 
+#ifndef min
+#define min(a,b) ((a) < (b) ? (a) : (b))
+#endif
+
 using namespace XFILE;
+
 
 Pipe::Pipe(const CStdString &name, int nMaxSize)
 {
@@ -12,10 +17,17 @@ Pipe::Pipe(const CStdString &name, int nMaxSize)
   m_strPipeName = name;
   m_bOpen = true;
   m_bEof = false;
+  m_nOpenThreashold = PIPE_DEFAULT_MAX_SIZE / 2;
+  m_bReadyForRead = true; // open threashold disabled atm
 }
 
 Pipe::~Pipe()
 {
+}
+
+void Pipe::SetOpenThreashold(int threashold)
+{
+  m_nOpenThreashold = threashold;
 }
 
 const CStdString &Pipe::GetName() 
@@ -56,6 +68,18 @@ bool Pipe::IsEmpty()
   return (m_buffer.GetMaxReadSize() == 0);
 }
 
+void Pipe::Flush()
+{
+  CSingleLock lock(m_lock);
+
+  if (!m_bOpen || !m_bReadyForRead || m_bEof)
+  {
+    return;
+  }
+  m_buffer.Clear();
+  CheckStatus();
+}
+
 int  Pipe::Read(char *buf, int nMaxSize, int nWaitMillis)
 {
   CSingleLock lock(m_lock);
@@ -64,12 +88,15 @@ int  Pipe::Read(char *buf, int nMaxSize, int nWaitMillis)
   {
     return -1;
   }
-  
+
+  while (!m_bReadyForRead && !m_bEof)
+    m_readEvent.WaitMSec(100);
+
   int nResult = 0;
   if (!IsEmpty())
   {
-    int nToRead = std::min(m_buffer.GetMaxReadSize(), nMaxSize);
-    m_buffer.ReadBinary(buf, nToRead);
+    int nToRead = min(m_buffer.GetMaxReadSize(), nMaxSize);
+    m_buffer.ReadData(buf, nToRead);
     nResult = nToRead;
   }
   else if (m_bEof)
@@ -82,12 +109,22 @@ int  Pipe::Read(char *buf, int nMaxSize, int nWaitMillis)
     // at the moment we leave m_listeners unprotected which might be a problem in future
     // but as long as we only have 1 listener attaching at startup and detaching on close we're fine
     AddRef();
-    lock.Leave();    
-    
-    for (size_t l=0; l<m_listeners.size(); l++)
-      m_listeners[l]->OnPipeUnderFlow();
-    
-    bool bHasData = m_readEvent.WaitMSec(nWaitMillis);
+    lock.Leave();
+
+    bool bHasData = false;
+    int nMillisLeft = nWaitMillis;
+    if (nMillisLeft < 0)
+      nMillisLeft = 5*60*1000; // arbitrary. 5 min.
+
+    do
+    {
+      for (size_t l=0; l<m_listeners.size(); l++)
+        m_listeners[l]->OnPipeUnderFlow();
+
+      bHasData = m_readEvent.WaitMSec(min(200,nMillisLeft));
+      nMillisLeft -= 200;
+    } while (!bHasData && nMillisLeft > 0 && !m_bEof);
+
     lock.Enter();
     DecRef();
     
@@ -96,8 +133,8 @@ int  Pipe::Read(char *buf, int nMaxSize, int nWaitMillis)
     
     if (bHasData)
     {
-      int nToRead = std::min(m_buffer.GetMaxReadSize(), nMaxSize);
-      m_buffer.ReadBinary(buf, nToRead);
+      int nToRead = min(m_buffer.GetMaxReadSize(), nMaxSize);
+      m_buffer.ReadData(buf, nToRead);
       nResult = nToRead;
     }
   }
@@ -116,7 +153,7 @@ bool Pipe::Write(const char *buf, int nSize, int nWaitMillis)
   int writeSize = m_buffer.GetMaxWriteSize();
   if (writeSize > nSize)
   {
-    m_buffer.WriteBinary(buf, nSize);
+    m_buffer.WriteData((char*)buf, nSize);
     bOk = true;
   }
   else
@@ -131,12 +168,12 @@ bool Pipe::Write(const char *buf, int nSize, int nWaitMillis)
       lock.Enter();
       if (bClear && m_buffer.GetMaxWriteSize() >= nSize)
       {
-        m_buffer.WriteBinary(buf, nSize);
+        m_buffer.WriteData((char*)buf, nSize);
         bOk = true;
         break;
       }
       
-      if (nWaitMillis != INFINITE)
+      if ((unsigned int) nWaitMillis != INFINITE)
         break;
     }
   }
@@ -163,7 +200,11 @@ void Pipe::CheckStatus()
   if (m_buffer.GetMaxReadSize() == 0)
     m_readEvent.Reset();
   else
+  {
+    if (!m_bReadyForRead  && m_buffer.GetMaxReadSize() >= m_nOpenThreashold)
+      m_bReadyForRead = true;
     m_readEvent.Set();  
+  }
 }
 
 void Pipe::Close()
@@ -196,6 +237,12 @@ void Pipe::RemoveListener(IPipeListener *l)
     else
       i++;
   }
+}
+
+int	Pipe::GetAvailableRead()
+{
+  CSingleLock lock(m_lock);
+  return m_buffer.GetMaxReadSize();
 }
 
 PipesManager::PipesManager() : m_nGenIdHelper(1)

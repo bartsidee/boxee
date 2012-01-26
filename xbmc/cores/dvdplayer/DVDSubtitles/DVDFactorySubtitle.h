@@ -33,7 +33,7 @@ typedef std::vector<std::string>::iterator VecSubtitleFilesIter;
 class CDVDFactorySubtitle
 {
 public:
-  static bool GetSubtitles(VecSubtitleFiles& vecSubtitles, std::string& strFile);
+  static bool GetSubtitles(VecSubtitleFiles& vecSubtitles, std::string& strFile, const std::string& content);
   static CDVDSubtitleParser* CreateParser(std::string& strFile);
 };
 

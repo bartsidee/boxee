@@ -19,6 +19,12 @@
  *
  */
 
+#if (defined HAVE_CONFIG_H) && (!defined WIN32)
+  #include "config.h"
+#endif
+
+#ifndef DISABLE_FFMPEG_POSTPROC
+
 #include "DVDVideoPPFFmpeg.h"
 #include "utils/log.h"
 
@@ -192,4 +198,6 @@ bool CDVDVideoPPFFmpeg::GetPicture(DVDVideoPicture* pPicture)
   }
   return false;
 }
+
+#endif
 

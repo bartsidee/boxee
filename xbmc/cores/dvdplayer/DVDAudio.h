@@ -39,7 +39,7 @@ extern "C" {
     #include <ffmpeg/avcodec.h>
   #endif
 #else
-  #include "ffmpeg/avcodec.h"
+  #include "ffmpeg/libavcodec/avcodec.h"
 #endif
 }
 #endif
@@ -61,23 +61,26 @@ public:
   void Pause();
   void Resume();
   bool Create(const DVDAudioFrame &audioframe, CodecID codec);
-  bool IsValidFormat(const DVDAudioFrame &audioframe);
+  bool IsValidFormat(const DVDAudioFrame &audioframe, CodecID codec);
   void Destroy();
   DWORD AddPackets(const DVDAudioFrame &audioframe);
   double GetDelay(); // returns the time it takes to play a packet if we add one at this time
   void Flush();
+  void Resync(double pts);
   void Finish();
   void Drain();
 
   void SetSpeed(int iSpeed);
+  void DisablePtsCorrection(bool bDisable) { m_bDisablePtsCorrection = bDisable; }
 
   IAudioRenderer* m_pAudioDecoder;
 protected:
-  DWORD AddPacketsRenderer(unsigned char* data, DWORD len, CSingleLock &lock);
+  DWORD AddPacketsRenderer(unsigned char* data, DWORD len, double pts, double duration, CSingleLock &lock);
   IAudioCallback* m_pCallback;
   BYTE* m_pBuffer; // should be [m_dwPacketSize]
   DWORD m_iBufferSize;
   DWORD m_dwPacketSize;
+  double m_lastPts;
   CCriticalSection m_critSection;
 
   int m_iChannels;
@@ -85,8 +88,10 @@ protected:
   int m_iBitsPerSample;
   bool m_bPassthrough;
   int m_iSpeed;
-
+  CodecID m_Codec;
+  
   volatile bool& m_bStop;
+  bool m_bDisablePtsCorrection;
   //counter that will go from 0 to m_iSpeed-1 and reset, data will only be output when speedstep is 0
   //int m_iSpeedStep; 
 };

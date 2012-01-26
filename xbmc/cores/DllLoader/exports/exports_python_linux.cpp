@@ -26,6 +26,9 @@
 #include <sys/stat.h>
 #include <stdio.h>
 #include <dlfcn.h>
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
 
 #include "../../../FileSystem/SpecialProtocol.h"
 #include "../../../utils/log.h"
@@ -33,6 +36,7 @@
 #include "../../../lib/libPython/XBPython.h"
 #endif
 #include "../DllLoaderContainer.h"
+#include "ThreadPolicy.h"
 
 #ifdef __APPLE__
 //
@@ -61,6 +65,28 @@ extern "C"
 void *xbp_dlopen(const char *filename, int flag)
 {
 #ifdef HAS_PYTHON
+  bool safeToOpen;
+  ThreadIdentifier tid;
+  FileSystemItem item;
+
+#if defined(_LINUX) && !defined(__APPLE__)
+  tid = gettid();
+#else
+  tid = CThread::GetCurrentThreadId();
+#endif
+
+  item.fileName = filename;
+  item.accessMode = "rb";
+
+#if !defined(HAS_EMBEDDED) && !defined(__APPLE__)
+  if(TPApplyPolicy(tid, SHARED_LIBRARY, &item, &safeToOpen) && !safeToOpen)
+  {
+    CLog::Log(LOGDEBUG,"%s access denied for %s", __FUNCTION__, filename);
+    errno = -EACCES;
+    return NULL;
+  } 
+#endif
+
   CLog::Log(LOGDEBUG,"%s loading python lib %s. flags: %d", __FUNCTION__, filename, flag);
   LibraryLoader* pDll = DllLoaderContainer::LoadModule(filename);
   if (pDll)
@@ -236,6 +262,26 @@ int xbp_lstat(const char * path, struct stat * buf)
 {
   CStdString strName = _P(path);
   return lstat(strName.c_str(), buf);
+}
+
+NSObjectFileImageReturnCode
+xbp_NSCreateObjectFileImageFromFile(const char *pathname, NSObjectFileImage *image)
+{
+#ifdef HAS_PYTHON
+  bool safeToOpen;
+  ThreadIdentifier tid = pthread_self();
+  FileSystemItem item;
+
+  item.fileName = pathname;
+  item.accessMode = "rb";
+
+  if(TPApplyPolicy(tid, SHARED_LIBRARY, &item, &safeToOpen) && !safeToOpen)
+  {
+    CLog::Log(LOGDEBUG,"%s access denied for %s", __FUNCTION__, pathname);
+    return NSObjectFileImageAccess;
+  }
+#endif
+  return NSCreateObjectFileImageFromFile(pathname, image);
 }
 
 #else

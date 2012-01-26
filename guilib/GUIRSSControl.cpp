@@ -45,7 +45,7 @@ CGUIRSSControl::CGUIRSSControl(int parentID, int controlID, float posX, float po
   }
 
 CGUIRSSControl::CGUIRSSControl(const CGUIRSSControl &from)
-: CGUIControl(from),m_scrollInfo(from.m_scrollInfo)
+: CGUIControl(from),IRssObserver(from),m_scrollInfo(from.m_scrollInfo)
 {
   m_label = from.m_label;
   m_headlineColor = from.m_headlineColor;
@@ -120,7 +120,7 @@ void CGUIRSSControl::Render()
       colors.push_back(m_label.textColor);
       colors.push_back(m_headlineColor);
       colors.push_back(m_channelColor);
-      m_label.font->DrawScrollingText(m_posX, m_posY, colors, m_label.shadowColor, m_feed, 0, m_width, m_scrollInfo);
+      //m_label.font->DrawScrollingText(m_posX, m_posY, colors, m_label.shadowColor, m_feed, 0, m_width, m_scrollInfo);
     }
 
     if (m_pReader)

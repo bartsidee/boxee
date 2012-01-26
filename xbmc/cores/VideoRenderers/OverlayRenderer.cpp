@@ -31,7 +31,7 @@
 #include "WindowingFactory.h"
 #include "../../Settings.h"
 #include "SingleLock.h"
-#if   defined(HAS_GL)
+#if defined(HAS_GL) || defined(HAS_GLES)
 #include "OverlayRendererGL.h"
 #elif defined(HAS_DX)
 #include "OverlayRendererDX.h"
@@ -197,7 +197,12 @@ void CRenderer::Render(COverlay* o)
   RESOLUTION_INFO res;
   g_renderManager.GetVideoRect(rs, rd);
   rv  = g_graphicsContext.GetViewWindow();
-  res = g_settings.m_ResInfo[g_renderManager.GetResolution()];
+
+  RESOLUTION resolution = g_renderManager.GetResolution();
+  if(resolution == RES_INVALID)
+    return;
+
+  res = g_settings.m_ResInfo[resolution];
 
   SRenderState state;
   state.x       = o->m_x;
@@ -214,7 +219,7 @@ void CRenderer::Render(COverlay* o)
     float scale_y = 1.0;
 
     if(align == COverlay::ALIGN_SCREEN
-    || align == COverlay::ALIGN_SUBTITLE)
+      || align == COverlay::ALIGN_SUBTITLE)
     {
       scale_x = (float)res.iWidth;
       scale_y = (float)res.iHeight;
@@ -237,7 +242,7 @@ void CRenderer::Render(COverlay* o)
   if(pos == COverlay::POSITION_ABSOLUTE)
   {
     if(align == COverlay::ALIGN_SCREEN
-    || align == COverlay::ALIGN_SUBTITLE)
+      || align == COverlay::ALIGN_SUBTITLE)
     {
       float scale_x = rv.Width() / res.iWidth;
       float scale_y = rv.Height()  / res.iHeight;
@@ -287,7 +292,7 @@ COverlay* CRenderer::Convert(CDVDOverlay* o, double pts)
   if(r)
     return r->Acquire();
 
-#ifdef HAS_GL
+#if defined(HAS_GL) || defined (HAS_GLES)
   if     (o->IsOverlayType(DVDOVERLAY_TYPE_IMAGE))
     r = new COverlayTextureGL((CDVDOverlayImage*)o);
   else if(o->IsOverlayType(DVDOVERLAY_TYPE_SPU))

@@ -36,6 +36,7 @@ public:
   virtual bool SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, bool blankOtherDisplays);
 
   virtual bool IsExtSupported(const char* extension);
+  virtual void EnableDepthTest(bool bEnable);
 
 protected:
   virtual bool PresentRenderImpl();

@@ -26,7 +26,12 @@ public:
   int getSelectedSource();
   void Refresh();
   
+  void UpdateScanLabel(const CStdString& path);
+  void UpdateResolveLabel(const CStdString& path);
+
 private:
+
+  CStdString GetScanResolvePathToShow(const CStdString& path);
   
   void OpenGUIWindow(int windowID);
   void LoadAllShares();

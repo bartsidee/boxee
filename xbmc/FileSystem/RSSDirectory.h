@@ -28,6 +28,7 @@
 #include "lib/libBoxee/boxee.h"
 
 #include "RssSourceManager.h"
+#include "CriticalSection.h"
 
 namespace DIRECTORY
 {
@@ -48,10 +49,15 @@ namespace DIRECTORY
                                   const std::string &strUrl, 
                                   const std::string &strTransactionId,
                                   void *pArg);
+    virtual void OnForcedStop();
+
   private:
+    void SignalOp();
+
     CStdString m_strUrl;
     CRssFeed m_feed;
-    bool m_Finished;
+    SDL_cond*  m_pOpFinishedCond;
+    SDL_mutex* m_pOpFinishedMutex;
   };
 }
 

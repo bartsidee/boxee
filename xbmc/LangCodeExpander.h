@@ -34,6 +34,7 @@ public:
 
   bool Lookup(CStdString& desc, const CStdString& code);
   bool Lookup(CStdString& desc, const int code);
+  bool CodeToStr(CStdString& desc, const int code);
 
   void LoadUserCodes(const TiXmlElement* pRootElement);
   void Clear();

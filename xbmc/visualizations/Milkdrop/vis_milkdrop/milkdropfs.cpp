@@ -955,7 +955,7 @@ void CPlugin::RenderFrame(int bRedraw)
         lpDevice->SetRenderTarget(0, pNewTarget);
         pNewTarget->Release();
 		lpDevice->SetDepthStencilSurface( NULL );
-
+  
 	    lpDevice->SetTexture(0, NULL);
     }
 

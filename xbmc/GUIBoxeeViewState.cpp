@@ -275,9 +275,9 @@ void CGUIBoxeeViewState::SaveBoxeeViewState()
         m_windowId == WINDOW_BOXEE_BROWSE_PHOTOS)
     {
       currentPathStr = "";
-    }
-    else
-    {
+  }
+  else
+  {
       currentPathStr = m_path;
     }
 

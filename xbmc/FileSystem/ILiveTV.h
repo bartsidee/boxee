@@ -36,6 +36,7 @@ public:
   virtual int            GetStartTime() = 0;
 
   virtual bool           UpdateItem(CFileItem& item)=0;
+  virtual int            GetProgramId() { return 0; }
 };
 
 class IRecordable

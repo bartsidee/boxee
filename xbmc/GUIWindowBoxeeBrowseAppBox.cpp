@@ -28,22 +28,28 @@ using namespace BOXEE;
 
 // STATE IMPLEMENTATION
 
-CAppBoxWindowState::CAppBoxWindowState(CGUIWindow* pWindow) : CAppsWindowState(pWindow)
+CAppBoxWindowState::CAppBoxWindowState(CGUIWindowBoxeeBrowse* pWindow) : CAppsWindowState(pWindow)
 {
   m_strSearchType = "appbox";
 }
 
+CBrowseWindowState* CAppBoxWindowState::Clone()
+{
+  return new CAppBoxWindowState(m_pWindow);
+}
+
 // WINDOW IMPLEMENTATION
 
-CGUIWindowBoxeeBrowseAppBox::CGUIWindowBoxeeBrowseAppBox() : CGUIWindowBoxeeBrowseWithPanel(WINDOW_BOXEE_BROWSE_APPBOX, "boxee_browse_appbox.xml")
+CGUIWindowBoxeeBrowseAppBox::CGUIWindowBoxeeBrowseAppBox() : CGUIWindowBoxeeBrowse(WINDOW_BOXEE_BROWSE_APPBOX, "boxee_browse_appbox.xml")
 {
   SetWindowState(new CAppBoxWindowState(this));
 }
 
 CGUIWindowBoxeeBrowseAppBox::~CGUIWindowBoxeeBrowseAppBox()
 {
-
 }
+
+
 
 bool CGUIWindowBoxeeBrowseAppBox::OnAction(const CAction &action)
 {
@@ -60,7 +66,8 @@ bool CGUIWindowBoxeeBrowseAppBox::OnAction(const CAction &action)
     }
     else
     {
-      ((CAppBoxWindowState*)m_windowState)->SaveWindowState();
+      // HHH: Should it be called here?
+      //((CAppBoxWindowState*)m_windowState)->SaveWindowStateToDB();
 
       // Open a main menu
       CGUIDialogBoxeeMainMenu* pMenu = (CGUIDialogBoxeeMainMenu*)g_windowManager.GetWindow(WINDOW_BOXEE_DIALOG_MAIN_MENU);
@@ -84,9 +91,9 @@ bool CGUIWindowBoxeeBrowseAppBox::OnAction(const CAction &action)
 
 void CGUIWindowBoxeeBrowseAppBox::OnInitWindow()
 {
-  ((CAppBoxWindowState*)m_windowState)->Reset();
+  m_windowState->ResetDefaults();
 
-  CGUIWindowBoxeeBrowseWithPanel::OnInitWindow();
+  CGUIWindowBoxeeBrowse::OnInitWindow();
   SetProperty("appbox",true);
 }
 
@@ -124,7 +131,7 @@ bool CGUIWindowBoxeeBrowseAppBox::OnMessage(CGUIMessage& message)
     }
     else
     {
-      CURL url(path);
+      CURI url(path);
       windowTitle += url.GetShareName();
     }
 
@@ -133,9 +140,10 @@ bool CGUIWindowBoxeeBrowseAppBox::OnMessage(CGUIMessage& message)
   break;
   }// switch
 
-  return CGUIWindowBoxeeBrowseWithPanel::OnMessage(message);
+  return CGUIWindowBoxeeBrowse::OnMessage(message);
 }
 
+/*
 bool CGUIWindowBoxeeBrowseAppBox::ProcessPanelMessages(CGUIMessage& message)
 {
   switch ( message.GetMessage() )
@@ -143,51 +151,52 @@ bool CGUIWindowBoxeeBrowseAppBox::ProcessPanelMessages(CGUIMessage& message)
   case GUI_MSG_CLICKED:
   {
 
-    int iControl = message.GetSenderId();
+  int iControl = message.GetSenderId();
 
 
-    switch (iControl)
-    {
-    case BTN_APPLICATION_TYPE:
-    {
-      CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseAppBox::ProcessMenuClick - Handling click on [%s=%d=BTN_APPLICATION_TYPE] (bapps)",CGUIWindowBoxeeBrowseAppBox::ControlIdAsString(iControl),iControl);
+  switch (iControl)
+  {
+  case BTN_APPLICATION_TYPE:
+  {
+    CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseAppBox::ProcessMenuClick - Handling click on [%s=%d=BTN_APPLICATION_TYPE] (bapps)",CGUIWindowBoxeeBrowseAppBox::ControlIdAsString(iControl),iControl);
 
-      return HandleBtnApplicationType();
-    }
-    break;
-    case MENU_REPOSITORIES:
-    {
-      CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseAppBox::ProcessMenuClick - Handling click on [%s=%d=MENU_REPOSITORIES] (bapps)",CGUIWindowBoxeeBrowseAppBox::ControlIdAsString(iControl),iControl);
-
-      return HandleMenuRepositories();
-    }
-    break;
-    case MENU_MY_APPS:
-    {
-      CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseAppBox::ProcessMenuClick - Handling click on [%s=%d=MENU_MY_APPS] (bapps)",CGUIWindowBoxeeBrowseAppBox::ControlIdAsString(iControl),iControl);
-
-      return HandleMenuMyApps();
-    }
-    break;
-    case MENU_SEARCH:
-    {
-      CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseAppBox::ProcessMenuClick - Handling click on [%s=%d=MENU_SEARCH] (bapps)",CGUIWindowBoxeeBrowseAppBox::ControlIdAsString(iControl),iControl);
-
-      return HandleMenuSearch();
-    }
-    break;
-    default:
-    {
-      // do nothing
-    }
-    break;
-    }// switch
-
+    return HandleBtnApplicationType();
   }
+  break;
+  case MENU_REPOSITORIES:
+  {
+    CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseAppBox::ProcessMenuClick - Handling click on [%s=%d=MENU_REPOSITORIES] (bapps)",CGUIWindowBoxeeBrowseAppBox::ControlIdAsString(iControl),iControl);
+
+    return HandleMenuRepositories();
+  }
+  break;
+  case MENU_MY_APPS:
+  {
+    CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseAppBox::ProcessMenuClick - Handling click on [%s=%d=MENU_MY_APPS] (bapps)",CGUIWindowBoxeeBrowseAppBox::ControlIdAsString(iControl),iControl);
+
+    return HandleMenuMyApps();
+  }
+  break;
+  case MENU_SEARCH:
+  {
+    CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseAppBox::ProcessMenuClick - Handling click on [%s=%d=MENU_SEARCH] (bapps)",CGUIWindowBoxeeBrowseAppBox::ControlIdAsString(iControl),iControl);
+
+    return HandleMenuSearch();
+  }
+  break;
+  default:
+  {
+    // do nothing
+  }
+  break;
+  }// switch
+
+}
   }
 
   return CGUIWindowBoxeeBrowseWithPanel::ProcessPanelMessages(message);
 }
+*/
 
 bool CGUIWindowBoxeeBrowseAppBox::OnClick(int iItem)
 {
@@ -213,49 +222,49 @@ bool CGUIWindowBoxeeBrowseAppBox::OnClick(int iItem)
   }
   else
   {
-    CStdString heading = g_localizeStrings.Get(52039);
-    CStdString line;
-    CStdString str = g_localizeStrings.Get(52038);
-    line.Format(str.c_str(), item.GetLabel());
+  CStdString heading = g_localizeStrings.Get(52039);
+  CStdString line;
+  CStdString str = g_localizeStrings.Get(52038);
+  line.Format(str.c_str(), item.GetLabel());
 
-    if (CGUIDialogYesNo2::ShowAndGetInput(heading, line))
+  if (CGUIDialogYesNo2::ShowAndGetInput(heading, line))
+  {
+    bool succeeded = false;
+    CStdString message;
+    CURI url(item.m_strPath);
+    if (url.GetProtocol() == "app")
     {
-      bool succeeded = false;
-      CStdString message;
-      CURL url(item.m_strPath);
-      if (url.GetProtocol() == "app")
+      InstallOrUpgradeAppBG* job = new InstallOrUpgradeAppBG(url.GetHostName(), true, false);
+      if (CUtil::RunInBG(job) == JOB_SUCCEEDED)
       {
-        InstallOrUpgradeAppBG* job = new InstallOrUpgradeAppBG(url.GetHostName(), true, false);
-        if (CUtil::RunInBG(job))
-        {
-          message = g_localizeStrings.Get(52016);
-          succeeded = true;
-        }
-        else
-        {
-          CStdString errorStr = g_localizeStrings.Get(52017);
-          message.Format(errorStr.c_str(), item.GetLabel());
-        }
+        message = g_localizeStrings.Get(52016);
+        succeeded = true;
       }
       else
       {
-        CLog::Log(LOGERROR,"CGUIWindowBoxeeBrowseAppBox::OnClick - FAILED to install app [label=%s]. Invalid path [path=%s] (bapps)",item.GetLabel().c_str(),item.m_strPath.c_str());
-
         CStdString errorStr = g_localizeStrings.Get(52017);
         message.Format(errorStr.c_str(), item.GetLabel());
       }
+    }
+    else
+    {
+      CLog::Log(LOGERROR,"CGUIWindowBoxeeBrowseAppBox::OnClick - FAILED to install app [label=%s]. Invalid path [path=%s] (bapps)",item.GetLabel().c_str(),item.m_strPath.c_str());
+
+      CStdString errorStr = g_localizeStrings.Get(52017);
+      message.Format(errorStr.c_str(), item.GetLabel());
+    }
 
       //Refresh();
 
-      if (succeeded)
-      {
-        g_application.m_guiDialogKaiToast.QueueNotification("", "","Application was installed", 5000);
-      }
-      else
-      {
-        CGUIDialogOK2::ShowAndGetInput(g_localizeStrings.Get(52039), message);
-      }
+    if (succeeded)
+    {
+      g_application.m_guiDialogKaiToast.QueueNotification("", "","Application was installed", 5000);
     }
+    else
+    {
+      CGUIDialogOK2::ShowAndGetInput(g_localizeStrings.Get(52039), message);
+    }
+  }
   }
 
   return true;
@@ -267,13 +276,14 @@ bool CGUIWindowBoxeeBrowseAppBox::HandleBtnApplicationType()
   FillDropdownWithApplicationTypes(applicationTypes);
 
   CStdString value;
-  if (CGUIDialogBoxeeDropdown::Show(applicationTypes, g_localizeStrings.Get(53563), value))
+  CGUIDialogBoxeeDropdown dialog; // TODO: Is some sort of initialization is needed here?
+  if (dialog.Show(applicationTypes, g_localizeStrings.Get(53563), value))
   {
     //((CAppBoxWindowState*)m_windowState)->SetApplicationType(value);
 
-    UpdateFileList();
+    Refresh();
     return true;
-  }
+    }
 
   return false;
 }
@@ -348,7 +358,6 @@ bool CGUIWindowBoxeeBrowseAppBox::HandleMenuRepositories()
 
 bool CGUIWindowBoxeeBrowseAppBox::HandleMenuMyApps()
 {
-  ((CGUIWindowBoxeeBrowseWithPanel*)g_windowManager.GetWindow(WINDOW_BOXEE_BROWSE_APPS))->ShowPanel();
   g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_APPS, "apps://all");
 
   return true;
@@ -377,7 +386,7 @@ bool CGUIWindowBoxeeBrowseAppBox::HandleMenuSearch()
   */
 
   return true;
-}
+  }
 
 const char* CGUIWindowBoxeeBrowseAppBox::ControlIdAsString(int controlId)
 {

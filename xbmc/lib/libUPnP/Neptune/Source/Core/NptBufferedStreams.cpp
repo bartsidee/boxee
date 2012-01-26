@@ -38,6 +38,15 @@
 #include "NptBufferedStreams.h"
 #include "NptUtils.h"
 
+#define NPT_CHECK_NOLOGTIMEOUT(_x)     \
+do {                                \
+    NPT_Result __result = (_x);      \
+    if (__result != NPT_SUCCESS) {   \
+        if (__result != NPT_ERROR_TIMEOUT) NPT_CHECK(__result); \
+        return __result;             \
+    }                               \
+} while(0)
+
 /*----------------------------------------------------------------------
 |   NPT_BufferedInputStream::NPT_BufferedInputStream
 +---------------------------------------------------------------------*/
@@ -151,13 +160,17 @@ NPT_BufferedInputStream::ReadLine(char*     buffer,
 {
     NPT_Result result = NPT_SUCCESS;
     char*      buffer_start = buffer;
+    char*      buffer_end   = buffer_start+size-1;
     bool       skip_newline = false;
 
     // check parameters
-    if (buffer == NULL || size < 1) return NPT_ERROR_INVALID_PARAMETERS;
+    if (buffer == NULL || size < 1) {
+        if (chars_read) *chars_read = 0;
+        return NPT_ERROR_INVALID_PARAMETERS;
+    }
 
     // read until EOF or newline
-    while (buffer-buffer_start < (long)(size-1)) {
+    for (;;) {
         while (m_Buffer.offset != m_Buffer.valid) {
             // there is some data left in the buffer
             NPT_Byte c = m_Buffer.data[m_Buffer.offset++];
@@ -172,6 +185,10 @@ NPT_BufferedInputStream::ReadLine(char*     buffer,
                 }
                 goto done;
             } else {
+                if (buffer == buffer_end) {
+                    result = NPT_ERROR_NOT_ENOUGH_SPACE;
+                    goto done;
+                }
                 *buffer++ = c;
             }
         }
@@ -188,6 +205,10 @@ NPT_BufferedInputStream::ReadLine(char*     buffer,
                 } else if (*buffer == '\n') {
                     goto done;
                 } else {
+                    if (buffer == buffer_end) {
+                        result = NPT_ERROR_NOT_ENOUGH_SPACE;
+                        goto done;
+                    }
                     ++buffer;
                 }
             }
@@ -215,6 +236,9 @@ done:
             return NPT_SUCCESS;
         }
     }
+    if (result == NPT_ERROR_CANCELLED) {
+        return result;
+    }
     return result;
 }
 
@@ -234,7 +258,7 @@ NPT_BufferedInputStream::ReadLine(NPT_String& line,
 
     // read the line
     NPT_Size chars_read = 0;
-    NPT_CHECK(ReadLine(line.UseChars(), max_chars, &chars_read, break_on_cr));
+    NPT_CHECK_NOLOGTIMEOUT(ReadLine(line.UseChars(), max_chars, &chars_read, break_on_cr));
 
     // adjust the length of the string object
     line.SetLength(chars_read);

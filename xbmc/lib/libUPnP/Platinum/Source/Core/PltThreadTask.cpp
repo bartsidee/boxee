@@ -2,7 +2,7 @@
 |
 |   Platinum - Tasks
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -29,7 +29,7 @@
 | 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 | http://www.gnu.org/licenses/gpl-2.0.html
 |
- ****************************************************************/
+****************************************************************/
 
 /*----------------------------------------------------------------------
 |   includes
@@ -67,8 +67,7 @@ PLT_ThreadTask::Start(PLT_TaskManager*  task_manager /* = NULL */,
 {
     m_Abort.SetValue(0);
     m_AutoDestroy = auto_destroy;
-
-    if (delay) m_Delay = *delay;
+    m_Delay       = delay?*delay:NPT_TimeStamp(0.);
 
     if (task_manager) {
         m_TaskManager = task_manager;
@@ -85,17 +84,21 @@ PLT_ThreadTask::Start(PLT_TaskManager*  task_manager /* = NULL */,
 NPT_Result
 PLT_ThreadTask::Stop(bool blocking /* = true */)
 {
-    m_Abort.SetValue(1);
-
+    // keep variable around in case
+    // we get destroyed
+    bool auto_destroy = m_AutoDestroy;
+    
     // tell thread we want to die
+    m_Abort.SetValue(1);
     DoAbort();
+    
+    // return without waiting
+    if (!blocking || !m_Thread) return NPT_SUCCESS;
 
-    // if auto-destroy, the thread may be dead, so we can't wait
-    // regardless on the m_Thread...only TaskManager knows
-    if (m_AutoDestroy == true && blocking) return NPT_FAILURE;
-
-    // wait for thread to be dead
-    return (blocking && m_Thread)?m_Thread->Wait():NPT_SUCCESS;
+    // if auto-destroy, the thread may be already dead by now 
+    // so we can't wait on m_Thread.
+    // only TaskManager will know when task is done
+    return auto_destroy?NPT_FAILURE:m_Thread->Wait();
 }
 
 /*----------------------------------------------------------------------
@@ -104,17 +107,15 @@ PLT_ThreadTask::Stop(bool blocking /* = true */)
 NPT_Result
 PLT_ThreadTask::Kill()
 {
+    Stop();
+
     // A task can only be destroyed manually
     // when the m_AutoDestroy is false
     // otherwise the task manager takes
-    // care of deleting it
-
+    // care of deleting it when the thread exits
     NPT_ASSERT(m_AutoDestroy == false);
+    if (!m_AutoDestroy) delete this;
 
-    Stop();
-
-    // cleanup
-    delete this;
     return NPT_SUCCESS;
 }
 
@@ -138,20 +139,12 @@ PLT_ThreadTask::Run()
         DoRun();
     }
 
+    // notify the Task Manager we're done
+    // it will destroy us if m_AutoDestroy is true
     if (m_TaskManager) {
         m_TaskManager->RemoveTask(this);
+    } else if (m_AutoDestroy) {
+        // destroy ourselves otherwise
+        delete this;
     }
-}
-
-/*----------------------------------------------------------------------
-|   PLT_ThreadTaskCallback::Callback
-+---------------------------------------------------------------------*/
-NPT_Result
-PLT_ThreadTaskCallback::Callback()
-{
-    // acquire global lock
-    NPT_AutoLock lock(m_Lock);
-
-    // invoke callback
-    return DoCallback();
 }

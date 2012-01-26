@@ -449,7 +449,7 @@ void GetTextureFromData(D3DTexture *pTex, void *texData, CBaseTexture **ppTextur
     if (IsPalettedFormat(fmt))
       (*ppTexture)->LoadPaletted(width, height, pitch, XB_FMT_B8G8R8A8, texDataStart, color);
     else
-      (*ppTexture)->LoadFromMemory(width, height, pitch, XB_FMT_B8G8R8A8, texDataStart);
+      (*ppTexture)->LoadFromMemory(width, 0, height, 0, pitch, XB_FMT_B8G8R8A8, texDataStart);
 
     if (IsSwizzledFormat(fmt) || fmt == XB_D3DFMT_DXT1 || fmt == XB_D3DFMT_DXT2 || fmt == XB_D3DFMT_DXT4)
     {

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<language>
+<language code="nl">
   <charsets>
     <gui unicodefont="false">CP1252</gui>
     <subtitle>CP1252</subtitle>
@@ -21,6 +21,7 @@
 
   <sorttokens>
     <token>The</token>
+    <token>A</token>
     <token>De</token>
     <token>Het</token>
   </sorttokens>

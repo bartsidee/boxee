@@ -56,10 +56,13 @@ void WINAPI Sleep(DWORD dwMilliSeconds)
 
 VOID GetLocalTime(LPSYSTEMTIME sysTime)
 {
-  const time_t t = time(NULL);
+  struct timeval tv;
+  struct timezone tz;
+  gettimeofday(&tv, &tz);
+
   struct tm now;
 
-  localtime_r(&t, &now);
+  localtime_r(&tv.tv_sec, &now);
   sysTime->wYear = now.tm_year + 1900;
   sysTime->wMonth = now.tm_mon + 1;
   sysTime->wDayOfWeek = now.tm_wday;
@@ -67,7 +70,7 @@ VOID GetLocalTime(LPSYSTEMTIME sysTime)
   sysTime->wHour = now.tm_hour;
   sysTime->wMinute = now.tm_min;
   sysTime->wSecond = now.tm_sec;
-  sysTime->wMilliseconds = 0;
+  sysTime->wMilliseconds = tv.tv_usec/1000;
   // NOTE: localtime_r() is not required to set this, but we Assume that it's set here.
   g_timezone.m_IsDST = now.tm_isdst;
 }
@@ -83,7 +86,8 @@ BOOL   SystemTimeToFileTime(const SYSTEMTIME* lpSystemTime,  LPFILETIME lpFileTi
 {
   static const int dayoffset[12] = {0, 31, 59, 90, 120, 151, 182, 212, 243, 273, 304, 334};
 
-  struct tm sysTime = {};
+  struct tm sysTime;
+  bzero(&sysTime, sizeof(sysTime));
   sysTime.tm_year = lpSystemTime->wYear - 1900;
   sysTime.tm_mon = lpSystemTime->wMonth - 1;
   sysTime.tm_wday = lpSystemTime->wDayOfWeek;

@@ -14,6 +14,7 @@
 #include "bxscheduletaskmanager.h"
 #include "bxboxeeservices.h"
 #include <SDL/SDL.h>
+#include "../libjson/include/json/value.h"
 
 namespace BOXEE
 {
@@ -65,7 +66,7 @@ private:
 
   SDL_mutex* m_servicesListGuard;
   BXBoxeeServices m_servicesList;
-  
+
   class RequestServicesListFromServerTask : public BoxeeScheduleTask
   {
   public:

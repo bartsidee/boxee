@@ -2,7 +2,7 @@
 |
 |   Platinum - Synchronous Media Browser
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -31,6 +31,10 @@
 |
 ****************************************************************/
 
+/** @file
+ UPnP AV Media Controller synchronous implementation.
+ */
+
 #ifndef _PLT_SYNC_MEDIA_BROWSER_
 #define _PLT_SYNC_MEDIA_BROWSER_
 
@@ -49,9 +53,9 @@ typedef NPT_Map<NPT_String, PLT_DeviceDataReference>         PLT_DeviceMap;
 typedef NPT_Map<NPT_String, PLT_DeviceDataReference>::Entry  PLT_DeviceMapEntry;
 
 typedef struct PLT_BrowseData {
-    NPT_SharedVariable          shared_var;
-    NPT_Result                  res;
-    PLT_BrowseInfo              info;
+    NPT_SharedVariable shared_var;
+    NPT_Result         res;
+    PLT_BrowseInfo     info;
 } PLT_BrowseData;
 
 typedef NPT_Reference<PLT_BrowseData> PLT_BrowseDataReference;
@@ -88,16 +92,16 @@ public:
     virtual void OnMSStateVariablesChanged(PLT_Service*                  service, 
                                            NPT_List<PLT_StateVariable*>* vars);
     virtual void OnBrowseResult(NPT_Result               res, 
-                                  PLT_DeviceDataReference& device, 
-                                  PLT_BrowseInfo*          info, 
-                                  void*                    userdata);
+                                PLT_DeviceDataReference& device, 
+                                PLT_BrowseInfo*          info, 
+                                void*                    userdata);
 
     // methods
     void       SetContainerListener(PLT_MediaContainerChangesListener* listener) {
         m_ContainerListener = listener;
     }
     NPT_Result BrowseSync(PLT_DeviceDataReference&      device, 
-                      const char*                   id, 
+                          const char*                   id, 
                           PLT_MediaObjectListReference& list,
                           bool                          metadata = false,
                           NPT_Int32                     start = 0,
@@ -108,13 +112,13 @@ public:
 
 protected:
     NPT_Result BrowseSync(PLT_BrowseDataReference& browse_data,
-                      PLT_DeviceDataReference& device, 
-                      const char*              object_id,
-                      NPT_Int32                index, 
-                      NPT_Int32                count,
-                      bool                     browse_metadata = false,
-                          const char*              filter = "dc:date,upnp:genre,res@duration,res@size,upnp:albumArtURI,upnp:album,upnp:artist,upnp:author", 
-                      const char*              sort = "");
+                          PLT_DeviceDataReference& device, 
+                          const char*              object_id,
+                          NPT_Int32                index, 
+                          NPT_Int32                count,
+                          bool                     browse_metadata = false,
+                          const char*              filter = "dc:date,upnp:genre,res,res@duration,res@size,upnp:albumArtURI,upnp:album,upnp:artist,upnp:author", // explicitely specify res otherwise WMP won't return a URL!
+                          const char*              sort = "");
 private:
     NPT_Result Find(const char* ip, PLT_DeviceDataReference& device);
     NPT_Result WaitForResponse(NPT_SharedVariable& shared_var);
@@ -123,7 +127,7 @@ private:
     NPT_Lock<PLT_DeviceMap>              m_MediaServers;
     PLT_MediaContainerChangesListener*   m_ContainerListener;
     bool                                 m_UseCache;
-    PLT_MediaCache                       m_Cache;
+    PLT_MediaCache<PLT_MediaObjectListReference,NPT_String> m_Cache;
 };
 
 /*----------------------------------------------------------------------

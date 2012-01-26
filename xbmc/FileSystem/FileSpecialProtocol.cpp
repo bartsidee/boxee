@@ -36,57 +36,52 @@ CFileSpecialProtocol::~CFileSpecialProtocol(void)
   Close();
 }
 
-bool CFileSpecialProtocol::Open(const CURL& url)
+bool CFileSpecialProtocol::Open(const CURI& url)
 {
-  CStdString strPath;
-  url.GetURL(strPath);
+  CStdString strPath = url.Get();
   CStdString strFileName=CSpecialProtocol::TranslatePath(strPath);
 
   return m_file.Open(strFileName);
 }
 
-bool CFileSpecialProtocol::OpenForWrite(const CURL& url, bool bOverWrite /*=false */)
+bool CFileSpecialProtocol::OpenForWrite(const CURI& url, bool bOverWrite /*=false */)
 {
-  CStdString strPath;
-  url.GetURL(strPath);
+  CStdString strPath = url.Get();
   CStdString strFileName=CSpecialProtocol::TranslatePath(strPath);
 
   return m_file.OpenForWrite(strFileName,bOverWrite);
 }
 
-bool CFileSpecialProtocol::Delete(const CURL& url)
+bool CFileSpecialProtocol::Delete(const CURI& url)
 {
-  CStdString strPath;
-  url.GetURL(strPath);
+  CStdString strPath = url.Get();
   CStdString strFileName=CSpecialProtocol::TranslatePath(strPath);
   
   return m_file.Delete(strFileName);
 }
 
-bool CFileSpecialProtocol::Exists(const CURL& url)
+bool CFileSpecialProtocol::Exists(const CURI& url)
 {
-  CStdString strPath;
-  url.GetURL(strPath);
+  CStdString strPath = url.Get();
   CStdString strFileName=CSpecialProtocol::TranslatePath(strPath);
 
   return m_file.Exists(strFileName);
 }
 
-int CFileSpecialProtocol::Stat(const CURL& url, struct __stat64* buffer)
+int CFileSpecialProtocol::Stat(const CURI& url, struct __stat64* buffer)
 {
-  CStdString strPath;
-  url.GetURL(strPath);
+  CStdString strPath = url.Get();
   CStdString strFileName=CSpecialProtocol::TranslatePath(strPath);
 
   return m_file.Stat(strFileName, buffer);
 }
 
-bool CFileSpecialProtocol::Rename(const CURL& url, const CURL& urlnew)
+bool CFileSpecialProtocol::Rename(const CURI& url, const CURI& urlnew)
 {
   CStdString strPath,strPath2;
-  url.GetURL(strPath);
+  strPath = url.Get();
   CStdString strFileName=CSpecialProtocol::TranslatePath(strPath);
-  urlnew.GetURL(strPath2);
+  strPath = urlnew.Get();
   CStdString strFileName2=CSpecialProtocol::TranslatePath(strPath2);
 
   return m_file.Rename(strFileName,strFileName2);

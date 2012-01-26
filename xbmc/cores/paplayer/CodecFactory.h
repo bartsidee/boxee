@@ -30,6 +30,6 @@ public:
   virtual ~CodecFactory() {}
 
   static ICodec* CreateCodec(const CStdString& strFileType);
-  static ICodec* CreateCodecDemux(const CStdString& strFile, const CStdString& strContent,unsigned int filecache);
+  static ICodec* CreateCodecDemux(const CStdString& strFile, const CStdString& strContent,unsigned int filecache, bool &initialized);
 };
 

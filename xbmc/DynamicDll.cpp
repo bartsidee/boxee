@@ -93,3 +93,18 @@ bool DllDynamic::SetFile(const CStdString& strDllName)
   return true;
 }
 
+
+
+bool LibStatic::Load()
+{
+  if (!ResolveExports())
+  {
+    CLog::Log(LOGERROR, "Unable to resolve exports from lib.");
+    Unload();
+    return false;
+  }
+
+  m_is_loaded = true;
+  return true;
+}
+

@@ -33,7 +33,7 @@
 #include "xvmc_internal.h"
 
 /**
- * Initializes the block field of the MpegEncContext pointer passed as
+ * Initialize the block field of the MpegEncContext pointer passed as
  * parameter after making sure that the data is not corrupted.
  * In order to implement something like direct rendering instead of decoding
  * coefficients in s->blocks and then copying them, copy them directly
@@ -301,7 +301,7 @@ void ff_xvmc_decode_mb(MpegEncContext *s)
     for (i = 0; i < blocks_per_mb; i++) {
         if (s->block_last_index[i] >= 0) {
             // I do not have unsigned_intra MOCO to test, hope it is OK.
-            if (s->mb_intra && (render->idct || (!render->idct && !render->unsigned_intra)))
+            if (s->mb_intra && (render->idct || !render->unsigned_intra))
                 *s->pblocks[i][0] -= 1 << 10;
             if (!render->idct) {
                 s->dsp.idct(*s->pblocks[i]);

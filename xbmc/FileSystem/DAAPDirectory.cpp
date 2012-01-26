@@ -19,6 +19,9 @@
 */
 
 #include "FileDAAP.h"
+
+#ifdef HAS_FILESYSTEM_DAAP
+
 #include "DAAPDirectory.h"
 #include "Util.h"
 #include "MusicInfoTag.h"
@@ -62,7 +65,7 @@ bool CDAAPDirectory::GetDirectory(const CStdString& strPath, CFileItemList &item
   int c;
   //wchar_t wStrFile[1024]; // buffer for converting strings
 
-  CURL url(strPath);
+  CURI url(strPath);
 
   CStdString strRoot = strPath;
   CUtil::AddSlashAtEnd(strRoot);
@@ -459,3 +462,4 @@ int CDAAPDirectory::GetCurrLevel(CStdString strPath)
 
 }
 
+#endif

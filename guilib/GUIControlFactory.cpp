@@ -29,6 +29,7 @@
 #include "GUIBorderedImage.h"
 #include "GUILabelControl.h"
 #include "GUIEditControl.h"
+#include "GUIMultilineEditControl.h"
 #include "GUIFadeLabelControl.h"
 #include "GUICheckMarkControl.h"
 #include "GUIToggleButtonControl.h"
@@ -65,6 +66,7 @@
 #include "Settings.h"
 #include "StringUtils.h"
 #include "GUIKeyboardControl.h"
+#include "GUIWebControl.h"
 
 using namespace std;
 
@@ -257,6 +259,11 @@ bool CGUIControlFactory::GetTexture(const TiXmlNode* pRootNode, const char* strT
   const char *border = pNode->Attribute("border");
   if (border)
     GetRectFromString(border, image.border);
+  image.srcBorder = image.border;
+  const char *srcborder = pNode->Attribute("srcborder");
+  if (srcborder)
+    GetRectFromString(srcborder, image.srcBorder);
+
   image.orientation = 0;
   const char *flipX = pNode->Attribute("flipx");
   if (flipX && strcmpi(flipX, "true") == 0) image.orientation = 1;
@@ -586,7 +593,8 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
   int id = 0;
   float posX = 0, posY = 0;
   float width = 0, height = 0;
-  float minWidth = 0;
+  float minWidth = 0, minHeight = 0;
+
 
   int left = 0, right = 0, up = 0, down = 0, next = 0, prev = 0;
   vector<CGUIActionDescriptor> leftActions, rightActions, upActions, downActions, nextActions, prevActions;
@@ -598,6 +606,7 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
   CStdString strTmp;
   int singleInfo = 0;
   CStdString strLabel;
+  CStdString emptyLabel;
   int iUrlSet=0;
   int iToggleSelect;
 
@@ -695,11 +704,13 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
   ORIENTATION orientation = VERTICAL;
   bool showOnePage = true;
   bool scrollOut = true;
-  int preloadItems = 0;
+  int preloadItems = 1;
 
   CLabelInfo labelInfo;
   CLabelInfo labelInfo2;
+  CLabelInfo altLabelInfo;
   CLabelInfo spinInfo;
+  CLabelInfo emptyInfo;
 
   CGUIInfoColor textColor3;
 
@@ -711,9 +722,10 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
   CStdString altLabel;
   CStdString strLabel2;
 
-  int focusPosition    = 0;
+  int focusPosition = 0;
   bool bPinnedPosition = false;
   int scrollTime = 200;
+  int scrollTimeMin = 0;
   bool useControlCoords = false;
   bool renderFocusedLast = false;
 
@@ -725,6 +737,10 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
   bool bPassword = false;
   
   int clickDuration = 50;
+
+  int maxinputsize = -1;
+
+  std::map<CStdString, CStdString> properties;
 
   /////////////////////////////////////////////////////////////////////////////
   // Read control properties from XML
@@ -747,9 +763,15 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
     posY = rect.Height() - posY;
 
   GetDimension(pControlNode, "width", width, minWidth);
-  GetFloat(pControlNode, "height", height);
+  GetDimension(pControlNode, "height", height, minHeight);
   GetFloat(pControlNode, "offsetx", offsetX);
   GetFloat(pControlNode, "offsety", offsetY);
+
+  CStdString strClipChildren = "true";
+  GetString(pControlNode, "clipchildren", strClipChildren);
+
+  CStdString strAutoResize = "false";
+  GetString(pControlNode, "autoresize", strAutoResize);
 
   // adjust width and height accordingly for groups.  Groups should
   // take the width/height of the parent (adjusted for positioning)
@@ -795,6 +817,7 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
   GetInfoColor(pControlNode, "disabledcolor", labelInfo.disabledColor);
   GetInfoColor(pControlNode, "shadowcolor", labelInfo.shadowColor);
   GetInfoColor(pControlNode, "selectedcolor", labelInfo.selectedColor);
+  GetInfoColor(pControlNode, "selectedbackcolor", labelInfo.selectedBackColor);
   GetFloat(pControlNode, "textoffsetx", labelInfo.offsetX);
   GetFloat(pControlNode, "textoffsety", labelInfo.offsetY);
   GetFloat(pControlNode, "textxoff", labelInfo.offsetX);
@@ -812,13 +835,50 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
     labelInfo.align |= alignY;
   if (GetFloat(pControlNode, "textwidth", labelInfo.width))
     labelInfo.align |= XBFONT_TRUNCATED;
+
+  CStdString t;
+  altLabelInfo.textColor = labelInfo.textColor;
+  if (XMLUtils::GetString(pControlNode, "alttextcolor", t))
+    GetInfoColor(pControlNode, "alttextcolor", altLabelInfo.textColor);
+  altLabelInfo.focusedColor = labelInfo.focusedColor;
+  if (XMLUtils::GetString(pControlNode, "altfocusedcolor", t))
+    GetInfoColor(pControlNode, "altfocusedcolor", altLabelInfo.focusedColor);
+  altLabelInfo.disabledColor = labelInfo.disabledColor;
+  if (XMLUtils::GetString(pControlNode, "altdisabledcolor", t))
+    GetInfoColor(pControlNode, "altdisabledcolor", altLabelInfo.disabledColor);
+  altLabelInfo.shadowColor = labelInfo.shadowColor;
+  if (XMLUtils::GetString(pControlNode, "altshadowcolor", t))
+    GetInfoColor(pControlNode, "altshadowcolor", altLabelInfo.shadowColor);
+  altLabelInfo.selectedColor = labelInfo.selectedColor;
+  if (XMLUtils::GetString(pControlNode, "altselectedcolor", t))
+    GetInfoColor(pControlNode, "altselectedcolor", altLabelInfo.selectedColor);
+  altLabelInfo.selectedBackColor = labelInfo.selectedBackColor;
+  if (XMLUtils::GetString(pControlNode, "altselectedbackcolor", t))
+    GetInfoColor(pControlNode, "altselectedbackcolor", altLabelInfo.selectedBackColor);
+  altLabelInfo.offsetX = labelInfo.offsetX;
+  if (XMLUtils::GetString(pControlNode, "alttextoffsetx", t))
+    GetFloat(pControlNode, "alttextoffsetx", altLabelInfo.offsetX);
+  altLabelInfo.offsetY = labelInfo.offsetY;
+  if (XMLUtils::GetString(pControlNode, "alttextoffsety", t))
+    GetFloat(pControlNode, "alttextoffsety", altLabelInfo.offsetY);
+  altLabelInfo.font = labelInfo.font;
+  if (XMLUtils::GetString(pControlNode, "altfont", t))
+    altLabelInfo.font = g_fontManager.GetFont(t);
+  altLabelInfo.align = labelInfo.align;
+
   labelInfo2.selectedColor = labelInfo.selectedColor;
+  labelInfo2.selectedBackColor = labelInfo.selectedBackColor;
   GetInfoColor(pControlNode, "selectedcolor2", labelInfo2.selectedColor);
+  GetInfoColor(pControlNode, "selectedbackcolor2", labelInfo2.selectedBackColor);
   GetInfoColor(pControlNode, "textcolor2", labelInfo2.textColor);
   GetInfoColor(pControlNode, "focusedcolor2", labelInfo2.focusedColor);
   labelInfo2.font = labelInfo.font;
   if (XMLUtils::GetString(pControlNode, "font2", strFont))
     labelInfo2.font = g_fontManager.GetFont(strFont);
+
+  emptyInfo = labelInfo;
+  if (XMLUtils::GetString(pControlNode, "emptycolor", t))
+    GetInfoColor(pControlNode, "emptycolor", emptyInfo.textColor);
 
   GetMultipleString(pControlNode, "onclick", clickActions);
   GetMultipleString(pControlNode, "ontextchange", textChangeActions);
@@ -950,6 +1010,7 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
   GetString(pControlNode, "label", strLabel);
   GetString(pControlNode, "altlabel", altLabel);
   GetString(pControlNode, "label2", strLabel2);
+  GetString(pControlNode, "emptylabel", emptyLabel);
 
   XMLUtils::GetBoolean(pControlNode, "wrapmultiline", wrapMultiLine);
   XMLUtils::GetInt(pControlNode,"urlset",iUrlSet);
@@ -998,6 +1059,7 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
   XMLUtils::GetBoolean(pControlNode, "pinposition", bPinnedPosition);
   XMLUtils::GetInt(pControlNode, "focusposition", focusPosition);
   XMLUtils::GetInt(pControlNode, "scrolltime", scrollTime);
+  bool bScrollTimeMinDefined = XMLUtils::GetInt(pControlNode, "scrolltimemin" , scrollTimeMin);
   XMLUtils::GetInt(pControlNode, "preloaditems", preloadItems, 0, 40);
   
   XMLUtils::GetInt(pControlNode, "clickduration", clickDuration);  
@@ -1007,6 +1069,8 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
   XMLUtils::GetBoolean(pControlNode, "resetonlabelchange", resetOnLabelChange);
   
   XMLUtils::GetBoolean(pControlNode, "password", bPassword);
+
+  XMLUtils::GetInt(pControlNode, "maxinputsize", maxinputsize);
 
   ListSelectionMode selectionMode = SELECTION_NONE;
   CStdString selectionLabel;
@@ -1024,6 +1088,9 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
   
   int autoScrollTime = 0;
   XMLUtils::GetInt(pControlNode, "autoscroll", autoScrollTime);
+
+  CStdString strUrl;
+  XMLUtils::GetString(pControlNode, "url", strUrl);
 
   // view type
   VIEW_TYPE viewType = VIEW_TYPE_NONE;
@@ -1076,7 +1143,18 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
     g_SkinInfo.ResolveConstant(cam->Attribute("y"), camera.y);
   }
 
+
   XMLUtils::GetInt(pControlNode, "scrollspeed", scrollSpeed);
+
+  const TiXmlElement *pChild = pControlNode->FirstChildElement("property");
+  while (pChild)
+  {
+    const char *propertyName = pChild->Attribute("name");
+    if (propertyName && pChild->FirstChild() && pChild->FirstChild()->Value())
+    {
+      properties[propertyName] = pChild->FirstChild()->Value();
+    }
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // Instantiate a new control using the properties gathered above
@@ -1102,6 +1180,9 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
     control = new CGUIControlGroupList(
       parentID, id, posX, posY, width, height, buttonGap, pageControl, orientation, useControlCoords, labelInfo.align);
     ((CGUIControlGroup *)control)->SetRenderFocusedLast(renderFocusedLast);
+    ((CGUIControlGroup *)control)->SetClipChildren(strClipChildren != "false");
+    ((CGUIControlGroup *)control)->SetAutoResize(strAutoResize == "true");
+    ((CGUIControlGroupList *)control)->SetMinSize(minWidth, minHeight);
   }
   else if (strType == "label")
   {
@@ -1119,17 +1200,28 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
         labelInfo, wrapMultiLine, bHasPath);
       ((CGUILabelControl *)control)->SetInfo(content);
       ((CGUILabelControl *)control)->SetWidthControl(minWidth, bScrollLabel, scrollSpeed);
+      ((CGUILabelControl *)control)->SetHeightControl(minHeight);
     }
   }
   else if (strType == "edit")
   {
     control = new CGUIEditControl(
       parentID, id, posX, posY, width, height, textureFocus, textureNoFocus,
-      labelInfo, strLabel);
+      labelInfo, strLabel, emptyInfo, emptyLabel, maxinputsize);
 
     if (bPassword)
       ((CGUIEditControl *) control)->SetInputType(CGUIEditControl::INPUT_TYPE_PASSWORD, 0);
     ((CGUIEditControl *) control)->SetTextChangeActions(textChangeActions);          
+  }
+  else if (strType == "multiedit")
+  {
+    control = new CGUIMultilineEditControl(
+        parentID, id, posX, posY, width, height, textureFocus, textureNoFocus,
+        labelInfo, strLabel, emptyInfo, emptyLabel, maxinputsize);
+
+    if (bPassword)
+      ((CGUIEditControl *) control)->SetInputType(CGUIEditControl::INPUT_TYPE_PASSWORD, 0);
+    ((CGUIEditControl *) control)->SetTextChangeActions(textChangeActions);
   }
   else if (strType == "keyboard")
   {
@@ -1192,7 +1284,7 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
     control = new CGUIToggleButtonControl(
       parentID, id, posX, posY, width, height,
       textureFocus, textureNoFocus,
-      textureAltFocus, textureAltNoFocus, labelInfo);
+      textureAltFocus, textureAltNoFocus, labelInfo, altLabelInfo);
 
     ((CGUIToggleButtonControl *)control)->SetLabel(strLabel);
     ((CGUIToggleButtonControl *)control)->SetAltLabel(altLabel);
@@ -1205,7 +1297,7 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
     if (textureClick.filename.length() > 0)
     {
       ((CGUIToggleButtonControl *)control)->SetClickTexture(textureClick, clickDuration);
-    }
+  }
   }
   else if (strType == "checkmark")
   {
@@ -1328,6 +1420,12 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
   else if (strType == "list")
   {
     control = new CGUIListContainer(parentID, id, posX, posY, width, height, orientation, scrollTime, preloadItems, selectionMode);
+
+    if (bScrollTimeMinDefined)
+      ((CGUIBaseContainer *)control)->SetScrollTimeMin(scrollTimeMin);
+    else if (scrollTime >= 200)
+      ((CGUIBaseContainer *)control)->SetScrollTimeMin(scrollTime - 150);
+
     ((CGUIListContainer *)control)->LoadLayout(pControlNode);
     ((CGUIListContainer *)control)->LoadContent(pControlNode);
     ((CGUIListContainer *)control)->SetType(viewType, viewLabel);
@@ -1348,6 +1446,11 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
   else if (strType == "fixedlist")
   {
     control = new CGUIFixedListContainer(parentID, id, posX, posY, width, height, orientation, scrollTime, preloadItems, focusPosition, selectionMode);
+    if (bScrollTimeMinDefined)
+      ((CGUIBaseContainer *)control)->SetScrollTimeMin(scrollTimeMin);
+    else if (scrollTime >= 200)
+      ((CGUIBaseContainer *)control)->SetScrollTimeMin(scrollTime - 150);
+
     ((CGUIFixedListContainer *)control)->LoadLayout(pControlNode);
     ((CGUIFixedListContainer *)control)->LoadContent(pControlNode);
     ((CGUIFixedListContainer *)control)->SetType(viewType, viewLabel);
@@ -1359,6 +1462,11 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
   else if (strType == "panel")
   {
     control = new CGUIPanelContainer(parentID, id, posX, posY, width, height, orientation, scrollTime, preloadItems, selectionMode);
+    if (bScrollTimeMinDefined)
+      ((CGUIBaseContainer *)control)->SetScrollTimeMin(scrollTimeMin);
+    else if (scrollTime >= 400)
+      ((CGUIBaseContainer *)control)->SetScrollTimeMin(scrollTime - 200);
+
     ((CGUIPanelContainer *)control)->LoadLayout(pControlNode);
     ((CGUIPanelContainer *)control)->LoadContent(pControlNode);
     ((CGUIPanelContainer *)control)->SetType(viewType, viewLabel);
@@ -1422,6 +1530,10 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
   {
     control = new CGUIVisualisationControl(parentID, id, posX, posY, width, height);
   }
+  else if (strType == "web" || strType == "browser")
+  {
+    control = new CGUIWebControl(parentID, id, posX, posY, width, height, strUrl);
+  }
 
   // things that apply to all controls
   if (control)
@@ -1436,8 +1548,7 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const CRect &rect, TiXmlEl
     control->SetTabNavigation(next,prev);
     control->SetNavigationActions(upActions, downActions, leftActions, rightActions);
     control->SetPulseOnSelect(bPulse);
-    if (hasCamera)
-      control->SetCamera(camera);
+    control->SetProperties(properties);
   }
   return control;
 }

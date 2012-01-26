@@ -23,16 +23,14 @@
 #include "../RenderFlags.h"
 #include "YUV2RGBShader.h"
 #include "AdvancedSettings.h"
-#include "TransformMatrix.h"
+#include "guilib/TransformMatrix.h"
 #include "utils/log.h"
+#include "utils/GLUtils.h"
 
 #include <string>
 #include <sstream>
 
-#if defined(HAS_GL) || defined(HAS_GLES)
-
-using namespace Shaders;
-using namespace std;
+// http://www.martinreddy.net/gfx/faqs/colorconv.faq
 
 //
 // Transformation matrixes for different colorspaces.
@@ -83,17 +81,17 @@ static float** PickYUVConversionMatrix(unsigned flags)
        return (float**)yuv_coef_bt601; break;
      case CONF_FLAGS_YUVCOEF_EBU:
        return (float**)yuv_coef_ebu; break;
-     default:
-       return (float**)yuv_coef_bt601; break;
    }
-}
    
-static void CalculateYUVMatrix(GLfloat      res[4][4]
-                             , unsigned int flags
-                             , float        black
-                             , float        contrast)
+   return (float**)yuv_coef_bt601;
+}
+
+void CalculateYUVMatrix(TransformMatrix &matrix
+                        , unsigned int  flags
+                        , float         black
+                        , float         contrast)
 {
-  TransformMatrix matrix, coef;
+  TransformMatrix coef;
 
   matrix *= TransformMatrix::CreateScaler(contrast, contrast, contrast);
   matrix *= TransformMatrix::CreateTranslation(black, black, black);
@@ -113,7 +111,21 @@ static void CalculateYUVMatrix(GLfloat      res[4][4]
     matrix *= TransformMatrix::CreateTranslation(- 16.0f / 255
                                                , - 16.0f / 255
                                                , - 16.0f / 255);
+  }
 }
+
+#if defined(HAS_GL) || HAS_GLES == 2
+
+using namespace Shaders;
+using namespace std;
+
+static void CalculateYUVMatrixGL(GLfloat      res[4][4]
+                               , unsigned int flags
+                               , float        black
+                               , float        contrast)
+{
+  TransformMatrix matrix;
+  CalculateYUVMatrix(matrix, flags, black, contrast);
 
   for(int row = 0; row < 3; row++)
     for(int col = 0; col < 4; col++)
@@ -129,7 +141,7 @@ static void CalculateYUVMatrix(GLfloat      res[4][4]
 // BaseYUV2RGBGLSLShader - base class for GLSL YUV2RGB shaders
 //////////////////////////////////////////////////////////////////////
 
-BaseYUV2RGBGLSLShader::BaseYUV2RGBGLSLShader(bool rect, unsigned flags)
+BaseYUV2RGBGLSLShader::BaseYUV2RGBGLSLShader(bool rect, unsigned flags, bool stretch)
 {
   m_width      = 1;
   m_height     = 1;
@@ -139,11 +151,16 @@ BaseYUV2RGBGLSLShader::BaseYUV2RGBGLSLShader(bool rect, unsigned flags)
   m_black      = 0.0f;
   m_contrast   = 1.0f;
 
-  // shader attribute handles
-  m_hYTex  = -1;
-  m_hUTex  = -1;
-  m_hVTex  = -1;
+  m_stretch = 0.0f;
 
+  // shader attribute handles
+  m_hYTex    = -1;
+  m_hUTex    = -1;
+  m_hVTex    = -1;
+  m_hStretch = -1;
+  m_hStep    = -1;
+
+#ifdef HAS_GL
   if(rect)
     m_defines += "#define XBMC_texture_rectangle 1\n";
   else
@@ -154,39 +171,83 @@ BaseYUV2RGBGLSLShader::BaseYUV2RGBGLSLShader(bool rect, unsigned flags)
   else
     m_defines += "#define XBMC_texture_rectangle_hack 0\n";
 
+  //don't compile in stretch support when it's not needed
+  if (stretch)
+    m_defines += "#define XBMC_STRETCH 1\n";
+  else
+    m_defines += "#define XBMC_STRETCH 0\n";
+
+  if (CONF_FLAGS_FORMAT_MASK(flags) == CONF_FLAGS_FORMAT_YV12)
+    m_defines += "#define XBMC_YV12\n";
+  else if (CONF_FLAGS_FORMAT_MASK(flags) == CONF_FLAGS_FORMAT_NV12)
+    m_defines += "#define XBMC_NV12\n";
+  else if (CONF_FLAGS_FORMAT_MASK(flags) == CONF_FLAGS_FORMAT_YUY2)
+    m_defines += "#define XBMC_YUY2\n";
+  else if (CONF_FLAGS_FORMAT_MASK(flags) == CONF_FLAGS_FORMAT_UYVY)
+    m_defines += "#define XBMC_UYVY\n";
+
   VertexShader()->LoadSource("yuv2rgb_vertex.glsl", m_defines);
+#elif HAS_GLES == 2
+  m_hVertex = -1;
+  m_hYcoord = -1;
+  m_hUcoord = -1;
+  m_hVcoord = -1;
+  m_hProj   = -1;
+  m_hModel  = -1;
+  m_hAlpha  = -1;
+
+  VertexShader()->LoadSource("yuv2rgb_vertex_gles.glsl", m_defines);
+#endif
+
+  CLog::Log(LOGDEBUG, "GL: BaseYUV2RGBGLSLShader: defines:\n%s", m_defines.c_str());
 }
 
 void BaseYUV2RGBGLSLShader::OnCompiledAndLinked()
 {
-  m_hYTex   = glGetUniformLocation(ProgramHandle(), "m_sampY");
-  m_hUTex   = glGetUniformLocation(ProgramHandle(), "m_sampU");
-  m_hVTex   = glGetUniformLocation(ProgramHandle(), "m_sampV");
-  m_hMatrix = glGetUniformLocation(ProgramHandle(), "m_yuvmat");
+#if HAS_GLES == 2
+  m_hVertex = glGetAttribLocation(ProgramHandle(),  "m_attrpos");
+  m_hYcoord = glGetAttribLocation(ProgramHandle(),  "m_attrcordY");
+  m_hUcoord = glGetAttribLocation(ProgramHandle(),  "m_attrcordU");
+  m_hVcoord = glGetAttribLocation(ProgramHandle(),  "m_attrcordV");
+  m_hProj   = glGetUniformLocation(ProgramHandle(), "m_proj");
+  m_hModel  = glGetUniformLocation(ProgramHandle(), "m_model");
+  m_hAlpha  = glGetUniformLocation(ProgramHandle(), "m_alpha");
+#endif
+  m_hYTex    = glGetUniformLocation(ProgramHandle(), "m_sampY");
+  m_hUTex    = glGetUniformLocation(ProgramHandle(), "m_sampU");
+  m_hVTex    = glGetUniformLocation(ProgramHandle(), "m_sampV");
+  m_hMatrix  = glGetUniformLocation(ProgramHandle(), "m_yuvmat");
+  m_hStretch = glGetUniformLocation(ProgramHandle(), "m_stretch");
+  m_hStep    = glGetUniformLocation(ProgramHandle(), "m_step");
   VerifyGLState();
 }
-  
+
 bool BaseYUV2RGBGLSLShader::OnEnabled()
-  {
+{
   // set shader attributes once enabled
   glUniform1i(m_hYTex, 0);
   glUniform1i(m_hUTex, 1);
   glUniform1i(m_hVTex, 2);
-    
+  glUniform1f(m_hStretch, m_stretch);
+  glUniform2f(m_hStep, 1.0 / m_width, 1.0 / m_height);
+
   GLfloat matrix[4][4];
-  CalculateYUVMatrix(matrix, m_flags, m_black, m_contrast);
-    
+  CalculateYUVMatrixGL(matrix, m_flags, m_black, m_contrast);
+
   glUniformMatrix4fv(m_hMatrix, 1, GL_FALSE, (GLfloat*)matrix);
+#if HAS_GLES == 2
+  glUniformMatrix4fv(m_hProj,  1, GL_FALSE, m_proj);
+  glUniformMatrix4fv(m_hModel, 1, GL_FALSE, m_model);
+  glUniform1i(m_hAlpha, m_alpha);
+#endif
   VerifyGLState();
   return true;
-  }
-  
-#ifdef HAS_GL
-  
+}
+
 //////////////////////////////////////////////////////////////////////
 // BaseYUV2RGBGLSLShader - base class for GLSL YUV2RGB shaders
 //////////////////////////////////////////////////////////////////////
-
+#if HAS_GLES != 2	// No ARB Shader when using GLES2.0
 BaseYUV2RGBARBShader::BaseYUV2RGBARBShader(unsigned flags)
 {
   m_width         = 1;
@@ -199,7 +260,6 @@ BaseYUV2RGBARBShader::BaseYUV2RGBARBShader(unsigned flags)
   m_hUTex  = -1;
   m_hVTex  = -1;
 }
-
 #endif
 
 //////////////////////////////////////////////////////////////////////
@@ -207,11 +267,15 @@ BaseYUV2RGBARBShader::BaseYUV2RGBARBShader(unsigned flags)
 // Use for weave deinterlacing / progressive
 //////////////////////////////////////////////////////////////////////
 
-YUV2RGBProgressiveShader::YUV2RGBProgressiveShader(bool rect, unsigned flags)
-  : BaseYUV2RGBGLSLShader(rect, flags)
+YUV2RGBProgressiveShader::YUV2RGBProgressiveShader(bool rect, unsigned flags, bool stretch)
+  : BaseYUV2RGBGLSLShader(rect, flags, stretch)
 {
+#ifdef HAS_GL
   PixelShader()->LoadSource("yuv2rgb_basic.glsl", m_defines);
-  }
+#elif HAS_GLES == 2
+  PixelShader()->LoadSource("yuv2rgb_basic_gles.glsl", m_defines);
+#endif
+}
 
 
 //////////////////////////////////////////////////////////////////////
@@ -219,13 +283,17 @@ YUV2RGBProgressiveShader::YUV2RGBProgressiveShader(bool rect, unsigned flags)
 //////////////////////////////////////////////////////////////////////
 
 YUV2RGBBobShader::YUV2RGBBobShader(bool rect, unsigned flags)
-  : BaseYUV2RGBGLSLShader(rect, flags)
+  : BaseYUV2RGBGLSLShader(rect, flags, false)
 {
   m_hStepX = -1;
   m_hStepY = -1;
   m_hField = -1;
+#ifdef HAS_GL
   PixelShader()->LoadSource("yuv2rgb_bob.glsl", m_defines);
-  }
+#elif HAS_GLES == 2
+  PixelShader()->LoadSource("yuv2rgb_bob_gles.glsl", m_defines);
+#endif
+}
 
 void YUV2RGBBobShader::OnCompiledAndLinked()
 {
@@ -248,23 +316,44 @@ bool YUV2RGBBobShader::OnEnabled()
   return true;
 }
 
-#ifdef HAS_GL
-
 //////////////////////////////////////////////////////////////////////
 // YUV2RGBProgressiveShaderARB - YUV2RGB with no deinterlacing
 //////////////////////////////////////////////////////////////////////
-
+#if HAS_GLES != 2	// No ARB Shader when using GLES2.0
 YUV2RGBProgressiveShaderARB::YUV2RGBProgressiveShaderARB(bool rect, unsigned flags)
   : BaseYUV2RGBARBShader(flags)
 {
   m_black      = 0.0f;
   m_contrast   = 1.0f;
-  if (rect)
-    PixelShader()->LoadSource("yuv2rgb_basic_rect.arb");
-  else
-    PixelShader()->LoadSource("yuv2rgb_basic_2d.arb");
-  
+
+  string shaderfile;
+
+  if (CONF_FLAGS_FORMAT_MASK(flags) == CONF_FLAGS_FORMAT_YUY2)
+  {
+    if(rect)
+      shaderfile = "yuv2rgb_basic_rect_YUY2.arb";
+    else
+      shaderfile = "yuv2rgb_basic_2d_YUY2.arb";
   }
+  else if (CONF_FLAGS_FORMAT_MASK(flags) == CONF_FLAGS_FORMAT_UYVY)
+  {
+    if(rect)
+      shaderfile = "yuv2rgb_basic_rect_UYVY.arb";
+    else
+      shaderfile = "yuv2rgb_basic_2d_UYVY.arb";
+  }
+  else
+  {
+    if(rect)
+      shaderfile = "yuv2rgb_basic_rect.arb";
+    else
+      shaderfile = "yuv2rgb_basic_2d.arb";
+  }
+
+  CLog::Log(LOGDEBUG, "GL: YUV2RGBProgressiveShaderARB: loading %s", shaderfile.c_str());
+
+  PixelShader()->LoadSource(shaderfile);
+}
 
 void YUV2RGBProgressiveShaderARB::OnCompiledAndLinked()
 {
@@ -273,7 +362,7 @@ void YUV2RGBProgressiveShaderARB::OnCompiledAndLinked()
 bool YUV2RGBProgressiveShaderARB::OnEnabled()
 {
   GLfloat matrix[4][4];
-  CalculateYUVMatrix(matrix, m_flags, m_black, m_contrast);
+  CalculateYUVMatrixGL(matrix, m_flags, m_black, m_contrast);
 
   for(int i=0;i<4;i++)
     glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, i
@@ -281,9 +370,11 @@ bool YUV2RGBProgressiveShaderARB::OnEnabled()
                                , matrix[1][i]
                                , matrix[2][i]
                                , matrix[3][i]);
+
+  glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 4,
+                               1.0 / m_width, 1.0 / m_height,
+                               m_width, m_height);
   return true;
 }
-
 #endif
-
 #endif // HAS_GL

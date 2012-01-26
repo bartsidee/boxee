@@ -31,11 +31,11 @@ namespace XFILE
 
 class CArchive;
 
-class ISerializable
+class IArchivable
 {
 public:
-  virtual void Serialize(CArchive& ar) = 0;
-  virtual ~ISerializable() {}
+  virtual void Archive(CArchive& ar) = 0;
+  virtual ~IArchivable() {}
 };
 
 class CArchive
@@ -55,7 +55,7 @@ public:
   CArchive& operator<<(const CStdString& str);
   CArchive& operator<<(const CStdStringW& str);
   CArchive& operator<<(const SYSTEMTIME& time);
-  CArchive& operator<<(ISerializable& obj);
+  CArchive& operator<<(IArchivable& obj);
 
   // loading
   CArchive& operator>>(float& f);
@@ -69,7 +69,7 @@ public:
   CArchive& operator>>(CStdString& str);
   CArchive& operator>>(CStdStringW& str);
   CArchive& operator>>(SYSTEMTIME& time);
-  CArchive& operator>>(ISerializable& obj);
+  CArchive& operator>>(IArchivable& obj);
 
   bool IsLoading();
   bool IsStoring();

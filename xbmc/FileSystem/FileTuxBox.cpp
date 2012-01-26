@@ -20,6 +20,9 @@
  */
 
 #include "FileTuxBox.h"
+
+#ifdef HAS_FILESYSTEM_TUXBOX
+
 #include <errno.h>
 
 //Reserved for TuxBox Recording!
@@ -43,7 +46,7 @@ int64_t CFileTuxBox::GetLength()
   return 0;
 }
 
-bool CFileTuxBox::Open(const CURL& url)
+bool CFileTuxBox::Open(const CURI& url)
 {
   return true;
 }
@@ -62,14 +65,15 @@ void CFileTuxBox::Close()
 {
 }
 
-bool CFileTuxBox::Exists(const CURL& url)
+bool CFileTuxBox::Exists(const CURI& url)
 {
   return true;
 }
 
-int CFileTuxBox::Stat(const CURL& url, struct __stat64* buffer)
+int CFileTuxBox::Stat(const CURI& url, struct __stat64* buffer)
 {
   errno = ENOENT;
   return -1;
 }
 
+#endif

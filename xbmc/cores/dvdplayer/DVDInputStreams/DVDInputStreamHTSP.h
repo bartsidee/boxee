@@ -19,7 +19,11 @@
  *
  */
 
+#include "system.h"
 #pragma once
+
+#ifdef HAS_FILESYSTEM_HTSP
+
 #include "DVDInputStream.h"
 #include "FileSystem/HTSPSession.h"
 
@@ -64,3 +68,5 @@ private:
   HTSP::SChannels    m_channels;
   HTSP::SEvent       m_event;
 };
+
+#endif

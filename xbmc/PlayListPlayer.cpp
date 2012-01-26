@@ -22,7 +22,9 @@
 #include "PlayListPlayer.h"
 #include "PlayListFactory.h"
 #include "Application.h"
+#ifndef _BOXEE_
 #include "PartyModeManager.h"
+#endif
 #include "AdvancedSettings.h"
 #include "GUIUserMessages.h"
 #include "GUIWindowManager.h"
@@ -100,9 +102,10 @@ int CPlayListPlayer::GetNextSong(int offset) const
   int song = m_iCurrentSong;
 
   // party mode
+#ifndef _BOXEE_
   if (g_partyModeManager.IsEnabled() && GetCurrentPlaylist() == PLAYLIST_MUSIC)
     return song + offset;
-
+#endif
   // wrap around in the case of repeating
   if (RepeatedOne(m_iCurrentPlayList))
     return song;
@@ -124,9 +127,10 @@ int CPlayListPlayer::GetNextSong()
   int iSong = m_iCurrentSong;
 
   // party mode
+#ifndef _BOXEE_
   if (g_partyModeManager.IsEnabled() && GetCurrentPlaylist() == PLAYLIST_MUSIC)
     return iSong + 1;
-
+#endif
   // if repeat one, keep playing the current song if its valid
   if (RepeatedOne(m_iCurrentPlayList))
   {
@@ -375,9 +379,10 @@ void CPlayListPlayer::SetCurrentPlaylist(int iPlaylist)
 
   // changing the current playlist while party mode is on
   // disables party mode
+#ifndef _BOXEE_
   if (g_partyModeManager.IsEnabled())
     g_partyModeManager.Disable();
-
+#endif
   m_iCurrentPlayList = iPlaylist;
   m_bPlayedFirstFile = false;
 }
@@ -488,8 +493,10 @@ void CPlayListPlayer::SetShuffle(int iPlaylist, bool bYesNo)
     return;
 
   // disable shuffle in party mode
+#ifndef _BOXEE_
   if (g_partyModeManager.IsEnabled() && iPlaylist == PLAYLIST_MUSIC)
     return;
+#endif
 
   // do we even need to do anything?
   if (bYesNo != IsShuffled(iPlaylist))
@@ -521,8 +528,10 @@ void CPlayListPlayer::SetShuffle(int iPlaylist, bool bYesNo)
 bool CPlayListPlayer::IsShuffled(int iPlaylist) const
 {
   // even if shuffled, party mode says its not
+#ifndef _BOXEE_
   if (g_partyModeManager.IsEnabled() && iPlaylist == PLAYLIST_MUSIC)
     return false;
+#endif
 
   if (iPlaylist >= PLAYLIST_MUSIC && iPlaylist <= PLAYLIST_VIDEO)
   {
@@ -537,8 +546,10 @@ void CPlayListPlayer::SetRepeat(int iPlaylist, REPEAT_STATE state)
     return;
 
   // disable repeat in party mode
+#ifndef _BOXEE_
   if (g_partyModeManager.IsEnabled() && iPlaylist == PLAYLIST_MUSIC)
     state = REPEAT_NONE;
+#endif
 
   m_repeatState[iPlaylist] = state;
 }

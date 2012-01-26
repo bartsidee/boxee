@@ -23,10 +23,12 @@
 
 #include "GUIWindow.h"
 
-class CGUIWindowHome :
-      public CGUIWindow
+class CGUIWindowHome : public CGUIWindow
 {
 public:
   CGUIWindowHome(void);
   virtual ~CGUIWindowHome(void);
+  
+protected:
+  virtual void OnInitWindow();
 };

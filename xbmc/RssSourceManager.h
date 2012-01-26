@@ -103,11 +103,11 @@ public:
   
   bool IsKnownContentType(CStdString contentType);
 
+  static CStdString CleanDescription(const CStdString& strDescription);
+
 private:
   
   bool ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* child, CFileItemPtr item, CRssFeedParseContext& parseContext);
-
-  CStdString CleanDescription(const CStdString& strDescription);
   
   bool IsPathToMedia(const CStdString& strPath );
   bool IsPathToThumbnail(const CStdString& strPath );

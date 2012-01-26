@@ -19,7 +19,11 @@
  *
  */
 
+#include "system.h"
 #pragma once
+
+#ifdef HAS_FILESYSTEM_HTSP
+
 #include "DVDDemux.h"
 #include "FileSystem/HTSPSession.h"
 
@@ -64,3 +68,5 @@ protected:
   int                  m_StatusCount;
   HTSP::SQueueStatus   m_QueueStatus;
 };
+
+#endif

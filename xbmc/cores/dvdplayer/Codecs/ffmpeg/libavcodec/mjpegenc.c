@@ -26,7 +26,7 @@
  */
 
 /**
- * @file libavcodec/mjpegenc.c
+ * @file
  * MJPEG encoder.
  */
 
@@ -211,7 +211,7 @@ void ff_mjpeg_encode_picture_header(MpegEncContext *s)
     }
 
     put_bits(&s->pb, 16, 17);
-    if(lossless && s->avctx->pix_fmt == PIX_FMT_RGB32)
+    if(lossless && s->avctx->pix_fmt == PIX_FMT_BGRA)
         put_bits(&s->pb, 8, 9); /* 9 bits/component RCT */
     else
         put_bits(&s->pb, 8, 8); /* 8 bits/component */
@@ -441,11 +441,13 @@ void ff_mjpeg_encode_mb(MpegEncContext *s, DCTELEM block[6][64])
         encode_block(s, block[5], 5);
         encode_block(s, block[7], 7);
     }
+
+    s->i_tex_bits += get_bits_diff(s);
 }
 
-AVCodec mjpeg_encoder = {
+AVCodec ff_mjpeg_encoder = {
     "mjpeg",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_MJPEG,
     sizeof(MpegEncContext),
     MPV_encode_init,

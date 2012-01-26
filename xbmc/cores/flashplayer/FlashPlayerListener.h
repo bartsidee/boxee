@@ -27,6 +27,10 @@
 #ifndef __FLASH_LISTENER_H__
 #define __FLASH_LISTENER_H__
 
+#include "../../lib/libjson/include/json/json.h"
+
+#include <string>
+
 typedef enum { FLASHLIB_MODE_NORMAL = 0, 
                FLASHLIB_MODE_BROWSER 
              } FlashLibMode;
@@ -35,26 +39,10 @@ class IFlashPlayerListener
 {
 public:
   virtual ~IFlashPlayerListener() { }
-  virtual void FlashPlaybackStarted() = 0;
+  virtual void FlashNewFrame() { }
+
   virtual void FlashPlaybackEnded() = 0;
-  virtual void FlashNewFrame() { } 
-  virtual void FlashPaused() { }
-  virtual void FlashResumed() { }
-  virtual void FlashProgress(int nPct) { }
-  virtual void FlashTime(int nTime) { }
-  virtual void FlashDuration(int nTime) { }
-  virtual void FlashConfigChange(int nWidth, int nHeight) { }
-  virtual void FlashSetMode(FlashLibMode nMode) { }
-
-  virtual void FlashNotification(const char *text, const char *thumb, int nTimeout) {}
-  virtual void FlashEnableExt(int nID, const char *extText, const char *extThumb)  {}
-  virtual void FlashDisableExt(int nID) { }
-
-  virtual void FlashGetTextInput(const char *title, const char *callback) {}
-
-  virtual void FlashSetCanPause(bool canPause) { }
-  virtual void FlashSetCanSkip(bool canSkip) { }
-  virtual void FlashSetCanSetVolume(bool canSetVolume) { }
+  virtual void FlashProcessCommand(const char *command) = 0;
 };
 
 #endif

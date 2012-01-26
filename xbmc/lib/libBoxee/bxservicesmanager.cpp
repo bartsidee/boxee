@@ -13,6 +13,9 @@
 #include "bxexceptions.h"
 #include "logger.h"
 #include "../../Application.h"
+#include "../../BoxeeUtils.h"
+#include "lib/libjson/include/json/reader.h"
+#include "../../GUILargeTextureManager.h"
 
 namespace BOXEE
 {
@@ -20,13 +23,13 @@ namespace BOXEE
 BXServicesManager::BXServicesManager()
 {
   m_servicesListGuard = SDL_CreateMutex();
+
   m_servicesList.Clear();
 }
 
 BXServicesManager::~BXServicesManager()
 {
   SDL_DestroyMutex(m_servicesListGuard);
-  
 }
 
 bool BXServicesManager::Initialize()
@@ -64,6 +67,7 @@ bool BXServicesManager::UpdateServicesList(unsigned long executionDelayInMS, boo
   }
 }
 
+
 void BXServicesManager::LockServicesList()
 {
   SDL_LockMutex(m_servicesListGuard);
@@ -74,10 +78,13 @@ void BXServicesManager::UnLockServicesList()
   SDL_UnlockMutex(m_servicesListGuard);
 }
 
+
 void BXServicesManager::CopyServicesList(const BXBoxeeServices& servicesList)
 {
   LockServicesList();
-  
+
+  LOG(LOG_LEVEL_DEBUG,"BXServicesManager::CopyServicesList - going to copy servicesList [size=%d]. [currSize=%d] (serv)",servicesList.GetNumOfServices(),m_servicesList.GetNumOfServices());
+
   m_servicesList = servicesList;
   m_servicesList.SetLoaded(true);
   
@@ -257,6 +264,11 @@ bool BXServicesManager::IsRegisterToServices(const std::string& serviceIdentifie
       }
     }
     break;
+    default:
+    {
+
+    }
+    break;
     }
   }
 
@@ -296,13 +308,13 @@ BXServicesManager::RequestServicesListFromServerTask::~RequestServicesListFromSe
 void BXServicesManager::RequestServicesListFromServerTask::DoWork()
 {
   LOG(LOG_LEVEL_DEBUG,"RequestServicesListFromServerTask::DoWork - Enter function (serv)");
-  
-  if (!g_application.IsConnectedToInternet())
+
+  if (!g_application.ShouldConnectToInternet())
   {
     // set loaded to true so Get() functions won't wait forever
     m_taskHandler->SetServicesListIsLoaded(true);
 
-    LOG(LOG_LEVEL_DEBUG,"RequestServicesListFromServerTask::DoWork - [IsConnectedToInternet=FALSE] -> Exit function (serv)");
+    LOG(LOG_LEVEL_DEBUG,"RequestServicesListFromServerTask::DoWork - [ShouldConnectToInternet=FALSE] -> Exit function (serv)");
     return;
   }
 
@@ -314,12 +326,27 @@ void BXServicesManager::RequestServicesListFromServerTask::DoWork()
   std::string strUrl = BXConfiguration::GetInstance().GetURLParam("Boxee.ServicesListUrl","http://app.boxee.tv/api/get_services");
 
   servicesList.LoadFromURL(strUrl);
-  m_taskHandler->CopyServicesList(servicesList);
+
+  bool isLoaded = m_taskHandler->m_servicesList.IsLoaded();
+  long lastRetCode = servicesList.GetLastRetCode();
+
+  LOG(LOG_LEVEL_DEBUG,"RequestServicesListFromServerTask::DoWork - After LoadFromURL. [lastRetCode=%d][isLoaded=%d][size=%d][currSize=%d] (serv)",lastRetCode,isLoaded,servicesList.GetNumOfServices(),m_taskHandler->m_servicesList.GetNumOfServices());
+
+  if (!isLoaded || lastRetCode == 200)
+  {
+    ////////////////////////////////////////////
+    // copy return result from the server if: //
+    // a) servicesList isn't loaded           //
+    // b) the server returned 200             //
+    ////////////////////////////////////////////
+
+    m_taskHandler->CopyServicesList(servicesList);
+  }
+
   LOG(LOG_LEVEL_DEBUG,"RequestServicesListFromServerTask::DoWork - Exit function (serv)");
 
   return;
 }
-
 //////////////////////////////
 // BXServicesItem functions //
 //////////////////////////////

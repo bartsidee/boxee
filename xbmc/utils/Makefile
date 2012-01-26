@@ -1,4 +1,4 @@
-INCLUDES=-I. -I.. -I../../ -I../linux -I../cores -I../../guilib -I../../guilib/tinyXML
+INCLUDES=-I. -I.. -I../../ -I../linux -I../cores -I../../guilib -I../../guilib/tinyXML -I../lib -I../lib/libjson/include -I../lib/libplist/include
 
 SRCS=AlarmClock.cpp \
      Archive.cpp \
@@ -31,6 +31,7 @@ SRCS=AlarmClock.cpp \
      Win32Exception.cpp \
      CPUInfo.cpp \
      PCMAmplifier.cpp \
+     PCMRemap.cpp \
      LabelFormatter.cpp \
      Network.cpp \
      BitstreamStats.cpp \
@@ -59,9 +60,15 @@ SRCS=AlarmClock.cpp \
      TimeUtils.cpp \
      JobManager.cpp \
      Teletext.cpp \
-     fastmemcpy.cpp
+     fastmemcpy.cpp \
+     AnnouncementManager.cpp \
+     Variant.cpp \
+     HttpParser.cpp \
+     AirPlayServer.cpp \
+     AirTunesServer.cpp \
+     GLUtils.cpp
 
-SRCS += Base64.cpp Clipboard.cpp
+SRCS += Base64.cpp Clipboard.cpp IServer.cpp
 
 LIB=utils.a
 

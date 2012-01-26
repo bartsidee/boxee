@@ -20,11 +20,12 @@
  */
 
 /**
- * @file libavcodec/h263_parser.c
+ * @file
  * H.263 parser
  */
 
 #include "parser.h"
+#include "h263_parser.h"
 
 int ff_h263_find_frame_end(ParseContext *pc, const uint8_t *buf, int buf_size){
     int vop_found, i;
@@ -82,7 +83,7 @@ static int h263_parse(AVCodecParserContext *s,
     return next;
 }
 
-AVCodecParser h263_parser = {
+AVCodecParser ff_h263_parser = {
     { CODEC_ID_H263 },
     sizeof(ParseContext),
     NULL,

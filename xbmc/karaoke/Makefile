@@ -1,4 +1,5 @@
-INCLUDES=-I. -I.. -I../linux -I../../guilib -I../cores -I../utils -I../cores/ffmpeg
+INCLUDES=-I. -I.. -I../linux -I../../guilib -I../cores -I../utils -I../.. -I../cores/dvdplayer/Codecs -I../cores/dvdplayer/Codecs/ffmpeg
+CXXFLAGS+= -D__STDC_CONSTANT_MACROS
 
 SRCS=GUIDialogKaraokeSongSelector.cpp \
 	karaokelyricscdg.cpp \

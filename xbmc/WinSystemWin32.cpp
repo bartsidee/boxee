@@ -28,6 +28,7 @@
 #include "utils/log.h"
 
 #ifdef _WIN32
+#include <tpcshrd.h>
 
 HWND g_hWnd = NULL;
 
@@ -36,13 +37,13 @@ CWinSystemWin32::CWinSystemWin32()
 {
   m_eWindowSystem = WINDOW_SYSTEM_WIN32;
   m_hWnd = NULL;
-  m_hBlankWindow = NULL;
   m_hInstance = NULL;
   m_hIcon = NULL;
   m_hDC = NULL;
-  m_nMonitorsCount = 0;
   m_nPrimary = 0;
-  m_nSecondary = 0;
+  PtrCloseGestureInfoHandle = NULL;
+  PtrSetGestureConfig = NULL;
+  PtrGetGestureInfo = NULL;
 }
 
 CWinSystemWin32::~CWinSystemWin32()
@@ -64,6 +65,7 @@ bool CWinSystemWin32::InitWindowSystem()
 
 bool CWinSystemWin32::DestroyWindowSystem()
 {
+  RestoreDesktopResolution(m_nScreen);
   return true;
 }
 
@@ -87,11 +89,11 @@ bool CWinSystemWin32::IsSystemScreenSaverEnabled()
        result = true;
   }
   RegCloseKey(hKeyScreenSaver);
-  
+
   return result;
 }
 
-void CWinSystemWin32::EnableSystemScreenSaver(bool bEnable) 
+void CWinSystemWin32::EnableSystemScreenSaver(bool bEnable)
 {
   SystemParametersInfo(SPI_SETSCREENSAVEACTIVE,bEnable,0,0);
   if(!bEnable)
@@ -111,10 +113,10 @@ bool CWinSystemWin32::CreateNewWindow(const CStdString& name, bool fullScreen, R
 
   // Register the windows class
   WNDCLASS wndClass;
+  wndClass.style = CS_OWNDC; // For OpenGL
   wndClass.lpfnWndProc = CWinEvents::WndProc;
   wndClass.cbClsExtra = 0;
   wndClass.cbWndExtra = 0;
-  wndClass.style = CS_DBLCLKS;
   wndClass.hInstance = m_hInstance;
   wndClass.hIcon = m_hIcon;
   wndClass.hCursor = LoadCursor( NULL, IDC_ARROW );
@@ -127,7 +129,7 @@ bool CWinSystemWin32::CreateNewWindow(const CStdString& name, bool fullScreen, R
     return false;
   }
 
-  HWND hWnd = CreateWindow(name.c_str(), name.c_str(), fullScreen ? WS_POPUP : WS_OVERLAPPEDWINDOW,
+  HWND hWnd = CreateWindow( name.c_str(), name.c_str(), fullScreen ? WS_POPUP : WS_OVERLAPPEDWINDOW,
     0, 0, m_nWidth, m_nHeight, 0,
     NULL, m_hInstance, userFunction );
   if( hWnd == NULL )
@@ -135,24 +137,39 @@ bool CWinSystemWin32::CreateNewWindow(const CStdString& name, bool fullScreen, R
     return false;
   }
 
+  const DWORD dwHwndTabletProperty = 
+      TABLET_DISABLE_PENBARRELFEEDBACK | // disables UI feedback on pen button down (circle)
+      TABLET_DISABLE_FLICKS; // disables pen flicks (back, forward, drag down, drag up)
+  
+  SetProp(hWnd, MICROSOFT_TABLETPENSERVICE_PROPERTY, reinterpret_cast<HANDLE>(dwHwndTabletProperty));
+
+  // setup our touch pointers
+  PtrGetGestureInfo = (pGetGestureInfo) GetProcAddress( GetModuleHandle( TEXT( "user32" ) ), "GetGestureInfo" );
+  PtrSetGestureConfig = (pSetGestureConfig) GetProcAddress( GetModuleHandle( TEXT( "user32" ) ), "SetGestureConfig" );
+  PtrCloseGestureInfoHandle = (pCloseGestureInfoHandle) GetProcAddress( GetModuleHandle( TEXT( "user32" ) ), "CloseGestureInfoHandle" );
+
   m_hWnd = hWnd;
   g_hWnd = hWnd;
   m_hDC = GetDC(m_hWnd);
 
   m_bWindowCreated = true;
 
-  CreateBlankWindow();
+  CreateBlankWindows();
 
   ResizeInternal(true);
- 
+
+  // Show the window
+  ShowWindow( m_hWnd, SW_SHOWDEFAULT );
+  UpdateWindow( m_hWnd );
+
   return true;
 }
 
-bool CWinSystemWin32::CreateBlankWindow()
+bool CWinSystemWin32::CreateBlankWindows()
 {
   WNDCLASSEX wcex;
 
-  wcex.cbSize = sizeof(WNDCLASSEX); 
+  wcex.cbSize = sizeof(WNDCLASSEX);
   wcex.style= CS_HREDRAW | CS_VREDRAW;
   wcex.lpfnWndProc= DefWindowProc;
   wcex.cbClsExtra= 0;
@@ -168,36 +185,56 @@ bool CWinSystemWin32::CreateBlankWindow()
   // Now we can go ahead and register our new window class
   int reg = RegisterClassEx(&wcex);
 
-  m_hBlankWindow = CreateWindowEx(WS_EX_TOPMOST, "BlankWindowClass", "", WS_POPUP | WS_DISABLED, 
+  // We need as many blank windows as there are screens (minus 1)
+  int BlankWindowsCount = m_MonitorsInfo.size() -1;
+  
+  m_hBlankWindows.reserve(BlankWindowsCount);
+
+  for (int i=0; i < BlankWindowsCount; i++)
+  {
+    HWND hBlankWindow = CreateWindowEx(WS_EX_TOPMOST, "BlankWindowClass", "", WS_POPUP | WS_DISABLED,
     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, NULL, NULL);
 
-  if(m_hBlankWindow == NULL)
-    return false;
+    if(hBlankWindow ==  NULL)
+      return false;
+
+    m_hBlankWindows.push_back(hBlankWindow);
+  }
 
   return true;
 }
 
-bool CWinSystemWin32::BlankNonActiveMonitor(bool bBlank)
+bool CWinSystemWin32::BlankNonActiveMonitors(bool bBlank)
 {
-  if(m_hBlankWindow == NULL)
+  if(m_hBlankWindows.size() == 0)
     return false;
 
   if(bBlank == false)
   {
-    ShowWindow(m_hBlankWindow, SW_HIDE);
+    for (unsigned int i=0; i < m_hBlankWindows.size(); i++)
+      ShowWindow(m_hBlankWindows[i], SW_HIDE);
     return true;
   }
 
-  const MONITOR_DETAILS &details = GetMonitor(1-m_nScreen);
-  RECT rBounds;
-  CopyRect(&rBounds, &details.MonitorRC);
+  // Move a blank window in front of every screen, except the current XBMC screen.
+  int screen = 0;
+  if (screen == m_nScreen)
+    screen++;
 
-  // finally, move and resize the window
-  SetWindowPos(m_hBlankWindow, NULL, rBounds.left, rBounds.top,
-    rBounds.right - rBounds.left, rBounds.bottom - rBounds.top,
-    SWP_NOACTIVATE);
+  for (unsigned int i=0; i < m_hBlankWindows.size(); i++)
+  {
+    RECT rBounds = ScreenRect(screen);
+    // move and resize the window
+    SetWindowPos(m_hBlankWindows[i], NULL, rBounds.left, rBounds.top,
+      rBounds.right - rBounds.left, rBounds.bottom - rBounds.top,
+      SWP_NOACTIVATE);
 
-  ShowWindow(m_hBlankWindow, SW_SHOW | SW_SHOWNOACTIVATE);
+    ShowWindow(m_hBlankWindows[i], SW_SHOW | SW_SHOWNOACTIVATE);
+
+    screen++;
+    if (screen == m_nScreen)
+      screen++;
+  }
 
   if(m_hWnd)
     SetForegroundWindow(m_hWnd);
@@ -248,34 +285,81 @@ void CWinSystemWin32::NotifyAppFocusChange(bool bGaining)
 
 bool CWinSystemWin32::SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, bool blankOtherDisplays)
 {
-  CLog::Log(LOGDEBUG, "%s(%s) on screen %d with size %dx%d, refresh %f", __FUNCTION__, fullScreen ? "fullscreen" : "windowed", res.iScreen, res.iWidth, res.iHeight, res.fRefreshRate);
+  CLog::Log(LOGDEBUG, "%s (%s) on screen %d with size %dx%d, refresh %f%s", __FUNCTION__, !fullScreen ? "windowed" : (g_guiSettings.GetBool("videoscreen.fakefullscreen") ? "windowed fullscreen" : "true fullscreen"), res.iScreen, res.iWidth, res.iHeight, res.fRefreshRate, (res.dwFlags & D3DPRESENTFLAG_INTERLACED) ? "i" : "");
+
+  bool forceResize = false;
+
+  if (m_nScreen != res.iScreen)
+  {
+    forceResize = true;
+    RestoreDesktopResolution(m_nScreen);
+  }
+
+  if(!m_bFullScreen && fullScreen)
+  {
+    // save position of windowed mode
+    WINDOWINFO wi;
+    GetWindowInfo(m_hWnd, &wi);
+    m_nLeft = wi.rcClient.left;
+    m_nTop = wi.rcClient.top;
+  }
+
   m_bFullScreen = fullScreen;
-  bool forceResize = (m_nScreen != res.iScreen);
   m_nScreen = res.iScreen;
   m_nWidth  = res.iWidth;
   m_nHeight = res.iHeight;
   m_bBlankOtherDisplay = blankOtherDisplays;
 
-  if (g_guiSettings.GetBool("videoscreen.fakefullscreen"))
-    ChangeRefreshRate(m_nScreen, res.fRefreshRate);
+  if (fullScreen && g_guiSettings.GetBool("videoscreen.fakefullscreen"))
+    ChangeResolution(res);
 
   ResizeInternal(forceResize);
 
-  BlankNonActiveMonitor(m_bBlankOtherDisplay);
- 
+  BlankNonActiveMonitors(m_bBlankOtherDisplay);
+
   return true;
+}
+
+void CWinSystemWin32::RestoreDesktopResolution(int screen)
+{
+  int resIdx = RES_DESKTOP;
+  for (int idx = RES_DESKTOP; idx < RES_DESKTOP + GetNumScreens(); idx++)
+  {
+    if (g_settings.m_ResInfo[idx].iScreen == screen)
+    {
+      resIdx = idx;
+      break;
+    }
+  }
+  ChangeResolution(g_settings.m_ResInfo[resIdx]);
 }
 
 const MONITOR_DETAILS &CWinSystemWin32::GetMonitor(int screen) const
 {
-  int monitorId;
-  if(screen == 0)
-    monitorId = m_nPrimary;
-  else
-    monitorId = m_nSecondary;
-  assert(monitorId >= 0 && monitorId < MAX_MONITORS_NUM);
+  for (unsigned int monitor = 0; monitor < m_MonitorsInfo.size(); monitor++)
+    if (m_MonitorsInfo[monitor].ScreenNumber == screen)
+      return m_MonitorsInfo[monitor];
 
-  return m_MonitorsInfo[monitorId];
+  // What to do if monitor is not found? Not sure... use the primary screen as a default value.
+  return m_MonitorsInfo[m_nPrimary];
+}
+
+RECT CWinSystemWin32::ScreenRect(int screen)
+{
+  const MONITOR_DETAILS &details = GetMonitor(screen);
+
+  DEVMODE sDevMode;
+  ZeroMemory(&sDevMode, sizeof(DEVMODE));
+  sDevMode.dmSize = sizeof(DEVMODE);
+  EnumDisplaySettings(details.DeviceName, ENUM_CURRENT_SETTINGS, &sDevMode);
+
+  RECT rc;
+  rc.left = sDevMode.dmPosition.x;
+  rc.right = sDevMode.dmPosition.x + sDevMode.dmPelsWidth;
+  rc.top = sDevMode.dmPosition.y;
+  rc.bottom = sDevMode.dmPosition.y + sDevMode.dmPelsHeight;
+
+  return rc;
 }
 
 bool CWinSystemWin32::ResizeInternal(bool forceRefresh)
@@ -283,18 +367,12 @@ bool CWinSystemWin32::ResizeInternal(bool forceRefresh)
   DWORD dwStyle = WS_CLIPCHILDREN;
   HWND windowAfter;
   RECT rc;
-  CopyRect(&rc, &GetMonitor(m_nScreen).MonitorRC);
-
-  WINDOWINFO wi;
-  GetWindowInfo(m_hWnd, &wi);
 
   if(m_bFullScreen)
   {
     dwStyle |= WS_POPUP;
     windowAfter = HWND_TOP;
-    // save position of window mode
-    m_nLeft = wi.rcClient.left;
-    m_nTop = wi.rcClient.top;
+    rc = ScreenRect(m_nScreen);
   }
   else
   {
@@ -311,7 +389,10 @@ bool CWinSystemWin32::ResizeInternal(bool forceRefresh)
     AdjustWindowRect( &rc, WS_OVERLAPPEDWINDOW, false );
   }
 
+  WINDOWINFO wi;
+  GetWindowInfo(m_hWnd, &wi);
   RECT wr = wi.rcWindow;
+
   if (forceRefresh || wr.bottom  - wr.top != rc.bottom - rc.top || wr.right - wr.left != rc.right - rc.left ||
                      (wi.dwStyle & WS_CAPTION) != (dwStyle & WS_CAPTION))
   {
@@ -319,7 +400,7 @@ bool CWinSystemWin32::ResizeInternal(bool forceRefresh)
                                                                                                          rc.left, rc.top, rc.right, rc.bottom, (dwStyle & WS_CAPTION) ? "" : " fullscreen");
     SetWindowRgn(m_hWnd, 0, false);
     SetWindowLong(m_hWnd, GWL_STYLE, dwStyle);
-    
+
     // The SWP_DRAWFRAME is here because, perversely, without it win7 draws a
     // white frame plus titlebar around the xbmc splash
     SetWindowPos(m_hWnd, windowAfter, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SWP_SHOWWINDOW|SWP_DRAWFRAME);
@@ -330,21 +411,47 @@ bool CWinSystemWin32::ResizeInternal(bool forceRefresh)
   return true;
 }
 
-bool CWinSystemWin32::ChangeRefreshRate(int screen, float refresh)
+bool CWinSystemWin32::ChangeResolution(RESOLUTION_INFO res)
 {
-  const MONITOR_DETAILS &details = GetMonitor(screen);
+  const MONITOR_DETAILS &details = GetMonitor(res.iScreen);
 
-  // grab the mode we want
   DEVMODE sDevMode;
   ZeroMemory(&sDevMode, sizeof(DEVMODE));
   sDevMode.dmSize = sizeof(DEVMODE);
-  EnumDisplaySettings(details.DeviceName, ENUM_CURRENT_SETTINGS, &sDevMode);
-  // update the display frequency
-  sDevMode.dmDisplayFrequency = (int)refresh;
-  sDevMode.dmFields |= DM_DISPLAYFREQUENCY;
 
-  return (DISP_CHANGE_SUCCESSFUL == ChangeDisplaySettingsEx(details.DeviceName, &sDevMode, NULL, 0, NULL));
+  // If we can't read the current resolution or any detail of the resolution is different than res
+  if (!EnumDisplaySettings(details.DeviceName, ENUM_CURRENT_SETTINGS, &sDevMode) ||
+      sDevMode.dmPelsWidth != res.iWidth || sDevMode.dmPelsHeight != res.iHeight ||
+      sDevMode.dmDisplayFrequency != (int)res.fRefreshRate ||
+      ((sDevMode.dmDisplayFlags & DM_INTERLACED) && !(res.dwFlags & D3DPRESENTFLAG_INTERLACED)) || 
+      (!(sDevMode.dmDisplayFlags & DM_INTERLACED) && (res.dwFlags & D3DPRESENTFLAG_INTERLACED)) )
+  {
+    ZeroMemory(&sDevMode, sizeof(DEVMODE));
+    sDevMode.dmSize = sizeof(DEVMODE);
+    sDevMode.dmDriverExtra = 0;
+    sDevMode.dmPelsWidth = res.iWidth;
+    sDevMode.dmPelsHeight = res.iHeight;
+    sDevMode.dmDisplayFrequency = (int)res.fRefreshRate;
+    sDevMode.dmDisplayFlags = (res.dwFlags & D3DPRESENTFLAG_INTERLACED) ? DM_INTERLACED : 0;
+    sDevMode.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_DISPLAYFREQUENCY | DM_DISPLAYFLAGS;
+
+    // CDS_FULLSCREEN is for temporary fullscreen mode and prevents icons and windows from moving
+    // to fit within the new dimensions of the desktop
+    LONG rc = ChangeDisplaySettingsEx(details.DeviceName, &sDevMode, NULL, CDS_FULLSCREEN, NULL);
+    if (rc != DISP_CHANGE_SUCCESSFUL)
+    {
+      CLog::Log(LOGERROR, "%s: error, code %d", __FUNCTION__, rc);
+      return false;
+    }
+    else
+    {
+      return true;
+    }
+  }
+  // nothing to do, return success
+  return true;
 }
+
 
 void CWinSystemWin32::UpdateResolutions()
 {
@@ -353,52 +460,62 @@ void CWinSystemWin32::UpdateResolutions()
 
   UpdateResolutionsInternal();
 
-  if(m_nMonitorsCount < 1)
+  if(m_MonitorsInfo.size() < 1)
     return;
 
   float refreshRate = 0;
   int w = 0;
   int h = 0;
+  uint32_t dwFlags;
 
   // Primary
+  m_MonitorsInfo[m_nPrimary].ScreenNumber = 0;
   w = m_MonitorsInfo[m_nPrimary].ScreenWidth;
   h = m_MonitorsInfo[m_nPrimary].ScreenHeight;
   if( (m_MonitorsInfo[m_nPrimary].RefreshRate == 59) || (m_MonitorsInfo[m_nPrimary].RefreshRate == 29) || (m_MonitorsInfo[m_nPrimary].RefreshRate == 23) )
     refreshRate = (float)(m_MonitorsInfo[m_nPrimary].RefreshRate + 1) / 1.001f;
   else
     refreshRate = (float)m_MonitorsInfo[m_nPrimary].RefreshRate;
-   
-  UpdateDesktopResolution(g_settings.m_ResInfo[RES_DESKTOP], 0, w, h, refreshRate);
-   
+  dwFlags = m_MonitorsInfo[m_nPrimary].Interlaced ? D3DPRESENTFLAG_INTERLACED : 0;
 
-  // Secondary
-  if(m_nMonitorsCount >= 2)
+  UpdateDesktopResolution(g_settings.m_ResInfo[RES_DESKTOP], 0, w, h, refreshRate, dwFlags);
+  CLog::Log(LOGNOTICE, "Primary mode: %s", g_settings.m_ResInfo[RES_DESKTOP].strMode.c_str());
+
+  // Desktop resolution of the other screens
+  if(m_MonitorsInfo.size() >= 2)
   {
-    w = m_MonitorsInfo[m_nSecondary].ScreenWidth;
-    h = m_MonitorsInfo[m_nSecondary].ScreenHeight;
-    if( (m_MonitorsInfo[m_nSecondary].RefreshRate == 59) || (m_MonitorsInfo[m_nSecondary].RefreshRate == 29) || (m_MonitorsInfo[m_nSecondary].RefreshRate == 23) )
-      refreshRate = (float)(m_MonitorsInfo[m_nSecondary].RefreshRate + 1) / 1.001f;
-    else
-      refreshRate = (float)m_MonitorsInfo[m_nSecondary].RefreshRate;
+    int xbmcmonitor = 1;  // The screen number+1 showed in the GUI display settings
 
-    RESOLUTION_INFO res;
-    UpdateDesktopResolution(res, 1, w, h, refreshRate);
-    g_settings.m_ResInfo.push_back(res);
+    for (unsigned int monitor = 0; monitor < m_MonitorsInfo.size(); monitor++)
+    {
+      if (monitor != m_nPrimary)
+      {
+        m_MonitorsInfo[monitor].ScreenNumber = xbmcmonitor;
+        w = m_MonitorsInfo[monitor].ScreenWidth;
+        h = m_MonitorsInfo[monitor].ScreenHeight;
+        if( (m_MonitorsInfo[monitor].RefreshRate == 59) || (m_MonitorsInfo[monitor].RefreshRate == 29) || (m_MonitorsInfo[monitor].RefreshRate == 23) )
+          refreshRate = (float)(m_MonitorsInfo[monitor].RefreshRate + 1) / 1.001f;
+        else
+          refreshRate = (float)m_MonitorsInfo[monitor].RefreshRate;
+        dwFlags = m_MonitorsInfo[monitor].Interlaced ? D3DPRESENTFLAG_INTERLACED : 0;
+
+        RESOLUTION_INFO res;
+        UpdateDesktopResolution(res, xbmcmonitor++, w, h, refreshRate, dwFlags);
+        g_settings.m_ResInfo.push_back(res);
+        CLog::Log(LOGNOTICE, "Secondary mode: %s", res.strMode.c_str());
+      }
+    }
   }
 
-  // add other resolutions...
-  for (int i = 0; i < m_nMonitorsCount; i++)
+  // The rest of the resolutions. The order is not important.
+  for (unsigned int monitor = 0; monitor < m_MonitorsInfo.size(); monitor++)
   {
-    // TODO: this is retarded...
-    int monitor = 0;
-    if (i != m_nPrimary)
-      monitor = 1;
     for(int mode = 0;; mode++)
     {
       DEVMODE devmode;
       ZeroMemory(&devmode, sizeof(devmode));
       devmode.dmSize = sizeof(devmode);
-      if(EnumDisplaySettings(m_MonitorsInfo[i].DeviceName, mode, &devmode) == 0)
+      if(EnumDisplaySettings(m_MonitorsInfo[monitor].DeviceName, mode, &devmode) == 0)
         break;
       if(devmode.dmBitsPerPel != 32)
         continue;
@@ -408,10 +525,12 @@ void CWinSystemWin32::UpdateResolutions()
         refreshRate = (float)(devmode.dmDisplayFrequency + 1) / 1.001f;
       else
         refreshRate = (float)(devmode.dmDisplayFrequency);
+      dwFlags = (devmode.dmDisplayFlags & DM_INTERLACED) ? D3DPRESENTFLAG_INTERLACED : 0;
+
       RESOLUTION_INFO res;
-      UpdateDesktopResolution(res, monitor, devmode.dmPelsWidth, devmode.dmPelsHeight, refreshRate);
+      UpdateDesktopResolution(res, m_MonitorsInfo[monitor].ScreenNumber, devmode.dmPelsWidth, devmode.dmPelsHeight, refreshRate, dwFlags);
       AddResolution(res);
-      CLog::Log(LOGNOTICE, "Found mode: %s", res.strMode.c_str());
+      CLog::Log(LOGNOTICE, "Additional mode: %s", res.strMode.c_str());
     }
   }
 }
@@ -419,118 +538,100 @@ void CWinSystemWin32::UpdateResolutions()
 void CWinSystemWin32::AddResolution(const RESOLUTION_INFO &res)
 {
   for (unsigned int i = 0; i < g_settings.m_ResInfo.size(); i++)
-    if (g_settings.m_ResInfo[i].strMode == res.strMode)
+    if (g_settings.m_ResInfo[i].iScreen      == res.iScreen &&
+        g_settings.m_ResInfo[i].iWidth       == res.iWidth &&
+        g_settings.m_ResInfo[i].iHeight      == res.iHeight &&
+        g_settings.m_ResInfo[i].fRefreshRate == res.fRefreshRate &&
+        g_settings.m_ResInfo[i].dwFlags      == res.dwFlags)
       return; // already have this resolution
+
   g_settings.m_ResInfo.push_back(res);
 }
 
 bool CWinSystemWin32::UpdateResolutionsInternal()
 {
-  memset(m_MonitorsInfo, sizeof(MONITOR_DETAILS) * MAX_MONITORS_NUM, 0);
-  m_nMonitorsCount = 0;
+  
+  DISPLAY_DEVICE ddAdapter;
+  ZeroMemory(&ddAdapter, sizeof(ddAdapter));
+  ddAdapter.cb = sizeof(ddAdapter);
+  DWORD adapter = 0;
 
-  DISPLAY_DEVICE dd;
-  dd.cb = sizeof(dd);
-  DWORD dev = 0; // device index
-  int id = 1; // monitor number, as used by Display Properties > Settings
-
-  while (EnumDisplayDevices(0, dev, &dd, 0) && id - 1 < MAX_MONITORS_NUM)
+  while (EnumDisplayDevices(NULL, adapter, &ddAdapter, 0))
   {
-    if (!(dd.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER))
+    // Exclude displays that are not part of the windows desktop. Using them is too different: no windows,
+    // direct access with GDI CreateDC() or DirectDraw for example. So it may be possible to play video, but GUI?
+    if (!(ddAdapter.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER) && (ddAdapter.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP))
     {
-      // ignore virtual mirror displays
-
-      // get information about the monitor attached to this display adapter. dual head cards
-      // and laptop video cards can have multiple monitors attached
-
       DISPLAY_DEVICE ddMon;
       ZeroMemory(&ddMon, sizeof(ddMon));
       ddMon.cb = sizeof(ddMon);
-      DWORD devMon = 0;
+      bool foundScreen = false;
+      DWORD screen = 0;
 
-      // please note that this enumeration may not return the correct monitor if multiple monitors
-      // are attached. this is because not all display drivers return the ACTIVE flag for the monitor
-      // that is actually active
-      while (EnumDisplayDevices(dd.DeviceName, devMon, &ddMon, 0))
+      // Just look for the first active output, we're actually only interested in the information at the adapter level.
+      while (EnumDisplayDevices(ddAdapter.DeviceName, screen, &ddMon, 0))
       {
-        if (ddMon.StateFlags & DISPLAY_DEVICE_ACTIVE)
+        if (ddMon.StateFlags & (DISPLAY_DEVICE_ACTIVE | DISPLAY_DEVICE_ATTACHED))
+        {
+          foundScreen = true;
           break;
-
-        devMon++;
+        }
+        ZeroMemory(&ddMon, sizeof(ddMon));
+        ddMon.cb = sizeof(ddMon);
+        screen++;
+      }
+      // Remoting returns no screens. Handle with a dummy screen.
+      if (!foundScreen && screen == 0)
+      {
+        lstrcpy(ddMon.DeviceString, _T("Dummy Monitor")); // safe: large static array
+        foundScreen = true;
       }
 
-      if (!*ddMon.DeviceString)
+      if (foundScreen)
       {
-        EnumDisplayDevices(dd.DeviceName, 0, &ddMon, 0);
-        if (!*ddMon.DeviceString)
-          lstrcpy(ddMon.DeviceString, _T("Default Monitor"));
-      }
+        CLog::Log(LOGNOTICE, "Found screen: %s on %s, adapter %d.", ddMon.DeviceString, ddAdapter.DeviceString, adapter);
 
-      // get information about the display's position and the current display mode
-      DEVMODE dm;
-      ZeroMemory(&dm, sizeof(dm));
-      dm.dmSize = sizeof(dm);
-      if (EnumDisplaySettingsEx(dd.DeviceName, ENUM_CURRENT_SETTINGS, &dm, 0) == FALSE)
-        EnumDisplaySettingsEx(dd.DeviceName, ENUM_REGISTRY_SETTINGS, &dm, 0);
+        // get information about the display's current position and display mode
+        // TODO: for Windows 7/Server 2008 and up, Microsoft recommends QueryDisplayConfig() instead, the API used by the control panel.
+        DEVMODE dm;
+        ZeroMemory(&dm, sizeof(dm));
+        dm.dmSize = sizeof(dm);
+        if (EnumDisplaySettingsEx(ddAdapter.DeviceName, ENUM_CURRENT_SETTINGS, &dm, 0) == FALSE)
+          EnumDisplaySettingsEx(ddAdapter.DeviceName, ENUM_REGISTRY_SETTINGS, &dm, 0);
 
-      // get the monitor handle and workspace
-      HMONITOR hm = 0;
-      MONITORINFO mi;
-      ZeroMemory(&mi, sizeof(mi));
-      mi.cbSize = sizeof(mi);
-      if (dd.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP)
-      {
-        // display is enabled. only enabled displays have a monitor handle
+        // get the monitor handle and workspace
+        HMONITOR hm = 0;
         POINT pt = { dm.dmPosition.x, dm.dmPosition.y };
         hm = MonitorFromPoint(pt, MONITOR_DEFAULTTONULL);
-        if (hm)
-          GetMonitorInfo(hm, &mi);
-        else
-        {
-          dev++;
-          continue;
-        }
+
+        MONITOR_DETAILS md;
+        memset(&md, 0, sizeof(MONITOR_DETAILS));
+
+        strcpy(md.MonitorName, ddMon.DeviceString);
+        strcpy(md.CardName, ddAdapter.DeviceString);
+        strcpy(md.DeviceName, ddAdapter.DeviceName);
+
+        // width x height @ x,y - bpp - refresh rate
+        // note that refresh rate information is not available on Win9x
+        md.ScreenWidth = dm.dmPelsWidth;
+        md.ScreenHeight = dm.dmPelsHeight;
+        md.hMonitor = hm;
+        md.RefreshRate = dm.dmDisplayFrequency;
+        md.Bpp = dm.dmBitsPerPel;
+        md.Interlaced = (dm.dmDisplayFlags & DM_INTERLACED) ? true : false;
+
+        m_MonitorsInfo.push_back(md);
+
+        // Careful, some adapters don't end up in the vector (mirroring, no active output, etc.)
+        if (ddAdapter.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE)
+          m_nPrimary = m_MonitorsInfo.size() -1;
+
       }
-
-      if (dd.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE)
-      {
-        m_MonitorsInfo[id - 1].type = MONITOR_TYPE_PRIMARY;
-        m_nPrimary = id - 1;
-      }
-      else if (dd.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP)
-      {
-        m_MonitorsInfo[id - 1].type = MONITOR_TYPE_SECONDARY;
-        m_nSecondary = id - 1;
-      }
-      else
-      {
-        dev++;
-        continue;
-      }
-
-      strcpy(m_MonitorsInfo[id - 1].MonitorName, ddMon.DeviceString);
-      strcpy(m_MonitorsInfo[id - 1].CardName, dd.DeviceString);
-      strcpy(m_MonitorsInfo[id - 1].DeviceName, dd.DeviceName);
-
-
-      // width x height @ x,y - bpp - refresh rate
-      // note that refresh rate information is not available on Win9x
-      m_MonitorsInfo[id - 1].ScreenWidth = dm.dmPelsWidth;
-      m_MonitorsInfo[id - 1].ScreenHeight = dm.dmPelsHeight;
-      CopyRect(&(m_MonitorsInfo[id - 1].MonitorRC), &mi.rcMonitor);
-
-      m_MonitorsInfo[id - 1].hMonitor = hm;
-      m_MonitorsInfo[id - 1].RefreshRate = dm.dmDisplayFrequency;
-      m_MonitorsInfo[id - 1].Bpp = dm.dmBitsPerPel;
-
-      id++;
     }
-
-    dev++;
+    ZeroMemory(&ddAdapter, sizeof(ddAdapter));
+    ddAdapter.cb = sizeof(ddAdapter);
+    adapter++;
   }
-
-  m_nMonitorsCount = id - 1;
-
   return 0;
 }
 

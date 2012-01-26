@@ -92,8 +92,6 @@
   </MyMusicLibrary>
   <FullscreenVideo>
     <joystick name="AppleRemote">
-      <button id="1">VolumeUp</button>
-      <button id="2">VolumeDown</button>
       <button id="3">StepBack</button>
       <button id="4">StepForward</button>
       <button id="5">Info</button>
@@ -112,8 +110,6 @@
   </PlayerControls>
   <Visualisation>
     <joystick name="AppleRemote">
-      <button id="1">VolumeUp</button>
-      <button id="2">VolumeDown</button>
       <button id="3">SkipPrevious</button>
       <button id="4">SkipNext</button>
       <button id="5">Info</button>

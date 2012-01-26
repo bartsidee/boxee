@@ -41,6 +41,7 @@ public:
 
   virtual bool OnAction(const CAction &action);
   virtual bool OnMessage(CGUIMessage& message);
+  virtual void Reset();
 
   void PinPosition(bool bPin);
   bool IsWrapAround();

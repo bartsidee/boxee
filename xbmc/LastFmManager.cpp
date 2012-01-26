@@ -20,6 +20,9 @@
  */
 
 #include "LastFmManager.h"
+
+#ifdef HAS_LASTFM
+
 #include "Application.h"
 #include "ApplicationRenderer.h"
 #include "PlayListPlayer.h"
@@ -219,7 +222,7 @@ CStdString CLastFmManager::GetStation()
   return m_stationUrl.GetShareName();
 }
 
-CURL CLastFmManager::GetStationURL()
+CURI CLastFmManager::GetStationURL()
 {
   return m_stationUrl;
 }
@@ -298,12 +301,12 @@ void CLastFmManager::ShowLastFMSettings(void)
   CLastfmScrobbler::GetInstance()->Init();
 }
 
-bool CLastFmManager::ChangeStation(const CURL& stationUrl)
+bool CLastFmManager::ChangeStation(const CURI& stationUrl)
 {
   unsigned int start = CTimeUtils::GetTimeMS();
 
   CStdString strUrl;
-  stationUrl.GetURL(strUrl);
+  strUrl = stationUrl.Get();
 
   InitProgressDialog(strUrl);
 
@@ -1137,3 +1140,5 @@ bool CLastFmManager::CanScrobble(const CFileItem &fileitem)
     (fileitem.IsLastFM() && g_guiSettings.GetBool("scrobbler.lastfmsubmitradio"))
   );
 }
+
+#endif

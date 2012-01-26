@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License along
  * with libass; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-*/
+ */
 
 #include "config.h"
 
@@ -25,16 +25,26 @@
 #include <inttypes.h>
 #include <ft2build.h>
 #include FT_GLYPH_H
+#ifndef _WIN32
+#include <strings.h>
+#endif
 
 #include "ass_library.h"
 #include "ass.h"
 #include "ass_utils.h"
 
+#ifdef _WIN32
+FILE *fopen_utf8(const char *_Filename, const char *_Mode)
+{
+    return fopen(_Filename, _Mode);
+}
+#endif
+
 int mystrtoi(char **p, int *res)
 {
     double temp_res;
-	char* start = *p;
-    temp_res = strtod(*p, p);
+    char *start = *p;
+    temp_res = ass_strtod(*p, p);
     *res = (int) (temp_res + (temp_res > 0 ? 0.5 : -0.5));
     if (*p != start)
         return 1;
@@ -46,7 +56,7 @@ int mystrtoll(char **p, long long *res)
 {
     double temp_res;
     char *start = *p;
-    temp_res = strtod(*p, p);
+    temp_res = ass_strtod(*p, p);
     *res = (int) (temp_res + (temp_res > 0 ? 0.5 : -0.5));
     if (*p != start)
         return 1;
@@ -54,60 +64,61 @@ int mystrtoll(char **p, long long *res)
         return 0;
 }
 
-int mystrtou32(char** p, int base, uint32_t* res)
+int mystrtou32(char **p, int base, uint32_t *res)
 {
-	char* start = *p;
-	*res = strtoll(*p, p, base);
+    char *start = *p;
+    *res = strtoll(*p, p, base);
     if (*p != start)
         return 1;
     else
         return 0;
 }
 
-int mystrtod(char** p, double* res)
+int mystrtod(char **p, double *res)
 {
-	char* start = *p;
-	*res = strtod(*p, p);
+    char *start = *p;
+    *res = ass_strtod(*p, p);
     if (*p != start)
         return 1;
     else
         return 0;
 }
 
-int strtocolor(ass_library_t *library, char **q, uint32_t *res)
+int strtocolor(ASS_Library *library, char **q, uint32_t *res, int hex)
 {
-	uint32_t color = 0;
-	int result;
-	char* p = *q;
-	
+    uint32_t color = 0;
+    int result;
+    char *p = *q;
+    int base = hex ? 16 : 10;
+
     if (*p == '&')
         ++p;
     else
         ass_msg(library, MSGL_DBG2, "suspicious color format: \"%s\"\n", p);
-	
-	if (*p == 'H' || *p == 'h') { 
-		++p;
-		result = mystrtou32(&p, 16, &color);
-	} else {
-		result = mystrtou32(&p, 0, &color);
-	}
-	
-	{
-		unsigned char* tmp = (unsigned char*)(&color);
-		unsigned char b;
+
+    if (*p == 'H' || *p == 'h') {
+        ++p;
+        result = mystrtou32(&p, 16, &color);
+    } else {
+        result = mystrtou32(&p, base, &color);
+    }
+
+    {
+        unsigned char *tmp = (unsigned char *) (&color);
+        unsigned char b;
         b = tmp[0];
         tmp[0] = tmp[3];
         tmp[3] = b;
         b = tmp[1];
         tmp[1] = tmp[2];
         tmp[2] = b;
-	}
+    }
     if (*p == '&')
         ++p;
-	*q = p;
+    *q = p;
 
-	*res = color;
-	return result;
+    *res = color;
+    return result;
 }
 
 // Return a boolean value for a string
@@ -122,7 +133,7 @@ char parse_bool(char *str)
     return 0;
 }
 
-void ass_msg(ass_library_t *priv, int lvl, char *fmt, ...)
+void ass_msg(ASS_Library *priv, int lvl, char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
@@ -161,7 +172,7 @@ unsigned ass_utf8_get_char(char **str)
 }
 
 #ifdef CONFIG_ENCA
-void *ass_guess_buffer_cp(ass_library_t *library, unsigned char *buffer,
+void *ass_guess_buffer_cp(ASS_Library *library, unsigned char *buffer,
                           int buflen, char *preferred_language,
                           char *fallback)
 {
@@ -170,13 +181,13 @@ void *ass_guess_buffer_cp(ass_library_t *library, unsigned char *buffer,
     EncaAnalyser analyser;
     EncaEncoding encoding;
     char *detected_sub_cp = NULL;
-	int i;
+    int i;
 
     languages = enca_get_languages(&langcnt);
     ass_msg(library, MSGL_V, "ENCA supported languages");
     for (i = 0; i < langcnt; i++) {
         ass_msg(library, MSGL_V, "lang %s", languages[i]);
-	}
+    }
 
     for (i = 0; i < langcnt; i++) {
         const char *tmp;
@@ -189,7 +200,7 @@ void *ass_guess_buffer_cp(ass_library_t *library, unsigned char *buffer,
         if (tmp && encoding.charset != ENCA_CS_UNKNOWN) {
             detected_sub_cp = strdup(tmp);
             ass_msg(library, MSGL_INFO, "ENCA detected charset: %s", tmp);
-}
+        }
         enca_analyser_free(analyser);
     }
 

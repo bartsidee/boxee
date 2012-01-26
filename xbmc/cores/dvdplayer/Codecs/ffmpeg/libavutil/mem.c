@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavutil/mem.c
+ * @file
  * default memory allocator for libavutil
  */
 
@@ -33,6 +33,7 @@
 #include <malloc.h>
 #endif
 
+#include "avutil.h"
 #include "mem.h"
 
 /* here we can use OS-dependent allocation functions */
@@ -40,11 +41,27 @@
 #undef malloc
 #undef realloc
 
+#ifdef MALLOC_PREFIX
+
+#define malloc         AV_JOIN(MALLOC_PREFIX, malloc)
+#define memalign       AV_JOIN(MALLOC_PREFIX, memalign)
+#define posix_memalign AV_JOIN(MALLOC_PREFIX, posix_memalign)
+#define realloc        AV_JOIN(MALLOC_PREFIX, realloc)
+#define free           AV_JOIN(MALLOC_PREFIX, free)
+
+void *malloc(size_t size);
+void *memalign(size_t align, size_t size);
+int   posix_memalign(void **ptr, size_t align, size_t size);
+void *realloc(void *ptr, size_t size);
+void  free(void *ptr);
+
+#endif /* MALLOC_PREFIX */
+
 /* You can redefine av_malloc and av_free in your project to use your
    memory allocator. You do not need to suppress this file because the
    linker will do it automatically. */
 
-void *av_malloc(unsigned int size)
+void *av_malloc(FF_INTERNAL_MEM_TYPE size)
 {
     void *ptr = NULL;
 #if CONFIG_MEMALIGN_HACK
@@ -99,7 +116,7 @@ void *av_malloc(unsigned int size)
     return ptr;
 }
 
-void *av_realloc(void *ptr, unsigned int size)
+void *av_realloc(void *ptr, FF_INTERNAL_MEM_TYPE size)
 {
 #if CONFIG_MEMALIGN_HACK
     int diff;
@@ -137,7 +154,7 @@ void av_freep(void *arg)
     *ptr = NULL;
 }
 
-void *av_mallocz(unsigned int size)
+void *av_mallocz(FF_INTERNAL_MEM_TYPE size)
 {
     void *ptr = av_malloc(size);
     if (ptr)

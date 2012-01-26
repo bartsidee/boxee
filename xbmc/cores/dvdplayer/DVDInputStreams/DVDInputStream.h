@@ -38,7 +38,8 @@ enum DVDStreamType
   DVDSTREAM_TYPE_RTMP   = 7,
   DVDSTREAM_TYPE_HTSP   = 8,
   DVDSTREAM_TYPE_MMS    = 9,
-  DVDSTREAM_TYPE_PLAYLIST  = 10
+  DVDSTREAM_TYPE_PLAYLIST  = 10,
+  DVDSTREAM_TYPE_BLURAY = 11,
 };
 
 #define DVDSTREAM_BLOCK_SIZE_FILE (2048 * 16)
@@ -58,6 +59,7 @@ public:
     virtual bool PrevChannel() = 0;
     virtual bool SelectChannel(unsigned int channel) = 0;
     virtual bool UpdateItem(CFileItem& item) = 0;
+    virtual int  GetProgramId() { return 0; }
   };
 
   class IDisplayTime
@@ -66,6 +68,23 @@ public:
     virtual ~IDisplayTime() {};
     virtual int GetTotalTime() = 0;
     virtual int GetTime() = 0;
+  };
+
+  class ISeekTime
+  {
+    public:
+    virtual ~ISeekTime() {};
+    virtual bool SeekTime(int ms) = 0;
+  };
+
+  class IChapter
+  {
+    public:
+    virtual ~IChapter() {};
+    virtual int  GetChapter() = 0;
+    virtual int  GetChapterCount() = 0;
+    virtual void GetChapterName(std::string& name) = 0;
+    virtual bool SeekChapter(int ch) = 0;
   };
 
   CDVDInputStream(DVDStreamType m_streamType);
@@ -86,6 +105,7 @@ public:
   virtual bool HasFileError(CStdString *err) { return false; };  
   virtual int GetCurrentGroupId() { return 0; }
   virtual BitstreamStats GetBitstreamStats() const { return m_stats; }
+  virtual void Abort() {};
 
   void SetFileItem(const CFileItem& item);
 
@@ -93,7 +113,7 @@ public:
   virtual DWORD GetReadAhead() { return 0; }
      
   CFileItem &GetItem() { return m_item; }
-
+  
   void SetStreamType(DVDStreamType streamType);
 
 protected:

@@ -51,6 +51,11 @@ namespace
       return "HTS";
     else if(fcr_service_type == "_daap._tcp.")
       return "iTunes Music Sharing";
+    else if(fcr_service_type == "_afpovertcp._tcp.")
+      return "AFP";
+    else if(fcr_service_type == BOXEE_SERVICE_NAME)
+      return "BMS";
+
     //fallback, just return the received type
     return fcr_service_type;
   }
@@ -64,6 +69,10 @@ namespace
       fr_protocol = "htsp";
     else if(fcr_service_type == "_daap._tcp.")
       fr_protocol = "daap";
+    else if(fcr_service_type == "_afpovertcp._tcp.")
+      return "afp";
+    else if(fcr_service_type == BOXEE_SERVICE_NAME)
+      return "bms";
     else
       return false;
     return true;
@@ -85,15 +94,28 @@ bool CZeroconfDirectory::GetDirectory(const CStdString& strPath, CFileItemList &
       if(GetXBMCProtocol(it->GetType(), tmp))
       {
         CFileItemPtr item(new CFileItem("", true));
-        CURL url;
+        CURI url;
         url.SetProtocol("zeroconf");
         CStdString service_path = CZeroconfBrowser::ZeroconfService::toPath(*it);
         CUtil::URLEncode(service_path);
         url.SetFileName(service_path);
-        url.GetURL(item->m_strPath);
+        item->m_strPath = url.Get();
+
+
+        if(!CZeroconfBrowser::GetInstance()->ResolveService(*it))
+        {
+          CLog::Log(LOGINFO, "CZeroconfDirectory::GetDirectory service ( %s ) could not be resolved in time", it->GetName().c_str());
+          return false;
+        }
 
         //now do the formatting
         CStdString protocol = GetHumanReadableProtocol(it->GetType());
+        item->SetProperty("protocol", protocol);
+        item->SetProperty("ipAddress", it->GetIP());
+        item->SetProperty("hostName", it->GetHostName());
+        item->SetProperty("name", it->GetName());
+        item->SetProperty("domain", it->GetDomain());
+
         item->SetLabel(it->GetName() + " (" + protocol  + ")");
         item->SetLabelPreformated(true);
         //just set the default folder icon
@@ -116,7 +138,7 @@ bool CZeroconfDirectory::GetDirectory(const CStdString& strPath, CFileItemList &
     else
     {
       assert(!zeroconf_service.GetIP().empty());
-      CURL service;
+      CURI service;
       service.SetPort(zeroconf_service.GetPort());
       service.SetHostName(zeroconf_service.GetIP());
       //do protocol conversion (_smb._tcp -> smb)
@@ -128,8 +150,7 @@ bool CZeroconfDirectory::GetDirectory(const CStdString& strPath, CFileItemList &
         return false;
       }
       service.SetProtocol(protocol);
-      CStdString resolved_path;
-      service.GetURL(resolved_path);
+      CStdString resolved_path = service.Get();
       return CDirectory::GetDirectory(resolved_path, items, "", true, true);
     }
   }

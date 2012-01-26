@@ -3,7 +3,7 @@
 |   Platinum - Test UPnP A/V MediaServer
 |
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -30,7 +30,7 @@
 | 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 | http://www.gnu.org/licenses/gpl-2.0.html
 |
- ****************************************************************/
+****************************************************************/
 
 /*----------------------------------------------------------------------
 |   includes
@@ -116,6 +116,9 @@ main(int /* argc */, char** argv)
     /* parse command line */
     ParseCommandLine(argv+1);
 
+	/* for DLNA faster testing */
+	//PLT_Constants::GetInstance().m_DefaultDeviceLease = 30.;
+    
     PLT_UPnP upnp(1900, !Options.broadcast);
 
     PLT_DeviceHostReference device(

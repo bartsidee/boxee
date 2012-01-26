@@ -33,13 +33,23 @@ void CDemuxStreamAudio::GetStreamType(std::string& strInfo)
   char sInfo[64];
   
   if (codec == CODEC_ID_AC3) strcpy(sInfo, "AC3 ");
+  else if (codec == CODEC_ID_EAC3) strcpy(sInfo, "EAC3 ");
+  else if (codec == CODEC_ID_TRUEHD) strcpy(sInfo, "TrueHD ");
   else if (codec == CODEC_ID_DTS) strcpy(sInfo, "DTS ");
   else if (codec == CODEC_ID_MP2) strcpy(sInfo, "MP2 ");
+  else if (codec == CODEC_ID_MP3) strcpy(sInfo, "MP3 ");
+  else if (codec == CODEC_ID_AAC) strcpy(sInfo, "AAC ");
+  else if (codec == CODEC_ID_WMAPRO ||
+           codec == CODEC_ID_WMAV1  ||
+           codec == CODEC_ID_WMAV2) strcpy(sInfo, "WMA ");
+  else if (codec >= CODEC_ID_PCM_S16LE &&
+           codec <= CODEC_ID_PCM_BLURAY) strcpy(sInfo, "PCM ");
   else strcpy(sInfo, "");
     
   if (iChannels == 1) strcat(sInfo, "Mono");
   else if (iChannels == 2) strcat(sInfo, "Stereo");
   else if (iChannels == 6) strcat(sInfo, "5.1");
+  else if (iChannels == 8) strcat(sInfo, "7.1");
   else if (iChannels != 0)
   {
     char temp[32];

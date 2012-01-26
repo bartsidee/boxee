@@ -15,7 +15,7 @@
 #else
 #include <windows.h>
 #endif
-
+#include <setjmp.h>
 #include "ximaraw.h"
 
 #if CXIMAGE_SUPPORT_RAW
@@ -32,6 +32,8 @@ static bool mutexInitialized = false;
 ////////////////////////////////////////////////////////////////////////////////
 bool CxImageRAW::Decode(CxFile *hFile)
 {
+return false;
+#if 0
 	if (hFile==NULL)
 		return false;
 
@@ -255,6 +257,7 @@ bool CxImageRAW::Decode(CxFile *hFile)
   }
 	/* that's it */
 	return true;
+#endif
 }
 
 #ifdef XBMC

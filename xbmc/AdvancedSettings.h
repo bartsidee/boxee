@@ -38,6 +38,17 @@ struct TVShowRegexp
 
 typedef std::vector<TVShowRegexp> SETTINGS_TVSHOWLIST;
 
+struct RefreshOverride
+{
+  float fpsmin;
+  float fpsmax;
+
+  float refreshmin;
+  float refreshmax;
+
+  bool  fallback;
+};
+
 class CAdvancedSettings
 {
   public:
@@ -90,6 +101,16 @@ class CAdvancedSettings
     CStdString m_audioHost;
     bool m_audioApplyDrc;
 
+    bool  m_videoVDPAUScaling;
+    float m_videoNonLinStretchRatio;
+    bool  m_videoAllowLanczos3;
+    float m_videoAutoScaleMaxFps;
+    bool  m_videoAllowMpeg4VDPAU;
+    std::vector<RefreshOverride> m_videoAdjustRefreshOverrides;
+
+	  bool m_DXVACheckCompatibility;
+    bool m_DXVACheckCompatibilityPresent;
+
     CStdString m_videoDefaultPlayer;
     CStdString m_videoDefaultDVDPlayer;
     float m_videoPlayCountMinimumPercent;
@@ -131,7 +152,7 @@ class CAdvancedSettings
     SETTINGS_TVSHOWLIST m_tvshowStackRegExps;
     CStdString m_tvshowMultiPartStackRegExp;
     CStdStringArray m_pathSubstitutions;
-    int m_remoteRepeat;
+    int m_remoteDelay;
     float m_controllerDeadzone;
 
     bool m_playlistAsFolders;
@@ -205,6 +226,11 @@ class CAdvancedSettings
     int m_iSkipLoopFilter;
     float m_ForcedSwapTime; /* if nonzero, set's the explicit time in ms to allocate for buffer swap */
 
+    bool m_AllowD3D9Ex;
+    bool m_ForceD3D9Ex;
+    bool m_AllowDynamicTextures;
+    unsigned int m_RestrictCapsMask;
+
     bool m_osx_GLFullScreen;
     float m_sleepBeforeFlip; ///< if true, XBMC waits for raster to be close to the end of the display before flipping.
     bool m_bVirtualShares;
@@ -231,6 +257,43 @@ class CAdvancedSettings
     CStdString m_appsUrl;
     bool m_bWireFrameMode;
     bool m_bCountPixels;
+
+    bool m_bForceVideoHardwareDecoding;
+    bool m_bForceAudioHardwarePassthrough;
+    bool m_bForceWMV3Flushing;
+
+    // quota limitation
+    uint64_t   m_httpCacheMaxSize;   // (in KB)
+    uint64_t   m_appsMaxSize;        // (in KB)
+    uint64_t   m_thumbsMaxSize;      // (in KB)
+    
+    // configuration options for dd+ certification testing
+    struct __ddplus
+    {
+      __ddplus() { Clear(); }
+      void Clear()
+      {
+        ltmode = false;
+        rfmode = false;
+        lfemode = true;
+        drc = false;
+        monomode = _stereo;
+      }
+      bool ltmode; // downmix LtRt if true, LoRo if false
+      bool rfmode; // RF if true, line out if false
+      bool lfemode; // use LFE if true, don't if false
+      bool drc; // use DRC if true, don't if false
+      enum _monotype
+      {
+        _stereo,  // default
+        _left,
+        _right,
+        _mixed,
+      };
+      _monotype monomode;
+    } m_ddplus;
+    
+
 };
 
 extern CAdvancedSettings g_advancedSettings;

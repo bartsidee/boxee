@@ -1,5 +1,4 @@
-#ifndef __FRAMEBUFFEROBJECT_H__
-#define __FRAMEBUFFEROBJECT_H__
+#pragma once
 
 /*
  *      Copyright (C) 2005-2008 Team XBMC
@@ -22,19 +21,18 @@
  *
  */
 
-#include "system.h" // for HAS_GL
-
-#ifdef HAS_GL
+#include "system.h"
+#include "gui3d.h"
 
 //
-// CFrameBufferObject
+// CFrameBufferObjectGL
 // A class that abstracts FBOs to facilitate Render To Texture
 //
 // Requires OpenGL 1.5+ or the GL_EXT_framebuffer_object extension.
 //
 // Usage:
 //
-//     CFrameBufferObject *fbo = new CFrameBufferObject();
+//     CFrameBufferObjectGL *fbo = new CFrameBufferObjectGL();
 //     fbo->Initialize();
 //     fbo->CreateAndBindToTexture(GL_TEXTURE_2D, 256, 256, GL_RGBA);
 //  OR fbo->BindToTexture(GL_TEXTURE_2D, <existing texture ID>);
@@ -45,28 +43,70 @@
 //     glBindTexture(GL_TEXTURE_2D, fbo->Texture());
 //
 
+class CFrameBufferObjectBase
+{
+public:
+  CFrameBufferObjectBase();
+  virtual ~CFrameBufferObjectBase();
 
-class CFrameBufferObject
+  // returns true if FBO support is detected
+  virtual bool IsSupported() { return false; }
+
+  // returns true if FBO has been initialized
+  virtual bool IsValid() { return m_valid; }
+
+  // returns true if FBO has a texture bound to it
+  virtual bool IsBound() { return m_bound; }
+
+  // initialize the FBO
+  virtual bool Initialize() { return false; }
+
+  // Cleanup
+  virtual void Cleanup() {}
+
+  virtual bool BeginRender() { return false; }
+
+  virtual void EndRender() {}
+
+  unsigned int GetWidth() { return m_width; }
+  unsigned int GetHeight() { return m_height; }
+
+  XBMC::TexturePtr Texture() { return m_texid; }
+
+protected:
+  unsigned int      m_width;
+  unsigned int      m_height;
+  unsigned int      m_fbo;
+  bool              m_valid;
+  bool              m_bound;
+  bool              m_supported;
+  XBMC::TexturePtr  m_texid;
+  bool              m_isRendering;
+};
+
+#if defined(HAS_GL2) || HAS_GLES == 2
+
+class CFrameBufferObjectGL : public CFrameBufferObjectBase
 {
 public:
   // Constructor
-  CFrameBufferObject();
-  virtual ~CFrameBufferObject();
+  CFrameBufferObjectGL();
+  virtual ~CFrameBufferObjectGL();
 
   // returns true if FBO support is detected
-  bool IsSupported();
+  virtual bool IsSupported();
 
   // returns true if FBO has been initialized
-  bool IsValid() { return m_valid; }
+  virtual bool IsValid() { return m_valid; }
 
   // returns true if FBO has a texture bound to it
-  bool IsBound() { return m_bound; }
+  virtual bool IsBound() { return m_bound; }
 
   // initialize the FBO
-  bool Initialize();
+  virtual bool Initialize();
 
   // Cleanup
-  void Cleanup();
+  virtual void Cleanup();
 
   // Bind to an exiting texture
   bool BindToTexture(GLenum target, GLuint texid);
@@ -78,37 +118,28 @@ public:
   bool CreateAndBindToTexture(GLenum target, int width, int height, GLenum format = GL_RGBA,
                               GLenum filter=GL_LINEAR, GLenum clamp=GL_CLAMP_TO_EDGE);
 
-  // Return the internally created texture ID
-  GLuint Texture() { return m_texid; }
-
   GLuint FBO() { return m_fbo; }
 
   // Begin rendering to FBO
-  bool BeginRender()
-  {
-    if (IsValid() && IsBound())
-    {
-      glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, m_fbo);
-      return true;
-    }
-    return false;
-  }
+  virtual bool BeginRender();
 
   // Finish rendering to FBO
-  void EndRender()
-  {
-    if (IsValid())
-      glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-  }
+  virtual void EndRender();
 
-private:
-  GLuint m_fbo;
-  bool   m_valid;
-  bool   m_bound;
-  bool   m_supported;
-  GLuint m_texid;
+  bool IsRendering() { return m_isRendering; }
 };
 
+#define  CFrameBufferObject CFrameBufferObjectGL
 #endif
 
+#if defined(HAS_DX)
+
+class CFrameBufferObjectDX : public CFrameBufferObjectBase
+{
+public:
+  CFrameBufferObjectDX();
+  virtual ~CFrameBufferObjectDX();
+};
+
+#define CFrameBufferObject CFrameBufferObjectDX
 #endif

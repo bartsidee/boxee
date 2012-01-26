@@ -41,4 +41,7 @@ protected:
   int m_flickerFilter;
   bool m_soften;
   bool m_advance;
+
+private:
+  bool OnViewModeChange();
 };

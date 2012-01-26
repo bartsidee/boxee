@@ -1,237 +1,216 @@
-﻿<?xml version="1.0"?>
+<?xml version="1.0"?>
 <window id="4">
 	<defaultcontrol always="true">52</defaultcontrol>
 	<allowoverlay>no</allowoverlay>
 	<controls>
-		<include>Common_Background</include>
-		<include>Common_Status</include>
-		<include>Common_Now_Playing</include>
-		<control type="image">
-			<!--animation type="WindowOpen" condition="!Window.Previous(SettingsCategory.xml)">
-				<effect type="fade" start="0" end="100" time="200" delay="0"/>
-			</animation>
-			<animation type="WindowClose" condition="!Window.Next(SettingsCategory.xml)">
-				<effect type="fade" start="100" end="0" time="200" delay="0"/>
-			</animation-->
-			<posx>0</posx>
-			<posy>0</posy>
-			<width>1280</width>
-			<height>720</height>
-			<texture>black.png</texture>
-			<colordiffuse>80FFFFFF</colordiffuse>
+		<include>Common_Settings_Background</include>
+		<control type="group" id="9000">
+			<control type="label" id="9019">
+				<posx>28</posx>
+				<posy>18</posy>
+				<width>925</width>
+				<font>font40b</font>
+				<align>left</align>
+				<label>[B]$LOCALIZE[5][/B]</label>
+			</control>
 		</control>
 		<control type="group">
-			<!--animation type="WindowOpen" condition="!Window.Previous(SettingsCategory.xml)">
-				<effect type="fade" start="0" end="100" time="200" tween="cubic" easing="inout"/>
-				<effect type="zoom" start="150,150" end="100,100" center="auto" time="200" tween="cubic" easing="inout"/>
-			</animation>			
-			<animation type="WindowClose" condition="!Window.Next(SettingsCategory.xml)">
-				<effect type="fade" start="100" end="0" time="200" tween="cubic" easing="inout"/>
-				<effect type="zoom" start="100,100" end="150,150" center="auto" time="200" tween="cubic" easing="inout"/>
-			</animation-->
-						<!--animation type="Conditional" condition="Window.IsVisible(boxee_media_sources.xml) | Window.IsVisible(boxee_media_source_list.xml) | Window.IsVisible(boxee_media_source_add_share.xml) | Window.IsVisible(boxee_media_source_add_folder.xml) | Window.IsVisible(boxee_media_source_info.xml) | Window.IsVisible(boxee_application_list.xml) | Window.IsVisible(custom_boxee_credits.xml) | Window.IsVisible(custom_boxee_settings.xml)">
-							<effect type="fade" start="100" end="0" time="200"/>
-						</animation-->
-			<posx>30</posx>
-			<posy>46</posy>
-			<width>1220</width>
-			<height>660</height>
-			<control type="image">
-				<posx>0</posx>
-				<posy>70</posy>
-				<width>1220</width>
-				<height>510</height>
-				<texture border="64">action_menu_bg.png</texture>
-			</control>
-			<control type="image">
-				<posx>100</posx>
-				<posy>104</posy>
-				<width>1020</width>
-				<height>256</height>
-				<texture border="128">feather_divider.png</texture>
-			</control>
-			<control type="label">
-				<posx>34</posx>
-				<posy>94</posy>
-				<width>1100</width>
-				<height>56</height>
-				<align>left</align>
-				<aligny>center</aligny>
-				<haspath>true</haspath>
-				<font>title56b</font>
-				<textcolor>white</textcolor>
-				<label>[UPPERCASE]$LOCALIZE[5][/UPPERCASE]</label>
-			</control>
 			<control type="panel" id="52">
-                <posx>113</posx>
-                <posy>174</posy>
-                <width>970</width>
-                <height>400</height>
-                <onup>-</onup>
-                <onright>53</onright>
-                <onleft>-</onleft>
-                <ondown>-</ondown>
-                <scrolltime>200</scrolltime>
-                <pagecontrol>-</pagecontrol>
-                <orientation>vertical</orientation>
-                <itemlayout width="220" height="194">
-                    <control type="image">
-                        <posx>31</posx>
-                        <posy>0</posy>
-                        <width>128</width>
-                        <height>128</height>
-                        <colordiffuse>80FFFFFF</colordiffuse>
-                        <texture>$INFO[ListItem.Thumb]</texture>
-                    </control>
-                    <control type="label">
-                        <posx>95</posx>
-                        <posy>130</posy>
-                        <width>250</width>
-                        <height>55</height>
-                        <font>title22b</font>
-                        <align>center</align>
-                        <aligny>top</aligny>
-                        <label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
-                        <textcolor>grey</textcolor>
-                    </control>
-                </itemlayout>
-                <focusedlayout width="190" height="194">
-                    <control type="image">
-                        <visible>Control.HasFocus(52)</visible>
-                        <posx>20</posx>
-                        <posy>-8</posy>
-                        <width>150</width>
-                        <height>140</height>
-                        <texture border="30">button_action_menu_source_on.png</texture>
-                    </control>
-                    <control type="image">
-                        <visible>!Control.HasFocus(52)</visible>
-                        <posx>31</posx>
-                        <posy>0</posy>
-                        <width>128</width>
-                        <height>128</height>
-                        <colordiffuse>80FFFFFF</colordiffuse>
-                        <texture>$INFO[ListItem.Thumb]</texture>
-                    </control>
-                    <control type="image">
-                        <visible>Control.HasFocus(52)</visible>
-                        <posx>31</posx>
-                        <posy>0</posy>
-                        <width>128</width>
-                        <height>128</height>
-                        <texture>$INFO[ListItem.Thumb]</texture>
-                    </control>
-                    <control type="label">
-                        <visible>!Control.HasFocus(52)</visible>
-                        <posx>95</posx>
-                        <posy>130</posy>
-                        <width>250</width>
-                        <height>55</height>
-                        <font>title22b</font>
-                        <align>center</align>
-                        <aligny>top</aligny>
-                        <label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
-                        <textcolor>grey</textcolor>
-                    </control>
-                    <control type="label">
-                        <visible>Control.HasFocus(52)</visible>
-                        <posx>95</posx>
-                        <posy>130</posy>
-                        <width>250</width>
-                        <height>55</height>
-                        <font>title22b</font>
-                        <align>center</align>
-                        <aligny>top</aligny>
-                        <label>[UPPERCASE]$INFO[ListItem.Label][/UPPERCASE]</label>
-                        <textcolor>white</textcolor>
-                    </control>
-                </focusedlayout>
+				<posx>219</posx>
+				<posy>124</posy>
+				<width>1000</width>
+				<height>500</height>
+				<onup>-</onup>
+				<onright>-</onright>
+				<onleft>-</onleft>
+				<ondown>53</ondown>
+				<scrolltime>200</scrolltime>
+				<pagecontrol>-</pagecontrol>
+				<orientation>vertical</orientation>
+				<itemlayout width="210" height="240">
+					<control type="image">
+						<posx>45</posx>
+						<posy>6</posy>
+						<width>120</width>
+						<height>120</height>
+						<colordiffuse>mediumgreyheidi</colordiffuse>
+						<texture>$INFO[ListItem.Thumb]</texture>
+					</control>
+					<control type="label">
+						<posx>109</posx>
+						<posy>137</posy>
+						<width>210</width>
+						<height>100</height>
+						<font>font24b</font>
+						<align>center</align>
+						<aligny>top</aligny>
+						<label>[UPPERCASE][B]$INFO[ListItem.Label][/B][/UPPERCASE]</label>
+						<textcolor>mediumgreyheidi</textcolor>
+						<wrapmultiline>true</wrapmultiline>
+					</control>
+				</itemlayout>
+				<focusedlayout width="210" height="240">
+					<control type="image">
+						<posx>37</posx>
+						<posy>0</posy>
+						<width>136</width>
+						<height>132</height>
+						<texture srcborder="24" border="16">button-focused.png</texture>
+					</control>
+					<control type="image">
+						<visible>!Control.HasFocus(52)</visible>
+						<posx>45</posx>
+						<posy>6</posy>
+						<width>120</width>
+						<height>120</height>
+						<colordiffuse>mediumgreyheidi</colordiffuse>
+						<texture>$INFO[ListItem.Thumb]</texture>
+					</control>
+					<control type="image">
+						<visible>Control.HasFocus(52)</visible>
+						<posx>45</posx>
+						<posy>6</posy>
+						<width>120</width>
+						<height>120</height>
+						<colordiffuse>whiteheidi</colordiffuse>
+						<texture>$INFO[ListItem.Thumb]</texture>
+					</control>
+					<control type="label">
+						<visible>!Control.HasFocus(52)</visible>
+						<posx>109</posx>
+						<posy>137</posy>
+						<width>210</width>
+						<height>100</height>
+						<font>font24b</font>
+						<align>center</align>
+						<aligny>top</aligny>
+						<label>[UPPERCASE][B]$INFO[ListItem.Label][/B][/UPPERCASE]</label>
+						<textcolor>mediumgreyheidi</textcolor>
+						<wrapmultiline>true</wrapmultiline>
+					</control>
+					<control type="label">
+						<visible>Control.HasFocus(52)</visible>
+						<posx>109</posx>
+						<posy>137</posy>
+						<width>210</width>
+						<height>100</height>
+						<font>font24b</font>
+						<align>center</align>
+						<aligny>top</aligny>
+						<label>[UPPERCASE][B]$INFO[ListItem.Label][/B][/UPPERCASE]</label>
+						<textcolor>whiteheidi</textcolor>
+						<wrapmultiline>true</wrapmultiline>
+					</control>
+				</focusedlayout>
 				<content>
-					<item>
-						<label>51550</label>
-						<label2>52027</label2>
-						<onclick>ActivateWindow(10460)</onclick>
-						<thumb>icons/icon_settings_local_files.png</thumb>
-					</item>
 					<item>
 						<label>10019</label>
 						<label2>52025</label2>
 						<onclick>ActivateWindow(AppearanceSettings)</onclick>
-						<thumb>icons/icon_settings_apperance.png</thumb>
+						<thumb>icons/icon-settings-general.png</thumb>
 					</item>
 					<item>
 						<label>51551</label>
 						<label2>52021</label2>
 						<onclick>ActivateWindow(MyMediaSettings)</onclick>
-						<thumb>icons/icon_settings_media.png</thumb>
+						<thumb>icons/icon-settings-media.png</thumb>
 					</item>
 					<item>
-						<label>10016</label>
-						<label2>52026</label2>
-						<onclick>ActivateWindow(SystemSettings)</onclick>
-						<thumb>icons/icon_settings_system.png</thumb>
+						<label>51550</label>
+						<label2>52027</label2>
+						<onclick>ActivateWindow(10460)</onclick>
+						<thumb>icons/icon-settings-file-sources.png</thumb>
 					</item>
 					<item>
 						<label>705</label>
 						<label2>52024</label2>
 						<onclick>ActivateWindow(NetworkSettings)</onclick>
-						<thumb>icons/icon_settings_network.png</thumb>
+						<thumb>icons/icon-settings-network.png</thumb>
 					</item>
 					<item>
-						<label>10014</label>
-						<label2>52025</label2>
-						<onclick>ActivateWindow(personalsettings)</onclick>
-						<thumb>icons/icon_settings_personal.png</thumb>
+						<visible>DVB.IsTunerReady</visible>				
+						<label>58000</label>
+						<onclick>ActivateWindow(LiveTVSettings)</onclick>
+						<thumb>icons/icon-settings-live-tv.png</thumb>
 					</item>
 					<item>
 						<label>10013</label>
 						<label2>801</label2>
 						<onclick>ActivateWindow(ParentalSettings)</onclick>
-						<thumb>icons/icon_settings_parental.png</thumb>
-					</item>										
+						<thumb>icons/icon-settings-parental-controls.png</thumb>
+					</item>
+					<item>
+						<label>10016</label>
+						<label2>52026</label2>
+						<onclick>ActivateWindow(SystemSettings)</onclick>
+						<thumb>icons/icon-settings-system.png</thumb>
+					</item>
 				</content>
 			</control>
 			<control type="group">
-				<posx>1110</posx>
-				<posy>450</posy>
-				<control type="image">
-					<visible>!Control.HasFocus(53)</visible>
-					<posx>9</posx>
-					<posy>9</posy>
-					<width>72</width>
-					<height>72</height>
-					<texture diffuse="nofocus.png">icons/icon_settings_credits.png</texture>
-				</control>
+				<posx>37</posx>
+				<posy>619</posy>
 				<control type="image">
 					<visible>Control.HasFocus(53)</visible>
-					<posx>9</posx>
-					<posy>9</posy>
-					<width>72</width>
-					<height>72</height>
-					<texture>icons/icon_settings_credits.png</texture>
+					<posx>-10</posx>
+					<posy>-9</posy>
+					<width>66</width>
+					<height>66</height>
+					<texture srcborder="24" border="16">button-focused.png</texture>
 				</control>
 				<control type="button" id="53">
 					<posx>0</posx>
 					<posy>0</posy>
-					<width>90</width>
-					<height>90</height>
-					<onleft>52</onleft>
+					<width>48</width>
+					<height>48</height>
+					<onleft>-</onleft>
+					<onright>54</onright>
+					<onup>52</onup>
+					<ondown>-</ondown>
+					<font>font18b</font>
+					<align>center</align>
+					<aligny>top</aligny>
+					<label>[UPPERCASE][B]$LOCALIZE[51552][/B][/UPPERCASE]</label>
+					<textcolor>mediumgreyheidi</textcolor>
+					<focusedcolor>whiteheidi</focusedcolor>
+					<textoffsety>58</textoffsety>
+					<texturenofocus diffuse="colors/color-grey.png">icons/icon-settings-about.png</texturenofocus>
+					<texturefocus diffuse="colors/color-white.png">icons/icon-settings-about.png</texturefocus>
+					<onclick>ActivateWindow(58)</onclick>
+				</control>
+			</control>		
+			<control type="group">
+				<posx>1197</posx>
+				<posy>619</posy>
+				<control type="image">
+					<visible>Control.HasFocus(54)</visible>
+					<posx>-10</posx>
+					<posy>-9</posy>
+					<width>66</width>
+					<height>66</height>
+					<texture srcborder="24" border="16">button-focused.png</texture>
+				</control>
+				<control type="button" id="54">
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>48</width>
+					<height>48</height>
+					<onleft>53</onleft>
 					<onright>-</onright>
 					<onup>52</onup>
 					<ondown>-</ondown>
-					<font>title18b</font>
+					<font>font18b</font>
 					<align>center</align>
 					<aligny>top</aligny>
-					<label>[UPPERCASE]$LOCALIZE[470][/UPPERCASE]</label>
-					<textcolor>grey</textcolor>
-					<focusedcolor>white</focusedcolor>
-					<textoffsety>80</textoffsety>
-					<texturenofocus border="30">-</texturenofocus>
-					<texturefocus border="30">button_action_menu_source_on.png</texturefocus>
-					<textureclick border="30">button_action_menu_source_click.png</textureclick>
-					<onclick>ActivateWindow(58)</onclick>
+					<label>[UPPERCASE][B]$LOCALIZE[51553][/B][/UPPERCASE]</label>
+					<textcolor>mediumgreyheidi</textcolor>
+					<focusedcolor>whiteheidi</focusedcolor>
+					<textoffsety>58</textoffsety>
+					<texturenofocus diffuse="colors/color-grey.png">icons/icon-settings-legal.png</texturenofocus>
+					<texturefocus diffuse="colors/color-white.png">icons/icon-settings-legal.png</texturefocus>
+					<onclick>-</onclick>
 				</control>
-			</control>
+			</control>			
 		</control>
 	</controls>
 </window>

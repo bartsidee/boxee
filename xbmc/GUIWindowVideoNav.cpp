@@ -34,7 +34,9 @@
 #include "PlayListFactory.h"
 #include "GUIDialogVideoScan.h"
 #include "GUIDialogOK.h"
+#ifndef _BOXEE_
 #include "PartyModeManager.h"
+#endif
 #include "MusicDatabase.h"
 #include "GUIWindowManager.h"
 #include "GUIDialogYesNo.h"
@@ -235,6 +237,7 @@ bool CGUIWindowVideoNav::OnMessage(CGUIMessage& message)
   case GUI_MSG_CLICKED:
     {
       int iControl = message.GetSenderId();
+#ifndef _BOXEE_
       if (iControl == CONTROL_BTNPARTYMODE)
       {
         if (g_partyModeManager.IsEnabled())
@@ -254,7 +257,7 @@ bool CGUIWindowVideoNav::OnMessage(CGUIMessage& message)
         }
         UpdateButtons();
       }
-
+#endif
       if (iControl == CONTROL_BTNSEARCH)
       {
         OnSearch();
@@ -592,8 +595,9 @@ void CGUIWindowVideoNav::UpdateButtons()
   SET_CONTROL_SELECTED(GetID(),CONTROL_BTN_FILTER, !m_filter.IsEmpty());
   SET_CONTROL_LABEL2(CONTROL_BTN_FILTER, m_filter);
 
+#ifndef _BOXEE_
   SET_CONTROL_SELECTED(GetID(),CONTROL_BTNPARTYMODE, g_partyModeManager.IsEnabled());
-
+#endif
   SET_CONTROL_SELECTED(GetID(),CONTROL_BTNFLATTEN, g_stSettings.m_bMyVideoNavFlatten);
 }
 

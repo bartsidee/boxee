@@ -27,10 +27,8 @@
 
 #ifdef __APPLE__
 #include <mach/mach.h>
-#include <SDL/SDL.h>
-#else
-#include <SDL.h>
 #endif
+#include <SDL/SDL.h>
 
 #ifdef _LINUX
 

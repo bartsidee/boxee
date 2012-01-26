@@ -162,6 +162,24 @@ public:
   std::vector<std::string> m_vecParts;
 };
 
+class BXVideoLink
+{
+public:
+  std::string m_strURL;
+  std::string m_strProvider;
+  std::string m_strProviderName;
+  std::string m_strProviderThumb;
+  std::string m_strTitle;
+  std::string m_strQuality;
+  std::string m_strQualityLabel;
+  bool        m_bIsHD;
+  std::string m_strCountryCodes;
+  std::string m_strCountryRel;
+  std::string m_strOffer;
+  std::string m_strBoxeeType;
+  std::string m_strType;
+};
+
 class BXVideo : public BXMetadataDetail
 {
 public:
@@ -185,6 +203,7 @@ public:
   std::string m_strTagLine;
   std::string m_strLanguageId;
   std::string m_strCover;
+  std::string m_strOriginalCover;
   std::string m_strTrailerUrl;
   std::string m_strGenre;
   int m_iSeason;
@@ -201,10 +220,18 @@ public:
   std::vector<std::string> m_vecActors;
   std::vector<std::string> m_vecParts;
   std::vector<BXPath> m_vecLinks;
+  std::vector<BXVideoLink> m_vecVideoLinks;
   bool m_bMovie;
   std::string m_episodeDate;
   
   std::string m_strFirstAired;
+  std::string m_strNfoPath;
+  int m_iNfoAccessedTime;
+  int m_iNfoModifiedTime;
+  int m_iCriticsScore;
+  int m_iAudienceScore;
+  std::string m_strCriticsRating;
+  std::string m_strAudienceRating;
 };
 
 class BXSeries : public BXMetadataDetail
@@ -233,6 +260,9 @@ public:
   std::string m_strLanguage;
   std::string m_strBoxeeId;
   std::string m_strGenre;
+  std::string m_strNfoPath;
+  int m_iNfoAccessedTime;
+  int m_iNfoModifiedTime;
   int m_iYear;
   
   // Holds the release date of the most recent episode of the series
@@ -330,7 +360,7 @@ public:
   const std::string& GetResolverId() const;
 
   void SetFileSize(int64_t fileSize);
-  const int64_t GetFileSize() const;
+  int64_t GetFileSize() const;
 
   void Reset();
   std::string ToString();

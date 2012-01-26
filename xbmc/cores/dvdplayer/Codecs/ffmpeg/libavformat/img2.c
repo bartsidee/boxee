@@ -73,6 +73,7 @@ static const IdStrMap img_tags[] = {
     { CODEC_ID_SUNRAST   , "sunras"},
     { CODEC_ID_JPEG2000  , "jp2"},
     { CODEC_ID_DPX       , "dpx"},
+    { CODEC_ID_PICTOR    , "pic"},
     { CODEC_ID_NONE      , NULL}
 };
 
@@ -128,7 +129,9 @@ static int find_image_range(int *pfirst_index, int *plast_index,
         if (av_get_frame_filename(buf, sizeof(buf), path, first_index) < 0){
             *pfirst_index =
             *plast_index = 1;
-            return 0;
+            if(url_exist(buf))
+                return 0;
+            return -1;
         }
         if (url_exist(buf))
             break;
@@ -168,7 +171,7 @@ static int find_image_range(int *pfirst_index, int *plast_index,
 }
 
 
-static int image_probe(AVProbeData *p)
+static int read_probe(AVProbeData *p)
 {
     if (p->filename && av_str2id(img_tags, p->filename)) {
         if (av_filename_number_test(p->filename))
@@ -183,7 +186,7 @@ enum CodecID av_guess_image2_codec(const char *filename){
     return av_str2id(img_tags, filename);
 }
 
-static int img_read_header(AVFormatContext *s1, AVFormatParameters *ap)
+static int read_header(AVFormatContext *s1, AVFormatParameters *ap)
 {
     VideoData *s = s1->priv_data;
     int first_index, last_index;
@@ -221,7 +224,7 @@ static int img_read_header(AVFormatContext *s1, AVFormatParameters *ap)
 
     if (!s->is_pipe) {
         if (find_image_range(&first_index, &last_index, s->path) < 0)
-            return AVERROR(EIO);
+            return AVERROR(ENOENT);
         s->img_first = first_index;
         s->img_last = last_index;
         s->img_number = first_index;
@@ -230,23 +233,23 @@ static int img_read_header(AVFormatContext *s1, AVFormatParameters *ap)
         st->duration = last_index - first_index + 1;
     }
 
-    if(ap->video_codec_id){
-        st->codec->codec_type = CODEC_TYPE_VIDEO;
-        st->codec->codec_id = ap->video_codec_id;
-    }else if(ap->audio_codec_id){
-        st->codec->codec_type = CODEC_TYPE_AUDIO;
-        st->codec->codec_id = ap->audio_codec_id;
+    if(s1->video_codec_id){
+        st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
+        st->codec->codec_id = s1->video_codec_id;
+    }else if(s1->audio_codec_id){
+        st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
+        st->codec->codec_id = s1->audio_codec_id;
     }else{
-        st->codec->codec_type = CODEC_TYPE_VIDEO;
+        st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
         st->codec->codec_id = av_str2id(img_tags, s->path);
     }
-    if(st->codec->codec_type == CODEC_TYPE_VIDEO && ap->pix_fmt != PIX_FMT_NONE)
+    if(st->codec->codec_type == AVMEDIA_TYPE_VIDEO && ap->pix_fmt != PIX_FMT_NONE)
         st->codec->pix_fmt = ap->pix_fmt;
 
     return 0;
 }
 
-static int img_read_packet(AVFormatContext *s1, AVPacket *pkt)
+static int read_packet(AVFormatContext *s1, AVPacket *pkt)
 {
     VideoData *s = s1->priv_data;
     char filename[1024];
@@ -267,6 +270,8 @@ static int img_read_packet(AVFormatContext *s1, AVPacket *pkt)
             return AVERROR(EIO);
         for(i=0; i<3; i++){
             if (url_fopen(&f[i], filename, URL_RDONLY) < 0) {
+                if(i==1)
+                    break;
                 av_log(s1, AV_LOG_ERROR, "Could not open file : %s\n",filename);
                 return AVERROR(EIO);
             }
@@ -288,7 +293,7 @@ static int img_read_packet(AVFormatContext *s1, AVPacket *pkt)
 
     av_new_packet(pkt, size[0] + size[1] + size[2]);
     pkt->stream_index = 0;
-    pkt->flags |= PKT_FLAG_KEY;
+    pkt->flags |= AV_PKT_FLAG_KEY;
 
     pkt->size= 0;
     for(i=0; i<3; i++){
@@ -315,7 +320,7 @@ static int img_read_packet(AVFormatContext *s1, AVPacket *pkt)
 /******************************************************/
 /* image output */
 
-static int img_write_header(AVFormatContext *s)
+static int write_header(AVFormatContext *s)
 {
     VideoData *img = s->priv_data;
 
@@ -331,7 +336,7 @@ static int img_write_header(AVFormatContext *s)
     return 0;
 }
 
-static int img_write_packet(AVFormatContext *s, AVPacket *pkt)
+static int write_packet(AVFormatContext *s, AVPacket *pkt)
 {
     VideoData *img = s->priv_data;
     ByteIOContext *pb[3];
@@ -341,8 +346,12 @@ static int img_write_packet(AVFormatContext *s, AVPacket *pkt)
 
     if (!img->is_pipe) {
         if (av_get_frame_filename(filename, sizeof(filename),
-                                  img->path, img->img_number) < 0 && img->img_number>1)
+                                  img->path, img->img_number) < 0 && img->img_number>1) {
+            av_log(s, AV_LOG_ERROR,
+                   "Could not get frame filename number %d from pattern '%s'\n",
+                   img->img_number, img->path);
             return AVERROR(EIO);
+        }
         for(i=0; i<3; i++){
             if (url_fopen(&pb[i], filename, URL_WRONLY) < 0) {
                 av_log(s, AV_LOG_ERROR, "Could not open file : %s\n",filename);
@@ -405,57 +414,48 @@ static int img_write_packet(AVFormatContext *s, AVPacket *pkt)
 
 /* input */
 #if CONFIG_IMAGE2_DEMUXER
-AVInputFormat image2_demuxer = {
-    "image2",
-    NULL_IF_CONFIG_SMALL("image2 sequence"),
-    sizeof(VideoData),
-    image_probe,
-    img_read_header,
-    img_read_packet,
-    NULL,
-    NULL,
-    NULL,
-    AVFMT_NOFILE,
+AVInputFormat ff_image2_demuxer = {
+    .name           = "image2",
+    .long_name      = NULL_IF_CONFIG_SMALL("image2 sequence"),
+    .priv_data_size = sizeof(VideoData),
+    .read_probe     = read_probe,
+    .read_header    = read_header,
+    .read_packet    = read_packet,
+    .flags          = AVFMT_NOFILE,
 };
 #endif
 #if CONFIG_IMAGE2PIPE_DEMUXER
-AVInputFormat image2pipe_demuxer = {
-    "image2pipe",
-    NULL_IF_CONFIG_SMALL("piped image2 sequence"),
-    sizeof(VideoData),
-    NULL, /* no probe */
-    img_read_header,
-    img_read_packet,
+AVInputFormat ff_image2pipe_demuxer = {
+    .name           = "image2pipe",
+    .long_name      = NULL_IF_CONFIG_SMALL("piped image2 sequence"),
+    .priv_data_size = sizeof(VideoData),
+    .read_header    = read_header,
+    .read_packet    = read_packet,
 };
 #endif
 
 /* output */
 #if CONFIG_IMAGE2_MUXER
-AVOutputFormat image2_muxer = {
-    "image2",
-    NULL_IF_CONFIG_SMALL("image2 sequence"),
-    "",
-    "bmp,jpeg,jpg,ljpg,pam,pbm,pcx,pgm,pgmyuv,png,ppm,sgi,tif,tiff,jp2",
-    sizeof(VideoData),
-    CODEC_ID_NONE,
-    CODEC_ID_MJPEG,
-    img_write_header,
-    img_write_packet,
-    NULL,
-    .flags= AVFMT_NOTIMESTAMPS | AVFMT_NOFILE
+AVOutputFormat ff_image2_muxer = {
+    .name           = "image2",
+    .long_name      = NULL_IF_CONFIG_SMALL("image2 sequence"),
+    .extensions     = "bmp,jpeg,jpg,ljpg,pam,pbm,pcx,pgm,pgmyuv,png,"
+                      "ppm,sgi,tga,tif,tiff,jp2",
+    .priv_data_size = sizeof(VideoData),
+    .video_codec    = CODEC_ID_MJPEG,
+    .write_header   = write_header,
+    .write_packet   = write_packet,
+    .flags          = AVFMT_NOTIMESTAMPS | AVFMT_NODIMENSIONS | AVFMT_NOFILE
 };
 #endif
 #if CONFIG_IMAGE2PIPE_MUXER
-AVOutputFormat image2pipe_muxer = {
-    "image2pipe",
-    NULL_IF_CONFIG_SMALL("piped image2 sequence"),
-    "",
-    "",
-    sizeof(VideoData),
-    CODEC_ID_NONE,
-    CODEC_ID_MJPEG,
-    img_write_header,
-    img_write_packet,
-    .flags= AVFMT_NOTIMESTAMPS
+AVOutputFormat ff_image2pipe_muxer = {
+    .name           = "image2pipe",
+    .long_name      = NULL_IF_CONFIG_SMALL("piped image2 sequence"),
+    .priv_data_size = sizeof(VideoData),
+    .video_codec    = CODEC_ID_MJPEG,
+    .write_header   = write_header,
+    .write_packet   = write_packet,
+    .flags          = AVFMT_NOTIMESTAMPS | AVFMT_NODIMENSIONS
 };
 #endif

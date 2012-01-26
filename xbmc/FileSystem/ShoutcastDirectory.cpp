@@ -43,7 +43,7 @@ CShoutcastDirectory::~CShoutcastDirectory(void)
 {
 }
 
-bool CShoutcastDirectory::ParseGenres(TiXmlElement *root, CFileItemList &items, CURL &url)
+bool CShoutcastDirectory::ParseGenres(TiXmlElement *root, CFileItemList &items, CURI &url)
 {
   TiXmlElement *element = root->FirstChildElement("genre");
   
@@ -65,7 +65,7 @@ bool CShoutcastDirectory::ParseGenres(TiXmlElement *root, CFileItemList &items, 
     CUtil::URLEncode(path);
 
     url.SetOptions("?genre=" + path);
-    url.GetURL(path);
+    path = url.Get();
  
     if (!path.IsEmpty())
     {
@@ -84,7 +84,7 @@ bool CShoutcastDirectory::ParseGenres(TiXmlElement *root, CFileItemList &items, 
   return true;
 }
 
-bool CShoutcastDirectory::ParseStations(TiXmlElement *root, CFileItemList &items, CURL &url)
+bool CShoutcastDirectory::ParseStations(TiXmlElement *root, CFileItemList &items, CURI &url)
 {
   TiXmlElement *element = NULL;
   CStdString path;
@@ -123,7 +123,7 @@ bool CShoutcastDirectory::ParseStations(TiXmlElement *root, CFileItemList &items
     CStdString label = name;
 
     url.SetOptions("?id=" + id);
-    url.GetURL(path);
+    path = url.Get();
 
     if (!id.IsEmpty())
     {
@@ -173,7 +173,7 @@ bool CShoutcastDirectory::GetDirectory(const CStdString& strPath, CFileItemList 
       strRoot.Equals("shout://www.shoutcast.com/sbin/newxml.phtml") )
     strRoot = SHOUTCAST_MASTER_LINK;
 
-  CURL url(strRoot);
+  CURI url(strRoot);
   CStdString protocol = url.GetProtocol();
   url.SetProtocol("http");
 

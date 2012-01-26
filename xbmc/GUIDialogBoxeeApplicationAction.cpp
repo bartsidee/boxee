@@ -15,7 +15,9 @@
 #include "AppManager.h"
 #include "GUIDialogOK2.h"
 #include "Util.h"
+#ifdef HAS_LASTFM
 #include "LastFmManager.h"
+#endif
 #include "GUIDialogProgress.h"
 #include "BoxeeUtils.h"
 #include "lib/libBoxee/boxee.h"
@@ -130,14 +132,14 @@ bool CGUIDialogBoxeeApplicationAction::OnMessage(CGUIMessage& message)
 
           m_appWasRemoved = true;
 
-          g_application.m_guiDialogKaiToast.QueueNotification("", "", g_localizeStrings.Get(51039), 5000);
+          g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_MINUS, "", g_localizeStrings.Get(51039), 5000 , KAI_GREEN_COLOR , KAI_GREEN_COLOR);
         }
         Close();
         return true;
       }
       else if (senderId == SETTINGS_BUTTON)
       {
-        CURL url(m_item->m_strPath);
+        CURI url(m_item->m_strPath);
 
         if (url.GetProtocol() == "plugin")
         {
@@ -154,7 +156,7 @@ bool CGUIDialogBoxeeApplicationAction::OnMessage(CGUIMessage& message)
           path2 += m_item->GetProperty("app-media");
           path2 += "/";
           path2 += url.GetHostName();
-          CURL url2(path2);
+          CURI url2(path2);
           
           CGUIDialogPluginSettings* pDlgSettings = (CGUIDialogPluginSettings*)g_windowManager.GetWindow(WINDOW_DIALOG_PLUGIN_SETTINGS);
           if (pDlgSettings)
@@ -163,19 +165,20 @@ bool CGUIDialogBoxeeApplicationAction::OnMessage(CGUIMessage& message)
             pDlgSettings->ShowAndGetInput(url2);
           }
         }
+#ifdef HAS_LASTFM
         else if (url.GetProtocol() == "lastfm")
         {
           Close();
           CLastFmManager::ShowLastFMSettings();
         }
-        
+#endif
         return true;
       }
       else if (senderId == UPGRADE_BUTTON)
       {
-        CURL url(m_item->m_strPath);    
+        CURI url(m_item->m_strPath);    
         InstallOrUpgradeAppBG* job = new InstallOrUpgradeAppBG(url.GetHostName(), false, true);
-        if (!CUtil::RunInBG(job))
+        if (CUtil::RunInBG(job) != JOB_SUCCEEDED)
         {
           CGUIDialogOK2::ShowAndGetInput(52039, 52018);
         }

@@ -2,21 +2,53 @@ ARCH=@ARCH@
 
 .PHONY: compile
 
-INCLUDES=-I. -I../../ -I../../../ -I../../linux -I../../../guilib -I../../utils -I../dvdplayer -I..
+INCLUDES=-I. -I../../ -I../../../ -I../../linux -I../../../guilib -I../../utils -I../dvdplayer -I.. -I../../..
 ifneq (@USE_EXTERNAL_FFMPEG@,1)
-  INCLUDES+=-I../ffmpeg
+  INCLUDES+=-I../dvdplayer/Codecs -I../dvdplayer/Codecs/ffmpeg
 endif
 
-CFLAGS+=-DHAS_ALSA
+CXXFLAGS+= -D__STDC_CONSTANT_MACROS
 
-SRCS=AC3CDDACodec.cpp AC3Codec.cpp ADPCMCodec.cpp AdplugCodec.cpp AIFFcodec.cpp APEcodec.cpp AudioDecoder.cpp CDDAcodec.cpp CodecFactory.cpp VGMCodec.cpp FLACcodec.cpp GYMCodec.cpp ModuleCodec.cpp MP3codec.cpp NSFCodec.cpp OGGcodec.cpp ReplayGain.cpp SHNcodec.cpp SIDCodec.cpp TimidityCodec.cpp WAVcodec.cpp WAVPackcodec.cpp YMCodec.cpp DVDPlayerCodec.cpp ASAPCodec.cpp DTSCodec.cpp DTSCDDACodec.cpp PAPlayer.cpp OggCallback.cpp
+SRCS=AC3CDDACodec.cpp AC3Codec.cpp AdplugCodec.cpp AIFFcodec.cpp AudioDecoder.cpp CDDAcodec.cpp CodecFactory.cpp FLACcodec.cpp ModuleCodec.cpp MP3codec.cpp OGGcodec.cpp ReplayGain.cpp SHNcodec.cpp WAVcodec.cpp DVDPlayerCodec.cpp ASAPCodec.cpp DTSCodec.cpp DTSCDDACodec.cpp PAPlayer.cpp OggCallback.cpp BXAcodec.cpp
 
-ifneq ($(findstring osx,$(ARCH)), osx)
-  CXXFLAGS+=-DHAS_ALSA
+
+ifeq (@BUILD_PAP_APE@, 1)
+SRCS+=APEcodec.cpp 
 endif
 
-ifneq ($(ARCH), arm)
-  CXXFLAGS+=-DHAS_SPC_CODEC
+ifeq (@BUILD_PAP_WAVPACK@, 1)
+SRCS+=WAVPackcodec.cpp 
+endif
+
+ifeq (@BUILD_PAP_SID@, 1)
+SRCS+=SIDCodec.cpp 
+endif
+
+ifeq (@BUILD_PAP_NSF@, 1)
+SRCS+=NSFCodec.cpp 
+endif
+
+ifeq (@BUILD_PAP_VGMSTREAM@, 1)
+SRCS+=VGMCodec.cpp
+endif
+
+ifeq (@BUILD_PAP_YM@, 1)
+SRCS+=YMCodec.cpp 
+endif
+
+ifeq (@BUILD_PAP_TIMIDITY@, 1)
+SRCS+=TimidityCodec.cpp 
+endif
+
+ifeq (@BUILD_PAP_GYM@, 1)
+SRCS+=GYMCodec.cpp 
+endif
+
+ifeq (@BUILD_PAP_ADPCM@, 1)
+SRCS+=ADPCMCodec.cpp  
+endif
+
+ifeq (@BUILD_PAP_SPC@, 1)
   SRCS+=SPCCodec.cpp
 endif
 

@@ -1,3 +1,5 @@
+#ifdef USE_PYTHON_DLL
+
 #if (defined HAVE_CONFIG_H) && (!defined WIN32)
   #include "config.h"
 #endif
@@ -82,7 +84,7 @@
   FUNCTION(PyLong_AsLong)
   FUNCTION(PyLong_AsLongLong)
   FUNCTION(PyErr_Format)
-#if !defined(_LINUX) 
+#if !defined(_LINUX)
   FUNCTION(PyUnicodeUCS2_AsUnicode)
 #else
   FUNCTION(PyUnicodeUCS4_AsUnicode)
@@ -177,5 +179,7 @@
   
 #if defined(__linux__) && defined(__ELF__)
 .section .note.GNU-stack,"",%progbits
+#endif
+
 #endif
 

@@ -24,6 +24,7 @@
 #include "utils/Archive.h"
 #include "StringUtils.h"
 #include "utils/SingleLock.h"
+#include "utils/Variant.h"
 
 CGUIListItem::CGUIListItem(const CGUIListItem& item)
 {
@@ -223,7 +224,7 @@ const CGUIListItem& CGUIListItem::operator =(const CGUIListItem& item)
   return *this;
 }
 
-void CGUIListItem::Serialize(CArchive &ar)
+void CGUIListItem::Archive(CArchive &ar)
 {
   if (ar.IsStoring())
   {
@@ -290,6 +291,22 @@ void CGUIListItem::Serialize(CArchive &ar)
   }
 }
 
+void CGUIListItem::Serialize(CVariant &value)
+{
+  value["isFolder"] = m_bIsFolder;
+  value["strLabel"] = m_strLabel;
+  value["strLabel2"] = m_strLabel2;
+  value["sortLabel"] = CStdString(m_sortLabel);
+  value["strThumbnailImage"] = m_strThumbnailImage;
+  value["strIcon"] = m_strIcon;
+  value["selected"] = m_bSelected;
+
+  for (std::map<CStdString, CStdString, icompare>::const_iterator it = m_mapProperties.begin(); it != m_mapProperties.end(); it++)
+  {
+    value["properties"][it->first] = it->second;
+  }
+}
+
 void CGUIListItem::FreeIcons()
 {
   FreeMemory();
@@ -298,15 +315,17 @@ void CGUIListItem::FreeIcons()
   SetInvalid();
 }
 
-void CGUIListItem::FreeMemory()
+void CGUIListItem::FreeMemory(bool immediately)
 {
   if (m_layout)
   {
+    m_layout->FreeResources(immediately);
     delete m_layout;
     m_layout = NULL;
   }
   if (m_focusedLayout)
   {
+    m_focusedLayout->FreeResources(immediately);
     delete m_focusedLayout;
     m_focusedLayout = NULL;
   }
@@ -314,7 +333,7 @@ void CGUIListItem::FreeMemory()
 
 void CGUIListItem::SetLayout(CGUIListItemLayout *layout)
 {
-    delete m_layout;
+  delete m_layout;
   m_layout = layout;
 }
 
@@ -439,7 +458,16 @@ int CGUIListItem::GetPropertyInt(const CStdString &strKey) const
 
 unsigned long CGUIListItem::GetPropertyULong(const CStdString &strKey) const
 {
-  return strtoul (GetProperty(strKey).c_str(),NULL,0);
+  CStdString value = GetProperty(strKey);
+
+  if (!value.IsEmpty())
+  {
+    return strtoul (value.c_str(),NULL,0);
+  }
+  else
+  {
+    return 0;
+  }
 }
 
 double CGUIListItem::GetPropertyDouble(const CStdString &strKey) const

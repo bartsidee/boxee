@@ -3762,7 +3762,7 @@ void CVideoDatabase::MarkAsWatched(const CFileItem &item)
   // first grab the video's id
   CStdString path = item.m_strPath;
   
-  CLog::Log(LOGDEBUG, "%s - mark video as watched %s (watched)", __FUNCTION__, path.c_str());
+  CLog::Log(LOGDEBUG,"CVideoDatabase::MarkAsWatched - mark video as watched. [path=%s] (wchd)",path.c_str());
   
   if (item.IsVideoDb() && item.HasVideoInfoTag())
     path = item.GetVideoInfoTag()->m_strFileNameAndPath;
@@ -6608,7 +6608,7 @@ void CVideoDatabase::CleanDatabase(IVideoInfoScannerObserver* pObserver, const v
       }
 
       // delete all removable media + ftp/http streams
-      CURL url(fullPath);
+      CURI url(fullPath);
       if (CUtil::IsOnDVD(fullPath) ||
           CUtil::IsMemCard(fullPath) ||
           url.GetProtocol() == "http" ||
@@ -7661,5 +7661,20 @@ void CVideoDatabase::DeleteThumbForItem(const CStdString& strPath, bool bFolder,
   g_windowManager.SendThreadMessage(msg);
 }
 
+bool CVideoDatabase::UpdateSubtitleSettings(bool subtitleOn)
+{
+  try
+  {
+    if (NULL == m_pDB.get()) return false;
+    if (NULL == m_pDS.get()) return false;
+    m_pDS->exec(FormatSQL("UPDATE settings SET SubtitlesOn=%i where SubtitlesOn=%i",subtitleOn,!subtitleOn));
+    return true;
+  }
+  catch (...)
+  {
+    CLog::Log(LOGERROR,"CVideoDatabase::UpdateSubtitleSettings - FAILED to update [subtitleOn=%d]",subtitleOn);
+  }
 
+  return false;
+}
 

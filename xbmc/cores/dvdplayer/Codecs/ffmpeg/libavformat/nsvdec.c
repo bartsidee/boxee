@@ -201,16 +201,16 @@ static const AVCodecTag nsv_codec_video_tags[] = {
 */
     { CODEC_ID_MPEG4, MKTAG('X', 'V', 'I', 'D') }, /* cf sample xvid decoder from nsv_codec_sdk.zip */
     { CODEC_ID_RAWVIDEO, MKTAG('R', 'G', 'B', '3') },
-    { 0, 0 },
+    { CODEC_ID_NONE, 0 },
 };
 
 static const AVCodecTag nsv_codec_audio_tags[] = {
-    { CODEC_ID_MP3, MKTAG('M', 'P', '3', ' ') },
-    { CODEC_ID_AAC, MKTAG('A', 'A', 'C', ' ') },
+    { CODEC_ID_MP3,       MKTAG('M', 'P', '3', ' ') },
+    { CODEC_ID_AAC,       MKTAG('A', 'A', 'C', ' ') },
     { CODEC_ID_AAC,       MKTAG('A', 'A', 'C', 'P') },
     { CODEC_ID_SPEEX,     MKTAG('S', 'P', 'X', ' ') },
     { CODEC_ID_PCM_U16LE, MKTAG('P', 'C', 'M', ' ') },
-    { 0, 0 },
+    { CODEC_ID_NONE,      0 },
 };
 
 //static int nsv_load_index(AVFormatContext *s);
@@ -339,7 +339,7 @@ static int nsv_parse_NSVf_header(AVFormatContext *s, AVFormatParameters *ap)
                 break;
             *p++ = '\0';
             PRINT(("NSV NSVf INFO: %s='%s'\n", token, value));
-            av_metadata_set(&s->metadata, token, value);
+            av_metadata_set2(&s->metadata, token, value, 0);
         }
         av_free(strings);
     }
@@ -363,7 +363,7 @@ static int nsv_parse_NSVf_header(AVFormatContext *s, AVFormatParameters *ap)
             nsv->nsvs_timestamps = av_malloc((unsigned)table_entries_used*sizeof(uint32_t));
             for(i=0;i<table_entries_used;i++) {
                 nsv->nsvs_timestamps[i] = get_le32(pb);
-    }
+            }
         }
     }
 
@@ -456,7 +456,7 @@ static int nsv_parse_NSVs_header(AVFormatContext *s, AVFormatParameters *ap)
             if (!nst)
                 goto fail;
             st->priv_data = nst;
-            st->codec->codec_type = CODEC_TYPE_VIDEO;
+            st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
             st->codec->codec_tag = vtag;
             st->codec->codec_id = ff_codec_get_id(nsv_codec_video_tags, vtag);
             st->codec->width = vwidth;
@@ -474,7 +474,7 @@ static int nsv_parse_NSVs_header(AVFormatContext *s, AVFormatParameters *ap)
                 } else {
                     int64_t ts = av_rescale(i*nsv->duration/nsv->index_entries, framerate.num, 1000*framerate.den);
                     av_add_index_entry(st, nsv->nsvs_file_offset[i], ts, 0, 0, AVINDEX_KEYFRAME);
-        }
+                }
             }
         }
         if (atag != T_NONE) {
@@ -487,7 +487,7 @@ static int nsv_parse_NSVs_header(AVFormatContext *s, AVFormatParameters *ap)
             if (!nst)
                 goto fail;
             st->priv_data = nst;
-            st->codec->codec_type = CODEC_TYPE_AUDIO;
+            st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
             st->codec->codec_tag = atag;
             st->codec->codec_id = ff_codec_get_id(nsv_codec_audio_tags, atag);
 
@@ -620,7 +620,7 @@ null_chunk_retry:
         av_get_packet(pb, pkt, vsize);
         pkt->stream_index = st[NSV_ST_VIDEO]->index;//NSV_ST_VIDEO;
         pkt->dts = nst->frame_offset;
-        pkt->flags |= nsv->state == NSV_HAS_READ_NSVS ? PKT_FLAG_KEY : 0; /* keyframe only likely on a sync frame */
+        pkt->flags |= nsv->state == NSV_HAS_READ_NSVS ? AV_PKT_FLAG_KEY : 0; /* keyframe only likely on a sync frame */
 /*
         for (i = 0; i < MIN(8, vsize); i++)
             PRINT(("NSV video: [%d] = %02x\n", i, pkt->data[i]));
@@ -660,7 +660,7 @@ null_chunk_retry:
         }
         av_get_packet(pb, pkt, asize);
         pkt->stream_index = st[NSV_ST_AUDIO]->index;//NSV_ST_AUDIO;
-        pkt->flags |= nsv->state == NSV_HAS_READ_NSVS ? PKT_FLAG_KEY : 0; /* keyframe only likely on a sync frame */
+        pkt->flags |= nsv->state == NSV_HAS_READ_NSVS ? AV_PKT_FLAG_KEY : 0; /* keyframe only likely on a sync frame */
         if( nsv->state == NSV_HAS_READ_NSVS && st[NSV_ST_VIDEO] ) {
             /* on a nsvs frame we have new information on a/v sync */
             pkt->dts = (((NSVStream*)st[NSV_ST_VIDEO]->priv_data)->frame_offset-1);
@@ -713,7 +713,7 @@ static int nsv_read_seek(AVFormatContext *s, int stream_index, int64_t timestamp
 
     index = av_index_search_timestamp(st, timestamp, flags);
     if(index < 0)
-    return -1;
+        return -1;
 
     url_fseek(s->pb, st->index_entries[index].pos, SEEK_SET);
     nst->frame_offset = st->index_entries[index].timestamp;
@@ -728,6 +728,10 @@ static int nsv_read_close(AVFormatContext *s)
 
     av_freep(&nsv->nsvs_file_offset);
     av_freep(&nsv->nsvs_timestamps);
+    if (nsv->ahead[0].data)
+        av_free_packet(&nsv->ahead[0]);
+    if (nsv->ahead[1].data)
+        av_free_packet(&nsv->ahead[1]);
 
 #if 0
 
@@ -764,13 +768,13 @@ static int nsv_probe(AVProbeData *p)
             return AVPROBE_SCORE_MAX-20;
     }
     /* so we'll have more luck on extension... */
-    if (match_ext(p->filename, "nsv"))
+    if (av_match_ext(p->filename, "nsv"))
         return AVPROBE_SCORE_MAX/2;
     /* FIXME: add mime-type check */
     return 0;
 }
 
-AVInputFormat nsv_demuxer = {
+AVInputFormat ff_nsv_demuxer = {
     "nsv",
     NULL_IF_CONFIG_SMALL("Nullsoft Streaming Video"),
     sizeof(NSVContext),

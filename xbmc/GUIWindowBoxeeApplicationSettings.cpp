@@ -101,11 +101,11 @@ bool CGUIWindowBoxeeApplicationSettings::OnMessage(CGUIMessage& message)
         if (CGUIDialogYesNo2::ShowAndGetInput(52039, 52038, response))
         {
           CStdString message;
-          CURL url(m_listNewApps[iItem]->m_strPath);
+          CURI url(m_listNewApps[iItem]->m_strPath);
           if (url.GetProtocol() == "app")
           {
             InstallOrUpgradeAppBG* job = new InstallOrUpgradeAppBG(url.GetHostName(), true, false);
-            if (CUtil::RunInBG(job))
+            if (CUtil::RunInBG(job) == JOB_SUCCEEDED)
             {
               message = g_localizeStrings.Get(52016);
             }
@@ -133,7 +133,7 @@ bool CGUIWindowBoxeeApplicationSettings::OnMessage(CGUIMessage& message)
         {
           CBoxeeMediaSourceList sourceList;
           sourceList.deleteSource(m_listExistingFeeds[iItem]->GetLabel());    
-          g_application.m_guiDialogKaiToast.QueueNotification("", "", g_localizeStrings.Get(51039), 5000);            
+          g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_MINUS, "", g_localizeStrings.Get(51039), 5000, KAI_GREEN_COLOR, KAI_GREEN_COLOR);
         }
 
         RefreshListsBG();
@@ -253,7 +253,7 @@ void CGUIWindowBoxeeApplicationSettings::RefreshListsBG()
 }
 
 void CGUIWindowBoxeeApplicationSettings::RefreshLists(bool forceReload)
-{
+{    
   m_installedAppsDesc.clear();
   m_installedAppsDesc = (CAppManager::GetInstance().GetInstalledApps());
   m_availableAppsDesc.clear();
@@ -372,7 +372,7 @@ void CGUIWindowBoxeeApplicationSettings::CreateListExistingApps()
     
     if (CUtil::IsApp(source.path))
     {
-      CURL appUrl(source.path);
+      CURI appUrl(source.path);
       CStdString id = appUrl.GetHostName();
       
       CAppDescriptor::AppDescriptorsMap& availableAppsDesc = m_availableAppsDesc;
@@ -454,7 +454,7 @@ void CGUIWindowBoxeeApplicationSettings::CreateListRepositories()
   CAppManager::GetInstance().GetRepositories().Load();
   const std::vector<CAppRepository> repositories = CAppManager::GetInstance().GetRepositories().Get();
   for (size_t i = 0; i < repositories.size(); i++)
-  {
+  {    
     const CAppRepository& repository = repositories[i];
     
     // Create new share FileItem

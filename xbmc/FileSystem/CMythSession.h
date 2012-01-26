@@ -20,6 +20,10 @@
  *
  */
 
+#include "system.h"
+
+#ifdef HAS_FILESYSTEM_MYTH
+
 #include "utils/CriticalSection.h"
 #include "utils/Thread.h"
 
@@ -35,7 +39,7 @@ typedef struct cmyth_timestamp *cmyth_timestamp_t;
 class DllLibCMyth;
 class CDateTime;
 class CFileItem;
-class CURL;
+class CURI;
 
 namespace XFILE
 {
@@ -44,7 +48,7 @@ class CCMythSession
   : private CThread
 {
 public:
-  static CCMythSession* AquireSession(const CURL& url);
+  static CCMythSession* AquireSession(const CURI& url);
   static void           ReleaseSession(CCMythSession*);
   static void           CheckIdle();
 
@@ -65,12 +69,12 @@ public:
   CDateTime        GetValue(cmyth_timestamp_t t);
   CStdString       GetValue(char* str);
 private:
-  CCMythSession(const CURL& url);
+  CCMythSession(const CURI& url);
   ~CCMythSession();
 
   virtual void Process();
 
-  bool             CanSupport(const CURL& url);
+  bool             CanSupport(const CURI& url);
   void             Disconnect();
 
   IEventListener*  m_listener;
@@ -90,3 +94,5 @@ private:
 };
 
 }
+
+#endif

@@ -93,8 +93,8 @@ CGUIViewStateWindowVideoFiles::CGUIViewStateWindowVideoFiles(const CFileItemList
 
 void CGUIViewStateWindowVideoFiles::SaveViewState()
 {
-  SaveViewToDb(m_items.m_strPath, WINDOW_VIDEO_FILES, &g_stSettings.m_viewStateVideoFiles);
-}
+    SaveViewToDb(m_items.m_strPath, WINDOW_VIDEO_FILES, &g_stSettings.m_viewStateVideoFiles);
+  }
 
 VECSOURCES& CGUIViewStateWindowVideoFiles::GetSources()
 {
@@ -118,7 +118,7 @@ VECSOURCES& CGUIViewStateWindowVideoFiles::GetSources()
 
 CGUIViewStateWindowVideoBoxeeDb::CGUIViewStateWindowVideoBoxeeDb(const CFileItemList& items) : CGUIViewStateWindowVideo(items)
 {
-  const CURL& url=items.GetAsUrl();
+  const CURI& url = CURI(items.m_strPath);
   
     if (items.IsVirtualDirectoryRoot())
     {

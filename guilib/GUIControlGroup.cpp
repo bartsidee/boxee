@@ -32,6 +32,7 @@ CGUIControlGroup::CGUIControlGroup()
   m_renderTime = 0;
   m_renderFocusedLast = false;
   ControlType = GUICONTROL_GROUP;
+  m_bClipChildren = true;
 }
 
 CGUIControlGroup::CGUIControlGroup(int parentID, int controlID, float posX, float posY, float width, float height)
@@ -44,6 +45,7 @@ CGUIControlGroup::CGUIControlGroup(int parentID, int controlID, float posX, floa
   m_renderFocusedLast = false;
   m_cropping = false;
   ControlType = GUICONTROL_GROUP;
+  m_bClipChildren = true;
 }
 
 CGUIControlGroup::CGUIControlGroup(const CGUIControlGroup &from)
@@ -62,6 +64,7 @@ CGUIControlGroup::CGUIControlGroup(const CGUIControlGroup &from)
   m_renderTime = 0;
   m_cropping = from.m_cropping;
   ControlType = GUICONTROL_GROUP;
+  m_bClipChildren = true;
 }
 
 CGUIControlGroup::~CGUIControlGroup(void)
@@ -80,13 +83,13 @@ void CGUIControlGroup::AllocResources()
   }
 }
 
-void CGUIControlGroup::FreeResources()
+void CGUIControlGroup::FreeResources(bool immediately)
 {
-  CGUIControl::FreeResources();
+  CGUIControl::FreeResources(immediately);
   for (iControls it = m_children.begin(); it != m_children.end(); ++it)
   {
     CGUIControl *control = *it;
-    control->FreeResources();
+    control->FreeResources(immediately);
   }
 }
 
@@ -102,7 +105,7 @@ void CGUIControlGroup::DynamicResourceAlloc(bool bOnOff)
 void CGUIControlGroup::Render()
 {
   // set the origin, and turn on clipping as applicable
-  g_graphicsContext.SetOrigin(m_posX, m_posY);
+  g_graphicsContext.PushTransform(TransformMatrix::CreateTranslation(m_posX, m_posY));
   bool cropping = (m_cropping && g_graphicsContext.SetClipRegion(0, 0, m_width, m_height));
 
   CGUIControl *focusedControl = NULL;
@@ -123,7 +126,7 @@ void CGUIControlGroup::Render()
   // turn off clipping, and restore the origin
   if (cropping)
     g_graphicsContext.RestoreClipRegion();
-  g_graphicsContext.RestoreOrigin();
+  g_graphicsContext.PopTransform();
 }
 
 bool CGUIControlGroup::OnAction(const CAction &action)
@@ -604,7 +607,7 @@ bool CGUIControlGroup::RemoveControl(const CGUIControl *control)
   return false;
 }
 
-void CGUIControlGroup::ClearAll()
+void CGUIControlGroup::ClearAll(bool bDelete)
 {
   // first remove from the lookup table
   if (m_parentControl)
@@ -613,11 +616,15 @@ void CGUIControlGroup::ClearAll()
       ((CGUIControlGroup *)m_parentControl)->RemoveLookup(*it);
   }
   // and delete all our children
-  for (iControls it = m_children.begin(); it != m_children.end(); it++)
+  if (bDelete)
   {
-    CGUIControl *control = *it;
-    delete control;
+    for (iControls it = m_children.begin(); it != m_children.end(); it++)
+    {
+      CGUIControl *control = *it;
+      delete control;
+    }
   }
+
   m_children.clear();
   m_lookup.clear();
 }
@@ -644,10 +651,22 @@ void CGUIControlGroup::DumpTextureUse()
 {
   for (iControls it = m_children.begin(); it != m_children.end(); ++it)
     (*it)->DumpTextureUse();
-  }
+}
 #endif
 
 void CGUIControlGroup::GetControls(std::vector<CGUIControl *> &controls) const
 {
   controls = m_children;
+}
+
+void CGUIControlGroup::GetControlsByType(CGUIControl::GUICONTROLTYPES type, std::vector<CGUIControl *> &controls) const
+{
+  for (ciControls it = m_children.begin();it != m_children.end(); ++it)
+  {
+    if ((*it)->GetControlType() == type)
+      controls.push_back(*it);
+
+    if ((*it)->IsGroup())
+      ((CGUIControlGroup *)(*it))->GetControlsByType(type, controls);
+  }
 }

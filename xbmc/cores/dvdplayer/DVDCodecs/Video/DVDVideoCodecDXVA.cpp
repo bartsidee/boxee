@@ -47,7 +47,7 @@ extern "C"
 #include <math.h>
 #define RINT lrint
 
-#include "cores/VideoRenderers/RenderManager.h"
+#include "cores/VideoRenderers/RenderManager.h" 
 
 typedef HRESULT (__stdcall *PFNDXVA2CREATEDEVICEMANAGER)(UINT* pResetToken, IDirect3DDeviceManager9** ppDeviceManager);
 
@@ -187,7 +187,7 @@ bool CDVDVideoCodecDXVA::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options)
   // register into the main device so we can free resources when the device is reset
   g_Windowing.Register(this);
 
-  if (!m_dllAvUtil.Load() || !m_dllAvCodec.Load() ) return false;
+  if (!m_dllAvUtil.Load() || !m_dllAvCore.Load() || !m_dllAvCodec.Load() ) return false;
 
   m_dllAvCodec.avcodec_register_all();
   
@@ -215,7 +215,7 @@ bool CDVDVideoCodecDXVA::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options)
   m_pCodecContext->error_recognition		= FF_ER_CAREFUL;
   m_pCodecContext->idct_algo				= FF_IDCT_AUTO;
   m_pCodecContext->skip_loop_filter		= (AVDiscard)AVDISCARD_DEFAULT;
-  m_pCodecContext->postgain				= 1.0f;
+  //m_pCodecContext->postgain				= 1.0f;
 
   m_pCodecContext->opaque					= this;
   AllocExtraData(hints.extradata, hints.extrasize);
@@ -320,6 +320,7 @@ void CDVDVideoCodecDXVA::Dispose()
   }
   
   m_dllAvCodec.Unload();
+  m_dllAvCore.Unload();
   m_dllAvUtil.Unload();
 
   ReleaseResources();
@@ -362,7 +363,7 @@ static double pts_itod(int64_t pts)
   return u.pts_d;
 }
 
-int CDVDVideoCodecDXVA::Decode(BYTE* pData, int iSize, double pts)
+int CDVDVideoCodecDXVA::Decode(BYTE* pData, int iSize, double pts, double dts)
 {
   int iGotPicture = 0, len = 0, result = 0;
 
@@ -400,7 +401,7 @@ int CDVDVideoCodecDXVA::Decode(BYTE* pData, int iSize, double pts)
     rtStop = rtStart + m_rtAvrTimePerFrame;
   
   m_pCodecContext->reordered_opaque  = rtStart;
-  m_pCodecContext->reordered_opaque2 = rtStop;
+  //m_pCodecContext->reordered_opaque2 = rtStop;
 
   if (m_pCodecContext->has_b_frames)
   {
@@ -818,7 +819,7 @@ void CDVDVideoCodecDXVA::AllocExtraData(void* ExtraData, int ExtraDataSize)
     jj += 2 + ppslen;
   }
 
-  m_pCodecContext->nal_length_size = (CodecPrivate[4] & 3) + 1;
+  //m_pCodecContext->nal_length_size = (CodecPrivate[4] & 3) + 1;
 
   int size = sh.size();
   if(size == 0)
@@ -1023,18 +1024,18 @@ void CDVDVideoCodecDXVA::AllocateRenderSurfaces()
 
   // Allocate the surfaces.
   D3DFORMAT dwFormat = m_VideoDesc.Format;
-  hr = m_pDecoderService->CreateSurface(
-    widthRound,
-    heightRound,
-    m_nSurfaceArrayCount - 1,
-    (D3DFORMAT)dwFormat,
-    D3DPOOL_DEFAULT,
-    0,
-    DXVA2_VideoDecoderRenderTarget,
-    m_ppRTSurfaceArray,
-    NULL
-    );
-}
+    hr = m_pDecoderService->CreateSurface(
+      widthRound,
+      heightRound,
+      m_nSurfaceArrayCount - 1,
+      (D3DFORMAT)dwFormat,
+      D3DPOOL_DEFAULT,
+      0,
+      DXVA2_VideoDecoderRenderTarget,
+      m_ppRTSurfaceArray,
+      NULL
+      );
+  }
 
 void CDVDVideoCodecDXVA::DisableDecoderPostProcessing(IDirectXVideoDecoder* pDirectXVideoDec)
 {
@@ -1115,4 +1116,4 @@ void CDVDVideoCodecDXVA::OnResetDevice()
 }
 
 
-#endif // DX
+#endif // HAS_DX

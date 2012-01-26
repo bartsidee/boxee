@@ -63,6 +63,7 @@ public:
           void        Stop();
 private:
           bool        LoadWindowSound(TiXmlNode* pWindowNode, const CStdString& strIdentifier, CStdString& strFile);
+          bool        m_bInitialized;
 
   typedef std::map<int, CStdString> actionSoundMap;
   typedef std::map<int, CWindowSounds> windowSoundMap;

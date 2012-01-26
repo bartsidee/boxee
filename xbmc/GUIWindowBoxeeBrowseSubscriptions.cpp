@@ -26,16 +26,16 @@ CGUIWindowBoxeeBrowseSubscriptions::~CGUIWindowBoxeeBrowseSubscriptions()
 
 }
 
-CStdString CGUIWindowBoxeeBrowseSubscriptions::CreatePath()
-{
-  CStdString strPath;
-
-  strPath = "boxee://tvshows/myshows";
-
-  CLog::Log(LOGERROR,"CGUIWindowBoxeeBrowseTvShows::CreatePath, created path = %s (browse)", strPath.c_str());
-  return strPath;
-
-}
+//CStdString CGUIWindowBoxeeBrowseSubscriptions::CreatePath()
+//{
+//  CStdString strPath;
+//
+//  strPath = "boxee://tvshows/myshows";
+//
+//  CLog::Log(LOGERROR,"CGUIWindowBoxeeBrowseTvShows::CreatePath, created path = %s (browse)", strPath.c_str());
+//  return strPath;
+//
+//}
 
 bool CGUIWindowBoxeeBrowseSubscriptions::OnClick(int iItem)
 {
@@ -60,7 +60,7 @@ bool CGUIWindowBoxeeBrowseSubscriptions::OnClick(int iItem)
       if (CUtil::HasSlashAtEnd(strBoxeePath))
         CUtil::RemoveSlashAtEnd(strBoxeePath);
 
-      CURL url(strBoxeePath);
+      CURI url(strBoxeePath);
 
       strPath = "boxee://tvshows/episodes?local=true&seriesId=";
       strPath += url.GetFileName();

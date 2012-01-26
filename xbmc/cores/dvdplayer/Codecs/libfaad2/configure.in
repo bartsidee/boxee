@@ -9,16 +9,17 @@ dnl - mpeg4ip plugin (requires mpeg4ip's libmp4v2 to be installed)
 
 AC_INIT
 AC_CONFIG_AUX_DIR(.)
-AM_INIT_AUTOMAKE(faad2, 2.6.0cvs)
+AM_INIT_AUTOMAKE(faad2, 2.7.0)
 
 AC_PROG_LIBTOOL
 AC_SUBST(LIBTOOL_DEPS)
 
 dnl Checks for programs.
 AC_PROG_CC
+AM_PROG_CC_C_O
 AC_PROG_CPP
 dnl disable for mpeg4ip plugin
-dnl AC_PROG_CXX
+AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET

@@ -24,7 +24,7 @@
 #include "system.h"
 #include "utils/log.h"
 #include "WindowingFactory.h"
-
+#include "HalServices.h"
 #include <assert.h>
 #include <string>
 
@@ -253,6 +253,8 @@ bool DPMSSupport::PlatformSpecificEnablePowerSaving(PowerSavingMode mode)
     // Set display to low power
     status = (IORegistryEntrySetCFProperty(r, CFSTR("IORequestIdle"), kCFBooleanTrue) == 0);
     break;
+  default:
+    status = false;
   }
   return status;
 }
@@ -268,6 +270,24 @@ bool DPMSSupport::PlatformSpecificDisablePowerSaving()
 
   // Turn display on
   return (IORegistryEntrySetCFProperty(r, CFSTR("IORequestIdle"), kCFBooleanFalse) == 0);
+}
+
+#elif defined(HAS_EMBEDDED)
+void DPMSSupport::PlatformSpecificInit()
+{
+  m_supportedModes.push_back(OFF);
+}
+
+bool DPMSSupport::PlatformSpecificEnablePowerSaving(PowerSavingMode mode)
+{
+  CHalServicesFactory::GetInstance().StandBy();
+  return true;
+}
+
+bool DPMSSupport::PlatformSpecificDisablePowerSaving()
+{
+  CHalServicesFactory::GetInstance().Resume();
+  return true;
 }
 
 #else

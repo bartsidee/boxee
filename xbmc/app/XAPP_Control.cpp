@@ -4,6 +4,7 @@
 #include "GraphicContext.h"
 #include "GUIWindowManager.h"
 #include "Application.h"
+#include "GUIWindowApp.h"
 
 namespace XAPP
 {
@@ -28,18 +29,6 @@ bool Control::HasFocus()
     return true;
 
   return false;
-
-//  CGUIWindow* pWindow = g_windowManager.GetWindow(m_windowId);
-//  if (pWindow)
-//  {
-//    CGUIControl *control = (CGUIControl *)pWindow->GetControl(m_controlId);
-//    if (control)
-//    {
-//      return control->HasFocus();
-//    }
-//  }
-//
-//  return false;
 
 }
 
@@ -66,18 +55,6 @@ bool Control::IsVisible()
     return true;
 
   return false;
-
-//  CGUIWindow* pWindow = g_windowManager.GetWindow(m_windowId);
-//  if (pWindow)
-//  {
-//    CGUIControl *control = (CGUIControl *)pWindow->GetControl(m_controlId);
-//    if (control)
-//    {
-//      return control->IsVisible();
-//    }
-//  }
-//
-//  return false;
 }
 
 void Control::SetEnabled(bool enabled)
@@ -103,19 +80,44 @@ bool Control::IsEnabled()
     return true;
 
   return false;
+}
 
+/**
+ * Get window id
+ */
+int Control::GetWindowId()
+{
+  return m_windowId;
+}
 
-//  CGUIWindow* pWindow = g_windowManager.GetWindow(m_windowId);
-//  if (pWindow)
-//  {
-//    CGUIControl *control = (CGUIControl *)pWindow->GetControl(m_controlId);
-//    if (control)
-//    {
-//      return !control->IsDisabled();
-//    }
-//  }
-//
-//  return false;
+/**
+ * Get control id
+ */
+int Control::GetControlId()
+{
+  return m_controlId;
+}
+
+void Control::AddActionListener(ActionListener* listener)
+{
+  CGUIWindow* window = g_windowManager.GetWindow(m_windowId);
+  if (!window)
+    return;
+
+  ((CGUIWindowApp*) window)->AddActionListener(listener);
+}
+
+void Control::RemoveActionListener(ActionListener* listener)
+{
+  CGUIWindow* window = g_windowManager.GetWindow(m_windowId);
+  if (!window)
+    return;
+
+  ((CGUIWindowApp*) window)->RemoveActionListener(listener);
+}
+
+ActionListener::~ActionListener()
+{
 }
 
 }

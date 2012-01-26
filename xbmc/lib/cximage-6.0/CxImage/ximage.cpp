@@ -5,6 +5,12 @@
 
 #include "ximage.h"
 
+#include <squish.h>
+
+#ifdef WIN32
+typedef unsigned int uint32_t;
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // CxImage 
 ////////////////////////////////////////////////////////////////////////////////
@@ -534,5 +540,195 @@ void CxImage::FreeMemory(void* memblock)
 	if (memblock)
 		free(memblock);
 }
+
+  enum {
+    ddsd_caps        = 0x00000001,
+    ddsd_height      = 0x00000002,
+    ddsd_width       = 0x00000004,
+    ddsd_pitch       = 0x00000008,
+    ddsd_pixelformat = 0x00001000,
+    ddsd_mipmapcount = 0x00020000,
+    ddsd_linearsize  = 0x00080000,
+    ddsd_depth       = 0x00800000
+  };
+
+  enum {
+    ddpf_alphapixels = 0x00000001,
+    ddpf_fourcc      = 0x00000004,
+    ddpf_rgb         = 0x00000040
+  };
+
+  enum {
+    ddscaps_complex = 0x00000008,
+    ddscaps_texture = 0x00001000,
+    ddscaps_mipmap  = 0x00400000
+  };
+
+  #pragma pack(push, 2)
+  typedef struct
+  {
+    uint32_t size;
+    uint32_t flags;
+    uint32_t fourcc;
+    uint32_t rgbBitCount;
+    uint32_t rBitMask;
+    uint32_t gBitMask;
+    uint32_t bBitMask;
+    uint32_t aBitMask;
+  } ddpixelformat;
+
+  typedef struct
+  {
+    uint32_t flags1;
+    uint32_t flags2;
+    uint32_t reserved[2];
+  } ddcaps2;
+
+  typedef struct
+  {
+    uint32_t      size;
+    uint32_t      flags;
+    uint32_t      height;
+    uint32_t      width;
+    uint32_t      linearSize;
+    uint32_t      depth;
+    uint32_t      mipmapcount;
+    uint32_t      reserved[11];
+    ddpixelformat pixelFormat;
+    ddcaps2       caps;
+    uint32_t      reserved2;
+  } ddsurfacedesc2;
+  #pragma pack(pop)
+
+unsigned int CxImage::DDS_GetDXT5StorageRequirements() const
+{
+	return ((head.biWidth + 3) / 4) * ((head.biHeight + 3) / 4) * 16;
+}
+
+bool CxImage::DDS_SaveAsDXT5(const char *fileName)
+{
+	bool bReturnValue = false;
+#ifdef HAS_EMBEDDED
+	if (GetBpp() != 24)
+	{
+		return false;
+	}
+
+	FILE * pFile = NULL;
+
+	// Convert image to RGBA
+
+	unsigned char *rgba = NULL;
+	BYTE *pCurrentRGBA;
+
+	unsigned char *data = NULL;
+
+	rgba = new unsigned char[head.biHeight * head.biWidth * 4];
+
+	if (!rgba) 
+	{
+		strcpy(info.szLastError,"CxImage::DDS_SaveAsDXT5: Can't allocate rgba buffer for RGBA convertion");
+		goto exit;
+	}
+
+	pCurrentRGBA = rgba;
+
+	for (int y = head.biHeight - 1 ; y >= 0; --y)
+		for (int x = 0; x < head.biWidth * 3; x+= 3) 
+		{
+			BYTE* pCurrentLine = GetBits(y);
+
+			if (!pCurrentLine) 
+			{
+				sprintf(info.szLastError, "CxImage::DDS_SaveAsDXT5: Can't get bits from line %d", y);
+				goto exit;
+			}
+
+			*pCurrentRGBA = pCurrentLine[x];
+			*(pCurrentRGBA + 1) = pCurrentLine[x + 1];
+			*(pCurrentRGBA + 2) = pCurrentLine[x + 2]; 
+			*(pCurrentRGBA + 3) = 0xff;
+
+			pCurrentRGBA += 4;
+		}
+
+	// Create DXT5 header
+
+	ddsurfacedesc2 desc;
+
+	memset(&desc, 0, sizeof(desc));
+	desc.size = sizeof(desc);
+	desc.flags = ddsd_caps | ddsd_pixelformat | ddsd_width | ddsd_height | ddsd_linearsize;
+	desc.height = head.biHeight;
+	desc.width = head.biWidth;
+	desc.linearSize = DDS_GetDXT5StorageRequirements();
+	desc.pixelFormat.size = sizeof(desc.pixelFormat);
+	desc.pixelFormat.flags = ddpf_fourcc;
+	memcpy(&desc.pixelFormat.fourcc, "DXT5", 4);
+	desc.caps.flags1 = ddscaps_texture;
+
+	// Allocate storage
+
+	data = new unsigned char[desc.linearSize];
+
+	if (!data) 
+	{
+		strcpy(info.szLastError,"CxImage::DDS_SaveAsDXT5: Can't allocate dest buffer");
+		goto exit;
+	}
+
+	// Convert to DXT5
+
+	squish::CompressImage(rgba, head.biWidth, head.biHeight, data, squish::kDxt5 | squish::kSourceBGRA);
+	
+	// Save file
+
+	pFile = fopen(fileName, "w");
+	if (pFile == NULL)
+	{
+		strcpy(info.szLastError,"CxImage::DDS_SaveAsDXT5: Can't open file");
+		goto exit;
+	}
+	
+	if (fwrite("DDS ", 1, 4, pFile) != 4) 
+	{
+		strcpy(info.szLastError,"CxImage::DDS_SaveAsDXT5: Can't write DDS signature");
+		goto exit;
+	}
+
+	if (fwrite(&desc, 1, sizeof(desc), pFile) != sizeof(desc)) 
+	{
+		strcpy(info.szLastError,"CxImage::DDS_SaveAsDXT5: Can't write DDS header");
+		goto exit;
+	}
+
+	if (fwrite(data, 1, desc.linearSize, pFile) != desc.linearSize)
+	{
+		strcpy(info.szLastError,"CxImage::DDS_SaveAsDXT5: Can't write or partially write of the data");
+		goto exit;
+	}
+
+	bReturnValue = true;
+
+exit:
+	if (pFile) 
+	{
+		fclose(pFile);
+	}
+
+	if (data) 
+	{
+		delete [] data;
+	}
+
+	if (rgba) 
+	{
+		delete [] rgba;
+	}
+
+#endif
+	return bReturnValue;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //EOF

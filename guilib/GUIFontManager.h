@@ -1,6 +1,6 @@
 /*!
 \file GUIFontManager.h
-\brief
+\brief 
 */
 
 #ifndef GUILIB_FONTMANAGER_H
@@ -49,7 +49,7 @@ struct OrigFontInfo
 
 /*!
  \ingroup textures
- \brief
+ \brief 
  */
 class GUIFontManager : public IMsgTargetCallback
 {
@@ -69,7 +69,7 @@ public:
   bool IsFontSetUnicode() { return m_fontsetUnicode; }
   bool IsFontSetUnicode(const CStdString& strFontSet);
   bool GetFirstFontSetUnicode(CStdString& strFontSet);
-
+  
 protected:
   void ReloadTTFFonts();
   void LoadFonts(const TiXmlNode* fontNode);
@@ -86,7 +86,7 @@ protected:
 
 /*!
  \ingroup textures
- \brief
+ \brief 
  */
 extern GUIFontManager g_fontManager;
 #endif

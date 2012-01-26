@@ -156,7 +156,7 @@ bool CPluginSettings::Load(const CStdString &strSettings)
   return true;
 }
 
-bool CPluginSettings::Load(const CURL& url)
+bool CPluginSettings::Load(const CURI& url)
 {
   m_url = url;  
 
@@ -236,7 +236,7 @@ TiXmlElement* CBasicSettings::GetPluginRoot()
 
 bool CPluginSettings::SettingsExist(const CStdString& strPath)
 {
-  CURL url(strPath);
+  CURI url(strPath);
   CStdString pluginFileName = "special://home/plugins/";
 
   // Create our final path

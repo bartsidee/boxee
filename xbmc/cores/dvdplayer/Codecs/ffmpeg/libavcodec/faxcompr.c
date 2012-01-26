@@ -21,7 +21,7 @@
 
 /**
  * CCITT Fax Group 3 and 4 decompression
- * @file libavcodec/faxcompr.c
+ * @file
  * @author Konstantin Shishkov
  */
 #include "avcodec.h"
@@ -269,7 +269,7 @@ static int find_group3_syncmarker(GetBitContext *gb, int srcsize)
 }
 
 int ff_ccitt_unpack(AVCodecContext *avctx,
-                       const uint8_t *src, int srcsize,
+                    const uint8_t *src, int srcsize,
                     uint8_t *dst, int height, int stride,
                     enum TiffCompr compr, int opts)
 {

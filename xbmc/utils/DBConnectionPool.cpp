@@ -16,16 +16,25 @@ CDBConnectionPool::CDBConnectionPool()
 
 CDBConnectionPool::~CDBConnectionPool()
 {
+  Cleanup();
+}
+
+void CDBConnectionPool::Cleanup()
+{
   SqlitePoolMngrMap::iterator iter = begin();
   SqlitePoolMngrMap::iterator endIter = end();
 
   while( iter != endIter )
   {
+    if (iter->second)
+    {
+      delete iter->second;
+    }
+
     erase( iter++ );
   }
   clear();
 }
-
 
 CSqliteConnectionPoolObject* CDBConnectionPool::GetSqliteConnectionPoolObject( const CStdString& strDatabaseFile )
 {

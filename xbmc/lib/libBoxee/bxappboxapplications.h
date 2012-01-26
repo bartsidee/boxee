@@ -11,7 +11,7 @@
 #ifndef BXAPPBOXAPPLICATIONS_H
 #define BXAPPBOXAPPLICATIONS_H
 
-#include <vector>
+#include <set>
 #include "bxxmldocument.h"
 
 namespace BOXEE
@@ -23,13 +23,20 @@ public:
   BXAppBoxApplications();
   virtual ~BXAppBoxApplications();
 
+  virtual bool Parse();
+
   void Clear();
 
   bool IsLoaded();
   void SetLoaded(bool bLoaded=true);
 
+  bool IsApplicationIdExist(std::string appId);
+
+  int GetNumOfApplication() const;
+
 protected:
   
+  std::set<std::string> m_appBoxApplicationIdsMap;
   bool	m_bLoaded;
 };
 

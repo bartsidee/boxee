@@ -21,10 +21,14 @@
  *
  */
 
+#include "system.h"
+
+#ifdef HAS_FILESYSTEM_TUXBOX
+
 #include "StdString.h"
 #include "Thread.h"
 
-class CURL;
+class CURI;
 class TiXmlElement;
 class CFileItem;
 class CFileItemList;
@@ -147,17 +151,17 @@ class CTuxBoxUtil
     virtual ~CTuxBoxUtil(void);
     
     bool GetZapUrl(const CStdString& strPath, CFileItem &items);
-    bool ParseBouquets(TiXmlElement *root, CFileItemList &items, CURL &url, CStdString strFilter, CStdString strChild);
-    bool ParseBouquetsEnigma2(TiXmlElement *root, CFileItemList &items, CURL &url, CStdString& strFilter, CStdString& strChild);
-    bool ParseChannels(TiXmlElement *root, CFileItemList &items, CURL &url, CStdString strFilter, CStdString strChild);
-    bool ParseChannelsEnigma2(TiXmlElement *root, CFileItemList &items, CURL &url, CStdString& strFilter, CStdString& strChild);
-    bool ZapToUrl(CURL url, CStdString strOptions, int ipoint);
+    bool ParseBouquets(TiXmlElement *root, CFileItemList &items, CURI &url, CStdString strFilter, CStdString strChild);
+    bool ParseBouquetsEnigma2(TiXmlElement *root, CFileItemList &items, CURI &url, CStdString& strFilter, CStdString& strChild);
+    bool ParseChannels(TiXmlElement *root, CFileItemList &items, CURI &url, CStdString strFilter, CStdString strChild);
+    bool ParseChannelsEnigma2(TiXmlElement *root, CFileItemList &items, CURI &url, CStdString& strFilter, CStdString& strChild);
+    bool ZapToUrl(CURI url, CStdString strOptions, int ipoint);
     bool StreamInformations(TiXmlElement *pRootElement);
     bool CurrentServiceData(TiXmlElement *pRootElement);
     bool BoxStatus(TiXmlElement *pRootElement);
     bool BoxInfo(TiXmlElement *pRootElement);
     bool ServiceEPG(TiXmlElement *pRootElement);
-    bool GetHttpXML(CURL url,CStdString strRequestType);
+    bool GetHttpXML(CURI url,CStdString strRequestType);
     bool GetAudioChannels(CStdString& strAudioChannelName, CStdString& strAudioChannelPid);
     bool GetVideoSubChannels(CStdString& strVideoSubChannelName, CStdString& strVideoSubChannelPid);
     bool GetVideoChannels(TiXmlElement *pRootElement);
@@ -184,3 +188,5 @@ public:
   virtual void Process();
 };
 extern CTuxBoxService g_tuxboxService;
+
+#endif

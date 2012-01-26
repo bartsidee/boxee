@@ -47,10 +47,13 @@
 static int do_obj(SSL_CTX *ssl_ctx, int obj_type, 
                     SSLObjLoader *ssl_obj, const char *password);
 #ifdef CONFIG_SSL_HAS_PEM
+#if 0 /* GBG */
 static int ssl_obj_PEM_load(SSL_CTX *ssl_ctx, int obj_type, 
                         SSLObjLoader *ssl_obj, const char *password);
+#endif /* GBG */
 #endif
 
+#if 0 /* GBG */
 /*
  * Load a file into memory that is in binary DER (or ascii PEM) format.
  */
@@ -97,6 +100,7 @@ error:
     return SSL_ERROR_NOT_SUPPORTED;
 #endif /* CONFIG_SSL_SKELETON_MODE */
 }
+#endif
 
 /*
  * Transfer binary data into the object loader.
@@ -150,7 +154,7 @@ static int do_obj(SSL_CTX *ssl_ctx, int obj_type,
             break;
 #endif
         default:
-            printf(unsupported_str);
+            /*printf("%s", unsupported_str);*/
             ret = SSL_ERROR_NOT_SUPPORTED;
             break;
     }
@@ -201,6 +205,7 @@ static const char * const aes_str[2] =
     "DEK-Info: AES-256-CBC," 
 };
 
+#if 0 /* GBG */
 /**
  * Take a base64 blob of data and decrypt it (using AES) into its 
  * proper ASN.1 form.
@@ -261,7 +266,7 @@ static int pem_decrypt(const char *where, const char *end,
 
     /* work out the key */
     MD5_Init(&md5_ctx);
-    MD5_Update(&md5_ctx, (const uint8_t *)password, strlen(password));
+    MD5_Update(&md5_ctx, (const uint8_t *)password, (int)strlen(password));
     MD5_Update(&md5_ctx, iv, SALT_SIZE);
     MD5_Final(key, &md5_ctx);
 
@@ -269,7 +274,7 @@ static int pem_decrypt(const char *where, const char *end,
     {
         MD5_Init(&md5_ctx);
         MD5_Update(&md5_ctx, key, MD5_SIZE);
-        MD5_Update(&md5_ctx, (const uint8_t *)password, strlen(password));
+        MD5_Update(&md5_ctx, (const uint8_t *)password, (int)strlen(password));
         MD5_Update(&md5_ctx, iv, SALT_SIZE);
         MD5_Final(&key[MD5_SIZE], &md5_ctx);
     }
@@ -345,7 +350,7 @@ static int new_pem_obj(SSL_CTX *ssl_ctx, int is_cacert, char *where,
                 goto error;
 
             end += strlen(ends[i]);
-            remain -= strlen(ends[i]);
+            remain -= (int)strlen(ends[i]);
             while (remain > 0 && (*end == '\r' || *end == '\n'))
             {
                 end++;
@@ -384,8 +389,10 @@ static int ssl_obj_PEM_load(SSL_CTX *ssl_ctx, int obj_type,
     return new_pem_obj(ssl_ctx, obj_type == SSL_OBJ_X509_CACERT,
                                 start, ssl_obj->len, password);
 }
+#endif /* GBG */
 #endif /* CONFIG_SSL_HAS_PEM */
 
+#if 0 /* GBG */
 /**
  * Load the key/certificates in memory depending on compile-time and user
  * options. 
@@ -463,3 +470,4 @@ error:
     return ret;
 
 }
+#endif

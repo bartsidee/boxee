@@ -38,14 +38,14 @@ FOR /F "tokens=*" %%S IN ('dir /B /AD "%PLUGIN_PATH%\%%a"') DO (
 	  CD "%CUR_PATH%"
 	  if EXIST "%PLUGIN_PATH%\%%a\%%S\BUILD\%%a\%%S\default.py" (
 	    ECHO Copying files...
-	    xcopy "%PLUGIN_PATH%\%%a\%%S\BUILD\%%a\%%S" "%CUR_PATH%\BUILD_WIN32\Xbmc\plugins\%%a\%%S" /E /Q /I /Y /EXCLUDE:exclude.txt > NUL
+	    xcopy "%PLUGIN_PATH%\%%a\%%S\BUILD\%%a\%%S" "%CUR_PATH%\BUILD_WIN32\Boxee\plugins\%%a\%%S" /E /Q /I /Y /EXCLUDE:exclude.txt > NUL
 	  ) ELSE (
 	    ECHO "%PLUGIN_PATH%\%%a\%%S\BUILD\%%a\%%S\default.py not found, not including in build." >> error.log
 	  )
 	) ELSE (
 	  CD "%CUR_PATH%"
 	  IF EXIST "%PLUGIN_PATH%\%%a\%%S\default.py" (
-	    xcopy "%PLUGIN_PATH%\%%a\%%S" "%CUR_PATH%\BUILD_WIN32\Xbmc\plugins\%%a\%%S" /E /Q /I /Y /EXCLUDE:exclude.txt > NUL
+	    xcopy "%PLUGIN_PATH%\%%a\%%S" "%CUR_PATH%\BUILD_WIN32\Boxee\plugins\%%a\%%S" /E /Q /I /Y /EXCLUDE:exclude.txt > NUL
 	  ) ELSE (
 	    ECHO "No build.bat or default.py found for directory %%S, not including in build." >> error.log
 	  )

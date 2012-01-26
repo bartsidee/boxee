@@ -2,7 +2,7 @@
 |
 |   Platinum - AV Media Controller (Media Renderer Control Point)
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -71,7 +71,7 @@ PLT_MediaController::OnDeviceAdded(PLT_DeviceDataReference& device)
     PLT_Service* serviceAVT = NULL;
     PLT_Service* serviceCMR;
 	PLT_Service* serviceRC;
-    NPT_String type;
+    NPT_String   type;
     
     if (!device->GetType().StartsWith("urn:schemas-upnp-org:device:MediaRenderer"))
         return NPT_FAILURE;
@@ -118,9 +118,9 @@ PLT_MediaController::OnDeviceAdded(PLT_DeviceDataReference& device)
 
         NPT_LOG_FINE_1("Device Found: %s", (const char*)*device);
 
-    m_MediaRenderers.Add(device);
+        m_MediaRenderers.Add(device);
     }
-
+    
     if (m_Delegate && m_Delegate->OnMRAdded(device)) {
         // subscribe to services eventing only if delegate wants it
         if (serviceAVT) m_CtrlPoint->Subscribe(serviceAVT);
@@ -138,26 +138,26 @@ PLT_MediaController::OnDeviceAdded(PLT_DeviceDataReference& device)
 +---------------------------------------------------------------------*/
 NPT_Result 
 PLT_MediaController::OnDeviceRemoved(PLT_DeviceDataReference& device)
-{
+{   
     if (!device->GetType().StartsWith("urn:schemas-upnp-org:device:MediaRenderer"))
         return NPT_FAILURE;
 
     {
         NPT_AutoLock lock(m_MediaRenderers);
 
-    // only release if we have kept it around
-    PLT_DeviceDataReference data;
-    NPT_String uuid = device->GetUUID();
+        // only release if we have kept it around
+        PLT_DeviceDataReference data;
+        NPT_String uuid = device->GetUUID();
 
         // Have we seen that device?
-    if (NPT_FAILED(NPT_ContainerFind(m_MediaRenderers, PLT_DeviceDataFinder(uuid), data))) {
+        if (NPT_FAILED(NPT_ContainerFind(m_MediaRenderers, PLT_DeviceDataFinder(uuid), data))) {
             NPT_LOG_WARNING_1("Device (%s) not found in our list!", (const char*)uuid);
-        return NPT_FAILURE;
-    }
+            return NPT_FAILURE;
+        }
 
         NPT_LOG_FINE_1("Device Removed: %s", (const char*)*device);
 
-    m_MediaRenderers.Remove(device);
+        m_MediaRenderers.Remove(device);
     }
 
     if (m_Delegate) {
@@ -206,7 +206,7 @@ PLT_MediaController::GetProtocolInfoSink(PLT_DeviceDataReference& device,
 
     sinks = value.Split(",");
     return NPT_SUCCESS;
-    }
+}
 
 /*----------------------------------------------------------------------
 |   PLT_MediaController::FindMatchingProtocolInfo
@@ -245,8 +245,8 @@ PLT_MediaController::FindBestResource(PLT_DeviceDataReference& device,
                 sinks, 
                 item.m_Resources[i].m_ProtocolInfo.ToString()))) {
             resource_index = i;
-    return NPT_SUCCESS;
-}
+            return NPT_SUCCESS;
+        }
     }
 
     return NPT_ERROR_NO_SUCH_ITEM;
@@ -257,8 +257,8 @@ PLT_MediaController::FindBestResource(PLT_DeviceDataReference& device,
 +---------------------------------------------------------------------*/
 NPT_Result 
 PLT_MediaController::InvokeActionWithInstance(PLT_ActionReference& action,
-                                           NPT_UInt32           instance_id,
-                                           void*                userdata)
+                                              NPT_UInt32           instance_id,
+                                              void*                userdata)
 {
     // Set the object id
     NPT_CHECK_SEVERE(action->SetArgumentValue(
@@ -740,7 +740,7 @@ PLT_MediaController::OnActionResponse(NPT_Result           res,
 
     PLT_DeviceDataReference device;
     NPT_String uuid = action->GetActionDesc().GetService()->GetDevice()->GetUUID();
-       
+           
     /* extract action name */
     NPT_String actionName = action->GetActionDesc().GetName();
 
@@ -837,10 +837,10 @@ PLT_MediaController::OnActionResponse(NPT_Result           res,
 |   PLT_MediaController::OnGetCurrentTransportActionsResponse
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaController::OnGetCurrentTransportActionsResponse(NPT_Result res, 
+PLT_MediaController::OnGetCurrentTransportActionsResponse(NPT_Result               res, 
                                                           PLT_DeviceDataReference& device, 
-                                                          PLT_ActionReference& action, 
-                                                          void* userdata)
+                                                          PLT_ActionReference&     action, 
+                                                          void*                    userdata)
 {
     NPT_String actions;
     PLT_StringList values;
@@ -868,10 +868,10 @@ bad_action:
 |   PLT_MediaController::OnGetDeviceCapabilitiesResponse
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaController::OnGetDeviceCapabilitiesResponse(NPT_Result res, 
+PLT_MediaController::OnGetDeviceCapabilitiesResponse(NPT_Result               res, 
                                                      PLT_DeviceDataReference& device, 
-                                                     PLT_ActionReference& action, 
-                                                     void* userdata)
+                                                     PLT_ActionReference&     action, 
+                                                     void*                    userdata)
 {
     NPT_String value;
     PLT_DeviceCapabilities capabilities;
@@ -910,10 +910,10 @@ bad_action:
 |   PLT_MediaController::OnGetMediaInfoResponse
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaController::OnGetMediaInfoResponse(NPT_Result res, 
+PLT_MediaController::OnGetMediaInfoResponse(NPT_Result               res, 
                                             PLT_DeviceDataReference& device, 
-                                            PLT_ActionReference& action, 
-                                            void* userdata)
+                                            PLT_ActionReference&     action, 
+                                            void*                    userdata)
 {
     NPT_String      value;
     PLT_MediaInfo   info;
@@ -966,10 +966,10 @@ bad_action:
 |   PLT_MediaController::OnGetPositionInfoResponse
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaController::OnGetPositionInfoResponse(NPT_Result res, 
+PLT_MediaController::OnGetPositionInfoResponse(NPT_Result               res, 
                                                PLT_DeviceDataReference& device, 
-                                               PLT_ActionReference& action, 
-                                               void* userdata)
+                                               PLT_ActionReference&     action, 
+                                               void*                    userdata)
 {
     NPT_String       value;
     PLT_PositionInfo info;
@@ -987,7 +987,7 @@ PLT_MediaController::OnGetPositionInfoResponse(NPT_Result res,
     }
     if (NPT_FAILED(PLT_Didl::ParseTimeStamp(value, info.track_duration))) {
          // some renderers return garbage sometimes
-		info.track_duration = NPT_TimeStamp(0, 0);
+		info.track_duration = NPT_TimeStamp(0.);
     }
 
     if (NPT_FAILED(action->GetArgumentValue("TrackMetaData", info.track_metadata))) {
@@ -1037,10 +1037,10 @@ bad_action:
 |   PLT_MediaController::OnGetTransportInfoResponse
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaController::OnGetTransportInfoResponse(NPT_Result res, 
+PLT_MediaController::OnGetTransportInfoResponse(NPT_Result               res, 
                                                 PLT_DeviceDataReference& device, 
-                                                PLT_ActionReference& action, 
-                                                void* userdata)
+                                                PLT_ActionReference&     action, 
+                                                void*                    userdata)
 {
     PLT_TransportInfo info;
 
@@ -1070,10 +1070,10 @@ bad_action:
 |   PLT_MediaController::OnGetTransportSettingsResponse
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaController::OnGetTransportSettingsResponse(NPT_Result res, 
+PLT_MediaController::OnGetTransportSettingsResponse(NPT_Result               res, 
                                                     PLT_DeviceDataReference& device, 
-                                                    PLT_ActionReference& action, 
-                                                    void* userdata)
+                                                    PLT_ActionReference&     action, 
+                                                    void*                    userdata)
 {
     PLT_TransportSettings settings;
 
@@ -1100,10 +1100,10 @@ bad_action:
 |   PLT_MediaController::OnGetCurrentConnectionIDsResponse
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaController::OnGetCurrentConnectionIDsResponse(NPT_Result res, 
+PLT_MediaController::OnGetCurrentConnectionIDsResponse(NPT_Result               res, 
                                                        PLT_DeviceDataReference& device, 
-                                                       PLT_ActionReference& action, 
-                                                       void* userdata)
+                                                       PLT_ActionReference&     action, 
+                                                       void*                    userdata)
 {
     NPT_String value;
     PLT_StringList IDs;
@@ -1130,10 +1130,10 @@ bad_action:
 |   PLT_MediaController::OnGetCurrentConnectionInfoResponse
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaController::OnGetCurrentConnectionInfoResponse(NPT_Result res, 
+PLT_MediaController::OnGetCurrentConnectionInfoResponse(NPT_Result               res, 
                                                         PLT_DeviceDataReference& device, 
-                                                        PLT_ActionReference& action, 
-                                                        void* userdata)
+                                                        PLT_ActionReference&     action, 
+                                                        void*                    userdata)
 {
     NPT_String value;
     PLT_ConnectionInfo info;
@@ -1175,10 +1175,10 @@ bad_action:
 |   PLT_MediaController::OnGetProtocolInfoResponse
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaController::OnGetProtocolInfoResponse(NPT_Result res, 
+PLT_MediaController::OnGetProtocolInfoResponse(NPT_Result               res, 
                                                PLT_DeviceDataReference& device, 
-                                               PLT_ActionReference& action, 
-                                               void* userdata)
+                                               PLT_ActionReference&     action, 
+                                               void*                    userdata)
 {
     NPT_String     source_info, sink_info;
     PLT_StringList sources, sinks;
@@ -1209,12 +1209,12 @@ bad_action:
 |   PLT_MediaController::OnGetMuteResponse
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_MediaController::OnGetMuteResponse(NPT_Result res, 
+PLT_MediaController::OnGetMuteResponse(NPT_Result               res, 
                                        PLT_DeviceDataReference& device, 
-                                       PLT_ActionReference& action, 
-                                       void* userdata)
+                                       PLT_ActionReference&     action, 
+                                       void*                    userdata)
 {
-    NPT_String     channel, mute;
+    NPT_String channel, mute;
 
     if (NPT_FAILED(res) || action->GetErrorCode() != 0) {
         goto bad_action;
@@ -1284,76 +1284,16 @@ bad_action:
 NPT_Result
 PLT_MediaController::OnEventNotify(PLT_Service*                  service, 
                                    NPT_List<PLT_StateVariable*>* vars)
-{
+{   
     if (!service->GetDevice()->GetType().StartsWith("urn:schemas-upnp-org:device:MediaRenderer"))
         return NPT_FAILURE;
 
     if (!m_Delegate) return NPT_SUCCESS;
+
+    /* make sure device associated to service is still around */
+    PLT_DeviceDataReference data;
+    NPT_CHECK_WARNING(FindRenderer(service->GetDevice()->GetUUID(), data));
     
-        // parse LastChange var into smaller vars
-        PLT_StateVariable* lastChangeVar = NULL;
-    if (NPT_SUCCEEDED(NPT_ContainerFind(*vars, 
-                                        PLT_ListStateVariableNameFinder("LastChange"), 
-                                        lastChangeVar))) {
-            vars->Remove(lastChangeVar);
-            PLT_Service* var_service = lastChangeVar->GetService();
-            NPT_String text = lastChangeVar->GetValue();
-            
-            NPT_XmlNode* xml = NULL;
-            NPT_XmlParser parser;
-            if (NPT_FAILED(parser.Parse(text, xml)) || !xml || !xml->AsElementNode()) {
-                delete xml;
-                return NPT_FAILURE;
-            }
-
-            NPT_XmlElementNode* node = xml->AsElementNode();
-            if (!node->GetTag().Compare("Event", true)) {
-                // look for the instance with attribute id = 0
-                NPT_XmlElementNode* instance = NULL;
-                for (NPT_Cardinal i=0; i<node->GetChildren().GetItemCount(); i++) {
-                    NPT_XmlElementNode* child;
-                    if (NPT_FAILED(PLT_XmlHelper::GetChild(node, child, i)))
-                        continue;
-
-                    if (!child->GetTag().Compare("InstanceID", true)) {
-                        // extract the "val" attribute value
-                        NPT_String value;
-                        if (NPT_SUCCEEDED(PLT_XmlHelper::GetAttribute(child, "val", value)) &&
-                            !value.Compare("0")) {
-                            instance = child;
-                            break;
-                        }
-                    }
-                }
-
-                // did we find an instance with id = 0 ?
-                if (instance != NULL) {
-                    // all the children of the Instance node are state variables
-                    for (NPT_Cardinal j=0; j<instance->GetChildren().GetItemCount(); j++) {
-                        NPT_XmlElementNode* var_node;
-                        if (NPT_FAILED(PLT_XmlHelper::GetChild(instance, var_node, j)))
-                            continue;
-
-                        // look for the state variable in this service
-                        const NPT_String* value = var_node->GetAttribute("val");
-                        PLT_StateVariable* var = var_service->FindStateVariable(var_node->GetTag());
-                        if (value != NULL && var != NULL) {
-                            // get the value and set the state variable
-                            // if it succeeded, add it to the list of vars we'll event
-                            if (NPT_SUCCEEDED(var->SetValue(*value))) {
-                                vars->Add(var);
-                                NPT_LOG_FINE_2("PLT_MediaController received var change for (%s): %s", (const char*)var->GetName(), (const char*)var->GetValue());
-                            }
-                        }
-                    }
-                }
-            }
-            delete xml;
-        }
-
-        if (vars->GetItemCount()) {
-        m_Delegate->OnMRStateVariablesChanged(service, vars);
-        }
-    
+    m_Delegate->OnMRStateVariablesChanged(service, vars);
     return NPT_SUCCESS;
 }

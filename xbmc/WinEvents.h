@@ -38,9 +38,20 @@ public:
 #ifdef _WIN32
 #include "WinEventsWin32.h"
 #define CWinEvents CWinEventsWin32
-#endif
 
-#ifdef _LINUX
+#elif defined(HAS_INTELCE)
+#include "WinEventsIntelCE.h"
+#define CWinEvents CWinEventsIntelCE
+
+#elif defined(HAS_LINUX_EVENTS)
+#include "WinEventsBoxeeBox.h"
+#define CWinEvents CWinEventsBoxeeBox
+
+#elif defined(HAS_X11_EVENTS)
+#include "WinEventsX11.h"
+#define CWinEvents CWinEventsX11
+
+#elif defined(HAS_SDL_WIN_EVENTS)
 #include "WinEventsSDL.h"
 #define CWinEvents CWinEventsSDL
 #endif

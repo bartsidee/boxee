@@ -18,7 +18,7 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
- 
+
 #include "DVDOverlayCodecFFmpeg.h"
 #include "DVDOverlayText.h"
 #include "DVDOverlaySpu.h"
@@ -26,8 +26,9 @@
 #include "DVDStreamInfo.h"
 #include "DVDClock.h"
 #include "utils/Win32Exception.h"
-#include "DVDCodecs/DVDCodecUtils.h"
 #include "utils/log.h"
+#include "utils/EndianSwap.h"
+#include "DVDDemuxers/DVDDemux.h"
 
 CDVDOverlayCodecFFmpeg::CDVDOverlayCodecFFmpeg() : CDVDOverlayCodec("FFmpeg Subtitle Decoder")
 {
@@ -39,29 +40,65 @@ CDVDOverlayCodecFFmpeg::CDVDOverlayCodecFFmpeg() : CDVDOverlayCodec("FFmpeg Subt
 }
 
 CDVDOverlayCodecFFmpeg::~CDVDOverlayCodecFFmpeg()
-{  
+{
   Dispose();
 }
 
 bool CDVDOverlayCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options)
 {
-  if (!m_dllAvUtil.Load() || !m_dllAvCodec.Load()) return false;
+  if (!m_dllAvUtil.Load() || !m_dllAvCore.Load() || !m_dllAvCodec.Load()) return false;
 
-  // must lock ffmpeg open/close methods - its not thread safe
-  CSingleLock ffmpegLock(CDVDCodecUtils::GetCodecLock());
+  m_dllAvCodec.avcodec_register_all();
 
   m_pCodecContext = m_dllAvCodec.avcodec_alloc_context();
   m_pCodecContext->debug_mv = 0;
   m_pCodecContext->debug = 0;
   m_pCodecContext->workaround_bugs = FF_BUG_AUTODETECT;
-  m_pCodecContext->dsp_mask = FF_MM_FORCE | FF_MM_MMX | FF_MM_MMXEXT | FF_MM_SSE;
   m_pCodecContext->sub_id = hints.identifier;
+  m_pCodecContext->codec_tag = hints.codec_tag;
 
   if( hints.extradata && hints.extrasize > 0 )
   {
     m_pCodecContext->extradata_size = hints.extrasize;
     m_pCodecContext->extradata = (uint8_t*)m_dllAvUtil.av_mallocz(hints.extrasize + FF_INPUT_BUFFER_PADDING_SIZE);
     memcpy(m_pCodecContext->extradata, hints.extradata, hints.extrasize);
+
+    // start parsing of extra data - create a copy to be safe and make it zero-terminating to avoid access violations!
+    unsigned int parse_extrasize = hints.extrasize;
+    char* parse_extra = new char[parse_extrasize + 1];
+    memcpy(parse_extra, hints.extradata, parse_extrasize);
+    parse_extra[parse_extrasize] = '\0';
+
+    // assume that the extra data is formatted as a concatenation of lines ('\n' terminated) 
+    char *ptr = parse_extra;
+    do // read line by line
+    {
+      if (!strncmp(ptr, "size:", 5))
+      {
+        int width = 0, height = 0;
+        sscanf(ptr, "size: %dx%d", &width, &height);
+        if (width > 0 && height > 0)
+        {
+          m_pCodecContext->width = width;
+          m_pCodecContext->height = height;
+          CLog::Log(LOGDEBUG,"%s - parsed extradata: size: %d x %d", __FUNCTION__,  width, height);
+        }
+      }
+      /*        
+      // leaving commented code: these items don't work yet... but they may be meaningful
+      if (!strncmp(ptr, "palette:", 8))
+        if (sscanf(ptr, "palette: %x, %x, %x, %x, %x, %x, %x, %x,"
+                                " %x, %x, %x, %x, %x, %x, %x, %x", ...        
+      if (!strncasecmp(ptr, "forced subs: on", 15))
+        forced_subs_only = 1;
+      */
+      // if tried all possibilities, then read newline char and move to next line
+      ptr = strchr(ptr, '\n');
+      if (ptr != NULL) ptr++;
+    } 
+    while (ptr != NULL && ptr <= parse_extra + parse_extrasize);
+
+    delete[] parse_extra;
   }
 
   AVCodec* pCodec = m_dllAvCodec.avcodec_find_decoder(hints.codec);
@@ -71,10 +108,9 @@ bool CDVDOverlayCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &optio
     return false;
   }
 
-  int retCode = m_dllAvCodec.avcodec_open(m_pCodecContext, pCodec);
-  if (retCode < 0)
+  if (m_dllAvCodec.avcodec_open(m_pCodecContext, pCodec) < 0)
   {
-    CLog::Log(LOGDEBUG,"CDVDVideoCodecFFmpeg::Open() Unable to open codec. [retCode=%d]",retCode);
+    CLog::Log(LOGDEBUG,"CDVDVideoCodecFFmpeg::Open() Unable to open codec");
     return false;
   }
 
@@ -85,16 +121,14 @@ void CDVDOverlayCodecFFmpeg::Dispose()
 {
   if (m_pCodecContext)
   {
-    // must lock ffmpeg open/close methods - its not thread safe
-    CSingleLock ffmpegLock(CDVDCodecUtils::GetCodecLock());
-
     if (m_pCodecContext->codec) m_dllAvCodec.avcodec_close(m_pCodecContext);
     m_dllAvUtil.av_free(m_pCodecContext);
     m_pCodecContext = NULL;
   }
   FreeSubtitle(m_Subtitle);
-  
+
   m_dllAvCodec.Unload();
+  m_dllAvCore.Unload();
   m_dllAvUtil.Unload();
 }
 
@@ -122,17 +156,22 @@ void CDVDOverlayCodecFFmpeg::FreeSubtitle(AVSubtitle& sub)
 }
 
 int CDVDOverlayCodecFFmpeg::Decode(BYTE* data, int size, double pts, double duration)
-{  
-  if (!m_pCodecContext) 
+{
+  if (!m_pCodecContext)
     return 1;
 
   int gotsub = 0, len = 0;
 
   FreeSubtitle(m_Subtitle);
 
+  AVPacket avpkt;
+  m_dllAvCodec.av_init_packet(&avpkt);
+  avpkt.data = data;
+  avpkt.size = size;
+
   try
   {
-    len = m_dllAvCodec.avcodec_decode_subtitle(m_pCodecContext, &m_Subtitle, &gotsub, data, size);
+    len = m_dllAvCodec.avcodec_decode_subtitle2(m_pCodecContext, &m_Subtitle, &gotsub, &avpkt);
   }
   catch (win32_exception e)
   {
@@ -181,6 +220,17 @@ CDVDOverlay* CDVDOverlayCodecFFmpeg::GetOverlay()
   if(m_SubtitleIndex<0)
     return NULL;
 
+  if(m_Subtitle.num_rects == 0 && m_SubtitleIndex == 0)
+  {
+    // we must add an empty overlay to replace the previous one
+    CDVDOverlay* o = new CDVDOverlay(DVDOVERLAY_TYPE_NONE);
+    o->iPTSStartTime = 0;
+    o->iPTSStopTime  = 0;
+    o->replace  = true;
+    m_SubtitleIndex++;
+    return o;
+  }
+
   if(m_Subtitle.format == 0)
   {
     if(m_SubtitleIndex >= (int)m_Subtitle.num_rects)
@@ -193,7 +243,7 @@ CDVDOverlay* CDVDOverlayCodecFFmpeg::GetOverlay()
 #else
     AVSubtitleRect& rect = m_Subtitle.rects[m_SubtitleIndex];
 #endif
-    
+
     CDVDOverlayImage* overlay = new CDVDOverlayImage();
 
     overlay->iPTSStartTime = DVD_MSEC_TO_TIME(m_Subtitle.start_display_time);
@@ -201,12 +251,13 @@ CDVDOverlay* CDVDOverlayCodecFFmpeg::GetOverlay()
     overlay->replace  = true;
     overlay->linesize = rect.w;
     overlay->data     = (BYTE*)malloc(rect.w * rect.h);
-    overlay->palette  = (DWORD*)malloc(rect.nb_colors*4);
+    overlay->palette  = (uint32_t*)malloc(rect.nb_colors*4);
     overlay->palette_colors = rect.nb_colors;
     overlay->x        = rect.x;
     overlay->y        = rect.y;
     overlay->width    = rect.w;
     overlay->height   = rect.h;
+    overlay->bForced  = m_Subtitle.flags & CDemuxStream::FLAG_FORCED;
 
     int right  = overlay->x + overlay->width;
     int bottom = overlay->y + overlay->height;
@@ -255,12 +306,14 @@ CDVDOverlay* CDVDOverlayCodecFFmpeg::GetOverlay()
       s += rect.pict.linesize[0];
       t += overlay->linesize;
     }
-    
-    memcpy(overlay->palette, rect.pict.data[1], rect.nb_colors*4);
+
+    for(int i=0;i<rect.nb_colors;i++)
+      overlay->palette[i] = Endian_SwapLE32(((uint32_t *)rect.pict.data[1])[i]);
+
     m_dllAvUtil.av_free(rect.pict.data[0]);
     m_dllAvUtil.av_free(rect.pict.data[1]);
     m_dllAvUtil.av_freep(&m_Subtitle.rects[m_SubtitleIndex]);
-#else    
+#else
     BYTE* s = rect.bitmap;
     BYTE* t = overlay->data;
     for(int i=0;i<rect.h;i++)

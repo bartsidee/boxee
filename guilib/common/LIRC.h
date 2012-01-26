@@ -2,6 +2,9 @@
 #define LIRC_H
 
 #include "../system.h"
+
+#ifdef HAS_LIRC
+
 #include "StdString.h"
 
 class CRemoteControl
@@ -21,6 +24,7 @@ public:
   bool IsInitialized() const { return m_bInitialized; }
 
 private:
+  void InitializeInternal(CStdString deviceName);
   int   m_fd;
   int   m_inotify_fd;
   int   m_inotify_wd;
@@ -42,3 +46,6 @@ private:
 extern CRemoteControl g_RemoteControl;
 
 #endif
+
+#endif
+

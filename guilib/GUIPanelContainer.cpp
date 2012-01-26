@@ -22,7 +22,10 @@
 #include "GUIPanelContainer.h"
 #include "GUIListItem.h"
 #include "utils/GUIInfoManager.h"
+#include "utils/log.h"
+#include "Application.h"
 #include "Key.h"
+#include "SingleLock.h"
 
 using namespace std;
 
@@ -32,6 +35,8 @@ CGUIPanelContainer::CGUIPanelContainer(int parentID, int controlId, float posX, 
   ControlType = GUICONTAINER_PANEL;
   m_type = VIEW_TYPE_ICON;
   m_itemsPerRow = 1;
+  m_memoryTimer.Start();
+  m_bShouldFreeMemory = false;
 }
 
 CGUIPanelContainer::~CGUIPanelContainer(void)
@@ -40,6 +45,23 @@ CGUIPanelContainer::~CGUIPanelContainer(void)
 
 void CGUIPanelContainer::Render()
 {
+  bool bIsScrolling = IsScrolling();
+
+#ifndef OLD_SCROLLING
+  if (!bIsScrolling && !m_deferredActions.empty())
+  {
+    {
+      CSingleLock lock(m_actionsLock);
+      if (!m_deferredActions.empty())
+      {
+        CAction action = m_deferredActions.front();
+        m_deferredActions.pop();
+        g_application.DeferAction(action);
+      }
+    }
+  }
+#endif
+
   ValidateOffset();
 
   if (m_bInvalidated)
@@ -59,9 +81,15 @@ void CGUIPanelContainer::Render()
   if (cacheAfter < 2) cacheAfter = 2;
 
   // Free memory not used on screen at the moment, do this first so there's more memory for the new items.
-  FreeMemory(CorrectOffset(offset - cacheBefore, 0), CorrectOffset(offset + cacheAfter + m_itemsPerPage + 1, 0));
+  // Free only if we're not scrolling up/down, if there was a change in the movement and the time since we last freed the memory was above 2 seconds
+  if (m_bShouldFreeMemory && !ScrollingDown() && !ScrollingUp() && m_memoryTimer.GetElapsedSeconds() > 2)
+  {
+    FreeMemory(CorrectOffset(offset - cacheBefore, 0), CorrectOffset(offset + cacheAfter + m_itemsPerPage + 1, 0));
+    m_bShouldFreeMemory = false;
+    m_memoryTimer.StartZero();
+  }
 
-  g_graphicsContext.SetClipRegion(m_posX + m_offsetX, m_posY + m_offsetY, m_width, m_height);
+  bool clip = g_graphicsContext.SetClipRegion(m_posX + m_offsetX, m_posY + m_offsetY, m_width, m_height);
   float pos = (m_orientation == VERTICAL) ? m_posY + m_offsetY : m_posX + m_offsetX;
   float end = (m_orientation == VERTICAL) ? m_posY + m_height : m_posX + m_width;
   pos += (offset - cacheBefore) * m_layout->Size(m_orientation) - m_scrollOffset;
@@ -95,12 +123,12 @@ void CGUIPanelContainer::Render()
         if (m_orientation == VERTICAL)
             RenderItem(m_posX + m_offsetX + col * m_layout->Size(HORIZONTAL), pos, item.get(), row, col, false);
         else
-            RenderItem(pos, m_posY + m_offsetY + col * m_layout->Size(VERTICAL), item.get(), row, col, false);          
+            RenderItem(pos, m_posY + m_offsetY + col * m_layout->Size(VERTICAL), item.get(), row, col, false);
       }
     }
     
     // increment our position
-    if (col < m_itemsPerRow - 1)
+    if (col < (size_t) (m_itemsPerRow - 1))
       col++;
     else
     {
@@ -122,7 +150,8 @@ void CGUIPanelContainer::Render()
 
   m_firstRenderAfterLoad = false;
   
-  g_graphicsContext.RestoreClipRegion();
+  if(clip)
+    g_graphicsContext.RestoreClipRegion();
 
   UpdatePageControl(offset);
 
@@ -168,7 +197,7 @@ bool CGUIPanelContainer::OnAction(const CAction &action)
       {
         handled = true;
         m_analogScrollCount -= AnalogScrollSpeed();
-        if (m_offset > 0)// && m_cursor <= m_itemsPerPage * m_itemsPerRow / 2)
+        if (m_offset > 0 )// && m_cursor <= m_itemsPerPage * m_itemsPerRow / 2)
         {
           Scroll(-1);
         }
@@ -221,7 +250,7 @@ bool CGUIPanelContainer::OnMessage(CGUIMessage& message)
       }
       else
       {
-        SelectItem(message.GetParam1());
+      SelectItem(message.GetParam1());
       }
       return true;
     }
@@ -269,6 +298,7 @@ void CGUIPanelContainer::OnRight()
 void CGUIPanelContainer::OnUp()
 {
   bool wrapAround = m_controlUp == GetID() || !(m_controlUp || m_upActions.size());
+  m_bShouldFreeMemory = true;
   if (m_orientation == VERTICAL && MoveUp(wrapAround))
     return;
   if (m_orientation == HORIZONTAL && MoveLeft(wrapAround))
@@ -279,6 +309,7 @@ void CGUIPanelContainer::OnUp()
 void CGUIPanelContainer::OnDown()
 {
   bool wrapAround = m_controlDown == GetID() || !(m_controlDown || m_downActions.size());
+  m_bShouldFreeMemory = true;
   if (m_orientation == VERTICAL && MoveDown(wrapAround))
     return;
   if (m_orientation == HORIZONTAL && MoveRight(wrapAround))

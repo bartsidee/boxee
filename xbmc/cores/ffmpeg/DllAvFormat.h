@@ -15,16 +15,14 @@ extern "C" {
 #ifndef __GNUC__
 #pragma warning(disable:4244)
 #endif
-#if (defined USE_EXTERNAL_FFMPEG) || (defined _WIN32)
+#if (defined USE_EXTERNAL_FFMPEG)
   #if (defined HAVE_LIBAVFORMAT_AVFORMAT_H)
     #include <libavformat/avformat.h>
   #else
     #include <ffmpeg/avformat.h>
   #endif
-  /* av_read_frame_flush() is defined for us in lib/xbmc-dll-symbols/DllAvFormat.c */
-  void av_read_frame_flush(AVFormatContext *s);
 #else
-  #include "avformat.h"
+#include "ffmpeg/libavformat/avformat.h"
 #endif
 }
 
@@ -39,14 +37,17 @@ class DllAvFormatInterface
 {
 public:
   virtual ~DllAvFormatInterface() {}
+#if LIBAVFORMAT_VERSION_MAJOR < 53 && LIBAVFORMAT_VERSION_MINOR < 64
   virtual void av_register_all_dont_call(void)=0;
+#else
+  virtual void av_register_all(void)=0;
+#endif
   virtual AVInputFormat *av_find_input_format(const char *short_name)=0;
   virtual int url_feof(ByteIOContext *s)=0;
   virtual AVMetadataTag *av_metadata_get(AVMetadata *m, const char *key, const AVMetadataTag *prev, int flags)=0;
   virtual void av_close_input_file(AVFormatContext *s)=0;
   virtual void av_close_input_stream(AVFormatContext *s)=0;
   virtual int av_read_frame(AVFormatContext *s, AVPacket *pkt)=0;
-  virtual void av_read_frame_flush(AVFormatContext *s)=0;
   virtual int av_read_play(AVFormatContext *s)=0;
   virtual int av_read_pause(AVFormatContext *s)=0;
   virtual int av_seek_frame(AVFormatContext *s, int stream_index, int64_t timestamp, int flags)=0;
@@ -99,19 +100,22 @@ class DllAvFormat : public DllDynamic, DllAvFormatInterface
 {
 public:
   virtual ~DllAvFormat() {}
+#if LIBAVFORMAT_VERSION_MAJOR < 53 && LIBAVFORMAT_VERSION_MINOR < 64
   virtual void av_register_all() 
   { 
     CSingleLock lock(DllAvCodec::m_critSection);
     return ::av_register_all();
   } 
   virtual void av_register_all_dont_call() { *(int* )0x0 = 0; } 
+#else
+  virtual void av_register_all() { return ::av_register_all(); }
+#endif
   virtual AVInputFormat *av_find_input_format(const char *short_name) { return ::av_find_input_format(short_name); }
   virtual int url_feof(ByteIOContext *s) { return ::url_feof(s); }
   virtual AVMetadataTag *av_metadata_get(AVMetadata *m, const char *key, const AVMetadataTag *prev, int flags){ return ::av_metadata_get(m, key, prev, flags); }
   virtual void av_close_input_file(AVFormatContext *s) { ::av_close_input_file(s); }
   virtual void av_close_input_stream(AVFormatContext *s) { ::av_close_input_stream(s); }
   virtual int av_read_frame(AVFormatContext *s, AVPacket *pkt) { return ::av_read_frame(s, pkt); }
-  virtual void av_read_frame_flush(AVFormatContext *s) { return ::av_read_frame_flush(s); }
   virtual int av_read_play(AVFormatContext *s) { return ::av_read_play(s); }
   virtual int av_read_pause(AVFormatContext *s) { return ::av_read_pause(s); }
   virtual int av_seek_frame(AVFormatContext *s, int stream_index, int64_t timestamp, int flags) { return ::av_seek_frame(s, stream_index, timestamp, flags); }
@@ -157,7 +161,7 @@ public:
   virtual int av_write_header (AVFormatContext *s) { return ::av_write_header (s); }
   virtual int av_write_trailer(AVFormatContext *s) { return ::av_write_trailer(s); }
   virtual int av_write_frame  (AVFormatContext *s, AVPacket *pkt) { return ::av_write_frame(s, pkt); }
-
+  
   // DLL faking.
   virtual bool ResolveExports() { return true; }
   virtual bool Load() {
@@ -175,7 +179,11 @@ class DllAvFormat : public DllDynamic, DllAvFormatInterface
 
   LOAD_SYMBOLS()
 
+#if LIBAVFORMAT_VERSION_MAJOR < 53 && LIBAVFORMAT_VERSION_MINOR < 64
   DEFINE_METHOD0(void, av_register_all_dont_call)
+#else
+  DEFINE_METHOD0(void, av_register_all)
+#endif
   DEFINE_METHOD1(AVInputFormat*, av_find_input_format, (const char *p1))
   DEFINE_METHOD1(int, url_feof, (ByteIOContext *p1))
   DEFINE_METHOD4(AVMetadataTag*, av_metadata_get, (AVMetadata *p1, const char *p2, const AVMetadataTag *p3, int p4))
@@ -183,7 +191,6 @@ class DllAvFormat : public DllDynamic, DllAvFormatInterface
   DEFINE_METHOD1(void, av_close_input_stream, (AVFormatContext *p1))
   DEFINE_METHOD1(int, av_read_play, (AVFormatContext *p1))
   DEFINE_METHOD1(int, av_read_pause, (AVFormatContext *p1))
-  DEFINE_METHOD1(void, av_read_frame_flush, (AVFormatContext *p1))
 #ifndef _LINUX
   DEFINE_FUNC_ALIGNED2(int, __cdecl, av_read_frame, AVFormatContext *, AVPacket *)
   DEFINE_FUNC_ALIGNED4(int, __cdecl, av_seek_frame, AVFormatContext*, int, int64_t, int)
@@ -241,7 +248,11 @@ class DllAvFormat : public DllDynamic, DllAvFormatInterface
   DEFINE_METHOD1(int, av_write_trailer, (AVFormatContext *p1))
   DEFINE_METHOD2(int, av_write_frame  , (AVFormatContext *p1, AVPacket *p2))
   BEGIN_METHOD_RESOLVE()
+#if LIBAVFORMAT_VERSION_MAJOR < 53 && LIBAVFORMAT_VERSION_MINOR < 64
     RESOLVE_METHOD_RENAME(av_register_all, av_register_all_dont_call)
+#else
+    RESOLVE_METHOD(av_register_all)
+#endif
     RESOLVE_METHOD(av_find_input_format)
     RESOLVE_METHOD(url_feof)
     RESOLVE_METHOD(av_metadata_get)
@@ -250,7 +261,6 @@ class DllAvFormat : public DllDynamic, DllAvFormatInterface
     RESOLVE_METHOD(av_read_frame)
     RESOLVE_METHOD(av_read_play)
     RESOLVE_METHOD(av_read_pause)
-    RESOLVE_METHOD(av_read_frame_flush)
     RESOLVE_METHOD(av_seek_frame)
     RESOLVE_METHOD_RENAME(av_find_stream_info, av_find_stream_info_dont_call)
     RESOLVE_METHOD(av_open_input_file)
@@ -286,11 +296,13 @@ class DllAvFormat : public DllDynamic, DllAvFormatInterface
     RESOLVE_METHOD(av_write_frame)
   END_METHOD_RESOLVE()
 public:
+#if LIBAVFORMAT_VERSION_MAJOR < 53 && LIBAVFORMAT_VERSION_MINOR < 64
   void av_register_all()
   {
     CSingleLock lock(DllAvCodec::m_critSection);
     av_register_all_dont_call();
   }
+#endif
   int av_find_stream_info(AVFormatContext *ic)
   {
     CSingleLock lock(DllAvCodec::m_critSection);

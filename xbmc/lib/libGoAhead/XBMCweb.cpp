@@ -769,7 +769,7 @@ int CXbmcWeb::xbmcCatalog( int eid, webs_t wp, char_t *parameter)
               }
               else
               {
-                CLog::Log(LOGERROR,"CXbmcWeb::xbmcCatalog - Item label is [%s] but the m_dirHistoryPaths vector size is [%d] (web)",(itm->GetLabel()).c_str(),m_dirHistoryPaths.size());
+                CLog::Log(LOGERROR,"CXbmcWeb::xbmcCatalog - Item label is [%s] but the m_dirHistoryPaths vector size is [%zu] (web)",(itm->GetLabel()).c_str(),m_dirHistoryPaths.size());
                 return 0;
               }
             }

@@ -39,7 +39,7 @@ CMusicFileDirectory::~CMusicFileDirectory(void)
 bool CMusicFileDirectory::GetDirectory(const CStdString& strPath1, CFileItemList &items)
 {
   CStdString strPath=strPath1;
-  CURL url(strPath);
+  CURI url(strPath);
 
   CStdString strFileName;
   strFileName = CUtil::GetFileName(strPath);

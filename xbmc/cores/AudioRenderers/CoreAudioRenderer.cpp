@@ -27,6 +27,11 @@
 #include "utils/log.h"
 #include "utils/TimeUtils.h"
 
+extern "C"
+{
+extern UInt64 AudioConvertHostTimeToNanos(UInt64 inHostTime); 
+}
+
 /////////////////////////////////////////////////////////////////////////////////
 // CAtomicAllocator: Wrapper class for lf_heap.
 ////////////////////////////////////////////////////////////////////////////////
@@ -294,16 +299,16 @@ void CCoreAudioPerformance::Reset()
 //***********************************************************************************************
 CCoreAudioRenderer::CCoreAudioRenderer() :
   m_Pause(false),
-  m_ChunkLen(0),
-  m_MaxCacheLen(0),
-  m_AvgBytesPerSec(0),
-  m_CurrentVolume(0),
   m_Initialized(false),
+  m_CurrentVolume(0),
+  m_ChunkLen(0),
+  m_pCache(NULL),
+  m_MaxCacheLen(0),
+  m_OutputBufferIndex(0),
+  m_queueTimestamp(0),
   m_Passthrough(false),
   m_EnableVolumeControl(true),
-  m_OutputBufferIndex(0),
-  m_pCache(NULL),
-  m_queueTimestamp(0)
+  m_AvgBytesPerSec(0)
 {
   m_RunoutEvent = CreateEvent(NULL, false, false, NULL);  
   m_bNeedRunoutSignal = true;
@@ -324,7 +329,7 @@ CCoreAudioRenderer::~CCoreAudioRenderer()
 if (!m_Initialized) \
 return x
 
-bool CCoreAudioRenderer::Initialize(IAudioCallback* pCallback, int iChannels, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec, bool bIsMusic, bool bPassthrough)
+bool CCoreAudioRenderer::Initialize(IAudioCallback* pCallback, int iChannels, enum PCMChannels* channelMap, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec, bool bIsMusic, bool bPassthrough, bool bTimed, AudioMediaFormat audioMediaFormat)
 {  
   if (m_Initialized) // Have to clean house before we start again. TODO: Should we return failure instead?
     Deinitialize();
@@ -400,7 +405,7 @@ bool CCoreAudioRenderer::Initialize(IAudioCallback* pCallback, int iChannels, un
     m_AudioUnit.GetInputFormat(&inputDesc_end);
     m_AudioUnit.GetOutputFormat(&outputDesc_end);
     CLog::Log(LOGDEBUG, "CoreAudioRenderer::Initialize: Input Stream Format %s", StreamDescriptionToString(inputDesc_end, formatString));
-    CLog::Log(LOGDEBUG, "CoreAudioRenderer::Initialize: Output Stream Format % s", StreamDescriptionToString(outputDesc_end, formatString));    
+    CLog::Log(LOGDEBUG, "CoreAudioRenderer::Initialize: Output Stream Format %s", StreamDescriptionToString(outputDesc_end, formatString));    
   }
   
   m_MaxCacheLen = m_AvgBytesPerSec;     // Set the max cache size to 1 second of data. TODO: Make this more intelligent
@@ -533,7 +538,7 @@ unsigned int CCoreAudioRenderer::GetSpace()
   return m_MaxCacheLen - m_pCache->GetTotalBytes(); // This is just an estimate, since the driver is asynchonously pulling data.
 }
 
-unsigned int CCoreAudioRenderer::AddPackets(const void* data, DWORD len)
+unsigned int CCoreAudioRenderer::AddPackets(const void* data, DWORD len, double pts, double duration)
 {  
   VERIFY_INIT(0);
   
@@ -547,7 +552,7 @@ unsigned int CCoreAudioRenderer::AddPackets(const void* data, DWORD len)
   
   size_t bytesUsed = m_pCache->AddData((void*)data, len);
   m_bNeedRunoutSignal = true;
-
+  
   Resume();  // We have some data. Attmept to resume playback
   
   return bytesUsed; // Number of bytes added to cache;
@@ -600,7 +605,7 @@ OSStatus CCoreAudioRenderer::OnRender(AudioUnitRenderActionFlags *ioActionFlags,
   if (bytesRead < bytesRequested)
   {
     if (m_bNeedRunoutSignal)
-      SetEvent(m_RunoutEvent); // Tell anyone who cares that the cache is empty
+    SetEvent(m_RunoutEvent); // Tell anyone who cares that the cache is empty
     m_bNeedRunoutSignal = false;
     ioData->mBuffers[m_OutputBufferIndex].mDataByteSize = bytesRead;
   }
@@ -608,8 +613,8 @@ OSStatus CCoreAudioRenderer::OnRender(AudioUnitRenderActionFlags *ioActionFlags,
   if (bytesRead > 0)
   {
     UInt64 hostMillis = AudioConvertHostTimeToNanos(inTimeStamp->mHostTime) / 1000000LL;
-    UInt32 nTimeSent = (UInt32)(((float)bytesRead / (float)m_AvgBytesPerSec) * 1000.0);
-    m_queueTimestamp = hostMillis + nTimeSent;
+  UInt32 nTimeSent = (UInt32)(((float)bytesRead / (float)m_AvgBytesPerSec) * 1000.0);
+  m_queueTimestamp = hostMillis + nTimeSent;
   }
   
   // Hard mute for formats that do not allow standard volume control. Throw away any actual data to keep the stream moving.
@@ -681,7 +686,8 @@ bool CCoreAudioRenderer::InitializeEncoded(AudioDeviceID outputDevice, UInt32 sa
   //return false; // un-comment to force PCM Spoofing (DD-Wav). For testing use only.
   
   CStdString formatString;
-  AudioStreamBasicDescription outputFormat = {0};
+  AudioStreamBasicDescription outputFormat;
+  bzero(&outputFormat, sizeof(outputFormat));
   AudioStreamID outputStream = 0;
         
   // Fetch a list of the streams defined by the output device
@@ -695,7 +701,7 @@ bool CCoreAudioRenderer::InitializeEncoded(AudioDeviceID outputDevice, UInt32 sa
     AudioStreamID id = streams.front();
     streams.pop_front(); // We copied it, now we are done with it
     
-    CLog::Log(LOGDEBUG, "CoreAudioRenderer::InitializeEncoded: Found %s stream - id: 0x%04X, Terminal Type: 0x%04lX", 
+    CLog::Log(LOGDEBUG, "CoreAudioRenderer::InitializeEncoded: Found %s stream - id: 0x%x, Terminal Type: 0x%x", 
               CCoreAudioStream::GetDirection(id) ? "Input" : "Output", 
               id, 
               CCoreAudioStream::GetTerminalType(id));
@@ -732,7 +738,7 @@ bool CCoreAudioRenderer::InitializeEncoded(AudioDeviceID outputDevice, UInt32 sa
   m_ChunkLen = outputFormat.mBytesPerPacket; // 1 Chunk == 1 Packet
   m_AvgBytesPerSec = outputFormat.mChannelsPerFrame * (outputFormat.mBitsPerChannel>>3) * outputFormat.mSampleRate; // mBytesPerFrame is 0 for a cac3 stream
   m_BytesPerFrame = outputFormat.mChannelsPerFrame * (outputFormat.mBitsPerChannel>>3);
-  CLog::Log(LOGDEBUG, "CoreAudioRenderer::InitializeEncoded: Selected stream[%lu] - id: 0x%04lX, Physical Format: %s (%lu Bytes/sec.)", streamIndex, outputStream, StreamDescriptionToString(outputFormat, formatString), m_AvgBytesPerSec);  
+  CLog::Log(LOGDEBUG, "CoreAudioRenderer::InitializeEncoded: Selected stream[%u] - id: 0x%x, Physical Format: %s (%lu Bytes/sec.)", streamIndex, outputStream, StreamDescriptionToString(outputFormat, formatString), m_AvgBytesPerSec);  
   
   // TODO: Auto hogging sets this for us. Figure out how/when to turn it off or use it
   // It appears that leaving this set will aslo restore the previous stream format when the

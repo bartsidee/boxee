@@ -53,7 +53,7 @@ FFPsyWindowInfo ff_psy_suggest_window(FFPsyContext *ctx,
 }
 
 void ff_psy_set_band_info(FFPsyContext *ctx, int channel,
-                          const float *coeffs, FFPsyWindowInfo *wi)
+                          const float *coeffs, const FFPsyWindowInfo *wi)
 {
     ctx->model->analyze(ctx, channel, coeffs, wi);
 }
@@ -80,19 +80,17 @@ av_cold struct FFPsyPreprocessContext* ff_psy_preprocess_init(AVCodecContext *av
 {
     FFPsyPreprocessContext *ctx;
     int i;
-    float cutoff_coeff;
+    float cutoff_coeff = 0;
     ctx        = av_mallocz(sizeof(FFPsyPreprocessContext));
     ctx->avctx = avctx;
 
     if (avctx->cutoff > 0)
         cutoff_coeff = 2.0 * avctx->cutoff / avctx->sample_rate;
-    else if (avctx->flags & CODEC_FLAG_QSCALE)
-        cutoff_coeff = 1.0f / av_clip(1 + avctx->global_quality / FF_QUALITY_SCALE, 1, 8);
-    else
-        cutoff_coeff = avctx->bit_rate / (4.0f * avctx->sample_rate * avctx->channels);
 
-    ctx->fcoeffs = ff_iir_filter_init_coeffs(FF_FILTER_TYPE_BUTTERWORTH, FF_FILTER_MODE_LOWPASS,
-                                             FILT_ORDER, cutoff_coeff, 0.0, 0.0);
+    if (cutoff_coeff)
+    ctx->fcoeffs = ff_iir_filter_init_coeffs(avctx, FF_FILTER_TYPE_BUTTERWORTH,
+                                             FF_FILTER_MODE_LOWPASS, FILT_ORDER,
+                                             cutoff_coeff, 0.0, 0.0);
     if (ctx->fcoeffs) {
         ctx->fstate = av_mallocz(sizeof(ctx->fstate[0]) * avctx->channels);
         for (i = 0; i < avctx->channels; i++)
@@ -126,5 +124,6 @@ av_cold void ff_psy_preprocess_end(struct FFPsyPreprocessContext *ctx)
         for (i = 0; i < ctx->avctx->channels; i++)
             ff_iir_filter_free_state(ctx->fstate[i]);
     av_freep(&ctx->fstate);
+    av_free(ctx);
 }
 

@@ -44,6 +44,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
+				AdditionalIncludeDirectories="..\jpeg-turbo\win"
 				PreprocessorDefinitions="_WINDOWS;WIN32;NDEBUG;UNICODE;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -114,6 +115,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="..\jpeg-turbo\win"
 				PreprocessorDefinitions="_WINDOWS;WIN32;_DEBUG;UNICODE;_CRT_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="3"
 				PrecompiledHeaderFile=".\Unicode_Debug/jpeg.pch"
@@ -182,7 +184,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE"
+				AdditionalIncludeDirectories="..\jpeg-turbo\win"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;JPEG_INTERNALS"
 				RuntimeLibrary="3"
 				PrecompiledHeaderFile=".\Debug/jpeg.pch"
 				AssemblerListingLocation=".\Debug/"
@@ -252,7 +255,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE"
+				AdditionalIncludeDirectories="..\jpeg-turbo\win"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;JPEG_INTERNALS"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -298,6 +302,10 @@
 	<References>
 	</References>
 	<Files>
+		<File
+			RelativePath=".\jaricom.c"
+			>
+		</File>
 		<File
 			RelativePath="Jcapimin.c"
 			>
@@ -377,6 +385,10 @@
 					PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;$(NoInherit)"
 				/>
 			</FileConfiguration>
+		</File>
+		<File
+			RelativePath=".\jcarith.c"
+			>
 		</File>
 		<File
 			RelativePath="Jccoefct.c"
@@ -1025,6 +1037,10 @@
 					PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;$(NoInherit)"
 				/>
 			</FileConfiguration>
+		</File>
+		<File
+			RelativePath=".\jdarith.c"
+			>
 		</File>
 		<File
 			RelativePath="Jdatadst.c"

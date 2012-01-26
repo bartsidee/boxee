@@ -27,6 +27,7 @@
 #include "Cfgmgr32.h"
 #endif
 #include "MediaSource.h"
+#include "utils/Stopwatch.h"
 
 enum Drive_Types
 {
@@ -43,22 +44,17 @@ public:
   CWIN32Util(void);
   virtual ~CWIN32Util(void);
 
-  static const CStdString GetNextFreeDriveLetter();
-  static CStdString MountShare(const CStdString &smbPath, const CStdString &strUser, const CStdString &strPass, DWORD *dwError=NULL);
-  static CStdString MountShare(const CStdString &strPath, DWORD *dwError=NULL);
-  static DWORD UmountShare(const CStdString &strPath);
-  static CStdString URLEncode(const CURL &url);
+  static CStdString URLEncode(const CURI &url);
   static CStdString GetLocalPath(const CStdString &strPath);
   static char FirstDriveFromMask (ULONG unitmask);
   static int GetDriveStatus(const CStdString &strPath);
-  static void UpdateDriveMask();
-  static CStdString GetChangedDrive();
   static bool PowerManagement(PowerState State);
   static bool XBMCShellExecute(const CStdString &strPath, bool bWaitForScriptExit=false);
   static std::vector<CStdString> GetDiskUsage();
   static CStdString GetResInfoString();
   static int GetDesktopColorDepth();
-  static void GetGLVersion(int& major, int& minor);
+  static CStdString GetSpecialFolder(int csidl);
+  static CStdString CWIN32Util::GetSystemPath();
   static CStdString GetProfilePath();
   static CStdString UncToSmb(const CStdString &strPath);
   static void ExtendDllPath();
@@ -66,7 +62,7 @@ public:
   static HRESULT EjectTray(const char cDriveLetter='\0');
   static HRESULT CloseTray(const char cDriveLetter='\0');
   static bool EjectDrive(const char cDriveLetter='\0');
-#if defined(HAS_GL) || defined(HAS_GLES)
+#ifdef HAS_GL
   static void CheckGLVersion();
   static bool HasGLDefaultDrivers();
   static bool HasReqGLVersion();
@@ -74,17 +70,28 @@ public:
   static CStdString GetMyVideosPath();
   static CStdString GetMyMusicPath();
   static CStdString GetMyPicturesPath();
-  static CStdString GetSystemPath();
   static BOOL IsCurrentUserLocalAdministrator();
-  static void GetDrivesByType(VECSOURCES &localDrives, Drive_Types eDriveType=ALL_DRIVES);
+  static void GetDrivesByType(VECSOURCES &localDrives, Drive_Types eDriveType=ALL_DRIVES, bool bonlywithmedia=false);
   static void AddRemovableDrives();
   static bool IsAudioCD(const CStdString& strPath);
   static CStdString GetDiskLabel(const CStdString& strPath);
   static void RunAtLogin(bool run);
 
+  static bool Is64Bit();
+  static LONG UtilRegGetValue( const HKEY hKey, const char *const pcKey, DWORD *const pdwType, char **const ppcBuffer, DWORD *const pdwSizeBuff, const DWORD dwSizeAdd );
+  static bool UtilRegOpenKeyEx( const HKEY hKeyParent, const char *const pcKey, const REGSAM rsAccessRights, HKEY *hKey, const bool bReadX64= false );
+
+  static bool GetCrystalHDLibraryPath(CStdString &strPath);
+  
 private:
-  static DWORD dwDriveMask;
 #if _MSC_VER > 1400
   static DEVINST GetDrivesDevInstByDiskNumber(long DiskNumber);
 #endif
+};
+
+
+class CWinIdleTimer : public CStopWatch
+{
+public:
+  void StartZero();
 };

@@ -42,8 +42,6 @@ public:
 
    virtual CStdString GetMacAddress(void);
 
-   virtual void GetAllAddresses(std::vector<CStdString> &vecAddr);
-
    virtual CStdString GetCurrentIPAddress(void);
    virtual CStdString GetCurrentNetmask(void);
    virtual CStdString GetCurrentBroadcastAddress(void);

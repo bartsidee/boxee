@@ -43,16 +43,24 @@ public:
     SOURCE_TYPE_REMOVABLE    = 6
   };
 
+  enum LocalSourceType
+  {
+    LOCAL_SOURCE_TYPE_UNKNOWN      = 0,
+    LOCAL_SOURCE_TYPE_USB          = 1,
+    LOCAL_SOURCE_TYPE_SD           = 2,
+    LOCAL_SOURCE_TYPE_INTERNAL_HD  = 3,
+  };
+
   enum ScanType
   {
     SCAN_TYPE_PRIVATE        = 0,
     SCAN_TYPE_ONCE           = 1,
     SCAN_TYPE_DAILY          = 2,
-    SCAN_TYPE_MONITORED      = 3
-
+    SCAN_TYPE_MONITORED      = 3,
+    SCAN_TYPE_HOURLY         = 4
   };
 
-  CMediaSource() { m_iDriveType=SOURCE_TYPE_UNKNOWN; m_iScanType=SCAN_TYPE_DAILY, m_iLockMode=LOCK_MODE_EVERYONE; m_iBadPwdCount=0; m_iHasLock=0; m_ignore=false; };
+  CMediaSource() { m_iDriveType=SOURCE_TYPE_UNKNOWN; m_iScanType=SCAN_TYPE_DAILY, m_iLockMode=LOCK_MODE_EVERYONE; m_iBadPwdCount=0; m_iHasLock=0; m_ignore=false; m_localSourceType = LOCAL_SOURCE_TYPE_UNKNOWN; };
   virtual ~CMediaSource() {};
 
   bool operator==(const CMediaSource &right) const;
@@ -64,6 +72,7 @@ public:
   CStdString strName; ///< Name of the share, can be choosen freely.
   CStdString strStatus; ///< Status of the share (eg has disk etc.)
   CStdString strPath; ///< Path of the share, eg. iso9660:// or F:
+  CStdString strDev;  /// Device mounted on
 
   /*!
   \brief The type of the media source.
@@ -119,8 +128,10 @@ public:
   bool m_countryAllow;
   CStdString m_country;
   CStdString m_type;
-// END BOXEE
+  LocalSourceType m_localSourceType;
 
+// END BOXEE
+  
 private:
   bool IsCountryAllowed() const;    
 };
@@ -138,3 +149,6 @@ typedef std::vector<CMediaSource> VECSOURCES;
 \sa CMediaSource, VECSOURCES
 */
 typedef std::vector<CMediaSource>::iterator IVECSOURCES;
+
+void AddOrReplace(VECSOURCES& sources, const VECSOURCES& extras);
+void AddOrReplace(VECSOURCES& sources, const CMediaSource& source);

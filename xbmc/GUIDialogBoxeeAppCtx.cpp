@@ -36,7 +36,7 @@ bool CGUIDialogBoxeeAppCtx::OnMessage(CGUIMessage &message)
          
          if (iControl == CONTROL_SETTINGS && m_item.IsPlugin() && CPluginSettings::SettingsExist(m_item.m_strPath))
          {
-            CURL url(m_item.m_strPath);
+            CURI url(m_item.m_strPath);
             CGUIDialogPluginSettings::ShowAndGetInput(url);
             return true;
          }

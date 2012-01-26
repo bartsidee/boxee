@@ -51,29 +51,35 @@ bool BXBoxeeSources::Parse()
   }
   
   m_sources.clear();
-  
+
   TiXmlNode *pMsgNode = 0;
   while ((pMsgNode = pChild->IterateChildren(pMsgNode)) != NULL)
   {
     if (pMsgNode->ValueStr().compare("source") == 0)
     {
-    	BXObject obj;
+      BXObject obj;
 
-		TiXmlElement* sourceElement = (TiXmlElement*)pMsgNode;
+      TiXmlElement* sourceElement = (TiXmlElement*)pMsgNode;
 
-		std::string strSourceId = sourceElement->Attribute("id") ? sourceElement->Attribute("id") : "";
-    	std::string strSourceType = sourceElement->Attribute("type") ? sourceElement->Attribute("type") : "";
-    	std::string strSourceGeo = sourceElement->Attribute("geo") ? sourceElement->Attribute("geo") : "";
-		std::string strSourceName = sourceElement->GetText() ? sourceElement->GetText() : "";
+      std::string strSourceId = sourceElement->Attribute("id") ? sourceElement->Attribute("id") : "";
+      std::string strSourceType = sourceElement->Attribute("type") ? sourceElement->Attribute("type") : "";
+      std::string strSourceGeo = sourceElement->Attribute("geo") ? sourceElement->Attribute("geo") : "";
+      std::string strSourceThumb = sourceElement->Attribute("thumb") ? sourceElement->Attribute("thumb") : "";
+      std::string strSourceName = sourceElement->GetText() ? sourceElement->GetText() : "";
+      std::string strSourcePremium = sourceElement->Attribute("premium") ? sourceElement->Attribute("premium") : "false";
+      std::string strSourceOffer = sourceElement->Attribute("offer") ? sourceElement->Attribute("offer") : "free";
 
-    	LOG(LOG_LEVEL_DEBUG,"BXBoxeeSources::Parse - source id = %s, name = %s, type = %s, geo = %s (source)", strSourceId.c_str(), strSourceName.c_str(), strSourceType.c_str(), strSourceGeo.c_str());
+      //LOG(LOG_LEVEL_DEBUG,"BXBoxeeSources::Parse - [sourceId=%s][name=%s][type=%s][geo=%s][thumb=%s][premium=%s][offer=%s] (source)",strSourceId.c_str(),strSourceName.c_str(),strSourceType.c_str(),strSourceGeo.c_str(),strSourceThumb.c_str(),strSourcePremium.c_str(),strSourceOffer.c_str());
 
-    	obj.SetValue("source_id", strSourceId);
-    	obj.SetValue("source_name", strSourceName);
-    	obj.SetValue("source_type", strSourceType);
-    	obj.SetValue("source_geo", strSourceGeo);
+      obj.SetValue("source_id", strSourceId);
+      obj.SetValue("source_name", strSourceName);
+      obj.SetValue("source_type", strSourceType);
+      obj.SetValue("source_geo", strSourceGeo);
+      obj.SetValue("source_thumb", strSourceThumb);
+      obj.SetValue("source_premium", strSourcePremium);
+      obj.SetValue("source_offer", strSourceOffer);
 
-        m_sources.push_back(obj);
+      m_sources.push_back(obj);
     }
   }
   

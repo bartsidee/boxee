@@ -12,4 +12,3 @@ NeAACDecDecode                    @6
 NeAACDecClose                     @7
 NeAACDecGetErrorMessage           @8
 NeAACDecAudioSpecificConfig       @9
-NeAACDecPostSeekReset             @10

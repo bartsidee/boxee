@@ -21,8 +21,18 @@
 
 #include "FileItem.h"
 #include "DVDInputStreamTV.h"
+#include "xbmc/FileSystem/IFile.h"
+#include "xbmc/FileSystem/ILiveTV.h"
+
+#ifdef HAS_FILESYSTEM_MYTH
 #include "FileSystem/CMythFile.h"
+#endif
+#ifdef HAS_FILESYSTEM_VTP
 #include "FileSystem/VTPFile.h"
+#endif
+#ifdef HAS_DVB
+#include "xbmc/FileSystem/DVBFile.h"
+#endif
 #include "URL.h"
 
 using namespace XFILE;
@@ -49,20 +59,36 @@ bool CDVDInputStreamTV::Open(const char* strFile, const std::string& content)
 {
   if (!CDVDInputStream::Open(strFile, content)) return false;
 
+  if(strncmp(strFile, "dvb://", 6) == 0)
+  {
+#ifdef HAS_DVB
+    m_pFile = new CDVBFile();
+    m_pLiveTV = ((CDVBFile*)m_pFile)->GetLiveTV();
+    m_pRecordable = NULL;
+#endif
+  }
+  else
+
   if(strncmp(strFile, "vtp://", 6) == 0)
   {
+#ifdef HAS_FILESYSTEM_VTP
     m_pFile       = new CVTPFile();
     m_pLiveTV     = ((CVTPFile*)m_pFile)->GetLiveTV();
     m_pRecordable = NULL;
+#endif
   }
   else
   {
-  m_pFile = new CCMythFile();
-  m_pLiveTV = ((CCMythFile*)m_pFile)->GetLiveTV();
-  m_pRecordable = ((CCMythFile*)m_pFile)->GetRecordable();
+#ifdef HAS_FILESYSTEM_MYTH
+    m_pFile = new CCMythFile();
+    m_pLiveTV = ((CCMythFile*)m_pFile)->GetLiveTV();
+    m_pRecordable = ((CCMythFile*)m_pFile)->GetRecordable();
+#endif
   }
 
-  CURL url(strFile);
+
+
+  CURI url(strFile);
   // open file in binary mode
   if (!m_pFile->Open(url))
   {
@@ -149,6 +175,12 @@ bool CDVDInputStreamTV::SelectChannel(unsigned int channel)
   return m_pLiveTV->SelectChannel(channel);
 }
 
+int CDVDInputStreamTV::GetProgramId()
+{
+  if(!m_pLiveTV) return 0;
+    return m_pLiveTV->GetProgramId();
+}
+
 bool CDVDInputStreamTV::UpdateItem(CFileItem& item)
 {
   if(m_pLiveTV)
@@ -191,5 +223,13 @@ bool CDVDInputStreamTV::Record(bool bOnOff)
   return false;
 }
 
+std::string& CDVDInputStreamTV::GetContent()
+{
+  if(!m_pFile)
+    m_content = "application/octet-stream";
+  else
+    m_content = m_pFile->GetContent();
 
+  return m_content;
+}
 

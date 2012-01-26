@@ -27,6 +27,7 @@
 #include <time.h>
 #else
 #include <sys/time.h> 
+#include <sys/socket.h>
 #endif
 
 #define LOG_LEVEL_NONE         -1 // nothing at all is logged
@@ -57,7 +58,7 @@ namespace XFILE {
 }
 
 class CLog
-{  
+{
 public:
   CLog();
   virtual ~CLog(void);
@@ -66,14 +67,20 @@ public:
   static void DebugLog(const char *format, ...);
   static void MemDump(char *pData, int length);
   static void DebugLogMemory();
+  static void ResetSyslogServer();
 
   static int           m_logLevel;
   static bool          m_showLogLine;
   
 private:
+  static int           m_syslogFd;
   static bool RotateLog(void);
   static XFILE::CFile *m_file;
   static int           m_logSize;
+  
+#ifndef _WIN32
+  static struct sockaddr_in m_syslogAddr;
+#endif
 };
 
 // GL Error checking macro

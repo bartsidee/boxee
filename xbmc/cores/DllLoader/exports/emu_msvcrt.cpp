@@ -61,6 +61,7 @@
 #include "utils/log.h"
 
 #include "Application.h"
+#include "ThreadPolicy.h"
 
 using namespace std;
 using namespace XFILE;
@@ -397,7 +398,6 @@ extern "C"
 
     if (g_emuFileWrapper.DescriptorIsEmulatedFile(fd))
     {
-      not_implement("msvcrt.dll incomplete function _fdopen(...) called\n");
       // file is probably already open here ???
       // the only correct thing todo is to close and reopn the file ???
       // for now, just return its stream
@@ -453,10 +453,10 @@ extern "C"
     // or the python DLLs have malformed slashes on Win32 & Xbox
     // (-> E:\test\VIDEO_TS/VIDEO_TS.BUP))
     if (bWrite)
-      bResult = pFile->OpenForWrite(CURL::ValidatePath(str), bOverwrite);
+      bResult = pFile->OpenForWrite(CURI::ValidatePath(str), bOverwrite);
     else
-      bResult = pFile->Open(CURL::ValidatePath(str));
-    
+      bResult = pFile->Open(CURI::ValidatePath(str));
+
     if (bResult)
     {
       EmuFileObject* object = g_emuFileWrapper.RegisterFileObject(pFile);
@@ -758,7 +758,7 @@ extern "C"
   {
     char str[1024];
     int size = sizeof(str);
-    CURL url(file);
+    CURI url(file);
     if (url.IsLocal())
     {
       // move to CFile classes
@@ -780,7 +780,7 @@ extern "C"
       }
 
       // Make sure the slashes are correct & translate the path
-      return _findfirst(_P(CURL::ValidatePath(str)), data);
+      return _findfirst(_P(CURI::ValidatePath(str)), data);
     }
     // non-local files. handle through IDirectory-class - only supports '*.bah' or '*.*'
     CStdString strURL(file);
@@ -802,12 +802,11 @@ extern "C"
       return 0xFFFF; // no free slots
     if (url.GetProtocol().Equals("filereader"))
     {
-      CURL url2(url.GetFileName());
+      CURI url2(url.GetFileName());
       url = url2;
     }
     CStdString fName = url.GetFileName();
     url.SetFileName("");
-    url.GetURL(strURL);
     bVecDirsInited = true;
     vecDirsOpen[iDirSlot].items.Clear();
     vecDirsOpen[iDirSlot].Directory = CFactoryDirectory::Create(strURL);
@@ -994,7 +993,7 @@ extern "C"
   FILE* dll_fopen(const char* filename, const char* mode)
   {
     if (g_application.m_bStop) return NULL;
-
+    ThreadIdentifier tid = 0;
     FILE* file = NULL;
 #if defined(_LINUX) && !defined(__APPLE__)
     if (strcmp(filename, MOUNTED) == 0
@@ -1003,7 +1002,11 @@ extern "C"
       CLog::Log(LOGINFO, "%s - something opened the mount file, let's hope it knows what it's doing", __FUNCTION__);
       return fopen(filename, mode);
     }
+    tid = gettid();
+#else
+    tid = CThread::GetCurrentThreadId();
 #endif
+
     int iMode = O_BINARY;
     if (strstr(mode, "r+"))
       iMode |= O_RDWR;
@@ -1014,6 +1017,22 @@ extern "C"
     else if (strchr(mode, 'w'))
       iMode |= _O_WRONLY  | O_CREAT;
       
+    FileSystemItem item;
+    item.fileName = filename;
+    item.accessMode = mode;
+
+#if !defined(HAS_EMBEDDED) && !defined(__APPLE__)
+    bool safeToOpen = true;
+    if(TPApplyPolicy(tid, FILE_SYSTEM, &item, &safeToOpen) && !safeToOpen)
+    {
+#if defined(_LINUX) && !defined(__APPLE__)
+      errno = -EACCES;
+#elif _WIN32
+      SetLastError(ERROR_ACCESS_DENIED);  
+#endif
+      return NULL;
+    }
+#endif
     int fd = dll_open(filename, iMode);
     if (fd >= 0)
     {
@@ -1533,13 +1552,51 @@ extern "C"
     return 0;
   }
 
+  typedef struct tagBeginThreadArgs
+  {
+    void* arglist;
+    void* start_address;
+    ThreadIdentifier tid_parent;
+  } BeginThreadArgs;
+
+  void beginthread_entry( 
+    void *arglist 
+  )
+  {
+    typedef void (__cdecl * StartAddress) (void *);
+
+    BeginThreadArgs* args = (BeginThreadArgs*)arglist;
+    StartAddress start_address = (StartAddress)args->start_address;
+    void *origarglist = args->arglist;
+    ThreadIdentifier tidParent = args->tid_parent;  
+#if defined(_LINUX) && !defined(__APPLE__)
+    ThreadIdentifier tid = gettid();
+#else
+    ThreadIdentifier tid = CThread::GetCurrentThreadId();	
+#endif
+    delete args;
+    
+    TPInheritPolicy(tid, tidParent);
+
+    start_address(origarglist);
+  }
+
   uintptr_t dll_beginthread( 
     void( *start_address )( void * ),
     unsigned stack_size,
     void *arglist 
   )
   {
-    return _beginthread(start_address, stack_size, arglist);
+    BeginThreadArgs* args = new BeginThreadArgs;
+
+    args->arglist = arglist;
+    args->start_address = (void*)start_address;
+#if defined(_LINUX) && !defined(__APPLE__)
+    args->tid_parent = gettid();
+#else
+    args->tid_parent = CThread::GetCurrentThreadId();
+#endif
+    return _beginthread(beginthread_entry, stack_size, args);
   }
 
   HANDLE dll_beginthreadex(LPSECURITY_ATTRIBUTES lpThreadAttributes, DWORD dwStackSize,
@@ -1581,6 +1638,17 @@ extern "C"
     }
     // errno is set by file.Stat(...)
     return -1;
+  }
+
+  void dll_endthread(void)
+  {
+    ThreadIdentifier tid = 0;
+#if defined(_LINUX) && !defined(__APPLE__)
+    tid = gettid();
+#else
+    tid = CThread::GetCurrentThreadId();
+#endif
+    TPDeletePolicy(tid, NULL);
   }
 
   int dll_stati64(const char *path, struct _stati64 *buffer)
@@ -1636,9 +1704,7 @@ extern "C"
       return pFile->Stat(buffer);
 #endif
 */
-#if defined(__APPLE__)
-     return pFile->Stat(buffer);
-#elif defined(_LINUX) 
+#if defined(_LINUX) 
     struct __stat64 s64;
     int nRc =  pFile->Stat(&s64);
     CUtil::Stat64ToStat(buffer, &s64);
@@ -1741,10 +1807,10 @@ extern "C"
 
 #ifndef _LINUX
     // Make sure the slashes are correct & translate the path
-    return mkdir(_P(CURL::ValidatePath(dir)).c_str());
+    return mkdir(_P(CURI::ValidatePath(dir)).c_str());
 #else
     // Make sure the slashes are correct & translate the path 
-    return mkdir(_P(CURL::ValidatePath(dir)).c_str(), 0755);
+    return mkdir(_P(CURI::ValidatePath(dir)).c_str(), 0755);
 #endif
   }
 
@@ -2052,6 +2118,29 @@ extern "C"
     return (long)d;
   }
 #endif
+
+  
+  int dll_exec(const char *filename, char *const argv[], char *const envp[])
+  {
+#if defined(_LINUX)
+  ThreadIdentifier tid = 0;
+#if !defined(__APPLE__)
+  tid = gettid();
+#else
+  tid = CThread::GetCurrentThreadId();
+#endif
+#if !defined(HAS_EMBEDDED) && !defined(__APPLE__)
+  bool safeToOpen = true;
+  if(TPApplyPolicy(tid, DISALLOW, (void*)(*(void**)(&filename)), &safeToOpen) && !safeToOpen)
+  {
+    errno = -EACCES;
+    return -1;
 }
-
-
+#endif
+  return envp ? execve(filename,argv,envp) : execv(filename, argv);
+#else
+  not_implement("dll_exec fake function called\n"); //warning
+  return 0;
+#endif  
+  }
+}

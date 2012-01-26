@@ -230,7 +230,7 @@ void CFlacTag::ProcessVorbisComment(const char *pBuffer, int nSize)
   for (unsigned int I2 = 0; I2 < Count; I2++) // Run through the comments
   {
     I1 = Endian_SwapLE32(*(unsigned int*)(pBuffer + Pos));   // Length of comment
-    if (Pos + 4 + I1 > nSize)
+    if (Pos + 4 + I1 > (unsigned int) nSize)
       break;
     if (I1 < CHUNK_SIZE)
     {

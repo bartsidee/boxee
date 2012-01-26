@@ -155,7 +155,7 @@ static int nuv_header(AVFormatContext *s, AVFormatParameters *ap) {
         vst = av_new_stream(s, ctx->v_id);
         if (!vst)
             return AVERROR(ENOMEM);
-        vst->codec->codec_type = CODEC_TYPE_VIDEO;
+        vst->codec->codec_type = AVMEDIA_TYPE_VIDEO;
         vst->codec->codec_id = CODEC_ID_NUV;
         vst->codec->width = width;
         vst->codec->height = height;
@@ -171,7 +171,7 @@ static int nuv_header(AVFormatContext *s, AVFormatParameters *ap) {
         ast = av_new_stream(s, ctx->a_id);
         if (!ast)
             return AVERROR(ENOMEM);
-        ast->codec->codec_type = CODEC_TYPE_AUDIO;
+        ast->codec->codec_type = AVMEDIA_TYPE_AUDIO;
         ast->codec->codec_id = CODEC_ID_PCM_S16LE;
         ast->codec->channels = 2;
         ast->codec->sample_rate = 44100;
@@ -221,7 +221,7 @@ static int nuv_packet(AVFormatContext *s, AVPacket *pkt) {
 
                 // HACK: we have no idea if it is a keyframe,
                 // but if we mark none seeking will not work at all.
-                pkt->flags |= PKT_FLAG_KEY;
+                pkt->flags |= AV_PKT_FLAG_KEY;
                 pkt->pos = pos;
                 pkt->pts = AV_RL32(&hdr[4]);
                 pkt->stream_index = ctx->v_id;
@@ -234,7 +234,7 @@ static int nuv_packet(AVFormatContext *s, AVPacket *pkt) {
                 ret = get_buffer(pb, pkt->data + copyhdrsize, size);
                 if (ret < 0) {
                     av_free_packet(pkt);
-                return ret;
+                    return ret;
                 }
                 if (ret < size)
                     av_shrink_packet(pkt, copyhdrsize + ret);
@@ -246,7 +246,7 @@ static int nuv_packet(AVFormatContext *s, AVPacket *pkt) {
                     break;
                 }
                 ret = av_get_packet(pb, pkt, size);
-                pkt->flags |= PKT_FLAG_KEY;
+                pkt->flags |= AV_PKT_FLAG_KEY;
                 pkt->pos = pos;
                 pkt->pts = AV_RL32(&hdr[4]);
                 pkt->stream_index = ctx->a_id;
@@ -340,7 +340,7 @@ static int64_t nuv_read_dts(AVFormatContext *s, int stream_index,
 }
 
 
-AVInputFormat nuv_demuxer = {
+AVInputFormat ff_nuv_demuxer = {
     "nuv",
     NULL_IF_CONFIG_SMALL("NuppelVideo format"),
     sizeof(NUVContext),

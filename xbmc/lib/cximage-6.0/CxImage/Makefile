@@ -1,6 +1,7 @@
 LIB=cximage.a
 CXXFLAGS+=-fPIC
 DEFINES+=-D_DLL -DXBMC
+INCLUDES+=-I../../libsquish
 ifeq ($(findstring osx,$(ARCH)), osx)
 	CXXFLAGS+=-fno-common
 	INCLUDES+=-I../jasper/include -I/opt/local/include

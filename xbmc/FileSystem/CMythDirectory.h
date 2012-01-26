@@ -20,6 +20,10 @@
  *
  */
 
+#include "system.h"
+
+#ifdef HAS_FILESYSTEM_MYTH
+
 #include "IDirectory.h"
 #include "CMythSession.h"
 #include "DateTime.h"
@@ -67,3 +71,5 @@ private:
 };
 
 }
+
+#endif

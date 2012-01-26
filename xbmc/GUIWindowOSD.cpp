@@ -68,7 +68,7 @@ void CGUIWindowOSD::Render()
   {
     // check for movement of mouse or a submenu open
     if (g_Mouse.HasMoved() || g_windowManager.IsWindowActive(WINDOW_DIALOG_AUDIO_OSD_SETTINGS)
-						   || g_windowManager.IsWindowActive(WINDOW_DIALOG_VIDEO_OSD_SETTINGS)
+                           || g_windowManager.IsWindowActive(WINDOW_DIALOG_VIDEO_OSD_SETTINGS)
 						   || g_windowManager.IsWindowActive(WINDOW_DIALOG_SUBTITLE_OSD_SETTINGS)
                            || g_windowManager.IsWindowActive(WINDOW_DIALOG_VIDEO_BOOKMARKS)
                            || g_windowManager.IsWindowActive(WINDOW_DIALOG_OSD_TELETEXT))
@@ -128,7 +128,7 @@ bool CGUIWindowOSD::OnMessage(CGUIMessage& message)
         if (CGUIDialogBoxeeRate::ShowAndGetInput(bLike))
         {
           BoxeeUtils::Rate(&item, bLike);
-          g_application.m_guiDialogKaiToast.QueueNotification("", "", g_localizeStrings.Get(51034), 5000);
+          g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_STAR, "", g_localizeStrings.Get(51034), 5000 , KAI_YELLOW_COLOR, KAI_GREY_COLOR);
         }
       }
       else if (iControl == CONTROL_RECOMMEND_BUTTON)

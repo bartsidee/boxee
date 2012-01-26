@@ -35,7 +35,7 @@ CWinSystemX11GL::CWinSystemX11GL()
   m_glXSwapIntervalMESA  = NULL;
   m_glXGetSyncValuesOML  = NULL;
   m_glXSwapBuffersMscOML = NULL;
-
+  
   m_iVSyncErrors = 0;
 }
 
@@ -134,7 +134,7 @@ void CWinSystemX11GL::SetVSyncImpl(bool enable)
 
   CStdString strVendor(m_RenderVendor);
   strVendor.ToLower();
-
+  
   if(!enable)
     return;
 
@@ -196,6 +196,14 @@ bool CWinSystemX11GL::IsExtSupported(const char* extension)
   return m_glxext.find(name) != std::string::npos;
 }
 
+void CWinSystemX11GL::EnableDepthTest(bool bEnable)
+{
+  if(bEnable)
+    glEnable(GL_DEPTH_TEST);
+  else
+    glDisable(GL_DEPTH_TEST);
+}
+
 bool CWinSystemX11GL::CreateNewWindow(const CStdString& name, bool fullScreen, RESOLUTION_INFO& res, PHANDLE_EVENT_FUNC userFunction)
 {
   if(!CWinSystemX11::CreateNewWindow(name, fullScreen, res, userFunction))
@@ -227,7 +235,7 @@ bool CWinSystemX11GL::CreateNewWindow(const CStdString& name, bool fullScreen, R
     m_glXGetVideoSyncSGI = (int (*)(unsigned int*))glXGetProcAddress((const GLubyte*)"glXGetVideoSyncSGI");
   else
     m_glXGetVideoSyncSGI = NULL;
-
+    
   if (IsExtSupported("GLX_SGI_swap_control") )
     m_glXSwapIntervalSGI = (int (*)(int))glXGetProcAddress((const GLubyte*)"glXSwapIntervalSGI");
   else
@@ -254,7 +262,7 @@ bool CWinSystemX11GL::SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, bool 
 {
   CWinSystemX11::SetFullScreen(fullScreen, res, blankOtherDisplays);
   CRenderSystemGL::ResetRenderSystem(res.iWidth, res.iHeight, fullScreen, res.fRefreshRate );
-
+  
   return true;
 }
 

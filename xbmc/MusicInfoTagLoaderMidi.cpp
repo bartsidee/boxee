@@ -18,7 +18,10 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
-
+#ifndef WIN32
+#include <config.h>
+#endif
+#ifdef HAS_TIMIDITY_CODEC
 #include "MusicInfoTagLoaderMidi.h"
 #include "Util.h"
 #include "MusicInfoTag.h"
@@ -67,3 +70,4 @@ bool CMusicInfoTagLoaderMidi::Load(const CStdString & strFileName, CMusicInfoTag
   tag.SetLoaded(true);
   return true;
 }
+#endif

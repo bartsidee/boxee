@@ -25,6 +25,10 @@
 
 #include <sys/stat.h>
 
+#ifdef _WIN32
+#include "../win32/c_defs.h"
+#endif
+
 #ifndef __GNUC__
 #ifndef _XBOX
 #pragma comment (lib,"../../xbmc/lib/zlib/zlib.lib")
@@ -52,13 +56,13 @@ CFileZip::~CFileZip()
   Close();
 }
 
-bool CFileZip::Open(const CURL&url)
+bool CFileZip::Open(const CURI&url)
 {
   CStdString strPath;
   CStdString strOpts  = url.GetOptions();
-  CURL url2(url);
+  CURI url2(url);
   url2.SetOptions("");
-  url2.GetURL(strPath);
+  strPath = url2.Get();
   if (!g_ZipManager.GetZipEntry(strPath,mZipItem))
     return false;
   
@@ -240,11 +244,11 @@ int64_t CFileZip::Seek(int64_t iFilePosition, int iWhence)
   return -1;
 }
 
-bool CFileZip::Exists(const CURL& url)
+bool CFileZip::Exists(const CURI& url)
 {
   SZipEntry item;
   CStdString strPath;
-  url.GetURL(strPath);
+  strPath = url.Get();
   if (g_ZipManager.GetZipEntry(strPath,item))
     return true;
   return false;
@@ -253,7 +257,8 @@ bool CFileZip::Exists(const CURL& url)
 int CFileZip::Stat(struct __stat64 *buffer)
 {
   int ret;
-  struct tm tm = {};
+  struct tm tm;
+  bzero(&tm, sizeof(tm));
 
   ret = mFile.Stat(buffer);
   tm.tm_sec = (mZipItem.mod_time & 0x1F) << 1;
@@ -270,10 +275,9 @@ int CFileZip::Stat(struct __stat64 *buffer)
   return ret;
 }
 
-int CFileZip::Stat(const CURL& url, struct __stat64* buffer)
+int CFileZip::Stat(const CURI& url, struct __stat64* buffer)
 {
-  CStdString strPath;
-  url.GetURL(strPath);
+  CStdString strPath = url.Get();
   if (!g_ZipManager.GetZipEntry(strPath,mZipItem))
     return -1;
 

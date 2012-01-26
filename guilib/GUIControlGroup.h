@@ -48,7 +48,7 @@ public:
   virtual bool SendControlMessage(CGUIMessage& message);
   virtual bool HasFocus() const;
   virtual void AllocResources();
-  virtual void FreeResources();
+  virtual void FreeResources(bool immediately = false);
   virtual void DynamicResourceAlloc(bool bOnOff);
   virtual bool CanFocus() const;
   virtual void SetCanFocus(bool canFocus);
@@ -76,11 +76,12 @@ public:
   virtual CGUIControl *GetFirstFocusableControl(int id);
   void GetContainers(std::vector<CGUIControl *> &containers) const;
   void GetControls(std::vector<CGUIControl *> &controls) const;
+  void GetControlsByType(CGUIControl::GUICONTROLTYPES type, std::vector<CGUIControl *> &GetControlsByType) const;
 
   virtual void AddControl(CGUIControl *control, int position = -1);
   bool InsertControl(CGUIControl *control, const CGUIControl *insertPoint);
   virtual bool RemoveControl(const CGUIControl *control);
-  virtual void ClearAll();
+  virtual void ClearAll(bool bDelete = true);
   void SetDefaultControl(int id, bool always) { m_defaultControl = id; m_defaultAlways = always; };
   void SetRenderFocusedLast(bool renderLast) { m_renderFocusedLast = renderLast; };
   void SetCropping(bool cropping) { m_cropping = cropping; };
@@ -88,6 +89,13 @@ public:
   virtual void SaveStates(std::vector<CControlState> &states);
 
   virtual bool IsGroup() const { return true; };
+
+  virtual bool GetClipChildren() { return m_bClipChildren; }
+  virtual void SetClipChildren(bool bClip) { m_bClipChildren = bClip; };
+ 
+  virtual bool GetAutoResize() { return m_bAutoResize; };
+  virtual void SetAutoResize(bool bAutoResize) { m_bAutoResize = bAutoResize; };
+
 
 #ifdef _DEBUG
   virtual void DumpTextureUse();
@@ -111,6 +119,8 @@ protected:
   int m_focusedControl;
   bool m_renderFocusedLast;
   bool m_cropping;
+  bool m_bClipChildren;
+  bool m_bAutoResize;
 
   // render time
   unsigned int m_renderTime;

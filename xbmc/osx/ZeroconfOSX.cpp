@@ -41,7 +41,8 @@ CZeroconfOSX::~CZeroconfOSX()
 bool CZeroconfOSX::doPublishService(const std::string& fcr_identifier,
                       const std::string& fcr_type,
                       const std::string& fcr_name,
-                      unsigned int f_port)
+                      unsigned int f_port,
+                      const std::map<std::string, std::string>& txt)
 {
   CLog::Log(LOGDEBUG, "CZeroconfOSX::doPublishService identifier: %s type: %s name:%s port:%i", fcr_identifier.c_str(),
             fcr_type.c_str(), fcr_name.c_str(), f_port);
@@ -78,6 +79,26 @@ bool CZeroconfOSX::doPublishService(const std::string& fcr_identifier,
   {
     CSingleLock lock(m_data_guard);
     m_services.insert(make_pair(fcr_identifier, netService));
+  }
+
+  CFMutableDictionaryRef dict = CFDictionaryCreateMutable(0, 0,
+      &kCFTypeDictionaryKeyCallBacks,
+      &kCFTypeDictionaryValueCallBacks);
+
+  if (txt.size() > 0)
+  {
+    for (std::map<std::string, std::string>::const_iterator itr = txt.begin(); itr != txt.end(); ++itr)
+    {
+      CFStringRef cfKey = CFStringCreateWithCString(NULL, (*itr).first.c_str(), kCFStringEncodingMacRoman);
+      CFStringRef cfValue = CFStringCreateWithCString(NULL, (*itr).second.c_str(), kCFStringEncodingMacRoman);
+      CFDictionaryAddValue(dict, cfKey, cfValue);
+    }
+
+    CFDataRef txtData = CFNetServiceCreateTXTDataWithDictionary(NULL, (CFMutableDictionaryRef) dict);
+    if (!CFNetServiceSetTXTData(netService, txtData))
+    {
+      CLog::Log(LOGERROR, "CZeroconfOSX::doPublishService CFNetServiceSetTXTData returned false");
+    }
   }
 
   return result;

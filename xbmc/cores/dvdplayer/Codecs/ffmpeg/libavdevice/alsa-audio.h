@@ -21,7 +21,7 @@
  */
 
 /**
- * @file libavdevice/alsa-audio.h
+ * @file
  * ALSA input and output: definitions and structures
  * @author Luca Abeni ( lucabe72 email it )
  * @author Benoit Fouet ( benoit fouet free fr )
@@ -37,11 +37,7 @@
 /* XXX: we make the assumption that the soundcard accepts this format */
 /* XXX: find better solution with "preinit" method, needed also in
         other formats */
-#if HAVE_BIGENDIAN
-#define DEFAULT_CODEC_ID CODEC_ID_PCM_S16BE
-#else
-#define DEFAULT_CODEC_ID CODEC_ID_PCM_S16LE
-#endif
+#define DEFAULT_CODEC_ID AV_NE(CODEC_ID_PCM_S16BE, CODEC_ID_PCM_S16LE)
 
 typedef struct {
     snd_pcm_t *h;
@@ -50,7 +46,7 @@ typedef struct {
 } AlsaData;
 
 /**
- * Opens an ALSA PCM.
+ * Open an ALSA PCM.
  *
  * @param s media file handle
  * @param mode either SND_PCM_STREAM_CAPTURE or SND_PCM_STREAM_PLAYBACK
@@ -68,7 +64,7 @@ int ff_alsa_open(AVFormatContext *s, snd_pcm_stream_t mode,
                  int channels, enum CodecID *codec_id);
 
 /**
- * Closes the ALSA PCM.
+ * Close the ALSA PCM.
  *
  * @param s1 media file handle
  *
@@ -77,7 +73,7 @@ int ff_alsa_open(AVFormatContext *s, snd_pcm_stream_t mode,
 int ff_alsa_close(AVFormatContext *s1);
 
 /**
- * Tries to recover from ALSA buffer underrun.
+ * Try to recover from ALSA buffer underrun.
  *
  * @param s1 media file handle
  * @param err error code reported by the previous ALSA call

@@ -8,6 +8,9 @@
 #include <dirent.h>
 #include <utime.h>
 #include <fcntl.h>
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
 
 char* xbp_getcwd(char *buf, int size);
 int xbp_chdir(const char *dirname);
@@ -23,6 +26,7 @@ DIR *xbp_opendir(const char *name);
 #ifdef __APPLE__
 int xbp_stat(const char * path, struct stat * buf);
 int xbp_lstat(const char * path, struct stat * buf);
+NSObjectFileImageReturnCode xbp_NSCreateObjectFileImageFromFile(const char *pathname, NSObjectFileImage *image);
 #endif
 void *xbp_dlopen(const char *filename, int flag);
 int xbp_dlclose(void *handle);
@@ -89,6 +93,12 @@ int PYTHON_WRAP(stat)(const char * path, struct stat * buf)
 int PYTHON_WRAP(lstat)(const char * path, struct stat * buf)
 {
   return xbp_lstat(path, buf);
+}
+
+NSObjectFileImageReturnCode 
+PYTHON_WRAP(NSCreateObjectFileImageFromFile)(const char *pathname, NSObjectFileImage *image)
+{
+  return xbp_NSCreateObjectFileImageFromFile(pathname, image);
 }
 #endif
 

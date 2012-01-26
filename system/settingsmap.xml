@@ -1,18 +1,25 @@
 <settingsmap>
-  <group id="7" window="480">  <!-- Appearence  -->
+  <group id="7" window="480" title="54806">  <!-- Appearence  -->
     <category id="location" label="20026">
-      <setting id="weather.areacode1"/>
       <setting id="locale.timeformat"/>
-      <setting id="locale.tempscale"/>
+      <setting id="timezone.country" platform="intel.ce4100"/>
+      <setting id="timezone.city" platform="intel.ce4100"/>
+      <setting id="weather.settings"/>
       <setting id="subtitles.sep1"/>
-      <setting id="filelists.filtergeoip"/>
     </category>        
     <category id="videoscreen" label="51525">
       <setting id="videoscreen.resolution"/>
       <setting id="videoscreen.testresolution"/>
       <separator/>
+      <setting id="videoplayer.adjustrefreshrate" platform="intel.ce4100"/>
       <setting id="videoscreen.guicalibration"/>
-      <setting id="videoscreen.testpattern" platform="mac,atv,linux"/>
+      <setting id="videoscreen.tv3dfc" platform="intel.ce4100"/>
+      <setting id="videoscreen.mode3d" platform="intel.ce4100"/>
+    </category>
+    <category id="menu" label="54830">
+      <setting id="menu.showsdefault"/>
+      <setting id="menu.moviesdefault"/>
+      <setting id="menu.appsdefault"/>      
     </category>
     <category id="screensaver" label="360">
       <setting id="screensaver.mode"/>
@@ -21,7 +28,7 @@
       <setting id="screensaver.powersavingtime"/>
       <separator/>
       <setting id="screensaver.dimlevel"/>
-      <setting id="screensaver.slideshowpath" platform="win,atv,mac,linux"/>
+      <setting id="screensaver.slideshowpath"/>
       <setting id="slideshow.shuffle" platform="win,atv,mac,linux"/>
     </category>
     <category id="language" label="248">
@@ -34,30 +41,43 @@
     <category id="sounds" label="51526">
       <setting id="lookandfeel.soundskin"/>
     </category>
-    <category id="background" label="53130" platform="win,atv,mac,linux">
+    <!--category id="background" label="53130" platform="win,atv,mac,linux">
       <setting id="background.imagefile"/>
       <setting id="background.imagefolder"/>
 	  <setting id="background.reset"/>
       <setting id="background.remark"/>
-    </category>      
+    </category-->      
     <category id="advanced" label="16005">
       <setting id="videoscreen.vsync" platform="atv,mac,linux"/>
       <setting id="videoscreen.displayblanking" platform="win,mac"/>
-      <setting id="filelists.showhidden"/>
+      <setting id="videoscreen.hdmioutput" platform="intel.ce4100"/>
+      <setting id="videoscreen.hdmipixeldepth" platform="intel.ce4100"/>
+      <setting id="videoscreen.forceedid" platform="intel.ce4100"/>
+      <setting id="videoscreen.testpattern" platform="intel.ce4100"/>
+      <setting id="videoscreen.testbadpixels" platform="mac,atv,linux,intel.ce4100"/>
+      <setting id="services.netflixplaypause" platform="intel.ce4100"/>
     </category>            
   </group>
-  <group id="2" window="51527">
+  <group id="2" window="51527" title="54801">
     <category id="feed" label="800"  runtime="true">
     </category>            
   </group>
-  <group id="5" window="51527">
-    <category id="video" label="157">
-      <setting id="subtitles.font"/>
+  <group id="5" window="51527" title="54804">
+  	<category id="videoplayback" label="291" platform="intel.ce4100">
+  	  <setting id="videoplayback.interlacemode"/>
+      <setting id="videoplayback.deringing" />
+      <setting id="videoplayback.gaussian"/>
+    </category>
+    <category id="audioplayback" label="292">
+  	  <setting id="audioplayback.preferredlanguage"/>
+    </category>
+    <category id="video" label="574">
+      <setting id="subtitles.enablesubtitlesbydefault"/>
+      <setting id="subtitles.preferredlanguage"/>
+      <setting id="subtitles.charset"/>
       <setting id="subtitles.height"/>
       <setting id="subtitles.style"/>
       <setting id="subtitles.color"/>
-      <setting id="subtitles.charset"/>
-      <setting id="myvideos.pausewhenexit"/>
     </category>
     <category id="music" label="2">
       <setting id="mymusic.visualisation" platform="linux,mac,win,atv"/>
@@ -74,14 +94,29 @@
       <setting id="autorun.cdda"/>    
     </category>    
     <category id="advanced" label="16005">
-      <setting id="videoplayer.hwaccel"/>
-      <setting id="videoplayer.rendermethod" platform="linux,mac,atv"/>
+      <setting id="videoplayer.hwaccel" platform="linux,mac,win"/>
       <setting id="myvideos.autothumb"/>
       <setting id="myvideos.videosize"/>
+      <setting id="myvideos.showmessagewhenexit"/>
+      <!-- setting id="filelists.showhidden"/ -->
+      <setting id="sort.showstarter" platform="win,intel.ce4100,linux"/>    
     </category>                
   </group>      
-  <group id="6" window="249">
-    <category id="network" label="705">
+  <group id="6" window="249" title="54805">
+    <category id="ftu" label="54695" platform="intel.ce4100">
+       <setting id="ftu.run"/>
+    </category>  
+    <category id="network" label="705" platform="intel.ce4100">
+      <setting id="network.interface"/>
+      <setting id="network.assignment"/>
+      <setting id="network.ipaddress"/>
+      <setting id="network.subnet"/>
+      <setting id="network.gateway"/>
+      <setting id="network.dns"/>
+      <setting id="network.essid"/>
+      <setting id="network.save"/>
+    </category>
+    <category id="network" label="713">
       <setting id="network.usehttpproxy"/>
       <setting id="network.httpproxyserver"/>
       <setting id="network.httpproxyport"/>
@@ -89,57 +124,130 @@
       <setting id="network.httpproxypassword"/>
     </category>
     <category id="server" label="14036">
+      <setting id="server.hostname"/>
       <setting id="servers.webserver"/>
       <setting id="servers.webserverport"/>
       <setting id="servers.webserverpassword"/>
+      <setting id="smbd.enable" platform="intel.ce4100"/>
+      <setting id="smbd.password" platform="intel.ce4100"/>      
+      <setting id="smbd.workgroup" platform="intel.ce4100"/>          
+      <setting id="airplay2.enable" platform="linux,intel.ce4100,mac,atv"/>
     </category>
-    <category id="smb" label="1200">
+    <category id="smb" label="1200" platform="atv,mac,win,linux,intel.ce4100">
       <setting id="smb.username"/>
       <setting id="smb.password"/>
       <setting id="smb.winsserver"/>
       <setting id="smb.workgroup"/>
+      <setting id="smb.agressivescan2" platform="intel.ce4100,win"/>  
     </category>
-  </group>      
-  <group id="4" window="51530">
+<!--  <category id="afp" label="57500" platform="atv,mac,win,linux,intel.ce4100">
+      <setting id="afp.username"/>
+      <setting id="afp.password"/>
+    </category> -->
+    <category id="vpn" label="54736" platform="intel.ce4100">
+      <setting id="vpn.type" platform="intel.ce4100"/>
+      <setting id="vpn.server" platform="intel.ce4100"/>
+      <setting id="vpn.account" platform="intel.ce4100"/>
+      <setting id="vpn.password" platform="intel.ce4100"/>
+      <setting id="vpn.encryption" platform="intel.ce4100"/>      
+      <setting id="vpn.operation" platform="intel.ce4100"/>
+    </category>
+ </group>      
+  <group id="4" window="51530" title="54803">
     <category id="version" label="51950">
       <setting id="version.version"/>
       <setting id="version.builddate"/>    
-      <setting id="version.ipaddress"/>    
-      <setting id="version.macaddress"/>    
-      <setting id="version.totalmemory"/>    
-      <setting id="version.screenresolution"/>    
+      <setting id="version.ipaddress" platform="atv,mac,win,linux,intel.ce4100"/>    
+      <setting id="version.macaddress" platform="atv,mac,linux"/>    
+      <setting id="version.totalmemory" platform="atv,mac,win,linux"/>    
+      <setting id="version.screenresolution" platform="atv,mac,win,linux"/>    
+      <setting id="version.device" platform="intel.ce4100"/>    
+      <setting id="version.devicesn" platform="intel.ce4100"/>    
+      <setting id="version.wiredmacaddress" platform="intel.ce4100"/>    
+      <setting id="version.wirelessmacaddress" platform="intel.ce4100"/>
     </category>
     <category id="audiooutput" label="772">
       <setting id="audiooutput.mode"/>
       <setting id="audiooutput.ac3passthrough"/>
       <setting id="audiooutput.dtspassthrough"/>
-      <setting id="audiooutput.eac3passthrough" platform="win"/>
-      <setting id="audiooutput.truehdpassthrough" platform="win"/>
-      <setting id="audiooutput.dtshdpassthrough" platform="win"/>
-      <setting id="audiooutput.audiodevice"/>
-      <setting id="audiooutput.customdevice"/>
-      <setting id="audiooutput.passthroughdevice"/>
-      <setting id="audiooutput.custompassthrough"/>
-      <setting id="audiooutput.downmixmultichannel"/>
+      <setting id="audiooutput.eac3passthrough" platform="intel.ce4100"/>
+      <setting id="audiooutput.truehdpassthrough" platform="win,intel.ce4100"/>
+      <setting id="audiooutput.dtshdpassthrough" platform="win,intel.ce4100"/>
+      <setting id="audiooutput.lpcm71passthrough" platform="intel.ce4100"/>
+      <setting id="audiooutput.audiodevice" platform="win,linux"/>
+      <setting id="audiooutput.customdevice" platform="win,linux"/>
+      <setting id="audiooutput.passthroughdevice" platform="win,linux"/>
+      <setting id="audiooutput.custompassthrough" platform="win,linux"/>
+      <setting id="audiooutput.downmixmultichannel" platform="win,linux,mac,atv"/>
+      <setting id="audiooutput.controlmastervolume" platform="win,linux,mac,atv"/>
+      <setting id="audiooutput.controlvolume" platform="mac,atv,intel.ce4100"/>
     </category>
-    <category id="navigation" label="53101">
-      <setting id="lookandfeel.enablemouse"/>
-      <setting id="appleremote.mode" platform="mac,atv"/>
-      <setting id="appleremote.alwayson" platform="mac,atv"/>
-      <setting id="appleremote.sequencetime " platform="mac,atv"/>
-    </category>                    
+    <category id="navigation" label="53101" platform="mac,atv,win,linux">
+      <setting id="lookandfeel.enablemouse" platform="mac,atv,win,linux"/>
+      <setting id="appleremote.mode" platform="mac"/>
+      <setting id="appleremote.alwayson" platform="mac"/>
+      <!--setting id="appleremote.sequencetime " platform="mac"/-->
+    </category>   
+    <category id="update" label="53251" platform="intel.ce4100">
+      <setting id="update.check.for.update" label="53253" platform="intel.ce4100" />
+      <setting id="update.status" label="53252" platform="intel.ce4100" />
+      <setting id="update.allow_beta" label="53298" platform="intel.ce4100" />
+    </category>                 
+    <category id="services" label="54887" platform="intel.ce4100">
+      <setting id="services.netflixclear" label="54885" platform="intel.ce4100" />
+      <setting id="services.netflixesn" label="54890" platform="intel.ce4100" />
+      <setting id="services.vuduclear" label="54886" platform="intel.ce4100" />
+      <setting id="services.spotifyclear" label="54891" platform="intel.ce4100" />
+      <setting id="services.none" label="54888" platform="intel.ce4100" />
+    </category>                 
+    <category id="browser" label="54897">
+      <setting id="browser.clearcookies" label="54895"/>
+      <setting id="browser.clearcache" label="54896"/>
+      <setting id="browser.clearflashsharedobjects" label="54778" platform="intel.ce4100"/>
+      <setting id="browser.clearlocalstorage" label="90210" platform="intel.ce4100"/>
+    </category>                 
     <category id="advanced" label="16005">
       <setting id="erase.db"/>
       <setting id="erase.thumb"/>
+      <setting id="erase.settings" platform="intel.ce4100"/>
       <setting id="debug.loglevel"/>
-      <setting id="debug.showinfoline"/>
+      <setting id="debug.syslogenabled" platform="intel.ce4100,atv,mac,linux"/>
+      <setting id="debug.syslogaddr" platform="intel.ce4100,atv,mac,linux"/>
       <setting id="boxee.runatlogin" platform="win,mac"/>
     </category>                
   </group>
-  <group id="1" window="10013">
-    <category id="parent.control" label="801">
+  <group id="1" window="10013" title="10035">
+    <category id="parent.control" label="54809">
       <setting id="filelists.filteradult"/>
       <setting id="filelists.setadultcode"/>
+    </category>
+  </group>  
+  <group id="3" window="58000" title="58050">
+    <category id="settings" label="10004" platform="linux,intel.ce4100">
+      <setting id="ota.share"/>
+      <setting id="ota.keep43ar"/>
+      <setting id="ota.showmessagewhenexit"/>          
+      <setting id="ota.reconfigure"/>      
+    </category>
+  </group>          
+  <group id="0" window="10013" title="54807">
+  	<category id="music" label="2">	
+ 	  <setting id="mymusic.visualisation" platform="intel.ce4100"/>       	
+    </category>
+    <category id="location" label="20026">
+      <setting id="filelists.filtergeoip2"/>
+    </category>
+    <category id="server" label="54739">
+      <!--<setting id="server.environment" platform="intel.ce4100,linux,mac"/>-->
+      <setting id="server.environment2" platform="intel.ce4100,linux,mac"/>
+    </category>
+    <category id="audiooutput" label="772">
+      <setting id="audiooutput.dd_truehd_drc" platform="intel.ce4100"/>
+      <setting id="audiooutput.dd_truehd_drc_percentage" platform="intel.ce4100"/>
+      <setting id="audiooutput.downmix" platform="intel.ce4100"/>
+      <setting id="audiooutput.ddplus_output_config" platform="intel.ce4100"/>
+      <setting id="audiooutput.ddplus_lfe_channel_config" platform="intel.ce4100"/>
+      <setting id="audiooutput.enable_audio_output_delay" platform="intel.ce4100"/>
     </category>
   </group>      
 </settingsmap>

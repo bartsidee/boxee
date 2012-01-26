@@ -27,7 +27,10 @@
 #include <vector>
 
 using namespace SOCKETS;
-using namespace std;
+
+#ifndef _WIN32
+using namespace std;// On VS2010, bind conflicts with std::bind
+#endif
 
 #ifdef WINSOCK_VERSION
 #define close closesocket

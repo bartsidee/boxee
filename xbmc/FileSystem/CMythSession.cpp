@@ -21,6 +21,9 @@
 
 #include "DllLibCMyth.h"
 #include "CMythSession.h"
+
+#ifdef HAS_FILESYSTEM_MYTH
+
 #include "VideoInfoTag.h"
 #include "AdvancedSettings.h"
 #include "DateTime.h"
@@ -69,7 +72,7 @@ void CCMythSession::CheckIdle()
   }
 }
 
-CCMythSession* CCMythSession::AquireSession(const CURL& url)
+CCMythSession* CCMythSession::AquireSession(const CURI& url)
 {
   CSingleLock lock(m_section_session);
 
@@ -160,18 +163,18 @@ bool CCMythSession::UpdateItem(CFileItem &item, cmyth_proginfo_t info)
     temp = GetValue(m_dll->proginfo_chanicon(info));
     if(temp.length() > 0)
     {
-      CURL url(item.m_strPath);
+      CURI url(item.m_strPath);
       url.SetFileName("files/channels/" + temp);
-      url.GetURL(temp);
+      temp = url.Get();
       item.SetThumbnailImage(temp);
     }
 
     temp = GetValue(m_dll->proginfo_chanstr(info));
     if(temp.length() > 0)
     {
-      CURL url(item.m_strPath);
+      CURI url(item.m_strPath);
       url.SetFileName("channels/" + temp + ".ts");
-      url.GetURL(temp);
+      temp = url.Get();
       if(item.m_strPath != temp)
         item.m_strPath = temp;
     }
@@ -181,7 +184,7 @@ bool CCMythSession::UpdateItem(CFileItem &item, cmyth_proginfo_t info)
   return true;
 }
 
-CCMythSession::CCMythSession(const CURL& url)
+CCMythSession::CCMythSession(const CURI& url)
 {
   m_control   = NULL;
   m_event     = NULL;
@@ -208,7 +211,7 @@ CCMythSession::~CCMythSession()
     delete m_dll;
 }
 
-bool CCMythSession::CanSupport(const CURL& url)
+bool CCMythSession::CanSupport(const CURI& url)
 {
   if(m_hostname != url.GetHostName())
     return false;
@@ -353,3 +356,5 @@ DllLibCMyth* CCMythSession::GetLibrary()
     return m_dll;
   return NULL;
 }
+
+#endif

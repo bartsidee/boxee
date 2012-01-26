@@ -19,7 +19,7 @@
  */
 
 /**
-* @file libavcodec/libdirac_libschro.h
+* @file
 * data structures common to libdirac and libschroedinger
 */
 
@@ -38,7 +38,7 @@ typedef struct {
 /**
 * Returns the index into the Dirac Schro common video format info table
 */
-unsigned int ff_dirac_schro_get_video_format_idx (AVCodecContext *avccontext);
+unsigned int ff_dirac_schro_get_video_format_idx(AVCodecContext *avccontext);
 
 /**
 * contains a single encoded frame returned from Dirac or Schroedinger
@@ -88,12 +88,12 @@ void ff_dirac_schro_queue_init(FfmpegDiracSchroQueue *queue);
 /**
 * Add an element to the end of the queue
 */
-int ff_dirac_schro_queue_push_back (FfmpegDiracSchroQueue *queue, void *p_data);
+int ff_dirac_schro_queue_push_back(FfmpegDiracSchroQueue *queue, void *p_data);
 
 /**
 * Return the first element in the queue
 */
-void *ff_dirac_schro_queue_pop (FfmpegDiracSchroQueue *queue);
+void *ff_dirac_schro_queue_pop(FfmpegDiracSchroQueue *queue);
 
 /**
 * Free the queue resources. free_func is a function supplied by the caller to

@@ -2,7 +2,7 @@
 |
 |   Platinum - Miccro Media Controller
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -68,7 +68,7 @@ PLT_MicroMediaController::~PLT_MicroMediaController()
 /*
 *  Remove trailing white space from a string
 */
-void strchomp(char* str)
+static void strchomp(char* str)
 {
     if (!str) return;
     char* e = str+NPT_StringLength(str)-1;
@@ -162,6 +162,34 @@ PLT_MicroMediaController::PopDirectoryStackToRoot(void)
 }
 
 /*----------------------------------------------------------------------
+|   PLT_MicroMediaController::OnMSAdded
++---------------------------------------------------------------------*/
+bool 
+PLT_MicroMediaController::OnMSAdded(PLT_DeviceDataReference& device) 
+{     
+    // Issue special action upon discovering MediaConnect server
+    PLT_Service* service;
+    if (NPT_SUCCEEDED(device->FindServiceByType("urn:microsoft.com:service:X_MS_MediaReceiverRegistrar:*", service))) {
+        PLT_ActionReference action;
+        PLT_SyncMediaBrowser::m_CtrlPoint->CreateAction(
+            device, 
+            "urn:microsoft.com:service:X_MS_MediaReceiverRegistrar:1", 
+            "IsAuthorized", 
+            action);
+        if (!action.IsNull()) PLT_SyncMediaBrowser::m_CtrlPoint->InvokeAction(action, 0);
+
+        PLT_SyncMediaBrowser::m_CtrlPoint->CreateAction(
+            device, 
+            "urn:microsoft.com:service:X_MS_MediaReceiverRegistrar:1", 
+            "IsValidated", 
+            action);
+        if (!action.IsNull()) PLT_SyncMediaBrowser::m_CtrlPoint->InvokeAction(action, 0);
+    }
+
+    return true; 
+}
+
+/*----------------------------------------------------------------------
 |   PLT_MicroMediaController::OnMRAdded
 +---------------------------------------------------------------------*/
 bool
@@ -169,12 +197,12 @@ PLT_MicroMediaController::OnMRAdded(PLT_DeviceDataReference& device)
 {
     NPT_String uuid = device->GetUUID();
 
-        // test if it's a media renderer
-        PLT_Service* service;
+    // test if it's a media renderer
+    PLT_Service* service;
     if (NPT_SUCCEEDED(device->FindServiceByType("urn:schemas-upnp-org:service:AVTransport:*", service))) {
         NPT_AutoLock lock(m_MediaRenderers);
-            m_MediaRenderers.Put(uuid, device);
-        }
+        m_MediaRenderers.Put(uuid, device);
+    }
     
     return true;
 }
@@ -184,23 +212,23 @@ PLT_MicroMediaController::OnMRAdded(PLT_DeviceDataReference& device)
 +---------------------------------------------------------------------*/
 void
 PLT_MicroMediaController::OnMRRemoved(PLT_DeviceDataReference& device)
-        {
+{
     NPT_String uuid = device->GetUUID();
 
     {
-            NPT_AutoLock lock(m_MediaRenderers);
-            m_MediaRenderers.Erase(uuid);
-        }
+        NPT_AutoLock lock(m_MediaRenderers);
+        m_MediaRenderers.Erase(uuid);
+    }
 
-        {
-            NPT_AutoLock lock(m_CurMediaRendererLock);
+    {
+        NPT_AutoLock lock(m_CurMediaRendererLock);
 
-            // if it's the currently selected one, we have to get rid of it
-            if (!m_CurMediaRenderer.IsNull() && m_CurMediaRenderer == device) {
-                m_CurMediaRenderer = NULL;
-            }
+        // if it's the currently selected one, we have to get rid of it
+        if (!m_CurMediaRenderer.IsNull() && m_CurMediaRenderer == device) {
+            m_CurMediaRenderer = NULL;
         }
     }
+}
 
 /*----------------------------------------------------------------------
 |   PLT_MicroMediaController::ChooseIDGetCurMediaServerFromTable
@@ -430,11 +458,22 @@ PLT_MicroMediaController::HandleCmd_info()
 |   PLT_MicroMediaController::HandleCmd_cd
 +---------------------------------------------------------------------*/
 void
-PLT_MicroMediaController::HandleCmd_cd()
+PLT_MicroMediaController::HandleCmd_cd(const char* command)
 {
-    NPT_String      newobject_id;
-    PLT_StringMap   containers;
+    NPT_String    newobject_id;
+    PLT_StringMap containers;
 
+    // if command has parameter, push it to stack and return
+    NPT_String id = command;
+    NPT_List<NPT_String> args = id.Split(" ");
+    if (args.GetItemCount() >= 2) {
+        args.Erase(args.GetFirstItem());
+        id = NPT_String::Join(args, " ");
+        m_CurBrowseDirectoryStack.Push(id);
+        return;
+    }
+
+    // list current directory to let user choose
     DoBrowse();
 
     if (!m_MostRecentBrowseResults.IsNull()) {
@@ -579,6 +618,7 @@ PLT_MicroMediaController::HandleCmd_seek(const char* command)
         NPT_String target = command;
         NPT_List<NPT_String> args = target.Split(" ");
         if (args.GetItemCount() < 2) return;
+
         args.Erase(args.GetFirstItem());
         target = NPT_String::Join(args, " ");
         
@@ -683,12 +723,12 @@ PLT_MicroMediaController::ProcessCommandLoop()
             HandleCmd_setms();
         } else if (0 == strcmp(command, "getms")) {
             HandleCmd_getms();
-        } else if (0 == strcmp(command, "ls")) {
+        } else if (0 == strncmp(command, "ls", 2)) {
             HandleCmd_ls();
         } else if (0 == strcmp(command, "info")) {
             HandleCmd_info();
         } else if (0 == strcmp(command, "cd")) {
-            HandleCmd_cd();
+            HandleCmd_cd(command);
         } else if (0 == strcmp(command, "cd ..")) {
             HandleCmd_cdup();
         } else if (0 == strcmp(command, "pwd")) {

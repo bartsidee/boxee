@@ -573,7 +573,7 @@ namespace PYXBMC
       return NULL;
     }
 
-    CURL cUrl(url);
+    CURI cUrl(url);
     CGUIDialogPluginSettings::ShowAndGetInput(cUrl);
 
     // reload plugin settings & strings

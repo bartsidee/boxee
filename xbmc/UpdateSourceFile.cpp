@@ -71,6 +71,8 @@ bool CUpdateSourceFile::UpdateProfilesSourceFile()
   {
     diffFilePath = "special://xbmc/userdata/sources.xml.in.diff.osx";
   }
+#elif defined(HAS_EMBEDDED)
+  CStdString diffFilePath = "special://xbmc/userdata/sources.xml.in.diff.embedded";
 #elif defined(_LINUX)
   CStdString diffFilePath = "special://xbmc/userdata/sources.xml.in.diff.linux";
 #elif defined(_WIN32)
@@ -139,7 +141,7 @@ void CUpdateSourceFile::DeleteDuplicateApps()
       continue;      
     }
 
-    printf("CUSF::UpdateSourceFiles - DEBUG - [%ld] Handling profile [%s] for duplicates\n",i+1,profileName.c_str());
+	printf("CUSF::UpdateSourceFiles - DEBUG - [%lu] Handling profile [%s] for duplicates\n",(unsigned long)i+1,profileName.c_str());
     
     // Update g_settings with the profile sources.xml
     CStdString profilePath = _P("special://home/profiles/");
@@ -155,7 +157,7 @@ void CUpdateSourceFile::DeleteDuplicateApps()
     bool retVal = ReadSourcesFromFile(profileSourceFilePath, g_settings.m_videoSources, g_settings.m_musicSources, g_settings.m_pictureSources);
     if (retVal == false)
     {
-      printf("CUSF::UpdateSourceFiles - ERROR - [%ld] Failed to read sources from [%s] of profile is [%s] -> Continue\n",i+1,profileSourceFilePath.c_str(),profileName.c_str());
+	  printf("CUSF::UpdateSourceFiles - ERROR - [%lu] Failed to read sources from [%s] of profile is [%s] -> Continue\n",(unsigned long)i+1,profileSourceFilePath.c_str(),profileName.c_str());
       continue;
     }
     
@@ -182,7 +184,7 @@ void CUpdateSourceFile::UpdateSourceFiles(const TiXmlNode* pAddTag, UPDATE_ACTIO
       continue;      
     }
 
-    printf("CUSF::UpdateSourceFiles - DEBUG - [%ld] Handling profile [%s]\n",i+1,profileName.c_str());
+	printf("CUSF::UpdateSourceFiles - DEBUG - [%lu] Handling profile [%s]\n",(unsigned long)i+1,profileName.c_str());
 
     // Update g_settings with the profile sources.xml
     CStdString profilePath = _P("special://home/profiles/");
@@ -199,7 +201,7 @@ void CUpdateSourceFile::UpdateSourceFiles(const TiXmlNode* pAddTag, UPDATE_ACTIO
     
     if (retVal == false)
     {
-      printf("CUSF::UpdateSourceFiles - ERROR - [%ld] Failed to read sources from [%s] of profile is [%s] -> Continue\n",i+1,profileSourceFilePath.c_str(),profileName.c_str());
+	  printf("CUSF::UpdateSourceFiles - ERROR - [%lu] Failed to read sources from [%s] of profile is [%s] -> Continue\n",(unsigned long)i+1,profileSourceFilePath.c_str(),profileName.c_str());
       continue;
     }
 

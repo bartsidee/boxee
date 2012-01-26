@@ -82,7 +82,7 @@ public:
   static int TranslateWindowString(const char *szWindow);
   static bool TranslateActionString(const char *szAction, int &action);
 
-#if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE)
+#if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE) || defined (HAS_REMOTECONTROL)
   bool NeedsLircLongClick(const char* szDevice, const char *szButton);
   WORD TranslateLircLongClick(const char* szDevice, const char *szButton);
   int TranslateLircRemoteString(const char* szDevice, const char *szButton);
@@ -115,7 +115,7 @@ private:
   void MapAction(uint32_t buttonCode, const char *szAction, buttonMap &map, const char* modifier = NULL);
 
   bool LoadKeymap(const CStdString &keymapPath);
-#if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE)
+#if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE)  || defined (HAS_REMOTECONTROL)
   bool LoadLircMap(const CStdString &lircmapPath);
   void MapRemote(TiXmlNode *pRemote, const char* szDevice); 
   typedef std::map<CStdString, CStdString> lircButtonMap;

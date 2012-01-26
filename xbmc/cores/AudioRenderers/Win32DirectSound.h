@@ -44,10 +44,10 @@ public:
   virtual float GetDelay();
   virtual float GetCacheTime();
   CWin32DirectSound();
-  virtual bool Initialize(IAudioCallback* pCallback, int iChannels, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec = "", bool bIsMusic=false, bool bAudioPassthrough=false);
+  virtual bool Initialize(IAudioCallback* pCallback, int iChannels, enum PCMChannels* channelMap, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec = "", bool bIsMusic=false, bool bAudioPassthrough=false, bool bTimed = AUDIO_NOT_TIMED, AudioMediaFormat audioMediaFormat = AUDIO_MEDIA_FMT_PCM);
   virtual ~CWin32DirectSound();
 
-  virtual unsigned int AddPackets(const void* data, unsigned int len);
+  virtual unsigned int AddPackets(const void* data, unsigned int len, double pts = DVD_NOPTS_VALUE, double duration = 0);
   virtual unsigned int GetSpace();
   virtual bool Deinitialize();
   virtual bool Pause();

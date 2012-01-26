@@ -285,13 +285,13 @@ bool CPlayListASX::LoadData(istream& stream)
     {
       CFileItemPtr newItem(new CFileItem(links[0]));
       newItem->m_strPath = links[0];
-      for (int i=1; i< links.size(); i++)
+      for (size_t i=1; i< links.size(); i++)
         newItem->m_fallbackPaths.push_back(links[i]);
       Add(newItem);
     }    
     return (links.size() > 0);
   }
-  else 
+  else
   {
     TiXmlDocument xmlDoc;
     stream >> xmlDoc;
@@ -371,12 +371,12 @@ bool CPlayListASX::LoadData(istream& stream)
               title = value;
               newItem->SetLabel(title);
             }
-            
+
             if (newItem->m_strPath.IsEmpty())
             {
-              CLog::Log(LOGINFO, "Adding element %s, %s", title.c_str(), value.c_str());
-              newItem->m_strPath = value;
-            }
+            CLog::Log(LOGINFO, "Adding element %s, %s", title.c_str(), value.c_str());
+            newItem->m_strPath = value;
+          }
             else
             {
               CLog::Log(LOGINFO, "Adding fallback path %s, %s", title.c_str(), value.c_str());
@@ -389,7 +389,7 @@ bool CPlayListASX::LoadData(istream& stream)
         if (!newItem->m_strPath.IsEmpty())
         {
           Add(newItem);
-        }
+      }
       }
       else if (value == "entryref")
       {

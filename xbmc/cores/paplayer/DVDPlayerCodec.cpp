@@ -31,6 +31,10 @@
 
 #include "AudioDecoder.h"
 
+#ifdef WIN32
+#include "ffmpeg\libavcodec\avcodec.h"
+#endif
+
 DVDPlayerCodec::DVDPlayerCodec()
 {
   m_CodecName = "DVDPlayer";
@@ -41,6 +45,12 @@ DVDPlayerCodec::DVDPlayerCodec()
   m_pPacket = NULL;
   m_decoded = NULL;;
   m_nDecodedLen = 0;
+  m_bPassthrough = false;
+  m_bHWDecode = false;
+
+  m_probeBufferPos = m_probeBufferLen = 0;
+
+  m_audioFormat = AUDIO_MEDIA_FMT_PCM;
 }
 
 DVDPlayerCodec::~DVDPlayerCodec()
@@ -55,12 +65,14 @@ void DVDPlayerCodec::SetContentType(const CStdString &strContent)
 
 bool DVDPlayerCodec::Init(const CStdString &strFile, unsigned int filecache)
 {
+  DeInit();
+  
   m_decoded = NULL;;
   m_nDecodedLen = 0;
 
   CStdString strFileToOpen = strFile;
 
-  CURL urlFile(strFile);
+  CURI urlFile(strFile);
   m_pInputStream = CDVDFactoryInputStream::CreateInputStream(NULL, strFileToOpen, m_strContentType);
   if (!m_pInputStream)
   {
@@ -139,12 +151,12 @@ bool DVDPlayerCodec::Init(const CStdString &strFile, unsigned int filecache)
 
   // we have to decode initial data in order to get channels/samplerate
   // for sanity - we read no more than 10 packets
-  for (int nPacket=0; nPacket < 10 && (m_Channels == 0 || m_SampleRate == 0); nPacket++)
+  bool ready = false;
+  for (int nPacket=0; nPacket < 10 && !ready; nPacket++)
   {
-    BYTE dummy[256];
     int nSize = 256;
-    
-    if( ReadPCM( dummy, nSize, &nSize ) != READ_SUCCESS )
+
+    if( ReadPCM( &( m_probeBuffer[m_probeBufferLen] ), nSize, &nSize ) != READ_SUCCESS )
     {
       CLog::Log( LOGERROR, "%s: Could not read from audio stream", __FUNCTION__ );
       delete m_pDemuxer;
@@ -155,11 +167,33 @@ bool DVDPlayerCodec::Init(const CStdString &strFile, unsigned int filecache)
       return false;
     }
 
+    m_probeBufferLen += nSize;
+
     // We always ask ffmpeg to return s16le
     m_BitsPerSample = m_pAudioCodec->GetBitsPerSample();
     m_SampleRate = m_pAudioCodec->GetSampleRate();
     m_Channels = m_pAudioCodec->GetChannels();
 
+    if( m_Channels != 0 && m_SampleRate != 0 )
+    {
+      // we'll read up to 2 frames for the channel layout
+      if( nPacket >= 2 || m_pAudioCodec->GetChannelMap() )
+        ready = true;
+    }
+  }
+
+  // see what kind of data we have
+  unsigned char flags = m_pAudioCodec->GetFlags();
+  m_bPassthrough = (0 != (flags & FFLAG_PASSTHROUGH));
+  m_bHWDecode = (0 != (flags & FFLAG_HWDECODE)); 
+
+  if( m_bPassthrough || m_bHWDecode )
+  {
+    CLog::Log( LOGDEBUG, "%s: using passthrough %s HW decode %s\n",
+               __FUNCTION__, m_bPassthrough ? "true" : "false",
+                             m_bHWDecode ? "true" : "false" );
+
+    SetAudioFormat(hint.codec, flags);
   }
 
   m_nDecodedLen = 0;
@@ -201,8 +235,12 @@ void DVDPlayerCodec::DeInit()
   }
 
   m_audioPos = 0;
-  m_decoded = NULL;;
+  m_decoded = NULL;
   m_nDecodedLen = 0;
+ 
+  m_probeBufferPos = m_probeBufferLen = 0;
+
+  m_bPassthrough = m_bHWDecode = false;
 }
 
 __int64 DVDPlayerCodec::Seek(__int64 iSeekTime)
@@ -221,6 +259,24 @@ __int64 DVDPlayerCodec::Seek(__int64 iSeekTime)
 
 int DVDPlayerCodec::ReadPCM(BYTE *pBuffer, int size, int *actualsize)
 {
+  // copy any residual from the initial decoding
+  if( m_probeBufferLen && m_Channels && m_SampleRate )
+  {
+    int toCopy = m_probeBufferLen - m_probeBufferPos;
+    if( toCopy > size ) toCopy = size;
+
+    memcpy( pBuffer, &( m_probeBuffer[m_probeBufferPos] ), toCopy );
+    m_probeBufferPos += toCopy;
+    *actualsize = toCopy;
+
+    // buffer now empty
+    if( m_probeBufferPos == m_probeBufferLen )
+      m_probeBufferPos = m_probeBufferLen = 0;
+
+    return READ_SUCCESS;
+  }
+
+  // copy any residual from the last decode
   if (m_decoded && m_nDecodedLen > 0)
   {
     int nLen = (size<m_nDecodedLen)?size:m_nDecodedLen;
@@ -247,8 +303,8 @@ int DVDPlayerCodec::ReadPCM(BYTE *pBuffer, int size, int *actualsize)
     {
       m_pPacket = m_pDemuxer->Read();
     } while (m_pPacket && m_pPacket->iStreamId != m_nAudioStream);
-    
-    if( !m_pPacket )
+
+    if (!m_pPacket)
     {
       return READ_EOF;
     }
@@ -275,6 +331,8 @@ int DVDPlayerCodec::ReadPCM(BYTE *pBuffer, int size, int *actualsize)
     return READ_ERROR;
   }
 
+  m_Time = (long long int)m_pPacket->pts/1000;
+
   m_audioPos += decodeLen;
 
   m_nDecodedLen = m_pAudioCodec->GetData(&m_decoded);
@@ -289,6 +347,10 @@ int DVDPlayerCodec::ReadPCM(BYTE *pBuffer, int size, int *actualsize)
 
   return READ_SUCCESS;
 }
+int DVDPlayerCodec::ReadData( BYTE* pBuffer, int size, int* actualsize )
+{
+  return ReadPCM( pBuffer, size, actualsize );
+}
 
 bool DVDPlayerCodec::CanInit()
 {
@@ -299,3 +361,38 @@ bool DVDPlayerCodec::CanSeek()
 {
   return true;
 }
+
+AudioMediaFormat DVDPlayerCodec::GetDataFormat()
+{
+  return m_audioFormat;
+}
+
+void DVDPlayerCodec::SetAudioFormat(int codec, unsigned char flags)
+{
+  m_audioFormat = AUDIO_MEDIA_FMT_PCM;
+
+  if( m_bPassthrough || m_bHWDecode )
+  {
+    if( codec == CODEC_ID_AC3 )
+    {
+      m_audioFormat = AUDIO_MEDIA_FMT_DD;
+    }
+    else if (codec == CODEC_ID_DTS && 0 != (flags & FFLAG_HDFORMAT))
+    {
+      m_audioFormat = AUDIO_MEDIA_FMT_DTS_HD_MA;
+    }
+    else if (codec == CODEC_ID_DTS)
+    {
+      m_audioFormat = AUDIO_MEDIA_FMT_DTS;
+    }
+    else if (codec == CODEC_ID_EAC3)
+    {
+      m_audioFormat = AUDIO_MEDIA_FMT_DD_PLUS;
+    }
+    else if (codec == CODEC_ID_TRUEHD)
+    {
+      m_audioFormat = AUDIO_MEDIA_FMT_TRUE_HD;
+    }
+  }
+}
+

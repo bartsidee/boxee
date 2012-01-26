@@ -63,12 +63,15 @@ public:
   bool CanSeek() { if (m_codec) return m_codec->CanSeek(); else return false; };
   __int64 Seek(__int64 time);
   __int64 TotalTime();
+  __int64 GetTime() { return m_codec ? m_codec->m_Time : 0; };
   void Start() { m_canPlay = true;}; // cause a pre-buffered stream to start.
   int GetStatus() { return m_status; };
   void SetStatus(int status) { m_status = status; };
 
-  void GetDataFormat(unsigned int *channels, unsigned int *samplerate, unsigned int *bitspersample);
-  unsigned int GetChannels() { if (m_codec) return m_codec->m_Channels; else return 0; };
+  void GetDataFormat(unsigned int *channels, unsigned int *samplerate, unsigned int *bitspersample, AudioMediaFormat* format, bool* isPassthrough);
+  unsigned int GetChannels()        { return m_codec ? m_codec->m_Channels : 0; };
+  enum PCMChannels* GetChannelMap() { return m_codec ? m_codec->GetChannelMap() : NULL; };
+
   // Data management
   unsigned int GetDataSize();
   void *GetData(unsigned int size);
@@ -96,6 +99,9 @@ private:
   // input buffer (for transferring data from the Codecs to our Pcm Ringbuffer
   BYTE m_pcmInputBuffer[INPUT_SIZE];
   float m_inputBuffer[INPUT_SAMPLES];
+
+  // sizeof(float) or sizeof(byte)
+  int m_outputUnitSize;
 
   // status
   bool    m_eof;

@@ -26,7 +26,9 @@
 #include "FileCurl.h"
 #include "FilePlaylist.h"
 #include "FileShoutcast.h"
+#ifdef HAS_LASTFM
 #include "FileLastFM.h"
+#endif
 #include "FileFileReader.h"
 #include "FileCache.h"
 #ifdef HAS_FILESYSTEM_SMB
@@ -66,13 +68,37 @@
 #include "FileSpecialProtocol.h"
 #include "MultiPathFile.h"
 #include "../utils/Network.h"
+#ifdef HAS_FILESYSTEM_TUXBOX
 #include "FileTuxBox.h"
+#endif
+#ifdef HAS_FILESYSTEM_HDHOMERUN
 #include "HDHomeRun.h"
+#endif
+#ifdef HAS_FILESYSTEM_MYTH
 #include "CMythFile.h"
+#endif
 #include "Application.h"
 #include "URL.h"
 #include "PipesManager.h"
 #include "FilePipe.h"
+#include "FileUPnP.h"
+#include "FileUDF.h"
+#ifdef HAS_NFS
+#include "FileNfs.h"
+#endif
+#ifdef HAS_AFP
+#include "FileAfp.h"
+#endif
+#ifdef HAS_CIFS
+#include "FileCifs.h"
+#endif
+#ifdef HAS_BMS
+#include "FileBms.h"
+#endif
+#ifdef HAS_UPNP_AV
+#include "FileUPnPAv.h"
+#endif
+
 
 using namespace XFILE;
 
@@ -86,11 +112,11 @@ CFileFactory::~CFileFactory()
 
 IFile* CFileFactory::CreateLoader(const CStdString& strFileName)
 {
-  CURL url(strFileName);
+  CURI url(strFileName);
   return CreateLoader(url);
 }
 
-IFile* CFileFactory::CreateLoader(const CURL& url)
+IFile* CFileFactory::CreateLoader(const CURI& url)
 {
   CStdString strProtocol = url.GetProtocol();
   strProtocol.MakeLower();
@@ -115,22 +141,38 @@ IFile* CFileFactory::CreateLoader(const CURL& url)
 #ifdef HAS_XBOX_HARDWARE
   else if (strProtocol.Left(3) == "mem") return new CFileMemUnit();
 #endif
-  
+  else if(strProtocol == "udf") return new CFileUDF();
+
   if (strProtocol == "http" 
     ||  strProtocol == "https")
       return new CFileCurl();
    else if (strProtocol == "ftp" 
        ||  strProtocol == "ftpx"
        ||  strProtocol == "ftps") return new CFileCurl();
+#ifdef HAS_UPNP_AV
+  else if (strProtocol == "upnp") return new CFileUPnPAv();
+#else
+  else if (strProtocol == "upnp") return new CFileUPnP();
+#endif
   else if (strProtocol == "shout") return new CFileShoutcast();
+#ifdef HAS_LASTFM
   else if (strProtocol == "lastfm") return new CFileLastFM();
+#endif
+#ifdef HAS_FILESYSTEM_TUXBOX
   else if (strProtocol == "tuxbox") return new CFileTuxBox();
+#endif
+#ifdef HAS_FILESYSTEM_HDHOMERUN
   else if (strProtocol == "hdhomerun") return new CFileHomeRun();
+#endif
+#ifdef HAS_FILESYSTEM_MYTH
   else if (strProtocol == "myth") return new CCMythFile();
   else if (strProtocol == "cmyth") return new CCMythFile();
+#endif
 #ifdef HAS_FILESYSTEM_SMB
-#ifdef _WIN32
+#if defined(_WIN32)
   else if (strProtocol == "smb") return new CWINFileSMB();
+#elif defined(HAS_CIFS)
+  else if (strProtocol == "smb") return new CFileCifs();
 #else
   else if (strProtocol == "smb") return new CFileSMB();
 #endif
@@ -146,8 +188,6 @@ IFile* CFileFactory::CreateLoader(const CURL& url)
   else if (strProtocol == "daap") return new CFileDAAP();
 #endif
 #endif
-  else if (strProtocol == "myth") return new CCMythFile();
-  else if (strProtocol == "cmyth") return new CCMythFile();
 #ifdef HAS_FILESYSTEM_SAP
   else if (strProtocol == "sap") return new CSAPFile();
 #endif
@@ -155,5 +195,14 @@ IFile* CFileFactory::CreateLoader(const CURL& url)
   else if (strProtocol == "vtp") return new CVTPFile();
 #endif
   else if (strProtocol == "pipe") return new XFILE::CFilePipe();
+#ifdef HAS_NFS
+  else if (strProtocol == "nfs") return new CFileNfs();
+#endif
+#ifdef HAS_AFP
+  else if (strProtocol == "afp") return new CFileAfp();
+#endif
+#ifdef HAS_BMS
+  else if (strProtocol == "bms") return new CFileBms();
+#endif
   return NULL;
 }

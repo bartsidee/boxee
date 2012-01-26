@@ -35,13 +35,13 @@ CFatXFileSystem::CFatXFileSystem(unsigned char unit) : IFileSystem(unit)
 
 bool CFatXFileSystem::Open(const CStdString &file)
 {
-  CURL url(GetLocal(file));
+  CURI url(GetLocal(file));
   return m_file.Open(url);
 }
 
 bool CFatXFileSystem::OpenForWrite(const CStdString &file, bool overWrite)
 {
-  CURL url(GetLocal(file));
+  CURI url(GetLocal(file));
   return m_file.OpenForWrite(url, true, overWrite);
 }
 
@@ -77,15 +77,15 @@ __int64 CFatXFileSystem::GetPosition()
 
 bool CFatXFileSystem::Delete(const CStdString &file)
 {
-  CURL url(GetLocal(file));
+  CURI url(GetLocal(file));
   CFileHD hdFile;
   return hdFile.Delete(url);
 }
 
 bool CFatXFileSystem::Rename(const CStdString &oldFile, const CStdString &newFile)
 {
-  CURL urlOld(GetLocal(oldFile));
-  CURL urlNew(GetLocal(newFile));
+  CURI urlOld(GetLocal(oldFile));
+  CURI urlNew(GetLocal(newFile));
   CFileHD hdFile;
   return hdFile.Rename(urlOld, urlNew);
 }

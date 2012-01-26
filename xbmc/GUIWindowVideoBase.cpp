@@ -45,7 +45,9 @@
 #include "GUIDialogMediaSource.h"
 #include "GUIWindowFileManager.h"
 #include "FileSystem/VideoDatabaseDirectory.h"
+#ifndef _BOXEE_
 #include "PartyModeManager.h"
+#endif
 #include "GUIWindowManager.h"
 #include "GUIDialogOK.h"
 #include "GUIDialogSelect.h"
@@ -789,11 +791,13 @@ void CGUIWindowVideoBase::OnQueueItem(int iItem)
   CFileItemList queuedItems;
   AddItemToPlayList(item, queuedItems);
   // if party mode, add items but DONT start playing
+#ifndef _BOXEE_
   if (g_partyModeManager.IsEnabled(PARTYMODECONTEXT_VIDEO))
   {
     g_partyModeManager.AddUserSongs(queuedItems, false);
     return;
   }
+#endif
 
   g_playlistPlayer.Add(PLAYLIST_VIDEO, queuedItems);
   // video does not auto play on queue like music
@@ -1141,11 +1145,11 @@ bool CGUIWindowVideoBase::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
         OnClick(itemNumber);
       return true;
     }
-
+#ifndef _BOXEE_
   case CONTEXT_BUTTON_PLAY_PARTYMODE:
     g_partyModeManager.Enable(PARTYMODECONTEXT_VIDEO, m_vecItems->Get(itemNumber)->m_strPath);
     return true;
-
+#endif
   case CONTEXT_BUTTON_RESTART_ITEM:
     OnRestartItem(itemNumber);
     return true;
@@ -1163,7 +1167,7 @@ bool CGUIWindowVideoBase::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
     return true;
 
   case CONTEXT_BUTTON_SETTINGS:
-    g_windowManager.ActivateWindow(WINDOW_SETTINGS_MYVIDEOS);
+    //g_windowManager.ActivateWindow(WINDOW_SETTINGS_MYVIDEOS);
     return true;
 
   case CONTEXT_BUTTON_INFO:
@@ -1238,7 +1242,7 @@ void CGUIWindowVideoBase::GetStackedFiles(const CStdString &strFilePath1, vector
 
   movies.clear();
 
-  CURL url(strFilePath);
+  CURI url(strFilePath);
   if (url.GetProtocol() == "stack")
   {
     CStackDirectory dir;
@@ -1259,6 +1263,7 @@ bool CGUIWindowVideoBase::OnPlayMedia(int iItem)
   CFileItemPtr pItem = m_vecItems->Get(iItem);
 
   // party mode
+#ifndef _BOXEE_
   if (g_partyModeManager.IsEnabled(PARTYMODECONTEXT_VIDEO))
   {
     CPlayList playlistTemp;
@@ -1266,7 +1271,7 @@ bool CGUIWindowVideoBase::OnPlayMedia(int iItem)
     g_partyModeManager.AddUserSongs(playlistTemp, true);
     return true;
   }
-
+#endif
   // Reset Playlistplayer, playback started now does
   // not use the playlistplayer.
   g_playlistPlayer.Reset();
@@ -1525,9 +1530,10 @@ void CGUIWindowVideoBase::UpdateVideoTitle(const CFileItem* pItem)
 void CGUIWindowVideoBase::LoadPlayList(const CStdString& strPlayList, int iPlayList /* = PLAYLIST_VIDEO */)
 {
   // if partymode is active, we disable it
+#ifndef _BOXEE_
   if (g_partyModeManager.IsEnabled())
     g_partyModeManager.Disable();
-
+#endif
   // load a playlist like .m3u, .pls
   // first get correct factory to load playlist
   auto_ptr<CPlayList> pPlayList (CPlayListFactory::Create(strPlayList));
@@ -1815,7 +1821,7 @@ void CGUIWindowVideoBase::OnSearchItemFound(const CFileItem* pSelItem)
     SetHistoryForPath(strParentPath);
 
     strPath = pSelItem->m_strPath;
-    CURL url(strPath);
+    CURI url(strPath);
     if (pSelItem->IsSmb() && !CUtil::HasSlashAtEnd(strPath))
       strPath += "/";
 

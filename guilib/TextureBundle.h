@@ -38,9 +38,9 @@ public:
   void GetTexturesFromPath(const CStdString &path, std::vector<CStdString> &textures);
   static CStdString Normalize(const CStdString &name);
 
-  bool LoadTexture(const CStdString& Filename, CBaseTexture** ppTexture, int &width, int &height);
+  bool LoadTexture(const CStdString& Filename, CBaseTexture** ppTexture, int &width, int &initialWidth, int &height, int &initialHeight);
 
-  int LoadAnim(const CStdString& Filename, CBaseTexture*** ppTextures, int &width, int &height, int& nLoops, int** ppDelays);
+  int LoadAnim(const CStdString& Filename, CBaseTexture*** ppTextures, int &width, int &initialWidth, int &height, int &initialHeight, int& nLoops, int** ppDelays);
   
 private:
   CTextureBundleXPR m_tbXPR;

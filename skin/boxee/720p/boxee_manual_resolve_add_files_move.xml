@@ -1,97 +1,54 @@
 ﻿<?xml version="1.0"?>
 <window id="10477">
-	<defaultcontrol>10</defaultcontrol>
+	<defaultcontrol always="true">10</defaultcontrol>
 	<controls>
 		<control type="group">
-			<posx>-130</posx>
-			<posy>0</posy>
+			<posx>496</posx>
+			<posy>-28</posy>
 			<control type="group">
 				<animation effect="fade" time="200">WindowOpen</animation>
 				<animation effect="fade" time="200">WindowClose</animation>
-				<control type="image">
-					<posx>3</posx>
-					<posy>3</posy>
-					<width>168</width>
-					<height>130</height>
-					<texture border="32">action_menu_bg.png</texture>
-				</control>
 				<control type="group">
-					<posx>10</posx>
-					<posy>8</posy>
-					<control type="image">
-						<visible>!Control.HasFocus(10)</visible>
-						<posx>22</posx>
-						<posy>28</posy>
-						<width>24</width>
-						<height>24</height>
-						<colordiffuse>80FFFFFF</colordiffuse>
-						<texture>icons/icon_shortcut_move.png</texture>
-					</control>
-					<control type="image">
-						<visible>Control.HasFocus(10)</visible>
-						<posx>22</posx>
-						<posy>28</posy>
-						<width>24</width>
-						<height>24</height>
-						<texture>icons/icon_shortcut_move.png</texture>
-					</control>
-					<control type="image">
-						<visible>Control.IsVisible(20) + !Control.HasFocus(20)</visible>
-						<posx>22</posx>
-						<posy>68</posy>
-						<width>24</width>
-						<height>24</height>
-						<colordiffuse>80FFFFFF</colordiffuse>
-						<texture>icons/icon_shortcut_remove.png</texture>
-					</control>
-					<control type="image">
-						<visible>Control.IsVisible(20) + Control.HasFocus(20)</visible>
-						<posx>22</posx>
-						<posy>68</posy>
-						<width>24</width>
-						<height>24</height>
-						<texture>icons/icon_shortcut_remove.png</texture>
-					</control>
 					<control type="button" id="10">
-						<posx>7</posx>
-						<posy>10</posy>
-						<width>140</width>
-						<height>60</height>
-						<onup>-</onup>
-						<ondown>20</ondown>
-						<onright>Dialog.Close(477)</onright>
-						<onleft>Dialog.Close(477)</onleft>
-						<texturenofocus>-</texturenofocus>
-						<texturefocus border="26">button_option_on.png</texturefocus>
-						<textureclick border="26">button_option_click.png</textureclick>
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>24</width>
+						<height>24</height>
+						<onup>Dialog.Close(477)</onup>
+						<ondown>Dialog.Close(477)</ondown>
+						<onright>20</onright>
+						<onleft>-</onleft>
+						<texturenofocus>universal/graphic-parts-moveup.png</texturenofocus>
+						<texturefocus diffuse="colors/color-blue.png">universal/graphic-parts-moveup.png</texturefocus>
+						<textureclick diffuse="colors/color-blue.png">universal/graphic-parts-moveup.png</textureclick>
 						<onclick>-</onclick>
-						<label>[UPPERCASE]$LOCALIZE[116][/UPPERCASE]</label>
+						<label></label>
 						<aligny>center</aligny>
 						<textoffsetx>42</textoffsetx>
 						<textcolor>grey</textcolor>
 						<focusedcolor>white</focusedcolor>
-						<font>title16b</font>
+						<font>font16b</font>
 					</control>
 					<!-- Remove shortcut -->
 					<control type="button" id="20">
-						<posx>7</posx>
-						<posy>50</posy>
-						<width>140</width>
-						<height>60</height>
-						<onup>10</onup>
-						<ondown>-</ondown>
-						<onright>Dialog.Close(477)</onright>
-						<onleft>Dialog.Close(477)</onleft>
-						<texturenofocus>-</texturenofocus>
-						<texturefocus border="26">button_option_on.png</texturefocus>
-						<textureclick border="26">button_option_click.png</textureclick>
+						<posx>32</posx>
+						<posy>0</posy>
+						<width>24</width>
+						<height>24</height>
+						<onup>Dialog.Close(477)</onup>
+						<ondown>Dialog.Close(477)</ondown>
+						<onright>-</onright>
+						<onleft>10</onleft>
+						<texturenofocus>universal/graphic-parts-minus.png</texturenofocus>
+						<texturefocus diffuse="colors/color-blue.png">universal/graphic-parts-minus.png</texturefocus>
+						<textureclick diffuse="colors/color-blue.png">universal/graphic-parts-minus.png</textureclick>
 						<onclick>-</onclick>
-						<label>[UPPERCASE]$LOCALIZE[1210][/UPPERCASE]</label>
+						<label></label>
 						<aligny>center</aligny>
 						<textoffsetx>42</textoffsetx>
 						<textcolor>grey</textcolor>
 						<focusedcolor>white</focusedcolor>
-						<font>title16b</font>
+						<font>font16b</font>
 					</control>
 					<control type="button" id="30">
 						<visible>false</visible>
@@ -106,7 +63,7 @@
 						<texturenofocus>-</texturenofocus>
 						<texturefocus>-</texturefocus>
 						<textureclick>-</textureclick>
-						<label>[UPPERCASE]$LOCALIZE[222][/UPPERCASE]</label>
+						<label>$LOCALIZE[222]</label>
 						<aligny>center</aligny>
 						<textoffsetx>40</textoffsetx>
 						<textcolor>grey</textcolor>

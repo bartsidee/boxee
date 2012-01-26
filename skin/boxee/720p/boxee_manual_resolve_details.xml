@@ -5,17 +5,17 @@
 	<controls>
 		<!-- Dummy container for Item Info -->
 		<control type="list" id="5000">
-			<description>info</description>
-			<posx>0</posx>
-			<posy>0</posy>
-			<width>0</width>
-			<height>0</height>
-			<visible>false</visible>
-			<itemlayout height="0">
+            <description>info</description>
+            <posx>0</posx>
+            <posy>0</posy>
+            <width>0</width>
+            <height>0</height>
+            <visible>false</visible>
+            <itemlayout height="0">
           </itemlayout>
-			<focusedlayout height="0">
+            <focusedlayout height="0">
           </focusedlayout>
-		</control>
+        </control>
 		<include>Window_Fade_Animation</include>
 		<control type="group">
 			<posx>30</posx>
@@ -53,16 +53,16 @@
 				<ondown>9010</ondown>
 				<orientation>vertical</orientation>
 				<usecontrolcoords>false</usecontrolcoords>
-				<control type="label">
-					<posx>26</posx>
-					<posy>130</posy>
+			<control type="label">
+				<posx>26</posx>
+				<posy>130</posy>
 					<width>840</width>
 					<height>20</height>
-					<aligny>center</aligny>
+				<aligny>center</aligny>
 					<font>font20b</font>
-					<textcolor>white</textcolor>
+				<textcolor>white</textcolor>
 					<label>$LOCALIZE[54204]</label>
-				</control>
+			</control>
 				<control type="label">
 					<posx>0</posx>
 					<posy>0</posy>
@@ -71,167 +71,167 @@
 					<aligny>center</aligny>
 					<font>font20b</font>
 					<textcolor>white</textcolor>
-					<label>$INFO[container(5000).ListItem.Filename,[COLOR grey][UPPERCASE]$LOCALIZE[561]: [/UPPERCASE][/COLOR],]</label>
+					<label>$INFO[container(5000).ListItem.Filename,[COLOR grey]$LOCALIZE[561]: [/COLOR],]</label>
 				</control>
 				<control type="group">
 					<width>840</width>
 					<height>40</height>
-					<control type="radiobutton" id="5010">
+			<control type="radiobutton" id="5010">
 						<posx>0</posx>
 						<posy>0</posy>
 						<width>120</width>
-						<height>40</height>
-						<onup>-</onup>
+				<height>40</height>
+				<onup>-</onup>
 						<ondown>5030</ondown>
 						<onright>5020</onright>
-						<onleft>-</onleft>
-						<font>font20b</font>
-						<aligny>center</aligny>
-						<textcolor>white</textcolor>
-						<focusedcolor>white</focusedcolor>
-						<disabledcolor>disabled</disabledcolor>
-						<textoffsetx>40</textoffsetx>
-						<texturenofocus>-</texturenofocus>
-						<texturefocus border="15">button_option_menu_on.png</texturefocus>
-						<textureradiofocus>icons/icon_checkbox_full.png</textureradiofocus>
-						<textureradionofocus>icons/icon_checkbox_empty.png</textureradionofocus>
-						<pulseonselect>false</pulseonselect>
-						<radioposx>10</radioposx>
-						<radioposy>10</radioposy>
-						<radiowidth>20</radiowidth>
-						<radioheight>20</radioheight>
-						<label>[UPPERCASE]$LOCALIZE[20338][/UPPERCASE]</label>
-					</control>
-					<control type="radiobutton" id="5020">
+				<onleft>-</onleft>
+				<font>font20b</font>
+				<aligny>center</aligny>
+				<textcolor>white</textcolor>
+				<focusedcolor>white</focusedcolor>
+				<disabledcolor>disabled</disabledcolor>
+				<textoffsetx>40</textoffsetx>
+				<texturenofocus>-</texturenofocus>
+				<texturefocus border="15">button_option_menu_on.png</texturefocus>
+				<textureradiofocus>icons/icon_checkbox_full.png</textureradiofocus>
+				<textureradionofocus>icons/icon_checkbox_empty.png</textureradionofocus>
+				<pulseonselect>false</pulseonselect>
+				<radioposx>10</radioposx>
+				<radioposy>10</radioposy>
+				<radiowidth>20</radiowidth>
+				<radioheight>20</radioheight>
+						<label>$LOCALIZE[20338]</label>
+			</control>			
+			<control type="radiobutton" id="5020">
 						<posx>160</posx>
 						<posy>0</posy>
 						<width>146</width>
-						<height>40</height>
-						<onup>-</onup>
+				<height>40</height>
+				<onup>-</onup>
 						<ondown>5030</ondown>
-						<onright>-</onright>
+				<onright>-</onright>
 						<onleft>5010</onleft>
-						<font>font20b</font>
-						<aligny>center</aligny>
-						<textcolor>white</textcolor>
-						<focusedcolor>white</focusedcolor>
-						<disabledcolor>disabled</disabledcolor>
-						<textoffsetx>40</textoffsetx>
-						<texturenofocus>-</texturenofocus>
-						<texturefocus border="15">button_option_menu_on.png</texturefocus>
-						<textureradiofocus>icons/icon_checkbox_full.png</textureradiofocus>
-						<textureradionofocus>icons/icon_checkbox_empty.png</textureradionofocus>
-						<pulseonselect>false</pulseonselect>
-						<radioposx>10</radioposx>
-						<radioposy>10</radioposy>
-						<radiowidth>20</radiowidth>
-						<radioheight>20</radioheight>
-						<label>[UPPERCASE]$LOCALIZE[20364][/UPPERCASE]</label>
-					</control>
+				<font>font20b</font>
+				<aligny>center</aligny>
+				<textcolor>white</textcolor>
+				<focusedcolor>white</focusedcolor>
+				<disabledcolor>disabled</disabledcolor>
+				<textoffsetx>40</textoffsetx>
+				<texturenofocus>-</texturenofocus>
+				<texturefocus border="15">button_option_menu_on.png</texturefocus>
+				<textureradiofocus>icons/icon_checkbox_full.png</textureradiofocus>
+				<textureradionofocus>icons/icon_checkbox_empty.png</textureradionofocus>
+				<pulseonselect>false</pulseonselect>
+				<radioposx>10</radioposx>
+				<radioposy>10</radioposy>
+				<radiowidth>20</radiowidth>
+				<radioheight>20</radioheight>
+						<label>$LOCALIZE[20364]</label>
+			</control>			
 				</control>
 				<control type="group">
 					<width>840</width>
 					<height>40</height>
-					<control type="label">
+			<control type="label">
 						<posx>0</posx>
 						<posy>0</posy>
-						<width>100</width>
-						<height>40</height>
-						<aligny>center</aligny>
+				<width>100</width>
+				<height>40</height>
+				<aligny>center</aligny>
 						<font>font20b</font>
-						<textcolor>white</textcolor>
-						<label>[UPPERCASE]$LOCALIZE[369]:[/UPPERCASE]</label>
-					</control>
-					<control type="edit" id="5030">
-						<description>title name</description>
+				<textcolor>white</textcolor>
+						<label>$LOCALIZE[369]:</label>
+			</control>
+			<control type="edit" id="5030">
+				<description>title name</description>
 						<posx>100</posx>
 						<posy>0</posy>
-						<width>450</width>
-						<height>40</height>
-						<font>font24b</font>
-						<textcolor>white</textcolor>
-						<focusedcolor>white</focusedcolor>
-						<align>left</align>
-						<aligny>center</aligny>
-						<textoffsetx>14</textoffsetx>
-						<texturenofocus border="20">search_text_box.png</texturenofocus>
-						<texturefocus border="20">search_text_box_focus.png</texturefocus>
-						<textureclick border="20">search_text_box_click.png</textureclick>
-						<onleft>-</onleft>
-						<onright>-</onright>
+				<width>450</width>
+				<height>40</height>
+				<font>font24b</font>
+				<textcolor>white</textcolor>
+				<focusedcolor>white</focusedcolor>
+				<align>left</align>
+				<aligny>center</aligny>
+				<textoffsetx>14</textoffsetx>
+				<texturenofocus border="20">search_text_box.png</texturenofocus>
+				<texturefocus border="20">search_text_box_focus.png</texturefocus>
+				<textureclick border="20">search_text_box_click.png</textureclick>				
+				<onleft>-</onleft>
+				<onright>-</onright>
 						<onup>5010</onup>
 						<ondown>5040</ondown>
-						<label>-</label>
-						<ontextchange/>
-					</control>
+				<label>-</label>
+				<ontextchange/>
+			</control>
 				</control>
 				<control type="group">
 					<width>840</width>
 					<height>40</height>
-					<control type="label">
+			<control type="label">
 						<posx>0</posx>
 						<posy>0</posy>
-						<width>100</width>
-						<height>40</height>
-						<aligny>center</aligny>
+				<width>100</width>
+				<height>40</height>
+				<aligny>center</aligny>
 						<font>font20b</font>
-						<textcolor>white</textcolor>
-						<label>[UPPERCASE]$LOCALIZE[20373]:[/UPPERCASE]</label>
-					</control>
-					<control type="edit" id="5040">
-						<description>episode season</description>
+				<textcolor>white</textcolor>
+						<label>$LOCALIZE[20373]:</label>
+			</control>
+			<control type="edit" id="5040">
+				<description>episode season</description>
 						<posx>100</posx>
 						<posy>0</posy>
-						<width>80</width>
-						<height>40</height>
-						<font>font24b</font>
-						<textcolor>white</textcolor>
-						<focusedcolor>white</focusedcolor>
-						<align>left</align>
-						<aligny>center</aligny>
-						<textoffsetx>14</textoffsetx>
-						<texturenofocus border="20">search_text_box.png</texturenofocus>
-						<texturefocus border="20">search_text_box_focus.png</texturefocus>
-						<textureclick border="20">search_text_box_click.png</textureclick>
-						<onleft>-</onleft>
+				<width>80</width>
+				<height>40</height>
+				<font>font24b</font>
+				<textcolor>white</textcolor>
+				<focusedcolor>white</focusedcolor>
+				<align>left</align>
+				<aligny>center</aligny>
+				<textoffsetx>14</textoffsetx>
+				<texturenofocus border="20">search_text_box.png</texturenofocus>
+				<texturefocus border="20">search_text_box_focus.png</texturefocus>
+				<textureclick border="20">search_text_box_click.png</textureclick>				
+				<onleft>-</onleft>
 						<onright>5050</onright>
-						<onup>-</onup>
+				<onup>-</onup>
 						<ondown>5060</ondown>
-						<label>-</label>
-						<ontextchange/>
-					</control>
-					<control type="label">
+				<label>-</label>
+				<ontextchange/>
+			</control>
+			<control type="label">
 						<posx>220</posx>
 						<posy>0</posy>
-						<width>100</width>
-						<height>40</height>
-						<aligny>center</aligny>
+				<width>100</width>
+				<height>40</height>
+				<aligny>center</aligny>
 						<font>font20b</font>
-						<textcolor>white</textcolor>
-						<label>[UPPERCASE]$LOCALIZE[20359]:[/UPPERCASE]</label>
-					</control>
-					<control type="edit" id="5050">
-						<description>episode number</description>
+				<textcolor>white</textcolor>
+						<label>$LOCALIZE[20359]:</label>
+			</control>
+			<control type="edit" id="5050">
+				<description>episode number</description>
 						<posx>326</posx>
 						<posy>0</posy>
-						<width>80</width>
-						<height>40</height>
-						<font>font24b</font>
-						<textcolor>white</textcolor>
-						<focusedcolor>white</focusedcolor>
-						<align>left</align>
-						<aligny>center</aligny>
-						<textoffsetx>14</textoffsetx>
-						<texturenofocus border="20">search_text_box.png</texturenofocus>
-						<texturefocus border="20">search_text_box_focus.png</texturefocus>
-						<textureclick border="20">search_text_box_click.png</textureclick>
+				<width>80</width>
+				<height>40</height>
+				<font>font24b</font>
+				<textcolor>white</textcolor>
+				<focusedcolor>white</focusedcolor>
+				<align>left</align>
+				<aligny>center</aligny>
+				<textoffsetx>14</textoffsetx>
+				<texturenofocus border="20">search_text_box.png</texturenofocus>
+				<texturefocus border="20">search_text_box_focus.png</texturefocus>
+				<textureclick border="20">search_text_box_click.png</textureclick>				
 						<onleft>5040</onleft>
-						<onright>-</onright>
+				<onright>-</onright>
 						<onup>5030</onup>
 						<ondown>5060</ondown>
-						<label>-</label>
-						<ontextchange/>
-					</control>
+				<label>-</label>
+				<ontextchange/>
+			</control>
 				</control>
 				<control type="button" id="5060">
 					<width>300</width>
@@ -244,7 +244,7 @@
 					<texturefocus border="27">button_action_menu_source_on.png</texturefocus>
 					<textureclick border="27">button_action_menu_source_click.png</textureclick>
 					<font>font20b</font>
-					<label>[UPPERCASE]$LOCALIZE[54205][/UPPERCASE]</label>
+					<label>$LOCALIZE[54205]</label>
 					<onup>5040</onup>
 					<ondown>-</ondown>
 					<onleft>9010</onleft>
@@ -264,8 +264,8 @@
 				<texturenofocus border="27">-</texturenofocus>
 				<texturefocus border="27">button_action_menu_source_on.png</texturefocus>
 				<textureclick border="27">button_action_menu_source_click.png</textureclick>
-				<font>title22b</font>
-				<label>[UPPERCASE]$LOCALIZE[20177][/UPPERCASE]</label>
+				<font>font22b</font>
+				<label>$LOCALIZE[20177]</label>
 				<onup>5060</onup>
 				<ondown>-</ondown>
 				<onleft>-</onleft>
@@ -284,8 +284,8 @@
 				<texturenofocus border="27">-</texturenofocus>
 				<texturefocus border="27">button_action_menu_source_on.png</texturefocus>
 				<textureclick border="27">button_action_menu_source_click.png</textureclick>
-				<font>title22b</font>
-				<label>[UPPERCASE]$LOCALIZE[54049][/UPPERCASE]</label>
+				<font>font22b</font>
+				<label>$LOCALIZE[54049]</label>
 				<onup>5060</onup>
 				<ondown>-</ondown>
 				<onleft>9010</onleft>
@@ -305,8 +305,8 @@
 				<texturenofocus border="27">-</texturenofocus>
 				<texturefocus border="27">button_action_menu_source_on.png</texturefocus>
 				<textureclick border="27">button_action_menu_source_click.png</textureclick>
-				<font>title22b</font>
-				<label>[UPPERCASE]$LOCALIZE[54206][/UPPERCASE]</label>
+				<font>font22b</font>
+				<label>$LOCALIZE[54206]</label>
 				<onup>5060</onup>
 				<ondown>-</ondown>
 				<onleft>9020</onleft>

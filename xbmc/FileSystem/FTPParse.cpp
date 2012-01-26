@@ -18,6 +18,7 @@
 #include <time.h>
 #include "FTPParse.h"
 
+#ifdef HAS_FTP
 
 static long totai(long year,long month,long mday)
 {
@@ -447,4 +448,6 @@ int ftpparse(struct ftpparse *fp,char *buf,int len)
 
   return 0;
 }
+
+#endif
 

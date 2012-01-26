@@ -39,6 +39,8 @@
 #include "control.h"
 #include "pyutil.h"
 
+#include "../../../placement_new.h"
+
 using namespace std;
 
 #ifndef __GNUC__
@@ -67,11 +69,11 @@ namespace PYXBMC
 
     self = (ControlProgress*)type->tp_alloc(type, 0);
     if (!self) return NULL;
-    new(&self->strTextureLeft) string();    
-    new(&self->strTextureMid) string();    
-    new(&self->strTextureRight) string();    
-    new(&self->strTextureBg) string();     
-    new(&self->strTextureOverlay) string();     
+   PLACEMENT_NEW(&self->strTextureLeft) string();    
+   PLACEMENT_NEW(&self->strTextureMid) string();    
+   PLACEMENT_NEW(&self->strTextureRight) string();    
+   PLACEMENT_NEW(&self->strTextureBg) string();     
+   PLACEMENT_NEW(&self->strTextureOverlay) string();     
 
     // parse arguments to constructor
     if (!PyArg_ParseTupleAndKeywords(args, kwds,

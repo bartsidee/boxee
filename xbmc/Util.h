@@ -34,11 +34,13 @@
 #include <limits>
 #include <string.h>
 #include <stdint.h>
+#include <time.h>
 
 #include "MediaSource.h"
 #include "utils/CriticalSection.h"
 #include "StringUtils.h"
 #include "GUIBaseContainer.h"
+#include "utils/Thread.h"
 
 // A list of filesystem types for LegalPath/FileName
 #define LEGAL_NONE            0
@@ -74,6 +76,13 @@ struct XBOXDETECTION
   std::vector<bool> client_informed;
 };
 
+typedef enum
+{
+  JOB_FAILED=0,
+  JOB_SUCCEEDED,
+  JOB_ABORTED
+}Job_Result;
+
 class CUtil
 {
 public:
@@ -90,6 +99,7 @@ public:
   static bool IsDOSPath(const CStdString &path);
   static bool IsHD(const CStdString& strFileName);
   static bool IsPlugin(const CStdString& strFileName);
+  static bool GetRecursiveParentPath(const CStdString& strChildPath, std::vector<CStdString>& output, unsigned int countHowManyLevels = 0);
   static bool GetParentPath(const CStdString& strPath, CStdString& strParent);
   static void GetQualifiedFilename(const CStdString &strBasePath, CStdString &strFilename);
   static void RunShortcut(const char* szPath);
@@ -115,6 +125,7 @@ public:
   static bool IsMemCard(const CStdString& strFile);
   static bool IsTuxBox(const CStdString& strFile);
   static bool IsMythTV(const CStdString& strFile);
+  static bool IsDVB(const CStdString& strFile);
   static bool IsLastFM(const CStdString& strFile);
   static bool IsShoutCast(const CStdString& strFile);
   static bool IsHDHomeRun(const CStdString& strFile);
@@ -132,6 +143,9 @@ public:
   static bool IsSmb(const CStdString& strFile);
   static bool IsDAAP(const CStdString& strFile);
   static bool IsUPnP(const CStdString& strFile);
+  static bool IsNfs(const CStdString& strFile);
+  static bool IsAfp(const CStdString& strFile);
+  static bool IsBms(const CStdString& strFile);
   static bool IsRSS(const CStdString& strFile);
   static bool IsFlash(const CStdString& strFile);
   static bool IsMMS(const CStdString& strFile);
@@ -139,10 +153,11 @@ public:
   static bool IsApp(const CStdString& strFile);
   static bool IsHTTP(const CStdString& strFile);  
   static void ConvertPathToUrl( const CStdString& strPath, const CStdString& strProtocol, CStdString& strOutUrl );
+  static bool ConstructStringFromTemplate(const CStdString& strTemplate, const std::map<CStdString , CStdString>& mapTemplateKeyToValue, CStdString& output, const CStdString& delimiter = "%");
   static void GetDVDDriveIcon( const CStdString& strPath, CStdString& strIcon );
   static void RemoveTempFiles();
 
-  static void CacheSubtitles(const CStdString& strMovie, CStdString& strExtensionCached, XFILE::IFileCallback *pCallback = NULL);
+  static void CacheSubtitles(const CStdString& strMovie, const CStdString& strContent, CStdString& strExtensionCached, XFILE::IFileCallback *pCallback = NULL);
   static bool CacheRarSubtitles(std::vector<CStdString>& vecExtensionsCached, const CStdString& strRarPath, const CStdString& strCompare, const CStdString& strExtExt="");
   static void ClearSubtitles();
   static int64_t ToInt64(uint32_t high, uint32_t low);
@@ -164,6 +179,7 @@ public:
   static void ThumbCacheClear();
   static void PlayDVD();
   static CStdString GetNextFilename(const CStdString &fn_template, int max);
+  static CStdString GetNextPathname(const CStdString &path_template, int max);
   static void TakeScreenshot();
   static void TakeScreenshot(const char* fn, bool flash);
   static void SetBrightnessContrastGamma(float Brightness, float Contrast, float Gamma, bool bImmediate);
@@ -215,6 +231,7 @@ public:
 
   static double AlbumRelevance(const CStdString& strAlbumTemp1, const CStdString& strAlbum1, const CStdString& strArtistTemp1, const CStdString& strArtist1);
   static bool MakeShortenPath(CStdString StrInput, CStdString& StrOutput, int iTextMaxLength);
+  static bool HideExternalHDPath(CStdString inputPath, CStdString& outputPath);
   static bool SupportsFileOperations(const CStdString& strPath);
 
   static CStdString GetCachedMusicThumb(const CStdString &path);
@@ -222,13 +239,17 @@ public:
   static CStdString GetDefaultFolderThumb(const CStdString &folderThumb);
   static void ClearFileItemCache();
 
-  static bool RunInBG(IRunnable* pJob);
+  static Job_Result RunInBG(IRunnable* pJob, bool deleteJob = true);
   static bool IsFrontMost();
   
   static void InitRandomSeed();
   
-  static bool RemovePasswordFromPath(CStdString &path);
+  static bool IsPasswordHidden(CStdString& path);
+  static bool RemovePasswordFromPath(CStdString &path,bool completelyRemove = false);
 
+  static bool IsDVDFolder(const CStdString& strPath, const CFileItemList* pPathItems = NULL);
+  static bool IsBlurayFolder(const CStdString& strPath, const CFileItemList* pPathItems = NULL);
+  static bool GetIsoDiskType(const CStdString& strIsoPath, CStdString& strDiskType);
 #ifdef _LINUX
   // this will run the command using sudo in a new process.
   // the user that runs xbmc should be allowed to issue the given sudo command.
@@ -246,8 +267,13 @@ public:
   // Forks to execute an unparsed shell command line.
   //
   static bool RunCommandLine(const CStdString& cmdLine, bool waitExit = false);
+
+  static bool IsMountpoint(const CStdString& strPath);
+  static int GetFsMagic(const CStdString& strPath);
+  static bool ValidateIpAddress(const CStdString& ipAddress);
 #endif
 
+  static bool GetHostByName(const CStdString& strHostName, CStdString& strHostIp);
   static bool CreatePictureFolderThumb(CFileItem* pictureFolderItem);
   
   static int  VersionCompare(const CStdString version1, const CStdString version2);
@@ -256,6 +282,7 @@ public:
   static CStdString MD5File(const CStdString& _strFilePath);
   
   static CStdString GetPlatform();
+  static bool IsEmbedded();
   
   static CStdString GetSpecialPathPrefix(const CStdString& specialPath);
   
@@ -264,14 +291,55 @@ public:
   static void FilterUnallowedItems(std::vector<CGUIListItemPtr>& items);
   
   static bool MatchesPlatform(const CStdString& platform);
-  
+  static void CreateTempDirectory(const CStdString &origPath);
+
   static CStdString LongestCommonPrefix(const CStdString& str1, const CStdString& str2);
   static Uint32 GetDirSize(const CStdString& path);
+
+  static bool IsValidIp(const CStdString& ip);
   static bool CheckFileSignature(const CStdString &file, const CStdString &validSig);
+  static bool GetHDDDirectory(const CStdString& path, CFileItemList& items);
+
+  static bool FindFile(const CStdString& filename, const CStdString& directory, std::vector<CStdString>& vecResult);
+#if defined(HAS_EMBEDDED) && !defined(__APPLE__)
+  static CStdString DumpStack(bool printStack = false);
+  static void MemLeakDetectorStart();
+  static void MemLeakDetectorStop();
+  static void MemLeakDetectorReport(const CStdString& reportFile);
+#endif
 private:
 
   static HANDLE m_hCurrentCpuUsage;
 
 };
 
+class CPlayableFolderType
+{
+public:
+  enum PlayableFolderEnums
+  {
+    PF_NO=0,
+    PF_BLURAY=1,
+    PF_DVD=2,
+    NUM_OF_PF=3
+  };
+};
 
+class IsPlayableFolderJob : public IRunnable
+{
+public:
+  IsPlayableFolderJob(CStdString path);
+  virtual ~IsPlayableFolderJob();
+  virtual void Run();
+
+  CPlayableFolderType::PlayableFolderEnums m_result;
+  CStdString m_strPath;
+};
+
+#define foreach         BOOST_FOREACH
+#define reverse_foreach BOOST_REVERSE_FOREACH
+
+#ifdef _WIN32
+long long atoll(const char *instr);
+#define localtime_r(a,b) localtime_s(b,a)
+#endif

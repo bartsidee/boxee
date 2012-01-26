@@ -23,11 +23,58 @@
 #include "DetectDVDType.h"
 #include "utils/log.h"
 #include "VideoInfoTag.h"
-#include "GUIWindowBoxeeMain.h"
 
 using namespace std;
 using namespace BOXEE;
 using namespace DIRECTORY;
+
+bool CBoxeeItemLauncher::ExecutePlayableFolder (const CFileItem& item)
+{
+  CStdString strPath = item.m_strPath;
+
+  CLog::Log(LOGDEBUG,"CBoxeeItemLauncher::ExecutePlayableFolder - checking for [path=%s] (epf)",strPath.c_str());
+
+  if (strPath.IsEmpty())
+  {
+    return false;
+  }
+
+  IsPlayableFolderJob* pPlayableFolderJob = new IsPlayableFolderJob(strPath);
+  Job_Result jobResult = CUtil::RunInBG(pPlayableFolderJob,false);
+
+  if (jobResult == JOB_SUCCEEDED)
+  {
+    CPlayableFolderType::PlayableFolderEnums result = pPlayableFolderJob->m_result;
+
+    delete pPlayableFolderJob;
+
+    if (result == CPlayableFolderType::PF_BLURAY)
+    {
+      CLog::Log(LOGDEBUG,"CBoxeeItemLauncher::ExecutePlayableFolder - [path=%s] is a Bluray folder. (epf)",strPath.c_str());
+      PlayFolder(item,0);
+      return true;
+    }
+    else if (result == CPlayableFolderType::PF_DVD)
+    {
+      CLog::Log(LOGDEBUG,"CBoxeeItemLauncher::ExecutePlayableFolder - [path=%s] is a DVD folder. (epf)",strPath.c_str());
+      PlayFolder(item,1);
+      return true;
+    }
+    else if (result == CPlayableFolderType::PF_NO)
+    {
+      CLog::Log(LOGDEBUG,"CBoxeeItemLauncher::ExecutePlayableFolder - [path=%s] is not a DVD or Bluray folder. (epf)",strPath.c_str());
+      return false;
+    }
+  }
+  else if (jobResult == JOB_ABORTED)
+  {
+    CLog::Log(LOGDEBUG,"CBoxeeItemLauncher::ExecutePlayableFolder - [path=%s] query was aborted. (epf)",strPath.c_str());
+    return true;
+  }
+
+  CLog::Log(LOGDEBUG,"CBoxeeItemLauncher::ExecutePlayableFolder - [path=%s] is not a DVD or Bluray folder. (epf)",strPath.c_str());
+  return false;
+}
 
 bool CBoxeeItemLauncher::Launch(const CFileItem& item)
 {
@@ -36,49 +83,78 @@ bool CBoxeeItemLauncher::Launch(const CFileItem& item)
     g_windowManager.ActivateWindow(WINDOW_BOXEE_MEDIA_SOURCES);
     return true;
   }
+#ifndef HAS_EMBEDDED
   else if (item.IsScript()) 
   {
     RunScript(item.m_strPath);
   }
+#endif
   else if (item.IsApp()) 
   {
-    if (CAppManager::GetInstance().IsPlayable(item.m_strPath))
+    if ((item.GetProperty("FeedTypeItem") == MSG_ACTION_TYPE_FEATURED) && (item.GetProperty("rts-mediatype").IsEmpty()))
     {
-      CGUIDialogBoxeeMediaAction::ShowAndGetInput(&item);
+      // ugly hack - in case of app or section within an app -> Launch the app
+      CAppManager::GetInstance().Launch(item, false);
+    }
+    else if (item.GetPropertyBOOL("IsSearchItem") || CAppManager::GetInstance().IsPlayable(item.m_strPath))
+    {
+      return CGUIDialogBoxeeMediaAction::ShowAndGetInput(&item);
     }
     else
     {
       CAppManager::GetInstance().Launch(item, false);
     }
   }
-  else if (item.IsPicture())
-  {
+  else if (item.IsPicture()) 
+  {    
     return LaunchPictureItem(item);
   }
   else if (item.GetPropertyBOOL("isalbum") && item.HasMusicInfoTag()) 
   {
-    CGUIDialogBoxeeMediaAction::ShowAndGetInput(&item);
+    return CGUIDialogBoxeeMediaAction::ShowAndGetInput(&item);
   }
   else if (item.GetPropertyBOOL("istvshowfolder") && !item.GetProperty("boxeeid").IsEmpty())
   {
-    // We always show both local and remote episodes
-    CStdString strPath = "boxee://tvshows/episodes?local=true&remote=true&seriesId=";
-    strPath += item.GetProperty("boxeeid");
-    g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_TVEPISODES, strPath);
+    CStdString strSeriesUrl;
+    CStdString strTitle = item.GetLabel();
+
+    CUtil::URLEncode(strTitle);
+
+    strSeriesUrl.Format("boxeeui://tvshows/?seriesId=%s&title=%s", item.GetProperty("boxeeid").c_str(), strTitle.c_str());
+
+    g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_TVEPISODES, strSeriesUrl);
     return true;
   }
   else if ((item.GetPropertyBOOL("isvideo") || (item.GetProperty("isvideo") == "true")) && item.HasVideoInfoTag() && !item.m_bIsFolder) 
   {
-    CGUIDialogBoxeeMediaAction::ShowAndGetInput(&item);
-
+    if (!ExecutePlayableFolder(item))
+      return CGUIDialogBoxeeMediaAction::ShowAndGetInput(&item);
+    else
+      return true;
   }
   else if ((item.GetPropertyBOOL("isinternetstream") || item.GetPropertyBOOL("isrss") || item.GetPropertyBOOL("isradio")) && !item.m_bIsFolder) 
   {
-    CGUIDialogBoxeeMediaAction::ShowAndGetInput(&item);
+    return CGUIDialogBoxeeMediaAction::ShowAndGetInput(&item);
   }
   else if (item.GetPropertyBOOL("isplugin") && !item.m_bIsFolder) 
   {
-    CGUIDialogBoxeeMediaAction::ShowAndGetInput(&item);
+    return CGUIDialogBoxeeMediaAction::ShowAndGetInput(&item);
+  }
+  else if (item.GetPropertyBOOL("photoslauncher"))
+  {
+    g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_PHOTOS);
+  }
+  else if (item.GetPropertyBOOL("musiclauncher"))
+  {
+    g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_ALBUMS);
+  }
+  else if (item.GetPropertyBOOL("videolauncher"))
+  {
+    g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_MOVIES , "boxeeui://movies/?category=local");
+  }
+  else if (item.GetPropertyBOOL("showslauncher"))
+  {
+    g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_TVSHOWS , "boxeeui://shows/?category=local");
   }
   else if ((item.m_bIsFolder) && (!item.IsPlayList()))
   {
@@ -88,7 +164,7 @@ bool CBoxeeItemLauncher::Launch(const CFileItem& item)
     }
     else
     {
-      return false;
+      return ExecutePlayableFolder(item);
     }
   }
   else
@@ -103,12 +179,12 @@ bool CBoxeeItemLauncher::Launch(const CFileItem& item)
       {
         DIRECTORY::CBoxeeDatabaseDirectory::CreateAudioItem(&metadata, &newItem);
 
-        // Set the correct path so that the album can be found,
-//        CStdString strAlbumPath = "boxeedb://album/?id=";
-//        strAlbumPath += BXUtils::IntToString(((BXAlbum*)metadata.GetDetail(MEDIA_DETAIL_ALBUM))->m_iId);
-//        strAlbumPath += "/";
-//
-//        newItem.m_strPath = strAlbumPath;
+        //Set the correct path so that the album can be found,
+        //CStdString strAlbumPath = "boxeedb://album/?id=";
+        //strAlbumPath += BXUtils::IntToString(((BXAlbum*)metadata.GetDetail(MEDIA_DETAIL_ALBUM))->m_iId);
+        //strAlbumPath += "/";
+
+        //newItem.m_strPath = strAlbumPath;
 
         // Set the property with the track number that should start playing
         newItem.SetProperty("PlayTrack", ((BXAudio*)metadata.GetDetail(MEDIA_DETAIL_AUDIO))->m_iTrackNumber);
@@ -118,7 +194,7 @@ bool CBoxeeItemLauncher::Launch(const CFileItem& item)
 
       //newItem.Dump();
 
-      CGUIDialogBoxeeMediaAction::ShowAndGetInput(&newItem);
+      CGUIDialogBoxeeMediaAction::OnPlayAudioFromFolder(newItem);
     }
     else
     {
@@ -139,7 +215,7 @@ bool CBoxeeItemLauncher::Launch(const CFileItem& item)
 
 void CBoxeeItemLauncher::RunScript(const CStdString& strPath) 
 {
-  CURL url(strPath);
+  CURI url(strPath);
 
   // path is special://home/scripts<path from here>
   CStdString pathToScript = "special://home/scripts";
@@ -186,16 +262,10 @@ void CBoxeeItemLauncher::PlayDVD()
 
 bool CBoxeeItemLauncher::LaunchPictureItem(const CFileItem& item)
 {
-  CGUIWindowBoxeeMain* pHomeWindow = (CGUIWindowBoxeeMain*)g_windowManager.GetWindow(WINDOW_HOME);
-  if (!pHomeWindow)
-  {
-    CLog::Log(LOGERROR,"CBoxeeItemLauncher::LaunchPictureItem - FAILED to get WINDOW_HOME. item [label=%s][path=%s][boxeeId=%s] (bma)",item.GetLabel().c_str(),item.m_strPath.c_str(),item.GetProperty("boxeeid").c_str());
-  }
-
   int activeWindow = g_windowManager.GetActiveWindow();
-  if ((activeWindow == WINDOW_BOXEE_BROWSE_QUEUE) || ((activeWindow == WINDOW_HOME) && pHomeWindow && (pHomeWindow->GetFocusedControlID() == LIST_QUEUE)))
+  if (activeWindow == WINDOW_BOXEE_BROWSE_QUEUE)
   {
-    CGUIDialogBoxeeMediaAction::ShowAndGetInput(&item);
+    return CGUIDialogBoxeeMediaAction::ShowAndGetInput(&item);
   }
   else
   {
@@ -215,3 +285,24 @@ bool CBoxeeItemLauncher::LaunchPictureItem(const CFileItem& item)
 
   return true;
 }
+
+bool CBoxeeItemLauncher::PlayFolder(const CFileItem& item, bool isDVD)
+{
+  CFileItem newItem(item);
+
+  newItem.SetProperty("isFolderItem", true);
+
+  newItem.SetProperty("HasNextItem", true);
+  newItem.SetProperty("HasPrevItem", true);
+
+  newItem.SetPlayableFolder(isDVD);
+
+  BOXEE::Boxee::GetInstance().GetMetadataEngine().AddPlayableFolder(item.m_strPath);
+
+  CLog::Log(LOGINFO,"CBoxeeItemLauncher::PlayFolder - Going to play %s folder [%s]", isDVD ? "DVD" : "Bluray", (newItem.m_strPath).c_str());
+
+  CGUIDialogBoxeeMediaAction::ShowAndGetInput(&newItem);
+
+  return true;
+}
+

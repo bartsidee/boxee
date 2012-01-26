@@ -11,10 +11,12 @@
 #include "lib/libBoxee/bxexceptions.h"
 #include "lib/libBoxee/bxfeedreader.h"
 #include "lib/libBoxee/bxfeedfactory.h"
+#include "lib/libBoxee/bxutils.h"
 #include "utils/log.h"
 #include "utils/CharsetConverter.h"
 #include "MathUtils.h"
 #include "lib/libBoxee/boxee.h"
+#include "BoxeeUtils.h"
 
 using namespace std;
 
@@ -22,15 +24,15 @@ using namespace std;
 
 CRssFeed::CRssFeed()
 {
-	m_LastRead = 0;
-	m_Timestamp = 0;
-	m_iIntervalSeconds = RSS_DEFAULT_CHECK_INTERVAL_SECONDS;
-	m_iNewItems = 0;
+  m_LastRead = 0;
+  m_Timestamp = 0;
+  m_iIntervalSeconds = RSS_DEFAULT_CHECK_INTERVAL_SECONDS;
+  m_iNewItems = 0;
 }
 
 CRssFeed::~CRssFeed()
 {
-
+  //items.Clear();
 }
 
 bool CRssFeed::Init(const CStdString& strURL, const CStdString& originalURL) {
@@ -38,24 +40,24 @@ bool CRssFeed::Init(const CStdString& strURL, const CStdString& originalURL) {
   m_originalURL = originalURL;
   m_strURL = strURL;
 
-	CLog::Log(LOGDEBUG, "Initializing feed: %s", m_strURL.c_str());
-	return true;
+  CLog::Log(LOGDEBUG, "Initializing feed: %s", m_strURL.c_str());
+  return true;
 }
 
 void CRssFeed::CheckFeed() 
 {
-	// Get the feed and parse it
+  // Get the feed and parse it
   BOXEE::BXXMLDocument document;
   document.GetDocument().SetConvertToUtf8(true);
   bool result = document.LoadFromURL(m_strURL);
 
-	if (!result)
-	{
-		CLog::Log(LOGERROR, "%s: Check failed, could not parse feed %s", __FUNCTION__, m_strURL.c_str());
-		time(&m_Timestamp);
-		m_Timestamp += m_iIntervalSeconds;
-		return;
-	}
+  if (!result)
+  {
+    CLog::Log(LOGERROR, "%s: Check failed, could not parse feed %s", __FUNCTION__, m_strURL.c_str());
+    time(&m_Timestamp);
+    m_Timestamp += m_iIntervalSeconds;
+    return;
+  }
 
   BOXEE::IBXFeedReader* reader = BOXEE::BXFeedFactory::Create(document);
   if (!reader)
@@ -63,41 +65,41 @@ void CRssFeed::CheckFeed()
     CLog::Log(LOGERROR, "%s: Feed does not seem to be an RSS or Atom: %s", __FUNCTION__, m_strURL.c_str());
     return;
   }
-  
-	reader->Parse();
 
-	// Retreive number of items in the list
-	int numOfItems = reader->GetNumOfItems();
+  reader->Parse();
 
-	// Loop over all items in the feed
-	for (int i = 0; i < numOfItems; i++) 
-	{
-		// Check if the item is newer than the last read date
-		string strPubDate = reader->GetItemPubDate(i);
-		//    struct tm pubDate = {0};
-		//    // TODO: Handle time zone
-		//    strptime(strPubDate.c_str(), "%a, %d %b %Y %H:%M:%S", &pubDate);
-		//    // Check the difference between the time of last check and time of the item
-		//    if (difftime(mktime(&pubDate), m_LastRead) > 0) {
-		//      m_iNewItems++;
-		//    }
-		if (difftime(reader->ParseDateTime(strPubDate), m_LastRead) > 0) 
-		{
-			m_iNewItems++;
-		}
-	}
+  // Retreive number of items in the list
+  int numOfItems = reader->GetNumOfItems();
 
-	// Reset the timestamp to the next time the feed should be checked
-	// Update the time to the current time first TODO: Check if this is ok
-	time(&m_Timestamp);
-	m_Timestamp += m_iIntervalSeconds;
-	
-	delete reader;
+  // Loop over all items in the feed
+  for (int i = 0; i < numOfItems; i++)
+  {
+    // Check if the item is newer than the last read date
+    string strPubDate = reader->GetItemPubDate(i);
+    //    struct tm pubDate = {0};
+    //    // TODO: Handle time zone
+    //    strptime(strPubDate.c_str(), "%a, %d %b %Y %H:%M:%S", &pubDate);
+    //    // Check the difference between the time of last check and time of the item
+    //    if (difftime(mktime(&pubDate), m_LastRead) > 0) {
+    //      m_iNewItems++;
+    //    }
+    if (difftime(reader->ParseDateTime(strPubDate), m_LastRead) > 0)
+    {
+      m_iNewItems++;
+    }
+  }
+
+  // Reset the timestamp to the next time the feed should be checked
+  // Update the time to the current time first TODO: Check if this is ok
+  time(&m_Timestamp);
+  m_Timestamp += m_iIntervalSeconds;
+
+  delete reader;
 }
 
 CStdString CRssFeed::CleanDescription(const CStdString& strDescription) 
 {
-	CStdString description = strDescription;
+  CStdString description = strDescription;
 
   description.Replace("<br>", "[CR]");
   description.Replace("<BR>", "[CR]");
@@ -114,84 +116,90 @@ CStdString CRssFeed::CleanDescription(const CStdString& strDescription)
   description.Replace("</p>", "[CR]");
   description.Replace("</P>", "[CR]");
   description.Replace("&nbsp;", " ");
-    
-	while (description.Find("<") != -1)
-	{
-		int start = description.Find("<");
-		int end = description.Find(">");
-		if (end > start)
-			description.Delete(start, end-start+1);
-		else
-			description.Delete(start, description.GetLength() - start);
-	}
-	description.Trim();
 
-	description.Replace("\\&", "&");
-	description.Replace("&quot;", "\"");
-	description.Replace("&amp;", "&");
-	description.Replace("&nbsp;", " ");
-	description.Replace("&gt;", ">");
-	description.Replace("&lt;", "<");
-	
-	int i;
-	while ((i = description.Find("&#")) >= 0)
-	{
+  while (description.Find("<") != -1)
+  {
+    int start = description.Find("<");
+    int end = description.Find(">");
+    if (end > start)
+      description.Delete(start, end-start+1);
+    else
+      description.Delete(start, description.GetLength() - start);
+  }
+  description.Trim();
+
+  description.Replace("\\&", "&");
+  description.Replace("&quot;", "\"");
+  description.Replace("&amp;", "&");
+  description.Replace("&nbsp;", " ");
+  description.Replace("&gt;", ">");
+  description.Replace("&lt;", "<");
+
+  int i;
+  while ((i = description.Find("&#")) >= 0)
+  {
     CStdString src = "&#";
     int radix = 10;
-    
-	  i += 2;
-	  if (description[i] == 'x' || description[i] == 'X')
-	  {
-	    src += description[i];
-	    i++;
-	    radix = 16;
-	  }
-	  
-	  CStdString numStr;
-	  unsigned long num;
-	  while (description[i] != ';' && numStr.length() <= 6)
-	  {
-	    numStr += description[i];
-	    src += description[i];
-	    i++;
-	  }
-	  
-	  // doesn't make sense....abort
-	  if (numStr.length() == 6)
-	  {
-	    break;
-	  }
-	  
-	  src += ';';
-	  char* end;
-	  num = strtoul(numStr.c_str(), &end, radix);
-	  
-	  // doesn't make sense....abort
-	  if (num == 0)
-	  {
-	    break;
-	  }
-	  	 
-	  CStdStringW utf16;
-	  utf16 += (wchar_t) num;
-	  CStdStringA utf8;
-	  g_charsetConverter.wToUTF8(utf16, utf8);
-	  description.Replace(src, utf8);
-	}
 
-	return description;
+    i += 2;
+    if (description[i] == 'x' || description[i] == 'X')
+    {
+      src += description[i];
+      i++;
+      radix = 16;
+    }
+
+    CStdString numStr;
+    unsigned long num;
+    while (description[i] != ';' && numStr.length() <= 6)
+    {
+      numStr += description[i];
+      src += description[i];
+      i++;
+    }
+
+    // doesn't make sense....abort
+    if (numStr.length() > 6)
+    {
+      break;
+    }
+
+    src += ';';
+    char* end;
+
+    if (numStr.IsEmpty())
+      break;
+
+    num = strtoul(numStr.c_str(), &end, radix);
+
+    // doesn't make sense....abort
+    if (num == 0)
+    {
+      break;
+    }
+
+    CStdStringW utf16;
+    utf16 += (wchar_t) num;
+    CStdStringA utf8;
+    g_charsetConverter.wToUTF8(utf16, utf8);
+    description.Replace(src, utf8);
+  }
+
+  return description;
 }
 
 bool CRssFeed::IsKnownContentType(CStdString contentType)
 {
   return (contentType.Left(6).Equals("video/") ||
-     contentType.Left(6).Equals("audio/") ||
-     contentType.Left(6).Equals("image/") ||
-     contentType.Equals("application/x-boxee") ||
-     contentType.Equals("application/x-shockwave-flash") ||
-     contentType.Equals("application/x-vnd.movenetworks.qm") ||
-     contentType.Equals("application/x-silverlight-2") ||
-     contentType.Equals("application/x-silverlight"));
+      contentType.Left(6).Equals("audio/") ||
+      contentType.Left(6).Equals("image/") ||
+      contentType.Equals("application/x-boxee") ||
+      contentType.Equals("application/x-shockwave-flash") ||
+      contentType.Equals("application/x-vnd.movenetworks.qm") ||
+      contentType.Equals("application/x-silverlight-2") ||
+      contentType.Equals("application/x-silverlight") ||
+      contentType.Equals("application/vnd.apple.mpegurl") ||
+      contentType.Equals("audio/mpeg")) ;
 }
 
 
@@ -214,6 +222,7 @@ bool CRssFeed::ParseItem(BOXEE::IBXFeedReader* reader, TiXmlElement* child, CFil
 
   return succeeded;
 }
+
 
 bool CRssFeed::ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* child, CFileItemPtr item, CRssFeedParseContext& parseContext)
 {
@@ -239,17 +248,22 @@ bool CRssFeed::ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* chi
     else if (item_child->Value() && ((reader->GetFeedType() == BOXEE::FEED_TYPE_RSS && strcmp(item_child->Value(), "pubDate") == 0) ||
         (reader->GetFeedType() == BOXEE::FEED_TYPE_ATOM && strcmp(item_child->Value(), "published") == 0)))
     {
-      const char *pubDate = item_child->GetText();
-      if (!pubDate)
-        pubDate = ""; // hack to protect from crash
-      time_t date = reader->ParseDateTime(pubDate);
-      if (date > 0)
-      {
-         CDateTime pubDate(date);
-         item->SetProperty("releasedate", pubDate.GetAsddMMMYYYYDate());
-         item->m_dateTime = pubDate;
-         CLog::Log(LOGDEBUG,"DATEDATE, label = %s, text = %s, release date = %s", item->GetLabel().c_str(), item_child->GetText(), item->GetProperty("releasedate").c_str());
-      }
+      const char *strPubDate = item_child->GetText();
+      if (!strPubDate)
+        strPubDate = ""; // hack to protect from crash
+
+      time_t date = reader->ParseDateTime(strPubDate);
+
+      //CLog::Log(LOGDEBUG,"DATEDATE, parsed date time %d (releasedate)", (unsigned long)date);
+
+      CDateTime pubDate(date);
+      item->SetProperty("releasedate", pubDate.GetAsddMMMYYYYDate());
+
+      //CLog::Log(LOGDEBUG,"DATEDATE, CDateTime parse to dd/mmm/yyyy: %s (releasedate) ", pubDate.GetAsddMMMYYYYDate().c_str());
+
+      item->SetProperty("releasedateVal" , (unsigned long)date); //we write it in unsigned long , even though date should be signed. (negative < 1970, positive > 1970)
+      item->m_dateTime = pubDate;
+      //CLog::Log(LOGDEBUG,"DATEDATE, label = %s, text = %s, release date = %s (releasedate)", item->GetLabel().c_str(), item_child->GetText(), item->GetProperty("releasedate").c_str());
     }
     else if (item_child->Value() && (strcmp(item_child->Value(), "link") == 0))
     {
@@ -267,11 +281,11 @@ bool CRssFeed::ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* chi
       {
         strLink = item_child->Attribute("href");
       }
-      
+
       if (!strLink.IsEmpty())
       {
         CRssFeedPlaybackItem playbackItem;
-        
+
         string strPrefix = strLink.substr(0, strLink.find_first_of(":"));
         if (strPrefix == "rss") 
         {
@@ -306,7 +320,7 @@ bool CRssFeed::ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* chi
             playbackItem.contentType = item_child->Attribute("type");
           }          
         }
-        
+
         if (playbackItem.path != "")
         {
           parseContext.Push(playbackItem);
@@ -316,10 +330,13 @@ bool CRssFeed::ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* chi
     else if (item_child->Value() && (strcmp(item_child->Value(), "enclosure") == 0))
     {
       const char * url = item_child->Attribute("url");
-      const char * content_type = item_child->Attribute("type");
+      CStdString content_type = item_child->Attribute("type");
       CRssFeedPlaybackItem playbackItem;
-      
-      if (url && content_type && IsKnownContentType(content_type)) 
+
+      // remove blank spaces
+      content_type.erase(remove(content_type.begin(),content_type.end(),' '),content_type.end());
+
+      if (url && !content_type.IsEmpty() && IsKnownContentType(content_type))
       {
         playbackItem.path = url;
         playbackItem.contentType = content_type;
@@ -330,7 +347,7 @@ bool CRssFeed::ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* chi
         playbackItem.path = url;
         playbackItem.priority = CRssFeedPlaybackItem::ENCLOSURE_URL_WITH_TYPE;
       }
-      
+
       if (playbackItem.path != "")
       {
         parseContext.Push(playbackItem);
@@ -344,10 +361,13 @@ bool CRssFeed::ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* chi
       }
 
       const char * url = item_child->Attribute("url");
-      const char * content_type = item_child->Attribute("type");
+      CStdString content_type = item_child->Attribute("type");
       CRssFeedPlaybackItem playbackItem;
 
-      if (url && content_type && IsKnownContentType(content_type))
+      // remove blank spaces
+      content_type.erase(remove(content_type.begin(),content_type.end(),' '),content_type.end());
+
+      if (url && !content_type.IsEmpty() && IsKnownContentType(content_type))
       {
         playbackItem.path = url;
         playbackItem.contentType = content_type;
@@ -358,7 +378,7 @@ bool CRssFeed::ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* chi
         playbackItem.path = url;
         playbackItem.priority = CRssFeedPlaybackItem::MEDIA_CONTENT_WITH_TYPE;
       }
-      
+
       // Temp fix for init IsInternetStream property for HULU item (in carusel)
       // in order to be able to successfully send recommandation for it (021208)
       if (!playbackItem.path.IsEmpty() && playbackItem.path.Left(6) == "app://")
@@ -372,18 +392,18 @@ bool CRssFeed::ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* chi
         long durationLong = atol(duration);
         StringUtils::SecondsToTimeString(durationLong, playbackItem.duration);
       }
-        
+
       const char * lang = item_child->Attribute("lang");
       if (lang)
       {
         playbackItem.lang = lang;
       }
-      
+
       if (playbackItem.path != "")
       {
         parseContext.Push(playbackItem);
       }
-      
+
       if (!item_child->NoChildren())
         ParseItemElements(reader, item_child, item, parseContext);
     }
@@ -428,7 +448,7 @@ bool CRssFeed::ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* chi
       }
     }
     else if (reader->GetFeedType() == BOXEE::FEED_TYPE_ATOM && item_child->Value() &&
-      (strcmp(item_child->Value(), "summary") == 0 || strcmp(item_child->Value(), "content") == 0))
+        (strcmp(item_child->Value(), "summary") == 0 || strcmp(item_child->Value(), "content") == 0))
     {
       if(item_child->GetText()) {
         CStdString dirtyDescription = item_child->GetText();
@@ -464,7 +484,6 @@ bool CRssFeed::ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* chi
     else if(item_child->Value() && (strcmp(item_child->Value(), "itunes:duration") == 0))
     {
       if(item_child->GetText()) {
-        item->GetVideoInfoTag()->m_strRuntime = item_child->GetText();
         item->SetProperty("duration", item_child->GetText());
       }
     }
@@ -489,26 +508,25 @@ bool CRssFeed::ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* chi
     else if(item_child->Value() && (strcmp(item_child->Value(), "boxee:runtime") == 0))
     {
       if(item_child->GetText()) {
-        item->GetVideoInfoTag()->m_strRuntime = item_child->GetText();
         item->SetProperty("duration", item_child->GetText());
       }
     }
     else if(item_child->Value() && (strcmp(item_child->Value(), "boxee:view-count") == 0 ||
-            strcmp(item_child->Value(), "zv:views") == 0))
+        strcmp(item_child->Value(), "zv:views") == 0))
     {
       if (item_child->GetText()) {
         item->SetProperty("viewcount", item_child->GetText());
       }
     }    
     else if(item_child->Value() && (strcmp(item_child->Value(), "boxee:episode") == 0 ||
-            strcmp(item_child->Value(), "zv:episode") == 0))
+        strcmp(item_child->Value(), "zv:episode") == 0))
     {
       if(item_child->GetText()) {
         item->GetVideoInfoTag()->m_iEpisode = atoi(item_child->GetText());
       }
     }
     else if(item_child->Value() && (strcmp(item_child->Value(), "boxee:season") == 0 ||
-            strcmp(item_child->Value(), "zv:season") == 0))
+        strcmp(item_child->Value(), "zv:season") == 0))
     {
       if(item_child->GetText()) {
         item->GetVideoInfoTag()->m_iSeason = atoi(item_child->GetText());
@@ -547,14 +565,22 @@ bool CRssFeed::ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* chi
     }
     else if(item_child->Value() && (strcmp(item_child->Value(), "boxee:plot") == 0))
     {
-      if(item_child->GetText()) {
-        item->GetVideoInfoTag()->m_strPlot = item_child->GetText();
+      if(item_child->GetText())
+      {
+        CStdString dirtyStrPlot = item_child->GetText();
+        CStdString strPlot = CleanDescription(dirtyStrPlot);
+        CUtil::UrlDecode(strPlot);
+        item->GetVideoInfoTag()->m_strPlot = strPlot;
       }
     }
     else if(item_child->Value() && (strcmp(item_child->Value(), "boxee:plot-summary") == 0))
     {
-      if(item_child->GetText()) {
-        item->GetVideoInfoTag()->m_strPlotOutline = item_child->GetText();
+      if(item_child->GetText())
+      {
+        CStdString dirtyStrPlotOutline = item_child->GetText();
+        CStdString strPlotOutline = CleanDescription(dirtyStrPlotOutline);
+        CUtil::UrlDecode(strPlotOutline);
+        item->GetVideoInfoTag()->m_strPlotOutline = strPlotOutline;
       }
     }
     else if(item_child->Value() && (strcmp(item_child->Value(), "boxee:id") == 0))
@@ -581,27 +607,149 @@ bool CRssFeed::ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* chi
         item->GetVideoInfoTag()->m_iPopularity = atoi(item_child->GetText());
       }
     }
+    else if(item_child->Value() && (strcmp(item_child->Value(), "boxee:rt-critics-score") == 0))
+    {
+      if(item_child->GetText()) {
+        item->GetVideoInfoTag()->m_rottenTomatoDetails.iCriticsScore = atoi(item_child->GetText());
+        item->GetVideoInfoTag()->m_rottenTomatoDetails.bValidCriticsDetails = true;
+        item->SetProperty("rt-critics-score",item->GetVideoInfoTag()->m_rottenTomatoDetails.iCriticsScore);
+
+        //ensure that when setting this flag we have already the rt-critics-rating defined
+        item->SetProperty("rt-has-critics-info",item->HasProperty("rt-critics-rating"));
+      }
+    }
+    else if(item_child->Value() && (strcmp(item_child->Value(), "boxee:rt-audience-score") == 0))
+    {
+      if(item_child->GetText()) {
+        item->GetVideoInfoTag()->m_rottenTomatoDetails.iAudienceScore = atoi(item_child->GetText());
+        item->GetVideoInfoTag()->m_rottenTomatoDetails.bValidAudienceDetails = true;
+        item->SetProperty("rt-audience-score",item->GetVideoInfoTag()->m_rottenTomatoDetails.iAudienceScore);
+
+        //ensure that when setting this flag we have already the rt-audience-rating defined
+        item->SetProperty("rt-has-audience-info",item->HasProperty("rt-audience-rating"));
+      }
+    }
+    else if(item_child->Value() && (strcmp(item_child->Value(), "boxee:rt-critics-rating") == 0))
+    {
+      if(item_child->GetText()) {
+        item->GetVideoInfoTag()->m_rottenTomatoDetails.strCriticsRating = item_child->GetText();
+        item->GetVideoInfoTag()->m_rottenTomatoDetails.bValidCriticsDetails = true;
+        item->SetProperty("rt-critics-rating",item->GetVideoInfoTag()->m_rottenTomatoDetails.strCriticsRating);
+
+        //ensure that when setting this flag we have already the rt-critics-score defined
+        item->SetProperty("rt-has-critics-info",item->HasProperty("rt-critics-score"));
+      }
+    }
+    else if(item_child->Value() && (strcmp(item_child->Value(), "boxee:rt-audience-rating") == 0))
+    {
+      if(item_child->GetText()) {
+        item->GetVideoInfoTag()->m_rottenTomatoDetails.strAudienceRating = item_child->GetText();
+        item->GetVideoInfoTag()->m_rottenTomatoDetails.bValidAudienceDetails = true;
+        item->SetProperty("rt-audience-rating",item->GetVideoInfoTag()->m_rottenTomatoDetails.strAudienceRating);
+
+        //ensure that when setting this flag we have already the rt-audience-score defined
+        item->SetProperty("rt-has-audience-info",item->HasProperty("rt-audience-score"));
+      }
+    }
     else if(item_child->Value() && (strcmp(item_child->Value(), "boxee:cast") == 0))
     {
       if(item_child->GetText()) {
         item->SetProperty("cast", item_child->GetText());
 
+        /*
         SActorInfo actor;
         std::vector<CStdString> names;
         std::vector<CStdString>::iterator it;
         CUtil::Tokenize(item_child->GetText(), names, ",");
         for( it = names.begin(); it != names.end(); it++ )
         {
-        	actor.strName = (*it);
-            item->GetVideoInfoTag()->m_cast.push_back(actor);
+          actor.strName = (*it);
+          item->GetVideoInfoTag()->m_cast.push_back(actor);
+        }
+        */
+      }
+    }
+    else if(item_child->Value() && (strcmp(item_child->Value(), "boxee:roles") == 0))
+    {
+      TiXmlElement* roleElem = item_child->FirstChildElement("boxee:role");
+
+      while (roleElem)
+      {
+        SActorInfo actor;
+
+        TiXmlElement* roleActor = roleElem->FirstChildElement("boxee:role-actor");
+        if (roleActor)
+        {
+          actor.strName = roleActor->GetText();
         }
 
+        TiXmlElement* roleCharacter = roleElem->FirstChildElement("boxee:role-character");
+        if (roleCharacter)
+        {
+          actor.strRole = roleCharacter->GetText();
+        }
+
+        item->GetVideoInfoTag()->m_cast.push_back(actor);
+
+        roleElem = roleElem->NextSiblingElement("boxee:role");
       }
     }
     else if(item_child->Value() && (strcmp(item_child->Value(), "boxee:producers") == 0))
     {
       if(item_child->GetText()) {
         item->SetProperty("producers", item_child->GetText());
+      }
+    }
+    else if (item_child->Value() && (strcmp(item_child->Value(), "boxee:providers") == 0))
+    {
+      if (item_child->GetText())
+      {
+        CStdString strProviders = item_child->GetText();
+
+        item->SetProperty("providers", strProviders);
+
+        vector<string> vecProviderIds = BOXEE::BXUtils::StringTokenize(strProviders," ");
+
+        BOXEE::BXBoxeeSources sources;
+
+        BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().GetSources(sources);
+
+        int count = 0;
+
+        for (vector<string>::iterator it = vecProviderIds.begin(); it != vecProviderIds.end() ; it++)
+        {
+          CStdString providerId = (*it);
+          providerId.Trim();
+
+          CLog::Log(LOGDEBUG,"CRssFeed::ParseItemElements, looking up premium provider:[id=%s](premium)",providerId.c_str());
+
+          for (int i = 0 ; i < sources.GetNumOfSources() ; i++)
+          {
+            BOXEE::BXObject currentSource = sources.GetSource(i);
+
+            std::string sourceId = currentSource.GetValue("source_id");
+            std::string sourcePremium = currentSource.GetValue("source_premium");
+
+            if (sourcePremium == "true" && sourceId == providerId)
+            {
+              CStdString thumb = currentSource.GetValue("source_thumb");
+              if (!thumb.IsEmpty())
+              {
+                CStdString strLabel;
+                strLabel.Format("premium-provider-thumb-%d",count);
+                item->SetProperty(strLabel,thumb);
+                CLog::Log(LOGDEBUG,"CRssFeed::ParseItemElements, found premium provider [id=%s][thumb=%s] (premium)",providerId.c_str(),thumb.c_str());
+                count++;
+                break;
+              }
+            }
+          }
+        }
+
+        if (count > 0)
+        {
+          item->SetProperty("HasPremiumProviders", true);
+        }
       }
     }
     else if(strcmp(item_child->Value(), "provider-thumb") == 0)
@@ -660,34 +808,26 @@ bool CRssFeed::ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* chi
       if (!schema) schema = item_child->Attribute("scheme");
 
       if (schema && stricmp(schema, "urn:user") == 0  && item_child->GetText()) {
-          item->GetVideoInfoTag()->m_fRating = atof(item_child->GetText());
+        item->GetVideoInfoTag()->m_fRating = atof(item_child->GetText());
       }
       else if (schema && stricmp(schema, "urn:mpaa") == 0 && item_child->GetText()) {
-          item->GetVideoInfoTag()->m_strMPAARating = item_child->GetText();
-          if (stricmp(item_child->GetText(), "x") == 0 || stricmp(item_child->GetText(), "nc17") == 0 || stricmp(item_child->GetText(), "nc-17") == 0)
-          {
-            item->SetAdult(true);
-          }  
+        item->GetVideoInfoTag()->m_strMPAARating = item_child->GetText();
+
+        item->SetAdult(BoxeeUtils::IsAdult(item_child->GetText(),CRating::MPAA));
       }
       else if (schema && stricmp(schema, "urn:tv") == 0  && item_child->GetText()) {
-          item->GetVideoInfoTag()->m_strMPAARating = item_child->GetText();
-          if (stricmp(item_child->GetText(), "tv-ma") == 0 || stricmp(item_child->GetText(), "tvma") == 0)
-          {
-            item->SetAdult(true);
-          }  
+        item->GetVideoInfoTag()->m_strMPAARating = item_child->GetText();
+
+        item->SetAdult(BoxeeUtils::IsAdult(item_child->GetText(),CRating::TV));
       }
       else if (schema && stricmp(schema, "urn:v-chip") == 0  && item_child->GetText()) {
-          item->GetVideoInfoTag()->m_strMPAARating = item_child->GetText();
-          if (stricmp(item_child->GetText(), "tv-ma") == 0 || stricmp(item_child->GetText(), "tvma") == 0)
-          {
-            item->SetAdult(true);
-          }  
+        item->GetVideoInfoTag()->m_strMPAARating = item_child->GetText();
+
+        item->SetAdult(BoxeeUtils::IsAdult(item_child->GetText(),CRating::V_CHIP));
       }
       else if ((!schema || (schema && stricmp(schema, "urn:simple") == 0)) && item_child->GetText()) {
-          if (stricmp(item_child->GetText(), "adult") == 0)
-          {
-            item->SetAdult(true);
-          }
+
+        item->SetAdult(BoxeeUtils::IsAdult(item_child->GetText(),CRating::SIMPLE));
       }
     }
     else if(item_child->Value() && (strcmp(item_child->Value(), "media:copyright") == 0))
@@ -700,7 +840,7 @@ bool CRssFeed::ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* chi
     {
       const char *restrictionType = item_child->Attribute("type");
       const char *relationshipType = item_child->Attribute("relationship");
-      
+
       if (restrictionType && stricmp(restrictionType, "country") == 0 && 
           relationshipType && item_child->GetText()) 
       {        
@@ -765,6 +905,11 @@ bool CRssFeed::ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* chi
             item->SetProperty("isepisode", true);
             item->SetProperty("rts-mediatype", "tv_show");
           }
+          else if (strcmp(type, "clip") == 0)
+          {
+            item->SetProperty("isclip", true);
+            item->SetProperty("rts-mediatype", "clip");
+          }
         }
         else if(scheme && strcmp(scheme, "urn:boxee:episode") == 0) {
           item->GetVideoInfoTag()->m_iEpisode = atoi(item_child->GetText());
@@ -818,7 +963,7 @@ bool CRssFeed::ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* chi
     {
       if (item_child->Attribute("average"))
       {
-          item->GetVideoInfoTag()->m_fRating = atof(item_child->Attribute("average")) * 2;
+        item->GetVideoInfoTag()->m_fRating = atof(item_child->Attribute("average")) * 2;
       }
     }
     else if (item_child->Value() && (strcmp(item_child->Value(), "boxee:viewcount") == 0))
@@ -826,6 +971,14 @@ bool CRssFeed::ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* chi
       if (item_child->GetText())
       {
         item->SetProperty("viewcount", item_child->GetText());
+      }
+    }
+    else if (item_child->Value() && (strcmp(item_child->Value(), "boxee:filesize") == 0))
+    {
+      const char * fileSize = item_child->GetText();
+      if (fileSize)
+      {
+        item->m_dwSize = atoll(fileSize);
       }
     }
     else if (item_child->Value() && (strcmp(item_child->Value(), "boxee:alternative-link") == 0))
@@ -864,15 +1017,15 @@ bool CRssFeed::ParseItemElements(BOXEE::IBXFeedReader* reader, TiXmlElement* chi
   {
     item->SetProperty("NumOfCustomButtons", alternativeLinks);
   }
-  
+
   if (!item->GetThumbnailImage().IsEmpty())
   {
     item->SetProperty("OriginalThumb",item->GetThumbnailImage());
   }
-  
+
   // ugly hack
   // some rss feeds have reckless spaces and new-line characters in the middle of the link
-  item->m_strPath.Replace("\n","");
+  item->m_strPath.Replace("\n",""); 
 
   return true;
 }
@@ -890,27 +1043,27 @@ bool CRssFeed::ReadFeed() {
   BOXEE::BXXMLDocument document;
   document.GetDocument().SetConvertToUtf8(true);
   bool result = false;
-  
+
   // Check whether this is a local path
   if (CUtil::IsHD(m_strURL))
   {
-    CLog::Log(LOGDEBUG, "%s - RSS, Loading feed from file", __FUNCTION__);
+    CLog::Log(LOGDEBUG,"CRssFeed::ReadFeed - [strURL=%s] is HD. Going to load from file (rssf)",m_strURL.c_str());
     result = document.LoadFromFile(m_strURL);
   }
   else
   {
-    CLog::Log(LOGDEBUG, "%s - RSS, Loading feed from URL: %s", __FUNCTION__, m_strURL.c_str());
-    
     document.SetCredentials(BOXEE::Boxee::GetInstance().GetCredentials());
     document.SetVerbose(BOXEE::Boxee::GetInstance().IsVerbose());
 
     result = document.LoadFromURL(m_strURL);
+
+    CLog::Log(LOGDEBUG,"CRssFeed::ReadFeed - [strURL=%s] is NOT HD. Load feed from URL returned [result=%d][LastRetCode=%ld] (rssf)",m_strURL.c_str(),result,document.GetLastRetCode());
   }
 
   if (!result) 
   {
     // log as warning. the error could also be a 404 missing title at the server.
-    CLog::Log(LOGWARNING, "%s - RSS Init failed, could not parse feed %s. Reason: %s, Row: %d Col: %d", __FUNCTION__, m_strURL.c_str(), document.GetErrorDesc(), document.GetErrorRow(), document.GetErrorCol());
+    CLog::Log(LOGWARNING,"CRssFeed::ReadFeed - FAILED to load [strURL=%s]. [LastRetCode=%ld][Reason=%s][Row=%d][Col=%d] (rssf)",m_strURL.c_str(),document.GetLastRetCode(),document.GetErrorDesc(),document.GetErrorRow(),document.GetErrorCol());
 
     // Reset the timestamp to the next time the feed should be checked
     // Update the time to the current time first
@@ -923,10 +1076,10 @@ bool CRssFeed::ReadFeed() {
   BOXEE::IBXFeedReader* reader = BOXEE::BXFeedFactory::Create(document);
   if (!reader)
   {
-    CLog::Log(LOGERROR, "%s: Feed does not seem to be an RSS or Atom: %s", __FUNCTION__, m_strURL.c_str());
+    CLog::Log(LOGERROR,"CRssFeed::ReadFeed - Feed does not seem to be an RSS or Atom. [strURL=%s] (rssf)",m_strURL.c_str());
     return false;
   }
-  
+
   TiXmlElement* root = document.GetRoot();
 
   // Load title
@@ -937,34 +1090,45 @@ bool CRssFeed::ReadFeed() {
 
   // Get channel thumbnail
   CStdString strMediaThumbnail;
-  if (IsPathToThumbnail(reader->GetChannelImageLink())) {
+  if (reader->GetChannelImageLink().length() > 0)
+  {
     m_strThumbnail = reader->GetChannelImageLink();
   }
-  else if (IsPathToThumbnail(reader->QueryChannelAttribute("media:content/media:thumbnail", "url"))) {
+
+  if (m_strThumbnail.size() == 0 && reader->QueryChannelAttribute("media:content/media:thumbnail", "url").length() > 0)
+  {
     m_strThumbnail = (reader->QueryChannelAttribute("media:content/media:thumbnail", "url"));
   }
-  else if(IsPathToThumbnail(reader->QueryChannel("boxee:image"))) {
+
+  if (m_strThumbnail.size() == 0 && reader->QueryChannel("boxee:image").length() > 0)
+  {
     m_strThumbnail = (reader->QueryChannel("boxee:image"));
   }
-  else if(IsPathToThumbnail(reader->QueryChannel("itunes:image"))) {
+
+  if (m_strThumbnail.size() == 0 && reader->QueryChannel("itunes:image").length() > 0)
+  {
     // TODO: This case is most likely irrelevant
     m_strThumbnail = (reader->QueryChannel("itunes:image"));
   }
-  else if(IsPathToThumbnail(reader->QueryChannelAttribute("itunes:image", "href"))) {
+
+  if (m_strThumbnail.size() == 0 && reader->QueryChannelAttribute("itunes:image", "href").length() > 0)
+  {
     m_strThumbnail = (reader->QueryChannelAttribute("itunes:image", "href"));
   }
-  else {
-    // no thumbnail for channel
+
+  if (!m_strThumbnail.c_str())
+  {
+    m_strThumbnail = "";
   }
 
   std::string strBGImage = reader->QueryChannel("boxee:background-image");
   if (!strBGImage.empty())
     items.SetProperty("BrowseBackgroundImage", strBGImage.c_str());
-  
+
   std::string strCacheExp = reader->QueryChannel("boxee:expiry");
   if (!strCacheExp.empty())
     items.SetProperty("CacheExpiry", strCacheExp.c_str());
-  
+
   // Get the feed check interval from the feed if it exists
   if (reader->QueryChannelAttribute("boxee:interval", "val") != "") {
     m_iIntervalSeconds = atoi(reader->QueryChannelAttribute("boxee:interval", "val").c_str());
@@ -992,30 +1156,30 @@ bool CRssFeed::ReadFeed() {
 
     CLog::Log(LOGDEBUG,"CRssFeed::ReadFeed - After setting property [ServerViewAndSort=%s] (vns)",(items.GetProperty("ServerViewAndSort")).c_str());
   }
-  
+
   // Try to get opensearch information from openSearch:startIndex, openSearch:itemsPerPage and openSearch:totalResults
   CPageContext pageContext;
-  std::string startIndex = reader->QueryChannel("openSearch:startIndex");
+  std::string startIndex = reader->QueryChannel("opensearch:startIndex");
   if (!startIndex.empty())
     pageContext.m_startIndex = atoi(startIndex.c_str());
 
-  std::string itemsPerPage = reader->QueryChannel("openSearch:itemsPerPage");
+  std::string itemsPerPage = reader->QueryChannel("opensearch:itemsPerPage");
   if (!itemsPerPage.empty())
     pageContext.m_itemsPerPage = atoi(itemsPerPage.c_str());
 
-  std::string totalResults = reader->QueryChannel("openSearch:totalResults");
+  std::string totalResults = reader->QueryChannel("opensearch:totalResults");
   if (!totalResults.empty())
     pageContext.m_totalResults = atoi(totalResults.c_str());
-  
+
   CLog::Log(LOGDEBUG,"CRssFeed::ReadFeed - open search, startIndex = %d, itemsPerPage = %d, totalResults = %d (paging)",  pageContext.m_startIndex, pageContext.m_itemsPerPage, pageContext.m_totalResults);
-  
+
   items.SetPageContext(pageContext);
 
   CRssFeedParseContext parseContext;
   for (child = channel->FirstChildElement(reader->GetItemTag()); child; child = child->NextSiblingElement() )
   {
     parseContext.Clear();
-    
+
     CFileItemPtr item (new CFileItem);
     bool succeeded = ParseItem(reader, child, item, parseContext);
 
@@ -1062,7 +1226,7 @@ bool CRssFeed::ReadFeed() {
     {
       item->SetProperty("istvshowfolder", true);      
     }
-    
+
     item->SetProperty("rsschanneltitle", m_strTitle);
 
     CStdString strContentType = item->GetContentType(false);
@@ -1104,20 +1268,34 @@ bool CRssFeed::ReadFeed() {
       if (item->GetVideoInfoTag()->m_strRuntime.IsEmpty())
         item->GetVideoInfoTag()->m_strRuntime = item->GetProperty("duration");
     }
-    
+
     if (item->HasVideoInfoTag())
     {
       char rating[10];
       sprintf(rating, "%d", item->GetVideoInfoTag()->m_iRating);
       item->SetProperty("videorating", rating);
 
-      if (item->GetVideoInfoTag()->m_iEpisode > 0 || !item->GetProperty("isepisode").IsEmpty()) // hack
+      CStdString type = item->GetProperty("boxee-mediatype");
+
+      if (type == "clip")
       {
-        item->SetProperty("istvshow","1");
+        item->SetProperty("isclip","1");
       }
       else
       {
-        item->SetProperty("ismovie","1");
+        if (item->GetPropertyBOOL("istvshow") || item->GetVideoInfoTag()->m_iEpisode > 0 || !item->GetProperty("isepisode").IsEmpty()) // hack
+        {
+          item->SetProperty("istvshow","1");
+        }
+        else
+        {
+          item->SetProperty("ismovie","1");
+        }
+      }
+
+      if (item->HasProperty("duration"))
+      {
+        item->GetVideoInfoTag()->m_strRuntime = item->GetProperty("duration");
       }
     }
 
@@ -1130,11 +1308,11 @@ bool CRssFeed::ReadFeed() {
     // This property indicates that item has additional info that will be presented to the user
     item->SetProperty("hasInfo", true);
     item->SetProperty("title", item->GetLabel());
-    
+
     // If the item has relative path, prepend the host name from the original RSS
-    if (item->m_strPath[0] == '/')
+    if (!item->m_strPath.IsEmpty() && item->m_strPath[0] == '/')
     {
-      CURL originalURL(m_originalURL);
+      CURI originalURL(m_originalURL);
       if (originalURL.GetProtocol() == "http")
       {
         CStdString path = "http://";
@@ -1143,7 +1321,33 @@ bool CRssFeed::ReadFeed() {
         item->m_strPath = path;
       }
     }
-    
+
+    if(strContentType.Equals("application/vnd.apple.mpegurl"))
+    {
+      CStdString u = item->m_strPath;
+      CUtil::URLEncode(u);
+      item->m_strPath.Format("playlist://%s", u);
+
+      if(item->HasLinksList())
+      {
+        CFileItemList list;
+        list.Copy(*item->GetLinksList());
+
+        int numLinks = list.Size();
+        for(int i=0; i<numLinks; i++)
+        {
+          CFileItemPtr pItem = list.Get(i);
+          CStdString path = pItem->m_strPath;
+          if(!path.IsEmpty())
+          {
+            CUtil::URLEncode(path);
+            pItem->m_strPath.Format("playlist://%s", path);
+          }
+        }
+        item->SetLinksList(&list);
+      }
+    }
+
     EnterCriticalSection(m_ItemVectorLock);
     items.Add(item);
     LeaveCriticalSection(m_ItemVectorLock);
@@ -1164,105 +1368,105 @@ bool CRssFeed::ReadFeed() {
   {
     delete reader;
   }
-  
+
   return true;
 }
 
 bool CRssFeed::IsPathToMedia(const CStdString& strPath ) {
 
-	CStdString extension;
-	CUtil::GetExtension(strPath, extension);
+  CStdString extension;
+  CUtil::GetExtension(strPath, extension);
 
-	if (extension.IsEmpty())
-		return false;
+  if (extension.IsEmpty())
+    return false;
 
-	extension.ToLower();
+  extension.ToLower();
 
-	if (g_stSettings.m_videoExtensions.Find(extension) != -1)
-		return true;
+  if (g_stSettings.m_videoExtensions.Find(extension) != -1)
+    return true;
 
-	if (g_stSettings.m_musicExtensions.Find(extension) != -1)
-		return true;
+  if (g_stSettings.m_musicExtensions.Find(extension) != -1)
+    return true;
 
-	if (g_stSettings.m_pictureExtensions.Find(extension) != -1)
-		return true;
+  if (g_stSettings.m_pictureExtensions.Find(extension) != -1)
+    return true;
 
-	return false;
+  return false;
 }
 
 bool CRssFeed::IsPathToThumbnail(const CStdString& strPath ) {
 
-	// Currently just check if this is an image, maybe we will add some
-	// other checks later
+  // Currently just check if this is an image, maybe we will add some
+  // other checks later
 
-	CStdString extension;
-	CUtil::GetExtension(strPath, extension);
+  CStdString extension;
+  CUtil::GetExtension(strPath, extension);
 
-	if (extension.IsEmpty())
-		return false;
+  if (extension.IsEmpty())
+    return false;
 
-	extension.ToLower();
+  extension.ToLower();
 
-	if (g_stSettings.m_pictureExtensions.Find(extension) != -1)
-		return true;
+  if (g_stSettings.m_pictureExtensions.Find(extension) != -1)
+    return true;
 
-	return false;
+  return false;
 }
 
 void CRssFeed::SerializeToXml(TiXmlElement *pElement) {
 
-	TiXmlElement * feedElement = new TiXmlElement("rssfeed");
+  TiXmlElement * feedElement = new TiXmlElement("rssfeed");
 
-	feedElement->SetAttribute("newItems", m_iNewItems);
-	feedElement->SetAttribute("intervalSeconds", m_iIntervalSeconds);
-	feedElement->SetAttribute("lastRead", (int)m_LastRead);
+  feedElement->SetAttribute("newItems", m_iNewItems);
+  feedElement->SetAttribute("intervalSeconds", m_iIntervalSeconds);
+  feedElement->SetAttribute("lastRead", (int)m_LastRead);
 
-	pElement->LinkEndChild(feedElement);
+  pElement->LinkEndChild(feedElement);
 
-	TiXmlElement * titleElement = new TiXmlElement("title");
-	titleElement->LinkEndChild(new TiXmlText(m_strTitle));
-	feedElement->LinkEndChild(titleElement);
+  TiXmlElement * titleElement = new TiXmlElement("title");
+  titleElement->LinkEndChild(new TiXmlText(m_strTitle));
+  feedElement->LinkEndChild(titleElement);
 
-	TiXmlElement * descriptionElement = new TiXmlElement("description");
-	descriptionElement->LinkEndChild(new TiXmlText(m_strDescription));
-	feedElement->LinkEndChild(descriptionElement);
+  TiXmlElement * descriptionElement = new TiXmlElement("description");
+  descriptionElement->LinkEndChild(new TiXmlText(m_strDescription));
+  feedElement->LinkEndChild(descriptionElement);
 
-	TiXmlElement * thumbnailElement = new TiXmlElement("thumbnail");
-	thumbnailElement->LinkEndChild(new TiXmlText(m_strThumbnail));
-	feedElement->LinkEndChild(thumbnailElement);
+  TiXmlElement * thumbnailElement = new TiXmlElement("thumbnail");
+  thumbnailElement->LinkEndChild(new TiXmlText(m_strThumbnail));
+  feedElement->LinkEndChild(thumbnailElement);
 
-	TiXmlElement * urlElement = new TiXmlElement("url");
-	urlElement->LinkEndChild(new TiXmlText(m_strURL));
-	feedElement->LinkEndChild(urlElement);
+  TiXmlElement * urlElement = new TiXmlElement("url");
+  urlElement->LinkEndChild(new TiXmlText(m_strURL));
+  feedElement->LinkEndChild(urlElement);
 
 }
 
 void CRssFeed::LoadFromXml(TiXmlElement *pElement) {
-	CStdString strValue;
-	if (pElement)
-	{
-		strValue = pElement->Value();
-	}
-	if (strValue != "rssfeed")
-	{
-		CLog::Log(LOGERROR, "%s rssfeeds.xml file does not contain <rssfeeds>", __FUNCTION__);
-	}
+  CStdString strValue;
+  if (pElement)
+  {
+    strValue = pElement->Value();
+  }
+  if (strValue != "rssfeed")
+  {
+    CLog::Log(LOGERROR, "%s rssfeeds.xml file does not contain <rssfeeds>", __FUNCTION__);
+  }
 
-	TiXmlElement* titleElement = pElement->FirstChildElement("title");
-	m_strTitle = titleElement->GetText();
+  TiXmlElement* titleElement = pElement->FirstChildElement("title");
+  m_strTitle = titleElement->GetText();
 
-	TiXmlElement* descriptionElement = pElement->FirstChildElement("description");
-	m_strDescription = descriptionElement->GetText();
+  TiXmlElement* descriptionElement = pElement->FirstChildElement("description");
+  m_strDescription = descriptionElement->GetText();
 
-	TiXmlElement* thumbnailElement = pElement->FirstChildElement("thumbnail");
-	m_strThumbnail = thumbnailElement->GetText();
+  TiXmlElement* thumbnailElement = pElement->FirstChildElement("thumbnail");
+  m_strThumbnail = thumbnailElement->GetText();
 
-	TiXmlElement* urlElement = pElement->FirstChildElement("url");
-	m_strURL = urlElement->GetText();
+  TiXmlElement* urlElement = pElement->FirstChildElement("url");
+  m_strURL = urlElement->GetText();
 
-	pElement->QueryIntAttribute("newItems", &m_iNewItems);
-	pElement->QueryIntAttribute("intervalSeconds", &m_iIntervalSeconds);
-	pElement->QueryIntAttribute("lastRead", (int*)&m_LastRead);
+  pElement->QueryIntAttribute("newItems", &m_iNewItems);
+  pElement->QueryIntAttribute("intervalSeconds", &m_iIntervalSeconds);
+  pElement->QueryIntAttribute("lastRead", (int*)&m_LastRead);
 }
 
 bool CRssFeed::HasBoxeeTypeAttribute(const TiXmlElement* item_child)
@@ -1277,70 +1481,94 @@ bool CRssFeed::HasBoxeeTypeAttribute(const TiXmlElement* item_child)
 
 void CRssFeed::AddLinkItem(const TiXmlElement* item_child, CFileItemPtr item)
 {
-  CStdString stUrl = "";
-  CStdString stBoxeeType = "";
-  CStdString stType = "";
-  CStdString stProvider = "";
-  CStdString stProviderName = "";
-  CStdString stProviderThumb = "";
-  CStdString stTitle = "";
-  CStdString stCountryAllow = "";
+  CStdString strUrl = "";
+  CStdString strBoxeeType = "";
+  CStdString strBoxeeOffer = "";
+  CStdString strType = "";
+  CStdString strProvider = "";
+  CStdString strProviderName = "";
+  CStdString strProviderThumb = "";
+  CStdString strTitle = "";
+  CStdString strCountryAllow = "";
   CStdString strQualityLabel = "";
+  CStdString strProductsList = "";
+
   bool bCountryRel = true;
   int  quality = 0;
 
   const char* title = item_child->Attribute("boxee:title");
   if (title)
   {
-    stTitle = title;
+    strTitle = title;
   }
 
   const char* url = item_child->Attribute("url");
   if (url)
   {
-    stUrl = url;
+    strUrl = url;
   }
 
   const char* type = item_child->Attribute("type");
   if (type)
   {
-    stType = type;
+    strType = type;
   }
 
   const char* boxeeType = item_child->Attribute("boxee:type");
   if (boxeeType)
   {
-    stBoxeeType = boxeeType;
+    strBoxeeType = boxeeType;
+
+    if (strBoxeeType == "rent" || strBoxeeType == "buy")
+    {
+      // 021110 - hack - for Elin the server can send [boxee:type=rent|buy] -> from fiona handle [boxee:type=rent|buy] as [boxee:type=feature]
+      strBoxeeType = "feature";
+    }
+  }
+
+  const char* boxeeOffer = item_child->Attribute("boxee:offer");
+  if (boxeeOffer)
+  {
+    strBoxeeOffer = boxeeOffer;
   }
 
   const char* provider = item_child->Attribute("boxee:provider");
   if (provider)
   {
-    stProvider = provider;
+    strProvider = provider;
   }
 
   const char* providerName = item_child->Attribute("boxee:provider-name");
   if (providerName)
   {
-    stProviderName = providerName;
+    strProviderName = providerName;
   }
 
   const char* providerThumb = item_child->Attribute("boxee:provider-thumb");
   if (providerThumb)
   {
-    stProviderThumb = providerThumb;
+    strProviderThumb = providerThumb;
   }
 
   const char* countryAllow = item_child->Attribute("boxee:country-allow");
   if (countryAllow)
   {
-    stCountryAllow = countryAllow;
+    strCountryAllow = countryAllow;
     bCountryRel = true;
   }
   else
   {
-    // no "boxee:country-allow" -> all countries ([country-allow=""][country-rel=FALSE])
-    bCountryRel = false;
+    const char* countryDeny = item_child->Attribute("boxee:country-deny");
+    if (countryDeny)
+    {
+      strCountryAllow = countryDeny;
+      bCountryRel = false;
+    }
+    else
+    {
+      // no "boxee:country-allow" or "boxee:country-deny" -> all countries ([country-allow=""][country-rel=FALSE])
+      bCountryRel = false;
+    }
   }
 
   const char* qualityLabel = item_child->Attribute("boxee:quality-lbl");
@@ -1357,238 +1585,244 @@ void CRssFeed::AddLinkItem(const TiXmlElement* item_child, CFileItemPtr item)
   item_child->Attribute((const char *)("boxee:quality"),&quality);
 
 
+  const char* productsList = item_child->Attribute("boxee:products");
+  if (productsList)
+  {
+    strProductsList = productsList;
+  }
+
   // NOTE: countries in "boxee:country-allow" are the allow countries, so TRUE will be send in AddLink()
-  item->AddLink(stTitle, stUrl, stType, CFileItem::GetLinkBoxeeTypeAsEnum(stBoxeeType), stProvider, stProviderName, stProviderThumb, stCountryAllow, bCountryRel, strQualityLabel,quality);
+  item->AddLink(strTitle, strUrl, strType, CFileItem::GetLinkBoxeeTypeAsEnum(strBoxeeType), strProvider, strProviderName, strProviderThumb, strCountryAllow, bCountryRel, strQualityLabel,quality,CFileItem::GetLinkBoxeeOfferAsEnum(strBoxeeOffer),strProductsList);
 }
 
 bool RssFeedSortByTimestamp(const CRssFeed* lhs, const CRssFeed* rhs)
 {
-	return lhs->GetTimestamp() < rhs->GetTimestamp();
+  return lhs->GetTimestamp() < rhs->GetTimestamp();
 }
 
 CRssSourceManager::CRssSourceManager()
 {
-	m_WakeEvent = CreateEvent(NULL, FALSE /*manual*/, TRUE /*initial state*/, NULL);
+  m_WakeEvent = CreateEvent(NULL, FALSE /*manual*/, TRUE /*initial state*/, NULL);
 }
 
 CRssSourceManager::~CRssSourceManager()
 {
-	CSingleLock lock(m_FeedVectorLock);
-	for (unsigned int i = 0; i < m_vecFeeds.size(); i++) {
-		delete m_vecFeeds[i];
-	}
-	CloseHandle(m_WakeEvent);
+  CSingleLock lock(m_FeedVectorLock);
+  for (unsigned int i = 0; i < m_vecFeeds.size(); i++) {
+    delete m_vecFeeds[i];
+  }
+  CloseHandle(m_WakeEvent);
 }
 
 
 
 CRssFeed* CRssSourceManager::AddFeed(const CStdString& strFeedURL) {
 
-	CLog::Log(LOGINFO, "Trying to add RSS Feed: %s", strFeedURL.c_str());
-	// Add the feed only if the feed with the same URL does not
-	// already exist
-	EnterCriticalSection(m_FeedVectorLock);
-	for (unsigned int i=0; i < m_vecFeeds.size(); i++) {
-		if (m_vecFeeds[i]->GetUrl() == strFeedURL)
-		{
-			CLog::Log(LOGINFO, "Found existing feed: %s", strFeedURL.c_str());
-			LeaveCriticalSection(m_FeedVectorLock);
-			return m_vecFeeds[i];
-		}
-	}
+  CLog::Log(LOGINFO, "Trying to add RSS Feed: %s", strFeedURL.c_str());
+  // Add the feed only if the feed with the same URL does not
+  // already exist
+  EnterCriticalSection(m_FeedVectorLock);
+  for (unsigned int i=0; i < m_vecFeeds.size(); i++) {
+    if (m_vecFeeds[i]->GetUrl() == strFeedURL)
+    {
+      CLog::Log(LOGINFO, "Found existing feed: %s", strFeedURL.c_str());
+      LeaveCriticalSection(m_FeedVectorLock);
+      return m_vecFeeds[i];
+    }
+  }
 
-	LeaveCriticalSection(m_FeedVectorLock);
+  LeaveCriticalSection(m_FeedVectorLock);
 
-	CRssFeed* pFeed = new CRssFeed();
-	pFeed->Init(strFeedURL, strFeedURL);
+  CRssFeed* pFeed = new CRssFeed();
+  pFeed->Init(strFeedURL, strFeedURL);
 
-	CLog::Log(LOGINFO, "Created new feed: %s", strFeedURL.c_str());
-	AddFeed(pFeed);
+  CLog::Log(LOGINFO, "Created new feed: %s", strFeedURL.c_str());
+  AddFeed(pFeed);
 
-	Save();
+  Save();
 
-	return pFeed;
+  return pFeed;
 }
 
 void CRssSourceManager::AddFeed(CRssFeed* pFeed) {
 
-	// Get the feed period from the feed and calculate the next time
-	// it should be checked
-	time_t now;
-	time(&now);
+  // Get the feed period from the feed and calculate the next time
+  // it should be checked
+  time_t now;
+  time(&now);
 
-	pFeed->SetTimestamp(now + pFeed->GetIntervalSeconds());
+  pFeed->SetTimestamp(now + pFeed->GetIntervalSeconds());
 
-	// Add the new feed to the list
-	EnterCriticalSection(m_FeedVectorLock);
-	m_vecFeeds.push_back(pFeed);
-	LeaveCriticalSection(m_FeedVectorLock);
+  // Add the new feed to the list
+  EnterCriticalSection(m_FeedVectorLock);
+  m_vecFeeds.push_back(pFeed);
+  LeaveCriticalSection(m_FeedVectorLock);
 
-	// Update the feed immediately by waking the thread
-	SetEvent(m_WakeEvent);
+  // Update the feed immediately by waking the thread
+  SetEvent(m_WakeEvent);
 }
 
 bool CRssSourceManager::Save()
 {
-	TiXmlDocument doc;
-	TiXmlDeclaration * decl = new TiXmlDeclaration( "1.0", "", "" );
-	TiXmlElement * rootElement = new TiXmlElement( "rssfeeds" );
+  TiXmlDocument doc;
+  TiXmlDeclaration * decl = new TiXmlDeclaration( "1.0", "", "" );
+  TiXmlElement * rootElement = new TiXmlElement( "rssfeeds" );
 
-	CRssFeed* feed;
-	EnterCriticalSection(m_FeedVectorLock);
-	for (unsigned int i = 0; i < m_vecFeeds.size(); i++) {
-		feed = m_vecFeeds[i];
-		feed->SerializeToXml(rootElement);
-	}
-	LeaveCriticalSection(m_FeedVectorLock);
+  CRssFeed* feed;
+  EnterCriticalSection(m_FeedVectorLock);
+  for (unsigned int i = 0; i < m_vecFeeds.size(); i++) {
+    feed = m_vecFeeds[i];
+    feed->SerializeToXml(rootElement);
+  }
+  LeaveCriticalSection(m_FeedVectorLock);
 
-	doc.LinkEndChild( decl );
-	doc.LinkEndChild( rootElement );
+  doc.LinkEndChild( decl );
+  doc.LinkEndChild( rootElement );
 
-	CStdString strRssFeedsFilePath;
-	CUtil::AddFileToFolder(g_settings.GetUserDataFolder(),"rssfeeds.xml",strRssFeedsFilePath);
+  CStdString strRssFeedsFilePath;
+  CUtil::AddFileToFolder(g_settings.GetUserDataFolder(),"rssfeeds.xml",strRssFeedsFilePath);
 
-	CLog::Log(LOGINFO, "Saving feeds to: %s", strRssFeedsFilePath.c_str());
-	doc.SaveFile(strRssFeedsFilePath);
-	CLog::Log(LOGINFO, "Feeds saved to: %s", strRssFeedsFilePath.c_str());
+  CLog::Log(LOGINFO, "Saving feeds to: %s", strRssFeedsFilePath.c_str());
+  doc.SaveFile(strRssFeedsFilePath);
+  CLog::Log(LOGINFO, "Feeds saved to: %s", strRssFeedsFilePath.c_str());
 
-	return true;
+  return true;
 }
 
 bool CRssSourceManager::Init()
 {
 
-	CStdString strRssFeedsFilePath;
+  CStdString strRssFeedsFilePath;
 
-	CUtil::AddFileToFolder(g_settings.GetUserDataFolder(),"rssfeeds.xml",strRssFeedsFilePath);
+  CUtil::AddFileToFolder(g_settings.GetUserDataFolder(),"rssfeeds.xml",strRssFeedsFilePath);
 
-	// Open the rssfeeds.xml file from the user space
-	if (!XFILE::CFile::Exists(strRssFeedsFilePath))
-	{
-		// If the file does not exist the initialization can not continue
-		CLog::Log(LOGWARNING, "%s rssfeeds.xml does not exist, RSS ticker will be disabled.", __FUNCTION__);
-		return false;
-	}
+  // Open the rssfeeds.xml file from the user space
+  if (!XFILE::CFile::Exists(strRssFeedsFilePath))
+  {
+    // If the file does not exist the initialization can not continue
+    CLog::Log(LOGWARNING, "%s rssfeeds.xml does not exist, RSS ticker will be disabled.", __FUNCTION__);
+    return false;
+  }
 
-	TiXmlDocument xmlDoc;
-	TiXmlElement *pRootElement= NULL;
-	if (xmlDoc.LoadFile(strRssFeedsFilePath.c_str()))
-	{
-		pRootElement = xmlDoc.RootElement();
-		CStdString strValue;
-		if (pRootElement)
-		{
-			strValue = pRootElement->Value();
-		}
-		else
-		{
-		  CLog::Log(LOGERROR, "%s rssfeeds.xml root element is NULL", __FUNCTION__);
+  TiXmlDocument xmlDoc;
+  TiXmlElement *pRootElement= NULL;
+  if (xmlDoc.LoadFile(strRssFeedsFilePath.c_str()))
+  {
+    pRootElement = xmlDoc.RootElement();
+    CStdString strValue;
+    if (pRootElement)
+    {
+      strValue = pRootElement->Value();
+    }
+    else
+    {
+      CLog::Log(LOGERROR, "%s rssfeeds.xml root element is NULL", __FUNCTION__);
       return false;
-		}
+    }
 
-		if (strValue != "rssfeeds")
-		{
-			CLog::Log(LOGERROR, "%s rssfeeds.xml file does not contain <rssfeeds>", __FUNCTION__);
-			return false;
-		}
-	}
-	else
-	{
-		CLog::Log(LOGERROR, "%s Error loading %s: Line %d, %s", __FUNCTION__,
-				strRssFeedsFilePath.c_str(), xmlDoc.ErrorRow(), xmlDoc.ErrorDesc());
-		return false;
-	}
+    if (strValue != "rssfeeds")
+    {
+      CLog::Log(LOGERROR, "%s rssfeeds.xml file does not contain <rssfeeds>", __FUNCTION__);
+      return false;
+    }
+  }
+  else
+  {
+    CLog::Log(LOGERROR, "%s Error loading %s: Line %d, %s", __FUNCTION__,
+        strRssFeedsFilePath.c_str(), xmlDoc.ErrorRow(), xmlDoc.ErrorDesc());
+    return false;
+  }
 
-	// Load feeds
-	if (pRootElement)
-	{
-		// Go over all elements in the widget
-		TiXmlNode * pChild;
-		for ( pChild = pRootElement->FirstChild(); pChild != NULL; pChild = pChild->NextSibling())
-		{
-			int type = pChild->Type();
+  // Load feeds
+  if (pRootElement)
+  {
+    // Go over all elements in the widget
+    TiXmlNode * pChild;
+    for ( pChild = pRootElement->FirstChild(); pChild != NULL; pChild = pChild->NextSibling())
+    {
+      int type = pChild->Type();
 
-			switch ( type )
-			{
-			case TiXmlNode::ELEMENT: {
-				string name = pChild->Value();
-				if (name == "rssfeed") {
-					CRssFeed* feed = new CRssFeed();
-					feed->LoadFromXml((TiXmlElement*)pChild);
-					EnterCriticalSection(m_FeedVectorLock);
-					m_vecFeeds.push_back(feed);
-					LeaveCriticalSection(m_FeedVectorLock);
-				}
-			}
-			default:
-				break;
-			}
-		}
-	}
+      switch ( type )
+      {
+      case TiXmlNode::ELEMENT: {
+        string name = pChild->Value();
+        if (name == "rssfeed") {
+          CRssFeed* feed = new CRssFeed();
+          feed->LoadFromXml((TiXmlElement*)pChild);
+          EnterCriticalSection(m_FeedVectorLock);
+          m_vecFeeds.push_back(feed);
+          LeaveCriticalSection(m_FeedVectorLock);
+        }
+      }
+      default:
+        break;
+      }
+    }
+  }
 
-	// Start the thread
+  // Start the thread
 
-	//---> currently disabled!
-	//CThread::Create(false, THREAD_MINSTACKSIZE);
+  //---> currently disabled!
+  //CThread::Create(false, THREAD_MINSTACKSIZE);
 
-	return true;
+  return true;
 }
 
 bool CRssSourceManager::Stop() {
   // Save is temporarily diabled, should be enabled if new item notifications are used
-	//Save();
-	SetEvent(m_WakeEvent);
-	StopThread();
-	CLog::Log(LOGINFO, "%s CRssSourceManager STOPPED !!!", __FUNCTION__);
-	return true;
+  //Save();
+  SetEvent(m_WakeEvent);
+  StopThread();
+  CLog::Log(LOGINFO, "%s CRssSourceManager STOPPED !!!", __FUNCTION__);
+  return true;
 }
 
 void CRssSourceManager::Process()
 {
-	time_t now;
+  time_t now;
 
-	while (!m_bStop)
-	{
-		CLog::Log(LOGDEBUG, "Processing RSS Feeds");
-		time(&now);
+  while (!m_bStop)
+  {
+    CLog::Log(LOGDEBUG, "Processing RSS Feeds");
+    time(&now);
 
-		// TODO: Consider rewriting the checking mechanism to work without sort
+    // TODO: Consider rewriting the checking mechanism to work without sort
 
-		time_t nextTime = now + RSS_DEFAULT_CHECK_INTERVAL_SECONDS;
+    time_t nextTime = now + RSS_DEFAULT_CHECK_INTERVAL_SECONDS;
 
-		EnterCriticalSection(m_FeedVectorLock);
-		for (unsigned int i = 0; i < m_vecFeeds.size() && !m_bStop; i++)
-		{
-			// If the timestamp of the feed is less than the current time, check it
-			if (m_vecFeeds[i]->GetTimestamp()  < now) {
-				CRssFeed* feed = m_vecFeeds[i];
-				LeaveCriticalSection(m_FeedVectorLock);
-				feed->CheckFeed();
-				EnterCriticalSection(m_FeedVectorLock);
-			}
-		}
-		LeaveCriticalSection(m_FeedVectorLock);
+    EnterCriticalSection(m_FeedVectorLock);
+    for (unsigned int i = 0; i < m_vecFeeds.size() && !m_bStop; i++)
+    {
+      // If the timestamp of the feed is less than the current time, check it
+      if (m_vecFeeds[i]->GetTimestamp()  < now) {
+        CRssFeed* feed = m_vecFeeds[i];
+        LeaveCriticalSection(m_FeedVectorLock);
+        feed->CheckFeed();
+        EnterCriticalSection(m_FeedVectorLock);
+      }
+    }
+    LeaveCriticalSection(m_FeedVectorLock);
 
-		EnterCriticalSection(m_FeedVectorLock);
-		// Sort the vector according to timestamp
-		if (m_vecFeeds.size() > 0) {
-			std::sort(m_vecFeeds.begin(), m_vecFeeds.end(), RssFeedSortByTimestamp);
-			if (m_vecFeeds[0]->GetTimestamp() > now)
-			{
-				nextTime = m_vecFeeds[0]->GetTimestamp();
-			}
-			else
-			{
-				nextTime = now;
-			}
-		}
-		LeaveCriticalSection(m_FeedVectorLock);
+    EnterCriticalSection(m_FeedVectorLock);
+    // Sort the vector according to timestamp
+    if (m_vecFeeds.size() > 0) {
+      std::sort(m_vecFeeds.begin(), m_vecFeeds.end(), RssFeedSortByTimestamp);
+      if (m_vecFeeds[0]->GetTimestamp() > now)
+      {
+        nextTime = m_vecFeeds[0]->GetTimestamp();
+      }
+      else
+      {
+        nextTime = now;
+      }
+    }
+    LeaveCriticalSection(m_FeedVectorLock);
 
-		// Sleep until the next time
-		CLog::Log(LOGDEBUG, "RSS Source Manager going to sleep for %ld seconds", nextTime - now);
-		WaitForSingleObject(m_WakeEvent, (nextTime - now)* 1000 /*milliseconds*/);
+    // Sleep until the next time
+    CLog::Log(LOGDEBUG, "RSS Source Manager going to sleep for %ld seconds", nextTime - now);
+    WaitForSingleObject(m_WakeEvent, (nextTime - now)* 1000 /*milliseconds*/);
 
-	} // while
+  } // while
 }
 
 CRssFeedParseContext::CRssFeedParseContext()

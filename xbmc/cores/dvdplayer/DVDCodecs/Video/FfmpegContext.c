@@ -22,8 +22,9 @@
  *
  */
 
+#ifdef HAS_DX
 
-#define HAVE_AV_CONFIG_H
+//#define HAVE_AV_CONFIG_H
 #define H264_MERGE_TESTING
 
 // start boxee
@@ -679,3 +680,5 @@ void FFSetThreadNumber(struct AVCodecContext* pAVCtx, int nThreadCount)
 	if (nThreadCount > 1)
 		avcodec_thread_init(pAVCtx, nThreadCount);
 }
+
+#endif // HAS_DX

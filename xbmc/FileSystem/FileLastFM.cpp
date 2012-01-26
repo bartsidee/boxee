@@ -21,6 +21,8 @@
 
 #include "FileLastFM.h"
 
+#ifdef HAS_LASTFM
+
 namespace XFILE
 {
 
@@ -36,3 +38,4 @@ CFileLastFM::~CFileLastFM()
 
 }
 
+#endif

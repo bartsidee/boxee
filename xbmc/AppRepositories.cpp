@@ -82,20 +82,20 @@ bool CAppRepositories::Save()
 
   {
     CSingleLock lock(m_lock);
-    for (size_t i = 0; i < m_repositories.size(); i++)
+  for (size_t i = 0; i < m_repositories.size(); i++)
+  {
+    if (m_repositories[i].GetID() == "tv.boxee")
     {
-      if (m_repositories[i].GetID() == "tv.boxee")
-      {
-        continue;
-      }
-
-      TiXmlNode *repo = pRoot->InsertEndChild(TiXmlElement("repository"));
-      repo->InsertEndChild(TiXmlElement("id"))->InsertEndChild(TiXmlText(m_repositories[i].GetID().c_str()));
-      repo->InsertEndChild(TiXmlElement("url"))->InsertEndChild(TiXmlText(m_repositories[i].GetURL().c_str()));
-      repo->InsertEndChild(TiXmlElement("name"))->InsertEndChild(TiXmlText(m_repositories[i].GetName().c_str()));
-      repo->InsertEndChild(TiXmlElement("description"))->InsertEndChild(TiXmlText(m_repositories[i].GetDescription().c_str()));
-      repo->InsertEndChild(TiXmlElement("thumb"))->InsertEndChild(TiXmlText(m_repositories[i].GetThumbnail().c_str()));
+      continue;
     }
+
+    TiXmlNode *repo = pRoot->InsertEndChild(TiXmlElement("repository"));
+    repo->InsertEndChild(TiXmlElement("id"))->InsertEndChild(TiXmlText(m_repositories[i].GetID().c_str()));
+    repo->InsertEndChild(TiXmlElement("url"))->InsertEndChild(TiXmlText(m_repositories[i].GetURL().c_str()));
+    repo->InsertEndChild(TiXmlElement("name"))->InsertEndChild(TiXmlText(m_repositories[i].GetName().c_str()));
+    repo->InsertEndChild(TiXmlElement("description"))->InsertEndChild(TiXmlText(m_repositories[i].GetDescription().c_str()));
+    repo->InsertEndChild(TiXmlElement("thumb"))->InsertEndChild(TiXmlText(m_repositories[i].GetThumbnail().c_str()));
+  }
   }
 
   CStdString strXMLFile = g_settings.GetProfileUserDataFolder();
@@ -150,7 +150,7 @@ bool CAppRepositories::Delete(const CStdString& id, bool reportToServer)
   if (found && reportToServer)
   {
     // Report to the server about the removed repository
-    BoxeeUtils::ReportRemoveRepository(id);
+  BoxeeUtils::ReportRemoveRepository(id);
   }
 
   return found;
@@ -168,7 +168,7 @@ int CAppRepositories::Size()
   return m_repositories.size();
 }
 
-bool CAppRepositories::GetDescriptorById(const CStdString id, CAppDescriptor& descriptor)
+bool  CAppRepositories::GetDescriptorById(const CStdString id, CAppDescriptor& descriptor)
 {
   CSingleLock lock(m_lock);
   CStdString appId;

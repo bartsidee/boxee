@@ -30,7 +30,7 @@
 
 
 #include "GUIFontTTF.h"
-
+#include "D3DResource.h"
 
 /*!
  \ingroup textures
@@ -44,12 +44,16 @@ public:
 
   virtual void Begin();
   virtual void End();
+  virtual void Render(FontCoordsIndiced& coords, bool useShadow);
 
 protected:
   virtual CBaseTexture* ReallocTexture(unsigned int& newHeight);
   virtual bool CopyCharToTexture(FT_BitmapGlyph bitGlyph, Character *ch);
   virtual void DeleteHardwareTexture();
-  virtual void RenderInternal(SVertex* v);
+  CD3DTexture *m_speedupTexture;  // extra texture to speed up reallocations when the main texture is in d3dpool_default.
+                                  // that's the typical situation of Windows Vista and above.
+  uint16_t* m_index;
+  unsigned  m_index_size;
 };
 
 #endif

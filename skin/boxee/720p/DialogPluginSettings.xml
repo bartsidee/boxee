@@ -3,13 +3,7 @@
 	<defaultcontrol always="true">2</defaultcontrol>
 	<allowoverlay>no</allowoverlay>
 	<controls>
-		<control type="image">
-			<!--animation type="WindowOpen" condition="!Window.Previous(Settings.xml) + !Window.Previous(SettingsCategory.xml)">
-				<effect type="fade" start="0" end="100" time="200" delay="0"/>
-			</animation>
-			<animation type="WindowClose" condition="!Window.Next(Settings.xml) + !Window.Next(SettingsCategory.xml)">
-				<effect type="fade" start="100" end="0" time="200" delay="0"/>
-			</animation-->
+		<control type="image" platformClass="pc">
 			<posx>45</posx>
 			<posy>125</posy>
 			<width>1200</width>
@@ -18,14 +12,6 @@
 			<colordiffuse>80FFFFFF</colordiffuse>
 		</control>
 		<control type="group">
-			<!--animation type="WindowOpen" condition="!Window.Previous(Settings.xml) + !Window.Previous(SettingsCategory.xml)">
-				<effect type="fade" start="0" end="100" time="200" tween="cubic" easing="inout"/>
-				<effect type="zoom" start="150,150" end="100,100" center="auto" time="200" tween="cubic" easing="inout"/>
-			</animation>			
-			<animation type="WindowClose" condition="!Window.Next(Settings.xml) + !Window.Next(SettingsCategory.xml)">
-				<effect type="fade" start="100" end="0" time="200" tween="cubic" easing="inout"/>
-				<effect type="zoom" start="100,100" end="150,150" center="auto" time="200" tween="cubic" easing="inout"/>
-			</animation-->
 			<posx>30</posx>
 			<posy>118</posy>
 			<width>1220</width>
@@ -35,7 +21,8 @@
 				<posy>0</posy>
 				<width>1220</width>
 				<height>507</height>
-				<texture border="64">action_menu_bg.png</texture>
+				<texture border="20">menu_dialog_background.png</texture>
+				<colordiffuse>FF212121</colordiffuse>
 			</control>
 			<control type="image">
 				<posx>100</posx>
@@ -52,7 +39,7 @@
 				<align>left</align>
 				<aligny>center</aligny>
 				<haspath>true</haspath>
-				<font>title56b</font>
+				<font>font56b</font>
 				<textcolor>white</textcolor>
 				<label>[UPPERCASE]$LOCALIZE[5][/UPPERCASE]</label>
 			</control>
@@ -65,18 +52,18 @@
 				<aligny>top</aligny>
 				<haspath>true</haspath>
 				<font>font24b</font>
-				<textcolor>title</textcolor>
+				<textcolor>font</textcolor>
 				<label>[UPPERCASE]$LOCALIZE[1045][/UPPERCASE]</label>
 			</control>
 		</control>
-		  <control type="label" id="52">
-			  <description>Header Label</description>
-			  <posx>200</posx>
-			  <posy>260</posy>
-	  		  <textcolor>white</textcolor>
-			  <height>100</height>
-			  <label>-</label>			  
-  		  </control>		
+		<control type="label" id="52">
+			<description>Header Label</description>
+			<posx>200</posx>
+			<posy>260</posy>
+			<textcolor>white</textcolor>
+			<height>100</height>
+			<label>-</label>
+		</control>
 		<control type="group" id="9000">
 			<control type="grouplist" id="2">
 				<description>control area</description>
@@ -168,4 +155,3 @@
 		</control>
 	</controls>
 </window>
-

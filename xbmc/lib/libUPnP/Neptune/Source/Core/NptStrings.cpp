@@ -127,13 +127,14 @@ NPT_String::Format(const char* format, ...)
     NPT_Size   buffer_size = NPT_STRING_FORMAT_BUFFER_DEFAULT_SIZE; // default value
     
     va_list  args;
-    va_start(args, format);
 
     for(;;) {
         /* try to format (it might not fit) */
         result.Reserve(buffer_size);
         char* buffer = result.UseChars();
+        va_start(args, format);
         int f_result = NPT_FormatStringVN(buffer, buffer_size, format, args);
+        va_end(args);
         if (f_result >= (int)(buffer_size)) f_result = -1;
         if (f_result >= 0) {
             result.SetLength(f_result);
@@ -147,7 +148,6 @@ NPT_String::Format(const char* format, ...)
         if (buffer_size > NPT_STRING_FORMAT_BUFFER_MAX_SIZE) break;
     }
 
-    va_end(args);
     
     return result;
 }
@@ -186,30 +186,6 @@ NPT_String::NPT_String(const NPT_String& str)
     } else {
         m_Chars = Buffer::Create(str.GetChars(), str.GetLength());
     }
-}
-
-/*----------------------------------------------------------------------
-|   NPT_String::NPT_String
-+---------------------------------------------------------------------*/
-NPT_String::NPT_String(const char* str,
-                       NPT_Ordinal first, 
-                       NPT_Size    length)
-{
-    // shortcut
-    if (str != NULL && length != 0) {
-        // truncate length      
-        NPT_Size str_length = StringLength(str);
-        if (first < str_length) {
-            if (first+length > str_length) {
-                length = str_length-first;
-            }
-            if (length != 0) {
-                m_Chars = Buffer::Create(str+first, length);
-                return;
-            }
-        }
-    } 
-    m_Chars = NULL;
 }
 
 /*----------------------------------------------------------------------
@@ -772,6 +748,22 @@ NPT_String::Replace(char a, const char* str)
     }
 
     Assign(dst.GetChars(), dst.GetLength());
+}
+
+/*----------------------------------------------------------------------
+|   NPT_String::Replace
++---------------------------------------------------------------------*/
+void
+NPT_String::Replace(const char* before, const char* after, bool ignore_case)
+{
+    int      index          = Find(before, 0, ignore_case);
+    NPT_Size before_length  = NPT_StringLength(before);
+    NPT_Size after_length   = NPT_StringLength(after);
+    while (index != NPT_STRING_SEARCH_FAILED) {
+        Erase(index, before_length);
+        Insert(after, index);
+        index = Find(before, index + after_length);
+    }
 }
 
 /*----------------------------------------------------------------------

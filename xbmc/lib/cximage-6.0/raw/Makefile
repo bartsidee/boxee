@@ -1,4 +1,4 @@
-CFLAGS+=-fPIC -DXBMC
+CFLAGS+=-DXBMC -fPIC
 ifeq ($(findstring osx,$(ARCH)), osx)
 	CFLAGS+=-fno-common
 endif

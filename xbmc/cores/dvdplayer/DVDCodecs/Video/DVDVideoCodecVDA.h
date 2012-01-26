@@ -44,7 +44,7 @@ public:
   // Required overrides
   virtual bool Open(CDVDStreamInfo &hints, CDVDCodecOptions &options);
   virtual void Dispose(void);
-  virtual int  Decode(BYTE *pData, int iSize, double pts);
+  virtual int  Decode(BYTE *pData, int iSize, double pts, double dts);
   virtual void Reset(void);
   virtual bool GetPicture(DVDVideoPicture *pDvdVideoPicture);
   virtual void SetDropState(bool bDrop);
@@ -68,8 +68,9 @@ protected:
   frame_queue       *m_display_queue; // display-order queue - next display frame is always at the queue head
   int32_t           m_queue_depth;    // we will try to keep the queue depth around 16+1 frames
   std::queue<double> m_dts_queue;
-  
+
   bool              m_convert_bytestream;
+  DllAvCore         m_dllAvCore;
   DllAvUtil         m_dllAvUtil;
   DllAvFormat       m_dllAvFormat;
 

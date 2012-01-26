@@ -46,7 +46,7 @@
 
 
 
-<language>
+<language code="en">
   <charsets>
     <gui>CP1252</gui>
     <subtitle>CP1252</subtitle>
@@ -124,5 +124,6 @@
 
   <sorttokens>
     <token>The</token>
+	<token>A</token>
   </sorttokens>
 </language>

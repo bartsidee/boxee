@@ -22,17 +22,28 @@
 #include "BoxeeVersionUpdateManager.h"
 #include "SystemInfo.h"
 #include "SpecialProtocol.h"
+#include "BrowserService.h"
 #include "FileSystem/FileSmb.h"
 #include "FileSystem/FileCurl.h"
 #include "FileSystem/HTSPDirectory.h"
 #include "FileSystem/DllLibCurl.h"
+#ifdef HAS_FILESYSTEM_MYTH
 #include "FileSystem/CMythSession.h"
+#endif
 #include "UPnP.h"
 #include "GUIWindowManager.h"
 #include "GUIUserMessages.h"
 #include "utils/Weather.h"
 #include "GUIDialogOK.h"
 #include "utils/GUIInfoManager.h"
+#include "LocalizeStrings.h"
+#include "FileSystem/DirectoryCache.h"
+#include "GUISettings.h"
+#include "BoxeeBrowseMenuManager.h"
+
+#ifdef HAS_EMBEDDED
+#include <HalServices.h>
+#endif
 
 #ifdef HAS_PYTHON
 #include "lib/libPython/XBPython.h"
@@ -40,12 +51,16 @@
 
 #define BXINFO_FILE_PATH "special://home/bxinfo.xml"
 
-#define CHECK_INTERNET_CONNECTION_INTERVAL_IN_MS_HI_FREQ     10000       // 10 sec
-#define CHECK_INTERNET_CONNECTION_INTERVAL_IN_MS_LOW_FREQ    (1*60000)   // 1 min
+#define CHECK_INTERNET_CONNECTION_INTERVAL_IN_MS_HI_FREQ     10000         // 10 sec
+#define CHECK_INTERNET_CONNECTION_INTERVAL_IN_MS_LOW_FREQ    (1*60000)     // 1 min
 
-#define SEND_PING_TO_SERVER_INTERVAL_IN_MS                   (10*60000)  // 10 min
-#define TEST_PATH_INTERVAL_IN_MS                             (1*60000)   // 1 min
-#define PROCESS_SLOW_INTERVAL_IN_MS                          (1*60000)   // 1 min
+#define SEND_PING_TO_SERVER_INTERVAL_IN_MS                   (10*60000)    // 10 min
+#define TEST_PATH_INTERVAL_IN_MS                             (1*60000)     // 1 min
+#define PROCESS_SLOW_INTERVAL_IN_MS                          (1*60000)     // 1 min
+#define SEND_CHKUPD_TO_SERVER_INTERVAL_IN_MS		             (24*60*60000) // 24 hours
+#define SEND_CHKUPD_TO_SERVER_INTERVAL_OFFLINE_IN_MS         (5*60000)     // 5 min
+
+#define WATCHDOG_DONT_TEST_PATH
 
 WatchDog::WatchDog() : m_profileBaseSTM("wdProfileSTM",500), m_generalSTM("wdGeneralSTM",500)
 {
@@ -53,11 +68,31 @@ WatchDog::WatchDog() : m_profileBaseSTM("wdProfileSTM",500), m_generalSTM("wdGen
   m_bIsConnectToInternet = true;
 
   m_isStoped = true;
+
+  m_vecBoxeeServersUrls.clear();
+  m_vecBoxeeServersUrls.push_back("http://0.ping.boxee.tv/");
+  m_vecBoxeeServersUrls.push_back("http://1.ping.boxee.tv/");
+  m_vecBoxeeServersUrls.push_back("http://2.ping.boxee.tv/");
+  m_vecBoxeeServersUrls.push_back("http://3.ping.boxee.tv/");
+  m_vecBoxeeServersUrls.push_back("http://4.ping.boxee.tv/");
+  m_vecBoxeeServersUrls.push_back("http://5.ping.boxee.tv/");
+  m_vecBoxeeServersUrls.push_back("http://6.ping.boxee.tv/");
+  m_vecBoxeeServersUrls.push_back("http://7.ping.boxee.tv/");
+  m_vecBoxeeServersUrls.push_back("http://8.ping.boxee.tv/");
+  m_vecBoxeeServersUrls.push_back("http://9.ping.boxee.tv/");
 }
 
 WatchDog::~WatchDog()
 {
   m_generalSTM.Stop();
+
+#ifdef HAS_EMBEDDED
+ if (m_chkupdJob)
+  {
+    delete m_chkupdJob;
+    m_chkupdJob = NULL;
+}
+#endif
 
   if (m_pingJob)
   {
@@ -70,7 +105,7 @@ WatchDog::~WatchDog()
     delete m_testPathJob;
     m_testPathJob = NULL;
   }
-
+  
   if (m_processSlowJob)
   {
     delete m_processSlowJob;
@@ -101,14 +136,14 @@ bool WatchDog::Start()
     CLog::Log(LOGERROR,"WatchDog::Start - FAILED to start ProfileScheduleTaskManager. [isStoped=%d] (wd)",m_isStoped);
     return false;
   }
-
+  
   m_isStoped = false;
 
   CLog::Log(LOGDEBUG,"WatchDog::Start - Exit function. [isStoped=%d] (wd)",m_isStoped);
 
   return true;
 }
-
+  
 bool WatchDog::StartGeneralSTM()
 {
   if (m_generalSTM.IsRunning())
@@ -123,13 +158,13 @@ bool WatchDog::StartGeneralSTM()
     CLog::Log(LOGERROR,"WatchDog::StartGeneralSTM - FAILED to start GeneralScheduleTaskManager. [isStoped=%d] (wd)",m_isStoped);
     return false;
   }
-
+      
   if (m_checkInternetConnectionJob)
   {
     delete m_checkInternetConnectionJob;
     m_checkInternetConnectionJob = NULL;
   }
-
+        
   unsigned long checkInternetConnectionIntervalInMS = BOXEE::BXConfiguration::GetInstance().GetIntParam("WatchDog.CheckInternetConnectionLowInMs",CHECK_INTERNET_CONNECTION_INTERVAL_IN_MS_LOW_FREQ);
   m_checkInternetConnectionJob = new CCheckInternetConnectionJob(this,0,checkInternetConnectionIntervalInMS);
   if (m_checkInternetConnectionJob)
@@ -140,7 +175,7 @@ bool WatchDog::StartGeneralSTM()
   {
     CLog::Log(LOGERROR,"WatchDog::StartGeneralSTM - FAILED to add CheckInternetConnectionJob to ScheduleTaskManager (wd)");
   }
-
+          
   if (m_pingJob)
   {
     delete m_pingJob;
@@ -158,9 +193,28 @@ bool WatchDog::StartGeneralSTM()
     CLog::Log(LOGERROR,"WatchDog::StartGeneralSTM - FAILED to add PingJob to ScheduleTaskManager (wd)");
   }
 
+#ifdef HAS_EMBEDDED
+  if (m_chkupdJob)
+  {
+    delete m_chkupdJob;
+    m_chkupdJob = NULL;
+  }
+
+  unsigned long chkUpdFreqIntervalInMS = BOXEE::BXConfiguration::GetInstance().GetIntParam("WatchDog.ChkupdFreqInMs",SEND_CHKUPD_TO_SERVER_INTERVAL_IN_MS);
+  m_chkupdJob = new CChkupdJob(this,0,chkUpdFreqIntervalInMS);
+  if (m_chkupdJob)
+  {
+    m_generalSTM.AddScheduleTask(m_chkupdJob);
+  }
+  else
+  {
+    CLog::Log(LOGERROR,"WatchDog::StartGeneralSTM - FAILED to add ChkupdJob to ScheduleTaskManager (wd)");
+  } 
+#endif
+
   return true;
 }
-
+                  
 bool WatchDog::StartProfileSTM()
 {
   if (m_profileBaseSTM.IsRunning())
@@ -182,7 +236,7 @@ bool WatchDog::StartProfileSTM()
     delete m_testPathJob;
     m_testPathJob = NULL;
   }
-
+                        
   unsigned long testPathIntervalInMS = BOXEE::BXConfiguration::GetInstance().GetIntParam("WatchDog.TestSourcesFreqInMs",TEST_PATH_INTERVAL_IN_MS);
   m_testPathJob = new CTestPathJob(this,0,testPathIntervalInMS);
   if (m_testPathJob)
@@ -193,13 +247,13 @@ bool WatchDog::StartProfileSTM()
   {
     CLog::Log(LOGERROR,"WatchDog::StartProfileSTM - FAILED to add TestPathJob to ScheduleTaskManager (wd)");
   }
-
+                    
   if (m_processSlowJob)
   {
     delete m_processSlowJob;
     m_processSlowJob = NULL;
   }
-
+                  
   unsigned long processSlowIntervalInMS = BOXEE::BXConfiguration::GetInstance().GetIntParam("WatchDog.ProcessSlowFreqInMs",PROCESS_SLOW_INTERVAL_IN_MS);
   m_processSlowJob = new CProcessSlowJob(this,0,processSlowIntervalInMS);
   if (m_processSlowJob)
@@ -231,12 +285,12 @@ bool WatchDog::Stop()
 
   return true;
 }
-
+                   
 bool WatchDog::IsStoped()
 {
   return m_isStoped;
 }
-
+                
 void WatchDog::AddListener(IWatchDogListener* pListener)
 {
   CSingleLock lock(m_lock);
@@ -263,7 +317,7 @@ void WatchDog::RemoveListener(IWatchDogListener* pListener)
 }
 
 void WatchDog::NotifyListeners(const CStdString &strPath, bool bAvailable)
-{
+      {
   CSingleLock lock(m_lock);
   for (size_t i = 0; i < m_vecListeners.size(); i++)
   {
@@ -271,12 +325,12 @@ void WatchDog::NotifyListeners(const CStdString &strPath, bool bAvailable)
       m_vecListeners[i]->PathUpdate(strPath, bAvailable);
   }
 }
-
+    
 void WatchDog::SetIsConnectedToServer(bool bIsConnectToServer)
 {
   m_bConnectedToServer = bIsConnectToServer;
 }
-
+    
 bool WatchDog::IsConnectedToServer()
 {
   return m_bConnectedToServer;
@@ -284,14 +338,46 @@ bool WatchDog::IsConnectedToServer()
 
 void WatchDog::SetIsConnectedToInternet(bool bIsConnectToInternet)
 {
+  CLog::Log(LOGINFO,"WatchDog::SetIsConnectedToInternet [bIsConnectToInternet %d]", bIsConnectToInternet);
   m_bIsConnectToInternet = bIsConnectToInternet;
 }
 
-bool WatchDog::IsConnectedToInternet()
+void WatchDog::SetConnectionToInternetChanged(void)
 {
-  return m_bIsConnectToInternet;
+  CLog::Log(LOGINFO,"WatchDog::SetConnectionToInternetChanged start");
+//  CSingleLock lock(m_lock);
+  m_bConnectionToInternetChanged = true;
+//  if (m_checkInternetConnectionJob)
+//  {
+//    m_generalSTM.RemoveScheduleTask(m_checkInternetConnectionJob);
+//    delete m_checkInternetConnectionJob;
+//    m_checkInternetConnectionJob = NULL;
+//  }
+//
+//  unsigned long checkInternetConnectionIntervalInMS = BOXEE::BXConfiguration::GetInstance().GetIntParam("WatchDog.CheckInternetConnectionLowInMs",CHECK_INTERNET_CONNECTION_INTERVAL_IN_MS_LOW_FREQ);
+//  m_checkInternetConnectionJob = new CCheckInternetConnectionJob(this, 2000, checkInternetConnectionIntervalInMS);
+//  if (m_checkInternetConnectionJob)
+//  {
+//    bool ret = m_generalSTM.AddScheduleTask(m_checkInternetConnectionJob);
+//    CLog::Log(LOGINFO,"WatchDog::SetConnectionToInternetChanged added internet status task (%d)", ret);
+//  }
+//  else
+//  {
+//    CLog::Log(LOGERROR,"WatchDog::SetConnectionToInternetChanged - FAILED to add CheckInternetConnectionJob to ScheduleTaskManager (wd)");
+//  }
+  CLog::Log(LOGINFO,"WatchDog::SetConnectionToInternetChanged end");
 }
 
+bool WatchDog::IsConnectedToInternet(bool checkNow)
+{
+  if (checkNow)
+  {
+    return CheckIsConnectedToInternet();
+  }
+
+  return m_bIsConnectToInternet;
+}
+  
 void  WatchDog::ProcessSlow()
 {
 #if defined(_LINUX) && defined(HAS_FILESYSTEM_SMB)
@@ -301,8 +387,10 @@ void  WatchDog::ProcessSlow()
   // check for any idle curl connections
   g_curlInterface.CheckIdle();
 
+#ifdef HAS_FILESYSTEM_MYTH
   // check for any idle myth sessions
   XFILE::CCMythSession::CheckIdle();
+#endif
 
 #ifdef HAS_FILESYSTEM_HTSP
   // check for any idle htsp sessions
@@ -322,6 +410,9 @@ void  WatchDog::ProcessSlow()
 
 void WatchDog::TestPath(const CStdString &strPath)
 {
+#ifdef WATCHDOG_DONT_TEST_PATH
+  return;
+#else
   CFileItem item;
   item.m_strPath = strPath;
   bool bAvailable = false;
@@ -343,10 +434,10 @@ void WatchDog::TestPath(const CStdString &strPath)
     }
   }
 
-  if (item.IsSmb() || item.IsHD())
-  {
-    CLog::Log(LOGDEBUG,"WatchDog::TestPath - [share=%s][available=%d][hasInfo=%d] (testpath)",strPath.c_str(), bAvailable, bHasInfo);
-  }
+//  if (item.IsSmb() || item.IsHD())
+//  {
+//    CLog::Log(LOGDEBUG,"WatchDog::TestPath - [share=%s][available=%d][hasInfo=%d] (testpath)",strPath.c_str(), bAvailable, bHasInfo);
+//  }
 
   if (bHasInfo)
   {
@@ -357,12 +448,16 @@ void WatchDog::TestPath(const CStdString &strPath)
     
     m_mapPaths[strPath] = bAvailable?WD_AVAILABLE:WD_UNAVAILABLE;
 
-    CLog::Log(LOGDEBUG,"WatchDog::TestPath - For [share=%s] set [available=%d] (testpath)",strPath.c_str(), m_mapPaths[strPath]);
+    //CLog::Log(LOGDEBUG,"WatchDog::TestPath - For [share=%s] set [available=%d] (testpath)",strPath.c_str(), m_mapPaths[strPath]);
   }
+#endif
 }
 
 bool WatchDog::IsPathAvailable(const CStdString &pathToCheck, bool bDefault)
 {
+#ifdef WATCHDOG_DONT_TEST_PATH
+  return true;
+#else
   CStdString strPath = _P(pathToCheck);
 
   CFileItem item;
@@ -375,18 +470,18 @@ bool WatchDog::IsPathAvailable(const CStdString &pathToCheck, bool bDefault)
   
   CSingleLock lock(m_lock);
   
-  CURL url1 (strPath);
+  CURI url1 (strPath);
   CStdString strUrl1;
-  url1.GetURL(strUrl1);
+  strUrl1 = url1.Get();
   strUrl1 = BOXEE::BXUtils::RemoveSMBCredentials(strUrl1);
   strUrl1.ToLower();
   CUtil::RemoveSlashAtEnd(strUrl1);
 
   for (std::map<CStdString, PathStatus>::iterator iter=m_mapPaths.begin(); iter != m_mapPaths.end(); iter++)
   {
-    CURL url2(iter->first);
+    CURI url2(iter->first);
     CStdString strUrl2;
-    url2.GetURL(strUrl2);
+    strUrl2 = url2.Get();
     strUrl2 = BOXEE::BXUtils::RemoveSMBCredentials(strUrl2);
     strUrl2.ToLower();
     CUtil::RemoveSlashAtEnd(strUrl2);
@@ -403,16 +498,24 @@ bool WatchDog::IsPathAvailable(const CStdString &pathToCheck, bool bDefault)
   }
 
   return bDefault; // we dont know...
+#endif
 }
 
 bool WatchDog::IsPathWatched(const char *strPath)
 {
+#ifdef WATCHDOG_DONT_TEST_PATH
+  return true;
+#else
   CSingleLock lock(m_lock);
   return m_mapPaths.find(strPath) != m_mapPaths.end();
+#endif
 }
 
 void WatchDog::AddPathToWatch(const char *strPath)
 {
+#ifdef WATCHDOG_DONT_TEST_PATH
+  return;
+#else
   CSingleLock lock(m_lock);
   
   CStdString pathToWatch(strPath);
@@ -423,12 +526,26 @@ void WatchDog::AddPathToWatch(const char *strPath)
 
   if (!IsPathWatched(pathToWatch))
   {
-    m_mapPaths[pathToWatch] = (CUtil::IsSmb(pathToWatch) || CUtil::IsUPnP(pathToWatch))?WD_UNKNOWN:WD_AVAILABLE; // default is unknown only for network
+    // default is unknown only for network
+    bool isNetPath = CUtil::IsSmb(pathToWatch) || CUtil::IsUPnP(pathToWatch);
+
+    m_mapPaths[pathToWatch] = (isNetPath) ? WD_UNKNOWN : WD_AVAILABLE;
+    
+    // for network paths we notify the browser that the path has been added
+    if( isNetPath )
+    {
+      CBrowserService* pBrowser = g_application.GetBrowserService();
+      pBrowser->TrackHostAvailability(pathToWatch);
+    }
   }
+#endif
 }
 
 void WatchDog::RemovePathFromWatch(const char *strPath)
 {
+#ifdef WATCHDOG_DONT_TEST_PATH
+  return;
+#else
   CSingleLock lock(m_lock);
   
   CStdString pathToRemove(strPath);
@@ -440,13 +557,18 @@ void WatchDog::RemovePathFromWatch(const char *strPath)
   {
     m_mapPaths.erase(pathToRemove);
   }
+#endif
 }
 
 void WatchDog::CleanWatchedPaths()
 {
+#ifdef WATCHDOG_DONT_TEST_PATH
+  return;
+#else
   CSingleLock lock(m_lock);
   CLog::Log(LOGDEBUG,"WATCHDOG: clean watched paths");
   m_mapPaths.clear();
+#endif
 }
 
 ///////////////////////////////
@@ -471,14 +593,14 @@ void WatchDog::CProcessSlowJob::DoWork()
     return;
   }
 
-  CLog::Log(LOGWARNING,"CProcessSlowJob::DoWork - Enter function. [server=%d][internet=%d][IsStoped=%d] (wdpslow)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet(),m_jobHandler->IsStoped());
+  CLog::Log(LOGDEBUG,"CProcessSlowJob::DoWork - Enter function. [server=%d][internet=%d][IsStoped=%d] (wdpslow)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet(),m_jobHandler->IsStoped());
 
   if (!m_jobHandler->IsStoped())
   {
     m_jobHandler->ProcessSlow();
   }
 
-  CLog::Log(LOGWARNING,"CProcessSlowJob::DoWork - Exit function. [server=%d][internet=%d] (wdpslow)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
+  CLog::Log(LOGDEBUG,"CProcessSlowJob::DoWork - Exit function. [server=%d][internet=%d] (wdpslow)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
 }
 
 bool WatchDog::CProcessSlowJob::ShouldDelete()
@@ -502,13 +624,14 @@ WatchDog::CTestPathJob::~CTestPathJob()
 
 void WatchDog::CTestPathJob::DoWork()
 {
+#ifndef WATCHDOG_DONT_TEST_PATH
   if (!m_jobHandler)
   {
     CLog::Log(LOGWARNING,"CTestPathJob::DoWork - Can't execute the job. [jobHandler=NULL] (testpath)");
     return;
   }
 
-  CLog::Log(LOGDEBUG,"CTestPathJob::DoWork - Enter function. [server=%d][internet=%d] (testpath)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
+  //CLog::Log(LOGDEBUG,"CTestPathJob::DoWork - Enter function. [server=%d][internet=%d] (testpath)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
 
   // scan all shares
   CStdStringArray arr;
@@ -524,12 +647,13 @@ void WatchDog::CTestPathJob::DoWork()
 
   for (size_t n=0; n<arr.size() && !m_jobHandler->IsStoped(); n++)
   {
-    CLog::Log(LOGDEBUG,"CTestPathJob::DoWork - [%d/%d] - Going to test [path=%s]. [server=%d][internet=%d] (testpath)",(int)n+1,(int)arr.size(),arr[n].c_str(),m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
+    //CLog::Log(LOGDEBUG,"CTestPathJob::DoWork - [%d/%d] - Going to test [path=%s]. [server=%d][internet=%d] (testpath)",(int)n+1,(int)arr.size(),arr[n].c_str(),m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
 
     m_jobHandler->TestPath(arr[n]);
   }
 
-  CLog::Log(LOGDEBUG,"CTestPathJob::DoWork - Exit function. [server=%d][internet=%d] (testpath)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
+  //CLog::Log(LOGDEBUG,"CTestPathJob::DoWork - Exit function. [server=%d][internet=%d] (testpath)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
+#endif
 }
 
 bool WatchDog::CTestPathJob::ShouldDelete()
@@ -561,6 +685,12 @@ void WatchDog::CPingJob::DoWork()
 
   CLog::Log(LOGDEBUG,"CPingJob::DoWork - Enter function. [server=%d][internet=%d] (ping)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
 
+  bool isPlaying = g_application.IsPlaying();
+  if(isPlaying)
+  {
+    CLog::Log(LOGDEBUG,"CPingJob::DoWork - since [isPlaying=%d=TRUE] -> Don't try to send ping. [server=%d][internet=%d] (ping)",isPlaying,m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
+    return;
+  }
 
   if (!m_jobHandler->IsConnectedToInternet())
   {
@@ -722,42 +852,46 @@ void WatchDog::CPingJob::DoWork()
         CLog::Log(LOGDEBUG,"CPingJob::DoWork - Because [nServerPingVersion=%d] <= [%d=nClientPingVersion] NOT going to parse the <cmds> tag (ping)",nServerPingVersion,nClientPingVersion);
       }
     }
+#ifndef HAS_EMBEDDED
     else if (strcmp(pingChildElem->Value(),"version_update") == 0)
     {
       CLog::Log(LOGDEBUG,"CPingJob::DoWork - The <version_update> tag was found (ping)");
 
-      // Get the update type
-      CStdString versionUpdateBuildNum = pingChildElem->Attribute("build-num");
-      CStdString versionUpdateFilePath = pingChildElem->Attribute("update-descriptor-path");
-      CStdString versionUpdateFileHash = pingChildElem->Attribute("update-descriptor-hash");
+      succeed = g_boxeeVersionUpdateManager.HandleVersionUpdate(root, pingChildElem);
+      CLog::Log(LOGDEBUG,"CPingJob::DoWork - Call to CBoxeeVersionUpdateManager::HandleVersionUpdate returned [%d]",succeed);
+    }
+#else
+    else if (strcmp(pingChildElem->Value(),"timestamp") == 0)
+    {
+      time_t currentTime = time(NULL);
+      time_t timeStamp = 0;
+      char *endptr;
 
-      CLog::Log(LOGDEBUG,"CPingJob::DoWork - <version_update> parameter has the following attributes [build-num=%s][update-descriptor-path=%s][update-descriptor-hash=%s] (ping)(update)",versionUpdateBuildNum.c_str(),versionUpdateFilePath.c_str(),versionUpdateFileHash.c_str());
+      CLog::Log(LOGDEBUG,"CPingJob::DoWork - The <timestamp> tag was found (ping)");
 
-      if (!versionUpdateFilePath.IsEmpty() && !versionUpdateBuildNum.IsEmpty() && !versionUpdateFileHash.IsEmpty())
+      CStdString strTimestamp = pingChildElem->Attribute("utc");
+
+      timeStamp = strtol(strTimestamp.c_str(), &endptr, 10);
+
+      if(abs(currentTime - timeStamp) > 60 * 60 )
       {
-        CLog::Log(LOGDEBUG,"CPingJob::DoWork - Going to call CBoxeeVersionUpdateManager::PrepareVersionUpdate() with [build-num=%s][update-descriptor-path=%s][update-descriptor-hash=%s] (ping)(update)",versionUpdateBuildNum.c_str(),versionUpdateFilePath.c_str(),versionUpdateFileHash.c_str());
-
-        bool retVal = g_boxeeVersionUpdateManager.PrepareVersionUpdate(versionUpdateBuildNum,versionUpdateFilePath,versionUpdateFileHash);
-
-        CLog::Log(LOGDEBUG,"CPingJob::DoWork - Call to CBoxeeVersionUpdateManager::PrepareVersionUpdate() with [build-num=%s][update-descriptor-path=%s][update-descriptor-hash=%s] returned [%d] (ping)(update)",versionUpdateBuildNum.c_str(),versionUpdateFilePath.c_str(),versionUpdateFileHash.c_str(),retVal);
-      }
-      else
-      {
-        CLog::Log(LOGERROR,"CPingJob::DoWork - One of the attributes of <version_update> is empty. [build-num=%s][update-descriptor-path=%s][update-descriptor-hash=%s] (ping)(update)",versionUpdateBuildNum.c_str(),versionUpdateFilePath.c_str(),versionUpdateFileHash.c_str());
+        IHalServices& client = CHalServicesFactory::GetInstance();
+        client.SetTime(strTimestamp);
       }
     }
+#endif
 
     pingChildElem = pingChildElem->NextSiblingElement();
   }
 
-  CLog::Log(LOGDEBUG,"CPingJob::DoWork - Exit function. [server=%d][internet=%d] (ping)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
+  //CLog::Log(LOGDEBUG,"CPingJob::DoWork - Exit function. [server=%d][internet=%d] (ping)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
 }
 
 bool WatchDog::CPingJob::InitPingRequest(CStdString& pingUrl,CStdString& strPingVersion)
 {
   BOXEE::BXXMLDocument bxinfo;
   CStdString bxinfoFilePath = PTH_IC(BXINFO_FILE_PATH);
-
+  
   //////////////////////////////////
   // Set the current ping version //
   //////////////////////////////////
@@ -766,7 +900,7 @@ bool WatchDog::CPingJob::InitPingRequest(CStdString& pingUrl,CStdString& strPing
   {
     TiXmlHandle handle(bxinfo.GetRoot());
     TiXmlElement* version = handle.FirstChild("ping_version").ToElement();
-
+    
     if (version)
     {
       std::string strVersion = version->GetText();
@@ -776,7 +910,7 @@ bool WatchDog::CPingJob::InitPingRequest(CStdString& pingUrl,CStdString& strPing
       }
     }
   }
-
+  
   if(strPingVersion.IsEmpty())
   {
     strPingVersion = "0";
@@ -786,44 +920,153 @@ bool WatchDog::CPingJob::InitPingRequest(CStdString& pingUrl,CStdString& strPing
   //////////////////////
   // Set the ping url //
   //////////////////////
-
+  
   pingUrl = BOXEE::BXConfiguration::GetInstance().GetStringParam("WatchDog.TestServerUrl","http://app.boxee.tv/");
-
+  
   if(g_application.GetInSlideshowScreensaver())
   {
     pingUrl += "idle/";
   }
   else
   {
-    pingUrl += "ping/";
+    pingUrl += "ping/";    
   }
-
+  
   pingUrl += BoxeeUtils::GetPlatformStr();
   pingUrl += "/";
-
+  
   CStdString boxeeCurrentVersion = g_infoManager.GetVersion();
-
+  
   // For debug //
   /*
   if(boxeeCurrentVersion == "SVN")
   {
     boxeeCurrentVersion = g_localizeStrings.Get(53250);
-
+    
     CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateManager::PerformVersionUpdate - boxeeCurrentVersion is [SVN], so it was changed to [%s] (ping)",boxeeCurrentVersion.c_str());
   }
   */
   ///////////////
-
+  
   pingUrl += boxeeCurrentVersion;
-
+  
   pingUrl += "/";
   pingUrl += strPingVersion;
+  
+  if (g_guiSettings.GetBool("update.allow_beta"))
+  {
+    pingUrl += "/1";
+  }
+  else
+  {
+    pingUrl += "/0";
+  }
 
   return true;
 }
 
 bool WatchDog::CPingJob::ShouldDelete()
 {
+  return false;
+}
+
+#ifdef HAS_EMBEDDED
+
+//////////////////////////
+// CChkupdJob functions //
+//////////////////////////
+
+WatchDog::CChkupdJob::CChkupdJob(WatchDog* jobHandler, unsigned long executionDelayInMS, unsigned long repeatTaskIntervalInMS) : BoxeeScheduleTask("WatchDogPingTask",executionDelayInMS,repeatTaskIntervalInMS)
+{
+  m_jobHandler = jobHandler;
+}
+
+WatchDog::CChkupdJob::~CChkupdJob()
+{
+
+}
+
+bool WatchDog::CChkupdJob::ShouldDelete()
+{
+  return false;
+}
+
+void WatchDog::CChkupdJob::DoWork()
+{
+  if (!m_jobHandler)
+  {
+    CLog::Log(LOGWARNING,"CChkupdJob::DoWork - Can't execute the job. [jobHandler=NULL] (cu)");
+    return;
+  }
+
+
+  if (!m_jobHandler->IsConnectedToInternet())
+  {
+    // NO connection -> update interval for checking update
+    m_repeatTaskIntervalInMS = BOXEE::BXConfiguration::GetInstance().GetIntParam("WatchDog.ChkupdFreqOfflineInMs",SEND_CHKUPD_TO_SERVER_INTERVAL_OFFLINE_IN_MS);
+    CLog::Log(LOGDEBUG,"CChkupdJob::DoWork - There is no internet connection -> Don't try to check update. [RepeatTaskIntervalInMS=%lu][server=%d][internet=%d] (cu)",m_repeatTaskIntervalInMS,m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
+    return;
+  }
+  else
+  {
+    // HAS connection -> update interval for checking update
+    m_repeatTaskIntervalInMS = BOXEE::BXConfiguration::GetInstance().GetIntParam("WatchDog.ChkupdFreqInMs",SEND_CHKUPD_TO_SERVER_INTERVAL_IN_MS);
+    CLog::Log(LOGDEBUG,"CChkupdJob::DoWork - has internet connection. [RepeatTaskIntervalInMS=%lu][server=%d][internet=%d] (cu)",m_repeatTaskIntervalInMS,m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
+  }
+
+  // handle version update only if after FTU
+  if(g_stSettings.m_doneFTU == false)
+  {
+    return;
+  }
+
+  bool hasNewUpdate = false;
+  CStdString versionUpdateBuildNum;
+
+  int retval = g_boxeeVersionUpdateManager.CheckForUpdate(hasNewUpdate, versionUpdateBuildNum);
+
+  CLog::Log(LOGDEBUG,"CChkupdJob::DoWork - call to CheckForUpdate returned [retval=%d][hasNewUpdate=%d][versionUpdateBuildNum=%s]. [server=%d][internet=%d] (cu)",retval,hasNewUpdate,versionUpdateBuildNum.c_str(),m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
+
+  if(!retval && hasNewUpdate == true)
+  {
+    CLog::Log(LOGDEBUG,"CChkupdJob::DoWork - call StartUpdate(). [server=%d][internet=%d] (cu)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
+
+    g_boxeeVersionUpdateManager.StartUpdate();
+  }
+}
+#endif
+
+bool WatchDog::CheckIsConnectedToInternet(bool fromCheckInternetJob)
+{
+  CLog::Log(LOGDEBUG,"WatchDog::CheckIsConnectedToInternet - Enter function. [server=%d][internet=%d]. [fromJob=%d] (offline)(wd)",IsConnectedToServer(),IsConnectedToInternet(),fromCheckInternetJob);
+
+  std::vector<CStdString> vecBoxeeServersUrls;
+
+  {
+    CSingleLock lock(m_ServersUrlsVecLock);
+    vecBoxeeServersUrls = m_vecBoxeeServersUrls;
+  }
+
+  std::random_shuffle(vecBoxeeServersUrls.begin(), vecBoxeeServersUrls.end());
+
+  for (int i=0; i<(int)vecBoxeeServersUrls.size(); i++)
+  {
+    CStdString serverUrl = vecBoxeeServersUrls[i];
+
+    BOXEE::BXCurl curl;
+    bool connect = curl.HttpHEAD(serverUrl.c_str());
+
+    CLog::Log(LOGDEBUG,"WatchDog::CheckIsConnectedToInternet - Check [%s] return [%d]. [server=%d][internet=%d]. [fromJob=%d] (offline)(wd)",serverUrl.c_str(),connect,IsConnectedToServer(),IsConnectedToInternet(),fromCheckInternetJob);
+
+    if (connect)
+    {
+      CLog::Log(LOGDEBUG,"WatchDog::CheckIsConnectedToInternet - Exit function and return TRUE. [server=%d][internet=%d]. [fromJob=%d] (offline)(wd)",IsConnectedToServer(),IsConnectedToInternet(),fromCheckInternetJob);
+      return true;
+    }
+  }
+
+  CLog::Log(LOGDEBUG,"WatchDog::CheckIsConnectedToInternet - Exit function and return FALSE. [server=%d][internet=%d]. [fromJob=%d] (offline)(wd)",IsConnectedToServer(),IsConnectedToInternet(),fromCheckInternetJob);
+
   return false;
 }
 
@@ -835,17 +1078,6 @@ WatchDog::CCheckInternetConnectionJob::CCheckInternetConnectionJob(WatchDog* job
 {
   m_jobHandler = jobHandler;
 
-  m_vecBoxeeServersUrls.clear();
-  m_vecBoxeeServersUrls.push_back("http://0.ping.boxee.tv/");
-  m_vecBoxeeServersUrls.push_back("http://1.ping.boxee.tv/");
-  m_vecBoxeeServersUrls.push_back("http://2.ping.boxee.tv/");
-  m_vecBoxeeServersUrls.push_back("http://3.ping.boxee.tv/");
-  m_vecBoxeeServersUrls.push_back("http://4.ping.boxee.tv/");
-  m_vecBoxeeServersUrls.push_back("http://5.ping.boxee.tv/");
-  m_vecBoxeeServersUrls.push_back("http://6.ping.boxee.tv/");
-  m_vecBoxeeServersUrls.push_back("http://7.ping.boxee.tv/");
-  m_vecBoxeeServersUrls.push_back("http://8.ping.boxee.tv/");
-  m_vecBoxeeServersUrls.push_back("http://9.ping.boxee.tv/");
 }
 
 WatchDog::CCheckInternetConnectionJob::~CCheckInternetConnectionJob()
@@ -855,73 +1087,87 @@ WatchDog::CCheckInternetConnectionJob::~CCheckInternetConnectionJob()
 
 void WatchDog::CCheckInternetConnectionJob::DoWork()
 {
+  //CLog::Log(LOGDEBUG,"CCheckInternetConnectionJob::DoWork - Enter function");
+
   if (!m_jobHandler)
   {
     CLog::Log(LOGWARNING,"CCheckInternetConnectionJob::DoWork - Can't execute the job. [jobHandler=NULL] (offline)");
     return;
   }
 
-  CLog::Log(LOGDEBUG,"CCheckInternetConnectionJob::DoWork - Enter function. [server=%d][internet=%d] (offline)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
-
-  bool cIsConnectToInternet = m_jobHandler->IsConnectedToInternet();
-
-  bool nIsConnectedToInternet = CheckIsConnectedToInternet();
-
-  CLog::Log(LOGDEBUG,"CCheckInternetConnectionJob::DoWork - After check [cIsConnectToInternet=%d][nIsConnectedToInternet=%d]. [server=%d][internet=%d] (offline)",cIsConnectToInternet,nIsConnectedToInternet,m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
-
-  if (cIsConnectToInternet != nIsConnectedToInternet)
+  if (!(g_application.IsPlayingVideo() || g_application.IsPlayingAudio()))
   {
-    // set new IsConnectToInternet status
-    m_jobHandler->SetIsConnectedToInternet(nIsConnectedToInternet);
+    CLog::Log(LOGINFO,"CCheckInternetConnectionJob::DoWork - Checking the internet connection. [server=%d][internet=%d][ConnectionToInternetChanged=%d] (offline)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet(), m_jobHandler->m_bConnectionToInternetChanged);
 
-    if (nIsConnectedToInternet)
+    bool cIsConnectToInternet = m_jobHandler->IsConnectedToInternet();
+
+    bool nIsConnectedToInternet = m_jobHandler->CheckIsConnectedToInternet(true);
+
+    //Log::Log(LOGINFO,"CCheckInternetConnectionJob::DoWork - After check [cIsConnectToInternet=%d][nIsConnectedToInternet=%d]. [server=%d][internet=%d] (offline)",cIsConnectToInternet,nIsConnectedToInternet,m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
+
+    if (cIsConnectToInternet != nIsConnectedToInternet)
     {
-      // new IsConnectToInternet status is CONNECT
 
-      HandleInternetConnectionRestore();
+      // set new IsConnectToInternet status
+      m_jobHandler->SetIsConnectedToInternet(nIsConnectedToInternet);
+
+      if (nIsConnectedToInternet)
+      {
+        // new IsConnectToInternet status is CONNECT
+
+        HandleInternetConnectionRestore();
+      }
+      else
+      {
+        // new IsConnectToInternet status is NOT CONNECT
+
+        HandleInternetConnectionLost();
+      }
     }
-    else
-    {
-      // new IsConnectToInternet status is NOT CONNECT
 
-      HandleInternetConnectionLost();
+    if (m_jobHandler->m_bConnectionToInternetChanged)
+    {
+      m_jobHandler->m_bConnectionToInternetChanged = false;
+      BoxeeUtils::RefreshCountryCode();
     }
   }
 
-  CLog::Log(LOGDEBUG,"CCheckInternetConnectionJob::DoWork - Exit function. [server=%d][internet=%d] (offline)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
+  //CLog::Log(LOGDEBUG,"CCheckInternetConnectionJob::DoWork - Exit function. [server=%d][internet=%d] (offline)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
 }
 
+#if 0 // DELETE??
 bool WatchDog::CCheckInternetConnectionJob::CheckIsConnectedToInternet()
 {
-  CLog::Log(LOGDEBUG,"CCheckInternetConnectionJob::CheckIsConnectedToInternet - Enter function. [server=%d][internet=%d] (offline)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
+  //CLog::Log(LOGDEBUG,"CCheckInternetConnectionJob::CheckIsConnectedToInternet - Enter function. [server=%d][internet=%d] (offline)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
 
-  std::random_shuffle(m_vecBoxeeServersUrls.begin(), m_vecBoxeeServersUrls.end());
+  std::random_shuffle(m_jobHandler->m_vecBoxeeServersUrls.begin(), m_jobHandler->m_vecBoxeeServersUrls.end());
 
-  for (int i=0; i<(int)m_vecBoxeeServersUrls.size(); i++)
+  for (int i=0; i<(int)m_jobHandler->m_vecBoxeeServersUrls.size(); i++)
   {
-    CStdString serverUrl = m_vecBoxeeServersUrls[i];
+    CStdString serverUrl = m_jobHandler->m_vecBoxeeServersUrls[i];
 
     BOXEE::BXCurl curl;
     bool connect = curl.HttpHEAD(serverUrl.c_str());
 
-    CLog::Log(LOGDEBUG,"CCheckInternetConnectionJob::CheckIsConnectedToInternet - Check [%s] return [%d]. [server=%d][internet=%d] (offline)",serverUrl.c_str(),connect,m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
+    //CLog::Log(LOGDEBUG,"CCheckInternetConnectionJob::CheckIsConnectedToInternet - Check [%s] return [%d]. [server=%d][internet=%d] (offline)",serverUrl.c_str(),connect,m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
 
     if (connect)
     {
-      CLog::Log(LOGDEBUG,"CCheckInternetConnectionJob::CheckIsConnectedToInternet - Exit function and return TRUE. [server=%d][internet=%d] (offline)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
+      //CLog::Log(LOGDEBUG,"CCheckInternetConnectionJob::CheckIsConnectedToInternet - Exit function and return TRUE. [server=%d][internet=%d] (offline)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
 
       return true;
     }
   }
 
-  CLog::Log(LOGDEBUG,"CCheckInternetConnectionJob::CheckIsConnectedToInternet - Exit function and return FALSE. [server=%d][internet=%d] (offline)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
+  //CLog::Log(LOGDEBUG,"CCheckInternetConnectionJob::CheckIsConnectedToInternet - Exit function and return FALSE. [server=%d][internet=%d] (offline)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
 
   return false;
 }
+#endif
 
 bool WatchDog::CCheckInternetConnectionJob::HandleInternetConnectionRestore()
 {
-  CLog::Log(LOGDEBUG,"CCheckInternetConnectionJob::HandleInternetConnectionRestore - Enter function. [server=%d][internet=%d] (offline)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
+  CLog::Log(LOGINFO,"CCheckInternetConnectionJob::HandleInternetConnectionRestore - Enter function. [server=%d][internet=%d] (offline)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
 
   bool succeeded = true;
 
@@ -934,9 +1180,24 @@ bool WatchDog::CCheckInternetConnectionJob::HandleInternetConnectionRestore()
   // update user list received from server now
   BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().UpdateAllUserListsNow();
 
+  CBoxeeBrowseMenuManager::GetInstance().ClearDynamicMenuButtons();
+
   if ((g_windowManager.GetActiveWindow() != WINDOW_LOGIN_SCREEN) && g_application.IsOfflineMode())
   {
     succeeded = LoginUserAfterInternetConnectionRestore();
+  }
+
+  bool showNotification = true;
+
+#ifdef HAS_EMBEDDED
+  showNotification = g_stSettings.m_doneFTU;
+#endif
+
+  g_application.NetworkConfigurationChanged();
+
+  if (showNotification)
+  {
+    g_application.m_guiDialogKaiToast.QueueNotification("boxeelogo96x96.png", "", g_localizeStrings.Get(55197), 5000 , KAI_GREEN_COLOR, KAI_GREEN_COLOR);
   }
 
   return succeeded;
@@ -963,16 +1224,16 @@ bool WatchDog::CCheckInternetConnectionJob::LoginUserAfterInternetConnectionRest
     pDialog->SetLine(1, "");
     pDialog->SetLine(2, "");
 
-    ThreadMessage tMsgNotify = {TMSG_DIALOG_DOMODAL, WINDOW_DIALOG_OK, g_windowManager.GetActiveWindow()};
+    ThreadMessage tMsgNotify(TMSG_DIALOG_DOMODAL, WINDOW_DIALOG_OK, g_windowManager.GetActiveWindow());
     g_application.getApplicationMessenger().SendMessage(tMsgNotify, true);
 
-    ThreadMessage tMsgLogout = {TMSG_LOGOUT};
+    ThreadMessage tMsgLogout(TMSG_LOGOUT);
     g_application.getApplicationMessenger().SendMessage(tMsgLogout, false);
 
     return false;
   }
 
-  CLog::Log(LOGDEBUG,"CCheckInternetConnectionJob::LoginUserAfterInternetConnectionRestore - Succeeded to login user [user=%s][pass=%s][loginStatus=%d] -> logout. [server=%d][internet=%d] (offline)(login)",creds.GetUserName().c_str(),creds.GetPassword().c_str(),loginStatus,m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
+  CLog::Log(LOGDEBUG,"CCheckInternetConnectionJob::LoginUserAfterInternetConnectionRestore - Succeeded to login user [user=%s][loginStatus=%d] -> logout. [server=%d][internet=%d] (offline)(login)",creds.GetUserName().c_str(),loginStatus,m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
 
   BoxeeUtils::UpdateProfile(lastUsedProfileIndex,userObj);
 
@@ -995,7 +1256,7 @@ bool WatchDog::CCheckInternetConnectionJob::LoginUserAfterInternetConnectionRest
     g_application.SetCountryCode(cc);
   }
 
-  g_weatherManager.Refresh();
+  CWeather::GetInstance().Refresh();
 
 #ifdef HAS_PYTHON
   g_pythonParser.m_bLogin = true;
@@ -1009,7 +1270,7 @@ bool WatchDog::CCheckInternetConnectionJob::LoginUserAfterInternetConnectionRest
 
 bool WatchDog::CCheckInternetConnectionJob::HandleInternetConnectionLost()
 {
-  CLog::Log(LOGDEBUG,"CCheckInternetConnectionJob::HandleInternetConnectionLost - Enter function. [server=%d][internet=%d] (offline)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
+  CLog::Log(LOGINFO,"CCheckInternetConnectionJob::HandleInternetConnectionLost - Internet connection lost. [server=%d][internet=%d] (offline)",m_jobHandler->IsConnectedToServer(),m_jobHandler->IsConnectedToInternet());
 
   // connection was lost -> set new interval for checking internet connection
   m_repeatTaskIntervalInMS = BOXEE::BXConfiguration::GetInstance().GetIntParam("WatchDog.CheckInternetConnectionHiInMs",CHECK_INTERNET_CONNECTION_INTERVAL_IN_MS_HI_FREQ);
@@ -1019,6 +1280,17 @@ bool WatchDog::CCheckInternetConnectionJob::HandleInternetConnectionLost()
 
   // no internet connection -> no srever connection
   m_jobHandler->SetIsConnectedToServer(false);
+
+  bool showNotification = true;
+
+#ifdef HAS_EMBEDDED
+  showNotification = g_stSettings.m_doneFTU;
+#endif
+
+  if (showNotification)
+  {
+    g_application.m_guiDialogKaiToast.QueueNotification("sleepy_boxee.png", "", g_localizeStrings.Get(55196), 5000, KAI_RED_COLOR, KAI_RED_COLOR);
+  }
 
   return true;
 }

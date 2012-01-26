@@ -49,7 +49,7 @@ CZipManager::~CZipManager()
 
 bool CZipManager::GetZipList(const CStdString& strPath, vector<SZipEntry>& items)
 {
-  CURL url(strPath);
+  CURI url(strPath);
   struct __stat64 m_StatData;
 
   CStdString strFile = url.GetHostName();
@@ -209,7 +209,7 @@ bool CZipManager::GetZipList(const CStdString& strPath, vector<SZipEntry>& items
 
 bool CZipManager::GetZipEntry(const CStdString& strPath, SZipEntry& item)
 {
-  CURL url(strPath);
+  CURI url(strPath);
 
   CStdString strFile = url.GetHostName();
 
@@ -314,7 +314,7 @@ void CZipManager::readCHeader(const char* buffer, SZipEntry& info)
 
 void CZipManager::release(const CStdString& strPath)
 {
-  CURL url(strPath);
+  CURI url(strPath);
   map<CStdString,vector<SZipEntry> >::iterator it= mZipMap.find(url.GetHostName());
   if (it != mZipMap.end())
   {

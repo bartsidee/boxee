@@ -26,7 +26,14 @@
 
 #include <vector>
 #include "RenderSystem.h"
-#include "CriticalSection.h"
+#include "utils\CriticalSection.h"
+
+enum PCI_Vendors
+{
+  PCIV_ATI    = 0x1002,
+  PCIV_nVidia = 0x10DE,
+  PCIV_Intel  = 0x8086
+};
 
 class ID3DResource;
 
@@ -47,6 +54,13 @@ public:
   virtual bool ClearBuffers(color_t color);
   virtual bool ClearBuffers(float r, float g, float b, float a);
   virtual bool IsExtSupported(const char* extension);
+  virtual bool IsSurfaceFormatOk(D3DFORMAT surfFormat, DWORD usage);
+  virtual bool IsTextureFormatOk(D3DFORMAT texFormat, DWORD usage);
+
+  virtual void EnableClipping(bool bEnable);
+  virtual void ApplyClippingRect(CRect& clipRect);
+  virtual void GetClipRect(CRect& clipRect);
+  virtual void EnableBlending(bool bEnableRGB, bool bEnableAlpha = false);
 
   virtual void SetVSync(bool vsync);
 
@@ -58,13 +72,17 @@ public:
 
   virtual void SetCameraPosition(const CPoint &camera, int screenWidth, int screenHeight);
 
-  virtual void ApplyHardwareTransform(const TransformMatrix &matrix);
-  virtual void RestoreHardwareTransform();
-
   virtual bool TestRender();
 
   LPDIRECT3DDEVICE9 Get3DDevice() { return m_pD3DDevice; }
   int GetBackbufferCount() const { return m_D3DPP.BackBufferCount; }
+
+  bool    UseD3D9Ex()       { return m_useD3D9Ex; }
+  DWORD   DefaultD3DUsage() { return m_defaultD3DUsage; }
+  D3DPOOL DefaultD3DPool()  { return m_defaultD3DPool; }
+  D3DADAPTER_IDENTIFIER9 GetAIdentifier() { return m_AIdentifier; }
+
+  bool    Interlaced()      { return m_interlaced; }
 
   /*!
    \brief Register as a dependent of the DirectX Render System
@@ -84,6 +102,8 @@ public:
   */
   void Unregister(ID3DResource *resource);
 
+  static CStdString GetErrorDescription(HRESULT hr);
+
 protected:
   bool CreateDevice();
   void DeleteDevice();
@@ -97,30 +117,40 @@ protected:
   void SetRenderParams(unsigned int width, unsigned int height, bool fullScreen, float refreshRate);
   void BuildPresentParameters();
   virtual void UpdateMonitor() {};
+  BOOL IsDepthFormatOk(D3DFORMAT DepthFormat, D3DFORMAT RenderTargetFormat);
 
-  LPDIRECT3D9 m_pD3D;
+  LPDIRECT3D9                 m_pD3D;
 
   // our adapter could change as we go
-  bool m_needNewDevice;
-  unsigned int m_adapter;
-  LPDIRECT3DDEVICE9 m_pD3DDevice;
-  unsigned int m_screenHeight;
+  bool                        m_needNewDevice;
+  unsigned int                m_adapter;
+  LPDIRECT3DDEVICE9           m_pD3DDevice;
+  unsigned int                m_screenHeight;
 
-  D3DPRESENT_PARAMETERS m_D3DPP;
-  HWND m_hFocusWnd;
-  HWND m_hDeviceWnd;
-  unsigned int m_nBackBufferWidth;
-  unsigned int m_nBackBufferHeight;
-  bool m_bFullScreenDevice;
-  float m_refreshRate;
-  HRESULT m_nDeviceStatus;
-  IDirect3DStateBlock9* m_stateBlock;
-  int64_t m_systemFreq;
+  D3DDEVTYPE                  m_devType;
+  D3DPRESENT_PARAMETERS       m_D3DPP;
+  D3DDISPLAYMODEEX            m_D3DDMEX;
+  HWND                        m_hFocusWnd;
+  HWND                        m_hDeviceWnd;
+  unsigned int                m_nBackBufferWidth;
+  unsigned int                m_nBackBufferHeight;
+  bool                        m_bFullScreenDevice;
+  float                       m_refreshRate;
+  bool                        m_interlaced;
+  HRESULT                     m_nDeviceStatus;
+  IDirect3DStateBlock9*       m_stateBlock;
+  int64_t                     m_systemFreq;
+  bool                        m_useD3D9Ex;
+  DWORD                       m_defaultD3DUsage;
+  D3DPOOL                     m_defaultD3DPool;
+  bool                        m_useWindowedDX;
+  D3DADAPTER_IDENTIFIER9      m_AIdentifier;
 
-  CCriticalSection m_resourceSection;
+  CCriticalSection            m_resourceSection;
   std::vector<ID3DResource*>  m_resources;
 
-  bool m_inScene; ///< True if we're in a BeginScene()/EndScene() block
+  bool                        m_inScene; ///< True if we're in a BeginScene()/EndScene() block
+  bool                        m_bClipping;
 };
 
 #endif // RENDER_SYSTEM_DX

@@ -12,7 +12,7 @@
 				<posy>0</posy>
 				<width>450</width>
 				<height>160</height>
-				<colordiffuse>DDFFFFFF</colordiffuse>
+				<colordiffuse>88FFFFFF</colordiffuse>
 				<texture>black-back.png</texture>
 				<bordertexture border="3">NoCover_1.png</bordertexture>
 				<bordersize>2</bordersize>

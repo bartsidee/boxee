@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/smacker.c
+ * @file
  * Smacker decoder
  */
 
@@ -514,10 +514,6 @@ static av_cold int decode_init(AVCodecContext *avctx)
 
     c->avctx = avctx;
 
-    if (avcodec_check_dimensions(avctx, avctx->width, avctx->height) < 0) {
-        return 1;
-    }
-
     avctx->pix_fmt = PIX_FMT_PAL8;
 
 
@@ -559,6 +555,7 @@ static av_cold int decode_end(AVCodecContext *avctx)
 static av_cold int smka_decode_init(AVCodecContext *avctx)
 {
     avctx->channel_layout = (avctx->channels==2) ? CH_LAYOUT_STEREO : CH_LAYOUT_MONO;
+    avctx->sample_fmt = avctx->bits_per_coded_sample == 8 ? AV_SAMPLE_FMT_U8 : AV_SAMPLE_FMT_S16;
     return 0;
 }
 
@@ -621,7 +618,7 @@ static int smka_decode_frame(AVCodecContext *avctx, void *data, int *data_size, 
     }
     if(bits) { //decode 16-bit data
         for(i = stereo; i >= 0; i--)
-            pred[i] = bswap_16(get_bits(&gb, 16));
+            pred[i] = av_bswap16(get_bits(&gb, 16));
         for(i = 0; i < stereo; i++)
             *samples++ = pred[i];
         for(i = 0; i < unp_size / 2; i++) {
@@ -692,9 +689,9 @@ static int smka_decode_frame(AVCodecContext *avctx, void *data, int *data_size, 
     return buf_size;
 }
 
-AVCodec smacker_decoder = {
+AVCodec ff_smacker_decoder = {
     "smackvid",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_SMACKVIDEO,
     sizeof(SmackVContext),
     decode_init,
@@ -705,9 +702,9 @@ AVCodec smacker_decoder = {
     .long_name = NULL_IF_CONFIG_SMALL("Smacker video"),
 };
 
-AVCodec smackaud_decoder = {
+AVCodec ff_smackaud_decoder = {
     "smackaud",
-    CODEC_TYPE_AUDIO,
+    AVMEDIA_TYPE_AUDIO,
     CODEC_ID_SMACKAUDIO,
     0,
     smka_decode_init,

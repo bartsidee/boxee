@@ -1,5 +1,5 @@
-INCLUDES=-I. -I../../ -I../../.. -I../../../ffmpeg -I../../../../ -I../../../../linux -I../../../../../guilib
-CXXFLAGS+=-DHAVE_MMX
+INCLUDES=-I. -I../../ -I../../.. -I../../../../.. -I../../../../ -I../../../../utils -I../../../../linux -I../../../../../guilib -I../../Codecs -I../../Codecs/ffmpeg 
+CXXFLAGS+=-DHAVE_MMX  -D__STDC_CONSTANT_MACROS
 
 SRCS=	DVDAudioCodecFFmpeg.cpp \
 	DVDAudioCodecLiba52.cpp \
@@ -9,6 +9,7 @@ SRCS=	DVDAudioCodecFFmpeg.cpp \
 	DVDAudioCodecLPcm.cpp \
 	DVDAudioCodecPassthrough.cpp \
 	DVDAudioCodecPcm.cpp \
+	DVDAudioCodecSMD.cpp \
 
 LIB=Audio.a
 

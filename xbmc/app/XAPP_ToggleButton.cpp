@@ -16,7 +16,7 @@ ToggleButton::ToggleButton(int windowId, int controlId) throw (AppException) : C
   CGUIControl::GUICONTROLTYPES type = (CGUIControl::GUICONTROLTYPES)msg.GetParam1();
 
   if (type != CGUIControl::GUICONTROL_TOGGLEBUTTON)
-    throw AppException("Control is not a ToggleButton");
+      throw AppException("Control is not a ToggleButton");
 
 //  CGUIWindow* pWindow = g_windowManager.GetWindow(m_windowId);
 //  if (pWindow)
@@ -27,12 +27,12 @@ ToggleButton::ToggleButton(int windowId, int controlId) throw (AppException) : C
 //      throw AppException("Control is not a ToggleButton");
 //    }
 //  }
-}
+    }
 
 void ToggleButton::SetLabel(const std::string& label)
 {
   std::vector<CStdString> vec;
-  ThreadMessage tMsg = { TMSG_SET_CONTROL_LABEL, m_windowId, m_controlId, label, vec, "", NULL, NULL };
+  ThreadMessage tMsg ( TMSG_SET_CONTROL_LABEL, m_windowId, m_controlId, label, vec, "", NULL, NULL );
   g_application.getApplicationMessenger().SendMessage(tMsg, true); 
 }
 

@@ -21,6 +21,7 @@
 
 #include "libavcodec/get_bits.h"
 #include "avformat.h"
+#include "id3v1.h"
 
 typedef struct {
     int totalframes, currentframe;
@@ -29,6 +30,7 @@ typedef struct {
 static int tta_probe(AVProbeData *p)
 {
     const uint8_t *d = p->buf;
+
     if (d[0] == 'T' && d[1] == 'T' && d[2] == 'A' && d[3] == '1')
         return 80;
     return 0;
@@ -39,8 +41,12 @@ static int tta_read_header(AVFormatContext *s, AVFormatParameters *ap)
     TTAContext *c = s->priv_data;
     AVStream *st;
     int i, channels, bps, samplerate, datalen, framelen;
-    uint64_t framepos;
+    uint64_t framepos, start_offset;
 
+    if (!av_metadata_get(s->metadata, "", NULL, AV_METADATA_IGNORE_SUFFIX))
+        ff_id3v1_read(s);
+
+    start_offset = url_ftell(s->pb);
     if (get_le32(s->pb) != AV_RL32("TTA1"))
         return -1; // not tta file
 
@@ -87,20 +93,20 @@ static int tta_read_header(AVFormatContext *s, AVFormatParameters *ap)
     }
     url_fskip(s->pb, 4); // seektable crc
 
-    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
     st->codec->codec_id = CODEC_ID_TTA;
     st->codec->channels = channels;
     st->codec->sample_rate = samplerate;
     st->codec->bits_per_coded_sample = bps;
 
-    st->codec->extradata_size = url_ftell(s->pb);
+    st->codec->extradata_size = url_ftell(s->pb) - start_offset;
     if(st->codec->extradata_size+FF_INPUT_BUFFER_PADDING_SIZE <= (unsigned)st->codec->extradata_size){
         //this check is redundant as get_buffer should fail
         av_log(s, AV_LOG_ERROR, "extradata_size too large\n");
         return -1;
     }
     st->codec->extradata = av_mallocz(st->codec->extradata_size+FF_INPUT_BUFFER_PADDING_SIZE);
-    url_fseek(s->pb, 0, SEEK_SET);
+    url_fseek(s->pb, start_offset, SEEK_SET);
     get_buffer(s->pb, st->codec->extradata, st->codec->extradata_size);
 
     return 0;
@@ -137,7 +143,7 @@ static int tta_read_seek(AVFormatContext *s, int stream_index, int64_t timestamp
     return 0;
 }
 
-AVInputFormat tta_demuxer = {
+AVInputFormat ff_tta_demuxer = {
     "tta",
     NULL_IF_CONFIG_SMALL("True Audio"),
     sizeof(TTAContext),

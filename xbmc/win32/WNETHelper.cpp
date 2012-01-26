@@ -108,7 +108,7 @@ bool CWNETHelper::EnumerateFunc(LPNETRESOURCE lpnr, CFileItemList &items)
           CFileItemPtr pItem(new CFileItem(strName));     
           strurl.append(lpnrLocal[i].lpRemoteName);
           strurl.Replace("\\","/");
-          CURL rooturl(strurl);
+          CURI rooturl(strurl);
           rooturl.SetFileName("");
           pItem->m_strPath = CWIN32Util::URLEncode(rooturl);
           pItem->m_bIsFolder = true;

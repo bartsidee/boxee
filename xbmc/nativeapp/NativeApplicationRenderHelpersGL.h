@@ -26,6 +26,8 @@
 #include "WindowingFactory.h"
 #include "GUITexture.h"
 
+extern CFrameBufferObject g_fbo;
+
 static std::string g_TextureVertexShader =
 "uniform mat4 u_matModelView;\n"
 "uniform mat4 u_matProjection;\n"
@@ -40,7 +42,9 @@ static std::string g_TextureVertexShader =
 "}\n";
 
 static std::string g_TexturePixelShader =
+#ifndef HAS_GL2
 "precision mediump float;\n"
+#endif
 "varying vec2 v_texCoord0;\n"
 "uniform sampler2D u_texture0;\n"
 "uniform vec4 u_diffuseColor;\n"
@@ -48,11 +52,17 @@ static std::string g_TexturePixelShader =
 "{\n"
 "vec4 texture0Color;\n"
 "texture0Color = texture2D(u_texture0, v_texCoord0) * u_diffuseColor;\n"
+#ifdef HAS_EMBEDDED
 "gl_FragColor.rgba = texture0Color.bgra;\n"
+#else
+"gl_FragColor.rgba = texture0Color.rgba;\n"
+#endif
 "}\n";
 
 static std::string g_AlphaPixelShader =
+#ifndef HAS_GL2
 "precision mediump float;\n"
+#endif
 "varying vec2 v_texCoord0;\n"
 "uniform sampler2D u_texture0;\n"
 "uniform vec4 u_diffuseColor;\n"
@@ -60,15 +70,25 @@ static std::string g_AlphaPixelShader =
 "{\n"
 "vec4 texture0Color;\n"
 "gl_FragColor.a = texture2D(u_texture0, v_texCoord0).a;\n"
+#ifdef HAS_EMBEDDED
 "gl_FragColor.rgb = u_diffuseColor.bgr;\n"
+#else
+"gl_FragColor.rgb = u_diffuseColor.rgb;\n"
+#endif
 "}\n";
 
 static std::string g_ColorPixelShader =
+#ifndef HAS_GL2
 "precision mediump float;\n"
+#endif
 "uniform vec4 u_diffuseColor;\n"
 "void main()\n"
 "{\n"
+#ifdef HAS_EMBEDDED
 "gl_FragColor.rgba = u_diffuseColor.bgra;\n"
+#else
+"gl_FragColor.rgba = u_diffuseColor.rgba;\n"
+#endif
 "}\n";
 
 extern Shaders::CGLSLShaderProgram* g_TextureShaderProgram;
@@ -79,23 +99,57 @@ typedef struct sBXSurfacePrivData
 {
   CCriticalSection          lock;
   BOXEE::NativeApplication *app;
-  CFrameBufferObject        fbo;
+  GLuint                    texid;
   bool                      initialized;
   bool                      bLoadedToGPU;
-  sBXSurfacePrivData() : app(NULL), initialized(false) { }
+
+  sBXSurfacePrivData() : app(NULL), texid(0), initialized(false)  { }
+
+  ~sBXSurfacePrivData()
+  {
+    if (initialized)
+    {
+      glDeleteTextures(1, &texid);
+      texid = 0;
+    }
+  }
+
   void Initialize(BX_Surface *s)
   {
     if (initialized)
       return;
+
+#ifdef HAS_GLES
+    if(s->w > 2048 || s->h > 2048)
+    {
+      CLog::Log(LOGERROR,"sBXSurfacePrivData::Initialize size is too big width = %d height = %d",
+          s->w, s->h);
+      return ;
+    }
+#endif
+
     initialized = true;
 
     //printf("Create RGBA FBO: %dx%d\n", (int) (s->w), (int)s->h);
-    fbo.Initialize();
-    fbo.CreateAndBindToTexture(GL_TEXTURE_2D, (int) s->w, (int)s->h, GL_RGBA);
-    fbo.BeginRender();
-    glClearColor(0.0, 0.0, 0.0, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT);
-    fbo.EndRender();
+    glGetError();
+    glGenTextures(1, &texid);
+    glBindTexture(GL_TEXTURE_2D, texid);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,  (int) s->w, (int)s->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    GLenum errCode;
+    if ((errCode = glGetError()) != GL_NO_ERROR)
+    {
+      CLog::Log(LOGERROR, "sBXSurfacePrivData::Initialize glTexImage2D failed %x", errCode);
+      return;
+    }
+
     bLoadedToGPU = false;
   }
 } BXSurfacePrivData;
@@ -133,13 +187,17 @@ public:
     if (!p->initialized)
       p->Initialize(surface);
 
-    if (!p->fbo.IsBound())
-    {
-      CLog::Log(LOGERROR, "FillRect: Trying to render into invalid FBO");
+    if (!p->initialized)
       return;
+
+    GLenum errCode = glGetError();
+
+    if (!g_fbo.BindToTexture(GL_TEXTURE_2D, p->texid))
+    {
+      CLog::Log(LOGERROR, "FillRectJob::BindToTexture failed");
     }
 
-    p->fbo.BeginRender();
+    g_fbo.BeginRender();
     
     if (blend == BX_BLEND_SOURCE_ALPHA)
     {
@@ -239,7 +297,7 @@ public:
     g_ColorShaderProgram->Disable();
 #endif
     
-    p->fbo.EndRender();
+    g_fbo.EndRender();
 
     bBlend?glEnable(GL_BLEND):glDisable(GL_BLEND);
     
@@ -248,6 +306,12 @@ public:
     glOrtho(0, g_graphicsContext.GetWidth()-1, g_graphicsContext.GetHeight()-1, 0.0, -1.0, 1.0);
 #endif
     
+    if ((errCode = glGetError()) != GL_NO_ERROR)
+    {
+      CLog::Log(LOGERROR, "FillRectJob failed %x", errCode);
+      return;
+    }
+
 #endif
   }  
   BX_Surface* surface; 
@@ -259,12 +323,19 @@ public:
 class BlitJob : public IGUIThreadTask
 {
 public: 
+  BlitJob() : color(0xffffffff), alpha(255) {}
+
   virtual void DoWork()
   {
+    GLenum errCode = glGetError();
+
     if (!destSurface || !destSurface->priv || !sourceSurface)
       return;
 #if defined(HAS_GL) || defined(HAS_GLES)
     bool bBlend = glIsEnabled(GL_BLEND);
+
+    if(alpha == 0)
+      alpha = 255;
 
     glDisable(GL_SCISSOR_TEST);
 
@@ -279,25 +350,28 @@ public:
     glActiveTexture(GL_TEXTURE0);
 #endif
 
+#ifdef HAS_GL
     glEnable(GL_TEXTURE_2D);
+#endif
 
     BXSurfacePrivData *srcPriv = (BXSurfacePrivData *)sourceSurface->priv;
     
     if (!srcPriv->initialized)
       srcPriv->Initialize(sourceSurface);
 
-    if (!srcPriv->fbo.IsBound())
-    {
-      CLog::Log(LOGERROR, "Blit: Trying to render from invalid FBO");
+    if (!srcPriv->initialized)
       return;
-    }
 
-    glBindTexture(GL_TEXTURE_2D, srcPriv->fbo.Texture());
+    glBindTexture(GL_TEXTURE_2D, srcPriv->texid);
     if (sourceSurface->pixels && !srcPriv->bLoadedToGPU)
     {
       if (sourceSurface->bpp == 4)
       {
+#ifdef __APPLE__
         glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, sourceSurface->w, sourceSurface->h, 0, GL_BGRA, GL_UNSIGNED_BYTE, sourceSurface->pixels);
+#else
+        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, sourceSurface->w, sourceSurface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, sourceSurface->pixels);
+#endif
       }
       else
       {
@@ -310,14 +384,18 @@ public:
     if (!p->initialized)
       p->Initialize(destSurface);
 
-    if (!p->fbo.IsBound())
-    {
-      CLog::Log(LOGERROR, "Blit: Trying to render from invalid FBO");
+    if (!p->initialized)
       return;
+
+    if (!g_fbo.BindToTexture(GL_TEXTURE_2D, p->texid))
+    {
+      CLog::Log(LOGERROR, "BlitJob::BindToTexture failed");
     }
 
-    p->fbo.BeginRender();
+    g_fbo.BeginRender();
     
+    glBindTexture(GL_TEXTURE_2D, srcPriv->texid);
+
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -326,7 +404,7 @@ public:
     glDisable(GL_BLEND);
     if (blend == BX_BLEND_SOURCE_ALPHA)
     {
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
       glEnable(GL_BLEND);
     }     
     
@@ -383,12 +461,17 @@ public:
     glEnd();
 
 #else
+    GLuint progObj;
     if (sourceSurface->bpp == 1 && destSurface->bpp == 4)
+    {
       g_AlphaShaderProgram->Enable();
+      progObj = g_AlphaShaderProgram->ProgramHandle();
+    }
     else
+    {
       g_TextureShaderProgram->Enable();
-
-    GLuint progObj = g_TextureShaderProgram->ProgramHandle();
+      progObj = g_TextureShaderProgram->ProgramHandle();
+    }
 
     // Set transformation matrixes
     TransformMatrix matProjection;
@@ -413,9 +496,9 @@ public:
     }
 
     GLfloat diffuseColor[4];
+
     if (sourceSurface->bpp == 1 && destSurface->bpp == 4)
     {
-      // Alpha texture rendering, need to take color from glColor
       diffuseColor[0] = (GLfloat)GET_B(color) / 255.0f;
       diffuseColor[1] = (GLfloat)GET_G(color) / 255.0f;
       diffuseColor[2] = (GLfloat)GET_R(color) / 255.0f;
@@ -423,11 +506,10 @@ public:
     }
     else
     {
-      // Regular texture rendering
       diffuseColor[0] = 1.0;
       diffuseColor[1] = 1.0;
       diffuseColor[2] = 1.0;
-      diffuseColor[3] = 1.0;
+      diffuseColor[3] = alpha / 255.0f;
     }
 
     GLint m_uniColor = glGetUniformLocation(progObj, "u_diffuseColor");
@@ -486,17 +568,25 @@ public:
       g_TextureShaderProgram->Disable();
 #endif
     
-    p->fbo.EndRender();
+    g_fbo.EndRender();
     
     bBlend ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
     glBindTexture(GL_TEXTURE_2D, 0);
+#ifdef HAS_GL
     glDisable(GL_TEXTURE_2D);
-    
+#endif
+
     glViewport(0, 0, g_graphicsContext.GetWidth(), g_graphicsContext.GetHeight());
 #ifdef HAS_GL
     glOrtho(0, g_graphicsContext.GetWidth()-1, g_graphicsContext.GetHeight()-1, 0.0, -1.0, 1.0);
 #endif
     
+    if ((errCode = glGetError()) != GL_NO_ERROR)
+    {
+      CLog::Log(LOGERROR, "BlitJob failed %x", errCode);
+      return;
+    }
+
 #endif
   }  
 
@@ -567,6 +657,7 @@ public:
   FreeSurfaceJob(BX_Surface* s) : surface(s) { }
   virtual void DoWork()
   {
+
     if (surface)
     {
       if (surface->priv)
@@ -598,12 +689,12 @@ public:
       if (!p->initialized)
         p->Initialize(surface);
       
-      p->fbo.BeginRender();
-    
+      if (!p->initialized)
+        return;
+
       if (!surface->pixels)
       {
         surface->pixels = new unsigned char[surface->h * surface->pitch];
-        memset(surface->pixels, 128, surface->h * surface->pitch);
       }
 
 #ifdef HAS_GL
@@ -613,8 +704,6 @@ public:
         glReadPixels(0, 0, surface->w, surface->h, (surface->pixelFormat == BX_PF_BGRA8888)?GL_RGBA:GL_ALPHA, GL_UNSIGNED_BYTE, surface->pixels);
       }
 #endif
-
-      p->fbo.EndRender();
     }
   }  
   BX_Surface* surface;
@@ -633,8 +722,13 @@ public:
       if (!p->initialized)
         p->Initialize(surface);
 
+      if (!p->initialized)
+        return;
+
+#ifdef HAS_GL
       glEnable(GL_TEXTURE_2D);
-      glBindTexture(GL_TEXTURE_2D, p->fbo.Texture());
+#endif
+      glBindTexture(GL_TEXTURE_2D, p->texid);
 
       if (surface->bpp == 4)
       {
@@ -661,10 +755,18 @@ public:
     if (!srcPriv->initialized)
       srcPriv->Initialize(surface);
     
-    srcPriv->fbo.BeginRender();
+    if (!srcPriv->initialized)
+      return;
+
+    if (!g_fbo.BindToTexture(GL_TEXTURE_2D, srcPriv->texid))
+    {
+      CLog::Log(LOGERROR, "ClearSurfaceJob::BindToTexture failed");
+    }
+
+    g_fbo.BeginRender();
     glClearColor(0.0, 0.0, 0.0, alpha);
     glClear(GL_COLOR_BUFFER_BIT);
-    srcPriv->fbo.EndRender();
+    g_fbo.EndRender();
   }
 protected:
   BX_Surface* surface;  
@@ -680,8 +782,10 @@ public:
 
   static void LoadShaders()
   {
-    if (g_TextureShaderProgram != NULL && g_ColorShaderProgram != NULL)
+    if (g_TextureShaderProgram != NULL && g_ColorShaderProgram != NULL && g_AlphaShaderProgram != NULL)
       return;
+
+    g_fbo.Initialize();
 
     g_TextureShaderProgram = new Shaders::CGLSLShaderProgram();
     g_TextureShaderProgram->VertexShader()->SetSource(g_TextureVertexShader);
@@ -701,6 +805,8 @@ public:
 
   void Render()
   {
+    GLenum errCode = glGetError();
+
     BXSurfacePrivData *srcPriv = (BXSurfacePrivData *)surface->priv;
     if (!srcPriv->initialized)
       srcPriv->Initialize(surface);
@@ -710,7 +816,7 @@ public:
     float offsetY = g_settings.m_ResInfo[iRes].Overscan.top;
     float width   = g_settings.m_ResInfo[iRes].Overscan.right - g_settings.m_ResInfo[iRes].Overscan.left;
     float height  = g_settings.m_ResInfo[iRes].Overscan.bottom - g_settings.m_ResInfo[iRes].Overscan.top;
-    glViewport(offsetX, offsetY, width, height);
+    glViewport((GLint) offsetX, (GLint) offsetY, (GLint) width, (GLint) height);
     
 #ifdef HAS_GL
     glMatrixMode(GL_MODELVIEW);
@@ -724,8 +830,10 @@ public:
 
     glDisable(GL_SCISSOR_TEST);
 
+#ifdef HAS_GL
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, srcPriv->fbo.Texture());
+#endif
+    glBindTexture(GL_TEXTURE_2D, srcPriv->texid);
     
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -742,8 +850,6 @@ public:
     
     float w = width;
     float h = height;
-    float x1 = 0;
-    float y1 = 0;
     float x2 = w;
     float y2 = h;
 
@@ -758,10 +864,10 @@ public:
     glColor4f(1.0, 1.0, 1.0, 1.0);
 
     glBegin(GL_QUADS);
-    glTexCoord2f(x1/w, y1/h); glVertex3i(0, 0, 0);
-    glTexCoord2f(x2/w, y1/h); glVertex3i(x2, 0, 0);
+    glTexCoord2f(x2/w, y2/h); glVertex3i(0, 0, 0);  // TODO: Is x1<->x2 OK here? Is y1<->y2 OK here?
+    glTexCoord2f(x2/w, y2/h); glVertex3i(x2, 0, 0);   // TODO: Is y1<->y2 OK here?
     glTexCoord2f(x2/w, y2/h); glVertex3i(x2, y2, 0);
-    glTexCoord2f(x1/w, y2/h); glVertex3i(0, y2, 0);
+    glTexCoord2f(x2/w, y2/h); glVertex3i(0, y2, 0); // TODO: Is x1<->x2 OK here?
     glEnd();
     
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
@@ -841,8 +947,17 @@ public:
 
     glBindTexture(GL_TEXTURE_2D, 0);
     
+#ifdef HAS_GL
     glDisable(GL_TEXTURE_2D);
+#endif
+
+    if ((errCode = glGetError()) != GL_NO_ERROR)
+    {
+      CLog::Log(LOGERROR, "NativeAppRenderToScreenHelper failed %x", errCode);
+      return;
+    }
   }
+
 protected:
   BX_Surface* surface;  
 };

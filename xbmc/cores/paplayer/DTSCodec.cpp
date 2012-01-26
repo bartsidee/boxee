@@ -19,6 +19,9 @@
  *
  */
 
+#ifndef WIN32
+#include "config.h"
+#endif
 #include "system.h"
 #include "utils/log.h"
 #ifdef HAS_DTS_CODEC

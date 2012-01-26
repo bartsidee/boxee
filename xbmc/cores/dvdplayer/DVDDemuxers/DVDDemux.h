@@ -23,7 +23,10 @@
 
 #include "StdString.h"
 #include "system.h"
+#include <vector>
 
+
+class IAudioRenderer;
 class CDVDInputStream;
 
 #if (defined HAVE_CONFIG_H) && (!defined WIN32)
@@ -40,7 +43,7 @@ extern "C" {
     #include <ffmpeg/avcodec.h>
   #endif
 #else
-  #include "cores/ffmpeg/avcodec.h"
+  #include "ffmpeg/libavcodec/avcodec.h"
 #endif
 }
 #endif
@@ -57,11 +60,11 @@ enum StreamType
 };
 
 enum StreamSource {
-  STREAM_SOURCE_NONE          = 0x000,
-  STREAM_SOURCE_DEMUX         = 0x100, 
-  STREAM_SOURCE_NAV           = 0x200,
-  STREAM_SOURCE_DEMUX_SUB     = 0x300,
-  STREAM_SOURCE_TEXT          = 0x400
+  STREAM_SOURCE_NONE              = 0x000,
+  STREAM_SOURCE_DEMUX             = 0x100,
+  STREAM_SOURCE_NAV               = 0x200,
+  STREAM_SOURCE_DEMUX_SUB         = 0x300,
+  STREAM_SOURCE_TEXT              = 0x400,
 };
 
 #define STREAM_SOURCE_MASK(a) ((a) & 0xf00)
@@ -85,9 +88,21 @@ public:
     pPrivate = NULL;
     ExtraData = NULL;
     ExtraSize = 0;
-    language[0] = 0;
+    memset(language, 0, sizeof(language));
     disabled = false;
+    flags = FLAG_NONE;
   }
+
+ enum EFlags
+  { FLAG_NONE     = 0x0000
+  , FLAG_DEFAULT  = 0x0001
+  , FLAG_DUB      = 0x0002
+  , FLAG_ORIGINAL = 0x0004
+  , FLAG_COMMENT  = 0x0008
+  , FLAG_LYRICS   = 0x0010
+  , FLAG_KARAOKE  = 0x0020
+  , FLAG_FORCED   = 0x0040
+  } flags;
 
   virtual ~CDemuxStream() {}
 
@@ -196,8 +211,26 @@ typedef struct DemuxPacket
   double pts; // pts in DVD_TIME_BASE
   double dts; // dts in DVD_TIME_BASE
   double duration; // duration in DVD_TIME_BASE if available
+
+#define DEMUX_PACKET_FLAG_DISCONTINUITY 0x1
+#define DEMUX_PACKET_FLAG_PASSTHROUGH   0x2 // this packet will pass from
+  int flags;
 } DemuxPacket;
 
+typedef struct
+{
+  int id;
+  CStdString title;
+  long startSecond;
+  long endSecond;
+} DemuxChapterInfo;
+
+typedef struct
+{
+  int id;
+  uint64_t duration;
+  CStdString title;
+} DemuxTitleInfo;
 
 class CDVDDemux
 {
@@ -244,6 +277,11 @@ public:
    * Get the number of chapters available
    */
   virtual int GetChapterCount() { return 0; }
+
+  /*
+   * Get information about all the chapters
+   */
+  virtual int GetChaptersInfo(std::vector<DemuxChapterInfo>& chapters) { return 0; }
 
   /*
    * Get current chapter 
@@ -329,4 +367,16 @@ public:
    * return the start time of the currently playing stream
    */
   virtual int GetStartTime() { return 0; }
+
+  virtual void AudioStreamSelected(int stream) { }
+
+  virtual void SubtitlesStreamChanged() { }
+
+  virtual void Start() {}
+  virtual void Stop() {}
+
+  virtual bool IsAudioPassthrough() { return false; }
+  virtual bool IsVideoPassthrough() { return false; }
+
+  virtual IAudioRenderer* GetAudioDevice() { return NULL; }
 };

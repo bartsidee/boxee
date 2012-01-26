@@ -32,6 +32,7 @@
 #include "IMsgTargetCallback.h"
 #include "inttypes.h"
 #include "DateTime.h"
+#include "BoxeeVersionUpdateManager.h"
 
 #include <list>
 #include <map>
@@ -102,6 +103,13 @@ class CDateTime;
 #define PLAYER_PROGRESS_WITH_CACHE   46
 #define PLAYER_IS_RADIO              47
 #define PLAYER_STATION_NAME          48
+#define PLAYER_IS_FLASH              49
+#define PLAYER_PROGRESS_TIME         50
+#define PLAYER_PROGRESS_WITH_CACHE_TIME 51
+#define PLAYER_SHOWAUDIOCODECLOGO    55
+#define PLAYER_IS_LIVE_TV            56
+#define PLAYER_CAN_SEEK_TO_TIME      57
+
 // Player operations flags
 #define PLAYER_ACTION_ALLOW_ALL      0
 #define PLAYER_ACTION_PLAY           1
@@ -112,8 +120,16 @@ class CDateTime;
 #define PLAYER_CAN_PAUSE             60
 #define PLAYER_CAN_SKIP              61
 #define PLAYER_CAN_SET_VOLUME        62
-//end Boxee
+#define PLAYER_CAN_GET_TIME          63
 
+#define PLAYER_PAGE_LOAD_PROGRESS    65
+#define PLAYER_PAGE_LOADING          66
+#define PLAYER_LONGER_THAN_HOUR      67
+
+#define PLAYER_CAN_SHUFFLE           70
+#define PLAYER_CAN_REPEAT            71
+
+#define BOXEE_IS_SHOW_OEM_LOGO       79
 #define BOXEE_NET_CONNECTED          80
 #define BOXEE_SERVER_CONNECTED       81
 #define BOXEE_OFFLINE_MODE           82
@@ -124,13 +140,16 @@ class CDateTime;
 #define BOXEE_IS_DURING_LOGIN        87
 #define BOXEE_IS_LOGIN_AFTER_OFFLINE 88
 #define BOXEE_SHOW_MOVIE_LIBRARY     89
+#define BOXEE_REMOTE_LOW_BATTERY     90
+#define BOXEE_NEW_VERSION_FORCE      91
+#define BOXEE_DOWNLOADING_UPDATE     92
+//end Boxee
+
+#define PLAYER_SEEKOFFSET            93
 
 #define WEATHER_CONDITIONS          100
 #define WEATHER_TEMPERATURE         101
-#define WEATHER_LOCATION            102
 #define WEATHER_IS_FETCHED          103
-#define WEATHER_FANART_CODE         104
-#define WEATHER_PLUGIN              105
 
 #define SYSTEM_TEMPERATURE_UNITS    106
 #define SYSTEM_PROGRESS_BAR         107
@@ -210,6 +229,7 @@ class CDateTime;
 #define NETWORK_DNS1_ADDRESS        196
 #define NETWORK_DNS2_ADDRESS        197
 #define NETWORK_DHCP_ADDRESS        198
+#define NETWORK_VPN_CONNECTED       199
 
 #define MUSICPLAYER_TITLE           200
 #define MUSICPLAYER_ALBUM           201
@@ -273,6 +293,9 @@ class CDateTime;
 #define VIDEOPLAYER_AUDIO_CHANNELS    289
 #define VIDEOPLAYER_VIDEO_ASPECT      290
 #define VIDEOPLAYER_HASTELETEXT       291
+// boxee
+#define VIDEOPLAYER_CANSETSUBTITLES   296
+// end boxee
 
 #define AUDIOSCROBBLER_ENABLED      300
 #define AUDIOSCROBBLER_CONN_STATE   301
@@ -439,8 +462,37 @@ class CDateTime;
 
 #define SYSTEM_HOUR                 773
 
-#define SKIN_THEME                  800
-#define SKIN_COLOUR_THEME           801
+#define DVB_IS_READY                780
+#define DVB_IS_CONNECTED            781
+#define DVB_IS_SCANNING             782
+#define DVB_SCAN_PROGRESS           783
+#define DVB_IS_TUNING_FREQ          784
+#define DVB_IS_TUNING_FAILED        785
+#define DVB_IS_SIGNAL_OK            786
+#define DVB_IS_TUNED                787
+#define DVB_HAS_EPG                 788
+#define DVB_IS_PARENTAL_LOCKED      790
+#define DVB_SHOW_TITLE              791
+#define DVB_CHANNEL_NUMBER          792
+#define DVB_CHANNEL_CALL_SIGN       793
+#define DVB_SHOW_RATING             794
+#define DVB_SHOW_START_TIME         795
+#define DVB_SHOW_END_TIME           796
+#define DVB_SHOW_PROGRESS           797
+#define DVB_SHOW_SYNOPSIS           798
+#define DVB_SHOW_SEASON             799
+#define DVB_SHOW_EPISODE            800
+#define DVB_SHOW_AIRDATE            801
+#define DVB_SHOW_THUMB              802
+#define DVB_SHOW_IS_NEW             803
+#define DVB_SHOW_EPISODE_TITLE      804
+#define DVB_IS_SHARING_ENABLED      805
+#define DVB_FRIEND_THUMB_1          806
+#define DVB_FRIEND_THUMB_2          807
+#define DVB_FRIEND_WATCHING_LABEL   808
+
+#define SKIN_THEME                  820
+#define SKIN_COLOUR_THEME           821
 
 #define KEYBOARD_CODE               830
 #define KEYBOARD_DESC               831
@@ -451,6 +503,8 @@ class CDateTime;
 
 #define SLIDE_INFO_START            900
 #define SLIDE_INFO_END              980
+
+#define WEATHER_TEMPERATURE_NO_UNIT 990
 
 #define FANART_COLOR1               1000
 #define FANART_COLOR2               1001
@@ -478,8 +532,6 @@ class CDateTime;
 #define CONTROL_HAS_FOCUS           30000
 #define BUTTON_SCROLLER_HAS_ICON    30001
 #define BUTTON_IS_SELECTED          30002
-
-#define VERSION_STRING "0.9"
 
 #define LISTITEM_START              35000
 #define LISTITEM_THUMB              (LISTITEM_START)
@@ -558,9 +610,11 @@ class CDateTime;
 #define LISTITEM_HAS_MUSIC_INFO            (LISTITEM_START + 111)
 #define LISTITEM_HAS_PICTURE_INFO          (LISTITEM_START + 112)
 #define LISTITEM_SHORTEN_FILENAME_AND_PATH (LISTITEM_START + 113)
-#define LISTITEM_CAN_PLAY (LISTITEM_START + 114)
+#define LISTITEM_CAN_PLAY                     (LISTITEM_START + 114)
 #define LISTITEM_PATH_TO_SHOW_IN_MEDIA_ACTION (LISTITEM_START + 115)
-#define LISTITEM_WATCHED (LISTITEM_START + 116)
+#define LISTITEM_WATCHED                      (LISTITEM_START + 116)
+#define LISTITEM_IS_FIRST                     (LISTITEM_START + 117)
+#define LISTITEM_IS_LAST                      (LISTITEM_START + 118)
 //end Boxee
 
 #define LISTITEM_PROPERTY_START     (LISTITEM_START + 200)
@@ -679,8 +733,8 @@ public:
   CStdString GetVersion();
   CStdString GetBuild();
 
-  bool GetDisplayAfterSeek() const;
-  void SetDisplayAfterSeek(unsigned int timeOut = 2500);
+  bool GetDisplayAfterSeek();
+  void SetDisplayAfterSeek(unsigned int timeOut = 2500, int seekOffset = 0);
   void SetSeeking(bool seeking) { m_playerSeeking = seeking; };
   void SetShowTime(bool showtime) { m_playerShowTime = showtime; };
   void SetShowCodec(bool showcodec) { m_playerShowCodec = showcodec; };
@@ -712,16 +766,30 @@ public:
 
   //Boxee
   inline bool HasNewVersion() { return m_bHasNewVersion; }
-  void SetHasNewVersion(bool bHasVersion);
-  
+  inline bool IsNewVersionForce() { return m_bIsNewVersionForce; }
+  void SetHasNewVersion(bool bHasVersion, bool bIsNewVersionForce);
+  bool IsDownloadingUpdate();
+  bool LongerThanHour() const ;
+
+  inline bool IsShowOemLogo() { return m_bIsShowOemLogo; }
+#ifdef HAS_EMBEDDED
+  void SetIsShowOemLogo(bool isShowOemLogo);
+#endif
+
   void LoginAfterConnectionRestoreWasDone();
 
   void SetShowMovieLibrary(bool bShowMovieLibrary);
+
+  void SetShowAudioCodecLogo(bool showPlayerAudioCodecLogo);
+  bool IsShowPlaybackAudioCodecLogo() { return (m_showAudioCodecLogoStartTime > 0); };
+  unsigned int GetAudioCodecLogoStartTime() { return m_showAudioCodecLogoStartTime; };
   //end Boxee
 
   void SetLibraryBool(int condition, bool value);
   bool GetLibraryBool(int condition);
   void ResetLibraryBools();
+
+  void SetPageLoadProgress(int nPct);
 
 protected:
   // routines for window retrieval
@@ -761,6 +829,10 @@ protected:
   unsigned int m_MusicBitrate;
   CFileItem* m_currentSlide;
 
+  // boxee
+  bool m_canSetSubtitlesToCurrentMovie;
+  // end boxee
+
   // fan stuff
   unsigned int m_lastSysHeatInfoTime;
   int m_fanSpeed;
@@ -769,10 +841,13 @@ protected:
 
   //Fullscreen OSD Stuff
   unsigned int m_AfterSeekTimeout;
+  int m_seekOffset;
   bool m_playerSeeking;
   bool m_playerShowTime;
   bool m_playerShowCodec;
   bool m_playerShowInfo;
+
+  unsigned int m_showAudioCodecLogoStartTime;
 
   // FPS counters
   float m_fps;
@@ -814,10 +889,14 @@ protected:
   int m_libraryHasMusicVideos;
 
   bool m_bHasNewVersion;
+  bool m_bIsNewVersionForce;
   bool m_bShowLoginAfterConnectionRestoreLabel;
+
+  bool m_bIsShowOemLogo;
 
   bool m_bShowMovieLibrary;
 
+  int  m_nPageLoadProgress;
   CCriticalSection m_critInfo;  
 };
 

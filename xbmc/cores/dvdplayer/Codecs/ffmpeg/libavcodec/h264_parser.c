@@ -20,20 +20,19 @@
  */
 
 /**
- * @file libavcodec/h264_parser.c
+ * @file
  * H.264 / AVC / MPEG4 part10 parser.
  * @author Michael Niedermayer <michaelni@gmx.at>
  */
 
 #include "parser.h"
-#include "h264_parser.h"
 #include "h264data.h"
 #include "golomb.h"
 
 #include <assert.h>
 
 
-int ff_h264_find_frame_end(H264Context *h, const uint8_t *buf, int buf_size)
+static int ff_h264_find_frame_end(H264Context *h, const uint8_t *buf, int buf_size)
 {
     int i;
     uint32_t state;
@@ -127,6 +126,9 @@ static inline int parse_nal_units(AVCodecParserContext *s,
     h->sei_cpb_removal_delay        = -1;
     h->sei_buffering_period_present =  0;
 
+    if (!buf_size)
+        return 0;
+
     for(;;) {
         int src_length, dst_length, consumed;
         buf = ff_find_start_code(buf, buf_end, &state);
@@ -185,6 +187,9 @@ static inline int parse_nal_units(AVCodecParserContext *s,
             h->sps = *h->sps_buffers[h->pps.sps_id];
             h->frame_num = get_bits(&h->s.gb, h->sps.log2_max_frame_num);
 
+            avctx->profile = ff_h264_get_profile(&h->sps);
+            avctx->level   = h->sps.level_idc;
+
             if(h->sps.frame_mbs_only_flag){
                 h->s.picture_structure= PICT_FRAME;
             }else{
@@ -242,6 +247,20 @@ static int h264_parse(AVCodecParserContext *s,
     ParseContext *pc = &h->s.parse_context;
     int next;
 
+    if (!h->got_first) {
+        h->got_first = 1;
+        if (avctx->extradata_size) {
+            h->s.avctx = avctx;
+            // must be done like in decoder, otherwise opening the parser,
+            // letting it create extradata and then closing and opening again
+            // will cause has_b_frames to be always set.
+            // Note that estimate_timings_from_pts does exactly this.
+            if (!avctx->has_b_frames)
+                h->s.low_delay = 1;
+            ff_h264_decode_extradata(h);
+        }
+    }
+
     if(s->flags & PARSER_FLAG_COMPLETE_FRAMES){
         next= buf_size;
     }else{
@@ -268,6 +287,9 @@ static int h264_parse(AVCodecParserContext *s,
             s->dts_sync_point    = INT_MIN;
             s->dts_ref_dts_delta = INT_MIN;
             s->pts_dts_delta     = INT_MIN;
+        }
+        if (s->flags & PARSER_FLAG_ONCE) {
+            s->flags &= PARSER_FLAG_COMPLETE_FRAMES;
         }
     }
 
@@ -309,11 +331,17 @@ static void close(AVCodecParserContext *s)
     ff_h264_free_context(h);
 }
 
+static int init(AVCodecParserContext *s)
+{
+    H264Context *h = s->priv_data;
+    h->thread_context[0] = h;
+    return 0;
+}
 
-AVCodecParser h264_parser = {
+AVCodecParser ff_h264_parser = {
     { CODEC_ID_H264 },
     sizeof(H264Context),
-    NULL,
+    init,
     h264_parse,
     close,
     h264_split,

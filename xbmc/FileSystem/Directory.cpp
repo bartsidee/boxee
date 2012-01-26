@@ -77,9 +77,9 @@ void ThumbCreatorJob::DoWork()
 
 BOXEE::BXBGProcess CDirectory::s_thumbCreatorProcess(MAX_WORK_CAPACITY);
 
-CDirectory::CDirectory() 
+CDirectory::CDirectory()
 {
-  
+
 }
 
 CDirectory::~CDirectory()
@@ -92,7 +92,7 @@ bool CDirectory::GetDirectory(CFileItem* pItem, CFileItemList &items)
   bool bResult = CDirectory::GetDirectory(pItem->m_strPath, items);
 
   items.SetProperty("parentPath", pItem->GetProperty("parentPath"));
-
+  
   if (bResult && pItem->GetThumbnailImage() != "") {
     for(int i = 0; i < items.Size(); i++) {
       if (items.Get(i)->GetThumbnailImage() != "")
@@ -107,7 +107,7 @@ bool CDirectory::GetDirectory(CFileItem* pItem, CFileItemList &items)
       }
     }
   }
-
+  
   ////////////////////////////////////
   // Create the directory thumbnail //
   ////////////////////////////////////
@@ -115,7 +115,7 @@ bool CDirectory::GetDirectory(CFileItem* pItem, CFileItemList &items)
   if(bResult)
   {
     // In case of success in call to GetDirectory(), check if item thumbnail is local and already exist
-
+    
     CLog::Log(LOGDEBUG,"CDirectory::GetDirectory - Handling item [path=%s][label=%s][thumbnail=%s] (foldert)",(pItem->m_strPath).c_str(),(pItem->GetLabel()).c_str(),(pItem->GetThumbnailImage()).c_str());
 
     CStdString dirThumbPath = pItem->GetThumbnailImage();
@@ -131,7 +131,7 @@ bool CDirectory::GetDirectory(CFileItem* pItem, CFileItemList &items)
     else
     {
       // Item thumb isn't HD or doesn't exist -> Need to create the directory thumbnail
-
+    
       CStdString dirCacheThumbPath = pItem->GetCachedPictureThumb();
 
       if(!CFile::Exists(dirCacheThumbPath))
@@ -146,15 +146,15 @@ bool CDirectory::GetDirectory(CFileItem* pItem, CFileItemList &items)
         {
           LOG(LOG_LEVEL_ERROR, "CDirectory::GetDirectory - FAILED to queue job for folder [path=%s][label=%s] (foldert)",(pItem->m_strPath).c_str(),(pItem->GetLabel()).c_str());
           delete job;
-        }
+      }
       }
       else
       {
-        CLog::Log(LOGDEBUG,"CDirectory::GetDirectory - The cache thumb [%s] for item [path=%s][label=%s] exist -> NO need to call CreateDirectoryThumbnail() (foldert)",dirCacheThumbPath.c_str(),(pItem->m_strPath).c_str(),(pItem->GetLabel()).c_str());
+        CLog::Log(LOGDEBUG,"CDirectory::GetDirectory - The cache thumb [%s] for item [path=%s][label=%s] exist -> NO need to call CreateDirectoryThumbnail() (foldert)",dirCacheThumbPath.c_str(),(pItem->m_strPath).c_str(),(pItem->GetLabel()).c_str());      
       }
     }
   }
-
+  
   return bResult;
 }
 
@@ -165,53 +165,61 @@ bool CDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items, C
     CLog::Log(LOGERROR, "%s - Error getting items from empty path", __FUNCTION__);
     return false;
   }
-  try
+  try 
   {
     auto_ptr<IDirectory> pDirectory(CFactoryDirectory::Create(strPath));
     if (!pDirectory.get())
+    {
       return false;
-
+    }
+    
     // check our cache for this path
+    CLog::Log(LOGDEBUG , "CDirectory::GetDirectory , calling g_directoryCache.GetDirectory with path: %s , items: %d , retreiveAll: %d (cache check)",strPath.c_str(), items.Size(), (cacheDirectory == DIR_CACHE_ALWAYS));
     if (g_directoryCache.GetDirectory(strPath, items, cacheDirectory == DIR_CACHE_ALWAYS))
+    {
+      CLog::Log(LOGDEBUG , "CDirectory::GetDirectory , g_directoryCache.GetDirectory returned true (cache check)");
       items.m_strPath = strPath;
+    }
     else
     {
       // need to clear the cache (in case the directory fetch fails)
       // and (re)fetch the folder
+      CLog::Log(LOGDEBUG , "CDirectory::GetDirectory , g_directoryCache.GetDirectory returned false (cache check)");
+
       if (cacheDirectory != DIR_CACHE_NEVER)
         g_directoryCache.ClearDirectory(strPath);
-
+      
       pDirectory->SetAllowPrompting(allowPrompting);
       pDirectory->SetCacheDirectory(cacheDirectory);
       pDirectory->SetUseFileDirectories(bUseFileDirectories);
       pDirectory->SetExtFileInfo(extFileInfo);
-
+      
       items.m_strPath = strPath;
-
+      
       if (!pDirectory->GetDirectory(strPath, items))
       {
         CLog::Log( LOGDEBUG, "%s - Error getting %s", __FUNCTION__, strPath.c_str() );
         return false;
       }
-
+      //CLog::Log(LOGDEBUG , "CDirectory::GetDirectory after trying to get the directory , path: %s , items: %d (cache check)",strPath.c_str(), items.Size());
       // cache the directory, if necessary
-      if (cacheDirectory != DIR_CACHE_NEVER)
+      if ((cacheDirectory != DIR_CACHE_NEVER) && (!items.IsEmpty()))
         g_directoryCache.SetDirectory(strPath, items, pDirectory->GetCacheType(strPath));
     }
-
+    
     // now filter for allowed files
     pDirectory->SetMask(strMask);
     for (int i = 0; i < items.Size(); ++i)
     {
       CFileItemPtr item = items[i];
-      if ((!item->m_bIsFolder && !pDirectory->IsAllowed(item->m_strPath)) ||
-          (item->GetPropertyBOOL("file:hidden") && !g_guiSettings.GetBool("filelists.showhidden")))
+      if ((!item->m_bIsFolder && !pDirectory->IsAllowed(item->m_strPath))/* ||
+          (item->GetPropertyBOOL("file:hidden") && !g_guiSettings.GetBool("filelists.showhidden"))*/)
       {
         items.Remove(i);
         i--; // don't confuse loop
       }
     }
-
+    
     //  Should any of the files we read be treated as a directory?
     //  Disable for database folders, as they already contain the extracted items
     if (bUseFileDirectories && !items.IsMusicDb() && !items.IsVideoDb() && !items.IsSmartPlayList() && !items.IsBoxeeDb())
@@ -219,29 +227,33 @@ bool CDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items, C
       for (int i=0; i< items.Size(); ++i)
       {
         CFileItemPtr pItem=items[i];
-        if (g_advancedSettings.m_playlistAsFolders && pItem->IsPlayList())
-          pItem->m_bIsFolder = true;
-        else if ((!pItem->m_bIsFolder) && (!pItem->IsInternetStream()) && !pItem->IsPicture() )
+        if (pItem.get() != NULL)
         {
-          auto_ptr<IFileDirectory> pDirectory(CFactoryFileDirectory::Create(pItem->m_strPath,pItem.get(),strMask));
-          if (pDirectory.get())
+          if (g_advancedSettings.m_playlistAsFolders && pItem->IsPlayList())
+          {
             pItem->m_bIsFolder = true;
+          }
+          else if ((!pItem->m_bIsFolder) && (!pItem->IsInternetStream()) && !pItem->IsPicture() )
+          {
+            auto_ptr<IFileDirectory> pDirectory(CFactoryFileDirectory::Create(pItem->m_strPath,pItem.get(),strMask));
+            if (pDirectory.get())
+              pItem->m_bIsFolder = true;
+          }
+
+          pItem->SetProperty("parentPath", strPath);
+          CBoxeeDatabaseDirectory::FillItemDetails(pItem.get());
         }
-
-        pItem->SetProperty("parentPath", strPath);
-
-        CBoxeeDatabaseDirectory::FillItemDetails(pItem.get());
-      }
+      }      
     }
     return true;
   }
 #ifndef _LINUX
-  catch (const win32_exception &e)
+  catch (const win32_exception &e) 
   {
     e.writelog(__FUNCTION__);
   }
 #endif
-  catch (...)
+  catch (...) 
   {
     CLog::Log(LOGERROR, "%s - Unhandled exception", __FUNCTION__);
   }
@@ -259,7 +271,7 @@ bool CDirectory::Create(const CStdString& strPath)
         return true;
   }
 #ifndef _LINUX
-  catch (const win32_exception &e)
+  catch (const win32_exception &e) 
   {
     e.writelog(__FUNCTION__);
   }
@@ -281,7 +293,7 @@ bool CDirectory::Exists(const CStdString& strPath)
       return pDirectory->Exists(strPath.c_str());
   }
 #ifndef _LINUX
-  catch (const win32_exception &e)
+  catch (const win32_exception &e) 
   {
     e.writelog(__FUNCTION__);
   }
@@ -290,7 +302,7 @@ bool CDirectory::Exists(const CStdString& strPath)
   {
     CLog::Log(LOGERROR, "%s - Unhandled exception", __FUNCTION__);
   }
-  CLog::Log(LOGERROR, "%s - Error checking for %s", __FUNCTION__, strPath.c_str());
+  CLog::Log(LOGERROR, "%s - Error checking for %s", __FUNCTION__, strPath.c_str());    
   return false;
 }
 
@@ -304,7 +316,7 @@ bool CDirectory::Remove(const CStdString& strPath)
         return true;
   }
 #ifndef _LINUX
-  catch (const win32_exception &e)
+  catch (const win32_exception &e) 
   {
     e.writelog(__FUNCTION__);
   }
@@ -322,3 +334,37 @@ bool CDirectory::IsCached(const CStdString& strPath)
   return g_directoryCache.HasDirectory(strPath);
 }
 
+bool CDirectory::CreateRecursive(const CStdString& strDirectory)
+{	// Recursively create all the non existing parent folders up to (and including) strDirectory.
+      CStdString curr_dir = strDirectory;
+      CUtil::RemoveSlashAtEnd(curr_dir);  // for the test below
+	  if(Exists(curr_dir))
+		  return true;
+	  vector<CStdString> tokens;
+      if (!(curr_dir.size() == 2 && curr_dir[1] == ':'))
+      {
+        CURI url(curr_dir);
+        CStdString pathsep;
+#ifndef _LINUX        
+        pathsep = "\\";
+#else
+        pathsep = "/";
+#endif
+        CUtil::Tokenize(url.GetFileName(),tokens,pathsep.c_str());
+        CStdString strCurrPath;
+        // Handle special
+        if (!url.GetProtocol().IsEmpty()) {
+          pathsep = "/";
+          strCurrPath += url.GetProtocol() + "://";
+        } // If the directory has a / at the beginning, don't forget it
+        else if (curr_dir[0] == pathsep[0])
+          strCurrPath += pathsep;
+        for (vector<CStdString>::iterator iter=tokens.begin();iter!=tokens.end();++iter)
+        {
+          strCurrPath += *iter+pathsep;
+          if(!Create(strCurrPath))
+			  return false;
+        }
+      }
+	  return true;
+}

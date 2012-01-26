@@ -20,6 +20,9 @@
  */
 
 #include "HTSPSession.h"
+
+#ifdef HAS_FILESYSTEM_HTSP
+
 #include "URL.h"
 #include "VideoInfoTag.h"
 #include "FileItem.h"
@@ -475,10 +478,10 @@ bool CHTSPSession::ParseItem(const SChannel& channel, int tagid, const SEvent& e
 
   CStdString temp, path;
 
-  CURL url(item.m_strPath);
+  CURI url(item.m_strPath);
   temp.Format("tags/%d/%d.ts", tagid, channel.id);
   url.SetFileName(temp);
-  url.GetURL(path);
+  path = url.Get();
 
   tag->m_iSeason  = 0;
   tag->m_iEpisode = 0;
@@ -519,3 +522,5 @@ bool CHTSPSession::ParseQueueStatus (htsmsg_t* msg, SQueueStatus &queue)
 
   return true;
 }
+
+#endif

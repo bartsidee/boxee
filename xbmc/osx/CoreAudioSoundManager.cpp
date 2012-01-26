@@ -24,6 +24,7 @@
 #include "CoreAudioSoundManager.h"
 #include "PlatformDefs.h"
 #include "utils/log.h"
+#include <CoreServices/CoreServices.h>
 
 struct core_audio_sound
 {

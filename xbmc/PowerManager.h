@@ -22,6 +22,17 @@
 #ifndef _POWER_MANAGER_H_
 #define _POWER_MANAGER_H_
 
+class IPowerEventsCallback
+{
+public:
+  virtual ~IPowerEventsCallback() { }
+
+  virtual void OnSleep() = 0;
+  virtual void OnWake() = 0;
+
+  virtual void OnLowBattery() = 0;
+};
+
 class IPowerSyscall
 {
 public:
@@ -32,10 +43,11 @@ public:
   virtual bool Reboot()       = 0;
 
 // Might need to be membervariables instead for speed
-  virtual bool CanPowerdown()  = 0;
+  virtual bool CanPowerdown() = 0;
   virtual bool CanSuspend()   = 0;
   virtual bool CanHibernate() = 0;
   virtual bool CanReboot()    = 0;
+  virtual bool IsSuspended()  = 0;
 };
 
 // For systems without PowerSyscalls we have a NullObject
@@ -51,6 +63,7 @@ public:
   virtual bool CanSuspend()   { return false; }
   virtual bool CanHibernate() { return false; }
   virtual bool CanReboot()    { return false; }
+  virtual bool IsSuspended()  { return false; }
 };
 
 // This class will wrap and handle PowerSyscalls.
@@ -73,8 +86,11 @@ public:
   virtual bool CanSuspend();
   virtual bool CanHibernate();
   virtual bool CanReboot();
+  virtual bool IsSuspended()  { return m_isSuspended; }
 private:
   IPowerSyscall *m_instance;
+  bool           m_isSuspended;
+  unsigned int   m_suspendTime;
 };
 
 extern CPowerManager g_powerManager;

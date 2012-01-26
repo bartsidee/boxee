@@ -100,6 +100,7 @@ extern "C" {
 #define SSL_ERROR_INVALID_KEY                   -269
 #define SSL_ERROR_FINISHED_INVALID              -271
 #define SSL_ERROR_NO_CERT_DEFINED               -272
+#define SSL_ERROR_NO_CLIENT_RENOG               -273
 #define SSL_ERROR_NOT_SUPPORTED                 -274
 #define SSL_ERROR_TIMEOUT                       -275 /* GBG */
 #define SSL_ERROR_EOS                           -276 /* GBG */
@@ -371,8 +372,6 @@ EXP_FUNC int STDCALL ssl_verify_cert(const SSL *ssl);
  * This will usually be used by a client to check that the server's common 
  * name matches the URL.
  *
- * A full handshake needs to occur for this call to work properly.
- *
  * @param ssl [in] An SSL object reference.
  * @param component [in] one of:
  * - SSL_X509_CERT_COMMON_NAME
@@ -386,8 +385,25 @@ EXP_FUNC int STDCALL ssl_verify_cert(const SSL *ssl);
  */
 EXP_FUNC const char * STDCALL ssl_get_cert_dn(const SSL *ssl, int component);
 
+/**
+ * @brief Retrieve a Subject Alternative DNSName
+ *
+ * When a handshake is complete and a certificate has been exchanged, then the
+ * details of the remote certificate can be retrieved.
+ *
+ * This will usually be used by a client to check that the server's DNS  
+ * name matches the URL.
+ *
+ * @param ssl [in] An SSL object reference.
+ * @param dnsindex [in] The index of the DNS name to retrieve.
+ * @return The appropriate string (or null if not defined)
+ * @note Verification build mode must be enabled.
+ */
+EXP_FUNC const char * STDCALL ssl_get_cert_subject_alt_dnsname(const SSL *ssl, int dnsindex);
+
 /* GBG added */
 EXP_FUNC void ssl_get_cert_fingerprints(const SSL* ssl, unsigned char* md5, unsigned char* sha1);
+EXP_FUNC void ssl_get_cert_validity_dates(const SSL* ssl, SSL_DateTime* not_before, SSL_DateTime* not_after);
 
 /**
  * @brief Force the client to perform its handshake again.
@@ -469,6 +485,8 @@ EXP_FUNC int STDCALL ssl_x509_create(SSL_CTX *ssl_ctx, uint32_t options, const c
  * @brief Return the axTLS library version as a string.
  */
 EXP_FUNC const char * STDCALL ssl_version(void);
+
+EXP_FUNC void ssl_mem_free(void* mem); /* GBG */
 
 /** @} */
 

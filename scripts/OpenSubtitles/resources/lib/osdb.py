@@ -11,11 +11,11 @@ from utilities import *
 
 _ = sys.modules[ "__main__" ].__language__
 
-BASE_URL_XMLRPC_DEV = u"http://dev.opensubtitles.org/xml-rpc"
-BASE_URL_XMLRPC = u"http://api.opensubtitles.org/xml-rpc"
-BASE_URL_SEARCH = u"http://www.opensubtitles.com/%s/search/moviename-%s/simplexml"
-BASE_URL_SEARCH_ALL = u"http://www.opensubtitles.com/en/search/sublanguageid-all/moviename-%s/simplexml"
-BASE_URL_DOWNLOAD = u"http://api.opensubtitles.org/%s"
+BASE_URL_XMLRPC_DEV = u"http://dev.opensubtitles.org/xml-rpc" #not working
+BASE_URL_XMLRPC = u"http://boxee.api.opensubtitles.org/xml-rpc" #made for and only Boxee users!
+BASE_URL_SEARCH = u"http://www.opensubtitles.org/%s/search/moviename-%s/simplexml"
+BASE_URL_SEARCH_ALL = u"http://www.opensubtitles.org/en/search/sublanguageid-all/moviename-%s/simplexml"
+BASE_URL_DOWNLOAD = u"http://boxee.api.opensubtitles.org/%s" #not in use in script? 
 BASE_URL_OSTOK = "http://app.boxee.tv/api/ostok"
 
 def compare_columns(a, b):
@@ -39,18 +39,21 @@ class OSDBServer:
 	try:
 		self.server = xmlrpclib.Server(BASE_URL_XMLRPC)
 		info = self.server.ServerInfo()
-#			if username:
-#				LOG( LOG_INFO, "Logging in " + username + "..." )
-#				login = self.server.LogIn(username, password, "en", "XBMC")
-#			else:
-#				LOG( LOG_INFO, "Logging in anonymously..." )
-#				login = self.server.LogIn("", "", "en", "XBMC")
-		socket = urllib.urlopen( BASE_URL_OSTOK )
-		result = socket.read()
-		socket.close()
-		xmldoc = minidom.parseString(result)
-		token = xmldoc.getElementsByTagName("token")[0].firstChild.data
-		LOG( LOG_INFO, "Fetching tocken " + token + "..." )
+#		if username:
+#			LOG( LOG_INFO, "Logging in " + username + "..." )
+#			login = self.server.LogIn(username, password, "en", "XBMC")
+#		else:
+#			LOG( LOG_INFO, "Logging in anonymously..." )
+#			login = self.server.LogIn("", "", "en", "XBMC")
+		login = self.server.LogIn("", "", "en", "boxee")
+		token = login['token']
+		# BASE_URL_OSTOK is probably using host api.opensubtitles.org and that's why we get timeout.
+		#socket = urllib.urlopen( BASE_URL_OSTOK )
+		#result = socket.read()
+		#socket.close()
+		#xmldoc = minidom.parseString(result)
+		#token = xmldoc.getElementsByTagName("token")[0].firstChild.data
+		LOG( LOG_INFO, "Fetching token " + token + "..." )
 		if token:
 #			if (login["status"].find("200") > -1):
 			self.connected = True
@@ -60,7 +63,7 @@ class OSDBServer:
 			return True, ""
 		else:
 			self.connected = False
-#				error = "Login " + login["status"]
+#			error = "Login " + login["status"]
 			error = _( 653 )
 			LOG( LOG_ERROR, error )
 			return False, error

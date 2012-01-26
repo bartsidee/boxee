@@ -20,6 +20,9 @@
  */
 
 #include "CMythDirectory.h"
+
+#ifdef HAS_FILESYSTEM_MYTH
+
 #include "CMythSession.h"
 #include "Util.h"
 #include "DllLibCMyth.h"
@@ -82,7 +85,7 @@ bool CCMythDirectory::GetGuide(const CStdString& base, CFileItemList &items)
       CLog::Log(LOGERROR, "%s - unable to get list of channels with url %s", __FUNCTION__, base.c_str());
       return false;
     }
-    CURL url(base);
+    CURI url(base);
 
     int count = m_dll->chanlist_get_count(list);
     for(int i = 0; i < count; i++)
@@ -118,14 +121,14 @@ bool CCMythDirectory::GetGuide(const CStdString& base, CFileItemList &items)
           CLog::Log(LOGDEBUG, "%s - Channel '%s' Icon '%s'", __FUNCTION__, name.c_str(), icon.c_str());
           path.Format("guide/%d/", num);
           url.SetFileName(path);
-          url.GetURL(path);
+          path = url.Get();
           CFileItemPtr item(new CFileItem(path, true));
           item->SetLabel(name);
           item->SetLabelPreformated(true);
           if(icon.length() > 0)
           {
             url.SetFileName("files/channels/" + CUtil::GetFileName(icon));
-            url.GetURL(icon);
+            icon = url.Get();
             item->SetThumbnailImage(icon);
           }
           items.Add(item);
@@ -240,7 +243,7 @@ bool CCMythDirectory::GetRecordings(const CStdString& base, CFileItemList &items
         continue;
       }
 
-      CURL url(base);
+      CURI url(base);
       /*
        * The base is the URL used to connect to the master server. The hostname in this may not
        * appropriate for all items as MythTV supports multiple backends (master + slaves).
@@ -278,10 +281,10 @@ bool CCMythDirectory::GetRecordings(const CStdString& base, CFileItemList &items
 
       CFileItemPtr item(new CFileItem("", false));
       m_session->UpdateItem(*item, program);
-      url.GetURL(item->m_strPath);
+      item->m_strPath = url.Get();
 
       url.SetFileName("files/" + path +  ".png");
-      url.GetURL(path);
+      path = url.Get();
       item->SetThumbnailImage(path);
 
       /*
@@ -431,7 +434,7 @@ bool CCMythDirectory::GetChannels(const CStdString& base, CFileItemList &items)
     m_dll->ref_release(recorder);
   }
 
-  CURL url(base);
+  CURI url(base);
   /*
    * The content of the cmyth_proginfo_t struct retrieved and stored in channels[] above does not
    * contain the host so the URL cannot be modified to support both master and slave servers.
@@ -448,13 +451,13 @@ bool CCMythDirectory::GetChannels(const CStdString& base, CFileItemList &items)
     CFileItemPtr item(new CFileItem("", false));
     m_session->UpdateItem(*item, program);
     url.SetFileName("channels/" + num + ".ts");
-    url.GetURL(item->m_strPath);
+    item->m_strPath = url.Get();
     item->SetLabel(GetValue(m_dll->proginfo_chansign(program)));
 
     if(icon.length() > 0)
     {
       url.SetFileName("files/channels/" + CUtil::GetFileName(icon));
-      url.GetURL(icon);
+      icon = url.Get();
       item->SetThumbnailImage(icon);
     }
 
@@ -492,7 +495,7 @@ bool CCMythDirectory::GetDirectory(const CStdString& strPath, CFileItemList &ite
   CStdString base(strPath);
   CUtil::RemoveSlashAtEnd(base);
 
-  CURL url(strPath);
+  CURI url(strPath);
   CStdString fileName = url.GetFileName();
   CUtil::RemoveSlashAtEnd(fileName);
 
@@ -589,10 +592,12 @@ bool CCMythDirectory::IsTvShow(const cmyth_proginfo_t program)
 
 bool CCMythDirectory::SupportsFileOperations(const CStdString& strPath)
 {
-  CURL url(strPath);
+  CURI url(strPath);
   CStdString filename = url.GetFileName();
   CUtil::RemoveSlashAtEnd(filename);
   return filename.Left(11) == "recordings/" ||
          filename.Left(7)  == "movies/" ||
          filename.Left(8)  == "tvshows/";
 }
+
+#endif

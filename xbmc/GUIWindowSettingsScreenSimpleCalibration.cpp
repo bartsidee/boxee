@@ -71,14 +71,14 @@ bool CGUIWindowSettingsScreenSimpleCalibration::OnMessage(CGUIMessage& message)
         ChangeOverscan(BUTTON_OVERSCAN_NONE);
         SelectOverscanButton(BUTTON_OVERSCAN_NONE);
         return true;
-      }
+      }      
       else if (iControl == BUTTON_NEXT)
       {
         // if BUTTON_NEXT appear -> window was launch from login -> go to WINDOW_HOME
         g_windowManager.ChangeActiveWindow(WINDOW_HOME);
         return true;
-      }
     }
+  }
   }
   
   return CGUIWindow::OnMessage(message);
@@ -98,7 +98,7 @@ bool CGUIWindowSettingsScreenSimpleCalibration::OnAction(const CAction &action)
 void CGUIWindowSettingsScreenSimpleCalibration::OnInitWindow()
 {
   CGUIWindow::OnInitWindow();
-
+  
   m_savedScreenFormat = g_settings.GetCurrentScreenFormat();
   m_savedPixelRatio = g_settings.m_ResInfo[g_graphicsContext.GetVideoResolution()].fPixelRatio;
   m_savedOverscan = g_settings.GetCurrentOverscan();
@@ -121,7 +121,7 @@ void CGUIWindowSettingsScreenSimpleCalibration::OnInitWindow()
   {
     SET_CONTROL_HIDDEN(BUTTON_OVERSCAN_CUSTOM);
   }
-
+  
   /////////////////////////////////////////////////////////////////////////////////////////
   // need to show BUTTON_NEXT only if the screen was open for the first user after login //
   /////////////////////////////////////////////////////////////////////////////////////////
@@ -232,6 +232,8 @@ void CGUIWindowSettingsScreenSimpleCalibration::ChangeOverscan(int iControl)
     g_settings.SetCurrentOverscan(m_savedOverscanValues);
     break;    
   }  
+
+  CopyOverscan();
 }
 
 void CGUIWindowSettingsScreenSimpleCalibration::SelectScreenFormatButton(int iControl)
@@ -269,5 +271,29 @@ void CGUIWindowSettingsScreenSimpleCalibration::SelectOverscanButton(int iContro
 void CGUIWindowSettingsScreenSimpleCalibration::SetLaunchFromLogin(bool launchFromLogin)
 {
   m_launchFromLogin = launchFromLogin;
+}
+
+// We need to copy the calibration to all matching resolutions
+void CGUIWindowSettingsScreenSimpleCalibration::CopyOverscan()
+{
+  RESOLUTION iCurRes = g_graphicsContext.GetVideoResolution();
+  RESOLUTION_INFO curInfo = g_settings.m_ResInfo[iCurRes];
+
+
+  for(int i = 0; i < (int)g_settings.m_ResInfo.size(); i++)
+  {
+    RESOLUTION_INFO info = g_settings.m_ResInfo[i];
+
+    if(i == iCurRes)
+      continue;
+
+    if(info.iWidth == curInfo.iWidth && info.iHeight == curInfo.iHeight && info.dwFlags == curInfo.dwFlags)
+    {
+      printf("For res %d %s Found matching %d %s\n", iCurRes, curInfo.strMode.c_str(), i, info.strMode.c_str());
+      g_settings.m_ResInfo[i].Overscan = curInfo.Overscan;
+      g_settings.m_ResInfo[i].iSubtitles = curInfo.iSubtitles;
+      g_settings.m_ResInfo[i].fPixelRatio = curInfo.fPixelRatio;
+    }
+  }
 }
 

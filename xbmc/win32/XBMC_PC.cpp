@@ -27,11 +27,14 @@
 #include "RemoteControl.h"
 #include "shellapi.h"
 #include "dbghelp.h"
+#include "../ErrorHandler.h"
 
 // Add support for minidumps
 #ifdef USE_MINI_DUMPS
 #include "MiniDumps.h"
 #endif
+
+GlobalErrorHandler geh;
 
 //-----------------------------------------------------------------------------
 // Resource defines
@@ -111,12 +114,22 @@ LONG WINAPI CreateMiniDump( EXCEPTION_POINTERS* pEp )
   return pEp->ExceptionRecord->ExceptionCode;;
 }
 
+
 //-----------------------------------------------------------------------------
 // Name: WinMain()
 // Desc: The application's entry point
 //-----------------------------------------------------------------------------
 INT WINAPI WinMain( HINSTANCE hInst, HINSTANCE, LPSTR commandLine, INT )
 {
+#ifdef WIN32_MEMORY_LEAK_DETECT
+	// Turn on the heap checking
+    _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF       |
+					_CRTDBG_DELAY_FREE_MEM_DF	|
+                     _CRTDBG_LEAK_CHECK_DF       ) ;
+	// Not adding the _CRTDBG_CHECK_ALWAYS_DF flag either - since it makes Boxee run VERY slow.
+
+#endif
+
 #ifdef USE_MINI_DUMPS
   g_MiniDumps.Install();
 #endif
@@ -216,7 +229,7 @@ INT WINAPI WinMain( HINSTANCE hInst, HINSTANCE, LPSTR commandLine, INT )
       else if (strArgW.Equals(L"-startup"))
       {
         Sleep(5000);
-      }
+    }
     }
     LocalFree(szArglist);
   }
@@ -232,5 +245,6 @@ INT WINAPI WinMain( HINSTANCE hInst, HINSTANCE, LPSTR commandLine, INT )
 
   g_application.Run();
 
+  char *a = new char[50];
   return 0;
 }

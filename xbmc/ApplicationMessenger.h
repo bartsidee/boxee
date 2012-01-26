@@ -45,10 +45,19 @@ class CFileItem;
 #define TMSG_MEDIA_STOP           201
 #define TMSG_MEDIA_PAUSE          202
 #define TMSG_MEDIA_RESTART        203
+#define TMSG_MEDIA_QUEUE_NEXT_ITEM 204
+#define TMSG_MEDIA_UPDATE_ITEM    205
 
 #define TMSG_PLAYLISTPLAYER_PLAY  210
 #define TMSG_PLAYLISTPLAYER_NEXT  211
 #define TMSG_PLAYLISTPLAYER_PREV  212
+#define TMSG_PLAYLISTPLAYER_ADD   213
+#define TMSG_PLAYLISTPLAYER_CLEAR 214
+#define TMSG_PLAYLISTPLAYER_SHUFFLE   215
+#define TMSG_PLAYLISTPLAYER_GET_ITEMS 216
+#define TMSG_PLAYLISTPLAYER_PLAY_SONG_ID 217
+#define TMSG_PLAYLISTPLAYER_INSERT 218
+#define TMSG_PLAYLISTPLAYER_REMOVE 219
 
 #define TMSG_PICTURE_SHOW         220
 #define TMSG_PICTURE_SLIDESHOW    221
@@ -77,6 +86,9 @@ class CFileItem;
 #define TMSG_GUI_WIN_MANAGER_PROCESS  602
 #define TMSG_GUI_WIN_MANAGER_RENDER   603
 #define TMSG_GUI_ACTIVATE_WINDOW      604
+#define TMSG_GUI_ACTION               607
+#define TMSG_GUI_INFOLABEL            608
+#define TMSG_GUI_INFOBOOL             609
 
 #define TMSG_OPTICAL_MOUNT        700 
 #define TMSG_OPTICAL_UNMOUNT      701 
@@ -101,11 +113,24 @@ class CFileItem;
 #define TMSG_DELETE_PLAYER         845
 #define TMSG_SHOW_PLAY_ERROR       846
 #define TMSG_CLOSE_SLIDESHOWPIC    847
-
+#define TMSG_APP_HANDLE            848
+#define TMSG_SHOW_BOXEE_DEVICE_PAIR_DIALOG 849
+#define TMSG_SEND_KEY              850
+#define TMSG_SEND_MOVE             851
 #define TMSG_EXECUTE_ON_MAIN_THREAD 900
 
-typedef struct
+// Message sent from the Browser to invoke GUI operation
+#define TMSG_GUI_INVOKE_FROM_BROWSER    901
+
+static std::vector<CStdString> NULL_STRING_VECTOR;
+
+class ThreadMessage 
 {
+public:
+  ThreadMessage(DWORD message = 0, DWORD param1 = 0, DWORD param2 = 0, CStdString sParam1 = "",
+                std::vector<CStdString> sParams = NULL_STRING_VECTOR, std::string sParam2 = "", HANDLE waitEvent = NULL, LPVOID lvoid = NULL) 
+  { dwMessage = message; dwParam1 = param1; dwParam2 = param2; strParam = sParam1; params = sParams; strParam2 = sParam2; hWaitEvent = waitEvent; lpVoid = lvoid; }
+
   DWORD dwMessage;
   DWORD dwParam1;
   DWORD dwParam2;
@@ -115,8 +140,7 @@ typedef struct
   HANDLE hWaitEvent;
   LPVOID lpVoid;
   ThreadIdentifier waitingThreadId;
-}
-ThreadMessage;
+};
 
 class IGUIThreadTask
 {
@@ -140,14 +164,27 @@ public:
 
   void MediaPlay(std::string filename);
   void MediaPlay(const CFileItem &item);
+  void QueueNextMediaFile(const CFileItem &item);
   void MediaStop();
   void MediaPause();
   void MediaRestart(bool bWait);
+  void UpdateItem(const CFileItem &item);
+
 
   void PlayListPlayerPlay();
   void PlayListPlayerPlay(int iSong);
+  bool PlayListPlayerPlaySongId(int songId);
   void PlayListPlayerNext();
   void PlayListPlayerPrevious();
+  void PlayListPlayerAdd(int playlist, const CFileItem &item);
+  void PlayListPlayerAdd(int playlist, const CFileItemList &list);
+  void PlayListPlayerClear(int playlist);
+  void PlayListPlayerShuffle(int playlist, bool shuffle);
+  void PlayListPlayerGetItems(int playlist, CFileItemList &list);
+  void PlayListPlayerInsert(int playlist, const CFileItem &item, int position);
+  void PlayListPlayerInsert(int playlist, const CFileItemList &list, int position);
+  void PlayListPlayerRemove(int playlist, int position);
+
   void PlayFile(const CFileItem &item, bool bRestart = false); // thread safe version of g_application.PlayFile()
   void PictureShow(std::string filename);
   void PictureSlideShow(std::string pathname, bool bScreensaver = false);
@@ -179,6 +216,9 @@ public:
   void WindowManagerProcess(bool renderOnly = false); // will call g_windowManager.Process on the rendering thread
   void Render(); // will call g_windowManager.Render on the rendering thread
   void ActivateWindow(int windowID, const std::vector<CStdString> &params, bool swappingWindows);
+  void SendAction(const CAction &action, int windowID = WINDOW_INVALID, bool waitResult = true);
+  std::vector<CStdString> GetInfoLabels(const std::vector<CStdString> &properties);
+  std::vector<bool> GetInfoBooleans(const std::vector<CStdString> &properties);
 
   void OpticalMount(CStdString device, bool bautorun=false); 
   void OpticalUnMount(CStdString device);

@@ -94,7 +94,7 @@ static int mpc8_probe(AVProbeData *p)
                 return 0;
             if (!AV_RL32(bs)) //zero CRC is invalid
                 return 0;
-        return AVPROBE_SCORE_MAX;
+            return AVPROBE_SCORE_MAX;
         } else {
             bs += size - 2;
         }
@@ -224,7 +224,7 @@ static int mpc8_read_header(AVFormatContext *s, AVFormatParameters *ap)
     st = av_new_stream(s, 0);
     if (!st)
         return AVERROR(ENOMEM);
-    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
     st->codec->codec_id = CODEC_ID_MUSEPACK8;
     st->codec->bits_per_coded_sample = 16;
 
@@ -279,7 +279,7 @@ static int mpc8_read_seek(AVFormatContext *s, int stream_index, int64_t timestam
 }
 
 
-AVInputFormat mpc8_demuxer = {
+AVInputFormat ff_mpc8_demuxer = {
     "mpc8",
     NULL_IF_CONFIG_SMALL("Musepack SV8"),
     sizeof(MPCContext),

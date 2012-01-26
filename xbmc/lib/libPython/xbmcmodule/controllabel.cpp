@@ -43,6 +43,8 @@
 
 #include "Application.h"
 
+#include "../../../placement_new.h"
+
 using namespace std;
 
 #ifndef __GNUC__
@@ -73,8 +75,8 @@ namespace PYXBMC
 
     self = (ControlLabel*)type->tp_alloc(type, 0);
     if (!self) return NULL;
-    new(&self->strText) string();
-    new(&self->strFont) string();
+   PLACEMENT_NEW(&self->strText) string();
+   PLACEMENT_NEW(&self->strFont) string();
 
     // set up default values in case they are not supplied
     self->strFont = "font13";
@@ -151,7 +153,7 @@ namespace PYXBMC
       pControl->bHasPath);
 
     // use thread message because of font handling
-    ThreadMessage msg = {TMSG_SET_CONTROL_LABEL};
+    ThreadMessage msg (TMSG_SET_CONTROL_LABEL);
     msg.dwParam1 = pControl->iParentId;
     msg.dwParam2 = pControl->iControlId;
     msg.lpVoid = pControl->pGUIControl;
@@ -179,7 +181,7 @@ namespace PYXBMC
 
     // use thread message because SetLabel touches fonts which should really be handled only from gui thread
     ControlLabel *pControl = (ControlLabel*)self;
-    ThreadMessage msg = {TMSG_SET_CONTROL_LABEL};
+    ThreadMessage msg (TMSG_SET_CONTROL_LABEL);
     msg.dwParam1 = pControl->iParentId;
     msg.dwParam2 = pControl->iControlId;
     msg.lpVoid = pControl->pGUIControl;

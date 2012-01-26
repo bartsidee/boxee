@@ -21,34 +21,62 @@
  *
  */
 
+
 #include "DVDVideoCodec.h"
 #include "cores/ffmpeg/DllAvCodec.h"
 #include "cores/ffmpeg/DllAvFormat.h"
+#include "cores/ffmpeg/DllAvUtil.h"
 #include "cores/ffmpeg/DllSwScale.h"
 
 class CVDPAU;
+class CCriticalSection;
 
 class CDVDVideoCodecFFmpeg : public CDVDVideoCodec
 {
 public:
+  class IHardwareDecoder
+  {
+    public:
+             IHardwareDecoder() : m_references(1) {}
+    virtual ~IHardwareDecoder() {};
+    virtual bool Open      (AVCodecContext* avctx, const enum PixelFormat) = 0;
+    virtual int  Decode    (AVCodecContext* avctx, AVFrame* frame) = 0;
+    virtual bool GetPicture(AVCodecContext* avctx, AVFrame* frame, DVDVideoPicture* picture) = 0;
+    virtual int  Check     (AVCodecContext* avctx) = 0;
+    virtual void Reset     () {}
+    virtual const std::string Name() = 0;
+    virtual CCriticalSection* Section() { return NULL; }
+    virtual long              Release();
+    virtual IHardwareDecoder* Acquire();
+    protected:
+    long m_references;
+  };
+
   CDVDVideoCodecFFmpeg();
   virtual ~CDVDVideoCodecFFmpeg();
-  virtual bool Open(CDVDStreamInfo &hints, CDVDCodecOptions &options);  
+  virtual bool Open(CDVDStreamInfo &hints, CDVDCodecOptions &options);
   virtual void Dispose();
-  virtual int Decode(BYTE* pData, int iSize, double pts);
+  virtual int Decode(BYTE* pData, int iSize, double pts, double dts);
   virtual void Reset();
+  bool GetPictureCommon(DVDVideoPicture* pDvdVideoPicture);
   virtual bool GetPicture(DVDVideoPicture* pDvdVideoPicture);
   virtual void SetDropState(bool bDrop);
   virtual const char* GetName() { return m_name.c_str(); }; // m_name is never changed after open
+  virtual unsigned GetConvergeCount();
 
-#ifdef HAVE_LIBVDPAU
-  CVDPAU* GetContextVDPAU();
-#endif
-  
+  bool               IsHardwareAllowed()                     { return !m_bSoftware; }
+  IHardwareDecoder * GetHardware()                           { return m_pHardware; };
+  void               SetHardware(IHardwareDecoder* hardware) 
+  {
+    m_pHardware = hardware;
+    m_name += "-";
+    m_name += m_pHardware->Name();
+  }
+
 protected:
+  static enum PixelFormat GetFormat(struct AVCodecContext * avctx, const PixelFormat * fmt);
 
   void GetVideoAspect(AVCodecContext* CodecContext, unsigned int& iWidth, unsigned int& iHeight);
-
   AVFrame* m_pFrame;
   AVCodecContext* m_pCodecContext;
 
@@ -64,6 +92,10 @@ protected:
   DllAvUtil  m_dllAvUtil;
   DllSwScale m_dllSwScale;
   std::string m_name;
-  bool m_UsingSoftware;
+  bool              m_bSoftware;
+  IHardwareDecoder *m_pHardware;
+  int m_iLastKeyframe;
+  double m_dts;
+  bool   m_started;
 };
 

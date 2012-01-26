@@ -2,6 +2,12 @@
 
 autoreconf -vif
 autoreconf -vif xbmc/lib/libass
+autoreconf -vif xbmc/lib/libdvbpsi
+autoreconf -vif xbmc/lib/harfbuzz/harfbuzz
+autoreconf -vif xbmc/lib/cximage-6.0/jpeg-turbo
+autoreconf -vif xbmc/lib/libid3tag/libid3tag
+autoreconf -vif xbmc/cores/dvdplayer/Codecs/libfaad2
+autoreconf -vif xbmc/lib/libbluray
 
 echo "Please (re)run configure..."
 

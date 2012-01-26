@@ -43,6 +43,8 @@
 #include "Util.h"
 #include "FileSystem/File.h"
 
+#include "../../../placement_new.h"
+
 #define ACTIVE_WINDOW  g_windowManager.GetActiveWindow()
 
 #ifndef __GNUC__
@@ -67,9 +69,9 @@ namespace PYXBMC
     self = (WindowXMLDialog*)type->tp_alloc(type, 0);
     if (!self) return NULL;
 
-    new(&self->sXMLFileName) string();
-    new(&self->sFallBackPath) string();
-    new(&self->vecControls) std::vector<Control*>();  
+   PLACEMENT_NEW(&self->sXMLFileName) string();
+   PLACEMENT_NEW(&self->sFallBackPath) string();
+   PLACEMENT_NEW(&self->vecControls) std::vector<Control*>();  
 
     self->iWindowId = -1;
     PyObject* pyOXMLname = NULL;

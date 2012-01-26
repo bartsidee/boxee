@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/ac3.c
+ * @file
  * Common code between the AC-3 encoder and decoder.
  */
 
@@ -28,12 +28,10 @@
 #include "ac3.h"
 #include "get_bits.h"
 
-#if CONFIG_HARDCODED_TABLES
-
 /**
  * Starting frequency coefficient bin for each critical band.
  */
-static const uint8_t band_start_tab[51] = {
+static const uint8_t band_start_tab[AC3_CRITICAL_BANDS+1] = {
       0,  1,   2,   3,   4,   5,   6,   7,   8,   9,
      10,  11, 12,  13,  14,  15,  16,  17,  18,  19,
      20,  21, 22,  23,  24,  25,  26,  27,  28,  31,
@@ -41,8 +39,10 @@ static const uint8_t band_start_tab[51] = {
      79,  85, 97, 109, 121, 133, 157, 181, 205, 229, 253
 };
 
+#if CONFIG_HARDCODED_TABLES
+
 /**
- * Maps each frequency coefficient bin to the critical band that contains it.
+ * Map each frequency coefficient bin to the critical band that contains it.
  */
 static const uint8_t bin_to_band_tab[253] = {
      0,
@@ -70,7 +70,6 @@ static const uint8_t bin_to_band_tab[253] = {
 };
 
 #else /* CONFIG_HARDCODED_TABLES */
-static uint8_t band_start_tab[51];
 static uint8_t bin_to_band_tab[253];
 #endif
 
@@ -101,7 +100,7 @@ void ff_ac3_bit_alloc_calc_psd(int8_t *exp, int start, int end, int16_t *psd,
     int bin, band;
 
     /* exponent mapping to PSD */
-    for(bin=start;bin<end;bin++) {
+    for (bin = start; bin < end; bin++) {
         psd[bin]=(3072 - (exp[bin] << 7));
     }
 
@@ -112,9 +111,10 @@ void ff_ac3_bit_alloc_calc_psd(int8_t *exp, int start, int end, int16_t *psd,
         int v = psd[bin++];
         int band_end = FFMIN(band_start_tab[band+1], end);
         for (; bin < band_end; bin++) {
+            int max = FFMAX(v, psd[bin]);
             /* logadd */
-            int adr = FFMIN(FFABS(v - psd[bin]) >> 1, 255);
-            v = FFMAX(v, psd[bin]) + ff_ac3_log_add_tab[adr];
+            int adr = FFMIN(max - ((v + psd[bin] + 1) >> 1), 255);
+            v = max + ff_ac3_log_add_tab[adr];
         }
         band_psd[band++] = v;
     } while (end > band_start_tab[band]);
@@ -126,7 +126,7 @@ int ff_ac3_bit_alloc_calc_mask(AC3BitAllocParameters *s, int16_t *band_psd,
                                uint8_t *dba_lengths, uint8_t *dba_values,
                                int16_t *mask)
 {
-    int16_t excite[50]; /* excitation */
+    int16_t excite[AC3_CRITICAL_BANDS]; /* excitation */
     int band;
     int band_start, band_end, begin, end1;
     int lowcomp, fastleak, slowleak;
@@ -197,7 +197,7 @@ int ff_ac3_bit_alloc_calc_mask(AC3BitAllocParameters *s, int16_t *band_psd,
         band = 0;
         for (seg = 0; seg < dba_nsegs; seg++) {
             band += dba_offsets[seg];
-            if (band >= 50 || dba_lengths[seg] > 50-band)
+            if (band >= AC3_CRITICAL_BANDS || dba_lengths[seg] > AC3_CRITICAL_BANDS-band)
                 return -1;
             if (dba_values[seg] >= 4) {
                 delta = (dba_values[seg] - 3) << 7;
@@ -219,8 +219,8 @@ void ff_ac3_bit_alloc_calc_bap(int16_t *mask, int16_t *psd, int start, int end,
     int bin, band;
 
     /* special case, if snr offset is -960, set all bap's to zero */
-    if(snr_offset == -960) {
-        memset(bap, 0, 256);
+    if (snr_offset == -960) {
+        memset(bap, 0, AC3_MAX_COEFS);
         return;
     }
 
@@ -228,7 +228,7 @@ void ff_ac3_bit_alloc_calc_bap(int16_t *mask, int16_t *psd, int start, int end,
     band = bin_to_band_tab[start];
     do {
         int m = (FFMAX(mask[band] - snr_offset - floor, 0) & 0x1FE0) + floor;
-        int band_end = FFMIN(bin + ff_ac3_critical_band_size_tab[band], end);
+        int band_end = FFMIN(band_start_tab[band+1], end);
         for (; bin < band_end; bin++) {
             int address = av_clip((psd[bin] - m) >> 5, 0, 63);
             bap[bin] = bap_tab[address];
@@ -236,45 +236,20 @@ void ff_ac3_bit_alloc_calc_bap(int16_t *mask, int16_t *psd, int start, int end,
     } while (end > band_start_tab[band++]);
 }
 
-/* AC-3 bit allocation. The algorithm is the one described in the AC-3
-   spec. */
-void ac3_parametric_bit_allocation(AC3BitAllocParameters *s, uint8_t *bap,
-                                   int8_t *exp, int start, int end,
-                                   int snr_offset, int fast_gain, int is_lfe,
-                                   int dba_mode, int dba_nsegs,
-                                   uint8_t *dba_offsets, uint8_t *dba_lengths,
-                                   uint8_t *dba_values)
-{
-    int16_t psd[256];   /* scaled exponents */
-    int16_t band_psd[50]; /* interpolated exponents */
-    int16_t mask[50];   /* masking value */
-
-    ff_ac3_bit_alloc_calc_psd(exp, start, end, psd, band_psd);
-
-    ff_ac3_bit_alloc_calc_mask(s, band_psd, start, end, fast_gain, is_lfe,
-                               dba_mode, dba_nsegs, dba_offsets, dba_lengths,
-                               dba_values, mask);
-
-    ff_ac3_bit_alloc_calc_bap(mask, psd, start, end, snr_offset, s->floor,
-                              ff_ac3_bap_tab, bap);
-}
-
 /**
- * Initializes some tables.
+ * Initialize some tables.
  * note: This function must remain thread safe because it is called by the
  *       AVParser init code.
  */
-av_cold void ac3_common_init(void)
+av_cold void ff_ac3_common_init(void)
 {
 #if !CONFIG_HARDCODED_TABLES
-    /* compute bndtab and masktab from bandsz */
+    /* compute bin_to_band_tab from band_start_tab */
     int bin = 0, band;
-    for (band = 0; band < 50; band++) {
-        int band_end = bin + ff_ac3_critical_band_size_tab[band];
-        band_start_tab[band] = bin;
+    for (band = 0; band < AC3_CRITICAL_BANDS; band++) {
+        int band_end = band_start_tab[band+1];
         while (bin < band_end)
             bin_to_band_tab[bin++] = band;
     }
-    band_start_tab[50] = bin;
 #endif /* !CONFIG_HARDCODED_TABLES */
 }

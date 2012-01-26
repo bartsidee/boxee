@@ -111,7 +111,7 @@ public:
     NPT_Cardinal GetCounter() const { return *m_Counter; }
     
     /**
-     * Returns wether this references a NULL object.
+     * Returns whether this references a NULL object.
      */
     bool IsNull()  const { return m_Object == NULL; }
     

@@ -150,10 +150,9 @@ CFileRar::~CFileRar()
 #endif
 }
 
-bool CFileRar::Open(const CURL& url)
+bool CFileRar::Open(const CURI& url)
 {
-  CStdString strFile; 
-  url.GetURL(strFile);
+  CStdString strFile = url.Get();
   
   InitFromUrl(url);
   CFileItemList items;
@@ -218,7 +217,7 @@ bool CFileRar::Open(const CURL& url)
   return false;
 }
 
-bool CFileRar::Exists(const CURL& url)
+bool CFileRar::Exists(const CURI& url)
 {
   InitFromUrl(url);
   CStdString strPathInCache;
@@ -230,8 +229,9 @@ bool CFileRar::Exists(const CURL& url)
   return bResult;
 }
 
-int CFileRar::Stat(const CURL& url, struct __stat64* buffer)
+int CFileRar::Stat(const CURI& url, struct __stat64* buffer)
 {
+  memset(buffer, 0, sizeof(struct __stat64));
   if (Open(url))
   {
     buffer->st_size = GetLength();
@@ -260,8 +260,7 @@ int CFileRar::Stat(const CURL& url, struct __stat64* buffer)
     return 0;
   }
 
-  CStdString strURL;
-  url.GetURL(strURL);
+  CStdString strURL = url.Get();
 
   if (CDirectory::Exists(strURL))
   {
@@ -273,7 +272,7 @@ int CFileRar::Stat(const CURL& url, struct __stat64* buffer)
   return -1;
 }
 
-bool CFileRar::OpenForWrite(const CURL& url)
+bool CFileRar::OpenForWrite(const CURI& url)
 {
   return false;
 }
@@ -530,9 +529,9 @@ void CFileRar::Flush()
     m_File.Flush();
 }
 
-void CFileRar::InitFromUrl(const CURL& url)
+void CFileRar::InitFromUrl(const CURI& url)
 {
-  url.GetURL(m_strUrl);
+  m_strUrl = url.Get();
   m_strCacheDir = g_advancedSettings.m_cachePath;//url.GetDomain();
   CUtil::AddSlashAtEnd(m_strCacheDir);
   m_strRarPath = url.GetHostName();

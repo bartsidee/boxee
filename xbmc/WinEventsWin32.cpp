@@ -23,19 +23,27 @@
 #include "Windowsx.h"
 #include "WinEvents.h"
 #include "WIN32Util.h"
+#include "win32/Win32StorageProvider.h"
 #include "Application.h"
 #include "XBMC_vkeys.h"
 #include "MouseStat.h"
 #include "MediaManager.h"
 #include "WindowingFactory.h"
 #include <dbt.h>
-#include "LocalizeStrings.h"
+#include "guilib/LocalizeStrings.h"
+#include "KeyboardStat.h"
+#include "guilib/GUIWindowManager.h"
+#include "guilib/GUIControl.h"       // for EVENT_RESULT
+#include "win32/Win32PowerSyscall.h"
+#include "Shlobj.h"
 
 #ifdef _WIN32
 
+#define XBMC_arraysize(array)	(sizeof(array)/sizeof(array[0]))
+
 /* Masks for processing the windows KEYDOWN and KEYUP messages */
-#define REPEATED_KEYMASK	(1<<30)
-#define EXTENDED_KEYMASK	(1<<24)
+#define REPEATED_KEYMASK  (1<<30)
+#define EXTENDED_KEYMASK  (1<<24)
 #define EXTKEYPAD(keypad) ((scancode & 0x100)?(mvke):(keypad))
 
 static XBMCKey VK_keymap[XBMCK_LAST];
@@ -47,10 +55,17 @@ uint32_t g_uQueryCancelAutoPlay = 0;
 int XBMC_TranslateUNICODE = 1;
 
 PHANDLE_EVENT_FUNC CWinEventsBase::m_pEventFunc = NULL;
+int CWinEventsWin32::m_lastGesturePosX = 0;
+int CWinEventsWin32::m_lastGesturePosY = 0;
+
+// register to receive SD card events (insert/remove)
+// seen at http://www.codeproject.com/Messages/2897423/Re-No-message-triggered-on-SD-card-insertion-remov.aspx
+#define WM_MEDIA_CHANGE (WM_USER + 666)
+SHChangeNotifyEntry shcne;
 
 void DIB_InitOSKeymap()
 {
-  char	current_layout[KL_NAMELENGTH];
+  char current_layout[KL_NAMELENGTH];
 
   GetKeyboardLayoutName(current_layout);
 
@@ -90,7 +105,7 @@ void DIB_InitOSKeymap()
   VK_keymap[VK_EQUALS] = XBMCK_EQUALS;
   VK_keymap[VK_LBRACKET] = XBMCK_LEFTBRACKET;
   VK_keymap[VK_BACKSLASH] = XBMCK_BACKSLASH;
-  VK_keymap[VK_OEM_102] = XBMCK_LESS;
+  VK_keymap[VK_OEM_102] = XBMCK_BACKSLASH;
   VK_keymap[VK_RBRACKET] = XBMCK_RIGHTBRACKET;
   VK_keymap[VK_GRAVE] = XBMCK_BACKQUOTE;
   VK_keymap[VK_BACKTICK] = XBMCK_BACKQUOTE;
@@ -184,6 +199,25 @@ void DIB_InitOSKeymap()
   VK_keymap[VK_CANCEL] = XBMCK_BREAK;
   VK_keymap[VK_APPS] = XBMCK_MENU;
 
+  VK_keymap[VK_BROWSER_BACK]        = XBMCK_BROWSER_BACK;
+  VK_keymap[VK_BROWSER_FORWARD]     = XBMCK_BROWSER_FORWARD;
+  VK_keymap[VK_BROWSER_REFRESH]     = XBMCK_BROWSER_REFRESH;
+  VK_keymap[VK_BROWSER_STOP]        = XBMCK_BROWSER_STOP;
+  VK_keymap[VK_BROWSER_SEARCH]      = XBMCK_BROWSER_SEARCH;
+  VK_keymap[VK_BROWSER_FAVORITES]   = XBMCK_BROWSER_FAVORITES;
+  VK_keymap[VK_BROWSER_HOME]        = XBMCK_BROWSER_HOME;
+  VK_keymap[VK_VOLUME_MUTE]         = XBMCK_VOLUME_MUTE;
+  VK_keymap[VK_VOLUME_DOWN]         = XBMCK_VOLUME_DOWN;
+  VK_keymap[VK_VOLUME_UP]           = XBMCK_VOLUME_UP;
+  VK_keymap[VK_MEDIA_NEXT_TRACK]    = XBMCK_MEDIA_NEXT_TRACK;
+  VK_keymap[VK_MEDIA_PREV_TRACK]    = XBMCK_MEDIA_PREV_TRACK;
+  VK_keymap[VK_MEDIA_STOP]          = XBMCK_MEDIA_STOP;
+  VK_keymap[VK_MEDIA_PLAY_PAUSE]    = XBMCK_MEDIA_PLAY_PAUSE;
+  VK_keymap[VK_LAUNCH_MAIL]         = XBMCK_LAUNCH_MAIL;
+  VK_keymap[VK_LAUNCH_MEDIA_SELECT] = XBMCK_LAUNCH_MEDIA_SELECT;
+  VK_keymap[VK_LAUNCH_APP1]         = XBMCK_LAUNCH_APP1;
+  VK_keymap[VK_LAUNCH_APP2]         = XBMCK_LAUNCH_APP2;
+
   Arrows_keymap[3] = (XBMCKey)0x25;
   Arrows_keymap[2] = (XBMCKey)0x26;
   Arrows_keymap[1] = (XBMCKey)0x27;
@@ -192,68 +226,73 @@ void DIB_InitOSKeymap()
 
 static int XBMC_MapVirtualKey(int scancode, int vkey)
 {
-	int	mvke  = MapVirtualKeyEx(scancode & 0xFF, 1, hLayoutUS);
+// It isn't clear why the US keyboard layout was being used. This causes
+// problems with e.g. the \ key. I have provisionally switched the code
+// to use the Windows layout.
+// int mvke = MapVirtualKeyEx(scancode & 0xFF, 1, hLayoutUS);
+  int mvke = MapVirtualKeyEx(scancode & 0xFF, 1, NULL);
 
   switch(vkey)
   { /* These are always correct */
-		case VK_DIVIDE:
-		case VK_MULTIPLY:
-		case VK_SUBTRACT:
-		case VK_ADD:
-		case VK_LWIN:
-		case VK_RWIN:
-		case VK_APPS:
-		/* These are already handled */
-		case VK_LCONTROL:
-		case VK_RCONTROL:
-		case VK_LSHIFT:
-		case VK_RSHIFT:
-		case VK_LMENU:
-		case VK_RMENU:
-		case VK_SNAPSHOT:
-		case VK_PAUSE:
-			return vkey;
-	}	
+    case VK_DIVIDE:
+    case VK_MULTIPLY:
+    case VK_SUBTRACT:
+    case VK_ADD:
+    case VK_LWIN:
+    case VK_RWIN:
+    case VK_APPS:
+    /* These are already handled */
+    case VK_LCONTROL:
+    case VK_RCONTROL:
+    case VK_LSHIFT:
+    case VK_RSHIFT:
+    case VK_LMENU:
+    case VK_RMENU:
+    case VK_SNAPSHOT:
+    case VK_PAUSE:
+      return vkey;
+  }
   switch(mvke)
   { /* Distinguish between keypad and extended keys */
-		case VK_INSERT: return EXTKEYPAD(VK_NUMPAD0);
-		case VK_DELETE: return EXTKEYPAD(VK_DECIMAL);
-		case VK_END:    return EXTKEYPAD(VK_NUMPAD1);
-		case VK_DOWN:   return EXTKEYPAD(VK_NUMPAD2);
-		case VK_NEXT:   return EXTKEYPAD(VK_NUMPAD3);
-		case VK_LEFT:   return EXTKEYPAD(VK_NUMPAD4);
-		case VK_CLEAR:  return EXTKEYPAD(VK_NUMPAD5);
-		case VK_RIGHT:  return EXTKEYPAD(VK_NUMPAD6);
-		case VK_HOME:   return EXTKEYPAD(VK_NUMPAD7);
-		case VK_UP:     return EXTKEYPAD(VK_NUMPAD8);
-		case VK_PRIOR:  return EXTKEYPAD(VK_NUMPAD9);
-	}
-	return mvke?mvke:vkey;
+    case VK_INSERT: return EXTKEYPAD(VK_NUMPAD0);
+    case VK_DELETE: return EXTKEYPAD(VK_DECIMAL);
+    case VK_END:    return EXTKEYPAD(VK_NUMPAD1);
+    case VK_DOWN:   return EXTKEYPAD(VK_NUMPAD2);
+    case VK_NEXT:   return EXTKEYPAD(VK_NUMPAD3);
+    case VK_LEFT:   return EXTKEYPAD(VK_NUMPAD4);
+    case VK_CLEAR:  return EXTKEYPAD(VK_NUMPAD5);
+    case VK_RIGHT:  return EXTKEYPAD(VK_NUMPAD6);
+    case VK_HOME:   return EXTKEYPAD(VK_NUMPAD7);
+    case VK_UP:     return EXTKEYPAD(VK_NUMPAD8);
+    case VK_PRIOR:  return EXTKEYPAD(VK_NUMPAD9);
+  }
+  return mvke ? mvke : vkey;
 }
 
 static XBMC_keysym *TranslateKey(WPARAM vkey, UINT scancode, XBMC_keysym *keysym, int pressed)
-{
+{ uint16_t mod;
+  uint8_t keystate[256];
+
   /* Set the keysym information */
   keysym->scancode = (unsigned char) scancode;
-  keysym->mod = XBMCKMOD_NONE;
   keysym->unicode = 0;
 
-  if ((vkey == VK_RETURN) && (scancode & 0x100)) 
+  if ((vkey == VK_RETURN) && (scancode & 0x100))
   {
     /* No VK_ code for the keypad enter key */
     keysym->sym = XBMCK_KP_ENTER;
   }
-  else 
+  else
   {
     keysym->sym = VK_keymap[XBMC_MapVirtualKey(scancode, vkey)];
   }
 
-  if ( pressed && XBMC_TranslateUNICODE ) {
+  // Attempt to convert the keypress to a UNICODE character
+  GetKeyboardState(keystate);
 
-    uint8_t   keystate[256];
-    uint16_t  wchars[2];
+  if ( pressed && XBMC_TranslateUNICODE )
+  { uint16_t  wchars[2];
 
-    GetKeyboardState(keystate);
     /* Numlock isn't taken into account in ToUnicode,
     * so we handle it as a special case here */
     if ((keystate[VK_NUMLOCK] & 1) && vkey >= VK_NUMPAD0 && vkey <= VK_NUMPAD9)
@@ -265,11 +304,38 @@ static XBMC_keysym *TranslateKey(WPARAM vkey, UINT scancode, XBMC_keysym *keysym
       keysym->unicode = wchars[0];
     }
   }
+
+  // Set the modifier bitmap
+
+  mod = (uint16_t) XBMCKMOD_NONE;
+
+  // If left control and right alt are down this usually means that
+  // AltGr is down
+  if ((keystate[VK_LCONTROL] & 0x80) && (keystate[VK_RMENU] & 0x80))
+  {
+    mod |= XBMCKMOD_MODE;
+  }
+  else
+  {
+    if (keystate[VK_LCONTROL] & 0x80) mod |= XBMCKMOD_LCTRL;
+    if (keystate[VK_RMENU]    & 0x80) mod |= XBMCKMOD_RALT;
+  }
+
+  // Check the remaining modifiers
+  if (keystate[VK_LSHIFT]   & 0x80) mod |= XBMCKMOD_LSHIFT;
+  if (keystate[VK_RSHIFT]   & 0x80) mod |= XBMCKMOD_RSHIFT;
+  if (keystate[VK_RCONTROL] & 0x80) mod |= XBMCKMOD_RCTRL;
+  if (keystate[VK_LMENU]    & 0x80) mod |= XBMCKMOD_LALT;
+  if (keystate[VK_LWIN]     & 0x80) mod |= XBMCKMOD_LSUPER;
+  if (keystate[VK_RWIN]     & 0x80) mod |= XBMCKMOD_LSUPER;
+  keysym->mod = (XBMCMod) mod;
+
+  // Return the updated keysym
   return(keysym);
 }
 
 bool CWinEventsWin32::MessagePump()
-{ 
+{
   MSG  msg;
   while( PeekMessage( &msg, NULL, 0U, 0U, PM_REMOVE ) )
   {
@@ -279,60 +345,20 @@ bool CWinEventsWin32::MessagePump()
   return true;
 }
 
-bool CWinEventsWin32::ProcessWinShortcuts(WPARAM wParam)
-{
-  bool bCtrl  = !!(GetKeyState(VK_CONTROL) & 0x8000);
-  bool bAlt   = !!(GetKeyState(VK_MENU) & 0x8000);
-  bool bShift = !!(GetKeyState(VK_SHIFT) & 0x8000);
-  
-  CAction action;
-
-  switch (wParam)
-  {
-    case VK_V:
-    {
-      if (bCtrl)
-      {
-        action.id = ACTION_PASTE;
-        g_application.OnAction(action);
-        return true;
-      }
-      break;
-    }
-    case VK_S: // Ctrl-s to take a screenshot
-    {
-      if (bCtrl)
-      {
-        action.id = ACTION_TAKE_SCREENSHOT;
-        g_application.OnAction(action);
-        return true;
-      }
-      break;
-    }
-    case VK_F: 
-    {
-      if (bCtrl)
-      {
-        action.id = ACTION_TOGGLE_FULLSCREEN;
-        g_application.OnAction(action);
-        return true;
-      }
-      break;
-    }
-  }
-  return false;
-}
-
 LRESULT CALLBACK CWinEventsWin32::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   XBMC_Event newEvent;
   ZeroMemory(&newEvent, sizeof(newEvent));
 
   if (uMsg == WM_CREATE)
-  {	
+  {
     SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG)(((LPCREATESTRUCT)lParam)->lpCreateParams));
     DIB_InitOSKeymap();
     g_uQueryCancelAutoPlay = RegisterWindowMessage(TEXT("QueryCancelAutoPlay"));
+    shcne.pidl = NULL;
+    shcne.fRecursive = TRUE;
+    long fEvents = SHCNE_DRIVEADD | SHCNE_DRIVEREMOVED | SHCNE_MEDIAREMOVED | SHCNE_MEDIAINSERTED;
+    SHChangeNotifyRegister(hWnd, SHCNRF_ShellLevel | SHCNRF_NewDelivery, fEvents, WM_MEDIA_CHANGE, 1, &shcne);
     return 0;
   }
 
@@ -343,7 +369,7 @@ LRESULT CALLBACK CWinEventsWin32::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
   if(g_uQueryCancelAutoPlay != 0 && uMsg == g_uQueryCancelAutoPlay)
     return S_FALSE;
 
-  switch (uMsg) 
+  switch (uMsg)
   {
     case WM_CLOSE:
     case WM_QUIT:
@@ -354,41 +380,40 @@ LRESULT CALLBACK CWinEventsWin32::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
     case WM_SHOWWINDOW:
       {
         bool active = g_application.m_AppActive;
-      g_application.m_AppActive = wParam != 0;
+        g_application.m_AppActive = wParam != 0;
         if (g_application.m_AppActive != active)
           g_Windowing.NotifyAppActiveChange(g_application.m_AppActive);
-      CLog::Log(LOGDEBUG, __FUNCTION__"Window is %s", g_application.m_AppActive ? "shown" : "hidden");
+        CLog::Log(LOGDEBUG, __FUNCTION__"Window is %s", g_application.m_AppActive ? "shown" : "hidden");
       }
       break;
     case WM_ACTIVATE:
       {
         bool active = g_application.m_AppActive;
-      if (HIWORD(wParam))
-      {
-        g_application.m_AppActive = false;
-      }
-      else
-      {
-        WINDOWPLACEMENT lpwndpl;
-        lpwndpl.length = sizeof(lpwndpl);
-        if (LOWORD(wParam) != WA_INACTIVE && GetWindowPlacement(hWnd, &lpwndpl))
+        if (HIWORD(wParam))
         {
-          g_application.m_AppActive = lpwndpl.showCmd != SW_HIDE;
+          g_application.m_AppActive = false;
         }
-      }
+        else
+        {
+          WINDOWPLACEMENT lpwndpl;
+          lpwndpl.length = sizeof(lpwndpl);
+          if (LOWORD(wParam) != WA_INACTIVE && GetWindowPlacement(hWnd, &lpwndpl))
+          {
+            g_application.m_AppActive = lpwndpl.showCmd != SW_HIDE;
+          }
+        }
         if (g_application.m_AppActive != active)
           g_Windowing.NotifyAppActiveChange(g_application.m_AppActive);
-      CLog::Log(LOGDEBUG, __FUNCTION__"Window is %s", g_application.m_AppActive ? "active" : "inactive");
+        CLog::Log(LOGDEBUG, __FUNCTION__"Window is %s", g_application.m_AppActive ? "active" : "inactive");
       }
       break;
     case WM_SETFOCUS:
     case WM_KILLFOCUS:
       g_application.m_AppFocused = uMsg == WM_SETFOCUS;
-      CLog::Log(LOGDEBUG, __FUNCTION__"Window %s focus", g_application.m_AppFocused ? "gained" : "lost");
       g_Windowing.NotifyAppFocusChange(g_application.m_AppFocused);
       break;
     case WM_SYSKEYDOWN:
-      switch (wParam) 
+      switch (wParam)
       {
         case VK_F4: //alt-f4, default event quit.
           return(DefWindowProc(hWnd, uMsg, wParam, lParam));
@@ -398,71 +423,67 @@ LRESULT CALLBACK CWinEventsWin32::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
           return 0;
       }
       //deliberate fallthrough
-    case WM_KEYDOWN: 
+    case WM_KEYDOWN:
     {
-      if (!ProcessWinShortcuts(wParam))
+      switch (wParam)
       {
-        switch (wParam) 
-        {
-          case VK_CONTROL:
+        case VK_CONTROL:
           if ( lParam & EXTENDED_KEYMASK )
             wParam = VK_RCONTROL;
           else
             wParam = VK_LCONTROL;
           break;
-          case VK_SHIFT:
+        case VK_SHIFT:
           /* EXTENDED trick doesn't work here */
-            if (GetKeyState(VK_LSHIFT) & 0x8000)
-              wParam = VK_LSHIFT;
-            else if (GetKeyState(VK_RSHIFT) & 0x8000)
-              wParam = VK_RSHIFT;
+          if (GetKeyState(VK_LSHIFT) & 0x8000)
+            wParam = VK_LSHIFT;
+          else if (GetKeyState(VK_RSHIFT) & 0x8000)
+            wParam = VK_RSHIFT;
           break;
-          case VK_MENU:
+        case VK_MENU:
           if ( lParam & EXTENDED_KEYMASK )
             wParam = VK_RMENU;
           else
             wParam = VK_LMENU;
           break;
-        }
-        XBMC_keysym keysym;
-
-        TranslateKey(wParam, HIWORD(lParam), &keysym, 1);
-
-        newEvent.type = XBMC_KEYDOWN;
-        newEvent.key.keysym = keysym;
-        m_pEventFunc(newEvent);
       }
+      XBMC_keysym keysym;
+      TranslateKey(wParam, HIWORD(lParam), &keysym, 1);
+
+      newEvent.type = XBMC_KEYDOWN;
+      newEvent.key.keysym = keysym;
+      m_pEventFunc(newEvent);
     }
     return(0);
 
     case WM_SYSKEYUP:
-    case WM_KEYUP: 
+    case WM_KEYUP:
       {
-      switch (wParam) 
+      switch (wParam)
       {
         case VK_CONTROL:
-        if ( lParam&EXTENDED_KEYMASK )
-          wParam = VK_RCONTROL;
-        else
-          wParam = VK_LCONTROL;
-        break;
+          if ( lParam&EXTENDED_KEYMASK )
+            wParam = VK_RCONTROL;
+          else
+            wParam = VK_LCONTROL;
+          break;
         case VK_SHIFT:
           {
             uint32_t scanCodeL = MapVirtualKey(VK_LSHIFT, MAPVK_VK_TO_VSC);
             uint32_t scanCodeR = MapVirtualKey(VK_RSHIFT, MAPVK_VK_TO_VSC);
             uint32_t keyCode = (uint32_t)((lParam & 0xFF0000) >> 16);
-            if (keyCode == scanCodeL) 
-            wParam = VK_LSHIFT;
+            if (keyCode == scanCodeL)
+              wParam = VK_LSHIFT;
             else if (keyCode == scanCodeR)
-            wParam = VK_RSHIFT;
+              wParam = VK_RSHIFT;
           }
-        break;
+          break;
         case VK_MENU:
-        if ( lParam&EXTENDED_KEYMASK )
-          wParam = VK_RMENU;
-        else
-          wParam = VK_LMENU;
-        break;
+          if ( lParam&EXTENDED_KEYMASK )
+            wParam = VK_RMENU;
+          else
+            wParam = VK_LMENU;
+          break;
       }
       XBMC_keysym keysym;
       TranslateKey(wParam, HIWORD(lParam), &keysym, 1);
@@ -470,14 +491,74 @@ LRESULT CALLBACK CWinEventsWin32::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
       if (wParam == VK_SNAPSHOT)
         newEvent.type = XBMC_KEYDOWN;
       else
-      newEvent.type = XBMC_KEYUP;
+        newEvent.type = XBMC_KEYUP;
       newEvent.key.keysym = keysym;
       m_pEventFunc(newEvent);
     }
     return(0);
+    case WM_APPCOMMAND: // MULTIMEDIA keys are mapped to APPCOMMANDS
+    {
+      CLog::Log(LOGDEBUG, "WinEventsWin32.cpp: APPCOMMAND %d", GET_APPCOMMAND_LPARAM(lParam));
+      newEvent.appcommand.type = XBMC_APPCOMMAND;
+      newEvent.appcommand.action = 0;
+
+      switch (GET_APPCOMMAND_LPARAM(lParam))
+      {
+        case APPCOMMAND_MEDIA_PLAY:
+          newEvent.appcommand.action = ACTION_PLAYER_PLAY;
+          break;
+        case APPCOMMAND_MEDIA_PLAY_PAUSE:
+          newEvent.appcommand.action = ACTION_PLAYER_PLAYPAUSE;
+          break;
+        case APPCOMMAND_MEDIA_PAUSE:
+          newEvent.appcommand.action = ACTION_PAUSE;
+          break;
+        case APPCOMMAND_BROWSER_BACKWARD:
+          newEvent.appcommand.action = ACTION_PARENT_DIR;
+          break;
+        case APPCOMMAND_MEDIA_STOP:
+          newEvent.appcommand.action = ACTION_STOP;
+          break;
+        case APPCOMMAND_MEDIA_PREVIOUSTRACK:
+          newEvent.appcommand.action = ACTION_PREV_ITEM;
+          break;
+        case APPCOMMAND_MEDIA_NEXTTRACK:
+          newEvent.appcommand.action = ACTION_NEXT_ITEM;
+          break;
+        case APPCOMMAND_MEDIA_REWIND:
+          newEvent.appcommand.action = ACTION_PLAYER_REWIND;
+          break;
+        case APPCOMMAND_MEDIA_FAST_FORWARD:
+          newEvent.appcommand.action = ACTION_PLAYER_FORWARD;
+          break;
+        case APPCOMMAND_LAUNCH_MEDIA_SELECT:
+          // disable launch of external media players
+          return 1;
+      }
+      if (newEvent.appcommand.action != 0)
+      {
+        m_pEventFunc(newEvent);
+        return 1; // should return TRUE if application handled the event
+      }
+      break;
+    }
+    case WM_GESTURENOTIFY:
+    {
+      OnGestureNotify(hWnd, lParam);
+      return DefWindowProc(hWnd, WM_GESTURENOTIFY, wParam, lParam);
+    }
+    case WM_GESTURE:
+    {
+      OnGesture(hWnd, lParam);
+      return 0;
+    }
     case WM_SYSCHAR:
       if (wParam == VK_RETURN) //stop system beep on alt-return
         return 0;
+      break;
+    case WM_SETCURSOR:
+      if (HTCLIENT != LOWORD(lParam))
+        g_Windowing.ShowOSMouse(true);
       break;
     case WM_MOUSEMOVE:
       newEvent.type = XBMC_MOUSEMOTION;
@@ -531,7 +612,7 @@ LRESULT CALLBACK CWinEventsWin32::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
         newEvent.type = XBMC_MOUSEBUTTONUP;
         newEvent.button.state = XBMC_RELEASED;
         m_pEventFunc(newEvent);
-  }
+      }
       return(0);
     case WM_SIZE:
       newEvent.type = XBMC_VIDEORESIZE;
@@ -541,67 +622,58 @@ LRESULT CALLBACK CWinEventsWin32::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
       if (newEvent.resize.w * newEvent.resize.h)
         m_pEventFunc(newEvent);
       return(0);
-    case WM_SETCURSOR:
-      if (HTCLIENT == LOWORD(lParam))
+    case WM_MEDIA_CHANGE:
       {
-        SetCursor(NULL);
-        return(1);
+        // There may be multiple notifications for one event
+        // There are also a few events we're not interested in, but they cause no harm
+        // For example SD card reader insertion/removal
+        long lEvent;
+        PIDLIST_ABSOLUTE *ppidl;
+        HANDLE hLock = SHChangeNotification_Lock((HANDLE)wParam, (DWORD)lParam, &ppidl, &lEvent);
+
+        if (hLock)
+        {
+          char drivePath[MAX_PATH+1];
+          if (!SHGetPathFromIDList(ppidl[0], drivePath))
+            break;
+
+          switch(lEvent)
+          {
+            case SHCNE_DRIVEADD:
+            case SHCNE_MEDIAINSERTED:
+              CLog::Log(LOGDEBUG, __FUNCTION__": Drive %s Media has arrived.", drivePath);
+              if (GetDriveType(drivePath) == DRIVE_CDROM)
+                g_application.getApplicationMessenger().OpticalMount(drivePath, true);
+              else
+                CWin32StorageProvider::SetEvent();
+              break;
+
+            case SHCNE_DRIVEREMOVED:
+            case SHCNE_MEDIAREMOVED:
+              CLog::Log(LOGDEBUG, __FUNCTION__": Drive %s Media was removed.", drivePath);
+              if (GetDriveType(drivePath) == DRIVE_CDROM)
+                g_application.getApplicationMessenger().OpticalUnMount(drivePath);
+              else
+                CWin32StorageProvider::SetEvent();
+              break;
+          }
+          SHChangeNotification_Unlock(hLock);
+        }
+        break;
+      }
+    case WM_POWERBROADCAST:
+      if (wParam==PBT_APMSUSPEND)
+      {
+        CLog::Log(LOGDEBUG,"WM_POWERBROADCAST: PBT_APMSUSPEND event was sent");
+        CWin32PowerSyscall::SetOnSuspend();
+      }
+      else if(wParam==PBT_APMRESUMEAUTOMATIC)
+      {
+        CLog::Log(LOGDEBUG,"WM_POWERBROADCAST: PBT_APMRESUMEAUTOMATIC event was sent");
+        CWin32PowerSyscall::SetOnResume();
       }
       break;
-    case WM_DEVICECHANGE:
-      PDEV_BROADCAST_HDR lpdb = (PDEV_BROADCAST_HDR)lParam;
-      switch(wParam)
-      {
-        case DBT_DEVICEARRIVAL:
-           if (lpdb -> dbch_devicetype == DBT_DEVTYP_VOLUME)
-           {
-              PDEV_BROADCAST_VOLUME lpdbv = (PDEV_BROADCAST_VOLUME)lpdb;
 
-              // Check whether a CD or DVD was inserted into a drive.
-              if (lpdbv -> dbcv_flags & DBTF_MEDIA)
-              {
-                CLog::Log(LOGDEBUG, "%s: Drive %c: Media has arrived.\n", __FUNCTION__, CWIN32Util::FirstDriveFromMask(lpdbv ->dbcv_unitmask));
-                CStdString strDevice;
-                strDevice.Format("%c:",CWIN32Util::FirstDriveFromMask(lpdbv ->dbcv_unitmask));
-                g_application.getApplicationMessenger().OpticalMount(strDevice, true);
-  }
-              else
-              {
-                // USB drive inserted
-              /*  CMediaSource share;
-                share.strPath.Format("%c:",CWIN32Util::FirstDriveFromMask(lpdbv ->dbcv_unitmask));
-                share.strName.Format("%s (%s)", g_localizeStrings.Get(437), share.strPath);
-                share.m_ignore = true;
-                share.m_iDriveType = CMediaSource::SOURCE_TYPE_REMOVABLE;
-                g_mediaManager.AddAutoSource(share); */
-              }
-           }
-           break;
-
-        case DBT_DEVICEREMOVECOMPLETE:
-           if (lpdb -> dbch_devicetype == DBT_DEVTYP_VOLUME)
-           {
-              PDEV_BROADCAST_VOLUME lpdbv = (PDEV_BROADCAST_VOLUME)lpdb;
-          
-              // Check whether a CD or DVD was removed from a drive.
-              if (lpdbv -> dbcv_flags & DBTF_MEDIA)
-              {
-                CLog::Log(LOGDEBUG,"%s: Drive %c: Media was removed.\n", __FUNCTION__, CWIN32Util::FirstDriveFromMask(lpdbv ->dbcv_unitmask));
-                CStdString strDevice;
-                strDevice.Format("%c:",CWIN32Util::FirstDriveFromMask(lpdbv ->dbcv_unitmask));
-                g_application.getApplicationMessenger().OpticalUnMount(strDevice);
-              }
-              else
-              {
-                // USB drive was removed
-                CMediaSource share;
-                share.strPath.Format("%c:",CWIN32Util::FirstDriveFromMask(lpdbv ->dbcv_unitmask));
-                share.strName.Format("%s (%s)", g_localizeStrings.Get(437), share.strPath);
-                g_mediaManager.RemoveAutoSource(share);
-              }
-           }
-           break;
-      }
   }
   return(DefWindowProc(hWnd, uMsg, wParam, lParam));
 }
@@ -617,6 +689,93 @@ void CWinEventsWin32::WindowFromScreenCoords(HWND hWnd, POINT *point)
   ClientToScreen(hWnd, &windowPos);
   point->x -= windowPos.x;
   point->y -= windowPos.y;
+}
+
+void CWinEventsWin32::OnGestureNotify(HWND hWnd, LPARAM lParam)
+{
+  // convert to window coordinates
+  PGESTURENOTIFYSTRUCT gn = (PGESTURENOTIFYSTRUCT)(lParam);
+  POINT point = { gn->ptsLocation.x, gn->ptsLocation.y };
+  WindowFromScreenCoords(hWnd, &point);
+
+  // by default that we want no gestures
+  GESTURECONFIG gc[] = {{ GID_ZOOM, 0, GC_ZOOM},
+                        { GID_ROTATE, 0, GC_ROTATE},
+                        { GID_PAN, 0, GC_PAN},
+                        { GID_TWOFINGERTAP, 0, GC_TWOFINGERTAP },
+                        { GID_PRESSANDTAP, 0, GC_PRESSANDTAP }};
+
+  // send a message to see if a control wants any
+  CGUIMessage message(GUI_MSG_GESTURE_NOTIFY, 0, 0, point.x, point.y);
+  if (g_windowManager.SendMessage(message))
+  {
+    int gestures = message.GetParam1();
+    if (gestures == EVENT_RESULT_ZOOM)
+      gc[0].dwWant |= GC_ZOOM;
+    if (gestures == EVENT_RESULT_ROTATE)
+      gc[1].dwWant |= GC_ROTATE;
+    if (gestures == EVENT_RESULT_PAN_VERTICAL)
+      gc[2].dwWant |= GC_PAN_WITH_SINGLE_FINGER_VERTICALLY | GC_PAN_WITH_GUTTER | GC_PAN_WITH_INERTIA;
+    if (gestures == EVENT_RESULT_PAN_HORIZONTAL)
+      gc[2].dwWant |= GC_PAN_WITH_SINGLE_FINGER_HORIZONTALLY | GC_PAN_WITH_GUTTER | GC_PAN_WITH_INERTIA;
+    gc[0].dwBlock = gc[0].dwWant ^ 1;
+    gc[1].dwBlock = gc[1].dwWant ^ 1;
+    gc[2].dwBlock = gc[2].dwWant ^ 30;
+  }
+  if (g_Windowing.PtrSetGestureConfig)
+    g_Windowing.PtrSetGestureConfig(hWnd, 0, 5, gc, sizeof(GESTURECONFIG));
+}
+
+void CWinEventsWin32::OnGesture(HWND hWnd, LPARAM lParam)
+{
+// boxee - not supported
+#if 0
+  if (!g_Windowing.PtrGetGestureInfo)
+    return;
+
+  GESTUREINFO gi = {0};
+  gi.cbSize = sizeof(gi);
+  g_Windowing.PtrGetGestureInfo((HGESTUREINFO)lParam, &gi);
+
+  // convert to window coordinates
+  POINT point = { gi.ptsLocation.x, gi.ptsLocation.y };
+  WindowFromScreenCoords(hWnd, &point);
+  switch (gi.dwID)
+  {
+  case GID_BEGIN:
+    {
+      m_lastGesturePosX = point.x;
+      m_lastGesturePosY = point.y;
+      g_application.OnAction(CAction(ACTION_GESTURE_BEGIN, 0, (float)point.x, (float)point.y, 0, 0));
+    }
+    break;
+  case GID_END:
+    {
+      g_application.OnAction(CAction(ACTION_GESTURE_END));
+    }
+    break;
+  case GID_PAN:
+    {
+      g_application.OnAction(CAction(ACTION_GESTURE_PAN, 0, (float)point.x, (float)point.y,
+                                    (float)(point.x - m_lastGesturePosX), (float)(point.y - m_lastGesturePosY)));
+      m_lastGesturePosX = point.x;
+      m_lastGesturePosY = point.y;
+    }
+    break;
+  case GID_ROTATE:
+    CLog::Log(LOGDEBUG, "%s - Rotating", __FUNCTION__);
+    break;
+  case GID_ZOOM:
+    CLog::Log(LOGDEBUG, "%s - Zooming", __FUNCTION__);
+    break;
+  case GID_TWOFINGERTAP:
+  case GID_PRESSANDTAP:
+  default:
+    // You have encountered an unknown gesture
+    break;
+  }
+  g_Windowing.PtrCloseGestureInfoHandle((HGESTUREINFO)lParam);
+#endif
 }
 
 #endif

@@ -27,5 +27,6 @@ class IDVDPlayer
 {
 public:
   virtual int OnDVDNavResult(void* pData, int iMessage) = 0;
+  virtual bool IsAborting() = 0;
   virtual ~IDVDPlayer() { }
 };

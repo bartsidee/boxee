@@ -48,6 +48,9 @@
 #include "GUIDialogProgress.h"
 #include "GUIDialogYesNo.h"
 #include "GUIDialogSelect.h"
+#include "ThreadPolicy.h"
+
+#include "../../../placement_new.h"
 
 using namespace std;
 
@@ -72,9 +75,9 @@ namespace PYXBMC
 
     self = (WindowDialog*)type->tp_alloc(type, 0);
     if (!self) return NULL;
-    new(&self->sXMLFileName) string();
-    new(&self->sFallBackPath) string();
-    new(&self->vecControls) std::vector<Control*>();    
+   PLACEMENT_NEW(&self->sXMLFileName) string();
+   PLACEMENT_NEW(&self->sFallBackPath) string();
+   PLACEMENT_NEW(&self->vecControls) std::vector<Control*>();    
 
     self->iWindowId = -1;
 
@@ -136,7 +139,7 @@ namespace PYXBMC
     PyGUIUnlock();    
 
     //send message and wait for user input
-    ThreadMessage tMsg = {TMSG_DIALOG_DOMODAL, window, ACTIVE_WINDOW};
+    ThreadMessage tMsg (TMSG_DIALOG_DOMODAL, window, ACTIVE_WINDOW);
     g_application.getApplicationMessenger().SendMessage(tMsg, true);
 
     return Py_BuildValue((char*)"b", pDialog->IsConfirmed());
@@ -319,7 +322,7 @@ namespace PYXBMC
     PyGUIUnlock();    
 
     //send message and wait for user input
-    ThreadMessage tMsg = {TMSG_DIALOG_DOMODAL, window, ACTIVE_WINDOW};
+    ThreadMessage tMsg (TMSG_DIALOG_DOMODAL, window, ACTIVE_WINDOW);
     g_application.getApplicationMessenger().SendMessage(tMsg, true);
 
     return Py_BuildValue((char*)"b", pDialog->IsConfirmed());
@@ -364,7 +367,7 @@ namespace PYXBMC
     }
 
     //send message and wait for user input
-    ThreadMessage tMsg = {TMSG_DIALOG_DOMODAL, window, ACTIVE_WINDOW};
+    ThreadMessage tMsg (TMSG_DIALOG_DOMODAL, window, ACTIVE_WINDOW);
     g_application.getApplicationMessenger().SendMessage(tMsg, true);
 
     return Py_BuildValue((char*)"i", pDialog->GetSelectedLabel());
@@ -411,7 +414,15 @@ namespace PYXBMC
     for (int i = 1; i < 4; i++)
       pDialog->SetLine(i - 1,utf8Line[i]);
 
+#if defined(HAS_EMBEDDED) && !defined(__APPLE__) 
+    TPDisablePolicy(gettid(), false);
+#endif
+
     pDialog->StartModal();
+
+#if defined(HAS_EMBEDDED) && !defined(__APPLE__) 
+    TPDisablePolicy(gettid(), true);
+#endif
 
     Py_INCREF(Py_None);
     return Py_None;

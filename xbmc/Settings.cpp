@@ -40,6 +40,7 @@
 #include "FileSystem/MultiPathDirectory.h"
 #include "FileSystem/SpecialProtocol.h"
 #include "GUIBaseContainer.h" // for VIEW_TYPE enum
+#include "GUIUserMessages.h"
 #include "MediaManager.h"
 #include "DNSNameCache.h"
 #include "GUIWindowManager.h"
@@ -61,8 +62,12 @@
 #include "cores/VideoRenderers/RenderManager.h"
 #include "BoxeeUtils.h"
 #include "AppManager.h"
+#include "GUIDialogYesNo2.h"
+#include "BoxeeBrowseMenuManager.h"
 #include "lib/libBoxee/boxee.h"
 #include <algorithm>
+
+#include "LicenseConfig.h"
 
 using namespace std;
 using namespace XFILE;
@@ -77,7 +82,7 @@ extern CStdString g_LoadErrorStr;
 
 CSettings::CSettings(void)
 {
-
+  m_settingsVersion = 1;
 }
 
 void CSettings::Initialize()
@@ -112,20 +117,21 @@ void CSettings::Initialize()
   g_stSettings.m_bMute = false;
   g_stSettings.m_fZoomAmount = 1.0f;
   g_stSettings.m_fPixelRatio = 1.0f;
+  g_stSettings.m_bNonLinStretch = false;
 
   g_stSettings.m_pictureExtensions = ".png|.jpg|.jpeg|.bmp|.gif|.ico|.tif|.tiff|.tga|.pcx|.cbz|.cbr|.dng|.nef|.cr2|.crw|.orf|.arw|.erf|.3fr|.dcr|.x3f|.mef|.raf|.mrw|.pef|.sr2";
-  g_stSettings.m_musicExtensions = ".nsv|.m4a|.flac|.aac|.strm|.pls|.rm|.rma|.mpa|.wav|.wma|.ogg|.mp3|.mp2|.m3u|.mod|.amf|.669|.dmf|.dsm|.far|.gdm|.imf|.it|.m15|.med|.okt|.s3m|.stm|.sfx|.ult|.uni|.xm|.sid|.ac3|.ec3|.dts|.cue|.aif|.aiff|.wpl|.ape|.mac|.mpc|.mp+|.mpp|.shn|.zip|.rar|.wv|.nsf|.spc|.gym|.adplug|.adx|.dsp|.adp|.ymf|.ast|.afc|.hps|.xsp|.xwav|.waa|.wvs|.wam|.gcm|.idsp|.mpdsp|.mss|.spt|.rsd|.mid|.kar|.sap|.cmc|.cmr|.dmc|.mpt|.mpd|.rmt|.tmc|.tm8|.tm2|.oga|.url|.pxml|.m4b";
-  g_stSettings.m_videoExtensions = ".m4v|.3g2|.3gp|.nsv|.tp|.ts|.ty|.strm|.pls|.rm|.rmvb|.m3u|.m3u8|.ifo|.mov|.qt|.divx|.xvid|.bivx|.vob|.nrg|.img|.iso|.pva|.wmv|.asf|.asx|.ogm|.m2v|.avi|.bin|.dat|.mpg|.mpeg|.mp4|.mkv|.avc|.vp3|.svq3|.nuv|.viv|.dv|.fli|.flv|.rar|.001|.wpl|.zip|.vdr|.dvr-ms|.xsp|.mts|.m2t|.m2ts|.evo|.ogv|.sdp|.avs|.rec|.url|.pxml|.vc1|.h264|.rcv";
+  g_stSettings.m_musicExtensions = ".nsv|.m4a|.flac|.aac|.strm|.pls|.rm|.rma|.mpa|.wav|.wma|.ogg|.mp3|.mp2|.m3u|.mod|.amf|.669|.dmf|.dsm|.far|.gdm|.imf|.it|.m15|.med|.okt|.s3m|.stm|.sfx|.ult|.uni|.xm|.sid|.ec3|.hbra|.aif|.aiff|.wpl|.ape|.mac|.mpc|.mp+|.mpp|.shn|.zip|.rar|.wv|.nsf|.spc|.gym|.adplug|.adx|.dsp|.adp|.ymf|.ast|.afc|.hps|.xsp|.xwav|.waa|.wvs|.wam|.gcm|.idsp|.mpdsp|.mss|.spt|.rsd|.mid|.kar|.sap|.cmc|.cmr|.dmc|.mpt|.mpd|.rmt|.tmc|.tm8|.tm2|.oga|.pxml|.m4b|.spx";
+  g_stSettings.m_videoExtensions = ".m4v|.3g2|.3gp|.nsv|.tp|.ts|.ty|.strm|.pls|.rm|.rmvb|.m3u|.m3u8|.ifo|.mov|.qt|.divx|.xvid|.bivx|.vob|.nrg|.img|.iso|.pva|.wmv|.asf|.asx|.ogm|.m2v|.avi|.dat|.mpg|.mpeg|.mp4|.mkv|.avc|.vp3|.svq3|.nuv|.viv|.dv|.fli|.flv|.f4v|.rar|.001|.wpl|.zip|.vdr|.dvr-ms|.xsp|.mts|.m2t|.m2ts|.evo|.ogv|.sdp|.avs|.rec|.url|.pxml|.vc1|.h264|.rcv|.webm|.trp|.wtv|.ac3|.eac3|.dts";
   // internal music extensions
   g_stSettings.m_musicExtensions += "|.sidstream|.oggstream|.nsfstream|.asapstream|.cdda";
 
-#ifdef __APPLE__
-  CStdString logDir = getenv("HOME");
-  logDir += "/Library/Logs/";
-  g_stSettings.m_logFolder = logDir;
-#else
-  g_stSettings.m_logFolder = "special://home/";              // log file location
-#endif
+  #ifdef __APPLE__
+    CStdString logDir = getenv("HOME");
+    logDir += "/Library/Logs/";
+    g_stSettings.m_logFolder = logDir;
+  #else
+    g_stSettings.m_logFolder = "special://home/";              // log file location
+  #endif
 
   m_iLastLoadedProfileIndex = 0;
 
@@ -135,6 +141,9 @@ void CSettings::Initialize()
   g_stSettings.iAdditionalSubtitleDirectoryChecked = 0;
 
   g_settings.bUseLoginScreen = false;
+
+  g_stSettings.m_doneFTU = false;
+  g_stSettings.m_doneFTU2 = false;
 }
 
 CSettings::~CSettings(void)
@@ -210,23 +219,23 @@ bool CSettings::Load(bool& bXboxMediacenter, bool& bSettings)
     CStdString strRemoteFile = pInclude->FirstChild()->Value();
     if (!strRemoteFile.IsEmpty())
     {
-      CLog::Log(LOGDEBUG, "Found <remote> tag");
-      CLog::Log(LOGDEBUG, "Attempting to retrieve remote file: %s", strRemoteFile.c_str());
-      // sometimes we have to wait for the network
+        CLog::Log(LOGDEBUG, "Found <remote> tag");
+        CLog::Log(LOGDEBUG, "Attempting to retrieve remote file: %s", strRemoteFile.c_str());
+        // sometimes we have to wait for the network
       if (!g_application.getNetwork().IsAvailable(true) && CFile::Exists(strRemoteFile))
-      {
-        if ( xmlDoc.LoadFile(strRemoteFile) )
         {
-          pRootElement = xmlDoc.RootElement();
-          CStdString strValue;
-          if (pRootElement)
-            strValue = pRootElement->Value();
-          if ( strValue != "sources")
-            CLog::Log(LOGERROR, "%s remote_sources.xml file does not contain <sources>", __FUNCTION__);
-        }
-        else
+        if ( xmlDoc.LoadFile(strRemoteFile) )
+          {
+      pRootElement = xmlDoc.RootElement();
+      CStdString strValue;
+      if (pRootElement)
+        strValue = pRootElement->Value();
+      if ( strValue != "sources")
+        CLog::Log(LOGERROR, "%s remote_sources.xml file does not contain <sources>", __FUNCTION__);
+    }
+    else
           CLog::Log(LOGERROR, "%s unable to load file: %s, Line %d, %s", __FUNCTION__, strRemoteFile.c_str(), xmlDoc.ErrorRow(), xmlDoc.ErrorDesc());
-      }
+  }
       else
         CLog::Log(LOGNOTICE, "Could not retrieve remote file, defaulting to local sources");
     }
@@ -253,6 +262,22 @@ bool CSettings::Load(bool& bXboxMediacenter, bool& bSettings)
     m_shortcuts.Load();
   }
 
+  CStdString strKeyMap;
+  for(size_t i = 0;i<m_videoSources.size();i++)
+  {
+    CURI url(m_videoSources[i].strPath);
+    if(url.GetUserName() != "")
+    {
+      strKeyMap = url.GetHostName();
+      if(url.GetShareName() != "")
+      {
+        strKeyMap += "/" + url.GetShareName();
+      }
+      g_passwordManager.m_mapCIFSPasswordCache[strKeyMap].first = url.GetUserName();
+      g_passwordManager.m_mapCIFSPasswordCache[strKeyMap].second = url.GetPassWord();
+    }
+  }
+
   return true;
 }
 
@@ -261,7 +286,7 @@ bool CSettings::Load(bool& bXboxMediacenter, bool& bSettings)
 bool CSettings::GetSourcesFromPath(const CStdString& _strPath, const CStdString& strType, std::vector<CMediaSource>& vecSources)
 {
   size_t n=0;
-
+  
   CStdString strPath = _P(_strPath);
 
   if (strPath.find("rar://") != std::string::npos || strPath.find("zip://") != std::string::npos)
@@ -273,11 +298,19 @@ bool CSettings::GetSourcesFromPath(const CStdString& _strPath, const CStdString&
 
   if (strType == "video" || strType == "")
   {
-    for (n = 0; n<g_settings.m_videoSources.size(); n++)
+    for (n = 0; n < g_settings.m_videoSources.size(); n++)
     {
       CStdString strPath2 = _P(g_settings.m_videoSources[n].strPath);
       CUtil::AddSlashAtEnd(strPath2);
-      transform (strPath2.begin(), strPath2.end(), strPath2.begin(), BOXEE::to_lower());
+
+      //if we're on upnp we need to compare without the last slash because the slashes in upnp are '\' and encoded
+      if ((strPath2.Find("upnp://") != -1) && CUtil::HasSlashAtEnd(strPath2))
+      {
+        CUtil::RemoveSlashAtEnd(strPath2);
+      }
+
+      transform(strPath2.begin(), strPath2.end(), strPath2.begin(), BOXEE::to_lower());
+
       strPath2 = BOXEE::BXUtils::RemoveSMBCredentials(strPath2);
       std::string::size_type startPos = strPath.find(strPath2, 0);
       if (startPos == 0)
@@ -289,10 +322,16 @@ bool CSettings::GetSourcesFromPath(const CStdString& _strPath, const CStdString&
 
   if (strType == "music" || strType == "")
   {
-    for (n = 0; n<g_settings.m_musicSources.size(); n++)
+    for (n = 0; n < g_settings.m_musicSources.size(); n++)
     {
       CStdString strPath2 = _P(g_settings.m_musicSources[n].strPath);
-      transform (strPath2.begin(), strPath2.end(), strPath2.begin(), BOXEE::to_lower());
+      transform(strPath2.begin(), strPath2.end(), strPath2.begin(), BOXEE::to_lower());
+
+      if ((strPath2.Find("upnp://") != -1) && BOXEE::BXUtils::HasSlashAtEnd(strPath2))
+      {
+        BOXEE::BXUtils::RemoveSlashAtEnd(strPath2);
+      }
+
       strPath2 = BOXEE::BXUtils::RemoveSMBCredentials(strPath2);
       std::string::size_type startPos = strPath.find(strPath2, 0);
       if (startPos == 0)
@@ -304,10 +343,16 @@ bool CSettings::GetSourcesFromPath(const CStdString& _strPath, const CStdString&
 
   if (strType == "pictures" || strType == "")
   {
-    for (n = 0; n<g_settings.m_pictureSources.size(); n++)
+    for (n = 0; n < g_settings.m_pictureSources.size(); n++)
     {
       CStdString strPath2 = _P(g_settings.m_pictureSources[n].strPath);
-      transform (strPath2.begin(), strPath2.end(), strPath2.begin(), BOXEE::to_lower());
+      transform(strPath2.begin(), strPath2.end(), strPath2.begin(), BOXEE::to_lower());
+
+      if ((strPath2.Find("upnp://") != -1) && BOXEE::BXUtils::HasSlashAtEnd(strPath2))
+      {
+        BOXEE::BXUtils::RemoveSlashAtEnd(strPath2);
+      }
+
       strPath2 = BOXEE::BXUtils::RemoveSMBCredentials(strPath2);
       std::string::size_type startPos = strPath.find(strPath2, 0);
       if (startPos == 0)
@@ -316,10 +361,10 @@ bool CSettings::GetSourcesFromPath(const CStdString& _strPath, const CStdString&
       }
     }
   }
-
+  
   return (vecSources.size() != 0);
 }
-
+  
 bool CSettings::IsPathOnSource(const CStdString &strPath)
 {
   CLog::Log(LOGDEBUG,"CSettings::IsPathOnSource, path = %s (checkpath)", strPath.c_str());
@@ -364,7 +409,7 @@ VECSOURCES *CSettings::GetSourcesFromType(const CStdString &type)
       VECSOURCES shares;
       g_mediaManager.GetLocalDrives(shares, true);  // true to include Q
       m_fileSources.insert(m_fileSources.end(),shares.begin(),shares.end());
-
+      
       CMediaSource source;
       source.strName = g_localizeStrings.Get(22013);
       source.m_ignore = true;
@@ -389,57 +434,57 @@ VECSOURCES *CSettings::GetSourcesFromType(const CStdString &type)
     return &g_settings.m_UPnPPictureSources;
   else if (type == "all")
     return GetAllMediaSources();
-
+  
   return NULL;
 }
 
-VECSOURCES* CSettings::GetAllMediaSources()
+VECSOURCES* CSettings::GetAllMediaSources(bool allowDuplicatePaths)
 {
   /////////////////////////////////////////////////////////////////////////////////
   // Return VECSOURCES that include all of the Video, Music and Pictures sources //
   // (filter duplicate source paths)                                             //
   /////////////////////////////////////////////////////////////////////////////////
-
+  
   m_allMediaSources.clear();
 
-  std::set<CStdString> m_alreadyAddedSourcePath;
-  m_alreadyAddedSourcePath.clear();
+  std::set<CStdString> alreadyAddedSourcePath;
+  alreadyAddedSourcePath.clear();
   std::set<CStdString>::iterator it;
-
+ 
   // Add video sources
   for(size_t i=0; i<m_videoSources.size(); i++)
   {
-    it = m_alreadyAddedSourcePath.find(m_videoSources[i].strPath);
-
-    if(it == m_alreadyAddedSourcePath.end())
+    if (!allowDuplicatePaths && (alreadyAddedSourcePath.find(m_videoSources[i].strPath) != alreadyAddedSourcePath.end()))
     {
-      m_allMediaSources.push_back(m_videoSources[i]);
-      m_alreadyAddedSourcePath.insert(m_videoSources[i].strPath);      
+      continue;
     }
-  }
 
+    m_allMediaSources.push_back(m_videoSources[i]);
+    alreadyAddedSourcePath.insert(m_videoSources[i].strPath);
+  }
+ 
   // Add music sources
   for(size_t i=0; i<m_musicSources.size(); i++)
   {
-    it = m_alreadyAddedSourcePath.find(m_musicSources[i].strPath);
-
-    if(it == m_alreadyAddedSourcePath.end())
+    if (!allowDuplicatePaths && (alreadyAddedSourcePath.find(m_musicSources[i].strPath) != alreadyAddedSourcePath.end()))
     {
-      m_allMediaSources.push_back(m_musicSources[i]);
-      m_alreadyAddedSourcePath.insert(m_musicSources[i].strPath);      
+      continue;
     }
+
+    m_allMediaSources.push_back(m_musicSources[i]);
+    alreadyAddedSourcePath.insert(m_musicSources[i].strPath);
   }
 
   // Add pictures sources
   for(size_t i=0; i<m_pictureSources.size(); i++)
   {
-    it = m_alreadyAddedSourcePath.find(m_pictureSources[i].strPath);
-
-    if(it == m_alreadyAddedSourcePath.end())
+    if (!allowDuplicatePaths && (alreadyAddedSourcePath.find(m_pictureSources[i].strPath) != alreadyAddedSourcePath.end()))
     {
-      m_allMediaSources.push_back(m_pictureSources[i]);
-      m_alreadyAddedSourcePath.insert(m_pictureSources[i].strPath);      
+      continue;
     }
+
+    m_allMediaSources.push_back(m_pictureSources[i]);
+    alreadyAddedSourcePath.insert(m_pictureSources[i].strPath);
   }
 
   return &m_allMediaSources;
@@ -560,12 +605,12 @@ bool CSettings::GetSource(const CStdString &category, const TiXmlNode *source, C
   const TiXmlNode *pLockCode = source->FirstChild("lockcode");
   const TiXmlNode *pBadPwdCount = source->FirstChild("badpwdcount");
   const TiXmlNode *pThumbnailNode = source->FirstChild("thumbnail");
-  // BOXEE
+// BOXEE
   const TiXmlNode *pScanType = source->FirstChild("scantype");
   const TiXmlNode *pAdult = source->FirstChild("adult");
   const TiXmlNode *pCountry = source->FirstChild("country");
   const TiXmlNode *pCountryAllow = source->FirstChild("country-allow");
-  // END BOXEE
+// END BOXEE
   if (!strName.IsEmpty() && vecPaths.size() > 0)
   {
     vector<CStdString> verifiedPaths;
@@ -579,7 +624,7 @@ bool CSettings::GetSource(const CStdString &category, const TiXmlNode *source, C
       // validate the paths
       for (int j = 0; j < (int)vecPaths.size(); ++j)
       {
-        CURL url(vecPaths[j]);
+        CURI url(vecPaths[j]);
         CStdString protocol = url.GetProtocol();
         bool bIsInvalid = false;
 
@@ -612,7 +657,7 @@ bool CSettings::GetSource(const CStdString &category, const TiXmlNode *source, C
 
     share.FromNameAndPaths(category, strName, verifiedPaths);
 
-    /*    CLog::Log(LOGDEBUG,"      Adding source:");
+/*    CLog::Log(LOGDEBUG,"      Adding source:");
     CLog::Log(LOGDEBUG,"        Name: %s", share.strName.c_str());
     if (CUtil::IsVirtualPath(share.strPath) || CUtil::IsMultiPath(share.strPath))
     {
@@ -621,7 +666,7 @@ bool CSettings::GetSource(const CStdString &category, const TiXmlNode *source, C
     }
     else
       CLog::Log(LOGDEBUG,"        Path: %s", share.strPath.c_str());
-     */
+*/
     share.m_iBadPwdCount = 0;
     if (pLockMode)
     {
@@ -647,13 +692,13 @@ bool CSettings::GetSource(const CStdString &category, const TiXmlNode *source, C
         share.m_strThumbnailImage = pThumbnailNode->FirstChild()->Value();
     }
 
-    // BOXEE
+// BOXEE
 
     if (pScanType && pScanType->FirstChild())
     {
       share.m_iScanType = atoi( pScanType->FirstChild()->Value() );
     }
-
+    
     share.m_adult = false;
     if (pAdult && pAdult->FirstChild()) 
     {
@@ -673,7 +718,7 @@ bool CSettings::GetSource(const CStdString &category, const TiXmlNode *source, C
     }
 
     share.m_type = category;
-    // END BOXEE
+// END BOXEE
 
     return true;
   }
@@ -725,6 +770,16 @@ bool CSettings::GetInteger(const TiXmlElement* pRootElement, const char *tagName
   return false;
 }
 
+bool CSettings::GetUint(const TiXmlElement* pRootElement, const char *strTagName, uint32_t& uValue, const uint32_t uDefault, const uint32_t uMin, const uint32_t uMax)
+{
+  if (XMLUtils::GetUInt(pRootElement, strTagName, uValue))
+    return true;
+  // default
+  uValue = uDefault;
+  return false;
+
+}
+
 bool CSettings::GetFloat(const TiXmlElement* pRootElement, const char *tagName, float& fValue, const float fDefault, const float fMin, const float fMax)
 {
   if (XMLUtils::GetFloat(pRootElement, tagName, fValue, fMin, fMax))
@@ -752,7 +807,7 @@ void CSettings::GetViewState(const TiXmlElement *pRootElement, const CStdString 
   int sortOrder;
   GetInteger(pNode, "sortorder", sortOrder, SORT_ORDER_ASC, SORT_ORDER_NONE, SORT_ORDER_DESC);
   viewState.m_sortOrder = (SORT_ORDER)sortOrder;
-}
+  }
 
 void CSettings::SetViewState(TiXmlNode *pRootNode, const CStdString &strTagName, const CViewState &viewState) const
 {
@@ -784,7 +839,7 @@ bool CSettings::LoadCalibration(const TiXmlElement* pRoot, const CStdString& str
     for (unsigned int res = 0; res < g_settings.m_ResInfo.size(); res++)
     {
       if (res == RES_WINDOW)
-        continue;
+      continue;
 
       if (g_settings.m_ResInfo[res].strMode == mode)
       { // found, read in the rest of the information for this item
@@ -808,7 +863,7 @@ bool CSettings::LoadCalibration(const TiXmlElement* pRoot, const CStdString& str
 
         GetInteger(pResolution, "subtitles", m_ResInfo[res].iSubtitles, (int)((1 - fSafe)*m_ResInfo[res].iHeight), m_ResInfo[res].iHeight / 2, m_ResInfo[res].iHeight*5 / 4);
         GetFloat(pResolution, "pixelratio", m_ResInfo[res].fPixelRatio, 128.0f / 117.0f, 0.5f, 2.0f);
-        /*    CLog::Log(LOGDEBUG, "  calibration for %s %ix%i", m_ResInfo[res].strMode, m_ResInfo[res].iWidth, m_ResInfo[res].iHeight);
+    /*    CLog::Log(LOGDEBUG, "  calibration for %s %ix%i", m_ResInfo[res].strMode, m_ResInfo[res].iWidth, m_ResInfo[res].iHeight);
         CLog::Log(LOGDEBUG, "    subtitle yposition:%i pixelratio:%03.3f offsets:(%i,%i)->(%i,%i)",
                   m_ResInfo[res].iSubtitles, m_ResInfo[res].fPixelRatio,
                   m_ResInfo[res].Overscan.left, m_ResInfo[res].Overscan.top,
@@ -819,7 +874,7 @@ bool CSettings::LoadCalibration(const TiXmlElement* pRoot, const CStdString& str
     pResolution = pResolution->NextSiblingElement("resolution");
 
 
-    /* Hmm, these stuff shouldn't be releaded, they should be used instead of our internal
+/* Hmm, these stuff shouldn't be releaded, they should be used instead of our internal
    id counter to select what resolution is affected by this settings
 #ifdef HAS_XRANDR
     const CStdString def("");
@@ -830,8 +885,8 @@ bool CSettings::LoadCalibration(const TiXmlElement* pRoot, const CStdString& str
     strncpy(m_ResInfo[iRes].strOutput, val.c_str(), sizeof(m_ResInfo[iRes].strOutput));
     GetFloat(pResolution, "refreshrate", m_ResInfo[iRes].fRefreshRate, 0, 0, 200);
 #endif
-     */
-  }
+*/
+    }
   return true;
 }
 
@@ -882,6 +937,11 @@ bool CSettings::LoadSettings(const CStdString& strSettingsFile)
   {
     g_LoadErrorStr.Format("%s\nDoesn't contain <settings>", strSettingsFile.c_str());
     return false;
+  }
+
+  if (pRootElement->Attribute("version"))
+  {
+    m_settingsVersion = atoi(pRootElement->Attribute("version"));
   }
 
   // mymusic settings
@@ -955,7 +1015,7 @@ bool CSettings::LoadSettings(const CStdString& strSettingsFile)
     GetInteger(pElement, "httpapibroadcastlevel", g_stSettings.m_HttpApiBroadcastLevel, 0, 0,5);
     GetInteger(pElement, "httpapibroadcastport", g_stSettings.m_HttpApiBroadcastPort, 8278, 1, 65535);
     int nTime=0;
-    GetInteger(pElement, "lasttimecheckforthumbremoval", nTime, 0, 0, LONG_MAX);
+    GetInteger(pElement, "lasttimecheckforthumbremoval", nTime, 0, 0, INT_MAX);
     g_stSettings.m_lastTimeCheckForThumbRemoval = nTime;
   }
 
@@ -981,7 +1041,7 @@ bool CSettings::LoadSettings(const CStdString& strSettingsFile)
     GetFloat(pElement, "contrast", g_stSettings.m_defaultVideoSettings.m_Contrast, 50, 0, 100);
     GetFloat(pElement, "gamma", g_stSettings.m_defaultVideoSettings.m_Gamma, 20, 0, 100);
     GetFloat(pElement, "audiodelay", g_stSettings.m_defaultVideoSettings.m_AudioDelay, 0.0f, -10.0f, 10.0f);
-    GetFloat(pElement, "subtitledelay", g_stSettings.m_defaultVideoSettings.m_SubtitleDelay, 0.0f, -10.0f, 10.0f);
+    GetFloat(pElement, "subtitledelay", g_stSettings.m_defaultVideoSettings.m_SubtitleDelay, 0.0f, -50.0f, 50.0f);
 
     g_stSettings.m_defaultVideoSettings.m_SubtitleCached = false;
   }
@@ -990,6 +1050,11 @@ bool CSettings::LoadSettings(const CStdString& strSettingsFile)
   if (pElement)
   {
     GetInteger(pElement, "volumelevel", g_stSettings.m_nVolumeLevel, VOLUME_MAXIMUM, VOLUME_MINIMUM, VOLUME_MAXIMUM);
+
+    // volume is not only availible with dedicated buttons on the remote
+    // We set the volume to max for user without it
+    g_stSettings.m_nVolumeLevel = VOLUME_MAXIMUM;
+
     GetInteger(pElement, "dynamicrangecompression", g_stSettings.m_dynamicRangeCompressionLevel, VOLUME_DRC_MINIMUM, VOLUME_DRC_MINIMUM, VOLUME_DRC_MAXIMUM);
     for (int i = 0; i < 4; i++)
     {
@@ -1001,6 +1066,19 @@ bool CSettings::LoadSettings(const CStdString& strSettingsFile)
       GetFloat(pElement, setting + "whisper", g_stSettings.m_karaokeVoiceMask[i].whisper, XVOICE_MASK_PARAM_DISABLED, XVOICE_MASK_PARAM_DISABLED, 1.0f);
       GetFloat(pElement, setting + "robotic", g_stSettings.m_karaokeVoiceMask[i].robotic, XVOICE_MASK_PARAM_DISABLED, XVOICE_MASK_PARAM_DISABLED, 1.0f);
     }
+  }
+
+  // FTU
+  pElement = pRootElement->FirstChildElement("ftu");
+  if (pElement)
+  {
+    int isDoneFTU;
+    pElement->Attribute("done",&isDoneFTU);
+    g_stSettings.m_doneFTU = isDoneFTU;
+
+    int isDoneFTU2;
+    pElement->Attribute("done2",&isDoneFTU2);
+    g_stSettings.m_doneFTU2 = isDoneFTU2;
   }
 
   LoadCalibration(pRootElement, strSettingsFile);
@@ -1019,7 +1097,28 @@ bool CSettings::LoadSettings(const CStdString& strSettingsFile)
   CLog::Log(LOGNOTICE, "Default Video Player: %s", g_advancedSettings.m_videoDefaultPlayer.c_str());
   CLog::Log(LOGNOTICE, "Default Audio Player: %s", g_advancedSettings.m_audioDefaultPlayer.c_str());
 
+  // Upgrade procedure
+  UpgradeSettings();
+
   return true;
+}
+
+void CSettings::UpgradeSettings()
+{
+  int originVersion = m_settingsVersion;
+
+  if (m_settingsVersion == 1)
+  {
+#ifdef HAS_EMBEDDED
+    // Upgrade to projectm
+    g_guiSettings.SetString("mymusic.visualisation", "ProjectM.vis");
+#endif
+    ++m_settingsVersion;
+  }
+
+  // ...
+  if (m_settingsVersion != originVersion)
+    Save();
 }
 
 bool CSettings::LoadPlayerCoreFactorySettings(const CStdString& fileStr, bool clear)
@@ -1045,6 +1144,11 @@ bool CSettings::SaveSettings(const CStdString& strSettingsFile, CGUISettings *lo
 {
   TiXmlDocument xmlDoc;
   TiXmlElement xmlRootElement("settings");
+
+  char versionStr[16];
+  sprintf(versionStr, "%d", m_settingsVersion);
+  xmlRootElement.SetAttribute("version", versionStr);
+
   TiXmlNode *pRoot = xmlDoc.InsertEndChild(xmlRootElement);
   if (!pRoot) return false;
   // write our tags one by one - just a big list for now (can be flashed up later)
@@ -1127,7 +1231,7 @@ bool CSettings::SaveSettings(const CStdString& strSettingsFile, CGUISettings *lo
   XMLUtils::SetInt(pNode, "httpapibroadcastport", g_stSettings.m_HttpApiBroadcastPort);
   XMLUtils::SetInt(pNode, "httpapibroadcastlevel", g_stSettings.m_HttpApiBroadcastLevel);
   XMLUtils::SetLong(pNode, "lasttimecheckforthumbremoval", g_stSettings.m_lastTimeCheckForThumbRemoval);
-
+  
   // default video settings
   TiXmlElement videoSettingsNode("defaultvideosettings");
   pNode = pRoot->InsertEndChild(videoSettingsNode);
@@ -1165,6 +1269,12 @@ bool CSettings::SaveSettings(const CStdString& strSettingsFile, CGUISettings *lo
     XMLUtils::SetFloat(pNode, setting + "robotic", g_stSettings.m_karaokeVoiceMask[i].robotic);
   }
 
+  // FTU
+  TiXmlElement ftuNode("ftu");
+  ftuNode.SetAttribute("done",g_stSettings.m_doneFTU);
+  ftuNode.SetAttribute("done2",g_stSettings.m_doneFTU2);
+  pRoot->InsertEndChild(ftuNode);
+
   SaveCalibration(pRoot);
 
   if (localSettings) // local settings to save
@@ -1179,6 +1289,18 @@ bool CSettings::SaveSettings(const CStdString& strSettingsFile, CGUISettings *lo
 
   // save the file
   return xmlDoc.SaveFile(strSettingsFile);
+}
+
+CStdString CSettings::GetLicenseFile() const
+{
+  CStdString lic_path;
+// Boxee
+//  if (g_settings.m_iLastLoadedProfileIndex == 0)
+    lic_path = "special://xbmc/system/license.xml";
+//    settings = "special://profile/guisettings.xml";
+// Boxee end
+
+  return lic_path;
 }
 
 bool CSettings::LoadProfile(int index)
@@ -1216,33 +1338,33 @@ bool CSettings::LoadProfile(int index)
     
     if (!strLanguage.Equals(strOldLanguage))
     {
-      strLanguage[0] = toupper(strLanguage[0]);
-  
-      CStdString strLangInfoPath;
-      strLangInfoPath.Format("special://xbmc/language/%s/langinfo.xml", strLanguage.c_str());
-      CLog::Log(LOGINFO, "load language info file:%s", strLangInfoPath.c_str());
-      g_langInfo.Load(strLangInfoPath);
+    strLanguage[0] = toupper(strLanguage[0]);
+
+    CStdString strLangInfoPath;
+    strLangInfoPath.Format("special://xbmc/language/%s/langinfo.xml", strLanguage.c_str());
+    CLog::Log(LOGINFO, "load language info file:%s", strLangInfoPath.c_str());
+    g_langInfo.Load(strLangInfoPath);
 
 #ifdef _XBOX
-      CStdString strKeyboardLayoutConfigurationPath;
-      strKeyboardLayoutConfigurationPath.Format("special://xbmc/language/%s/keyboardmap.xml", strLanguage.c_str());
-      CLog::Log(LOGINFO, "load keyboard layout configuration info file: %s", strKeyboardLayoutConfigurationPath.c_str());
-      g_keyboardLayoutConfiguration.Load(strKeyboardLayoutConfigurationPath);
+    CStdString strKeyboardLayoutConfigurationPath;
+    strKeyboardLayoutConfigurationPath.Format("special://xbmc/language/%s/keyboardmap.xml", strLanguage.c_str());
+    CLog::Log(LOGINFO, "load keyboard layout configuration info file: %s", strKeyboardLayoutConfigurationPath.c_str());
+    g_keyboardLayoutConfiguration.Load(strKeyboardLayoutConfigurationPath);
 #endif
 
-      CStdString strLanguagePath;
-      strLanguagePath.Format("special://xbmc/language/%s/strings.xml", strLanguage.c_str());
-  
-      CButtonTranslator::GetInstance().Load();
-      g_localizeStrings.Load(strLanguagePath);
-  
-      g_infoManager.ResetCache();
-      g_infoManager.ResetLibraryBools();
+    CStdString strLanguagePath;
+    strLanguagePath.Format("special://xbmc/language/%s/strings.xml", strLanguage.c_str());
 
-      // always reload the skin - we need it for the new language strings
-      g_application.LoadSkin(g_guiSettings.GetString("lookandfeel.skin"));
+    CButtonTranslator::GetInstance().Load();
+    g_localizeStrings.Load(strLanguagePath);
+
+    g_infoManager.ResetCache();
+    g_infoManager.ResetLibraryBools();
+
+    // always reload the skin - we need it for the new language strings
+    g_application.LoadSkin(g_guiSettings.GetString("lookandfeel.skin"));
     }
-    
+
     if (m_iLastLoadedProfileIndex != 0)
     {
       TiXmlDocument doc;
@@ -1261,6 +1383,10 @@ bool CSettings::LoadProfile(int index)
     CUtil::DeleteMusicDatabaseDirectoryCache();
     CUtil::DeleteVideoDatabaseDirectoryCache();
 
+#ifdef HAS_EMBEDDED
+    g_lic_settings.Load();
+#endif
+    
     return true;
   }
 
@@ -1274,37 +1400,30 @@ bool CSettings::DeleteProfile(int index)
   if (index < 0 && index >= (int)g_settings.m_vecProfiles.size())
     return false;
 
-  CGUIDialogYesNo* dlgYesNo = (CGUIDialogYesNo*)g_windowManager.GetWindow(WINDOW_DIALOG_YES_NO);
-  if (dlgYesNo)
+  CStdString message;
+  CStdString str = g_localizeStrings.Get(55691);
+  message.Format(str.c_str(), g_settings.m_vecProfiles.at(index).getName());
+
+  if (CGUIDialogYesNo2::ShowAndGetInput(g_localizeStrings.Get(55690),message,0))
   {
-    CStdString message;
-    CStdString str = g_localizeStrings.Get(53406);
-    message.Format(str.c_str(), g_settings.m_vecProfiles.at(index).getName());
-    dlgYesNo->SetHeading(53405);
-    dlgYesNo->SetLine(0, message);
-    dlgYesNo->SetLine(1, "");
-    dlgYesNo->SetLine(2, "");
-    dlgYesNo->DoModal();
-
-    if (dlgYesNo->IsConfirmed())
+    //delete profile
+    CStdString strDirectory = g_settings.m_vecProfiles[index].getDirectory();
+    m_vecProfiles.erase(g_settings.m_vecProfiles.begin()+index);
+    if (index == g_settings.m_iLastLoadedProfileIndex)
     {
-      //delete profile
-      CStdString strDirectory = g_settings.m_vecProfiles[index].getDirectory();
-      m_vecProfiles.erase(g_settings.m_vecProfiles.begin()+index);
-      if (index == g_settings.m_iLastLoadedProfileIndex)
-      {
-        g_settings.LoadProfile(0);
-        g_settings.Save();
-      }
-
-      CFileItem item(CUtil::AddFileToFolder(GetUserDataFolder(), strDirectory));
-      item.m_strPath = CUtil::AddFileToFolder(GetUserDataFolder(), strDirectory + "\\");
-      item.m_bIsFolder = true;
-      item.Select(true);
-      CGUIWindowFileManager::DeleteItem(&item,false);
+      g_settings.LoadProfile(0);
+      g_settings.Save();
     }
-    else
-      return false;
+
+    CFileItem item(CUtil::AddFileToFolder(GetUserDataFolder(), strDirectory));
+    item.m_strPath = CUtil::AddFileToFolder(GetUserDataFolder(), strDirectory + "\\");
+    item.m_bIsFolder = true;
+    item.Select(true);
+    CGUIWindowFileManager::DeleteItem(&item,false);
+  }
+  else
+  {
+    return false;
   }
 
   SaveProfiles( PROFILES_FILE );
@@ -1324,10 +1443,10 @@ bool CSettings::LoadProfiles(const CStdString& strSettingsFile)
 {
   TiXmlDocument profilesDoc;
   CStdString backup = strSettingsFile + ".bak";
-
+  
   if (!CFile::Exists(strSettingsFile) && !CFile::Exists(backup))
   { // set defaults, or assume no rss feeds??
-    CLog::Log(LOGWARNING, "Settings file does not exist, defaults assumed, path = %s", strSettingsFile.c_str());
+	  CLog::Log(LOGWARNING, "Settings file does not exist, defaults assumed, path = %s", strSettingsFile.c_str());
     return false;
   }
   if (!profilesDoc.LoadFile(strSettingsFile))
@@ -1442,11 +1561,11 @@ bool CSettings::LoadProfiles(const CStdString& strSettingsFile)
     CStdString strDate;
     XMLUtils::GetString(pProfile,"lastdate",strDate);
     profile.setDate(strDate);
-
+    
     bHas = true;
     XMLUtils::GetBoolean(pProfile, "lockadult", bHas);
     profile.setAdultLocked(bHas);
-
+    
     CStdString strAdultLockCode;
     XMLUtils::GetString(pProfile,"adultlockcode",strAdultLockCode);
     profile.setAdultLockCode(strAdultLockCode);    
@@ -1479,12 +1598,12 @@ bool CSettings::SaveProfiles(const CStdString& strSettingsFile) const
     XMLUtils::SetPath(pNode,"thumbnail",g_settings.m_vecProfiles[iProfile].getThumb());
     XMLUtils::SetString(pNode,"lastdate",g_settings.m_vecProfiles[iProfile].getDate());
 
-    //Boxee
+//Boxee
     //if (g_settings.m_vecProfiles[0].getLockMode() != LOCK_MODE_EVERYONE)
-    //end Boxee
+//end Boxee
     {
       XMLUtils::SetInt(pNode,"lockmode",g_settings.m_vecProfiles[iProfile].getLockMode());
-      CLog::Log(LOGDEBUG, "CSettings::SaveProfiles, LOGIN, save lock code: %s", g_settings.m_vecProfiles[iProfile].getLockCode().c_str());
+      //CLog::Log(LOGDEBUG, "CSettings::SaveProfiles, LOGIN, save lock code: %s", g_settings.m_vecProfiles[iProfile].getLockCode().c_str());
       XMLUtils::SetString(pNode,"lockcode",g_settings.m_vecProfiles[iProfile].getLockCode());
       XMLUtils::SetString(pNode,"lastlockcode",g_settings.m_vecProfiles[iProfile].getLastLockCode());
       XMLUtils::SetString(pNode,"adultlockcode",g_settings.m_vecProfiles[iProfile].getAdultLockCode());
@@ -1633,17 +1752,20 @@ bool CSettings::UpdateShare(const CStdString &type, const CStdString oldName, co
       (*it).m_country = share.m_country;
       (*it).m_countryAllow = share.m_countryAllow;
       (*it).m_type = share.m_type;
-
+      
       pShare = &(*it);
-
+      
       break;
     }
   }
 
   if (!pShare)
     return false;
-
-  BOXEE::Boxee::GetInstance().GetMetadataEngine().UpdateMediaShare(pShare->strName, pShare->strPath, pShare->m_type, pShare->m_iScanType);
+  
+  if (!BOXEE::Boxee::GetInstance().GetMetadataEngine().UpdateMediaShare(oldName, type, pShare->strName, pShare->strPath, pShare->m_type, pShare->m_iScanType))
+  {
+    CLog::Log(LOGERROR,"CSettings::UpdateShare - FAILED to UpdateMediaShare in Database. [sourceName=%s][type=%s][NewName=%s][NewPath=%s][NewType=%s][NewScanType=%d] (msdb)",oldName.c_str(),type.c_str(),pShare->strName.c_str(),pShare->strPath.c_str(),pShare->m_type.c_str(),pShare->m_iScanType);
+  }
 
   // Update our XML file as well
   return SaveSources();
@@ -1684,6 +1806,11 @@ bool CSettings::UpdateSource(const CStdString &strType, const CStdString strOldN
       }
       else
         return false;
+      
+      if (!BOXEE::Boxee::GetInstance().GetMetadataEngine().UpdateMediaShare(strOldName, strType, (*it).strName, (*it).strPath, (*it).m_type, (*it).m_iScanType))
+      {
+        CLog::Log(LOGERROR,"CSettings::UpdateSource - FAILED to UpdateMediaShare in Database. [sourceName=%s][type=%s][FieldToUpdate=%s][NewValue=%s] (msdb)",strOldName.c_str(),strType.c_str(),strUpdateElement.c_str(),strUpdateText.c_str());
+      }
 
       return true;
     }
@@ -1714,30 +1841,48 @@ bool CSettings::DeleteSource(const CStdString &strType, const CStdString strName
 	// This mutex locks all the sources vector from all the types - it should improve and represent a specific source type
     CSingleLock lock(m_sourcesVecLock);
 
-    VECSOURCES *pShares = GetSourcesFromType(strType);
-    if (!pShares) return false;
+  VECSOURCES *pShares = GetSourcesFromType(strType);
+  if (!pShares) return false;
 
-    for (IVECSOURCES it = pShares->begin(); it != pShares->end(); it++)
+  for (IVECSOURCES it = pShares->begin(); it != pShares->end(); it++)
+  {
+    if ((*it).strName == strName && (*it).strPath == strPath)
     {
-      if ((*it).strName == strName && (*it).strPath == strPath)
-      {
-        CLog::Log(LOGDEBUG,"found share, removing!");
-        pShares->erase(it);
-        found = true;
-        break;
-      }
+      CLog::Log(LOGDEBUG,"found share, removing!");
+      pShares->erase(it);
+      found = true;
+      break;
     }
   }
+  }
 
-  if (virtualSource || strType.Find("upnp") > -1)
+  if (virtualSource)
     return found;
+  
+  if (!BOXEE::Boxee::GetInstance().GetMetadataEngine().DeleteMediaShare(strName, strPath, strType))
+  {
+    CLog::Log(LOGERROR,"CSettings::DeleteSource - FAILED to DeleteMediaShare from Database. [name=%s][path=%s][type=%s] (msdb)",strName.c_str(),strPath.c_str(),strType.c_str());
+  }
 
+  CLog::Log(LOGINFO,"CSettings::DeleteSource - ERASE, all the files that are under the share [path=%s] (msdb)", strPath.c_str());
 
-  BOXEE::Boxee::GetInstance().GetMetadataEngine().DeleteMediaShare(strName, strPath, strType);
+  // this is the only table that doesnt have trigger - will be fixed later ?
+  CStdString strFolderShareDeletePath = _P(strPath);
 
-  CLog::Log(LOGINFO,"CSettings::DeleteSource ERASE, all the files that are under the share %s", strPath.c_str());
-  BOXEE::Boxee::GetInstance().GetMetadataEngine().RemoveAudioByFolder(_P(strPath)); // this is the only table that doesnt have trigger - will be fixed later ?
-  BOXEE::Boxee::GetInstance().GetMetadataEngine().RemoveFolderByPath(_P(strPath));
+  if (strFolderShareDeletePath.Left(7) == "upnp://" && CUtil::HasSlashAtEnd(strFolderShareDeletePath))
+  {
+    CUtil::RemoveSlashAtEnd(strFolderShareDeletePath);
+  }
+
+  if (!BOXEE::Boxee::GetInstance().GetMetadataEngine().RemoveAudioByFolder(strFolderShareDeletePath))
+  {
+    CLog::Log(LOGERROR,"CSettings::DeleteSource - FAILED to RemoveAudioByFolder [path=%s] from Database (msdb)",(_P(strPath)).c_str());
+  }
+
+  if (!BOXEE::Boxee::GetInstance().GetMetadataEngine().RemoveFolderByPath(strFolderShareDeletePath))
+  {
+    CLog::Log(LOGERROR,"CSettings::DeleteSource - FAILED to RemoveFolderByPath [path=%s] from Database (msdb)",(_P(strPath)).c_str());
+  }
 
 
   return SaveSources();
@@ -1772,17 +1917,20 @@ bool CSettings::AddShare(const CStdString &type, const CMediaSource &share)
     }
   }
   pShares->push_back(shareToAdd);
-
+  
   // Add the share to the watchdog
   g_application.AddPathToWatch(shareToAdd.strPath);
 
-  BOXEE::Boxee::GetInstance().GetMetadataEngine().AddMediaShare(shareToAdd.strName, shareToAdd.strPath, shareToAdd.m_type, shareToAdd.m_iScanType);
+  if (!BOXEE::Boxee::GetInstance().GetMetadataEngine().AddMediaShare(shareToAdd.strName, shareToAdd.strPath, shareToAdd.m_type, shareToAdd.m_iScanType))
+  {
+    CLog::Log(LOGERROR,"CSettings::AddShare - FAILED to AddMediaShare to Database. [name=%s][path=%s][type=%s][ScanType=%d] (msdb)",shareToAdd.strName.c_str(),shareToAdd.strPath.c_str(),shareToAdd.m_type.c_str(),shareToAdd.m_iScanType);
+  }
 
   if (!share.m_ignore || type.Find("upnp") < 0)
   {
     return SaveSources();
   }
-
+  
   return true;
 }
 
@@ -1801,9 +1949,11 @@ bool CSettings::SaveSources()
   SetSources(pRoot, "pictures", g_settings.m_pictureSources, g_settings.m_defaultPictureSource);
   SetSources(pRoot, "files", g_settings.m_fileSources, g_settings.m_defaultFileSource);
 
+  CBoxeeBrowseMenuManager::GetInstance().ClearDynamicMenuButtons("mn_local_movies_sources");
+
   return doc.SaveFile(g_settings.GetSourcesFile());
 }
-
+  
 bool CSettings::SetSources(TiXmlNode *root, const char *section, const VECSOURCES &shares, const char *defaultPath)
 {
   TiXmlElement sectionElement(section);
@@ -1831,7 +1981,7 @@ bool CSettings::SetSources(TiXmlNode *root, const char *section, const VECSOURCE
       }
       if (!share.m_strThumbnailImage.IsEmpty())
         XMLUtils::SetPath(&source, "thumbnail", share.m_strThumbnailImage);
-      // BOXEE
+// BOXEE
       XMLUtils::SetInt(&source, "scantype", share.m_iScanType);
       if (share.vecPaths.size() == 1 && CUtil::IsApp(share.vecPaths[0]))
       {
@@ -1839,7 +1989,7 @@ bool CSettings::SetSources(TiXmlNode *root, const char *section, const VECSOURCE
         XMLUtils::SetBoolean(&source, "country-allow", share.m_countryAllow);
         XMLUtils::SetString(&source, "country", share.m_country);
       }
-      // END BOXEE
+// END BOXEE
       sectionNode->InsertEndChild(source);
     }
   }
@@ -1912,7 +2062,7 @@ void CSettings::Clear()
   m_fileSources.clear();
   m_musicSources.clear();
   m_videoSources.clear();
-  //  m_vecIcons.clear();
+//  m_vecIcons.clear();
   m_vecProfiles.clear();
   m_mapRssUrls.clear();
   m_skinBools.clear();
@@ -2205,7 +2355,7 @@ CStdString CSettings::GetBookmarksThumbFolder() const
 CStdString CSettings::GetPicturesThumbFolder() const
 {
   CStdString folder;
-  if (m_vecProfiles.size() > m_iLastLoadedProfileIndex && m_vecProfiles[m_iLastLoadedProfileIndex].hasDatabases())
+  if ((int) m_vecProfiles.size() > m_iLastLoadedProfileIndex && m_vecProfiles[m_iLastLoadedProfileIndex].hasDatabases())
     CUtil::AddFileToFolder(g_settings.GetProfileUserDataFolder(), "Thumbnails/Pictures", folder);
   else
     CUtil::AddFileToFolder(g_settings.GetUserDataFolder(), "Thumbnails/Pictures", folder);
@@ -2347,18 +2497,27 @@ void CSettings::LoadRSSFeeds()
 CStdString CSettings::GetSettingsFile() const
 {
   CStdString settings;
-  // Boxee
-  //  if (g_settings.m_iLastLoadedProfileIndex == 0)
-  settings = "special://masterprofile/guisettings.xml";
-  //  else
-  //    settings = "special://profile/guisettings.xml";
-  // Boxee end
+// Boxee
+//  if (g_settings.m_iLastLoadedProfileIndex == 0)
+    settings = "special://masterprofile/guisettings.xml";
+//  else
+//    settings = "special://profile/guisettings.xml";
+// Boxee end
 
   return settings;
 }
 
 void CSettings::CreateProfileFolders()
 {
+#ifdef CANMORE
+  if ((size_t) m_iLastLoadedProfileIndex <  m_vecProfiles.size())
+  {
+    CDirectory::Create("/tmp/profile/"+m_vecProfiles[m_iLastLoadedProfileIndex].getID());
+  }
+  CUtil::CreateTempDirectory("special://profile/cache");
+
+#endif
+
   CDirectory::Create(GetDatabaseFolder());
   CDirectory::Create(GetCDDBFolder());
 
@@ -2369,7 +2528,18 @@ void CSettings::CreateProfileFolders()
 
 void CSettings::CreateThumbnailsFolders()
 {
-  // Thumbnails/
+  // Thumbnails/ 
+#ifdef CANMORE
+  CStdString thumbFolder = GetThumbnailsFolder();
+  struct stat fileStat;
+
+  int rc = lstat(_P(thumbFolder).c_str(), &fileStat);
+  if(rc == 0 && S_ISLNK(fileStat.st_mode))
+  {
+    CFile::Delete(thumbFolder);
+    CLog::Log(LOGINFO, "%s is a soft link and needs to be deleted", _P(thumbFolder).c_str());
+  }
+#endif
   CDirectory::Create(GetThumbnailsFolder());
   CDirectory::Create(GetMusicThumbFolder());
   CDirectory::Create(GetMusicArtistThumbFolder());
@@ -2396,22 +2566,35 @@ CBoxeeShortcutList& CSettings::GetShortcuts()
   return m_shortcuts;
 }
 
+BlackLevelType CSettings::GetBlackLevelAsEnum(const std::string& blackLevel)
+{
+  for (int i=BLACK_LEVEL_PC; i<NUM_OF_BLACK_LEVEL; i++)
+  {
+    if (blackLevelValues[i] == g_guiSettings.GetString("videoscreen.blacklevel"))
+    {
+      return (BlackLevelType)i;
+    }
+  }
+
+  return BLACK_LEVEL_ERROR;
+}
+
 OverscanType CSettings::GetCurrentOverscan()
 {
   RESOLUTION iRes = g_graphicsContext.GetVideoResolution();
   const RESOLUTION_INFO& resolution = m_ResInfo[iRes];
-
+  
   // Calculate average overscan
   float overscans[4];
   overscans[0] = ((float) resolution.Overscan.left) / ((float) resolution.iWidth);
   overscans[1] = ((float) resolution.Overscan.top) / ((float) resolution.iHeight);
   overscans[2] = ((float) (resolution.iWidth - resolution.Overscan.right)) / ((float) resolution.iWidth);
   overscans[3] = ((float) (resolution.iHeight - resolution.Overscan.bottom)) / ((float) resolution.iHeight);
-
+  
   for (OverscanType i = OVERSCAN_NONE; i <= OVERSCAN_6_0; i = OverscanType(i+1))
   {
     int match = 0;
-
+    
     for (int o = 0; o < 4; o++)
     {
       if (overscans[o] > OverscanValues[i] - 0.005f && overscans[o] < OverscanValues[i] + 0.005f)
@@ -2419,13 +2602,13 @@ OverscanType CSettings::GetCurrentOverscan()
         match++;
       }
     }
-
+    
     if (match == 4)
     {
       return i;
     }
   }
-
+  
   return OVERSCAN_CUSTOM;
 }
 
@@ -2434,6 +2617,27 @@ void CSettings::SetCurrentOverscan(OVERSCAN overscan)
   RESOLUTION iRes = g_graphicsContext.GetVideoResolution();
   RESOLUTION_INFO& resolution = m_ResInfo[iRes];
   resolution.Overscan = overscan;
+
+  // We need to copy the calibration to all matching resolutions
+  for (int i = 0; i < (int)m_ResInfo.size(); i++)
+  {
+    RESOLUTION_INFO info = m_ResInfo[i];
+
+    //printf("i = %d m_iCurRes = %d\n", i, iRes);
+
+    if (i == iRes)
+      continue;
+
+    if (info.iWidth == resolution.iWidth && info.iHeight == resolution.iHeight
+        && info.dwFlags == resolution.dwFlags)
+    {
+      //printf("For res %d %s Found matching %d %s\n", iRes,
+      //    resolution.strMode.c_str(), i, info.strMode.c_str());
+      m_ResInfo[i].Overscan = resolution.Overscan;
+      m_ResInfo[i].iSubtitles = resolution.iSubtitles;
+      m_ResInfo[i].fPixelRatio = resolution.fPixelRatio;
+    }
+  }
 
   g_settings.Save();
   // reset our screen resolution to what it was initially
@@ -2451,13 +2655,13 @@ void CSettings::SetCurrentOverscan(OverscanType overscan)
   RESOLUTION iRes = g_graphicsContext.GetVideoResolution();
   RESOLUTION_INFO& resolution = m_ResInfo[iRes];
   float overscanPercent = OverscanValues[overscan];
-
+  
   OVERSCAN overscanValues;
   overscanValues.left = (int) (overscanPercent * (float) resolution.iWidth);
   overscanValues.right = resolution.iWidth - (int) (overscanPercent *  (float) resolution.iWidth);
   overscanValues.top = (int) (overscanPercent * (float) resolution.iHeight);
   overscanValues.bottom = resolution.iHeight - (int) (overscanPercent * (float) resolution.iHeight);
-
+  
   SetCurrentOverscan(overscanValues);
 }
 
@@ -2465,7 +2669,7 @@ ScreenFormatType CSettings::GetCurrentScreenFormat()
 {
   RESOLUTION iRes = g_graphicsContext.GetVideoResolution();
   const RESOLUTION_INFO& resolution = m_ResInfo[iRes];
-
+  
   for (ScreenFormatType i = SCREEN_FORMAT_4_3; i <= SCREEN_FORMAT_21_9; i = ScreenFormatType(i+1))
   {
     if (resolution.fPixelRatio > ScreenFormatValues[i] - 0.02f && resolution.fPixelRatio < ScreenFormatValues[i] + 0.02f)
@@ -2473,7 +2677,7 @@ ScreenFormatType CSettings::GetCurrentScreenFormat()
       return i;
     }
   }
-
+  
   return SCREEN_FORMAT_CUSTOM;
 }
 
@@ -2707,6 +2911,33 @@ void CSettings::CollectSourcesForReportFromVec(VECSOURCES sourcesFromTypeVec, VE
       CLog::Log(LOGDEBUG,"CSettings::CollectSourcesForReportFromVec - [path=%s] of [type=%s] is UNKNOWN. Path and won't be collect (rtspf)",sourcesFromTypeVec[i].strPath.c_str(),sourcesFromTypeVec[i].m_type.c_str());
     }
   }
+}
+
+bool CSettings::LoadAdditionalSettings()
+{
+  /////////////////////////////
+  // Load Subtitles Language //
+  /////////////////////////////
+
+  for (int i=57202;i<=BOXEE::BXUtils::StringToInt(g_localizeStrings.Get(57201));i++)
+  {
+    CStdString lang = g_localizeStrings.Get(i);
+    vector<CStdString> tokens;
+    CUtil::Tokenize(lang,tokens,",");
+    if ((int)tokens.size()<2)
+    {
+      CLog::Log(LOGERROR,"CSettings::LoadAdditionalSettings - LoadSubtitlesLanguage - FAILED to find comma in [%d=%s] (sl)",i,lang.c_str());
+      continue;
+    }
+    m_subtitleLangsVec.push_back(tokens[0]);
+    m_subtitleLangToCodeMap[tokens[0]] = tokens[1];
+  }
+  sort(m_subtitleLangsVec.begin(), m_subtitleLangsVec.end(), sortstringbyname());
+
+  m_subtitleLangsVec.insert(m_subtitleLangsVec.begin(),g_localizeStrings.Get(57200));
+  m_subtitleLangToCodeMap[g_localizeStrings.Get(57200)] = "def";
+
+  return true;
 }
 
 //

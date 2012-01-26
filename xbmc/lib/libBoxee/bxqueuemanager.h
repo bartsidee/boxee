@@ -18,6 +18,22 @@
 namespace BOXEE
 {
 
+class CQueueItemsType
+{
+public:
+  enum QueueItemsTypeEnums
+  {
+    QIT_CLIP=0,
+    QIT_TVSHOW=1,
+    QIT_MOVIE=2,
+    QIT_ALL=3,
+    NUM_OF_QUEUE_ITEMS_TYPE=4
+  };
+
+  static std::string GetQueueItemTypeAsStringId(CQueueItemsType::QueueItemsTypeEnums queueItemType);
+  static CQueueItemsType::QueueItemsTypeEnums GetQueueItemTypeAsEnum(const std::string& _queueItem);
+};
+
 class BXQueueManager
 {
 public:
@@ -27,8 +43,8 @@ public:
   bool Initialize();
   
   bool UpdateQueueList(unsigned long executionDelayInMS, bool repeat);
-  bool GetQueueList(BXBoxeeFeed& queueList);
-  int GetQueueSize();
+  bool GetQueueList(BXBoxeeFeed& queueList, CQueueItemsType::QueueItemsTypeEnums queueType = CQueueItemsType::QIT_ALL);
+  int GetQueueSize(CQueueItemsType::QueueItemsTypeEnums queueType);
   bool IsInQueueList(const std::string& boxeeId, const std::string& path);
   bool IsInQueueList(const std::string& boxeeId, const std::string& path, std::string& referral);
 
@@ -39,12 +55,20 @@ private:
 
   void LockQueueList();
   void UnLockQueueList();
-  void CopyQueueList(const BXBoxeeFeed& queueList);
-  void SetQueueListIsLoaded(bool isLoaded);
+  void CopyQueueList(const BXBoxeeFeed& queueList, CQueueItemsType::QueueItemsTypeEnums queueType);
+  void SetQueueListIsLoaded(CQueueItemsType::QueueItemsTypeEnums queueType, bool isLoaded);
+
+  bool IsLoaded(CQueueItemsType::QueueItemsTypeEnums queueType);
+
+  BXBoxeeFeed* GetQueueListByType(CQueueItemsType::QueueItemsTypeEnums queueType);
 
   SDL_mutex* m_queueListGuard;
+
   BXBoxeeFeed m_queueList;
-  
+  BXBoxeeFeed m_queueClipList;
+  BXBoxeeFeed m_queueMovieList;
+  BXBoxeeFeed m_queueTvList;
+
   int m_validQueueSize;
 
   class RequestQueueListFromServerTask : public BoxeeScheduleTask

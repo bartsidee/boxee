@@ -13,7 +13,7 @@ public:
   virtual ~CAppRegistry();
 
   void Load(const CAppDescriptor& desc, bool persistent = false);
-  const CStdString &Get(const CStdString& key);
+  const CStdString& Get(const CStdString& key);
   bool Has(const CStdString& key);
   void Set(const CStdString& key, const CStdString& value);
   void Set(const CStdString& key, const char* value);

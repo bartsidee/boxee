@@ -23,7 +23,7 @@
 #include "metadata.h"
 #include "libavutil/avstring.h"
 
-#if LIBAVFORMAT_VERSION_MAJOR < 53
+#if FF_API_OLD_METADATA
 
 #define SIZE_OFFSET(x) sizeof(((AVFormatContext*)0)->x),offsetof(AVFormatContext,x)
 
@@ -45,8 +45,11 @@ static const struct {
     { "creator",         SIZE_OFFSET(author)    },
     { "written_by",      SIZE_OFFSET(author)    },
     { "lead_performer",  SIZE_OFFSET(author)    },
+    { "composer",        SIZE_OFFSET(author)    },
+    { "performer",       SIZE_OFFSET(author)    },
     { "description",     SIZE_OFFSET(comment)   },
     { "albumtitle",      SIZE_OFFSET(album)     },
+    { "date",            SIZE_OFFSET(year)      },
     { "date_written",    SIZE_OFFSET(year)      },
     { "date_released",   SIZE_OFFSET(year)      },
     { "tracknumber",     SIZE_OFFSET(track)     },
@@ -105,10 +108,11 @@ void ff_metadata_demux_compat(AVFormatContext *ctx)
 
 
 #define FILL_METADATA(s, key, value) {                                        \
-    if (value && *value && !av_metadata_get(s->metadata, #key, NULL, 0))      \
-        av_metadata_set(&s->metadata, #key, value);                           \
+    if (!av_metadata_get(s->metadata, #key, NULL, 0))                         \
+        av_metadata_set2(&s->metadata, #key, value, 0);                       \
     }
-#define FILL_METADATA_STR(s, key)  FILL_METADATA(s, key, s->key)
+#define FILL_METADATA_STR(s, key) {                                           \
+    if (s->key && *s->key)  FILL_METADATA(s, key, s->key); }
 #define FILL_METADATA_INT(s, key) {                                           \
     char number[10];                                                          \
     snprintf(number, sizeof(number), "%d", s->key);                           \
@@ -141,4 +145,4 @@ void ff_metadata_mux_compat(AVFormatContext *ctx)
     }
 }
 
-#endif /* LIBAVFORMAT_VERSION_MAJOR < 53 */
+#endif /* FF_API_OLD_METADATA */

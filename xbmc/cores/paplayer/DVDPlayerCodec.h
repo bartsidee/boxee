@@ -37,19 +37,32 @@ public:
 
   virtual bool Init(const CStdString &strFile, unsigned int filecache);
   virtual void DeInit();
+  virtual bool CanSeek();
   virtual __int64 Seek(__int64 iSeekTime);
   virtual int ReadPCM(BYTE *pBuffer, int size, int *actualsize);
+  virtual int ReadData(BYTE *pBuffer, int size, int *actualsize);
   virtual bool CanInit();
-  virtual bool CanSeek();
+
+  virtual bool UsePassthrough() const { return m_bPassthrough; }
+  virtual bool UseHWDecoding()  const { return m_bHWDecode; }
+
+  virtual enum PCMChannels* GetChannelMap() { return m_pAudioCodec ? m_pAudioCodec->GetChannelMap() : NULL; };
+  virtual AudioMediaFormat GetDataFormat();
 
   void SetContentType(const CStdString &strContent);
 
 private:
+  void SetAudioFormat(int codec, unsigned char flags);
+
+  BYTE m_probeBuffer[2560];
+  int m_probeBufferLen, m_probeBufferPos;
+
   CDVDDemux* m_pDemuxer;
   CDVDInputStream* m_pInputStream;
   CDVDAudioCodec* m_pAudioCodec;
 
   CStdString m_strContentType;
+  AudioMediaFormat m_audioFormat;
 
   int m_nAudioStream;
 
@@ -58,6 +71,9 @@ private:
 
   BYTE *m_decoded;
   int  m_nDecodedLen;
+
+  bool m_bPassthrough;
+  bool m_bHWDecode;
 };
 
 #endif

@@ -42,7 +42,7 @@ CFileMemUnit::~CFileMemUnit()
   Close();
 }
 //*********************************************************************************************
-bool CFileMemUnit::Open(const CURL& url, bool bBinary)
+bool CFileMemUnit::Open(const CURI& url, bool bBinary)
 {
   Close();
 
@@ -52,7 +52,7 @@ bool CFileMemUnit::Open(const CURL& url, bool bBinary)
   return m_fileSystem->Open(GetPath(url));
 }
 
-bool CFileMemUnit::OpenForWrite(const CURL& url, bool bBinary, bool bOverWrite)
+bool CFileMemUnit::OpenForWrite(const CURI& url, bool bBinary, bool bOverWrite)
 {
   Close();
 
@@ -117,7 +117,7 @@ __int64 CFileMemUnit::GetPosition()
   return m_fileSystem->GetPosition();
 }
 
-bool CFileMemUnit::Exists(const CURL& url)
+bool CFileMemUnit::Exists(const CURI& url)
 {
   if (Open(url, true))
   {
@@ -127,7 +127,7 @@ bool CFileMemUnit::Exists(const CURL& url)
   return false;
 }
 
-int CFileMemUnit::Stat(const CURL& url, struct __stat64* buffer)
+int CFileMemUnit::Stat(const CURI& url, struct __stat64* buffer)
 {
   if (Open(url, true))
   {
@@ -137,7 +137,7 @@ int CFileMemUnit::Stat(const CURL& url, struct __stat64* buffer)
   return -1;
 }
 
-bool CFileMemUnit::Delete(const CURL& url)
+bool CFileMemUnit::Delete(const CURI& url)
 {
   IFileSystem *fileSystem = GetFileSystem(url);
   if (fileSystem)
@@ -145,7 +145,7 @@ bool CFileMemUnit::Delete(const CURL& url)
   return false;
 }
 
-bool CFileMemUnit::Rename(const CURL& url, const CURL& urlnew)
+bool CFileMemUnit::Rename(const CURI& url, const CURI& urlnew)
 {
   IFileSystem *fileSystem = GetFileSystem(url);
   if (fileSystem)
@@ -153,13 +153,13 @@ bool CFileMemUnit::Rename(const CURL& url, const CURL& urlnew)
   return false;
 }
 
-IFileSystem *CFileMemUnit::GetFileSystem(const CURL& url)
+IFileSystem *CFileMemUnit::GetFileSystem(const CURI& url)
 {
   unsigned char unit = url.GetProtocol()[3] - '0';
   return g_memoryUnitManager.GetFileSystem(unit);
 }
 
-CStdString CFileMemUnit::GetPath(const CURL& url)
+CStdString CFileMemUnit::GetPath(const CURI& url)
 {
   CStdString path = url.GetFileName();
   path.Replace("\\", "/");

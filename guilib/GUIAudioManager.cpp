@@ -381,7 +381,7 @@ void CGUIAudioManager::Enable(bool bEnable)
   // always deinit audio when we don't want gui sounds
   if (g_guiSettings.GetString("lookandfeel.soundskin")=="OFF")
     bEnable = false;
-    
+
   if (bEnable)
     Initialize(CAudioContext::DEFAULT_DEVICE);
   else if (!bEnable)
@@ -391,5 +391,6 @@ void CGUIAudioManager::Enable(bool bEnable)
 // \brief Sets the volume of all playing sounds
 void CGUIAudioManager::SetVolume(int iLevel)
 {
- CGUISoundPlayer::GetInstance().SetVolume(iLevel);
+ if (m_bEnabled)
+   CGUISoundPlayer::GetInstance().SetVolume(iLevel);
 }

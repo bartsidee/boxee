@@ -41,6 +41,7 @@ CFileCache::CFileCache()
    m_nSeekResult = 0;
    m_seekPos = 0;
    m_readPos = 0;
+   m_seekPossible = 0;
    m_pCache = NULL;
    m_bCanSeekBack = true;
 }
@@ -78,7 +79,7 @@ IFile *CFileCache::GetFileImp() {
   return m_source.GetImplemenation();
 }
 
-bool CFileCache::Open(const CURL& url)
+bool CFileCache::Open(const CURI& url)
 {
   Close();
 
@@ -86,18 +87,18 @@ bool CFileCache::Open(const CURL& url)
 
   CLog::Log(LOGDEBUG,"CFileCache::Open - opening <%s> using cache", url.GetFileName().c_str());
 
-  url.GetURL(m_sourcePath);
+  m_sourcePath = url.Get();
 
   // opening the source file.
-  if(!m_source.Open(m_sourcePath, READ_NO_CACHE | READ_TRUNCATED)) {
+  if(!m_source.Open(m_sourcePath, READ_NO_CACHE | READ_TRUNCATED | READ_CHUNKED)) {
     CLog::Log(LOGERROR,"%s - failed to open source <%s>", __FUNCTION__, m_sourcePath.c_str());
     Close();
     return false;
   }
 
   // check if source can seek
-  m_bSeekPossible = m_source.Seek(0, SEEK_POSSIBLE) > 0 ? true : false;
-  m_bCanSeekBack = m_bSeekPossible;
+  m_seekPossible = m_source.Seek(0, SEEK_POSSIBLE);
+  m_bCanSeekBack = m_seekPossible ? true : false;
 
   __int64 nLength = m_source.GetLength();
   CFileItem item;
@@ -111,11 +112,11 @@ bool CFileCache::Open(const CURL& url)
   }
 
   m_bDeleteCache = true;
-
+  
   // we use file cache for files which are not seekable, pictures and in general small files (under 10 M)
   if ( item.IsPicture() || 
        ( nLength > 0 && nLength < 15 * 1024 * 1024 ) || 
-       ( !m_bSeekPossible && nLength > 0 && nLength < (512*1024*1024) )
+       ( 1 != m_seekPossible && nLength > 0 && nLength < (512*1024*1024) )
      )
   {
     CLog::Log(LOGDEBUG, "%s - using file cache", __FUNCTION__);
@@ -179,9 +180,7 @@ void CFileCache::Process()
   }
 
   // setup read chunks size
-  int chunksize = m_source.GetChunkSize();
-  if(chunksize == 0)
-    chunksize = READ_CACHE_CHUNK_SIZE;
+  int chunksize = CFile::GetChunkSize(m_source.GetChunkSize(), READ_CACHE_CHUNK_SIZE);
 
   // create our read buffer
   auto_aptr<char> buffer(new char[chunksize]);
@@ -268,17 +267,17 @@ void CFileCache::OnExit()
   m_seekEnded.Set();
 }
 
-bool CFileCache::Exists(const CURL& url)
+bool CFileCache::Exists(const CURI& url)
 {
   CStdString strPath;
-  url.GetURL(strPath);
+  strPath = url.Get();
   return CFile::Exists(strPath);
 }
 
-int CFileCache::Stat(const CURL& url, struct __stat64* buffer)
+int CFileCache::Stat(const CURI& url, struct __stat64* buffer)
 {
   CStdString strPath;
-  url.GetURL(strPath);
+  strPath = url.Get();
   return CFile::Stat(strPath, buffer);
 }
 
@@ -340,12 +339,12 @@ int64_t CFileCache::Seek(int64_t iFilePosition, int iWhence)
   else if (iWhence == SEEK_POSSIBLE)
   {
     if (iFilePosition < iCurPos)
-      return m_bCanSeekBack;
+      return m_bCanSeekBack ? 1 : 0;
     
     if (iFilePosition > iCurPos && iFilePosition < iCurPos + m_pCache->GetAvailableRead())
-      return true;
+      return 1;
     
-    return m_bSeekPossible;
+    return m_seekPossible;
   }
   else if (iWhence != SEEK_SET)
     return -1;
@@ -362,7 +361,7 @@ int64_t CFileCache::Seek(int64_t iFilePosition, int iWhence)
   
   if ((m_nSeekResult = m_pCache->Seek(iTarget, SEEK_SET)) != iTarget)
   {
-    if(!m_bSeekPossible)
+    if(m_seekPossible == 0)
       return m_nSeekResult;
 
     m_seekPos = iTarget;

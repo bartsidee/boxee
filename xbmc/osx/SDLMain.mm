@@ -387,10 +387,10 @@ int main(int argc, char *argv[])
     /* Create SDLMain and make it the app delegate */
     sdlMain = [[SDLMain alloc] init];
     [NSApp setDelegate:sdlMain];
-
+    
     /* Start the main event loop */
     [NSApp run];
-
+    
     // call SDLMain which calls our real main (xbmc.cpp)
     // we never return from here as quiting xbmc will call exit().
     // see http://lists.libsdl.org/pipermail/sdl-libsdl.org/2008-September/066542.html

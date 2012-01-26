@@ -18,7 +18,12 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
+
+#include "system.h"
 #pragma once
+
+#ifdef HAS_FILESYSTEM_HTSP
+
 #include "IDirectory.h"
 #include "Thread.h"
 #include "utils/CriticalSection.h"
@@ -43,7 +48,7 @@ namespace HTSP
       htsmsg_t*               ReadResult(htsmsg_t* m);
 
 
-      static CHTSPDirectorySession* Acquire(const CURL& url);
+      static CHTSPDirectorySession* Acquire(const CURI& url);
       static void                   Release(CHTSPDirectorySession* &session);
       static void                   CheckIdle(DWORD idle = 60000);
 
@@ -51,7 +56,7 @@ namespace HTSP
        CHTSPDirectorySession();
       ~CHTSPDirectorySession();
 
-      bool   Open(const CURL& url);
+      bool   Open(const CURI& url);
       void   Close();
 
     private:
@@ -85,11 +90,12 @@ namespace DIRECTORY
       virtual bool GetDirectory(const CStdString& strPath, CFileItemList &items);
       virtual DIR_CACHE_TYPE GetCacheType(const CStdString& strPath) const { return DIR_CACHE_ONCE; };
     private:
-      bool GetChannels(const CURL& base, CFileItemList &items);
-      bool GetChannels(const CURL& base, CFileItemList &items, HTSP::SChannels channels, int tag);
-      bool GetTag     (const CURL& base, CFileItemList &items);
+      bool GetChannels(const CURI& base, CFileItemList &items);
+      bool GetChannels(const CURI& base, CFileItemList &items, HTSP::SChannels channels, int tag);
+      bool GetTag     (const CURI& base, CFileItemList &items);
 
       HTSP::CHTSPDirectorySession* m_session;
   };
 }
 
+#endif

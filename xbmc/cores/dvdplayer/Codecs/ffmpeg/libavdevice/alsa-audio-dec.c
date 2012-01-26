@@ -21,7 +21,7 @@
  */
 
 /**
- * @file libavdevice/alsa-audio-dec.c
+ * @file
  * ALSA input and output: input
  * @author Luca Abeni ( lucabe72 email it )
  * @author Benoit Fouet ( benoit fouet free fr )
@@ -45,12 +45,12 @@
  * plugin.
  */
 
-#include "libavformat/avformat.h"
 #include <alsa/asoundlib.h>
+#include "libavformat/avformat.h"
 
 #include "alsa-audio.h"
 
-av_cold static int audio_read_header(AVFormatContext *s1,
+static av_cold int audio_read_header(AVFormatContext *s1,
                                      AVFormatParameters *ap)
 {
     AlsaData *s = s1->priv_data;
@@ -79,7 +79,7 @@ av_cold static int audio_read_header(AVFormatContext *s1,
         return AVERROR(ENOMEM);
     }
     sample_rate = ap->sample_rate;
-    codec_id    = ap->audio_codec_id;
+    codec_id    = s1->audio_codec_id;
 
     ret = ff_alsa_open(s1, SND_PCM_STREAM_CAPTURE, &sample_rate, ap->channels,
         &codec_id);
@@ -111,7 +111,7 @@ av_cold static int audio_read_header(AVFormatContext *s1,
     }
 
     /* take real parameters */
-    st->codec->codec_type  = CODEC_TYPE_AUDIO;
+    st->codec->codec_type  = AVMEDIA_TYPE_AUDIO;
     st->codec->codec_id    = codec_id;
     st->codec->sample_rate = sample_rate;
     st->codec->channels    = ap->channels;
@@ -163,7 +163,7 @@ static int audio_read_packet(AVFormatContext *s1, AVPacket *pkt)
     return 0;
 }
 
-AVInputFormat alsa_demuxer = {
+AVInputFormat ff_alsa_demuxer = {
     "alsa",
     NULL_IF_CONFIG_SMALL("ALSA audio input"),
     sizeof(AlsaData),

@@ -14,7 +14,7 @@ Label::Label(int windowId, int controlId) throw (AppException) : Control(windowI
   CGUIControl::GUICONTROLTYPES type = (CGUIControl::GUICONTROLTYPES)msg.GetParam1();
 
   if (type != CGUIControl::GUICONTROL_LABEL)
-    throw AppException("Control is not a Label");
+      throw AppException("Control is not a Label");
 
 //  // TODO: I am not sure this is necessary at all ??
 //  CGUIWindow* pWindow = g_windowManager.GetWindow(m_windowId);
@@ -26,12 +26,12 @@ Label::Label(int windowId, int controlId) throw (AppException) : Control(windowI
 //      throw AppException("Control is not a Label");
 //    }
 //  }
-}
+    }
 
 void Label::SetLabel(const std::string& label)
 {
   std::vector<CStdString> vec;
-  ThreadMessage tMsg = { TMSG_SET_CONTROL_LABEL, m_windowId, m_controlId, label, vec, "", NULL, NULL };
+  ThreadMessage tMsg ( TMSG_SET_CONTROL_LABEL, m_windowId, m_controlId, label, vec, "", NULL, NULL );
   g_application.getApplicationMessenger().SendMessage(tMsg, false); 
 }
 

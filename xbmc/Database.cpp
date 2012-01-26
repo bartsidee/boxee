@@ -109,17 +109,16 @@ bool CDatabase::Open()
   bool bDatabaseExists = XFILE::CFile::Exists(strDatabase);
   CDBConnectionPool* pPool = g_application.GetDBConnectionPool();
 
-  if( !pPool )
+  if(!pPool)
   {
-    CLog::Log( LOGERROR, " Can not get Connection Pool." );
-
+    CLog::Log(LOGERROR,"CDatabase::Open - FAILED to get Connection Pool");
     return false;
   }
 
   m_pSqliteConnectionObject = pPool->GetSqliteConnectionPoolObject( strDatabase );
-  if( !m_pSqliteConnectionObject )
+  if(!m_pSqliteConnectionObject)
   {
-    CLog::Log( LOGERROR, "Can not pull s Connection from Connection Pool." );
+    CLog::Log(LOGERROR,"CDatabase::Open - FAILED to pull s Connection from Connection Pool");
     return false;
   }
 
@@ -130,7 +129,7 @@ bool CDatabase::Open()
   if (!bDatabaseExists)
   {
     CreateTables();
-  }
+    }
 
   // Mark our db as open here to make our destructor to properly close the file handle
   m_bOpen = true;
@@ -149,8 +148,8 @@ bool CDatabase::Open()
 //#ifdef PRE_2_1_DATABASE_COMPATIBILITY
         float fVersion = m_pDS->fv("idVersion").get_asFloat();
         if (fVersion < m_preV2version)
-        { // old version - drop db completely
-          CLog::Log(LOGERROR, "Unable to open %s (old version?)", m_strDatabaseFile.c_str());
+        {// old version - drop db completely
+          CLog::Log(LOGERROR,"CDatabase::Open - UNABLE to open [path=%s]. (old version?)", m_strDatabaseFile.c_str());
           Close();
           XFILE::CFile::Delete(strDatabase);
           return false;
@@ -174,43 +173,45 @@ bool CDatabase::Open()
     }
     else
     {
-      CLog::Log(LOGWARNING, "no tables found although db file is there. recreating. (%s) ", m_strDatabaseFile.c_str());      
+      CLog::Log(LOGWARNING,"CDatabase::Open - no tables found although db file is there. recreating. [path=%s]",m_strDatabaseFile.c_str());
       CreateTables();
     }
   
     CDatabase::UpdateOldVersion(version); // always call this
     if (version < m_version)
     {
-      CLog::Log(LOGNOTICE, "Attempting to update the database %s from version %i to %i", m_strDatabaseFile.c_str(), version, m_version);
+      CLog::Log(LOGNOTICE,"CDatabase::Open - attempting to update the database [path=%s] from version %i to %i",m_strDatabaseFile.c_str(), version, m_version);
       if (UpdateOldVersion(version) && UpdateVersionNumber())
-        CLog::Log(LOGINFO, "Update to version %i successfull", m_version);
+      {
+        CLog::Log(LOGINFO,"CDatabase::Open - successfully update to version %i. [path=%s]",m_version,m_strDatabaseFile.c_str());
+      }
       else
       {
-        CLog::Log(LOGERROR, "Can't update the database %s from version %i to %i", m_strDatabaseFile.c_str(), version, m_version);
+        CLog::Log(LOGERROR,"CDatabase::Open - FAILED to update the database [path=%s] from version %i to %i",m_strDatabaseFile.c_str(), version, m_version);
         Close();
         return false;
       }
     }
     else if (version > m_version)
     {
-      CLog::Log(LOGERROR, "Can't open the database %s as it is a NEWER version than what we were expecting!", m_strDatabaseFile.c_str());
+      CLog::Log(LOGERROR,"CDatabase::Open - FAILED to open the database [path=%s] as it is a NEWER version than what we were expecting", m_strDatabaseFile.c_str());
       Close();
       return false;
     }
   }
   catch (...)
   {
-    CLog::Log(LOGERROR, "Can't open the database %s!", m_strDatabaseFile.c_str());
+    CLog::Log(LOGERROR,"CDatabase::Open - FAILED to open the database [path=%s]. call CreateTables",m_strDatabaseFile.c_str());
     try
     {
       CreateTables();    
     }
     catch(...)
     {
-      CLog::Log(LOGERROR, "Can't open the database file %s!", m_strDatabaseFile.c_str());
+      CLog::Log(LOGERROR,"CDatabase::Open - FAILED to open the database file [path=%s]",m_strDatabaseFile.c_str());
     }
   }
-  
+
   try 
   {
     m_pDS->exec("PRAGMA cache_size=4096\n");
@@ -219,11 +220,11 @@ bool CDatabase::Open()
   }
   catch(...)
   {
-    CLog::Log(LOGERROR, "something is really wrong with the db %s!", m_strDatabaseFile.c_str());
+    CLog::Log(LOGERROR,"CDatabase::Open - something is really wrong with the db [path=%s]",m_strDatabaseFile.c_str());
     try { Close();} catch(...) {} 
     return false;
   }
-  
+
   m_iRefCount++;
   return true;
 }
@@ -385,9 +386,9 @@ bool CDatabase::UpdateOldVersion(int version)
   {
     try 
     {
-      // add compresscount field
-      m_pDS->exec("alter table version add iCompressCount integer\n");
-    }
+    // add compresscount field
+    m_pDS->exec("alter table version add iCompressCount integer\n");
+  }
     catch(...)
     {
       CLog::Log(LOGERROR,"database %s is useless. cant create/alter table.", m_strDatabaseFile.c_str());

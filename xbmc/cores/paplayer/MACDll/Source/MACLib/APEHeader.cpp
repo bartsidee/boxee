@@ -4,7 +4,7 @@
 #include "APEInfo.h"
 
 #ifndef __APPLE__
-#include <linux/smbno.h>
+//#include <linux/smbno.h>
 #endif
 
 // TODO: should push and pop the file position

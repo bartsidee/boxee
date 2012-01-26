@@ -20,6 +20,9 @@
  */
 
 #include "LastFMDirectory.h"
+
+#ifdef HAS_LASTFM
+
 #include "DirectoryCache.h"
 #include "Util.h"
 #include "MusicInfoTag.h"
@@ -535,7 +538,7 @@ bool CLastFMDirectory::GetTagInfo(CFileItemList &items)
 bool CLastFMDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items)
 {
   CStdString strURL = strPath;
-  CURL url(strURL);
+  CURI url(strURL);
   strURL=url.GetFileName();
 
   // parse the URL, finding object type, name, and requested info
@@ -610,7 +613,7 @@ bool CLastFMDirectory::GetDirectory(const CStdString& strPath, CFileItemList &it
   }
 
   return true;
-}
+  }
   
 DIR_CACHE_TYPE CLastFMDirectory::GetCacheType(const CStdString& strPath) const
   {
@@ -618,4 +621,6 @@ DIR_CACHE_TYPE CLastFMDirectory::GetCacheType(const CStdString& strPath) const
     return DIR_CACHE_ONCE;
   return DIR_CACHE_ALWAYS;
   }
+
+#endif
 

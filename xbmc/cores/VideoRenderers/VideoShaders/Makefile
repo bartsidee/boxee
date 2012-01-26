@@ -1,5 +1,5 @@
-INCLUDES=-I. -I.. -I../../ -I../../../ -I../../../linux -I../../../../guilib
-SRCS=YUV2RGBShader.cpp VideoFilterShader.cpp
+INCLUDES=-I. -I.. -I../../ -I../../../ -I../../../linux -I../../../../guilib -I../../dvdplayer/Codecs -I../../dvdplayer/Codecs/ffmpeg
+SRCS=YUV2RGBShader.cpp VideoFilterShader.cpp ConvolutionKernels.cpp 
 
 LIB=VideoShaders.a
 

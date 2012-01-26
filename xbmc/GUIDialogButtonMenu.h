@@ -30,5 +30,11 @@ public:
   CGUIDialogButtonMenu(void);
   virtual ~CGUIDialogButtonMenu(void);
   virtual bool OnMessage(CGUIMessage &message);
+  virtual void OnInitWindow();
   virtual void Render();
+
+  bool IsCanceled() const;
+
+protected:
+  bool m_bCanceled;
 };

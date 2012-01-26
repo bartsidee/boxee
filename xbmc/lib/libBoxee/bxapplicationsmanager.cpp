@@ -189,7 +189,7 @@ bool BXApplicationsManager::IsInApplications(const std::string& id)
 
   int numOfApplications = m_applicationsList.GetNumOfApplications();
   
-  LOG(LOG_LEVEL_DEBUG,"BXApplicationsManager::IsInApplicationsList - Enter function with [id=%s][ApplicationsListSize=%d] (apps)",id.c_str(),numOfApplications);
+  //LOG(LOG_LEVEL_DEBUG,"BXApplicationsManager::IsInApplicationsList - Enter function with [id=%s][ApplicationsListSize=%d] (apps)",id.c_str(),numOfApplications);
   
   if(numOfApplications < 1)
   {
@@ -218,17 +218,17 @@ bool BXApplicationsManager::IsInApplications(const std::string& id)
     }
   }
   */
-
+  
   if (m_applicationsList.IsApplicationIdExist(id))
   {
     UnLockApplicationsList();
-    LOG(LOG_LEVEL_DEBUG,"BXApplicationsManager::IsInApplicationsList - [id=%s] WAS found in the ApplicationsList. Exit function and return TRUE (apps)",id.c_str());
+    //LOG(LOG_LEVEL_DEBUG,"BXApplicationsManager::IsInApplicationsList - [id=%s] WAS found in the ApplicationsList. Exit function and return TRUE (apps)",id.c_str());
     return true;
   }
   else
   {
     UnLockApplicationsList();
-    LOG(LOG_LEVEL_DEBUG,"BXApplicationsManager::IsInApplicationsList - [id=%s] WASN'T found in the ApplicationsList. Exit function and return FALSE (apps)",id.c_str());
+    //LOG(LOG_LEVEL_DEBUG,"BXApplicationsManager::IsInApplicationsList - [id=%s] WASN'T found in the ApplicationsList. Exit function and return FALSE (apps)",id.c_str());
     return false;
   }
 }
@@ -250,13 +250,13 @@ BXApplicationsManager::RequestApplicationsListFromServerTask::~RequestApplicatio
 void BXApplicationsManager::RequestApplicationsListFromServerTask::DoWork()
 {
   LOG(LOG_LEVEL_DEBUG,"RequestApplicationsListFromServerTask::DoWork - Enter function (apps)");
-  
-  if (!g_application.IsConnectedToInternet())
+
+  if (!g_application.ShouldConnectToInternet())
   {
     // set loaded to true so Get() functions won't wait forever
     m_taskHandler->SetApplicationsListIsLoaded(true);
 
-    LOG(LOG_LEVEL_DEBUG,"RequestApplicationsListFromServerTask::DoWork - [IsConnectedToInternet=FALSE] -> Exit function (apps)");
+    LOG(LOG_LEVEL_DEBUG,"RequestApplicationsListFromServerTask::DoWork - [ShouldConnectToInternet=FALSE] -> Exit function (apps)");
     return;
   }
 
@@ -271,13 +271,25 @@ void BXApplicationsManager::RequestApplicationsListFromServerTask::DoWork()
 
   try
   {
-    LOG(LOG_LEVEL_DEBUG,"RequestApplicationsListFromServerTask::DoWork - Going to call LoadFromURL with [%s] for [CredentialsName=%s][CredentialsPass=%s] (apps)",strUrl.c_str(),applicationsList.GetCredentialsUserName().c_str(),applicationsList.GetCredentialsPassword().c_str());
+    LOG(LOG_LEVEL_DEBUG,"RequestApplicationsListFromServerTask::DoWork - Going to call LoadFromURL with [%s] (apps)",strUrl.c_str());
 
     retVal = applicationsList.LoadFromURL(strUrl);
-    
-    LOG(LOG_LEVEL_DEBUG,"RequestApplicationsListFromServerTask::DoWork - Call LoadFromURL with [%s] returned [ApplicationsListSize=%d][retVal=%d][timestamp=%lu]. Going to call CopyApplicationsList() (apps)(schedule)",strUrl.c_str(),applicationsList.GetNumOfApplications(),retVal,applicationsList.GetTimeStamp());
 
-    m_taskHandler->CopyApplicationsList(applicationsList);
+    bool isLoaded = m_taskHandler->m_applicationsList.IsLoaded();
+    long lastRetCode = applicationsList.GetLastRetCode();
+
+    LOG(LOG_LEVEL_DEBUG,"RequestApplicationsListFromServerTask::DoWork - Call LoadFromURL with [%s] returned [ApplicationsListSize=%d][lastRetCode=%d][timestamp=%lu]. [isLoaded=%d] (apps)(schedule)",strUrl.c_str(),applicationsList.GetNumOfApplications(),lastRetCode,applicationsList.GetTimeStamp(),isLoaded);
+
+    if (!isLoaded || lastRetCode == 200)
+    {
+      ////////////////////////////////////////////
+      // copy return result from the server if: //
+      // a)  applicationsList isn't loaded      //
+      // b) the server returned 200             //
+      ////////////////////////////////////////////
+
+      m_taskHandler->CopyApplicationsList(applicationsList);
+    }
   }
   catch (BXNetworkException* e)
   {

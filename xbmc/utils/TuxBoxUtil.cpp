@@ -23,6 +23,10 @@
 // GeminiServer
 //
 
+#include "system.h"
+
+#ifdef HAS_FILESYSTEM_TUXBOX
+
 #include "TuxBoxUtil.h"
 #include "Util.h"
 #include "FileSystem/FileCurl.h"
@@ -102,7 +106,7 @@ void CTuxBoxService::Process()
     int iRequestTimer = g_advancedSettings.m_iTuxBoxEpgRequestTime *1000; //seconds
     Sleep(iRequestTimer);
 
-    CURL url(strURL);
+    CURI url(strURL);
     if(g_tuxbox.GetHttpXML(url,"currentservicedata"))
     {
       CLog::Log(LOGDEBUG, "%s - receive current service data was successful", __FUNCTION__);
@@ -167,7 +171,7 @@ bool CTuxBoxUtil::CreateNewItem(const CFileItem& item, CFileItem& item_new)
   }
   return false;
 }
-bool CTuxBoxUtil::ParseBouquets(TiXmlElement *root, CFileItemList &items, CURL &url, CStdString strFilter, CStdString strChild)
+bool CTuxBoxUtil::ParseBouquets(TiXmlElement *root, CFileItemList &items, CURI &url, CStdString strFilter, CStdString strChild)
 {
   CStdString strItemName, strItemPath, strOptions, strPort;
   TiXmlElement *pRootElement =root;
@@ -227,7 +231,7 @@ bool CTuxBoxUtil::ParseBouquets(TiXmlElement *root, CFileItemList &items, CURL &
   }
   return true;
 }
-bool CTuxBoxUtil::ParseBouquetsEnigma2(TiXmlElement *root, CFileItemList &items, CURL &url, CStdString& strFilter, CStdString& strChild)
+bool CTuxBoxUtil::ParseBouquetsEnigma2(TiXmlElement *root, CFileItemList &items, CURI &url, CStdString& strFilter, CStdString& strChild)
 {
   CStdString strItemName, strItemPath;
   TiXmlElement *pRootElement = root;
@@ -264,7 +268,7 @@ bool CTuxBoxUtil::ParseBouquetsEnigma2(TiXmlElement *root, CFileItemList &items,
   }
   return true;
 }
-bool CTuxBoxUtil::ParseChannels(TiXmlElement *root, CFileItemList &items, CURL &url, CStdString strFilter, CStdString strChild)
+bool CTuxBoxUtil::ParseChannels(TiXmlElement *root, CFileItemList &items, CURI &url, CStdString strFilter, CStdString strChild)
 {
   CStdString strItemName, strItemPath,strPort;
   TiXmlElement *pRootElement =root;
@@ -348,7 +352,7 @@ bool CTuxBoxUtil::ParseChannels(TiXmlElement *root, CFileItemList &items, CURL &
   }
   return false;
 }
-bool CTuxBoxUtil::ParseChannelsEnigma2(TiXmlElement *root, CFileItemList &items, CURL &url, CStdString& strFilter, CStdString& strChild)
+bool CTuxBoxUtil::ParseChannelsEnigma2(TiXmlElement *root, CFileItemList &items, CURI &url, CStdString& strFilter, CStdString& strChild)
 {
   CStdString strItemName, strItemPath, strPort;
   TiXmlElement *pRootElement = root;
@@ -402,7 +406,7 @@ bool CTuxBoxUtil::ParseChannelsEnigma2(TiXmlElement *root, CFileItemList &items,
   }
   return true;
 }
-bool CTuxBoxUtil::ZapToUrl(CURL url, CStdString strOptions, int ipoint) 
+bool CTuxBoxUtil::ZapToUrl(CURI url, CStdString strOptions, int ipoint) 
 {
   // send Zap 
   CStdString strZapUrl, strPostUrl, strZapName, strFilter;
@@ -421,7 +425,7 @@ bool CTuxBoxUtil::ZapToUrl(CURL url, CStdString strOptions, int ipoint)
   strPostUrl.Format("/cgi-bin/zapTo?path=%s",strFilter.c_str());
 
   //Set Zap URL
-  CURL urlx(strZapUrl);
+  CURI urlx(strZapUrl);
 
   //Check Recording State!
   if(GetHttpXML(urlx,"boxstatus"))
@@ -514,7 +518,7 @@ bool CTuxBoxUtil::ZapToUrl(CURL url, CStdString strOptions, int ipoint)
 }
 bool CTuxBoxUtil::GetZapUrl(const CStdString& strPath, CFileItem &items )
 {
-  CURL url(strPath);
+  CURI url(strPath);
   CStdString strOptions = url.GetOptions();
   if (strOptions.IsEmpty())
     return false;
@@ -597,7 +601,7 @@ bool CTuxBoxUtil::GetZapUrl(const CStdString& strPath, CFileItem &items )
   return false;
 }
 
-bool CTuxBoxUtil::GetHttpXML(CURL url,CStdString strRequestType)
+bool CTuxBoxUtil::GetHttpXML(CURI url,CStdString strRequestType)
 {
   // Check and Set URL Request Option
   if(!strRequestType.IsEmpty())
@@ -1598,3 +1602,5 @@ CStdString CTuxBoxUtil::DetectSubMode(CStdString strSubMode, CStdString& strXMLR
   }
   return strFilter;
 }
+
+#endif

@@ -21,7 +21,7 @@
  */
 
 /**
- * @file libpostproc/postprocess.c
+ * @file
  * postprocessing.
  */
 
@@ -90,6 +90,17 @@ try to unroll inner for(x=0 ... loop to avoid these damn if(x ... checks
 unsigned postproc_version(void)
 {
     return LIBPOSTPROC_VERSION_INT;
+}
+
+const char *postproc_configuration(void)
+{
+    return FFMPEG_CONFIGURATION;
+}
+
+const char *postproc_license(void)
+{
+#define LICENSE_PREFIX "libpostproc license: "
+    return LICENSE_PREFIX FFMPEG_LICENSE + sizeof(LICENSE_PREFIX) - 1;
 }
 
 #if HAVE_ALTIVEC_H

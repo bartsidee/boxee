@@ -3,7 +3,9 @@
 #include "HALProvider.h"
 #include "DeviceKitDisksProvider.h"
 #include "PosixMountProvider.h"
+#include "BoxeeHalStorageProvider.h"
 
+  
 class CLinuxStorageProvider : public IStorageProvider
 {
 public:
@@ -17,9 +19,11 @@ public:
     else
       m_instance = new CPosixMountProvider();
 #elif defined(HAS_BOXEE_HAL)
-    m_instance = NULL;
-#else
+    m_instance = new CBoxeeHalStorageProvider();
+#elif !defined(HAS_EMBEDDED)
     m_instance = new CPosixMountProvider();
+#else
+    m_instance = NULL;
 #endif
   }
 
@@ -31,6 +35,7 @@ public:
 
   virtual void GetLocalDrives(VECSOURCES &localDrives)
   {
+#ifndef HAS_EMBEDDED
     // Home directory
     CMediaSource share;
     share.strPath = getenv("HOME");
@@ -38,6 +43,7 @@ public:
     share.m_ignore = true;
     share.m_iDriveType = CMediaSource::SOURCE_TYPE_LOCAL;
     localDrives.push_back(share);
+#endif
 
     if (m_instance)
       m_instance->GetLocalDrives(localDrives);

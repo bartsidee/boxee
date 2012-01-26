@@ -18,7 +18,7 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
- 
+
 #if (defined HAVE_CONFIG_H) && (!defined WIN32)
   #include "config.h"
 #endif
@@ -40,6 +40,8 @@
 #include "GUIFontManager.h"
 #include "control.h"
 #include "pyutil.h"
+
+#include "../../../placement_new.h"
 
 using namespace std;
 
@@ -77,10 +79,10 @@ namespace PYXBMC
     //char* cShadowColor = NULL;
     self = (ControlList*)type->tp_alloc(type, 0);
     if (!self) return NULL;
-    new(&self->strFont) string();    
-    new(&self->strTextureButton) string();    
-    new(&self->strTextureButtonFocus) string();
-    new(&self->vecItems) std::vector<PYXBMC::ListItem*>();
+   PLACEMENT_NEW(&self->strFont) string();    
+   PLACEMENT_NEW(&self->strTextureButton) string();    
+   PLACEMENT_NEW(&self->strTextureButtonFocus) string();
+   PLACEMENT_NEW(&self->vecItems) std::vector<PYXBMC::ListItem*>();
 
     // create a python spin control
     self->pControlSpin = (ControlSpin*)ControlSpin_New();

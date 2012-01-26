@@ -25,23 +25,30 @@ namespace BOXEE {
 */
 class BXCredentials{
 public:
-    BXCredentials();
-    virtual ~BXCredentials();
+  BXCredentials();
+  virtual ~BXCredentials();
 
 	void SetUserName(const std::string &strName);
 	void SetPassword(const std::string &strPassword);
-    void SetProxy(const std::string &strProxy);
 	void SetAuthKey(const std::string &strKey);
 	void Clear();
+
+  void SetProxyUserName(const std::string &strName);
+  void SetProxyPassword(const std::string &strPassword);
+  void SetProxy(const std::string &strProxy);
 
 	std::string GetUserName();
 	std::string GetPassword();
 	std::string GetAuthKey();
 
-    std::string GetProxyAddress();
+  std::string GetProxyAddress();
+  std::string GetProxyUsername();
+  std::string GetProxyPassword();
   
 protected:
-    std::string     m_strProxyAddress;    
+  std::string   m_strProxyAddress;
+  std::string   m_strProxyUsername;
+  std::string   m_strProxyPassword;
   
 	std::string		m_strUserName;
 	std::string		m_strPassword;

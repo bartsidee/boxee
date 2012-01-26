@@ -6,8 +6,8 @@
 class CDiscoverWindowState : public CBrowseWindowState
 {
 public:
-  CDiscoverWindowState(CGUIWindow* pWindow);
-  virtual void SortItems(CFileItemList &items);
+  CDiscoverWindowState(CGUIWindowBoxeeBrowse* pWindow);
+  void SetDefaultView();
 };
 
 class CGUIWindowBoxeeBrowseDiscover : public CGUIWindowBoxeeBrowse
@@ -15,17 +15,17 @@ class CGUIWindowBoxeeBrowseDiscover : public CGUIWindowBoxeeBrowse
 public:
   CGUIWindowBoxeeBrowseDiscover();
   virtual ~CGUIWindowBoxeeBrowseDiscover();
-	
+
   virtual bool OnMessage(CGUIMessage& message);
+  virtual bool OnAction(const CAction& action);
+  virtual void OnInitWindow();
+  virtual void OnDeinitWindow(int nextWindowID);
 
-protected:
+  static void LaunchFriends();
 
-	/**
-	 * Creates the updated path that will be sent to BoxeeServerDirectory
-	 * according to the current state of the buttons
-	 */
-	virtual CStdString CreatePath();
-
+  virtual bool HandleEmptyState();
+private:
+  static bool FriendsMakeBoxeeSocial();
 };
 
 #endif /*GUIWINDOWBOXEEBROWSEDISCOVER_H_*/

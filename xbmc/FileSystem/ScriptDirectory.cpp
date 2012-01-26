@@ -22,7 +22,7 @@ bool CScriptDirectory::GetDirectory(const CStdString& _strPath, CFileItemList &i
 {
 	
 	CStdString strPath = _strPath;
-	CURL url(strPath);
+	CURI url(strPath);
 
 	// path is special://home/scripts/<path from here>
 	CStdString pathToScript = "special://home/scripts/";

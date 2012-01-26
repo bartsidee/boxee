@@ -38,9 +38,10 @@ bool CGUIDialogBoxeeManualResolveMovie::Show(CFileItemPtr pItem, CFileItemList& 
     return false;
   }
 
-  // Copy the item into the dialog
+    // Copy the item into the dialog
   pDialog->m_videoItem = pItem;
   pDialog->m_videoParts = videoParts;
+  pDialog->m_bConfirmed = false;
 
   pDialog->DoModal();
 
@@ -59,6 +60,7 @@ void CGUIDialogBoxeeManualResolveMovie::OnInitWindow()
   g_windowManager.SendThreadMessage(winmsg);
 
   m_videoItem->Dump();
+  m_bConfirmed = false;
 
   CLog::Log(LOGDEBUG, "CGUIDialogBoxeeManualResolveMovie::OnInitWindow, confirm movie, thumb path = %s (manual)", m_videoItem->GetThumbnailImage().c_str());
 }

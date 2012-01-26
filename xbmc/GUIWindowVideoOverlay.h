@@ -29,7 +29,7 @@ public:
   CGUIWindowVideoOverlay(void);
   virtual ~CGUIWindowVideoOverlay(void);
   virtual void Render();
-  bool OnMouse(const CPoint &point);
+  virtual bool OnMouse(const CPoint &point);
 protected:
   virtual void SetDefaults();
 };

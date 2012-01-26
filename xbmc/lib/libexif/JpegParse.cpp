@@ -280,7 +280,7 @@ bool CJpegParse::Process (const char *picFileName)
 
 /*    // Get file name...
   CStdString tmp, urlFName, path;
-  CURL url(picFileName);
+  CURI url(picFileName);
   url.GetURLWithoutUserDetails(urlFName);
   CUtil::Split(urlFName, path, tmp);
   m_JpegInfo[SLIDE_FILE_NAME] = tmp;
@@ -317,8 +317,6 @@ bool CJpegParse::Process (const char *picFileName)
 
   bool result = ExtractInfo(file);
   fclose(file);
-  if (result == false)
-    printf("JpgParse: Not a JPEG file %s", picFileName);
   return result;
 }
 

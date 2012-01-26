@@ -26,7 +26,7 @@
  */
 
 /**
- * @file libavcodec/svq1.c
+ * @file
  * Sorenson Vector Quantizer #1 (SVQ1) video codec.
  * For more information of the SVQ1 algorithm, visit:
  *   http://www.pcisys.net/~melanson/codecs/
@@ -650,6 +650,7 @@ static int svq1_decode_frame(AVCodecContext *avctx,
   uint8_t        *current, *previous;
   int             result, i, x, y, width, height;
   AVFrame *pict = data;
+  svq1_pmv *pmv;
 
   /* initialize bit buffer */
   init_get_bits(&s->gb,buf,buf_size*8);
@@ -692,6 +693,10 @@ static int svq1_decode_frame(AVCodecContext *avctx,
   if(MPV_frame_start(s, avctx) < 0)
       return -1;
 
+  pmv = av_malloc((FFALIGN(s->width, 16)/8 + 3) * sizeof(*pmv));
+  if (!pmv)
+      return -1;
+
   /* decode y, u and v components */
   for (i=0; i < 3; i++) {
     int linesize;
@@ -724,13 +729,12 @@ static int svq1_decode_frame(AVCodecContext *avctx,
 //#ifdef DEBUG_SVQ1
             av_log(s->avctx, AV_LOG_INFO, "Error in svq1_decode_block %i (keyframe)\n",result);
 //#endif
-            return result;
+            goto err;
           }
         }
         current += 16*linesize;
       }
     } else {
-      svq1_pmv pmv[width/8+3];
       /* delta frame */
       memset (pmv, 0, ((width / 8) + 3) * sizeof(svq1_pmv));
 
@@ -743,7 +747,7 @@ static int svq1_decode_frame(AVCodecContext *avctx,
 #ifdef DEBUG_SVQ1
     av_log(s->avctx, AV_LOG_INFO, "Error in svq1_decode_delta_block %i\n",result);
 #endif
-            return result;
+            goto err;
           }
         }
 
@@ -761,7 +765,10 @@ static int svq1_decode_frame(AVCodecContext *avctx,
   MPV_frame_end(s);
 
   *data_size=sizeof(AVFrame);
-  return buf_size;
+  result = buf_size;
+err:
+  av_free(pmv);
+  return result;
 }
 
 static av_cold int svq1_decode_init(AVCodecContext *avctx)
@@ -826,9 +833,9 @@ static av_cold int svq1_decode_end(AVCodecContext *avctx)
 }
 
 
-AVCodec svq1_decoder = {
+AVCodec ff_svq1_decoder = {
     "svq1",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_SVQ1,
     sizeof(MpegEncContext),
     svq1_decode_init,
@@ -838,5 +845,5 @@ AVCodec svq1_decoder = {
     CODEC_CAP_DR1,
     .flush= ff_mpeg_flush,
     .pix_fmts= (const enum PixelFormat[]){PIX_FMT_YUV410P, PIX_FMT_NONE},
-    .long_name= NULL_IF_CONFIG_SMALL("Sorenson Vector Quantizer 1"),
+    .long_name= NULL_IF_CONFIG_SMALL("Sorenson Vector Quantizer 1 / Sorenson Video 1 / SVQ1"),
 };

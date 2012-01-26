@@ -32,14 +32,47 @@
 #define FRAME_TYPE_B 3
 #define FRAME_TYPE_D 4
 
+#define DVP_QSCALE_UNKNOWN          0
+#define DVP_QSCALE_MPEG1            1
+#define DVP_QSCALE_MPEG2            2
+#define DVP_QSCALE_H264             3
+
+
+namespace DXVA { class CProcessor; }
+namespace VAAPI { struct CHolder; }
+class CVDPAU;
+class COpenMax;
+class COpenMaxVideo;
+struct OpenMaxVideoBuffer;
 
 // should be entirely filled by all codecs
 struct DVDVideoPicture
 {
   double pts; // timestamp in seconds, used in the CDVDPlayer class to keep track of pts
-  BYTE* data[4];      // [4] = alpha channel, currently not used
-  int iLineSize[4];   // [4] = alpha channel, currently not used
-  void* opaque;
+  double dts;
+
+  union
+  {
+    struct {
+      BYTE* data[4];      // [4] = alpha channel, currently not used
+      int iLineSize[4];   // [4] = alpha channel, currently not used
+    };
+    struct {
+      DXVA::CProcessor* proc;
+      int64_t           proc_id;
+    };
+    struct {
+      CVDPAU* vdpau;
+    };
+    struct {
+      VAAPI::CHolder* vaapi;
+    };
+
+    struct {
+      COpenMax *openMax;
+      OpenMaxVideoBuffer *openMaxBuffer;
+    };
+  };
 
   unsigned int iFlags;
   
@@ -50,6 +83,10 @@ struct DVDVideoPicture
   unsigned int color_range        : 1; // 1 indicate if we have a full range of color
   int iGroupId;
 
+  int8_t* qscale_table; // Quantization parameters, primarily used by filters
+  int qscale_stride;
+  int qscale_type;
+
   unsigned int iWidth;
   unsigned int iHeight;
   unsigned int iDisplayWidth;  // width of the picture without black bars
@@ -58,8 +95,14 @@ struct DVDVideoPicture
   enum EFormat {
     FMT_YUV420P = 0,
     FMT_VDPAU,
+    FMT_NV12,
+    FMT_UYVY,
+    FMT_YUY2,
     FMT_DXVA,
-    FMT_INTERNAL
+    FMT_VAAPI,
+    FMT_OMXEGL,
+    FMT_CVBREF,
+    FMT_SMD,
   } format;
 };
 
@@ -111,14 +154,17 @@ public:
    * returns one or a combination of VC_ messages
    * pData and iSize can be NULL, this means we should flush the rest of the data.
    */
-  virtual int Decode(BYTE* pData, int iSize, double pts) = 0;
+  virtual int Decode(BYTE* pData, int iSize, double pts, double dts) = 0;
   
  /*
    * Reset the decoder.
    * Should be the same as calling Dispose and Open after each other
    */
   virtual void Reset() = 0;
+  virtual void Resync(double pts){}
   
+  virtual void SetSpeed(int speed) {}
+
   /*
    * returns true if successfull
    * the data is valid until the next Decode call
@@ -149,8 +195,20 @@ public:
    */
   virtual const char* GetName() = 0;
 
+  /*
+   *
+   * How many packets should player remember, so codec
+   * can recover should something cause it to flush
+   * outside of players control
+   */
+  virtual unsigned GetConvergeCount()
+  {
+    return 0;
+  }
+
   virtual bool IsHarwareCodec() { return m_bIsHarwareCodec; }
   virtual bool IsDirectRendering() { return m_bIsDirectRendering; }
+  virtual void DisablePtsCorrection(bool bDisable) {}
 
 protected:
   bool m_bIsHarwareCodec;

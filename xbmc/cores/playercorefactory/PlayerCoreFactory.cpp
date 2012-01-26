@@ -100,6 +100,8 @@ PLAYERCOREID CPlayerCoreFactory::GetPlayerCore(const CStdString& strCoreName)
 
 CStdString CPlayerCoreFactory::GetPlayerName(const PLAYERCOREID eCore)
 {
+  if(eCore == PCID_NONE)
+    return "";
   return s_vecCoreConfigs[eCore-1]->GetName();
 }
 
@@ -133,7 +135,7 @@ void CPlayerCoreFactory::GetPlayers( VECPLAYERCORES &vecCores, const bool audio,
 
 void CPlayerCoreFactory::GetPlayers( const CFileItem& item, VECPLAYERCORES &vecCores)
 {
-  CURL url(item.m_strPath);
+  CURI url(item.m_strPath);
 
   CLog::Log(LOGDEBUG, "CPlayerCoreFactory::GetPlayers(%s)", item.m_strPath.c_str());
 
@@ -143,6 +145,7 @@ void CPlayerCoreFactory::GetPlayers( const CFileItem& item, VECPLAYERCORES &vecC
 
   CLog::Log(LOGDEBUG, "CPlayerCoreFactory::GetPlayers: matched %d rules with players", (int)vecCores.size());
 
+  // This needs some thought. if paplayer doesn't support the type often times we won't offer alternatives
   if( PAPlayer::HandlesType(url.GetFileType()) )
   {
     // We no longer force PAPlayer as our default audio player (used to be true):
@@ -162,16 +165,11 @@ void CPlayerCoreFactory::GetPlayers( const CFileItem& item, VECPLAYERCORES &vecC
 
     if (bAdd)
     {
+
       if( g_guiSettings.GetInt("audiooutput.mode") == AUDIO_ANALOG )
       {
         CLog::Log(LOGDEBUG, "CPlayerCoreFactory::GetPlayers: adding PAPlayer (%d)", EPC_PAPLAYER);
         vecCores.push_back(EPC_PAPLAYER);
-      }
-      else if ((url.GetFileType().Equals("ac3") && g_audioConfig.GetAC3Enabled())
-           ||  (url.GetFileType().Equals("dts") && g_audioConfig.GetDTSEnabled())) 
-      {
-        CLog::Log(LOGDEBUG, "CPlayerCoreFactory::GetPlayers: adding DVDPlayer (%d)", EPC_DVDPLAYER);
-        vecCores.push_back(EPC_DVDPLAYER);
       }
       else
       {
@@ -207,8 +205,8 @@ void CPlayerCoreFactory::GetPlayers( const CFileItem& item, VECPLAYERCORES &vecC
       CLog::Log(LOGDEBUG, "CPlayerCoreFactory::GetPlayers: adding audiodefaultplayer (%d)", eAudioDefault);
       vecCores.push_back(eAudioDefault);
     }
-      GetPlayers(vecCores, true, false); // Audio-only players
-      GetPlayers(vecCores, true, true);  // Audio & video players
+    GetPlayers(vecCores, true, false); // Audio-only players
+    GetPlayers(vecCores, true, true);  // Audio & video players
   }
 
   /* make our list unique, preserving first added players */

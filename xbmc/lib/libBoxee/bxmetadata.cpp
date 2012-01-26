@@ -342,6 +342,8 @@ BXVideo::BXVideo()
   m_iFolderId = 0;
   m_iPopularity = 0;
   m_iReleaseDate = 0;
+  m_iCriticsScore = -1;
+  m_iAudienceScore = -1;
 }
 
 BXVideo::~BXVideo() 
@@ -354,6 +356,7 @@ void BXVideo::Dump() const
 	LOG(LOG_LEVEL_DEBUG, "Path: %s", m_strPath.c_str());
 	LOG(LOG_LEVEL_DEBUG, "Title: %s", m_strTitle.c_str());
 	LOG(LOG_LEVEL_DEBUG, "Thumb: %s", m_strCover.c_str());
+	LOG(LOG_LEVEL_DEBUG, "RottenTomato: Critic Score/Rating:(%d/'%s') | Audience Score/Rating:(%d/'%s')", m_iCriticsScore, m_strCriticsRating.c_str(), m_iAudienceScore, m_strAudienceRating.c_str());
 
 	LOG(LOG_LEVEL_DEBUG, "= END VIDEO DETAIL =");
 }
@@ -621,7 +624,7 @@ void BXMetadata::SetFileSize(int64_t fileSize)
 {
   m_dwSize = fileSize;
 }
-const int64_t BXMetadata::GetFileSize() const
+int64_t BXMetadata::GetFileSize() const
 {
   return m_dwSize;
 }

@@ -20,8 +20,10 @@
  */
 
 #pragma once
-#include "deque"
+#include <deque>
 #include "system.h" // for SOCKET
+
+#ifdef HAS_FILESYSTEM_HTSP
 
 #include <algorithm>
 #include <string>
@@ -222,3 +224,5 @@ private:
 };
 
 }
+
+#endif

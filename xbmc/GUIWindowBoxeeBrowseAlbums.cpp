@@ -22,195 +22,212 @@
 #include "lib/libBoxee/boxee.h"
 #include "SpecialProtocol.h"
 #include "BoxeeDatabaseDirectory.h"
-
+#include "GUISettings.h"
+#include "GUIDialogBoxeeBrowseMenu.h"
 
 using namespace std;
 using namespace BOXEE;
 
-#define BUTTON_ARTISTS 120
+#define BUTTON_ARTISTS  120
 #define BUTTON_ALBUMS  130
-#define BUTTON_SHOW_APPS  131
 #define BUTTON_GENRES  150
-#define BUTTON_SEARCH  160
 
-#define STATE_SHOW_ALL_ALBUMS    1
-#define STATE_SHOW_ALL_ARTISTS   2
-#define STATE_SHOW_ARTIST_ALBUMS 3
+// This button is only shown in case no albums present
+// and user is suggested to browse apps instead
+#define BUTTON_SHOW_APPS  131
+#define BUTTON_BROWSE_SOURCES 7002
 
-#define CUSTOM_GENRE_FILTER 600
+#define STATE_SHOW_ALL_ALBUMS    "albums"
+#define STATE_SHOW_ALL_ARTISTS   "artists"
+#define STATE_SHOW_ARTIST_ALBUMS "artistsalbum"
 
-#define RESOLVED_AUDIO_LABEL    501
-#define SCANNING_LABEL          502
+#define SWITCH_VIEW_THUMBS   8001
+#define SWITCH_VIEW_LIST   8002
+#define SWITCH_VIEW_FLAG "show-thumbnails"
+
+#define GENRE_FILTER_ID   600
+#define GENRE_FILTER_NAME "genre"
+
+#define ALBUMS_ARTIST_FLAG        "albums-or-artists"
+
+#define SHOW_FILTERS_AND_SORT     9014
+#define SHOW_FILTERS_AND_SORT_FLAG "filters-and-sort"
+
+#define ITEM_SUMMARY    9018
+#define ITEM_SUMMARY_FLAG "item-summary"
+
+#define INIT_SELECT_POS_IN_BROWSE_MENU 1
 
 // STATE IMPLEMENTATION
-
-CAlbumsWindowState::CAlbumsWindowState(CGUIWindow* pWindow) : CBrowseWindowState(pWindow)
+CAlbumsSource::CAlbumsSource(int iWindowID) : CBrowseWindowSource("albumsource", "boxeedb://albums/",iWindowID)
 {
-  m_strGenre = g_localizeStrings.Get(53511);
-  m_iState = STATE_SHOW_ALL_ARTISTS;
+}
 
-  SetSearchType("music");
+CAlbumsSource::~CAlbumsSource()
+{
+
+}
+
+void CAlbumsSource::BindItems(CFileItemList& items)
+{
+  CStdString strGenre;
+  CBrowseWindowAlbumGenreFilter* filter;
+  std::map<CStdString, CStdString>::iterator it = m_mapFilters.find("genre");
+
+  if (it != m_mapFilters.end())
+  {
+    strGenre = it->second;
+
+    if (strGenre != "")
+    {
+      filter = new CBrowseWindowAlbumGenreFilter(GENRE_FILTER_ID, GENRE_FILTER_NAME, strGenre);
+
+      int i = 0;
+
+      while (i < items.Size())
+      {
+        if (filter->Apply(&*items[i]) != true)
+        {//need to remove this item
+          items.Remove(i);
+        }
+        else
+        {
+          i++;
+        }
+      }
+
+      delete filter;
+    }
+
+  }
+
+  return CBrowseWindowSource::BindItems(items);
+}
+
+CArtistsSource::CArtistsSource(int iWindowID) : CBrowseWindowSource("artistsource", "boxeedb://artists/",iWindowID)
+{
+}
+
+CArtistsSource::~CArtistsSource()
+{
+
+}
+
+CArtistSource::CArtistSource(const CStdString& path ,int iWindowID) : CBrowseWindowSource("selectedartistsource", path ,iWindowID)
+{
+}
+
+CArtistSource::~CArtistSource()
+{
+
+}
+
+void CAlbumsWindowState::SetDefaultCategory()
+{
+  SetCategory(STATE_SHOW_ALL_ARTISTS);
+}
+
+void CAlbumsWindowState::SetCategory(const CStdString &strCategory)
+{
+  m_sourceController.ActivateAllSources(false,true);
+
+  if (strCategory.CompareNoCase(STATE_SHOW_ALL_ALBUMS) == 0 )
+  {
+    OnAlbums();
+  }
+  else if (strCategory.CompareNoCase(STATE_SHOW_ALL_ARTISTS) == 0)
+  {
+    OnArtists();
+  }
+
+  CBrowseWindowState::SetCategory(strCategory);
+}
+
+CAlbumsWindowState::CAlbumsWindowState(CGUIWindowBoxeeBrowse* pWindow) : CBrowseWindowState(pWindow)
+{
+  m_sourceController.RemoveAllSources();
+
+  m_sourceController.AddSource(new CArtistsSource(m_pWindow->GetID()));
+  m_sourceController.AddSource(new CAlbumsSource(m_pWindow->GetID()));
+  m_sourceController.AddSource(new CArtistSource("", m_pWindow->GetID()));
+  
+  m_strGenre = "all";
+  bool IgnorePrefix = g_guiSettings.GetBool("sort.showstarter");
 
   // Initialize sort vector
-  m_vecSortMethods.push_back(CBoxeeSort("title", SORT_METHOD_ALBUM, SORT_ORDER_ASC, g_localizeStrings.Get(53505), ""));
-  m_vecSortMethods.push_back(CBoxeeSort("release", SORT_METHOD_DATE_ADDED, SORT_ORDER_DESC, g_localizeStrings.Get(53506), ""));
+  m_vecSortMethods.clear();
+  m_vecSortMethods.push_back(CBoxeeSort(VIEW_SORT_METHOD_ATOZ, IgnorePrefix?SORT_METHOD_LABEL_IGNORE_THE:SORT_METHOD_LABEL, SORT_ORDER_ASC , g_localizeStrings.Get(53505), ""));
+  m_vecSortMethods.push_back(CBoxeeSort(VIEW_SORT_METHOD_RELEASE, SORT_METHOD_DATE_ADDED, SORT_ORDER_DESC, g_localizeStrings.Get(53539), ""));
 
-  SetSort(m_vecSortMethods[0]);
-
-  m_bInTracks = false;
+  // Reset selected item
   m_iSelectedArtist = -1;
-}
-
-void CAlbumsWindowState::Reset()
-{
-  CBrowseWindowState::Reset();
-
-  // Reset view labels
-  switch (m_iState)
-  {
-  case STATE_SHOW_ALL_ALBUMS:
-    m_pWindow->SetProperty("albums-set", true);
-    m_pWindow->SetProperty("artists-set", false);
-    m_pWindow->SetProperty("type-label", "ALBUMS");
-    break;
-  case STATE_SHOW_ALL_ARTISTS:
-    m_pWindow->SetProperty("albums-set", false);
-    m_pWindow->SetProperty("artists-set", true);
-    m_pWindow->SetProperty("type-label", "ARTISTS");
-    break;
-  case STATE_SHOW_ARTIST_ALBUMS:
-    m_pWindow->SetProperty("albums-set", true);
-    m_pWindow->SetProperty("artists-set", true);
-    m_pWindow->SetProperty("type-label", m_strArtist);
-    m_pWindow->SetProperty("sort-label", "");
-    break;
-  }
-
-  m_strArtist = "";
-
-  // Reset genre
-  SetGenre(g_localizeStrings.Get(53511));
-
-  CBrowseWindowState::Reset();
-
-}
-
-CStdString CAlbumsWindowState::CreatePath()
-{
-  CStdString strPath;
-
-  if (InSearchMode())
-  {
-    if (!m_strSearchString.IsEmpty())
-    {
-      strPath = "boxeedb://music/?search=";
-      strPath += GetSearchString();
-    }
-  }
-  else
-  {
-    switch (m_iState)
-    {
-    case STATE_SHOW_ALL_ALBUMS:
-      strPath = "boxeedb://albums/";
-      break;
-    case STATE_SHOW_ALL_ARTISTS:
-      strPath = "boxeedb://artists/";
-      break;
-    case STATE_SHOW_ARTIST_ALBUMS:
-      return GetCurrentPath(); //m_configuration.m_strPath;
-    }
-
-    strPath = AddGuiStateParameters(strPath);
-  }
-
-  CLog::Log(LOGDEBUG,"CAlbumsWindowState::CreatePath, created path = %s (browse)", strPath.c_str());
-  return strPath;
-}
-
-CStdString CAlbumsWindowState::AddGuiStateParameters(const CStdString& _strPath)
-{
-  std::map<CStdString, CStdString> mapOptions;
-
-  mapOptions["genre"] = m_strGenre;
-
-  CStdString strPath = _strPath;
-  strPath += BoxeeUtils::BuildParameterString(mapOptions);
-
-  return strPath;
-}
-
-void CAlbumsWindowState::SortItems(CFileItemList &items)
-{
-  if (m_iState == STATE_SHOW_ALL_ARTISTS)
-  {
-    items.Sort(SORT_METHOD_LABEL, SORT_ORDER_ASC);
-  }
-  else
-  {
-    CBrowseWindowState::SortItems(items);
-  }
+  m_iSavedView = MUSIC_THUMB_VIEW;
 }
 
 bool CAlbumsWindowState::OnBack()
 {
-  if (OnSearchEnd())
+  CStdString category = GetCategory();
+
+  if (category.CompareNoCase(STATE_SHOW_ARTIST_ALBUMS) == 0 )
   {
-    if (m_iState == STATE_SHOW_ALL_ALBUMS)
-    {
-      OnAlbums();
-    }
-    else
-    {
-      OnArtists();
-    }
-    return true;
+    SetCategory(STATE_SHOW_ALL_ARTISTS);
+    SetSelectedItem(m_iSelectedArtist);
+    SetCurrentView(m_iSavedView);
+    Refresh(false);
   }
-  else if (m_iState == STATE_SHOW_ARTIST_ALBUMS)
+  else
   {
-    OnArtists();
-    return true;
+    CGUIDialogBoxeeBrowseMenu* pMenu = (CGUIDialogBoxeeBrowseMenu*)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_BROWSE_MENU);
+    pMenu->DoModal();
   }
-  return false;
+
+  return true;
 }
 
 bool CAlbumsWindowState::OnAlbums()
 {
-  if (m_iState == STATE_SHOW_ALL_ALBUMS)
-    return false;
-
-  m_iState = STATE_SHOW_ALL_ALBUMS;
-
-  Reset();
-
+  m_sourceController.ActivateSource("albumsource",true,true);
+  m_pWindow->SetProperty(ALBUMS_ARTIST_FLAG, 0);
   return true;
 }
 
 bool CAlbumsWindowState::OnArtists()
 {
-  if (m_iState == STATE_SHOW_ALL_ARTISTS)
-    return false;
-
-  m_iState = STATE_SHOW_ALL_ARTISTS;
-  m_configuration.m_iSelectedItem = m_iSelectedArtist;
-
-  Reset();
-
+  m_iSelectedItem = m_iSelectedArtist;
+  m_sourceController.ActivateSource("artistsource",true,true);
+  m_pWindow->SetProperty(ALBUMS_ARTIST_FLAG, 1);
   return true;
 }
 
-bool CAlbumsWindowState::OnArtist(const CStdString& strArtist)
+bool CAlbumsWindowState::OnArtist(CFileItem& artistItem)
 {
-  m_strArtist = strArtist;
 
-  if (m_iState == STATE_SHOW_ARTIST_ALBUMS)
-    return false;
+  bool bRetVal = false;
+  m_strArtist = artistItem.GetLabel();
+  CBrowseWindowSource* source = NULL;
 
-  m_iState = STATE_SHOW_ARTIST_ALBUMS;
+  source = m_sourceController.GetSourceById("selectedartistsource");
 
-  Reset();
+  if (source != NULL)
+  {
+    m_iSavedView = GetCurrentView(); //save the current view before applying the new one in SetCategory
 
-  return true;
+    SetCategory(STATE_SHOW_ARTIST_ALBUMS); //once its done, previous view and sort is loaded
+    source->SetBasePath( artistItem.m_strPath );
+    source->Activate(true);
+    source->Reset();
+    bRetVal = true;
+    m_pWindow->SetProperty(ALBUMS_ARTIST_FLAG, 2);
+
+    //SetDefaultView(); //should set MUSIC_THUMB_VIEW
+  }
+  
+  return bRetVal;
+}
+
+void CAlbumsWindowState::SetDefaultView()
+{
+  m_iCurrentView = MUSIC_THUMB_VIEW;
 }
 
 void CAlbumsWindowState::SetArtist(const CStdString& strArtist)
@@ -221,27 +238,79 @@ void CAlbumsWindowState::SetArtist(const CStdString& strArtist)
 void CAlbumsWindowState::SetGenre(const CStdString& strGenre)
 {
   m_strGenre = strGenre;
-  //m_configuration.ClearActiveFilters();
 
-  m_configuration.RemoveCustomFilter(CUSTOM_GENRE_FILTER);
+  //RemoveLocalFilter(GENRE_FILTER_NAME);
 
-  if (m_strGenre.CompareNoCase(g_localizeStrings.Get(53511)) != 0)
+  if (m_strGenre.CompareNoCase("all") != 0)
   {
     m_pWindow->SetProperty("genre-label", m_strGenre);
-    m_configuration.AddCustomFilter(new CBrowseWindowAlbumGenreFilter(CUSTOM_GENRE_FILTER, "Album Genre Filter", m_strGenre));
+    //AddLocalFilter(new CBrowseWindowAlbumGenreFilter(GENRE_FILTER_ID, GENRE_FILTER_NAME, m_strGenre));
+    m_sourceController.SetFilter("genre", m_strGenre);
   }
   else
   {
     m_pWindow->SetProperty("genre-label", ""); // reset genre
+    m_sourceController.ClearFilter("genre");
   }
+}
+
+
+void CAlbumsWindowState::Refresh(bool bResetSelected)
+{
+  CBrowseWindowState::Refresh(bResetSelected);
+
+  m_pWindow->SetProperty(ITEM_SUMMARY_FLAG, GetItemSummary());
+}
+
+CStdString CAlbumsWindowState::GetItemSummary()
+{
+  CStdString strSummary = "";
+  std::map<CStdString , CStdString> mapTitleItemValue;
+
+  if (!m_sort.m_sortName.empty() && m_sort.m_id != VIEW_SORT_METHOD_ATOZ)
+  {
+    mapTitleItemValue["sort"] = g_localizeStrings.Get(90006) + " " + m_sort.m_sortName; //prefix + " " + sort name
+  }
+
+  if (m_strGenre.CompareNoCase("all") != 0 && GetCategory() == STATE_SHOW_ALL_ALBUMS)
+  {
+    CStdString strGenre = m_strGenre.ToLower();
+
+    strGenre[0] = toupper(strGenre[0]);
+    strGenre.Replace("_"," ");
+
+    mapTitleItemValue["filter"] = strGenre;
+  }
+
+  if (GetCategory() == STATE_SHOW_ALL_ALBUMS)
+  {
+    mapTitleItemValue["media"] = g_localizeStrings.Get(82006);
+  }
+  else if (GetCategory() == STATE_SHOW_ALL_ARTISTS)
+  {
+    mapTitleItemValue["media"] = g_localizeStrings.Get(82005);
+  }
+  else if (GetCategory() == STATE_SHOW_ARTIST_ALBUMS)
+  {
+    mapTitleItemValue["media"] = g_localizeStrings.Get(82003) + m_strArtist;
+  }
+
+  if (!CUtil::ConstructStringFromTemplate(g_localizeStrings.Get(90003), mapTitleItemValue,strSummary))
+  {
+    strSummary = g_localizeStrings.Get(2);
+    CLog::Log(LOGERROR,"CAlbumsWindowState::GetItemSummary, Error in Strings.xml for the current language [id=90003], the template is bad. (browse)");
+  }
+
+  return strSummary;
 }
 
 // WINDOW IMPLEMENTATION
 
-CGUIWindowBoxeeBrowseAlbums::CGUIWindowBoxeeBrowseAlbums()
-: CGUIWindowBoxeeBrowseWithPanel(WINDOW_BOXEE_BROWSE_ALBUMS, "boxee_browse_music.xml"), m_renderCount(0)
+CGUIWindowBoxeeBrowseAlbums::CGUIWindowBoxeeBrowseAlbums() : CGUIWindowBoxeeBrowse(WINDOW_BOXEE_BROWSE_ALBUMS, "boxee_browse_music.xml")
 {
   SetWindowState(new CAlbumsWindowState(this));
+  
+  SetProperty(SHOW_FILTERS_AND_SORT_FLAG, false);
 }
 
 CGUIWindowBoxeeBrowseAlbums::~CGUIWindowBoxeeBrowseAlbums()
@@ -249,134 +318,64 @@ CGUIWindowBoxeeBrowseAlbums::~CGUIWindowBoxeeBrowseAlbums()
 
 }
 
-void CGUIWindowBoxeeBrowseAlbums::Render()
+void CGUIWindowBoxeeBrowseAlbums::ShowItems(CFileItemList& list, bool append)
 {
-  CGUIWindow::Render();
+  CGUIWindowBoxeeBrowse::ShowItems(list,append);
 
-  m_renderCount ++;
-  if (m_renderCount == 120) {
-    SetAudioCounters(true);
-    m_renderCount = 0;
-  }
+  SetProperty(SWITCH_VIEW_FLAG, (m_windowState->GetCurrentView() != MUSIC_THUMB_VIEW));
 }
 
-void CGUIWindowBoxeeBrowseAlbums::OnInitWindow()
-{
-  // clear vector before initializing
-  m_vecGenres.clear();
-
-  DIRECTORY::CBoxeeDatabaseDirectory dir;
-  dir.GetMusicGenres(m_vecGenres);
-
-  if (((CAlbumsWindowState*)m_windowState)->m_bInTracks)
-  {
-    ((CAlbumsWindowState*)m_windowState)->m_bInTracks = false;
-  }
-  else
-  {
-    m_windowState->Reset();
-  }
-  // Reset Audio Counters
-  SetAudioCounters(true);
-
-  CGUIWindowBoxeeBrowseWithPanel::OnInitWindow();
-}
-
-bool CGUIWindowBoxeeBrowseAlbums::ProcessPanelMessages(CGUIMessage& message)
+bool CGUIWindowBoxeeBrowseAlbums::OnMessage(CGUIMessage& message)
 {
   switch ( message.GetMessage() )
   {
-  case GUI_MSG_CLICKED:
-  {
-    int iControl = message.GetSenderId();
-
-    if (iControl == BUTTON_ALBUMS)
+    case GUI_MSG_CLICKED:
     {
-      ResetHistory();
-      ((CAlbumsWindowState*)m_windowState)->OnAlbums();
-      Refresh();
-      return true;
-    }
-    else if (iControl == BUTTON_ARTISTS)
-    {
-      ResetHistory();
-      ((CAlbumsWindowState*)m_windowState)->OnArtists();
-      Refresh();
-      return true;
-    }
-    else if (iControl == BUTTON_SHOW_APPS)
-    {
-      ((CGUIWindowBoxeeBrowseWithPanel*)g_windowManager.GetWindow(WINDOW_BOXEE_BROWSE_APPS))->ShowPanel();
-      g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_APPS,"apps://all");
-      return true;
-    }
-    else if (iControl == BUTTON_GENRES)
-    {
-      CFileItemList genres;
-      FillGenresList(genres);
-
-      CStdString value;
-      if (CGUIDialogBoxeeDropdown::Show(genres, g_localizeStrings.Get(53561), value))
+      int iControl = message.GetSenderId();
+      if (iControl == SWITCH_VIEW_THUMBS || iControl == SWITCH_VIEW_LIST)
       {
-        ((CAlbumsWindowState*)m_windowState)->SetGenre(value);
-        UpdateFileList();
+        SetProperty(SWITCH_VIEW_FLAG, !GetPropertyBOOL(SWITCH_VIEW_FLAG));
+        return true;
       }
-
-      return true;
-    }
-    else if (iControl == BUTTON_SEARCH)
-    {
-      if (m_windowState->OnSearchStart())
+      if (iControl == BUTTON_SHOW_APPS)
       {
-        ClearView();
-        SET_CONTROL_FOCUS(9000,0);
-
-        Refresh(true);
+        g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_APPS , "boxeeui://apps/?category=all&categoryfilter=9");
+        return true;
       }
-
-      return true;
-    }
-
-    // else - break from switch and return false
-    break;
-  } // case GUI_MSG_CLICKED
-  }// switch
-
-  return CGUIWindowBoxeeBrowseWithPanel::ProcessPanelMessages(message);
-}
-
-bool CGUIWindowBoxeeBrowseAlbums::OnAction(const CAction &action)
-{
-  switch (action.id)
-  {
-  case ACTION_PARENT_DIR:
-  case ACTION_PREVIOUS_MENU:
-  {
-    if (m_windowState->OnBack())
-    {
-      Refresh();
-      return true;
-    }
-    else
-    {
-      CGUIDialogBoxeeMainMenu* pMenu = (CGUIDialogBoxeeMainMenu*)g_windowManager.GetWindow(WINDOW_BOXEE_DIALOG_MAIN_MENU);
-      pMenu->DoModal();
-      return true;
     }
   }
-  };
+  return CGUIWindowBoxeeBrowse::OnMessage(message);
+}
 
-  return CGUIWindowBoxeeBrowse::OnAction(action);
+void CGUIWindowBoxeeBrowseAlbums::ConfigureState(const CStdString& param)
+{
+  CGUIWindowBoxeeBrowse::ConfigureState(param);
+
+   std::map<CStdString, CStdString> optionsMap;
+   CURI properties(param);
+
+
+   if (properties.GetProtocol().compare("boxeeui") == 0)
+   {
+     optionsMap = properties.GetOptionsAsMap();
+
+     CStdString strGenre = "all";
+     if (optionsMap.find("genre") != optionsMap.end())
+     {
+       strGenre = optionsMap["genre"];
+     }
+
+     ((CAlbumsWindowState*)m_windowState)->SetGenre(strGenre);
+   }
 }
 
 bool CGUIWindowBoxeeBrowseAlbums::OnClick(int iItem)
 {
-  CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseAlbums::OnClick, item = %d (browse)", iItem);
-
   CFileItem item;
-
   if (!GetClickedItem(iItem, item))
     return true;
+
+  CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseAlbums::OnClick, item no = %d, label = %s (browse)", iItem, item.GetLabel().c_str());
 
   item.Dump();
 
@@ -388,16 +387,16 @@ bool CGUIWindowBoxeeBrowseAlbums::OnClick(int iItem)
     CStdString strArtist = item.GetMusicInfoTag()->GetArtist().IsEmpty() ? item.GetMusicInfoTag()->GetAlbumArtist() :item.GetMusicInfoTag()->GetArtist();
     strArtist = BXUtils::URLEncode(strArtist);
 
+    // Construct album path TODO: Check why cant we use the id here
     CStdString strAlbumPath;
     strAlbumPath.Format("boxeedb://album/?title=%s&artist=%s", strAlbum.c_str(), strArtist.c_str());
 
-
+    // Get all album instances from the database
     CFileItemList albumItems;
     CFileItemList availableAlbums;
     DIRECTORY::CDirectory::GetDirectory(strAlbumPath, albumItems);
 
-    // Fill available options into a context menu dialog
-
+    // Create a list of available instances, by checking whether the album folder path is available
     for (int i = 0; i < albumItems.Size(); i++)
     {
       CStdString strPath = albumItems.Get(i)->GetProperty("AlbumFolderPath");
@@ -407,6 +406,7 @@ bool CGUIWindowBoxeeBrowseAlbums::OnClick(int iItem)
       }
     }
 
+    // Present the user with a list of instances to choose from
     CStdString strAlbumId;
     if (availableAlbums.Size() > 1)
     {
@@ -418,7 +418,17 @@ bool CGUIWindowBoxeeBrowseAlbums::OnClick(int iItem)
 
       for (int i = 0; i < availableAlbums.Size(); i++)
       {
-        pDlgSelect->Add(availableAlbums.Get(i)->GetProperty("AlbumFolderPath"));
+        CStdString path = availableAlbums.Get(i)->GetProperty("AlbumFolderPath");
+        if (!path.IsEmpty())
+        {
+          CUtil::RemovePasswordFromPath(path);
+          CUtil::UrlDecode(path);
+          pDlgSelect->Add(path);
+        }
+        else
+        {
+          CLog::Log(LOGWARNING,"CGUIWindowBoxeeBrowseAlbums::OnClick - [%d/%d] - received an EMPTY album folder path [%s] (browse)",i+1,availableAlbums.Size(),path.c_str());
+        }
       }
 
       pDlgSelect->EnableButton(TRUE);
@@ -445,15 +455,10 @@ bool CGUIWindowBoxeeBrowseAlbums::OnClick(int iItem)
       return false;
     }
 
+    // If album was selected, activate the tracks window for this album
     if (!strAlbumId.IsEmpty())
     {
-      CStdString strPath = "boxeedb://tracks/";
-      strPath += strAlbumId;
-
-      CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseAlbums::OnClick - Going to activate WINDOW_BOXEE_BROWSE_TRACKS with [strPath=%s] (browse)",strPath.c_str());
-
-      g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_TRACKS, strPath);
-      ((CAlbumsWindowState*)m_windowState)->m_bInTracks = true;
+      g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_TRACKS, strAlbumId);
     }
 
     return true;
@@ -461,76 +466,42 @@ bool CGUIWindowBoxeeBrowseAlbums::OnClick(int iItem)
   else if (item.GetPropertyBOOL("isartist"))
   {
     // Update state in order to be able to return to correct result
+
     ((CAlbumsWindowState*)m_windowState)->m_iSelectedArtist = iItem;
-    ((CAlbumsWindowState*)m_windowState)->OnArtist(item.GetLabel());
+    ((CAlbumsWindowState*)m_windowState)->OnArtist(item);
+    Refresh();
+
+    return true;
   }
 
   return CGUIWindowBoxeeBrowse::OnClick(iItem);
 }
 
-void CGUIWindowBoxeeBrowseAlbums::FillGenresList(CFileItemList& genres)
+void CGUIWindowBoxeeBrowseAlbums::GetStartMenusStructure(std::list<CFileItemList>& browseMenuLevelList)
 {
-  CFileItemPtr allItem (new CFileItem(g_localizeStrings.Get(53511)));
-  allItem->SetProperty("type", "genre");
-  allItem->SetProperty("value", g_localizeStrings.Get(53511));
-  genres.Add(allItem);
+  CStdString category = m_windowState->GetCategory();
 
-  for (size_t i = 0; i < m_vecGenres.size(); i++)
+  CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseAlbums::GetStartMenusStructure - enter function [category=%s] (bm)",category.c_str());
+
+  if (category == STATE_SHOW_ALL_ALBUMS)
   {
-    CFileItemPtr genreItem (new CFileItem(m_vecGenres[i]));
-    genreItem->SetProperty("type", "genre");
-    genreItem->SetProperty("value", m_vecGenres[i]);
-    genres.Add(genreItem);
+    CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseTvShows::GetStartMenusStructure - handle [category=%s=albums] -> set [m_initSelectPosInBrowseMenu=%d=0] menu (bm)",category.c_str(),m_initSelectPosInBrowseMenu);
+    m_initSelectPosInBrowseMenu = 1;
   }
-}
-
-void CGUIWindowBoxeeBrowseAlbums::SetAudioCounters(bool bOn) {
-
-  int resolved_count = 0;
-  int unresolved_count = 0;
-  bool is_scanning = false;
-
-  if (bOn)
+  else if (category == STATE_SHOW_ALL_ARTISTS)
   {
-    BOXEE::BXAudioDatabase audio_db;
-
-    DIRECTORY::CBoxeeDatabaseDirectory dummyDir;
-    std::vector<std::string> vecAudioShares;
-    if (!dummyDir.CreateShareFilter("music",vecAudioShares,false))
-    {
-      CLog::Log(LOGERROR,"CGUIWindowBoxeeBrowseTvShows::SetVideoCounters - Couldnt create video share list");
-      return;
-    }
-
-    //build video share list.
-    CStdString audio_share_list = "";
-
-    for (size_t i = 0; i < vecAudioShares.size(); i++)
-    {
-      audio_share_list += "\'";
-      audio_share_list += _P(vecAudioShares[i].c_str());
-      audio_share_list += "\'";
-
-      if (i < vecAudioShares.size() -1 )
-        audio_share_list += ',';
-    }
-
-
-    resolved_count = audio_db.GetUserUnresolvedAudioFilesCount(audio_share_list, STATUS_RESOLVED);
-    unresolved_count = audio_db.GetUserUnresolvedAudioFilesCount(audio_share_list, STATUS_UNRESOLVED);
-    is_scanning = audio_db.AreAudioFilesBeingScanned(audio_share_list);
-
+    CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseTvShows::GetStartMenusStructure - handle [category=%s=artists] -> set [m_initSelectPosInBrowseMenu=%d=1] (bm)",category.c_str(),m_initSelectPosInBrowseMenu);
+    m_initSelectPosInBrowseMenu = 0;
   }
 
-  char     tmp[100];
+  CBoxeeBrowseMenuManager::GetInstance().GetFullMenuStructure("mn_local_music_categories",browseMenuLevelList);
 
-  sprintf(tmp, "%d files found, %d unresolved" , resolved_count + unresolved_count, unresolved_count);
-  SET_CONTROL_LABEL(RESOLVED_AUDIO_LABEL, tmp);
+  //m_initSelectPosInBrowseMenu = INIT_SELECT_POS_IN_BROWSE_MENU;
 
-  if (is_scanning)
-    SET_CONTROL_VISIBLE(SCANNING_LABEL);
-  else
-    SET_CONTROL_HIDDEN(SCANNING_LABEL);
+  //CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseAlbums::GetStartMenusStructure - exit function with [browseMenuLevelStackSize=%zu]. [category=%s] (bm)",browseMenuLevelStack.size(),category.c_str());
 
+  CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseAlbums::GetStartMenusStructure - after set [browseMenuLevelListSize=%zu][m_initSelectPosInBrowseMenu=%d]. [category=%s] (bm)",browseMenuLevelList.size(),m_initSelectPosInBrowseMenu,category.c_str());
+
+  return CGUIWindowBoxeeBrowse::GetStartMenusStructure(browseMenuLevelList);
 }
 

@@ -1924,7 +1924,7 @@ class NPT_XmlNodeWriter
 public:
     NPT_XmlNodeWriter(NPT_XmlSerializer& serializer) : 
         m_Serializer(serializer), m_AttributeWriter(serializer) {
-        m_Serializer.StartDocument(); // WMP needs this!
+        m_Serializer.StartDocument();
     }
     void operator()(NPT_XmlNode*& node) const {
         if (NPT_XmlElementNode* element = node->AsElementNode()) {
@@ -1980,7 +1980,7 @@ public:
                                MapChainLink*      map_chain = NULL) : 
         m_MapChain(map_chain),
         m_Serializer(serializer) {
-        m_Serializer.StartDocument(); // WMP needs this!
+        m_Serializer.StartDocument();
     }
     void operator()(NPT_XmlNode*& node) const;
 
@@ -2244,14 +2244,14 @@ NPT_XmlNodeCanonicalWriter::operator()(NPT_XmlNode*& node) const
 NPT_XmlSerializer::NPT_XmlSerializer(NPT_OutputStream* output,
                                      NPT_Cardinal      indentation,
                                      bool              shrink_empty_elements,
-									 bool			   add_header) :
+									 bool			   add_xml_decl) :
     m_Output(output),
     m_ElementPending(false),
     m_Depth(0),
     m_Indentation(indentation),
     m_ElementHasText(false),
     m_ShrinkEmptyElements(shrink_empty_elements),
-	m_AddHeader(add_header)
+	m_AddXmlDecl(add_xml_decl)
 {
 }
 
@@ -2268,9 +2268,9 @@ NPT_XmlSerializer::~NPT_XmlSerializer()
 NPT_Result 
 NPT_XmlSerializer::StartDocument()
 {
-	if (!m_AddHeader) return NPT_SUCCESS;
+	if (!m_AddXmlDecl) return NPT_SUCCESS;
 
-    return m_Output->WriteString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+    return m_Output->WriteString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n");
 }
 
 /*----------------------------------------------------------------------
@@ -2345,7 +2345,7 @@ NPT_XmlSerializer::OutputEscapedString(const char* text, bool attribute)
         }
         if (insert) {
             // output pending chars
-            if (start != text) m_Output->Write(start, (NPT_Size)(text-start));
+            if (start != text) m_Output->WriteFully(start, (NPT_Size)(text-start));
             m_Output->WriteString(insert);
             start = ++text;
         } else {
@@ -2353,7 +2353,7 @@ NPT_XmlSerializer::OutputEscapedString(const char* text, bool attribute)
         }
     }
     if (start != text) {
-        m_Output->Write(start, (NPT_Size)(text-start));
+        m_Output->WriteFully(start, (NPT_Size)(text-start));
     }
 
     return NPT_SUCCESS;
@@ -2365,7 +2365,7 @@ NPT_XmlSerializer::OutputEscapedString(const char* text, bool attribute)
 void
 NPT_XmlSerializer::OutputIndentation(bool start)
 {
-    if (m_Depth || !start) m_Output->Write("\n", 1);
+    if (m_Depth || !start) m_Output->Write("\r\n", 2);
 
     // ensure we have enough chars in the prefix string
     unsigned int prefix_length = m_Indentation*m_Depth;
@@ -2377,7 +2377,7 @@ NPT_XmlSerializer::OutputIndentation(bool start)
     }
 
     // print the indentation prefix
-    m_Output->Write(m_IndentationPrefix.GetChars(), prefix_length);
+    m_Output->WriteFully(m_IndentationPrefix.GetChars(), prefix_length);
 }
 
 /*----------------------------------------------------------------------
@@ -2411,7 +2411,7 @@ NPT_XmlSerializer::EndElement(const char* prefix, const char* name)
         // this element has no children
         m_ElementPending = false;
         if (m_ShrinkEmptyElements) {
-            return m_Output->Write("/>", 2);
+            return m_Output->WriteFully("/>", 2);
         } else {
             m_Output->Write(">",1);
         }
@@ -2419,7 +2419,7 @@ NPT_XmlSerializer::EndElement(const char* prefix, const char* name)
 
     if (m_Indentation && !m_ElementHasText) OutputIndentation(false);
     m_ElementHasText = false;
-    m_Output->Write("</", 2);
+    m_Output->WriteFully("</", 2);
     if (prefix && prefix[0]) {
         m_Output->WriteString(prefix);
         m_Output->Write(":", 1);
@@ -2440,7 +2440,7 @@ NPT_XmlSerializer::Attribute(const char* prefix, const char* name, const char* v
         m_Output->Write(":", 1);
     }
     m_Output->WriteString(name);
-    m_Output->Write("=\"", 2);
+    m_Output->WriteFully("=\"", 2);
     OutputEscapedString(value, true);
     return m_Output->Write("\"", 1);
 }
@@ -2464,9 +2464,9 @@ NPT_XmlSerializer::CdataSection(const char* data)
 {
     ProcessPending();
     m_ElementHasText = true;
-    m_Output->Write("<![CDATA[", 9);
+    m_Output->WriteFully("<![CDATA[", 9);
     m_Output->WriteString(data);
-    return m_Output->Write("]]>", 3);
+    return m_Output->WriteFully("]]>", 3);
 }
 
 /*----------------------------------------------------------------------
@@ -2476,9 +2476,9 @@ NPT_Result
 NPT_XmlSerializer::Comment(const char* comment)
 {
     ProcessPending();
-    m_Output->Write("<!--", 4);
+    m_Output->WriteFully("<!--", 4);
     m_Output->WriteString(comment);
-    return m_Output->Write("-->", 3);
+    return m_Output->WriteFully("-->", 3);
 }
 
 /*----------------------------------------------------------------------
@@ -2487,9 +2487,9 @@ NPT_XmlSerializer::Comment(const char* comment)
 NPT_Result
 NPT_XmlWriter::Serialize(NPT_XmlNode&	   node, 
 						 NPT_OutputStream& output, 
-						 bool			   add_header)
+						 bool			   add_xml_decl)
 {
-    NPT_XmlSerializer serializer(&output, m_Indentation, true, add_header);
+    NPT_XmlSerializer serializer(&output, m_Indentation, true, add_xml_decl);
     NPT_XmlNodeWriter node_writer(serializer);
     NPT_XmlNode* node_pointer = &node;
     node_writer(node_pointer);
@@ -2503,10 +2503,10 @@ NPT_XmlWriter::Serialize(NPT_XmlNode&	   node,
 NPT_Result
 NPT_XmlCanonicalizer::Serialize(NPT_XmlNode&      node, 
 								NPT_OutputStream& output, 
-								bool			  add_header)
+								bool			  add_xml_decl)
 {
     // create a serializer with no indentation and no shrinking of empty elements
-    NPT_XmlSerializer serializer(&output, 0, false, add_header);
+    NPT_XmlSerializer serializer(&output, 0, false, add_xml_decl);
 
     // serialize the node
     NPT_XmlNodeCanonicalWriter node_writer(serializer);

@@ -75,9 +75,9 @@ class unzip:
             if not name.endswith('/'):
 		if name == file:
 			outfile = open(xbmc.translatePath(os.path.join(dir, dest_file)), 'wb')
-			outfile.write(zf.read(name))
-			outfile.flush()
-			outfile.close()
+		        outfile.write(zf.read(name))
+		        outfile.flush()
+		        outfile.close()
 
 
     def _createstructure(self, file, dir):

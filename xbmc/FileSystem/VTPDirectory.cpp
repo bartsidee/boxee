@@ -1,10 +1,12 @@
 #include "VTPDirectory.h"
+
+#ifdef HAS_FILESYSTEM_VTP
+
 #include "VTPSession.h"
 #include "VideoInfoTag.h"
 #include "URL.h"
 #include "Util.h"
 #include "FileItem.h"
-
 
 using namespace std;
 using namespace DIRECTORY;
@@ -43,13 +45,12 @@ bool CVTPDirectory::GetChannels(const CStdString& base, CFileItemList &items)
 
 bool CVTPDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items)
 {
-  CURL url(strPath);
+  CURI url(strPath);
 
   if(url.GetHostName() == "")
     url.SetHostName("localhost");
 
-  CStdString base;
-  url.GetURL(base);
+  CStdString base = url.Get();
   CUtil::RemoveSlashAtEnd(base);
 
   // add port after, it changes the structure
@@ -76,3 +77,4 @@ bool CVTPDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
     return false;
 }
 
+#endif

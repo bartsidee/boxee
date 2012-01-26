@@ -21,7 +21,7 @@
  */
 
 /**
- * @file libavcodec/rv10enc.c
+ * @file
  * RV10 encoder
  */
 
@@ -56,9 +56,9 @@ void rv10_encode_picture_header(MpegEncContext *s, int picture_number)
     put_bits(&s->pb, 3, 0);     /* ignored */
 }
 
-AVCodec rv10_encoder = {
+AVCodec ff_rv10_encoder = {
     "rv10",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_RV10,
     sizeof(MpegEncContext),
     MPV_encode_init,

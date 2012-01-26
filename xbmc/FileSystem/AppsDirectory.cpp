@@ -18,6 +18,13 @@
 #include "BoxeeUtils.h"
 #include "AppManager.h"
 #include "File.h"
+#include "Util.h"
+#include "ZipManager.h"
+#include "AppSecurity.h"
+#include "SpecialProtocol.h"
+#include "MediaManager.h"
+
+#define BOXEE_EX_APPS_FOLDER "BoxeeApps"
 
 using namespace XFILE;
 using namespace DIRECTORY;
@@ -37,7 +44,7 @@ bool CAppsDirectory::GetDirectory(const CStdString& strPath, CFileItemList &item
 {
   CLog::Log(LOGDEBUG,"CAppsDirectory::GetDirectory - Enter function with [strPath=%s] (bapps)",strPath.c_str());
 
-  CURL url(strPath);
+  CURI url(strPath);
   CStdString strProtocol = url.GetProtocol();
 
   if (strProtocol.CompareNoCase("apps") != 0)
@@ -49,31 +56,51 @@ bool CAppsDirectory::GetDirectory(const CStdString& strPath, CFileItemList &item
   return HandleAppRequest(url, items);
 }
 
-bool CAppsDirectory::HandleAppRequest(const CURL& url, CFileItemList &items)
+bool CAppsDirectory::HandleAppRequest(const CURI& url, CFileItemList &items)
 {
-  CStdString strPath;
-  url.GetURL(strPath);
+  CStdString strPath = url.Get();
+  CStdString strExtLink="";
 
-  // get all available apps
-  const CAppDescriptor::AppDescriptorsMap availableAppsDesc = CAppManager::GetInstance().GetRepositories().GetAvailableApps(true,false);
-
-  int numOfDescriptors = availableAppsDesc.size();
-
-  CLog::Log(LOGWARNING,"CAppsDirectory::HandleAppRequest - Got [%d] apps descriptors. [strPath=%s] (bapps)",numOfDescriptors,strPath.c_str());
-
-  if (numOfDescriptors < 1)
+  if (url.GetOptions().size() > 0)
   {
-    CLog::Log(LOGWARNING,"CAppsDirectory::HandleAppRequest - Since we got [numOfDescriptors=%d] not going to handle the request. [strPath=%s] (bapps)",numOfDescriptors,strPath.c_str());
-    return true;
-  }
+    std::map<CStdString, CStdString> mapOptions;
+    mapOptions = url.GetOptionsAsMap();
 
-  GetAppDirectoryByType(availableAppsDesc, url, items);
+    std::map<CStdString, CStdString>::iterator it = mapOptions.find("external-link");
+
+    if (it != mapOptions.end())
+    {
+      strExtLink = it->second;
+    }
+  }
+  // get all available apps only if we're not in external app mode
+  if (strExtLink.size() <= 0)
+  {
+    const CAppDescriptor::AppDescriptorsMap availableAppsDesc = CAppManager::GetInstance().GetRepositories().GetAvailableApps(true,false);
+
+    int numOfDescriptors = availableAppsDesc.size();
+
+    CLog::Log(LOGWARNING,"CAppsDirectory::HandleAppRequest - Got [%d] apps descriptors. [strPath=%s] (bapps)",numOfDescriptors,strPath.c_str());
+
+    if (numOfDescriptors < 1)
+    {
+      CLog::Log(LOGWARNING,"CAppsDirectory::HandleAppRequest - Since we got [numOfDescriptors=%d] not going to handle the request. [strPath=%s] (bapps)",numOfDescriptors,strPath.c_str());
+      return true;
+    }
+
+    GetAppDirectoryByType(availableAppsDesc, url, items);
+  }
+  else
+  {
+    const CAppDescriptor::AppDescriptorsMap emptyAppsDesc;
+    GetAppDirectoryByType(emptyAppsDesc, url, items , strExtLink);
+  }
 
   return true;
 }
 
-bool CAppsDirectory::GetAppDirectoryByType(const CAppDescriptor::AppDescriptorsMap& availableAppsDesc, const CURL& url, CFileItemList &items)
-{
+bool CAppsDirectory::GetAppDirectoryByType(const CAppDescriptor::AppDescriptorsMap& availableAppsDesc, const CURI& url, CFileItemList &items, const CStdString& strExtLink/* ="" */)
+  {
   CStdString strType = "";
 
   if (url.GetHostName() != "all")
@@ -82,30 +109,34 @@ bool CAppsDirectory::GetAppDirectoryByType(const CAppDescriptor::AppDescriptorsM
   }
 
   bool doSearch = false;
-  CStdString strSearch = "";
+  CStdString strSearchTerm = "";
   std::map<CStdString, CStdString> optionsMap = url.GetOptionsAsMap();
   if ((int)optionsMap.size() > 0)
   {
-    strSearch = optionsMap["search"];
+    strSearchTerm = optionsMap["term"];
 
-    if (!strSearch.IsEmpty())
+    if (!strSearchTerm.IsEmpty())
     {
-      strSearch.Trim();
-      strSearch.ToLower();
+      strSearchTerm.Trim();
+      strSearchTerm.ToLower();
 
       doSearch = true;
     }
   }
 
-  CLog::Log(LOGDEBUG,"CAppsDirectory::GetAppDirectoryByType - Enter function with [strType=%s][strSearch=%s] (bapps)",url.GetHostName().c_str(),strSearch.c_str());
+  CLog::Log(LOGDEBUG,"CAppsDirectory::GetAppDirectoryByType - Enter function with [strType=%s][strSearch=%s] (bapps)",url.GetHostName().c_str(),strSearchTerm.c_str());
 
   std::set<CStdString> userInstalledAppsSet;
 
   // filter all available apps by type and get it as FileItemList
   CFileItemList availableAppsItemList;
 
-  CAppManager::GetInstance().GetRepositories().GetAvailableApps(availableAppsDesc, availableAppsItemList, strType);
-  CAppManager::GetInstance().RefreshAppsStats();
+  if (strExtLink.size() <= 0)
+  {
+    //fetch the server only if we're not in external app mode
+    CAppManager::GetInstance().GetRepositories().GetAvailableApps(availableAppsDesc, availableAppsItemList, strType);
+    CAppManager::GetInstance().RefreshAppsStats();
+  }
 
   // need to filter out the apps that are not the user
   for(int i=0;i<availableAppsItemList.Size();i++)
@@ -133,7 +164,7 @@ bool CAppsDirectory::GetAppDirectoryByType(const CAppDescriptor::AppDescriptorsM
         }
 
         // if strSearch isn't empty -> check if app label match
-        if ((appLabel.Find(strSearch) == (-1)) && (tagsSet.find(strSearch) == tagsSet.end()))
+        if ((appLabel.Find(strSearchTerm) == (-1)) && (tagsSet.find(strSearchTerm) == tagsSet.end()))
         {
           continue;
         }
@@ -149,12 +180,17 @@ bool CAppsDirectory::GetAppDirectoryByType(const CAppDescriptor::AppDescriptorsM
       int appUsageCounter = CAppManager::GetInstance().GetAppTimesOpened(appId);
       appItemToAdd->SetProperty("app-usage", appUsageCounter);
 
-
-      items.Add(appItemToAdd);
-
-      userInstalledAppsSet.insert(appItemToAdd->GetProperty("app-localpath"));
-
-      CLog::Log(LOGDEBUG,"CAppsDirectory::GetDirectoryByType - [%d/%d] - After adding [locaPath=%s] to set. [SetSize=%d] (bapps)",i+1,availableAppsItemList.Size(),appItemToAdd->GetProperty("app-localpath").c_str(),(int)userInstalledAppsSet.size());
+      bool isAllowed = appItemToAdd->IsAllowed();
+      if (isAllowed)
+      {
+        items.Add(appItemToAdd);
+        userInstalledAppsSet.insert(appItemToAdd->GetProperty("app-localpath"));
+        CLog::Log(LOGDEBUG,"CAppsDirectory::GetDirectoryByType - [%d/%d] - After adding [locaPath=%s] to set. [SetSize=%d] (bapps)",i+1,availableAppsItemList.Size(),appItemToAdd->GetProperty("app-localpath").c_str(),(int)userInstalledAppsSet.size());
+      }
+      else
+      {
+        CLog::Log(LOGDEBUG,"CAppsDirectory::GetDirectoryByType - [%d/%d] - NOT adding app [label=%s] since [IsAllowed=%d] (bapps)",i+1,availableAppsItemList.Size(),appItemToAdd->GetLabel().c_str(),isAllowed);
+      }
     }
   }
 
@@ -167,17 +203,89 @@ bool CAppsDirectory::GetAppDirectoryByType(const CAppDescriptor::AppDescriptorsM
   if (!doSearch)
   {
     // if not in search -> add TestApps
-    bool retVal = AddTestApps(userInstalledAppsSet,items);
-    CLog::Log(LOGDEBUG,"CAppsDirectory::GetDirectoryByType - Call to AddTestApps() returned [retVal=%d][NumOfAddedTestApps=%d]. Going to return [NumOfApps=%d] (bapps)",retVal,(items.Size()-numOfApps),items.Size());
+    
+    if (strExtLink.empty())
+    {
+      //genereate external links and read specific folder
+      CLog::Log(LOGDEBUG,"CAppsDirectory::GetAppDirectoryByType, going to call AddTestApps searching for apps in user's lib");
+      AddTestApps(userInstalledAppsSet,items);
+
+      VECSOURCES drives;
+      g_mediaManager.GetRemovableDrives(drives);
+
+      VECSOURCES::iterator it = drives.begin();
+
+      for (; it != drives.end() ; it++)
+      {
+        CStdString path = it->strPath;
+        CUtil::AddSlashAtEnd(path);
+        path+=BOXEE_EX_APPS_FOLDER;
+        CUtil::AddSlashAtEnd(path);
+        CLog::Log(LOGDEBUG,"CAppsDirectory::GetAppDirectoryByType, going to call AddTestApps on path: %s",path.c_str());
+        AddTestApps(userInstalledAppsSet,items,path,true);
+      }
+    }
+    else
+    {
+      CLog::Log(LOGDEBUG,"CAppsDirectory::GetAppDirectoryByType, going to call AddTestApps on path: %s",strExtLink.c_str());
+      AddTestApps(userInstalledAppsSet,items,strExtLink);
+    }
   }
 
   return true;
 }
 
-bool CAppsDirectory::AddTestApps(std::set<CStdString> userInstalledAppsSet, CFileItemList &items)
+
+bool CAppsDirectory::VerifyDeviceSignature(const CFileItemPtr& appItem, const CStdString& path)
+{
+  bool bVerified = false;
+
+#ifdef HAS_EMBEDDED
+  do
+  {
+    std::vector<CStdString> vecFindResults;
+    CStdString certFile;
+
+    // search for device cert
+    if(!CUtil::FindFile("dev-certificate.xml", path, vecFindResults))
+    {
+      CLog::Log(LOGERROR,"CAppsDirectory::%s - Cannot find device-certificate.xml in [%s]", __func__, path.c_str());
+
+    }
+    else
+    {
+      certFile = vecFindResults[0];
+    }
+
+    if(certFile.IsEmpty())
+    {
+      break;
+    }
+
+    CLog::Log(LOGINFO, "CAppsDirectory::%s - Found device certificate [%s]", __func__, certFile.c_str());
+
+    CAppSecurity appSecurity(appItem->m_strPath, certFile);
+
+    if(!appSecurity.VerifySignature(FLAG_TEST_APP))
+    {
+      CLog::Log(LOGERROR,"CAppsDirectory::%s - FAILED to verify app [%s], incorrect signature", __func__, appItem->m_strPath.c_str());
+      break;
+    }
+
+    bVerified = true;
+  
+    CLog::Log(LOGINFO, "Successfully verified app [%s]", appItem->m_strPath.c_str());
+
+  } while(false);
+#endif
+
+  return bVerified;
+}
+
+bool CAppsDirectory::AddTestApps(std::set<CStdString> userInstalledAppsSet, CFileItemList &items ,const CStdString& path /*="special://home/apps"*/, bool bOnRemovableStorage)
 {
   CFileItemList appItems;
-  DIRECTORY::CDirectory::GetDirectory("special://home/apps", appItems);
+  DIRECTORY::CDirectory::GetDirectory(path, appItems);
 
   std::set<CStdString>::iterator it;
 
@@ -211,6 +319,7 @@ bool CAppsDirectory::AddTestApps(std::set<CStdString> userInstalledAppsSet, CFil
 
     CStdString appLocalPath = appItem->m_strPath;
     CStdString descFilePath = (appLocalPath + "descriptor.xml");
+
     if (!XFILE::CFile::Exists(descFilePath))
     {
       CLog::Log(LOGDEBUG,"CAppsDirectory::AddTestApps - FAILED to find [descriptor.xml] under [%s] -> continue (testapp)",appItem->m_strPath.c_str());
@@ -228,6 +337,25 @@ bool CAppsDirectory::AddTestApps(std::set<CStdString> userInstalledAppsSet, CFil
 
     if (appDesc.IsTestApp())
     {
+#ifdef HAS_EMBEDDED
+      if(bOnRemovableStorage)
+      {
+        bool bVerified = false;
+        CURI url(appItem->m_strPath);
+
+        CStdString protocol = url.GetProtocol();
+
+        if(appItem->m_bIsFolder && !(protocol == "zip" || protocol == "rar"))
+        {
+          bVerified = VerifyDeviceSignature(appItem, path);
+        }
+
+        if(!bVerified)
+        {
+          continue;
+        }
+      }
+#endif
       ////////////////////////////////////////////////////////
       // This appItem is of a TestApp -> add it to the list //
       ////////////////////////////////////////////////////////
@@ -249,6 +377,7 @@ bool CAppsDirectory::AddTestApps(std::set<CStdString> userInstalledAppsSet, CFil
       pItem->SetProperty("tags", appDesc.GetTagsStr());
       pItem->SetProperty("appid", appDesc.GetId());
       pItem->SetProperty("app-releasedate", appDesc.GetReleaseDate());
+      pItem->SetProperty("actual-path" , appLocalPath);
       pItem->SetAdult(appDesc.IsAdult());
       pItem->SetCountryRestriction(country, allow);
       items.Add(pItem);

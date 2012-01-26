@@ -23,27 +23,32 @@
 #define CONTROL_NETWORK_APPLICATIONS 53
 #define CONTROL_MANUALLY_ADD_SOURCES 54
 #define CONTROL_SOURCE_LIST              56
+#define CONTROL_SCAN_LABEL              151
+#define CONTROL_RESOLVE_LABEL           161
 
-#define NO_SOURCE_EXIST_LABEL             "No sources currently exist."
-
-CGUIWindowBoxeeMediaSources::CGUIWindowBoxeeMediaSources(void)
-: CGUIDialog(WINDOW_BOXEE_MEDIA_SOURCES, "boxee_media_sources.xml"), m_renderCount(0)
+CGUIWindowBoxeeMediaSources::CGUIWindowBoxeeMediaSources(void) : CGUIDialog(WINDOW_BOXEE_MEDIA_SOURCES, "boxee_media_sources.xml"), m_renderCount(0)
 {
+
 }
 
 CGUIWindowBoxeeMediaSources::~CGUIWindowBoxeeMediaSources(void)
-{}
+{
+
+}
 
 void CGUIWindowBoxeeMediaSources::Render()
 {
   CGUIDialog::Render();
 
-  m_renderCount ++;
-  if (m_renderCount == 120) {
+  m_renderCount++;
+
+  if (m_renderCount > 120)
+  {
     Refresh();
     m_renderCount = 0;
   }
 }
+
 bool CGUIWindowBoxeeMediaSources::OnMessage(CGUIMessage &message)
 {
   if (message.GetMessage() == GUI_MSG_CLICKED)
@@ -56,14 +61,14 @@ bool CGUIWindowBoxeeMediaSources::OnMessage(CGUIMessage &message)
       CGUIWindowBoxeeMediaSourceAddShare *pDlgSourceInfo = (CGUIWindowBoxeeMediaSourceAddShare*)g_windowManager.GetWindow(WINDOW_BOXEE_MEDIA_SOURCE_ADD_SHARE);
       if (pDlgSourceInfo)
       {
-    	m_selectedSource = SOURCE_LOCAL;
-    	OpenGUIWindow(WINDOW_BOXEE_MEDIA_SOURCE_ADD_SHARE);
+        m_selectedSource = SOURCE_LOCAL;
+        OpenGUIWindow(WINDOW_BOXEE_MEDIA_SOURCE_ADD_SHARE);
       }
     }
     else if(iControl == CONTROL_SHOW_UNIDENTIFIED)
     {
       CLog::Log(LOGDEBUG,"CGUIWindowBoxeeMediaSources::OnMessage - Enter GUI_MSG_CLICKED case with [iControl=CONTROL_SHOW_UNIDENTIFIED] (msmk)");
-      g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_LOCAL, "boxeedb://unresolvedVideoFiles");
+      g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_LOCAL, "boxeeui://files/?path=boxeedb://unresolvedVideoFiles");
 
     }
     else if(iControl == CONTROL_NETWORK_APPLICATIONS)
@@ -109,62 +114,61 @@ bool CGUIWindowBoxeeMediaSources::OnMessage(CGUIMessage &message)
   }
 
   return CGUIDialog::OnMessage(message);
-
 }
 
 bool CGUIWindowBoxeeMediaSources::OnAction(const CAction &action)
 {
-//  int iControl = GetFocusedControlID();
+  //  int iControl = GetFocusedControlID();
 
-//  bool bSelectAction = ((action.id == ACTION_SELECT_ITEM) || (action.id == ACTION_MOUSE_LEFT_CLICK));
-//
-//  CLog::Log(LOGDEBUG, "CGUIWindowBoxeeMediaSources::OnAction, action id = %ld", action.id);
-//
-//  if(bSelectAction)
-//  {
-//    if(iControl == CONTROL_LOCAL_SOURCES)
-//    {
-//      m_selectedSource = SOURCE_LOCAL;
-//
-//      OpenGUIWindow(WINDOW_BOXEE_MEDIA_SOURCE_LIST);
-//      return true;
-//    }
-//    else if(iControl == CONTROL_NETWORK_SOURCES)
-//    {
-//      m_selectedSource = SOURCE_NETWORK;
-//
-//      OpenGUIWindow(WINDOW_BOXEE_MEDIA_SOURCE_LIST);
-//      return true;
-//    }
-//    else if(iControl == CONTROL_NETWORK_APPLICATIONS)
-//    {
-//      m_selectedSource = SOURCE_NETWORK_APPLICATIONS;
-//
-//      OpenGUIWindow(WINDOW_BOXEE_MEDIA_SOURCE_LIST);
-//      return true;
-//    }
-//    else if(iControl == CONTROL_MANUALLY_ADD_SOURCES)
-//    {
-//      m_selectedSource = MANUALLY_ADD_SOURCE;
-//
-//      CGUIWindowBoxeeMediaSourceInfo* pDlgSourceInfo = (CGUIWindowBoxeeMediaSourceInfo*)g_windowManager.GetWindow(WINDOW_BOXEE_MEDIA_SOURCE_INFO);
-//
-//      if(pDlgSourceInfo)
-//      {
-//        pDlgSourceInfo->SetAddSource("");
-//        pDlgSourceInfo->SetSourceThumbPath("");
-//        pDlgSourceInfo->SetEnableLocationEdit(true);
-//
-//        OpenGUIWindow(WINDOW_BOXEE_MEDIA_SOURCE_INFO);
-//        return true;
-//      }
-//    }
-//    else
-//    {
-//      CLog::Log(LOGERROR,"In CGUIWindowBoxeeMediaSources::OnAction - Failed to handle in [ACTION_SELECT_ITEM] an unknown FocusedControlID [%d]",iControl);
-//    }
-//  }
-//  else
+  //  bool bSelectAction = ((action.id == ACTION_SELECT_ITEM) || (action.id == ACTION_MOUSE_LEFT_CLICK));
+  //
+  //  CLog::Log(LOGDEBUG, "CGUIWindowBoxeeMediaSources::OnAction, action id = %ld", action.id);
+  //
+  //  if(bSelectAction)
+  //  {
+  //    if(iControl == CONTROL_LOCAL_SOURCES)
+  //    {
+  //      m_selectedSource = SOURCE_LOCAL;
+  //
+  //      OpenGUIWindow(WINDOW_BOXEE_MEDIA_SOURCE_LIST);
+  //      return true;
+  //    }
+  //    else if(iControl == CONTROL_NETWORK_SOURCES)
+  //    {
+  //      m_selectedSource = SOURCE_NETWORK;
+  //
+  //      OpenGUIWindow(WINDOW_BOXEE_MEDIA_SOURCE_LIST);
+  //      return true;
+  //    }
+  //    else if(iControl == CONTROL_NETWORK_APPLICATIONS)
+  //    {
+  //      m_selectedSource = SOURCE_NETWORK_APPLICATIONS;
+  //
+  //      OpenGUIWindow(WINDOW_BOXEE_MEDIA_SOURCE_LIST);
+  //      return true;
+  //    }
+  //    else if(iControl == CONTROL_MANUALLY_ADD_SOURCES)
+  //    {
+  //      m_selectedSource = MANUALLY_ADD_SOURCE;
+  //
+  //      CGUIWindowBoxeeMediaSourceInfo* pDlgSourceInfo = (CGUIWindowBoxeeMediaSourceInfo*)g_windowManager.GetWindow(WINDOW_BOXEE_MEDIA_SOURCE_INFO);
+  //
+  //      if(pDlgSourceInfo)
+  //      {
+  //        pDlgSourceInfo->SetAddSource("");
+  //        pDlgSourceInfo->SetSourceThumbPath("");
+  //        pDlgSourceInfo->SetEnableLocationEdit(true);
+  //
+  //        OpenGUIWindow(WINDOW_BOXEE_MEDIA_SOURCE_INFO);
+  //        return true;
+  //      }
+  //    }
+  //    else
+  //    {
+  //      CLog::Log(LOGERROR,"In CGUIWindowBoxeeMediaSources::OnAction - Failed to handle in [ACTION_SELECT_ITEM] an unknown FocusedControlID [%d]",iControl);
+  //    }
+  //  }
+  //  else
   if (action.id == ACTION_PREVIOUS_MENU)
   {
     Close();
@@ -184,6 +188,7 @@ void CGUIWindowBoxeeMediaSources::OnInitWindow()
   CGUIWindow::OnInitWindow();
 
   LoadAllShares();
+  m_renderCount = 0;
 }
 
 int CGUIWindowBoxeeMediaSources::getSelectedSource()
@@ -202,15 +207,12 @@ void CGUIWindowBoxeeMediaSources::Refresh()
 }
 void CGUIWindowBoxeeMediaSources::LoadAllShares()
 {
-  BOXEE::BXVideoDatabase video_db;
-  BOXEE::BXAudioDatabase audio_db;
   time_t                 LastScanned;
   int                    SavedFocusedControlId = 0;
   int                    SavedFocusedItem = 0;
   int                    total_unres_file = 0;
 
   m_selectedSource = SOURCE_LOCAL;
-
 
   // keep the focus control
   CGUIControl *focusedControl = GetFocusedControl();
@@ -239,11 +241,11 @@ void CGUIWindowBoxeeMediaSources::LoadAllShares()
   for (sourcesIterator = sourceList.getMap().begin(); sourcesIterator != sourceList.getMap().end(); sourcesIterator++)
   {
     CBoxeeMediaSource& source = (*sourcesIterator).second;
-    int                    resolved_count = 0;
-    int                    unresolved_count = 0;
-    int                    new_count = 0;
-    int                    total_count = 0;
-    bool                   display_counters = true;
+    int resolved_count = 0;
+    int unresolved_count = 0;
+    int new_count = 0;
+    int total_count = 0;
+    bool display_counters = true;
 
     // Create new share FileItem
     CStdString statusVal;
@@ -257,9 +259,13 @@ void CGUIWindowBoxeeMediaSources::LoadAllShares()
     share->SetLabel(source.name);
     share->SetProperty("name",source.name);
     if (source.isNetwork)
+    {
       share->SetProperty("foldericon","network_folder");
+    }
     else
+    {
       share->SetProperty("foldericon","folder");
+    }
 
     if (g_application.IsPathAvailable(source.path, true))
     {
@@ -267,30 +273,45 @@ void CGUIWindowBoxeeMediaSources::LoadAllShares()
       {
         CStdString strLabel = share->GetLabel();
         CStdString strPath = source.path;
-        CStdString strType = source.isVideo ? "video" : "music";
+        //CStdString strType = source.isVideo ? "video" : "music";
 
+        time_t LastScannedVideo = 0;
+        time_t LastScannedMusic = 0;
 
         if (source.isVideo)
         {
           // get the resolved/unresolved video files number
+          BOXEE::BXVideoDatabase video_db;
           resolved_count = video_db.GetShareUnresolvedVideoFilesCount(_P(source.path), STATUS_RESOLVED);
           unresolved_count = video_db.GetShareUnresolvedVideoFilesCount(_P(source.path), STATUS_UNRESOLVED);
           new_count = video_db.GetShareUnresolvedVideoFilesCount(_P(source.path), STATUS_NEW);
           total_count = video_db.GetShareUnresolvedVideoFilesCount(_P(source.path), STATUS_ALL);
           total_unres_file += unresolved_count;
+
+          BOXEE::Boxee::GetInstance().GetMetadataEngine().GetScanTime(strLabel ,strPath, "video", LastScannedVideo);
+        }
+
+        if (source.isMusic)
+        {
+          // get the resolved/unresolved music files number
+          BOXEE::BXAudioDatabase audio_db;
+          resolved_count += audio_db.GetShareUnresolvedAudioFilesCount(_P(source.path), STATUS_RESOLVED);
+          unresolved_count += 0; // unresolved music file doesnt count in the status
+          new_count += audio_db.GetShareUnresolvedAudioFilesCount(_P(source.path), STATUS_NEW);
+          total_count += audio_db.GetShareUnresolvedAudioFilesCount(_P(source.path), STATUS_ALL);
+
+          BOXEE::Boxee::GetInstance().GetMetadataEngine().GetScanTime(strLabel ,strPath, "music", LastScannedMusic);
+        }
+
+        if ((LastScannedVideo == SHARE_TIMESTAMP_RESOLVING) || (LastScannedMusic == SHARE_TIMESTAMP_RESOLVING))
+        {
+          LastScanned = SHARE_TIMESTAMP_RESOLVING;
         }
         else
         {
-          // get the resolved/unresolved video files number
-          resolved_count = audio_db.GetShareUnresolvedAudioFilesCount(_P(source.path), STATUS_RESOLVED);
-//          unresolved_count = audio_db.GetShareUnresolvedAudioFilesCount(_P(source.path), STATUS_UNRESOLVED);
-          unresolved_count = 0; // unresolved music file doesnt count in the status
-          new_count = audio_db.GetShareUnresolvedAudioFilesCount(_P(source.path), STATUS_NEW);
-          total_count = audio_db.GetShareUnresolvedAudioFilesCount(_P(source.path), STATUS_ALL);
+          LastScanned = std::max(LastScannedVideo,LastScannedMusic);
         }
 
-        // print the share scanning status
-        BOXEE::Boxee::GetInstance().GetMetadataEngine().GetScanTime(strLabel ,strPath, strType, LastScanned);
         if (LastScanned == SHARE_TIMESTAMP_NOT_SCANNED)
         {
           statusVal = g_localizeStrings.Get(51531);
@@ -301,6 +322,7 @@ void CGUIWindowBoxeeMediaSources::LoadAllShares()
         {
           statusVal = g_localizeStrings.Get(51532);
           share->SetProperty("scan_status", statusVal);
+
           display_counters = false;
 
           if (source.isNetwork)
@@ -314,8 +336,8 @@ void CGUIWindowBoxeeMediaSources::LoadAllShares()
         }
         else
         {
-          // if we scanned the folder already, but there arfe still new files of
-          // the share we should display Identifing label
+          // if we scanned the folder already, but there are still new files of
+          // the share we should display Identifying label
 
           if (new_count)
           {
@@ -357,18 +379,21 @@ void CGUIWindowBoxeeMediaSources::LoadAllShares()
               statusVal.Format(g_localizeStrings.Get(51538),total_count);
             }
           }
+
           share->SetLabel2(statusVal.c_str());
         }
       }
     }
     else
     {
+      // path is not available
       statusVal = g_localizeStrings.Get(51534);
       share->SetProperty("scan_status", statusVal);
       share->SetProperty("foldericon","disconnected_folder");
     }
 
     m_sources.Add(share);
+
     CGUIMessage msg(GUI_MSG_LABEL_ADD, GetID(), CONTROL_SOURCE_LIST, 0, 0, share);
     OnMessage(msg);
 
@@ -381,17 +406,12 @@ void CGUIWindowBoxeeMediaSources::LoadAllShares()
   }
   else
   {
-   SET_CONTROL_VISIBLE(CONTROL_SHOW_UNIDENTIFIED);
+    SET_CONTROL_VISIBLE(CONTROL_SHOW_UNIDENTIFIED);
   }
 
   if (!m_sourcesExist)
   {
-    CFileItemPtr share ( new CFileItem(NO_SOURCE_EXIST_LABEL) );
-    m_sources.Add(share);
-    CGUIMessage msg(GUI_MSG_LABEL_ADD, GetID(), CONTROL_SOURCE_LIST, 0, 0, share);
-    OnMessage(msg);
     CONTROL_DISABLE(CONTROL_SOURCE_LIST);
-
   }
   else
   {
@@ -410,14 +430,15 @@ void CGUIWindowBoxeeMediaSources::LoadAllShares()
         SavedFocusedItem = m_sources.Size() -1 ;
       }
     }
+
     SET_CONTROL_FOCUS(CONTROL_SOURCE_LIST,SavedFocusedItem);
-  } else if (SavedFocusedControlId != 0)
+  }
+  else if (SavedFocusedControlId != 0)
   {
     SET_CONTROL_FOCUS(SavedFocusedControlId,0);
   }
-
-
 }
+
 void CGUIWindowBoxeeMediaSources::ProccessItemSelectedInControlSourceList()
 {
   CGUIMessage msg(GUI_MSG_ITEM_SELECTED, GetID(), CONTROL_SOURCE_LIST);
@@ -427,19 +448,64 @@ void CGUIWindowBoxeeMediaSources::ProccessItemSelectedInControlSourceList()
   CGUIWindowBoxeeMediaSourceInfo *pDlgSourceInfo = (CGUIWindowBoxeeMediaSourceInfo*)g_windowManager.GetWindow(WINDOW_BOXEE_MEDIA_SOURCE_INFO);
   if (pDlgSourceInfo)
   {
-
-    CStdString label =  m_sources[iItem]->GetLabel();
-    if (label.Equals(NO_SOURCE_EXIST_LABEL))
-    {
-      pDlgSourceInfo->SetAddSource("");
-
-    }
-
-    pDlgSourceInfo->SetEditedSource( m_sources[iItem]->GetProperty("name"));
-    pDlgSourceInfo->SetSourceThumbPath(( m_sources[iItem]->GetThumbnailImage()));
+    pDlgSourceInfo->SetEditedSource(m_sources[iItem]->GetProperty("name"));
+    pDlgSourceInfo->SetSourceThumbPath((m_sources[iItem]->GetThumbnailImage()));
     pDlgSourceInfo->SetEnableLocationEdit(false);
   }
 
   g_windowManager.ActivateWindow(WINDOW_BOXEE_MEDIA_SOURCE_INFO);
 }
 
+void CGUIWindowBoxeeMediaSources::UpdateScanLabel(const CStdString& path)
+{
+  CStdString pathToShow = GetScanResolvePathToShow(path);
+  CUtil::UrlDecode(pathToShow);
+
+  if (!pathToShow.IsEmpty())
+  {
+    CGUIMessage msg(GUI_MSG_LABEL_SET, GetID(), CONTROL_SCAN_LABEL);
+    msg.SetLabel(pathToShow);
+    g_windowManager.SendThreadMessage(msg);
+  }
+}
+
+void CGUIWindowBoxeeMediaSources::UpdateResolveLabel(const CStdString& path)
+{
+  CStdString pathToShow = GetScanResolvePathToShow(path);
+  CUtil::UrlDecode(pathToShow);
+
+  if (!pathToShow.IsEmpty())
+  {
+    CGUIMessage msg(GUI_MSG_LABEL_SET, GetID(), CONTROL_RESOLVE_LABEL);
+    msg.SetLabel(pathToShow);
+    g_windowManager.SendThreadMessage(msg);
+  }
+}
+
+CStdString CGUIWindowBoxeeMediaSources::GetScanResolvePathToShow(const CStdString& path)
+{
+  CStdString pathToShow = "";
+
+  if (!CUtil::IsInArchive(path))
+  {
+    // Translate the path
+    pathToShow = _P(path);
+
+    if (CUtil::IsHD(pathToShow))
+    {
+      CUtil::HideExternalHDPath(pathToShow, pathToShow);
+    }
+
+    // Shorten the path
+    CStdString shortPath = pathToShow;
+    CUtil::MakeShortenPath(pathToShow,shortPath,80);
+    pathToShow = shortPath;
+
+    if(!pathToShow.IsEmpty())
+    {
+      CUtil::RemovePasswordFromPath(pathToShow);
+    }
+  }
+
+  return pathToShow;
+}

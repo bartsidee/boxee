@@ -20,6 +20,13 @@
 #include "lib/libBoxee/bxsubscriptionsmanager.h"
 #include "WatchDog.h"
 #include "AppRepository.h"
+#include "lib/libBoxee/bxwebfavoritesmanager.h"
+#include "lib/libjson/include/json/value.h"
+#include "FileSystem/IDirectory.h"
+#include "URL.h"
+#include "Util.h"
+
+class CBoxeeMediaSource;
 
 namespace MUSIC_GRABBER {
   class CMusicAlbumInfo;
@@ -91,7 +98,20 @@ public:
     WEB_UNKNOWN_PICTURE=15,
     WEB_UNKNOWN=16,
     UNKNOWN=17,
-    NUM_OF_FILE_ITEM_TYPES=18
+    LIVETV=18,
+    NUM_OF_FILE_ITEM_TYPES=19
+  };
+};
+
+class CRating
+{
+public:
+  enum RatingEnums
+  {
+    MPAA=0,
+    TV=1,
+    V_CHIP=2,
+    SIMPLE=3,
   };
 };
 
@@ -100,9 +120,10 @@ public:
     BoxeeUtils();
     virtual ~BoxeeUtils();
 
+    static bool BuildItemInfo(CFileItem& item,CFileItemList& items, bool loadLocalLinks);
     static bool ResolveItem(const CStdString& strBoxeeId, CFileItemList& items);
     static bool GetLocalVideoMetadata(CFileItem& item);
-    static void GetLocalLinks(CFileItemPtr pItem);
+    static void GetLocalLinks(CFileItem& item);
 
     // returns thumb file for the message
     static std::string GetMessageThumb(const BOXEE::BXGeneralMessage &msg);
@@ -127,7 +148,12 @@ public:
     static bool Recommend(const CFileItem *pItem, const std::vector<BOXEE::BXFriend> &vecRecommendTo);
     static void Rate(const CFileItem *pItem, bool bThumbsUp);
 
-    static void Share(const CFileItem *pItem, const std::vector<BOXEE::BXFriend> &vecRecommendTo, bool bInBoxee, const std::string& userText = "");
+    static void Share(const CFileItem *pItem, const std::vector<BOXEE::BXFriend> &vecRecommendTo, CFileItemList& listPublishToServices  , bool bInBoxee, const std::string& userText = "");
+    static void GetShareServicesXML(CFileItemList& list); //not used
+    static Job_Result GetShareServicesJson(Json::Value& response, int& retCode, bool runInBG=false);
+    static int  ParseJsonShareServicesToFileItems(const Json::Value& jsonValue, CFileItemList& outputList);
+    static void LoadSocialShareServicesStatus(CFileItemList& list);
+    static bool PrecacheShareServicesImages(const Json::Value& response);
 
     static bool Queue(CFileItem* pItem, bool runInBG = false);
     static bool Dequeue(const CFileItem* pItem, bool runInBG = false);
@@ -137,6 +163,11 @@ public:
     static bool IsSubscribe(const std::string& src);
     static bool GetSubscriptionIds(BOXEE::CSubscriptionType::SubscriptionTypeEnums subscriptionType,std::vector<std::string>& subscriptionsIdsVec);
     static bool GetSubscriptions(BOXEE::CSubscriptionType::SubscriptionTypeEnums subscriptionType, std::vector<BOXEE::BXSubscriptionItem>& subscriptionsVec);
+
+    static bool AddWebFavorite(const CStdString& src, const CStdString& urlTitle, bool runInBG = false);
+    static bool RemoveWebFavorite(int index);
+    static bool IsWebFavorite(const std::string& src);
+    static bool GetWebFavorites(std::vector<BOXEE::BXObject>& webFavoritesVec);
 
     static void ReportLaunchApp(const std::string& id, const CFileItem* pItem);
     static bool ReportInstalledApps(const VECSOURCES& appsVec, bool runInBG = false);
@@ -172,26 +203,12 @@ public:
     static bool IsPathLocal(const CStdString& path);
 
     // drops the metadata for the provided file item from the database
-    static void Drop(const CFileItem *pItem);
-
+    //static void Drop(const CFileItem *pItem);
 
     static std::string FormatTime(time_t tmWhen);
     static int         DayDiff(time_t tmNow, time_t tmOther);
 
     static time_t GetModTime(const CStdString& strPath);
-    
-    // DEPRECATED SHOULD NOT BE USED
-    //static void OnFeedPopupMenu(const BOXEE::BXBoxeeFeed &feed, int iItem, int nX, int nY);
-    //static void OnActionPopupMenu(const BOXEE::BXGeneralMessage &boxeeAction, int nX, int nY);
-    //static bool ShowMusicInfoDialog(const BOXEE::BXObject &musicObj, bool bReviewMode);
-    //static bool ObjToMusicInfo(const BOXEE::BXObject &musicObj, MUSIC_GRABBER::CMusicAlbumInfo &info, BOXEE::BXAlbum& album);
-    //static void OnInfoMovie(const BOXEE::BXObject &movieObj);
-    //static void OnInfoMusic(const BOXEE::BXObject &musicObj);
-    //static bool ShowVideoInfoDialog(const BOXEE::BXObject &movieObj);
-    //static void ShowInfoOnVideoItem(CFileItemPtr pItem, bool bKeepData=false);
-	//static void OnInfoUser(const BOXEE::BXObject &userObj);
-    // END DEPRECATED SHOULD NOT BE USED
-    
     
     static bool VideoDetailsToObject(const CFileItem *pItem, BOXEE::BXObject &obj);
     static BOXEE::BXObject FileItemToObject(const CFileItem *pItem);
@@ -207,9 +224,6 @@ public:
     static bool ConvertBXAlbumToCAlbum(BOXEE::BXAlbum* pAlbum, CAlbum& album);
     static bool ConvertCAlbumToBXAlbum(const MUSIC_GRABBER::CMusicAlbumInfo& info, BOXEE::BXMetadata* pAlbum);
     static bool ConvertBXAlbumToMusicInfoTag(const BOXEE::BXAlbum* pAlbum, MUSIC_INFO::CMusicInfoTag& infoTag);
-    
-    // Receives information about the album and the list of file items tha are associated with the album, returns initialized BXFolder
-    //static bool ConvertAlbumInfoToBXFolder(const MUSIC_GRABBER::CMusicAlbumInfo& albumInfo, const CFileItemList& albumFileItems, BOXEE::BXFolder& folder);
     
     // converts complete album info including songs and artist to bxmetadata
     static bool ConvertAlbumInfoToBXMetadata(const MUSIC_GRABBER::CMusicAlbumInfo& info, BOXEE::BXMetadata* pAlbum);
@@ -253,10 +267,39 @@ public:
     static int StringTokenize(const CStdString& path, std::set<CStdString>& tokens, const CStdString& delimiters, bool shouldTrim, bool shouldLower);
 
     static void PlayPicture(const CFileItem& itemPath);
-    static CStdString URLEncode(const CURL &url);
+    static CStdString URLEncode(const CURI &url);
     static CStdString TranslateStringById(const CStdString  &srcStr);
 
     static void UpdateProfile(int profileIndex, BOXEE::BXObject& userObj);
+
+    static bool GetAvailableLanguages(CFileItemList& listLanguages);
+
+    static bool GetWeatherCitiesResults(const CStdString &strSearch, std::vector<CStdString>& resultVec);
+    static bool SetWeatherLocation(const CStdString& cityName, const CStdString& countryCode);
+
+    static void IndexItems(std::map< CStdString, CFileItemPtr >& indexMap , CFileItemList& vector);
+
+    static bool DoYouWantToScan(const CStdString& path);
+    static bool DoYouWantToScan(CBoxeeMediaSource* source);
+
+    static bool GetSourceTotalScanResolveData(CBoxeeMediaSource* source, int& resolved_count, int& unresolved_count, int& new_count, int& total_count);
+
+    static CStdString GetTimeAddedToDirectoryLabel(int tmAdded);
+
+    static bool FindFiles(const CStdString& directory, const CStdString& startsWith, CFileItemList& output, bool lookupHidden = true, bool lookupVideo = true, bool lookupAudio = true, bool lookupPictures = true, bool insensitive = true);
+    static CStdString GetUserVideoThumbPath(const CStdString& videoFilePath, const CFileItemList* pathsList);
+
+    static CStdString GetPlatformDefaultHostName();
+
+    static bool IsAdult(const std::string& rating,CRating::RatingEnums type);
+
+    static bool LaunchBrowser(const CStdString& url = "http://about:blank");
+
+    static bool RefreshCountryCode();
+
+    static CStdString GetFilesButtonPathToExecute();
+
+    static bool LaunchGetFacebookExtraCredentials(bool queryDataBase = true);
 
 private:
 
@@ -279,6 +322,7 @@ private:
   static void HandleWebUnknownAudioItem(const CFileItem *pItem, BOXEE::BXObject& obj);
   static void HandleWebUnknownPictureItem(const CFileItem *pItem, BOXEE::BXObject& obj);
   static void HandleWebUnknownItem(const CFileItem *pItem, BOXEE::BXObject& obj);
+  static void HandleLiveTvItem(const CFileItem *pItem, BOXEE::BXObject& obj);
   static void HandleUnknownItem(const CFileItem *pItem, BOXEE::BXObject& obj);
 
   static CStdString GetUrlFromItemForRepostToServer(const CFileItem& item);
@@ -287,7 +331,7 @@ private:
   static void SetActivatedFromToObj(const CFileItem *pItem, BOXEE::BXObject& obj);
 
   static void Rate(const CFileItem *pItem, const std::string &strRate);
-  static void Share(const CFileItem *pItem, const std::vector<BOXEE::BXFriend> &vecRecommendTo, const std::string& inBoxee, const std::string& userText = "");
+  static void Share(const CFileItem *pItem, const std::vector<BOXEE::BXFriend> &vecRecommendTo, CFileItemList& listPublishToServices , const std::string& inBoxee, const std::string& userText = "");
 
   static bool AddAppObjToAction(BOXEE::BXGeneralMessage& action, BOXEE::BXObject& obj, const std::string& name, const std::string& id, const std::string& url, const std::string& thumb);
   static bool AddRepositoryObjToAction(BOXEE::BXGeneralMessage& action, BOXEE::BXObject& obj, const std::string& name, const std::string& id, const std::string& url);

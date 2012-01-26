@@ -30,27 +30,36 @@
 
 
 #include "GUIFontTTF.h"
-
+#include "Shader.h"
 
 /*!
- \ingroup textures
- \brief
- */
+\ingroup textures
+\brief
+*/
 class CGUIFontTTFGLES : public CGUIFontTTFBase
 {
 public:
   CGUIFontTTFGLES(const CStdString& strFileName);
   virtual ~CGUIFontTTFGLES(void);
+  static void PrintPixelCount(){}
 
   virtual void Begin();
   virtual void End();
+  virtual bool LoadShaders();
 
 protected:
   virtual CBaseTexture* ReallocTexture(unsigned int& newHeight);
   virtual bool CopyCharToTexture(FT_BitmapGlyph bitGlyph, Character *ch);
   virtual void DeleteHardwareTexture();
-  virtual void RenderInternal(SVertex* v) {}
-  
+  virtual void Render(FontCoordsIndiced& coords, bool useShadow);
+
+  GLint m_uniMatModelView;
+  GLint m_uniMatProjection;
+
+  GLint m_uniTexture;
+  GLint m_attribVertex;
+  GLint m_attribTextureCoord;
+  GLint m_attribColor;
 };
 
 #endif

@@ -14,19 +14,19 @@ ECHO Compiling skins...
 SET PATH=%PATH%;%CD%\..\..\Tools\XBMCTex
 
 rem default skins
-ECHO Compiling Project Mayhem III...
-cd "..\..\skin\Project Mayhem III"
-CALL build.bat > NUL
-cd "%CUR_PATH%"
-ECHO Copying files...
-xcopy "..\..\skin\Project Mayhem III\BUILD\Project Mayhem III" "BUILD_WIN32\Xbmc\skin\Project Mayhem III" /E /Q /I /Y /EXCLUDE:exclude.txt  > NUL
+rem ECHO Compiling Project Mayhem III...
+rem cd "..\..\skin\Project Mayhem III"
+rem CALL build.bat > NUL
+rem cd "%CUR_PATH%"
+rem ECHO Copying files...
+rem xcopy "..\..\skin\Project Mayhem III\BUILD\Project Mayhem III" "BUILD_WIN32\Xbmc\skin\Project Mayhem III" /E /Q /I /Y /EXCLUDE:exclude.txt  > NUL
 
-ECHO Compiling PM3.HD...
-cd "..\..\skin\PM3.HD"
-CALL build.bat > NUL
-cd "%CUR_PATH%"
-ECHO Copying files...
-xcopy "..\..\skin\PM3.HD\BUILD\PM3.HD" "BUILD_WIN32\Xbmc\skin\PM3.HD" /E /Q /I /Y /EXCLUDE:exclude.txt  > NUL
+rem ECHO Compiling PM3.HD...
+rem cd "..\..\skin\PM3.HD"
+rem CALL build.bat > NUL
+rem cd "%CUR_PATH%"
+rem ECHO Copying files...
+rem xcopy "..\..\skin\PM3.HD\BUILD\PM3.HD" "BUILD_WIN32\Xbmc\skin\PM3.HD" /E /Q /I /Y /EXCLUDE:exclude.txt  > NUL
 
 IF "%SKIN_PATH%" == "" GOTO DONE
 rem optional skins
@@ -58,14 +58,14 @@ FOR /F "tokens=*" %%S IN ('dir /B /AD "%SKIN_PATH%"') DO (
 	  CD "%CUR_PATH%"
 	  if EXIST "%SKIN_PATH%\%%S\BUILD\%%S\skin.xml" (
 	    ECHO Copying files...
-	    xcopy "%SKIN_PATH%\%%S\BUILD\%%S" "%CUR_PATH%\BUILD_WIN32\Xbmc\skin\%%S" /E /Q /I /Y /EXCLUDE:exclude.txt > NUL
+	    xcopy "%SKIN_PATH%\%%S\BUILD\%%S" "%CUR_PATH%\BUILD_WIN32\Boxee\skin\%%S" /E /Q /I /Y /EXCLUDE:exclude.txt > NUL
 	  ) ELSE (
 	    ECHO "%SKIN_PATH%\%%S\BUILD\%%S\skin.xml not found, not including in build." >> error.log
 	  )
 	) ELSE (
 	  CD "%CUR_PATH%"
 	  IF EXIST "%SKIN_PATH%\%%S\skin.xml" (
-	    xcopy "%SKIN_PATH%\%%S" "%CUR_PATH%\BUILD_WIN32\Xbmc\skin\%%S" /E /Q /I /Y /EXCLUDE:exclude.txt > NUL
+	    xcopy "%SKIN_PATH%\%%S" "%CUR_PATH%\BUILD_WIN32\Boxee\skin\%%S" /E /Q /I /Y /EXCLUDE:exclude.txt > NUL
 	  ) ELSE (
 	    ECHO "No build.bat, build_skin.bat or skin.xml found for directory %%S, not including in build." >> error.log
 	  )

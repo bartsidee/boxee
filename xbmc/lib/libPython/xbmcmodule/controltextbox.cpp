@@ -41,6 +41,8 @@
 #include "control.h"
 #include "pyutil.h"
 
+#include "../../../placement_new.h"
+
 using namespace std;
 
 #ifndef __GNUC__
@@ -68,7 +70,7 @@ namespace PYXBMC
     self = (ControlTextBox*)type->tp_alloc(type, 0);
     if (!self) return NULL;
 
-    new(&self->strFont) string();        
+   PLACEMENT_NEW(&self->strFont) string();        
 
     // parse arguments to constructor
     if (!PyArg_ParseTupleAndKeywords(

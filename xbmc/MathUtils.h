@@ -45,7 +45,7 @@ namespace MathUtils
       sar i, 1
     }
 #else
-    #if defined(__powerpc__) || defined(__ppc__) || defined(__arm__)
+    #if defined(__powerpc__) || defined(__ppc__) || defined(__arm__) || defined(__APPLE__) || defined(__mips__)
         i = floor(x + round_to_nearest);
     #else
         __asm__ __volatile__ (
@@ -132,6 +132,11 @@ namespace MathUtils
     if (x < 0)
       i = -i;
     return (i);
+  }
+
+  inline signed long abs(signed long a)
+  {
+    return (a < 0) ? -a : a;
   }
 
   inline void hack()

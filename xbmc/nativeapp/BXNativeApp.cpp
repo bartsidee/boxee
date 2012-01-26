@@ -61,6 +61,11 @@
 #include "PipesManager.h"
 #include "FilePipe.h"
 
+#ifdef CANMORE
+#include "IntelSMDGlobals.h"
+#endif
+
+
 #ifndef NULL
 #define NULL 0
 #endif
@@ -181,7 +186,11 @@ void BXPersistentSet( BX_Handle hApp, const char* key, const char* value )
 
 void BXGetUniqueId( BX_Handle hApp, char* uid)
 {
+#ifndef HAS_EMBEDDED
   const char *strId = BXRegistryGet(hApp, "boxee-id");
+#else
+  const char *strId = BXPersistentGet(hApp, "boxee-id");
+#endif
   if (strId && *strId)
   {
     strcpy(uid,strId);
@@ -217,7 +226,11 @@ void BXGetUniqueId( BX_Handle hApp, char* uid)
   randPostfix.Format("%lu",(rand()%899999)+100000);
   strMac += randPostfix;
   
+#ifndef HAS_EMBEDDED
   BXRegistrySet(hApp, "boxee-id", strMac.c_str());
+#else
+  BXPersistentSet(hApp, "boxee-id", strMac.c_str());
+#endif
   strcpy(uid, strMac.c_str());
 }
 
@@ -450,7 +463,7 @@ void BXSurfaceFillRect( BX_Surface* surface, BX_Color c, BX_Rect rect, BX_BlendM
   ((BOXEE::NativeApplication *)(surface->hApp->boxeeData))->PushRenderOperation(j);
 }
 
-void BXSurfaceBlit( BX_Surface* sourceSurface, BX_Surface* destSurface, BX_Rect sourceRect, BX_Rect destRect, BX_BlendMethod blend, unsigned char alpha)
+void BXSurfaceBlit( BX_Surface* sourceSurface, BX_Surface* destSurface, BX_Rect sourceRect, BX_Rect destRect, BX_BlendMethod blend, unsigned char alpha )
 {
   TRACE_APP(LOGDEBUG,"nativeapp: blit source surface %x (%d %d %d %d) on dest surface %x (%d %d %d %d)", 
             sourceSurface, sourceRect.x, sourceRect.y, sourceRect.w, sourceRect.h, 
@@ -479,7 +492,7 @@ void BXSurfaceBlitWithColor( BX_Surface* sourceSurface, BX_Surface* destSurface,
   j->sourceRect = sourceRect;
   j->destRect = destRect;
   j->blend = blend;
-  j->color = color;
+  j->color = color; 
   j->alpha = 255;
   ((BOXEE::NativeApplication *)(destSurface->hApp->boxeeData))->PushRenderOperation(j);
 }
@@ -550,6 +563,10 @@ void            BXPlayerDestroy (BX_PlayerHandle hPlayer)
 unsigned int    BXPlayerFeed  (BX_PlayerHandle hPlayer, const char *data, unsigned int nDataLen )
 {
   XFILE::CFilePipe *p = (XFILE::CFilePipe *)(hPlayer->priv);
+  if (g_application.m_pPlayer && nDataLen)
+  {
+    g_application.m_pPlayer->SetCaching(false);
+  }
   if (p->Write(data, nDataLen) > 0)   
     return nDataLen;
   return 0;
@@ -557,7 +574,7 @@ unsigned int    BXPlayerFeed  (BX_PlayerHandle hPlayer, const char *data, unsign
 
 BX_Bool         BXPlayerPlay  (BX_PlayerHandle hPlayer, const char *mimeType)
 {
-  ThreadMessage tMsg = {TMSG_MEDIA_STOP};
+  ThreadMessage tMsg (TMSG_MEDIA_STOP);
   g_application.getApplicationMessenger().SendMessage(tMsg, true);
   
   XFILE::CFilePipe *p = (XFILE::CFilePipe *)(hPlayer->priv);
@@ -567,10 +584,20 @@ BX_Bool         BXPlayerPlay  (BX_PlayerHandle hPlayer, const char *mimeType)
   item.SetProperty("DisableFullScreen", true);
   item.SetProperty("UseMovieFPS", true);
   item.SetProperty("EmulateVideoFullScreen", true);
+  item.SetProperty("FastPlayerStart", true);
+  item.SetProperty("SilentCaching", true);
+  item.SetProperty("DisableBoxeeUI", true);
+  item.SetProperty("DisablePtsCorrection", true);
+#ifdef CANMORE
+  item.SetProperty("MaxAudioQueueSize", 2 * 1024 * 1024);
+  item.SetProperty("MaxVideoQueueSize", 5 * 1024 * 1024);
+#else
   item.SetProperty("MaxAudioQueueSize", 1 * 1024 * 1024);
   item.SetProperty("MaxVideoQueueSize", 4 * 1024 * 1024);
-  
+#endif
+
   g_application.getApplicationMessenger().PlayFile(item);
+
   return BX_TRUE;
 }
 
@@ -580,7 +607,7 @@ void            BXPlayerStop  (BX_PlayerHandle hPlayer)
   p->SetEof();  
   p->Close();
 
-  ThreadMessage tMsg = {TMSG_MEDIA_STOP};
+  ThreadMessage tMsg (TMSG_MEDIA_STOP);
   g_application.getApplicationMessenger().SendMessage(tMsg, false);
 }
 
@@ -624,13 +651,31 @@ unsigned int    BXPlayerGetPos  ( BX_PlayerHandle hPlayer)
   
   XFILE::CFilePipe *p = (XFILE::CFilePipe *)(hPlayer->priv);
   if (p && p->IsClosed())
+  {
     app->OnPlaybackEOF();
-  
+  }
+
+  if (p && p->IsEof() && p->IsEmpty() && !g_application.IsPlaying())
+    app->OnPlaybackEOF();
+
   if (g_application.m_pPlayer)
   {
-    if (p && p->IsEof() && p->IsEmpty() && g_application.m_pPlayer->GetCacheLevel() == 0)
-      app->OnPlaybackEOF();
-    return g_application.m_pPlayer->GetTime() + g_application.m_pPlayer->GetStartTime();  
+#ifdef CANMORE
+    ismd_pts_t audioTime = g_IntelSMDGlobals.GetAudioCurrentTime();
+    ismd_pts_t audioPauseTime = g_IntelSMDGlobals.GetAudioPauseCurrentTime();
+
+    //ismd_time_t pauseCurrentTime = g_IntelSMDGlobals.GetPauseCurrentTime();
+
+    if (audioTime == ISMD_NO_PTS)
+      return g_application.m_pPlayer->GetStartTime();
+
+    if (g_application.IsPaused())
+      audioTime = audioPauseTime;
+
+    int nAudioTimeMs = (int)DVD_TIME_TO_MSEC(g_IntelSMDGlobals.IsmdToDvdPts(audioTime));
+    return nAudioTimeMs + g_application.m_pPlayer->GetStartTime() ;
+#endif
+    return g_application.m_pPlayer->GetTime() + g_application.m_pPlayer->GetStartTime();
   }
   return 0;
 }
@@ -644,24 +689,29 @@ BX_MessageBoxResult BXMessageBox (const char *title, const char *text, BX_Messag
   }
   else if (type == MBT_OK_CANCEL)
   {
-    if (CGUIDialogYesNo2::ShowAndGetInput(title, text, g_localizeStrings.Get(222), g_localizeStrings.Get(186)))
+    bool cancelled = true;
+    bool result = CGUIDialogYesNo2::ShowAndGetInput(title, text, g_localizeStrings.Get(222), g_localizeStrings.Get(186), cancelled);
+    if (cancelled || !result)
     {
-      return MBR_OK;
+      return MBR_CANCEL;
     }
     else
     {
-      return MBR_CANCEL;
+      return MBR_OK;
     }
   }
   else if (type == MBT_YES_NO)
   {
-    if (CGUIDialogYesNo2::ShowAndGetInput(title, text))
+    bool cancelled = true;
+    bool result = CGUIDialogYesNo2::ShowAndGetInput(title, text, cancelled);
+
+    if (cancelled || !result)
     {
-      return MBR_YES;
+      return MBR_NO;
     }
     else
     {
-      return MBR_NO;
+      return MBR_YES;
     }
   }
 

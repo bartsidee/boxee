@@ -73,8 +73,9 @@ CWin32DirectSound::CWin32DirectSound() :
   m_pBuffer = NULL;
 }
 
-bool CWin32DirectSound::Initialize(IAudioCallback* pCallback, int iChannels, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec, bool bIsMusic, bool bAudioPassthrough)
+bool CWin32DirectSound::Initialize(IAudioCallback* pCallback, int iChannels, enum PCMChannels* channelMap, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec, bool bIsMusic, bool bAudioPassthrough, bool bTimed, AudioMediaFormat audioMediaFormat)
 {
+  // TODO: What to do with channelMap?
   HRESULT res;
   bool bAudioOnAllSpeakers(false);
   bool bControlVolume(true);
@@ -112,7 +113,7 @@ bool CWin32DirectSound::Initialize(IAudioCallback* pCallback, int iChannels, uns
 
   //fill waveformatex
   ZeroMemory(&wfxex, sizeof(WAVEFORMATEXTENSIBLE));
-  wfxex.Format.cbSize          = sizeof(WAVEFORMATEXTENSIBLE)-sizeof(WAVEFORMATEX);
+  wfxex.Format.cbSize          =  sizeof(WAVEFORMATEXTENSIBLE)-sizeof(WAVEFORMATEX);
   wfxex.Format.nChannels       = iChannels;
   wfxex.Format.nSamplesPerSec  = uiSamplesPerSec;
 
@@ -176,6 +177,9 @@ bool CWin32DirectSound::Initialize(IAudioCallback* pCallback, int iChannels, uns
       wfxex.SubFormat              = _KSDATAFORMAT_SUBTYPE_PCM;
       wfxex.Format.wBitsPerSample  = uiBitsPerSample;
     }
+
+    wfxex.Format.nChannels       = iChannels;
+    wfxex.Format.nSamplesPerSec  = uiSamplesPerSec;
 
     wfxex.Samples.wValidBitsPerSample = wfxex.Format.wBitsPerSample;
     wfxex.Format.nBlockAlign       = wfxex.Format.nChannels * (wfxex.Format.wBitsPerSample >> 3);
@@ -247,7 +251,7 @@ bool CWin32DirectSound::Initialize(IAudioCallback* pCallback, int iChannels, uns
   m_BufferOffset = 0;
   m_CacheLen = 0;
   m_LastCacheCheck = CTimeUtils::GetTimeMS();
-  
+  CLog::Log(LOGINFO, __FUNCTION__": DirectSound initialized.");
   return m_bIsAllocated;
 }
 
@@ -262,7 +266,7 @@ bool CWin32DirectSound::Deinitialize()
 {
   if (m_bIsAllocated)
   {
-    CLog::Log(LOGDEBUG, __FUNCTION__": Cleaning up");
+    CLog::Log(LOGDEBUG, __FUNCTION__": DirectSound - Cleaning up");
     if (m_pBuffer)
     {
       m_pBuffer->Stop();
@@ -314,8 +318,8 @@ bool CWin32DirectSound::Stop()
   // Stop and reset DirectSound buffer
   if( m_bIsAllocated )
   {
-    m_pBuffer->Stop();
-    m_pBuffer->SetCurrentPosition(0);
+  m_pBuffer->Stop();
+  m_pBuffer->SetCurrentPosition(0);
   }
 
   // Reset buffer management members
@@ -353,8 +357,10 @@ bool CWin32DirectSound::SetCurrentVolume(long nVolume)
 }
 
 //***********************************************************************************************
-unsigned int CWin32DirectSound::AddPackets(const void* data, unsigned int len)
+unsigned int CWin32DirectSound::AddPackets(const void* data, unsigned int len, double pts, double duration)
 {
+  // TODO: What to do with pts and duration?
+
   //Sanity check - hack...
   if (!m_pBuffer)
     return 0;
@@ -365,6 +371,7 @@ unsigned int CWin32DirectSound::AddPackets(const void* data, unsigned int len)
 
   DWORD bufferStatus = 0;
   m_pBuffer->GetStatus(&bufferStatus);
+
   if (bufferStatus & DSBSTATUS_BUFFERLOST)
   {
     CLog::Log(LOGDEBUG, __FUNCTION__ ": Buffer allocation was lost. Restoring buffer.");

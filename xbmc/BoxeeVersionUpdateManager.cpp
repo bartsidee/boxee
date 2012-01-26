@@ -17,12 +17,23 @@
 #include "utils/SingleLock.h"
 #include "LocalizeStrings.h"
 
+#ifdef HAS_EMBEDDED
+#include "GUISettings.h"
+#include "GUIDialogProgress.h"
+#include "HalServices.h"
+#include "FileCurl.h"
+#include "Util.h"
+#include "TimeUtils.h"
+#include "bxconfiguration.h"
+#endif
+
 #ifdef _WIN32
 #include <io.h>
 #include <process.h>
 #endif
 
-#define UPDATE_DIRECTORY_BASE_PATH _P("special://home/boxee/packages/")
+#define UPDATE_DIRECTORY_BASE_PATH _P("/download/upgrade/")
+//#define UPDATE_DIRECTORY_BASE_PATH _P("special://home/boxee/packages/")
 //#define UPDATE_DIRECTORY_BASE_PATH PTH_IC("C:\\Users\\Popeye\\AppData\\Roaming\\BOXEE\\userdata\\boxee\\packages\\")
 
 #define BUFFER_SIZE 1024
@@ -76,6 +87,94 @@ void CBoxeeVersionUpdateManager::reset()
   }
 }
 
+bool CBoxeeVersionUpdateManager::ShouldInstallFromLocal(const CStdString& versionUpdateBuildNum,const CStdString& versionUpdateFilePath,const CStdString& versionUpdateFileHash,const CStdString& directoryForUpdateLocalPath)
+{
+  bool retval = false;
+  struct stat st;
+
+  CStdString updateDirectory = directoryForUpdateLocalPath;
+  CStdString tmpDirectoryForUpdateLocalPath = directoryForUpdateLocalPath;
+  tmpDirectoryForUpdateLocalPath += "_tmp";
+  
+  if(stat(tmpDirectoryForUpdateLocalPath,&st) == 0)
+  {
+    updateDirectory = tmpDirectoryForUpdateLocalPath;
+  }
+
+  if(stat(updateDirectory,&st) == 0)
+  {
+    CBoxeeVersionUpdateJob boxeeVerUpdateJob;
+    bool initSucceeded = boxeeVerUpdateJob.Init(versionUpdateBuildNum,versionUpdateFilePath,versionUpdateFileHash,updateDirectory);
+  
+    if(initSucceeded)
+    {
+
+      CStdString updateFileLocalPath = boxeeVerUpdateJob.GetVersionUpdateFilePath();
+
+      CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateManager::ShouldInstallFromLocal- Going to parse [m_versionUpdateFilePath=%s] (update)",updateFileLocalPath.c_str());
+
+      bool parseSucceeded = boxeeVerUpdateJob.ParseUpdateFile(updateFileLocalPath);
+
+      if(parseSucceeded)
+      {
+         CVersionUpdateInfo& versionUpdateInfo = boxeeVerUpdateJob.GetVersionUpdateInfo();
+         int numOfFilesToDownload = versionUpdateInfo.m_UpdateFilesToDownload.size();
+
+         for(int i=0; i<numOfFilesToDownload; i++)
+         {
+           CUpdateFilesInfo& ufi = (versionUpdateInfo.m_UpdateFilesToDownload)[i];
+           CStdString strName = CUtil::GetFileName(ufi.m_filePath);
+           CStdString downloadFileLocalPath = updateDirectory;
+
+           downloadFileLocalPath += "/";
+           downloadFileLocalPath += strName;
+
+           if(!XFILE::CFile::Exists(downloadFileLocalPath))
+           {
+              CLog::Log(LOGERROR,"CBoxeeVersionUpdateManager::ShouldInstallFromLocal- Local file [%s] is missing(update)",downloadFileLocalPath.c_str());
+              retval = false;
+              break;
+           }
+           else
+           {            
+             if(CUtil::MD5File(downloadFileLocalPath) != ufi.m_fileHash)
+             {
+               CLog::Log(LOGERROR,"CBoxeeVersionUpdateManager::ShouldInstallFromLocal- Local file [%s] is corrupted(update)",downloadFileLocalPath.c_str());
+               retval = false;
+               break;
+             }
+             
+             CLog::Log(LOGERROR,"CBoxeeVersionUpdateManager::ShouldInstallFromLocal- Local file [%s] is OK(update)",downloadFileLocalPath.c_str());
+             retval = true;             
+           }           
+         }
+
+        if(retval == true)
+        {
+          if(updateDirectory != directoryForUpdateLocalPath)
+          {
+            int renameFailed = ::rename(updateDirectory,directoryForUpdateLocalPath);
+           
+            if(renameFailed)
+            {
+              CLog::Log(LOGERROR,"CBoxeeVersionUpdateManager::ShouldInstallFromLocal- Failed to rename [%s] ==> [%s]",updateDirectory.c_str(), directoryForUpdateLocalPath.c_str());
+              CUtil::WipeDir(updateDirectory);
+              retval = false;
+            }
+          }
+        }
+        else
+        {  
+          CLog::Log(LOGERROR,"CBoxeeVersionUpdateManager::ShouldInstallFromLocal - One of the installation files is missing or corrupted. Going to remove the update directory [%s] (update)",updateDirectory.c_str());
+          CUtil::WipeDir(updateDirectory);
+        }   
+      }
+    }
+  }
+
+  return retval;
+}
+
 bool CBoxeeVersionUpdateManager::PrepareVersionUpdate(const CStdString& versionUpdateBuildNum,const CStdString& versionUpdateFilePath,const CStdString& versionUpdateFileHash)
 {
   bool retVal = false;
@@ -95,8 +194,7 @@ bool CBoxeeVersionUpdateManager::PrepareVersionUpdate(const CStdString& versionU
     CStdString directoryForUpdateLocalPath = UPDATE_DIRECTORY_BASE_PATH;
     directoryForUpdateLocalPath += versionUpdateBuildNum;
     
-    struct stat st;
-    if(stat(directoryForUpdateLocalPath,&st) == 0)
+    if(ShouldInstallFromLocal(versionUpdateBuildNum,versionUpdateFilePath,versionUpdateFileHash,directoryForUpdateLocalPath))
     {
       CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateManager::PrepareVersionUpdate - The directory for the update [%s] already exist [%s], therefore no need to download. Going to call PrepareVersionUpdateFromLocal() (update)",versionUpdateBuildNum.c_str(),directoryForUpdateLocalPath.c_str());
       
@@ -204,7 +302,12 @@ bool CBoxeeVersionUpdateManager::PrepareVersionUpdateFromLocal(const CStdString&
 
       CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateManager::PrepareVersionUpdateFromLocal - Going to set NewVersion flag in CGUIInfoManager as TRUE (update)");
 
-      g_infoManager.SetHasNewVersion(true);
+      g_infoManager.SetHasNewVersion(true,m_boxeeVerUpdateJob.GetVersionUpdateInfo().GetVersionUpdateForce() == VUF_YES ? true : false);
+
+#ifdef HAS_EMBEDDED
+      m_boxeeVerUpdateJob.SetVersionUpdateDownloadStatus(VUDS_FINISHED);
+      CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateManager::PrepareVersionUpdateFromLocal - After set [Status=VUDS_FINISHED] (update)");
+#endif
   
       retVal = true;
     }
@@ -375,7 +478,7 @@ bool CBoxeeVersionUpdateManager::PerformOsxVersionUpdate()
                 
       CVersionUpdateInfo& versionUpdateInfo = m_boxeeVerUpdateJob.GetVersionUpdateInfo(); 
 
-      CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateManager::PerformOsxVersionUpdate - In the child process, got CVersionUpdateInfo object. [m_versionUpdateForce=%s][m_scriptToRunName=%s][m_UpdateNotesFileName=%s][m_UpdateVersionNum=%s][m_UpdateFilesToDownloadSize=%lu] (update)",(versionUpdateInfo.m_versionUpdateForce).c_str(),(versionUpdateInfo.m_scriptToRunName).c_str(),(versionUpdateInfo.m_UpdateNotesFileName).c_str(),(versionUpdateInfo.m_UpdateVersionNum).c_str(),(versionUpdateInfo.m_UpdateFilesToDownload).size());
+      CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateManager::PerformOsxVersionUpdate - In the child process, got CVersionUpdateInfo object. [m_versionUpdateForce=%s][m_scriptToRunName=%s][m_UpdateNotesFileName=%s][m_UpdateVersionNum=%s][m_UpdateFilesToDownloadSize=%zu] (update)",(versionUpdateInfo.m_versionUpdateForce).c_str(),(versionUpdateInfo.m_scriptToRunName).c_str(),(versionUpdateInfo.m_UpdateNotesFileName).c_str(),(versionUpdateInfo.m_UpdateVersionNum).c_str(),(versionUpdateInfo.m_UpdateFilesToDownload).size());
               
       ////////////////////////////////////////////////////
       // Get the scriptToRun path for the execl command //
@@ -660,6 +763,7 @@ bool CBoxeeVersionUpdateManager::PerformWinVersionUpdate()
 
           // close the pipes
           ::CloseHandle(pi.hThread);
+          ::CloseHandle(pi.hProcess);
           ::CloseHandle(hInputWrite);
           ::CloseHandle(hOutputRead);
 
@@ -926,7 +1030,18 @@ bool CBoxeeVersionUpdateManager::HandleUpdateVersionButton(bool inLoginScreen)
     if(dialog->IsConfirmed())
     {
       CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateManager::HandleUpdateVersionButton - Call to CGUIDialogBoxeeUpdateMessage returned with [Confirmed=TRUE] (update)");
-      
+
+#ifdef HAS_EMBEDDED
+
+      IHalServices& client = CHalServicesFactory::GetInstance();
+
+      client.RequestUpgrade();
+
+      CGUIDialogProgress* dialog = (CGUIDialogProgress *)g_windowManager.GetWindow(WINDOW_DIALOG_PROGRESS);
+      dialog->DoModal();
+
+      CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateManager::HandleUpdateVersionButton - Waiting for machine reboot (update)");
+#else      
       CStdString scriptToRunName = (((g_boxeeVersionUpdateManager.GetBoxeeVerUpdateJob())).GetVersionUpdateInfo()).m_scriptToRunName;
       
       if(scriptToRunName.IsEmpty())
@@ -951,6 +1066,7 @@ bool CBoxeeVersionUpdateManager::HandleUpdateVersionButton(bool inLoginScreen)
         
         retVal = updateVerionSucceedded;        
       }  
+#endif
     }
     else
     {
@@ -962,6 +1078,255 @@ bool CBoxeeVersionUpdateManager::HandleUpdateVersionButton(bool inLoginScreen)
   return retVal;
 }
 
+bool CBoxeeVersionUpdateManager::HandleVersionUpdate(const TiXmlElement* root, const TiXmlElement* updateChildElem, bool startOnDemand)
+{
+  bool retVal = false;
+
+  if(strcmp(updateChildElem->Value(),"version_update") != 0)
+  {
+    CLog::Log(LOGERROR,"CBoxeeVersionUpdateManager::HandleVersionUpdate - <version_update> parameter is not found in child element [%s]",updateChildElem->Value());
+    return false;   
+  }
+
+  // Get the update type
+  CStdString versionUpdateBuildNum = updateChildElem->Attribute("build-num");
+  CStdString versionUpdateFilePath = updateChildElem->Attribute("update-descriptor-path");
+  CStdString versionUpdateFileHash = updateChildElem->Attribute("update-descriptor-hash");
+
+  CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateManager::HandleVersionUpdate - <version_update> parameter has the following attributes [build-num=%s][update-descriptor-path=%s][update-descriptor-hash=%s] (ping)(update)",versionUpdateBuildNum.c_str(),versionUpdateFilePath.c_str(),versionUpdateFileHash.c_str());
+
+  if (!versionUpdateFilePath.IsEmpty() && !versionUpdateBuildNum.IsEmpty() && !versionUpdateFileHash.IsEmpty())
+  {
+    if(startOnDemand == false)
+    {
+      CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateManager::HandleVersionUpdate - Going to call CBoxeeVersionUpdateManager::PrepareVersionUpdate() with [build-num=%s][update-descriptor-path=%s][update-descriptor-hash=%s] (ping)(update)",versionUpdateBuildNum.c_str(),versionUpdateFilePath.c_str(),versionUpdateFileHash.c_str());
+
+      retVal = PrepareVersionUpdate(versionUpdateBuildNum,versionUpdateFilePath,versionUpdateFileHash);
+
+      CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateManager::HandleVersionUpdate - Call to CBoxeeVersionUpdateManager::PrepareVersionUpdate() with [build-num=%s][update-descriptor-path=%s][update-descriptor-hash=%s] returned [%d] (ping)(update)",versionUpdateBuildNum.c_str(),versionUpdateFilePath.c_str(),versionUpdateFileHash.c_str(),retVal);
+
+    }
+    else
+    {
+      CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateManager::HandleVersionUpdate - Got on demand update, saving the attributes and waiting for start update command\n");
+
+      m_savedOnDemandInfo.m_versionUpdateBuildNum = versionUpdateBuildNum;
+      m_savedOnDemandInfo.m_versionUpdateFilePath = versionUpdateFilePath;
+      m_savedOnDemandInfo.m_versionUpdateFileHash = versionUpdateFileHash;
+
+      retVal = true;
+    }
+
+  }
+  else
+  {
+    CLog::Log(LOGERROR,"CBoxeeVersionUpdateManager::HandleVersionUpdate - One of the attributes of <version_update> is empty. [build-num=%s][update-descriptor-path=%s][update-descriptor-hash=%s] (ping)(update)",versionUpdateBuildNum.c_str(),versionUpdateFilePath.c_str(),versionUpdateFileHash.c_str());
+  }
+
+  return retVal;
+}
+
+#ifdef HAS_EMBEDDED
+bool CBoxeeVersionUpdateManager::StartUpdate()
+{
+  if(m_savedOnDemandInfo.m_versionUpdateBuildNum.IsEmpty() ||  
+     m_savedOnDemandInfo.m_versionUpdateFilePath.IsEmpty() || 
+     m_savedOnDemandInfo.m_versionUpdateFileHash.IsEmpty())
+  {
+    CLog::Log(LOGERROR,"CBoxeeVersionUpdateManager::StartUpdate - One of the attributes of <version_update> is empty. [build-num=%s][update-descriptor-path=%s][update-descriptor-hash=%s] (ping)(update)",m_savedOnDemandInfo.m_versionUpdateBuildNum.c_str(),m_savedOnDemandInfo.m_versionUpdateFilePath.c_str(),m_savedOnDemandInfo.m_versionUpdateFileHash.c_str());
+    return false;
+  }
+
+  return PrepareVersionUpdate(m_savedOnDemandInfo.m_versionUpdateBuildNum,m_savedOnDemandInfo.m_versionUpdateFilePath,m_savedOnDemandInfo.m_versionUpdateFileHash);
+}
+
+bool CBoxeeVersionUpdateManager::GetDownloadInfo(CDownloadInfo& downloadInfo)
+{
+  return GetBoxeeVerUpdateJob().GetDownloadInfo(downloadInfo);
+}
+
+int CBoxeeVersionUpdateManager::InitCheckForUpdateRequest(CStdString& chkupdUrl,CStdString& strPingVersion)
+{
+#define BXINFO_FILE_PATH "special://home/bxinfo.xml"
+  BOXEE::BXXMLDocument bxinfo;
+  CStdString bxinfoFilePath = PTH_IC(BXINFO_FILE_PATH);
+  
+  //////////////////////////////////
+  // Set the current ping version //
+  //////////////////////////////////
+
+  if (bxinfo.LoadFromFile(bxinfoFilePath))
+  {
+    TiXmlHandle handle(bxinfo.GetRoot());
+    TiXmlElement* version = handle.FirstChild("ping_version").ToElement();
+    
+    if (version)
+    {
+      std::string strVersion = version->GetText();
+      if (!strVersion.empty())
+      {
+        strPingVersion = strVersion;
+      }
+    }
+  }
+  
+  if(strPingVersion.IsEmpty())
+  {
+    strPingVersion = "0";
+    CLog::Log(LOGDEBUG,"CPingJob::InitPingRequest - Failed to get the PingVersion from [%s], so set the ping version to [%s] (ping)",bxinfoFilePath.c_str(),strPingVersion.c_str());
+  }
+
+  //////////////////////
+  // Set the ping url //
+  //////////////////////
+  
+  chkupdUrl = BOXEE::BXConfiguration::GetInstance().GetStringParam("WatchDog.TestServerUrl","http://app.boxee.tv/");
+
+  chkupdUrl += "chkupd/";
+  
+  chkupdUrl += BoxeeUtils::GetPlatformStr();
+  chkupdUrl += "/";
+  
+  CStdString boxeeCurrentVersion = g_infoManager.GetVersion();
+  
+  // For debug //
+  /*
+  if(boxeeCurrentVersion == "SVN")
+  {
+    boxeeCurrentVersion = g_localizeStrings.Get(53250);
+
+    CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateManager::PerformVersionUpdate - boxeeCurrentVersion is [SVN], so it was changed to [%s] (ping)",boxeeCurrentVersion.c_str());
+  }
+  */
+  ///////////////
+  
+  chkupdUrl += boxeeCurrentVersion;
+  
+  chkupdUrl += "/";
+  chkupdUrl += strPingVersion;
+  
+
+  CHalHardwareInfo hwInfo;
+  CHalSoftwareInfo swInfo;
+  IHalServices& client = CHalServicesFactory::GetInstance();
+
+  if(client.GetHardwareInfo(hwInfo) && client.GetSoftwareInfo(swInfo))
+  {
+    chkupdUrl += "/";
+    chkupdUrl += hwInfo.revision;
+
+    chkupdUrl += "/";
+    chkupdUrl += swInfo.regionSKU;
+
+    chkupdUrl += "/";
+    chkupdUrl += hwInfo.serialNumber;
+  }
+  else
+  {
+      CLog::Log(LOGERROR,"CBoxeeVersionUpdateManager::InitCheckForUpdateRequest - Failed to retrieve device info\n");
+  }
+
+  if (g_guiSettings.GetBool("update.allow_beta"))
+  {
+    chkupdUrl += "/1";
+  }
+  else
+  {
+    chkupdUrl += "/0";
+  }
+
+  return true;
+}
+
+CStdString CBoxeeVersionUpdateManager::GetLastCheckedTime()
+{
+  return g_guiSettings.GetString("update.status");
+}
+
+int CBoxeeVersionUpdateManager::CheckForUpdate(bool& hasNewUpdate, CStdString& versionUpdateBuildNum)
+{
+  int retval = 0;
+
+  if(g_application.IsConnectedToInternet() == false)
+  {
+    CLog::Log(LOGERROR,"CBoxeeVersionUpdateManager::CheckForUpdate - FAILED to check for update - no network connection (update)");
+    return ENETDOWN;
+  }
+
+  hasNewUpdate = false;
+  
+  CStdString strClientPingVersion = "";
+  CStdString chkupdUrl = "";
+  BOXEE::BXCurl curl;
+
+  InitCheckForUpdateRequest(chkupdUrl,strClientPingVersion);
+
+  std::string strResp = curl.HttpGetString(chkupdUrl, false);
+
+  CLog::Log(LOGWARNING,"CBoxeeVersionUpdateManager::CheckForUpdate - Check update for [chkupdUrl=%s] returned [Response-IsEmpty=%d] (update)",chkupdUrl.c_str(),strResp.empty());
+  
+  CDateTime time=CDateTime::GetCurrentDateTime();
+  CStdString strLastUpdateTime = time.GetAsLocalizedDateTime(false, false);
+
+  g_guiSettings.SetString("update.status",strLastUpdateTime);
+
+  BOXEE::BXXMLDocument reader;
+  if (strResp.empty())
+  {
+    CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateManager::CheckForUpdate - Not handling server response to [chkupdUrl=%s] because it is empty (update)",chkupdUrl.c_str());
+    return 0;
+  }
+  if(!reader.LoadFromString(strResp))
+  {
+    CLog::Log(LOGERROR,"CBoxeeVersionUpdateManager::CheckForUpdate - Not handling server response to [chkupdUrl=%s] because failed to load it to BXXMLDocument (update)",chkupdUrl.c_str());
+    return EINVAL;
+  }
+
+  TiXmlElement* root = reader.GetRoot();
+
+  if(!root)
+  {
+    CLog::Log(LOGERROR,"CBoxeeVersionUpdateManager::CheckForUpdate - Failed to get root from BXXMLDocument of the ping response (update)");
+    return EINVAL;
+  }
+
+  if((strcmp(root->Value(),"ping") != 0))
+  {
+    CLog::Log(LOGERROR,"CBoxeeVersionUpdateManager::CheckForUpdate - Failed to parse ping response because the root tag ISN'T <ping> (update)");
+    return EINVAL;
+  }
+
+  CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateManager::CheckForUpdate - The root tag <ping> was found. Going to parse the ping response (update)");
+
+  TiXmlElement* pingChildElem = NULL;
+  pingChildElem = root->FirstChildElement();
+
+  while (pingChildElem)
+  {
+    if (strcmp(pingChildElem->Value(),"version_update") == 0)
+    {
+
+      CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateManager::CheckForUpdate - The <version_update> tag was found (update)");
+
+      bool retval = HandleVersionUpdate(root, pingChildElem, true);
+      
+      if(retval == true)
+      {
+        hasNewUpdate = true;
+        versionUpdateBuildNum = m_savedOnDemandInfo.m_versionUpdateBuildNum;
+        retval = 0;
+        break; 
+      }
+
+    }
+
+    pingChildElem = pingChildElem->NextSiblingElement();
+  }
+
+  return retval;
+}
+#endif
+
 //////////////////////////////////////
 // CBoxeeVersionUpdateJob functions //
 //////////////////////////////////////
@@ -972,6 +1337,12 @@ CBoxeeVersionUpdateJob::CBoxeeVersionUpdateJob()
   m_versionUpdateFilePath = "";
   m_versionUpdateBuildNum = "";
   m_versionUpdateInfo.reset();
+
+#ifdef HAS_EMBEDDED
+  m_TotalBytesToDownload = 0;
+  m_TotalBytesDownloaded = 0;
+  memset(&m_DownloadInfo, sizeof m_DownloadInfo, 0);
+#endif
 }
 
 bool CBoxeeVersionUpdateJob::Init(const CStdString& versionUpdateBuildNum,const CStdString& updateFilePath,const CStdString& versionUpdateFileHash,const CStdString& directoryForUpdateLocalPath)
@@ -1013,6 +1384,11 @@ void CBoxeeVersionUpdateJob::reset()
   SetVersionUpdateJobStatus(VUJS_IDLE);
 
   m_versionUpdateInfo.reset();
+#ifdef HAS_EMBEDDED
+  m_TotalBytesToDownload = 0;
+  m_TotalBytesDownloaded = 0;
+  memset(&m_DownloadInfo, sizeof m_DownloadInfo, 0);
+#endif
 }
 
 void CBoxeeVersionUpdateJob::SetVersionUpdateJobStatus(VERSION_UPDATE_JOB_STATUS versionUpdateJobStatus)
@@ -1061,7 +1437,7 @@ bool CBoxeeVersionUpdateJob::acquireVersionUpdateJobForInitializeUpdate(const CS
     if(boxeeCurrentVersion == "SVN")
     {
       boxeeCurrentVersion = g_localizeStrings.Get(53250);
-      
+
       CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateJob::acquireVersionUpdateJobForInitializeUpdate - boxeeCurrentVersion is [SVN], so it was changed to [%s] (update)",boxeeCurrentVersion.c_str());
     }
     */
@@ -1189,9 +1565,145 @@ bool CBoxeeVersionUpdateJob::IsThisNewVersion(CStdString currentVersion,CStdStri
   }
 
   CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateJob::IsThisNewVersion - For [currentVersion=%s][newVersion=%s] going to return [isThisNewVersion=%d] (update)",currentVersion.c_str(),newVersion.c_str(),isThisNewVersion);
-
+  
   return isThisNewVersion;
 }
+
+#ifdef HAS_EMBEDDED
+void CBoxeeVersionUpdateJob::SetVersionUpdateDownloadStatus(VERSION_UPDATE_DOWNLOAD_STATUS versionUpdateDownloadStatus)
+{
+  CSingleLock lock(m_downloadInfoLock);
+  
+  m_DownloadInfo.m_Status = versionUpdateDownloadStatus;
+}
+
+VERSION_UPDATE_DOWNLOAD_STATUS CBoxeeVersionUpdateJob::GetVersionUpdateDownloadStatus()
+{
+  CSingleLock lock(m_downloadInfoLock);
+
+  return m_DownloadInfo.m_Status;
+}
+
+bool CBoxeeVersionUpdateJob::GetDownloadInfo(CDownloadInfo& downloadInfo)
+{
+  CSingleLock lock(m_downloadInfoLock);
+  
+  downloadInfo = m_DownloadInfo;
+
+  return true;
+}
+
+bool CBoxeeVersionUpdateJob::SafeDownloadWithProgress(const CStdString& url, const CStdString& target, const CStdString& hash,bool isLast)
+{
+  CFileCurl http;
+  CFile targetFile;
+  CStdString targetPath = target;
+  char* buf = NULL;
+  int bufSize = m_TotalBytesToDownload/100;
+  bool bOk = false;
+
+  if(CUtil::IsSpecial(targetPath))
+  {
+    targetPath = _P(targetPath);
+  }
+
+  buf = new char[bufSize];
+  
+  if(buf == NULL)
+  {
+     CLog::Log(LOGERROR,"CBoxeeVersionUpdateJob::SafeDownloadWithProgress - Unable to allocate memory [%d] bytes (update)", bufSize);
+     return false;
+  }
+
+  do
+  {
+    int bytesRead = 0;
+    
+    bOk = http.Open(url);
+    if(!bOk)
+    {
+      CLog::Log(LOGERROR,"CBoxeeVersionUpdateJob::SafeDownloadWithProgress - Unable to open url [%s] (update)", url.c_str());
+      break;
+    }
+
+    bOk = targetFile.OpenForWrite(targetPath, true);
+    if(!bOk)
+    {
+      CLog::Log(LOGERROR,"CBoxeeVersionUpdateJob::SafeDownloadWithProgress - Unable to open target file [%s] (update)", targetPath.c_str());
+      break;
+    }
+
+    double prevPrintDownloadProgress = 0.0;
+    while((bytesRead = http.Read(buf, bufSize)) != 0)
+    {
+      int bytesWritten = targetFile.Write(buf, bytesRead);
+      double transferRateBytesPerMS = 0.0;
+
+      if((bytesWritten < 0) || (bytesRead != bytesWritten))
+      {
+        CLog::Log(LOGERROR,"CBoxeeVersionUpdateJob::SafeDownloadWithProgress - Error writting file [%s] (update)", target.c_str());
+        bOk = false;
+        break;
+      }
+
+      m_TotalBytesDownloaded += bytesWritten;
+
+      transferRateBytesPerMS = (double)m_TotalBytesDownloaded/(double)((CTimeUtils::GetTimeMS() - m_DownloadStartTime));
+
+      EnterCriticalSection(m_downloadInfoLock);
+
+      if(m_TotalBytesToDownload)
+      {
+        m_DownloadInfo.m_CurrentDownloadProgress = (double)((double)m_TotalBytesDownloaded/(double)m_TotalBytesToDownload)*100.0;
+      }
+
+      if(transferRateBytesPerMS >= 1.0)
+      {      
+        m_DownloadInfo.m_EstimatedTimeLeftMS = (unsigned int)(m_TotalBytesToDownload - m_TotalBytesDownloaded)/(int)transferRateBytesPerMS;
+      }
+
+      if (m_DownloadInfo.m_Status != VUDS_DOWNLOADING)
+      {
+        SetVersionUpdateDownloadStatus(VUDS_DOWNLOADING);
+      }
+
+      LeaveCriticalSection(m_downloadInfoLock);
+
+      if (m_DownloadInfo.m_CurrentDownloadProgress - prevPrintDownloadProgress >= 1.0)
+      {
+        CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateJob::SafeDownloadWithProgress - Downloading file [%s], total progress [%.2f%%], time left [%dms] (update)", url.c_str(), m_DownloadInfo.m_CurrentDownloadProgress, m_DownloadInfo.m_EstimatedTimeLeftMS);
+        prevPrintDownloadProgress = m_DownloadInfo.m_CurrentDownloadProgress;
+      }
+    }
+
+    if (isLast)
+    {
+      SetVersionUpdateDownloadStatus(VUDS_POST_DOWNLOADING);
+    }
+
+    targetFile.Close();
+    http.Close();
+
+    if(bOk)
+    {
+      if(hash != CUtil::MD5File(targetPath))
+      {
+        CLog::Log(LOGERROR,"CBoxeeVersionUpdateJob::SafeDownloadWithProgress - Wrong MD5 file [%s] (update)", targetPath.c_str());
+        ::DeleteFile(targetPath);
+        bOk = false;
+      }
+    }
+
+  } while(false);
+
+  if(buf)
+  {
+    free(buf);
+  }
+
+  return bOk;  
+}
+#endif
 
 void CBoxeeVersionUpdateJob::Run()
 {
@@ -1199,6 +1711,22 @@ void CBoxeeVersionUpdateJob::Run()
   
   SetVersionUpdateJobStatus(VUJS_WORKING);
   
+#ifdef HAS_EMBEDDED
+  m_DownloadStartTime = CTimeUtils::GetTimeMS();
+  SetVersionUpdateDownloadStatus(VUDS_PRE_DOWNLOADING);
+#endif
+
+  ///////////////////////////////////////////////////
+  // Clean the download dir first                  //
+  // this is a must in occasions where an optional //
+  // version was downloaded before and there's a   //
+  // new version which will not have space on the  //
+  // NAND.                                         //
+  ///////////////////////////////////////////////////
+
+  CUtil::WipeDir(UPDATE_DIRECTORY_BASE_PATH);
+  CUtil::CreateDirectoryEx(UPDATE_DIRECTORY_BASE_PATH);
+
   /////////////////////////////////////////////////
   // Create a tmp directory for the update files //
   /////////////////////////////////////////////////
@@ -1220,6 +1748,10 @@ void CBoxeeVersionUpdateJob::Run()
 
   if(tmpDirWasCreated == false)
   {
+#ifdef HAS_EMBEDDED
+    SetVersionUpdateDownloadStatus(VUDS_FAILED);
+#endif
+
     CLog::Log(LOGERROR,"CBoxeeVersionUpdateJob::Run - Call to CreateDirectory with [path=%s] failed. Going to exit (update)",tmpDirectoryForUpdate.c_str());
     reset();
     return;
@@ -1244,6 +1776,10 @@ void CBoxeeVersionUpdateJob::Run()
   {
     CLog::Log(LOGERROR,"CBoxeeVersionUpdateJob::Run - Failed to download file [path=%s] to [updateFileLocalPath=%s]. Going to remove the tmp directory [%s] and exit (update)",m_versionUpdateFilePath.c_str(),updateFileLocalPath.c_str(),tmpDirectoryForUpdate.c_str());
 
+#ifdef HAS_EMBEDDED
+    SetVersionUpdateDownloadStatus(VUDS_FAILED);
+#endif
+
     CUtil::WipeDir(tmpDirectoryForUpdate);
     reset();
     return;
@@ -1267,6 +1803,10 @@ void CBoxeeVersionUpdateJob::Run()
   {
     CLog::Log(LOGERROR,"CBoxeeVersionUpdateJob::Run - Failed to parse [updateFileLocalPath=%s]. Going to remove the tmp directory [%s] and exit (update)",updateFileLocalPath.c_str(),tmpDirectoryForUpdate.c_str());
     
+#ifdef HAS_EMBEDDED
+    SetVersionUpdateDownloadStatus(VUDS_FAILED);
+#endif
+
     CUtil::WipeDir(tmpDirectoryForUpdate);
     reset();
     return;    
@@ -1283,8 +1823,10 @@ void CBoxeeVersionUpdateJob::Run()
   if(numOfFilesToDownload > 0)
   {
     bool releaseNotesFileNameWasFound = false;
+#ifndef HAS_EMBEDDED
     bool scriptToRunPermissionsWasChanged = false;
-    
+#endif
+
     for(int i=0;i<numOfFilesToDownload;i++)
     {
       CUpdateFilesInfo& ufi = (m_versionUpdateInfo.m_UpdateFilesToDownload)[i];
@@ -1294,17 +1836,25 @@ void CBoxeeVersionUpdateJob::Run()
       CStdString downloadFileLocalPath = tmpDirectoryForUpdate;
       downloadFileLocalPath += "/";
       downloadFileLocalPath += strName;
-
+     
       if(!XFILE::CFile::Exists(downloadFileLocalPath))
       {
         CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateJob::Run - [%d/%d] Going to call SafeDownload for file [path=%s][hash=%s] and place it at [target=%s] (update)",i+1,numOfFilesToDownload,(ufi.m_filePath).c_str(),(ufi.m_fileHash).c_str(),downloadFileLocalPath.c_str());
 
+#ifdef HAS_EMBEDDED
+        bool isLast;
+        (i == numOfFilesToDownload-1) ? isLast = true : isLast = false;
+        bool succeed = SafeDownloadWithProgress(ufi.m_filePath, downloadFileLocalPath, ufi.m_fileHash, isLast);
+#else
         bool succeed = BoxeeUtils::SafeDownload((ufi.m_filePath).c_str(), downloadFileLocalPath.c_str(),ufi.m_fileHash);
-
+#endif
         if(!succeed)
         {
           CLog::Log(LOGERROR,"CBoxeeVersionUpdateJob::Run - [%d/%d] Failed to download file [path=%s] to [target=%s]. Going to remove the tmp directory [%s] and exit (update)",i+1,numOfFilesToDownload,(ufi.m_filePath).c_str(),downloadFileLocalPath.c_str(),tmpDirectoryForUpdate.c_str());
-          
+         
+#ifdef HAS_EMBEDDED
+          SetVersionUpdateDownloadStatus(VUDS_FAILED);
+#endif 
           CUtil::WipeDir(tmpDirectoryForUpdate);
           reset();
           return;
@@ -1325,7 +1875,8 @@ void CBoxeeVersionUpdateJob::Run()
       {
         releaseNotesFileNameWasFound = true;      
       }
-      
+
+#ifndef HAS_EMBEDDED      
       if(strName == m_versionUpdateInfo.m_scriptToRunName)
       {
         //////////////////////////////////////////////////////////
@@ -1338,6 +1889,10 @@ void CBoxeeVersionUpdateJob::Run()
         if(_chmod(downloadFileLocalPath,0777) != 0)
   #endif
         {
+#ifdef HAS_EMBEDDED
+    SetVersionUpdateDownloadStatus(VUDS_FAILED);
+#endif
+
           CLog::Log(LOGERROR,"CBoxeeVersionUpdateJob::Run - Failed to change the installtion script [path=%s] permissions [errno=%d]. Going to remove the tmp directory [%s] and exit (update)",downloadFileLocalPath.c_str(),errno,tmpDirectoryForUpdate.c_str());
 
           CUtil::WipeDir(tmpDirectoryForUpdate);
@@ -1349,6 +1904,7 @@ void CBoxeeVersionUpdateJob::Run()
         
         scriptToRunPermissionsWasChanged = true;
       }
+#endif
     }
 
     if((!(m_versionUpdateInfo.m_UpdateNotesFileName).IsEmpty()) && (releaseNotesFileNameWasFound == false))
@@ -1356,16 +1912,22 @@ void CBoxeeVersionUpdateJob::Run()
       CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateJob::Run - The updateNotesFileName [%s] ISN'T the name of one of the files that was downloaded (update)",(m_versionUpdateInfo.m_UpdateNotesFileName).c_str());
     }
 
+#ifndef HAS_EMBEDDED  
     if((!(m_versionUpdateInfo.m_scriptToRunName).IsEmpty()) && (scriptToRunPermissionsWasChanged == false))
     {
+#ifdef HAS_EMBEDDED
+    SetVersionUpdateDownloadStatus(VUDS_FAILED);
+#endif
+
       CLog::Log(LOGERROR,"CBoxeeVersionUpdateJob::Run - The installation script name [%s] ISN'T one of the files that were downloaded. Going to remove the tmp directory [%s] and exit (update)",(m_versionUpdateInfo.m_scriptToRunName).c_str(),tmpDirectoryForUpdate.c_str());
       
       CUtil::WipeDir(tmpDirectoryForUpdate);
       reset();
       return;              
-    }    
+    }
+#endif    
   }
-  
+
   /////////////////////////////////////////////////////////////////////////////////////
   // After downloading all of the files to the tmp directory -> Rename the directory //
   /////////////////////////////////////////////////////////////////////////////////////
@@ -1375,12 +1937,61 @@ void CBoxeeVersionUpdateJob::Run()
   int renameFailed = ::rename(tmpDirectoryForUpdate.c_str(),directoryForUpdate);
   if (renameFailed)
   {
+#ifdef HAS_EMBEDDED
+    SetVersionUpdateDownloadStatus(VUDS_FAILED);
+#endif
+
     CLog::Log(LOGERROR,"CBoxeeVersionUpdateJob::Run - Failed to rename directory of update files from [%s] to [%s]. Going to remove the tmp directory and exit (update)",tmpDirectoryForUpdate.c_str(),directoryForUpdate.c_str());
 
     CUtil::WipeDir(tmpDirectoryForUpdate);
     reset();
     return;
   }
+
+#ifdef HAS_EMBEDDED
+  /////////////////////////////////////////////////////////////////////////////////////
+  // Create two symlinks: one points on update directory and second on image file   //
+  ////////////////////////////////////////////////////////////////////////////////////
+
+  CStdString directoryForUpdateSymlink = UPDATE_DIRECTORY_BASE_PATH;
+  directoryForUpdateSymlink += "current";
+  ::unlink(directoryForUpdateSymlink);
+  int symlinkFailed = ::symlink(directoryForUpdate, directoryForUpdateSymlink);
+  if(symlinkFailed)
+  {
+    SetVersionUpdateDownloadStatus(VUDS_FAILED);
+
+    CLog::Log(LOGERROR,"CBoxeeVersionUpdateJob::Run - Failed to create symbolic link [%s] -> [%s]. Going to remove the update directory and exit (update)", directoryForUpdateSymlink.c_str(),directoryForUpdate.c_str());
+
+    CUtil::WipeDir(directoryForUpdate);
+    reset();
+    return;
+  }
+
+  CStdString imageFile = directoryForUpdate;
+  imageFile += "/" + m_versionUpdateInfo.m_ImageFile;
+  CStdString imageFileSymlink = directoryForUpdate;
+  imageFileSymlink += "/image";
+  ::unlink(imageFileSymlink);
+  symlinkFailed = ::symlink(imageFile, imageFileSymlink);
+  if(symlinkFailed)
+  {
+    SetVersionUpdateDownloadStatus(VUDS_FAILED);
+
+    CLog::Log(LOGERROR,"CBoxeeVersionUpdateJob::Run - Failed to create symbolic link [%s] to [%s]. Going to remove the update directory and exit (update)",imageFile.c_str(),imageFileSymlink.c_str());
+
+    CUtil::WipeDir(directoryForUpdate);
+    reset();
+    return;    
+  }
+  
+  CStdString versionFileName = directoryForUpdate;
+  versionFileName += "/version";
+  CFile versionFile;
+  versionFile.OpenForWrite(versionFileName, true);
+  versionFile.Write(m_versionUpdateBuildNum.c_str(), m_versionUpdateBuildNum.length());
+  versionFile.Close();
+#endif
 
   CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateJob::Run - Directory of update files was renamed from [%s] to [%s]. Going to call UpdateFilesPathToLocal() (update)",tmpDirectoryForUpdate.c_str(),directoryForUpdate.c_str());
 
@@ -1416,7 +2027,11 @@ void CBoxeeVersionUpdateJob::Run()
 
   CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateJob::Run - Going to set NewVersion flag in CGUIInfoManager as TRUE (update)");
 
-  g_infoManager.SetHasNewVersion(true);
+  g_infoManager.SetHasNewVersion(true,m_versionUpdateInfo.GetVersionUpdateForce() == VUF_YES ? true : false);
+
+#ifdef HAS_EMBEDDED
+  SetVersionUpdateDownloadStatus(VUDS_FINISHED);
+#endif
 
   return; 
 }
@@ -1463,7 +2078,12 @@ bool CBoxeeVersionUpdateJob::ParseUpdateFile(const CStdString& updateFileLocalPa
           bool foundScriptToRun = false;
           bool foundVersion = false;
           bool emptyAttribute = false;
+          bool foundImageFile = false;
           
+#ifdef HAS_EMBEDDED
+          m_TotalBytesToDownload = 0;
+#endif
+
           while (root)
           {
             if (strcmp(root->Value(),"download") == 0)
@@ -1483,9 +2103,12 @@ bool CBoxeeVersionUpdateJob::ParseUpdateFile(const CStdString& updateFileLocalPa
                 
                 ufi.m_filePath = fileElem->Attribute("url");
                 ufi.m_fileHash = fileElem->Attribute("hash");
-                
+#ifdef HAS_EMBEDDED
+                ufi.m_fileSize = fileElem->Attribute("size");
+                m_TotalBytesToDownload += atoi(ufi.m_fileSize);
+#endif
                 (m_versionUpdateInfo.m_UpdateFilesToDownload).push_back(ufi);
-                
+
                 CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateJob::ParseUpdateFile - Under element <download> parse file [%d] - [path=%s][hash=%s] (update)",filesCounter,(ufi.m_filePath).c_str(),(ufi.m_fileHash).c_str());
                 
                 fileElem = fileElem->NextSiblingElement("file");
@@ -1545,7 +2168,24 @@ bool CBoxeeVersionUpdateJob::ParseUpdateFile(const CStdString& updateFileLocalPa
                 foundVersion = true;
               }
             }
-
+#ifdef HAS_EMBEDDED
+            else if (strcmp(root->Value(),"image-file") == 0)
+            {
+              m_versionUpdateInfo.m_ImageFile = root->Attribute("name");
+              if((m_versionUpdateInfo.m_ImageFile).IsEmpty())
+              {
+                CLog::Log(LOGERROR,"CBoxeeVersionUpdateJob::ParseUpdateFile - The [value] attribute in <image-file> is empty -> break (update)");
+                emptyAttribute = true;
+                break;
+              }
+              else
+              {
+                CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateJob::ParseUpdateFile - Under <image-file> element parse [value=%s] (update)",(m_versionUpdateInfo.m_UpdateVersionNum).c_str());
+                foundImageFile = true;
+              }
+            
+            }
+#endif
             root = root->NextSiblingElement();
           }
           
@@ -1555,7 +2195,7 @@ bool CBoxeeVersionUpdateJob::ParseUpdateFile(const CStdString& updateFileLocalPa
           }
           else
           {
-            CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateJob::ParseUpdateFile - After parse of [updateFileLocalPath=%s]. [foundDownload=%d][foundUpdateNotes=%d][foundScriptToRun=%d][foundVersion=%d] (update)",updateFileLocalPath.c_str(),foundDownload,foundUpdateNotes,foundScriptToRun,foundVersion);
+            CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateJob::ParseUpdateFile - After parse of [updateFileLocalPath=%s]. [foundDownload=%d][foundUpdateNotes=%d][foundScriptToRun=%d][foundVersion=%d][foundImageFile=%d] (update)",updateFileLocalPath.c_str(),foundDownload,foundUpdateNotes,foundScriptToRun,foundVersion,foundImageFile);
             retVal = true;
           }
         }
@@ -1591,7 +2231,7 @@ void CBoxeeVersionUpdateJob::UpdateFilesPathToLocal(const CStdString& directoryF
     ufi.m_filePath += PATH_SEPARATOR_STRING;
     ufi.m_filePath += strName;
 
-    CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateJob::UpdateFilesPathToLocal - [%lu/%lu] file path was changed from [%s] to [%s] (update)",i+1,(m_versionUpdateInfo.m_UpdateFilesToDownload).size(),orgPath.c_str(),(ufi.m_filePath).c_str());    
+    CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateJob::UpdateFilesPathToLocal - [%zu/%zu] file path was changed from [%s] to [%s] (update)",i+1,(m_versionUpdateInfo.m_UpdateFilesToDownload).size(),orgPath.c_str(),(ufi.m_filePath).c_str());    
   }
 
   CLog::Log(LOGDEBUG,"CBoxeeVersionUpdateJob::UpdateFilesPathToLocal - Exit function (update)");

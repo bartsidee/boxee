@@ -1,3 +1,4 @@
+
 /*
  *      Copyright (C) 2005-2008 Team XBMC
  *      http://www.xbmc.org
@@ -21,10 +22,17 @@
  *
  */
 
+#include "system.h"
 #include "GUIWindowTestPattern.h"
 #include "Settings.h"
 #include "GUIWindowManager.h"
 #include "Key.h"
+
+#ifndef HAS_GLES
+#define TEST_PATTERNS_COUNT 5
+#else
+#define TEST_PATTERNS_COUNT 4
+#endif
 
 CGUIWindowTestPattern::CGUIWindowTestPattern(void)
     : CGUIWindow(WINDOW_TEST_PATTERN, "")
@@ -101,11 +109,11 @@ void CGUIWindowTestPattern::Render()
       break;
 
     case 3:
-      DrawCheckers(top, left, bottom, right);
+      DrawBouncingRectangle(top, left, bottom, right);
       break;
 
     case 4:
-      DrawBouncingRectangle(top, left, bottom, right);
+      DrawCheckers(top, left, bottom, right);
       break;
   }
 

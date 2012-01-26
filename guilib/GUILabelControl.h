@@ -50,15 +50,19 @@ public:
   virtual bool OnMessage(CGUIMessage& message);
   virtual CStdString GetDescription() const;
   virtual float GetWidth() const;
- 
+  virtual float GetHeight() const;
+
   const CLabelInfo& GetLabelInfo() const { return m_label; };
   void SetLabel(const std::string &strLabel);
   CStdString GetLabel() const;
   void ShowCursor(bool bShow = true);
   void SetCursorPos(int iPos);
   int GetCursorPos() const { return m_iCursorPos;};
-  void SetInfo(const CGUIInfoLabel&labelInfo);
+  void SetInfo(const CGUIInfoLabel& labelInfo);
+  CGUIInfoLabel& GetInfo();
   void SetWidthControl(float minWidth, bool bScroll, int scrollSpeed);
+  void SetHeightControl(float minHeight);
+
   void SetTruncate(bool bTruncate);
   void SetAlignment(uint32_t align);
   void SetHighlight(unsigned int start, unsigned int end);
@@ -80,6 +84,7 @@ protected:
   // stuff for autowidth
   bool m_autoWidth;
   float m_minWidth;
+  float m_minHeight;
 
   // multi-info stuff
   CGUIInfoLabel m_infoLabel;

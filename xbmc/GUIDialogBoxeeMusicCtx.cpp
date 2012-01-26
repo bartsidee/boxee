@@ -20,69 +20,132 @@
 #include "GUIWindowManager.h"
 #include "GUIWindowBoxeeBrowseTracks.h"
 #include "GUIListContainer.h"
+#include "GUIUserMessages.h"
 
 using namespace BOXEE;
 
-#define LIST_CONTROL 9000
+#define LIST_CONTROL          9000
 
-#define BUTTON_TRACKS 9001
+#define BUTTON_TRACKS         9001
 
-#define HIDDEN_ITEM_ID 5000
+#define HIDDEN_ITEM_ID        5000
 
-CGUIDialogBoxeeMusicCtx::CGUIDialogBoxeeMusicCtx(void) : 
-  CGUIDialogBoxeeCtx(WINDOW_DIALOG_BOXEE_MUSIC_CTX, "boxee_music_context.xml")
+#define BTN_STOP_ID           9102
+#define BTN_PLAY_PAUSE_ID     9103
+#define BTN_SHUFFLE           9105
+#define BTN_REPEAT            9116
+#define BTN_OSD1              9110
+#define BTN_NEXT_TRACK        9104
+
+#define NEXT_TRACK_RIGHT_CLICK  9155
+#define SHUFFLE_RIGHT_CLICK     9156
+#define OSD1_LEFT_CLICK         9157
+
+CGUIDialogBoxeeMusicCtx::CGUIDialogBoxeeMusicCtx() : CGUIDialogBoxeeSeekableCtx(WINDOW_DIALOG_BOXEE_MUSIC_CTX, "boxee_music_context.xml")
 {
+
 }
 
-CGUIDialogBoxeeMusicCtx::~CGUIDialogBoxeeMusicCtx(void)
+CGUIDialogBoxeeMusicCtx::~CGUIDialogBoxeeMusicCtx()
 {
 }
 
 void CGUIDialogBoxeeMusicCtx::Update()
 {
-  CGUIDialogBoxeeCtx::Update();
+  CGUIDialogBoxeeSeekableCtx::Update();
 }
 
 bool CGUIDialogBoxeeMusicCtx::OnMessage(CGUIMessage &message)
 {
   switch (message.GetMessage())
   {
-  case GUI_MSG_CLICKED:
+  case GUI_MSG_NOTIFY_ALL:
+    if (message.GetParam1() == GUI_MSG_UPDATE_ITEM && message.GetItem())
     {
-      unsigned int iControl = message.GetSenderId();
-      if (iControl == BUTTON_TRACKS)
-      {
-        CStdString strPath;
-
-        m_item.Dump();
-
-        if (m_item.IsCDDA())
-        {
-          strPath = m_item.m_strPath;
-        }
-        else
-        {
-          strPath = "boxeedb://tracks/";
-          strPath += m_item.GetProperty("BoxeeDBAlbumId");
-        }
-
-        g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_TRACKS, strPath);
-        g_windowManager.CloseDialogs(true);
-        return true;
-      }
+      SetItem(*message.GetItem());
     }
     break;
-  case GUI_MSG_WINDOW_DEINIT:
+
+  case GUI_MSG_CLICKED:
+  {
+    unsigned int iControl = message.GetSenderId();
+    if (iControl == BUTTON_TRACKS)
     {
-      m_item.Reset();
+      CStdString strPath;
+
+      m_item.Dump();
+
+      /* Should implement CDDA
+      if (m_item.IsCDDA())
+      {
+        strPath = m_item.m_strPath;
+      }
+      else
+      {
+        strPath = "boxeedb://tracks/";
+        strPath += m_item.GetProperty("BoxeeDBAlbumId");
+      }
+      */
+
+      g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_TRACKS, m_item.GetProperty("BoxeeDBAlbumId"));
+      g_windowManager.CloseDialogs(true);
+      return true;
+    }
+    else if (iControl == NEXT_TRACK_RIGHT_CLICK)
+    {
+      if (GetControl(BTN_SHUFFLE)->IsVisible())
+      {
+        SET_CONTROL_FOCUS(BTN_SHUFFLE, 0);
+      }
+      else if (GetControl(BTN_REPEAT)->IsVisible())
+      {
+        SET_CONTROL_FOCUS(BTN_REPEAT, 0);
+      }
+      else if (GetControl(BTN_OSD1)->IsVisible())
+      {
+        SET_CONTROL_FOCUS(BTN_OSD1, 0);
+      }
+    }
+    else if (iControl == OSD1_LEFT_CLICK)
+    {
+      if (GetControl(BTN_REPEAT)->IsVisible())
+      {
+        SET_CONTROL_FOCUS(BTN_REPEAT, 0);
+      }
+      else if (GetControl(BTN_SHUFFLE)->IsVisible())
+      {
+        SET_CONTROL_FOCUS(BTN_SHUFFLE, 0);
+      }
+      else if (GetControl(BTN_NEXT_TRACK)->IsVisible())
+      {
+        SET_CONTROL_FOCUS(BTN_NEXT_TRACK, 0);
+      }
+    }
+    else if (iControl == SHUFFLE_RIGHT_CLICK)
+    {
+      if (GetControl(BTN_REPEAT)->IsVisible())
+      {
+        SET_CONTROL_FOCUS(BTN_REPEAT, 0);
+      }
+      else if (GetControl(BTN_OSD1)->IsVisible())
+      {
+        SET_CONTROL_FOCUS(BTN_OSD1, 0);
+      }
     }
   }
-  return CGUIDialogBoxeeCtx::OnMessage(message);
+  break;
+  case GUI_MSG_WINDOW_DEINIT:
+  {
+    m_item.Reset();
+  }
+  }
+
+  return CGUIDialogBoxeeSeekableCtx::OnMessage(message);
 }
 
 void CGUIDialogBoxeeMusicCtx::OnInitWindow()
 {
-  if (m_item.m_strPath.IsEmpty())
+  if (m_item.m_strPath.IsEmpty()) 
   {
     m_item = g_application.CurrentFileItem();
   }
@@ -102,7 +165,7 @@ void CGUIDialogBoxeeMusicCtx::OnInitWindow()
   CGUIMessage winmsg(GUI_MSG_LABEL_ADD, GetID(), HIDDEN_ITEM_ID, 0, 0, pItem);
   OnMessage(winmsg);
 
-  CGUIDialogBoxeeCtx::OnInitWindow();
+  CGUIDialogBoxeeSeekableCtx::OnInitWindow();
 
   CGUIListContainer* pControl = (CGUIListContainer*)GetControl(LIST_CONTROL);
 
@@ -110,6 +173,11 @@ void CGUIDialogBoxeeMusicCtx::OnInitWindow()
   {
     // need to update visibility in order for buttons in the static list to be shown (tmp fix before version release)
     pControl->UpdateVisibility();
+  }
+
+  if (m_item.IsLastFM() || m_item.IsShoutCast() || m_item.HasProperty("isradio"))
+  {
+    SET_CONTROL_FOCUS(BTN_PLAY_PAUSE_ID,0);
   }
 }
 

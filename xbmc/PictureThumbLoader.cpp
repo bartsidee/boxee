@@ -58,6 +58,7 @@ bool CPictureThumbLoader::LoadItem(CFileItem* pItem, bool bCanBlock)
         pItem->SetThumbnailImage(pItem->GetProperty("OriginalThumb"));
         pItem->SetCachedPictureThumb();
         thumb = pItem->GetThumbnailImage();
+        pItem->SetProperty("needsloading",true);
       }
     }
     
@@ -108,7 +109,7 @@ bool CPictureThumbLoader::LoadItem(CFileItem* pItem, bool bCanBlock)
     // load the thumb from the image file
     if (bCanBlock)
     {
-    CPicture::CreateThumbnail(pItem->m_strPath, pItem->GetCachedPictureThumb());
+      CPicture::CreateThumbnail(pItem->m_strPath, pItem->GetCachedPictureThumb());
     }
     else 
     {
@@ -126,17 +127,22 @@ bool CPictureThumbLoader::LoadItem(CFileItem* pItem, bool bCanBlock)
     //
     // 2) If we have already entered this folder (we are currently in CPictureThumbLoader because we are back to its parent folder)
     //    its thumbnail should be created already -> so we need to set it.
-    
-    CLog::Log(LOGDEBUG,"CPictureThumbLoader::LoadItem - Item [path=%s] is a folder (foldert)",(pItem->m_strPath).c_str());
 
     CStdString folderCacheThumbPath = pItem->GetCachedPictureThumb();
+    
+    CLog::Log(LOGDEBUG,"CPictureThumbLoader::LoadItem - Item [label=%s][label2=%s][path=%s] is a folder. [folderCacheThumbPath=%s] (foldert)",pItem->GetLabel().c_str(),pItem->GetLabel2().c_str(),pItem->m_strPath.c_str(),folderCacheThumbPath.c_str());
+
     if(CFile::Exists(folderCacheThumbPath))
     {
       pItem->SetThumbnailImage(folderCacheThumbPath);
-      CLog::Log(LOGDEBUG,"CPictureThumbLoader::LoadItem - CahceFolderThumb for item [path=%s] exist and was set as ThumbnailImage [ItemThumbnailImage=%s] (foldert)",(pItem->m_strPath).c_str(),(pItem->GetThumbnailImage()).c_str());
+      CLog::Log(LOGDEBUG,"CPictureThumbLoader::LoadItem - CahceFolderThumb for item [label=%s][label2=%s][path=%s] exist and was set as ThumbnailImage [ItemThumbnailImage=%s] (foldert)",pItem->GetLabel().c_str(),pItem->GetLabel2().c_str(),pItem->m_strPath.c_str(),pItem->GetThumbnailImage().c_str());
+    }
+    else
+    {
+      CLog::Log(LOGDEBUG,"CPictureThumbLoader::LoadItem - CahceFolderThumb for item [label=%s][label2=%s][path=%s] DOESN'T exist. [OriginalThumb=%s] (foldert)",pItem->GetLabel().c_str(),pItem->GetLabel2().c_str(),pItem->m_strPath.c_str(),pItem->GetProperty("OriginalThumb").c_str());
     }
     
-    CLog::Log(LOGDEBUG,"CPictureThumbLoader::LoadItem - For item [path=%s] going to return TRUE [Not queue for background loading] (foldert)",(pItem->m_strPath).c_str());
+    CLog::Log(LOGDEBUG,"CPictureThumbLoader::LoadItem - For item [label=%s][label2=%s][path=%s] going to return TRUE [Not queue for background loading] (foldert)",pItem->GetLabel().c_str(),pItem->GetLabel2().c_str(),pItem->m_strPath.c_str());
     return true;
   }
 

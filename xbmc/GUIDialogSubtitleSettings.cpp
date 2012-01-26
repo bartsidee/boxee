@@ -28,6 +28,10 @@
 #include "VideoDatabase.h"
 #include "XBAudioConfig.h"
 #include "GUIDialogYesNo.h"
+#include "GUIDialogSelect.h"
+#include "GUIWindowManager.h"
+#include "GUILabelControl.h"
+#include "GUIButtonControl.h"
 #include "FileSystem/Directory.h"
 #include "FileSystem/File.h"
 #include "URL.h"
@@ -41,6 +45,7 @@
 #include "CharsetConverter.h"
 #include "DVDPlayer.h"
 #include "utils/TimeUtils.h"
+#include "LangCodeExpander.h"
 
 using namespace std;
 using namespace XFILE;
@@ -65,6 +70,7 @@ CGUIDialogSubtitleSettings::~CGUIDialogSubtitleSettings(void)
 #define SUBTITLE_SETTINGS_STREAM          3
 #define SUBTITLE_SETTINGS_BROWSER         4
 #define SUBTITLE_SETTINGS_CHARSET         5
+#define SUBTITLE_SETTINGS_TITLE           6
 
 void CGUIDialogSubtitleSettings::CreateSettings()
 {
@@ -77,23 +83,12 @@ void CGUIDialogSubtitleSettings::CreateSettings()
   // create our settings
   m_subtitleVisible = g_application.m_pPlayer->GetSubtitleVisible();
   AddBool(SUBTITLE_SETTINGS_ENABLE, 13397, &m_subtitleVisible);
-  AddSlider(SUBTITLE_SETTINGS_DELAY, 22006, &g_stSettings.m_currentVideoSettings.m_SubtitleDelay, -g_advancedSettings.m_videoSubsDelayRange, 0.1f, g_advancedSettings.m_videoSubsDelayRange, FormatDelay);
+  AddSpin(SUBTITLE_SETTINGS_DELAY, 22006,&g_stSettings.m_currentVideoSettings.m_SubtitleDelay,-g_advancedSettings.m_videoSubsDelayRange, g_advancedSettings.m_videoSubsDelayRange, 0.25, FormatDelay);
   AddSubtitleStreams(SUBTITLE_SETTINGS_STREAM);
   AddButton(SUBTITLE_SETTINGS_BROWSER,13250);
+  AddSubtitleCharset(SUBTITLE_SETTINGS_CHARSET);
 
-  m_vecCharsetLabels.clear();
-  m_vecCharsetLabels =  g_charsetConverter.getCharsetLabels();
-  sort(m_vecCharsetLabels.begin(), m_vecCharsetLabels.end(), sortstringbyname());
-
-  CStdString charsetLabel = g_charsetConverter.getCharsetLabelByName(g_langInfo.GetSubtitleCharSet());
-
-  g_stSettings.m_currentVideoSettings.m_Charset = getCharsetPosByLabel(charsetLabel);
-
-  if (g_stSettings.m_currentVideoSettings.m_Charset != -1)
-  {
-    AddSpin(SUBTITLE_SETTINGS_CHARSET, 735, m_vecCharsetLabels , &g_stSettings.m_currentVideoSettings.m_Charset);
-  }
-
+  SetSubtitleTitle();
 }
 
 void CGUIDialogSubtitleSettings::AddSubtitleStreams(unsigned int id)
@@ -101,38 +96,90 @@ void CGUIDialogSubtitleSettings::AddSubtitleStreams(unsigned int id)
   SettingInfo setting;
 
   setting.id = id;
-  setting.name = g_localizeStrings.Get(462);
-  setting.type = SettingInfo::SPIN;
+  setting.name = g_localizeStrings.Get(55301);
+  setting.type = SettingInfo::BUTTON;
   setting.min = 0;
   setting.data = &m_subtitleStream;
   m_subtitleStream = g_application.m_pPlayer->GetSubtitle();
+  setting.label2 = "";
 
   if(m_subtitleStream < 0) m_subtitleStream = 0;
 
-  // get the number of audio strams for the current movie
+  // get the number of subtitles streams for the current movie
   setting.max = (float)g_application.m_pPlayer->GetSubtitleCount() - 1;
 
   // cycle through each subtitle and add it to our entry list
   for (int i = 0; i <= setting.max; ++i)
   {
-    CStdString strItem;
-    CStdString strName;
-    g_application.m_pPlayer->GetSubtitleName(i, strName);
+    CStdString strItem = "";
+    CStdString strName = "";
+    CStdString strDetails = "";
+    g_application.m_pPlayer->GetSubtitleLang(i, strName);
+    g_application.m_pPlayer->GetSubtitleName(i, strDetails);
+
+    CStdString language;
+    g_LangCodeExpander.Lookup(language, strName);
+    strName = language;
+
     if (strName.length() == 0)
-      strName = "Unnamed";
+      strName = "Unknown";
 
-    strItem.Format("%s (%i/%i)", strName.c_str(), i + 1, (int)setting.max + 1);
+    if( CStdString(strName).ToLower() == CStdString(strDetails).ToLower())
+      strDetails = "";
 
+    CStdString sep = (!strName.IsEmpty() && !strDetails.IsEmpty()) ? " - " : "";
+
+    strItem.Format("%i . %s%s%s ", i + 1, strName.c_str(), sep.c_str(), strDetails.c_str());
     setting.entry.push_back(strItem);
+
+    if(i == m_subtitleStream)
+    {
+      CStdString label2;
+      label2.Format("%s  (%i/%i)", strName.c_str(), i + 1, (int)setting.max + 1);
+      setting.label2 = label2;
+    }
   }
 
   if (setting.max < 0)
   { // no subtitle streams - just add a "None" entry
     m_subtitleStream = 0;
     setting.max = 0;
+    setting.label2 = "None";
     setting.entry.push_back(g_localizeStrings.Get(231).c_str());
   }
   m_settings.push_back(setting);
+  SetSubtitleTitle();
+}
+void CGUIDialogSubtitleSettings::AddSubtitleCharset(unsigned int id)
+{
+  m_vecCharsetLabels.clear();
+  m_vecCharsetLabels =  g_charsetConverter.getCharsetLabels();
+  sort(m_vecCharsetLabels.begin(), m_vecCharsetLabels.end(), sortstringbyname());
+
+  CStdString charsetLabel = g_charsetConverter.getCharsetLabelByName(g_langInfo.GetSubtitleCharSet());
+  g_stSettings.m_currentVideoSettings.m_Charset = getCharsetPosByLabel(charsetLabel);
+
+  m_subtitleCharset = g_stSettings.m_currentVideoSettings.m_Charset;
+
+  if (m_subtitleCharset != -1)
+  {
+    CStdString strItem;
+    SettingInfo setting;
+
+    setting.id = id;
+    setting.name = g_localizeStrings.Get(55305);
+    setting.type = SettingInfo::BUTTON;
+    setting.data = &m_subtitleCharset;
+    setting.label2 = charsetLabel;
+
+    for(size_t i = 0; i < m_vecCharsetLabels.size(); i++)
+    {
+      strItem.Format("%d . %s", i+1 , m_vecCharsetLabels[i]);
+      setting.entry.push_back(strItem);
+    }
+
+    m_settings.push_back(setting);
+  }
 }
 
 void CGUIDialogSubtitleSettings::OnSettingChanged(SettingInfo &setting)
@@ -149,50 +196,89 @@ void CGUIDialogSubtitleSettings::OnSettingChanged(SettingInfo &setting)
   }
   else if (setting.id == SUBTITLE_SETTINGS_DELAY)
   {
-    g_application.m_pPlayer->SetSubTitleDelay(g_stSettings.m_currentVideoSettings.m_SubtitleDelay);
+    if (g_application.m_pPlayer)
+      g_application.m_pPlayer->SetSubTitleDelay(g_stSettings.m_currentVideoSettings.m_SubtitleDelay);
   }
   else if (setting.id == SUBTITLE_SETTINGS_STREAM && setting.max > 0)
   {
-    g_stSettings.m_currentVideoSettings.m_SubtitleStream = m_subtitleStream;
-    g_application.m_pPlayer->SetSubtitle(m_subtitleStream);
+    CGUIDialogSelect *pDlgSelect = (CGUIDialogSelect*)g_windowManager.GetWindow(WINDOW_DIALOG_SELECT);
+
+    if(pDlgSelect && setting.entry.size() > 1)
+    {
+      pDlgSelect->SetHeading(55300);
+      pDlgSelect->Reset();
+
+      for(size_t i = 0; i < setting.entry.size(); i++)
+      {
+        pDlgSelect->Add(setting.entry[i]);
+      }
+      pDlgSelect->DoModal();
+
+      if(pDlgSelect->IsConfirmed())
+      {
+        m_subtitleStream=pDlgSelect->GetSelectedLabel();
+        g_stSettings.m_currentVideoSettings.m_SubtitleStream = m_subtitleStream;
+        g_application.m_pPlayer->SetSubtitle(m_subtitleStream);
+
+        CStdString m_langStreamString;
+        CStdString m_label2;
+        g_application.m_pPlayer->GetSubtitleLang(m_subtitleStream, m_langStreamString);
+        g_LangCodeExpander.Lookup(m_label2, m_langStreamString);
+
+        setting.label2.Format("%s (%i/%i) ", m_label2, m_subtitleStream+1, setting.entry.size());
+      }
+    }
+    SetSubtitleTitle();
   }
   else if (setting.id == SUBTITLE_SETTINGS_BROWSER)
   {
-    CStdString strPath;
+    CStdString strPath;// = "sources://all/";
+
     if (CUtil::IsInRAR(g_application.CurrentFileItem().m_strPath) || CUtil::IsInZIP(g_application.CurrentFileItem().m_strPath))
     {
-      CURL url(g_application.CurrentFileItem().m_strPath);
+      CURI url(g_application.CurrentFileItem().m_strPath);
       strPath = url.GetHostName();
     }
     else
+    {
       strPath = g_application.CurrentFileItem().m_strPath;
+    }
 
     CStdString strMask = ".utf|.utf8|.utf-8|.sub|.srt|.smi|.rt|.txt|.ssa|.aqt|.jss|.ass|.idx|.rar|.zip";
     if (g_application.GetCurrentPlayer() == EPC_DVDPLAYER)
       strMask = ".srt|.rar|.zip|.ifo|.smi|.sub|.idx|.ass|.ssa|.txt";
-    VECSOURCES shares(g_settings.m_videoSources);
-    if (g_stSettings.iAdditionalSubtitleDirectoryChecked != -1 && !g_guiSettings.GetString("subtitles.custompath").IsEmpty())
+
+    VECSOURCES locations;
+    CFileItemList sourceList;
+    DIRECTORY::CDirectory::GetDirectory("sources://all/",sourceList);
+
+    for (int i = 0 ; i < sourceList.Size() ; i++)
     {
       CMediaSource share;
-      std::vector<CStdString> paths;
-      CStdString strPath1;
-      CUtil::GetDirectory(strPath,strPath1);
-      paths.push_back(strPath1);
-      strPath1 = g_guiSettings.GetString("subtitles.custompath");
-      paths.push_back(g_guiSettings.GetString("subtitles.custompath"));
-      share.FromNameAndPaths("video",g_localizeStrings.Get(21367),paths);
-      shares.push_back(share);
-      strPath = share.strPath;
-      CUtil::AddSlashAtEnd(strPath);
+      CURI url(sourceList[i]->m_strPath);
+
+
+      share.strName = sourceList[i]->GetLabel();
+      share.strPath = sourceList[i]->m_strPath;
+
+#ifdef HAS_EMBEDDED
+      if (share.strPath.IsEmpty() || share.strPath == "boxeedb://unresolvedVideoFiles")
+      {
+        continue;
+      }
+#endif
+
+      locations.push_back(share);
     }
-    if (CGUIDialogFileBrowser::ShowAndGetFile(shares,strMask,g_localizeStrings.Get(293),strPath,false,true)) // "subtitles"
+
+    if (CGUIDialogFileBrowser::ShowAndGetFile(locations,strMask,g_localizeStrings.Get(293),strPath,false,true,false)) // "subtitles"
     {
       CStdString strExt;
       CUtil::GetExtension(strPath,strExt);
       if (strExt.CompareNoCase(".idx") == 0 || strExt.CompareNoCase(".sub") == 0)
       {
         // Playback could end and delete m_pPlayer while dialog is up so make sure it's valid
-       	if (g_application.m_pPlayer)
+        if (g_application.m_pPlayer)
         {
           if (CFile::Cache(strPath,"special://temp/subtitle"+strExt))
           {
@@ -264,25 +350,45 @@ void CGUIDialogSubtitleSettings::OnSettingChanged(SettingInfo &setting)
   }
   else if (setting.id == SUBTITLE_SETTINGS_CHARSET)
   {
-    CStdString charSetName = g_charsetConverter.getCharsetNameByLabel(m_vecCharsetLabels[g_stSettings.m_currentVideoSettings.m_Charset]);
-    if (!charSetName.Equals(g_langInfo.GetSubtitleCharSet()))
+    CGUIDialogSelect *pDlgSelect = (CGUIDialogSelect*)g_windowManager.GetWindow(WINDOW_DIALOG_SELECT);
+
+    if(pDlgSelect && setting.entry.size() > 1)
     {
-      m_reloadSubtitle = CTimeUtils::GetFrameTime() + 2000;
-    }
-    else
-    {
-      m_reloadSubtitle = 0;
+      pDlgSelect->SetHeading(55304);
+      pDlgSelect->Reset();
+
+      for(size_t i = 0; i < setting.entry.size(); i++)
+      {
+        pDlgSelect->Add(setting.entry[i]);
+      }
+      pDlgSelect->DoModal();
     }
 
+    if(pDlgSelect->IsConfirmed())
+    {
+      m_subtitleCharset = pDlgSelect->GetSelectedLabel();
+      g_stSettings.m_currentVideoSettings.m_Charset = m_subtitleCharset;
+      CStdString charSetName = g_charsetConverter.getCharsetNameByLabel(m_vecCharsetLabels[m_subtitleCharset]);
+
+      if (!charSetName.Equals(g_langInfo.GetSubtitleCharSet()))
+      {
+        m_reloadSubtitle = CTimeUtils::GetFrameTime();
+      }
+      else
+      {
+        m_reloadSubtitle = 0;
+      }
+      setting.label2 = m_vecCharsetLabels[m_subtitleCharset];
+    }
   }
 }
 
 void CGUIDialogSubtitleSettings::ReloadSubtitle()
 {
-	CStdString charSetName = g_charsetConverter.getCharsetNameByLabel(m_vecCharsetLabels[g_stSettings.m_currentVideoSettings.m_Charset]);
-    g_guiSettings.SetString("subtitles.charset", charSetName);
-    g_charsetConverter.reset();
-    g_application.m_pPlayer->RestartSubtitleStream();
+  CStdString charSetName = g_charsetConverter.getCharsetNameByLabel(m_vecCharsetLabels[g_stSettings.m_currentVideoSettings.m_Charset]);
+  g_guiSettings.SetString("subtitles.charset", charSetName);
+  g_charsetConverter.reset();
+  g_application.m_pPlayer->RestartSubtitleStream();
 }
 
 void CGUIDialogSubtitleSettings::Render()
@@ -307,11 +413,11 @@ CStdString CGUIDialogSubtitleSettings::FormatDelay(float value, float interval)
 {
   CStdString text;
   if (fabs(value) < 0.5f*interval)
-    text = "0.000s";
+    text = "0.0s";
   else if (value < 0)
-    text.Format(g_localizeStrings.Get(22004).c_str(), fabs(value));
+    text.Format("-%2.1f", fabs(value));
   else
-    text.Format(g_localizeStrings.Get(22005).c_str(), value);
+    text.Format("+%2.1f", fabs(value));
   return text;
 }
 
@@ -342,3 +448,19 @@ CStdString CGUIDialogSubtitleSettings::getCharsetLabelByPos(int pos)
   return empty;
 }
 
+void CGUIDialogSubtitleSettings::SetSubtitleTitle()
+{
+  CGUILabelControl* pControl = (CGUILabelControl *) GetControl(SUBTITLE_SETTINGS_TITLE);
+  if(!pControl) return;
+  CStdString subName;
+  g_application.m_pPlayer->GetSubtitleName(m_subtitleStream, subName);
+  subName.Trim();
+  if((!subName.Equals("Unknown")) && (!subName.Equals("(Invalid)")))
+  {
+    pControl->SetLabel(subName);
+  }
+  else
+  {
+    pControl->SetLabel("");
+  }
+}

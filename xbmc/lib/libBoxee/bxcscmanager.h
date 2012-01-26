@@ -18,10 +18,13 @@
 #include "bxapplicationsmanager.h"
 #include "bxsubscriptionsmanager.h"
 #include "bxservicesmanager.h"
+#include "bxentitlementsmanager.h"
 #include "bxsourcesmanager.h"
 #include "bxfeaturedmanager.h"
 #include "bxappboxmanager.h"
 #include "bxgenresmanager.h"
+#include "bxwebfavoritesmanager.h"
+#include "bxtrailersmanager.h"
 
 #include <SDL/SDL.h>
 
@@ -42,9 +45,10 @@ public:
   bool AddRequestFromServer(BoxeeScheduleTask& requestTask);
   
   bool GetRecommendations(BXBoxeeFeed& recommendationsList);
+  int GetRecommendationsSize();
   
-  bool GetQueue(BXBoxeeFeed& queueList);
-  int GetQueueSize();
+  bool GetQueue(BXBoxeeFeed& queueList, CQueueItemsType::QueueItemsTypeEnums queueType = CQueueItemsType::QIT_ALL);
+  int GetQueueSize(CQueueItemsType::QueueItemsTypeEnums queueType);
   void SetValidQueueSize(int validQueueSize);
   int GetValidQueueSize();
   bool IsInQueue(const std::string& boxeeId, const std::string& path);
@@ -57,6 +61,7 @@ public:
   bool GetUserApplications(BXBoxeeApplications& applicationsList);
   bool GetUserApplications(std::vector<BXApplicationItem>& applicationVec);
   bool UpdateUserApplicationsListNow();
+  bool UpdateGenresListNow();
   bool UpdateUserApplicationsList(unsigned long executionDelayInMS, bool repeat);
   bool IsInUserApplications(const std::string& id);
 
@@ -67,10 +72,23 @@ public:
   bool UpdateSubscriptionsList(unsigned long executionDelayInMS, bool repeat);
   bool IsInSubscriptions(const std::string& src);
   
+  bool GetWebFavorites(BXBoxeeWebFavorites& WebFavortiesList);
+  bool GetWebFavorites(std::vector<BXObject>& webFavoritesVec);
+  bool UpdateWebFavoritesListNow();
+  bool UpdateWebFavoritesList(unsigned long executionDelayInMS, bool repeat);
+  bool IsInWebFavorites(const std::string& src);
+
   bool GetServices(BXBoxeeServices& servicesList);
   bool GetServices(std::vector<BXServicesItem>& servicesVec);
   bool GetServicesIds(std::vector<std::string>& servicesIdsVec);
   bool IsRegisterToServices(const std::string& serviceIdentifier, CServiceIdentifierType::ServiceIdentifierTypeEnums identifierTypeEnum);
+
+  bool GetEntitlements(BXBoxeeEntitlements& entitlementsList);
+  bool GetEntitlements(std::vector<BXEntitlementsItem>& entitlementsVec);
+  bool GetEntitlementsIds(std::vector<std::string>& entitlementsIdsVec);
+  bool IsInEntitlements(const std::string& productsList);
+  bool UpdateUserEntitlementsNow();
+  bool UpdateUserEntitlements(unsigned long executionDelayInMS, bool repeat);
 
   bool GetSources(BXBoxeeSources& sourcesList);
   bool GetSources(std::vector<BXSourcesItem>& sourcesVec);
@@ -78,10 +96,16 @@ public:
   bool GetMovieSources(std::vector<BXSourcesItem>& sourcesVec);
   bool GetSourcesIds(std::vector<std::string>& sourcesIdsVec);
   bool IsInSources(const std::string& productsList);
-  
+
+  bool UpdateExcludedSourcesNow();
+  bool UpdateExcludedSources(unsigned long executionDelayInMS, bool repeat);
+  void SetExcludedSources(const std::string& excludedSources);
+  std::string GetExcludedSources();
+
   bool GetFeatured(BXBoxeeFeed& featuredList);
 
   bool GetAppBoxApplications(TiXmlDocument& applicationsList);
+  bool IsAppIdInAppBoxApplicationsList(const std::string& id);
   bool UpdateAppBoxApplicationsListNow();
   bool UpdateAppBoxApplicationsList(unsigned long executionDelayInMS, bool repeat);
   std::string GetAppBoxPopularitiesById(const std::string& id);
@@ -96,6 +120,12 @@ public:
   bool GetTvGenres(std::vector<GenreItem>& tvGenresVec);
   bool GetBadWords(std::vector<std::string>& badWordsVec);
 
+  bool GetMovieTrailerSections(std::vector<TrailerSectionItem>& movieTrailersVec);
+
+  bool UpdateAppsCategoriesListNow();
+  bool GetAppsCategories(std::vector<AppCategoryItem>& vecAppCategories);
+  std::string GetAppCategoryLabel(const std::string& id);
+
 private:
 
   bool InitializeUserLists();
@@ -107,10 +137,13 @@ private:
   BXApplicationsManager m_userApplicationsManager;
   BXSubscriptionsManager m_subscriptionsManager;
   BXServicesManager m_servicesManager;
+  BXEntitlementsManager m_entitlementsManager;
   BXSourcesManager m_sourcesManager;
   BXFeaturedManager m_featuredManager;
   BXAppBoxManager m_appBoxApplicationsManager;
   BXGenresManager m_genresManager;
+  BXWebFavoritesManager m_webFavoritesManager;
+  BXTrailerSectionsManager m_trailerSectionsManager;
 };
 
 } // namespace

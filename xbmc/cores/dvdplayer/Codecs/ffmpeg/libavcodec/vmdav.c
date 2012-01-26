@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/vmdav.c
+ * @file
  * Sierra VMD audio & video decoders
  * by Vladimir "VAG" Gneushev (vagsoft at mail.ru)
  * for more information on the Sierra VMD format, visit:
@@ -446,7 +446,7 @@ static av_cold int vmdaudio_decode_init(AVCodecContext *avctx)
     s->channels = avctx->channels;
     s->bits = avctx->bits_per_coded_sample;
     s->block_align = avctx->block_align;
-    avctx->sample_fmt = SAMPLE_FMT_S16;
+    avctx->sample_fmt = AV_SAMPLE_FMT_S16;
 
     av_log(s->avctx, AV_LOG_DEBUG, "%d channels, %d bits/sample, block align = %d, sample rate = %d\n",
             s->channels, s->bits, s->block_align, avctx->sample_rate);
@@ -565,9 +565,9 @@ static int vmdaudio_decode_frame(AVCodecContext *avctx,
  * Public Data Structures
  */
 
-AVCodec vmdvideo_decoder = {
+AVCodec ff_vmdvideo_decoder = {
     "vmdvideo",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_VMDVIDEO,
     sizeof(VmdVideoContext),
     vmdvideo_decode_init,
@@ -578,9 +578,9 @@ AVCodec vmdvideo_decoder = {
     .long_name = NULL_IF_CONFIG_SMALL("Sierra VMD video"),
 };
 
-AVCodec vmdaudio_decoder = {
+AVCodec ff_vmdaudio_decoder = {
     "vmdaudio",
-    CODEC_TYPE_AUDIO,
+    AVMEDIA_TYPE_AUDIO,
     CODEC_ID_VMDAUDIO,
     sizeof(VmdAudioContext),
     vmdaudio_decode_init,

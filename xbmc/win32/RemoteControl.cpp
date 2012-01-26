@@ -182,7 +182,7 @@ bool CWinRemoteControl::Initialize()
 				if (!RegisterRawInputDevices(rid, (UINT)3, (UINT) sizeof(rid[0])))
 				{
 					//ShowLastError();
-				  return false;
+				    return false;
 				}
 			}
 		}

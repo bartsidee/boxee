@@ -21,8 +21,8 @@
 
 #include "libavcodec/get_bits.h"
 #include "avformat.h"
-#include "id3v2.h"
 #include "apetag.h"
+#include "id3v1.h"
 
 #define MPC_FRAMESIZE  1152
 #define DELAY_FRAMES   32
@@ -45,10 +45,6 @@ typedef struct {
 static int mpc_probe(AVProbeData *p)
 {
     const uint8_t *d = p->buf;
-    if (ff_id3v2_match(d)) {
-        d += ff_id3v2_tag_len(d);
-    }
-    if (d+3 < p->buf+p->buf_size)
     if (d[0] == 'M' && d[1] == 'P' && d[2] == '+' && (d[3] == 0x17 || d[3] == 0x7))
         return AVPROBE_SCORE_MAX;
     return 0;
@@ -58,32 +54,10 @@ static int mpc_read_header(AVFormatContext *s, AVFormatParameters *ap)
 {
     MPCContext *c = s->priv_data;
     AVStream *st;
-    int t, ret;
-    int64_t pos = url_ftell(s->pb);
 
-    t = get_le24(s->pb);
-    if(t != MKTAG('M', 'P', '+', 0)){
-        uint8_t buf[ID3v2_HEADER_SIZE];
-        if (url_fseek(s->pb, pos, SEEK_SET) < 0)
-            return -1;
-        ret = get_buffer(s->pb, buf, ID3v2_HEADER_SIZE);
-        if (ret != ID3v2_HEADER_SIZE || !ff_id3v2_match(buf)) {
-            av_log(s, AV_LOG_ERROR, "Not a Musepack file\n");
-            return -1;
-        }
-        /* skip ID3 tags and try again */
-        t = ff_id3v2_tag_len(buf) - ID3v2_HEADER_SIZE;
-        av_log(s, AV_LOG_DEBUG, "Skipping %d(%X) bytes of ID3 data\n", t, t);
-        url_fskip(s->pb, t);
-        if(get_le24(s->pb) != MKTAG('M', 'P', '+', 0)){
-            av_log(s, AV_LOG_ERROR, "Not a Musepack file\n");
-            return -1;
-        }
-        /* read ID3 tags */
-        if (url_fseek(s->pb, pos, SEEK_SET) < 0)
-            return -1;
-        ff_id3v2_read(s);
-        get_le24(s->pb);
+    if(get_le24(s->pb) != MKTAG('M', 'P', '+', 0)){
+        av_log(s, AV_LOG_ERROR, "Not a Musepack file\n");
+        return -1;
     }
     c->ver = get_byte(s->pb);
     if(c->ver != 0x07 && c->ver != 0x17){
@@ -104,7 +78,7 @@ static int mpc_read_header(AVFormatContext *s, AVFormatParameters *ap)
     st = av_new_stream(s, 0);
     if (!st)
         return AVERROR(ENOMEM);
-    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
     st->codec->codec_id = CODEC_ID_MUSEPACK7;
     st->codec->channels = 2;
     st->codec->bits_per_coded_sample = 16;
@@ -115,13 +89,15 @@ static int mpc_read_header(AVFormatContext *s, AVFormatParameters *ap)
     st->codec->sample_rate = mpc_rate[st->codec->extradata[2] & 3];
     av_set_pts_info(st, 32, MPC_FRAMESIZE, st->codec->sample_rate);
     /* scan for seekpoints */
-    s->start_time = 0;
-    s->duration = (int64_t)c->fcount * MPC_FRAMESIZE * AV_TIME_BASE / st->codec->sample_rate;
+    st->start_time = 0;
+    st->duration = c->fcount;
 
     /* try to read APE tags */
     if (!url_is_streamed(s->pb)) {
         int64_t pos = url_ftell(s->pb);
         ff_ape_parse_tag(s);
+        if (!av_metadata_get(s->metadata, "", NULL, AV_METADATA_IGNORE_SUFFIX))
+            ff_id3v1_read(s);
         url_fseek(s->pb, pos, SEEK_SET);
     }
 
@@ -170,6 +146,8 @@ static int mpc_read_packet(AVFormatContext *s, AVPacket *pkt)
 
     pkt->data[0] = curbits;
     pkt->data[1] = (c->curframe > c->fcount);
+    pkt->data[2] = 0;
+    pkt->data[3] = 0;
 
     pkt->stream_index = 0;
     pkt->pts = cur;
@@ -234,7 +212,7 @@ static int mpc_read_seek(AVFormatContext *s, int stream_index, int64_t timestamp
 }
 
 
-AVInputFormat mpc_demuxer = {
+AVInputFormat ff_mpc_demuxer = {
     "mpc",
     NULL_IF_CONFIG_SMALL("Musepack"),
     sizeof(MPCContext),

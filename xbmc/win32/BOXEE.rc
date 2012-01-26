@@ -9,7 +9,8 @@
 //
 #include "windows.h"
 #include "..\utils\VersionInfo.h"
-#include "svn_rev.h"
+//#include "svn_rev.h"
+#define SNV_REV_NUM 1 // TODO: Fix
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -107,7 +108,8 @@ IDI_MAIN_ICON           ICON                    "..\\..\\media\\Boxee.ico"
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-
+
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

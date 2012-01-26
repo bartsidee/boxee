@@ -1,6 +1,6 @@
-INCLUDES=-I. -I.. -I../ffmpeg -I../../ -I../../linux -I../../utils -I../../../guilib -I../../../guilib/tinyXML -I../../FileSystem
+INCLUDES=-I. -I.. -I../../.. -I../../ -I../../linux -I../../utils -I../../../guilib -I../../../guilib/tinyXML -I../../FileSystem -ICodecs -ICodecs/ffmpeg
 
-CXXFLAGS+=-D__STDC_FORMAT_MACROS
+CXXFLAGS+=-D__STDC_FORMAT_MACROS -D__STDC_CONSTANT_MACROS
 
 SRCS=	DVDAudio.cpp \
 	DVDClock.cpp \
@@ -20,7 +20,8 @@ SRCS=	DVDAudio.cpp \
 	DVDFileInfo.cpp \
         DVDPlayerAudioResampler.cpp \
 	DVDTSCorrection.cpp \
-	Edl.cpp
+	Edl.cpp \
+	PacketCache.cpp
 
 LIB=	DVDPlayer.a
 

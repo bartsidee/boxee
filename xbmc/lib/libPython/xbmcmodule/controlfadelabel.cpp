@@ -41,6 +41,8 @@
 #include "control.h"
 #include "pyutil.h"
 
+#include "../../../placement_new.h"
+
 using namespace std;
 
 #ifndef __GNUC__
@@ -69,8 +71,8 @@ namespace PYXBMC
 
     self = (ControlFadeLabel*)type->tp_alloc(type, 0);
     if (!self) return NULL;
-    new(&self->strFont) string();
-    new(&self->vecLabels) std::vector<string>();    
+   PLACEMENT_NEW(&self->strFont) string();
+   PLACEMENT_NEW(&self->vecLabels) std::vector<string>();    
 
     // set up default values in case they are not supplied
     self->strFont = "font13";

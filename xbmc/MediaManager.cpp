@@ -42,6 +42,7 @@
 #include "tinyXML/tinyxml.h"
 #include "utils/SingleLock.h"
 #include "utils/log.h"
+#include "Application.h"
 
 #ifdef __APPLE__
 #include "PosixMountProvider.h"
@@ -152,8 +153,8 @@ void CMediaManager::GetNetworkLocations(VECSOURCES &locations)
   {
     CMediaSource share;
     share.strPath = m_locations[i].path;
-    CURL url(share.strPath);
-    url.GetURLWithoutUserDetails(share.strName);
+    CURI url(share.strPath);
+    share.strName = url.GetWithoutUserDetails();
     locations.push_back(share);
   }
 }

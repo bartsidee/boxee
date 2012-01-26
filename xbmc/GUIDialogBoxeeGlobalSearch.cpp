@@ -39,7 +39,7 @@ bool CGUIDialogBoxeeGlobalSearch::ShowAndGetInput(CStdString& aTextString, const
   pKeyboard->SetText(aTextString);
 
   // do this using a thread message to avoid render() conflicts
-  ThreadMessage tMsg = {TMSG_DIALOG_DOMODAL, WINDOW_DIALOG_BOXEE_GLOBAL_SEARCH, g_windowManager.GetActiveWindow()};
+  ThreadMessage tMsg(TMSG_DIALOG_DOMODAL, WINDOW_DIALOG_BOXEE_GLOBAL_SEARCH, g_windowManager.GetActiveWindow());
   g_application.getApplicationMessenger().SendMessage(tMsg, true);
   pKeyboard->Close();
 

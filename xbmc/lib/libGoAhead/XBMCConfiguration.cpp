@@ -561,7 +561,7 @@ int CXbmcConfiguration::SaveConfiguration( int eid, webs_t wp, CStdString& respo
 
 	// Save configuration to file
 	CStdString strPath(filename);
-  if (!CURL::IsFullPath(strPath))
+  if (!CURI::IsFullPath(strPath))
 	{
 		// only filename specified, so use our homedir as base.
     strPath = CUtil::AddFileToFolder("special://home/", filename);

@@ -23,8 +23,8 @@
 #define AVCODEC_DIRAC_H
 
 /**
- * @file libavcodec/dirac.h
- * Interfaces to Dirac Decoder/Encoder
+ * @file
+ * Interface to Dirac Decoder/Encoder
  * @author Marco Gerards <marco@gnu.org>
  */
 

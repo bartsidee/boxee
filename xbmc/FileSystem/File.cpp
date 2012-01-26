@@ -109,10 +109,10 @@ CFile::CFile()
 //*********************************************************************************************
 CFile::~CFile()
 {
+  if (m_pBuffer)
+    SAFE_DELETE(m_pBuffer);
   if (m_pFile)
     SAFE_DELETE(m_pFile);
-  if (m_pBuffer)
-    SAFE_DELETE(m_pBuffer);  
 }
 
 //*********************************************************************************************
@@ -148,34 +148,9 @@ bool CFile::Cache(const CStdString& _strFileName, const CStdString& _strDest, XF
     CFile newFile;
     if (CUtil::IsHD(strDest)) // create possible missing dirs
     {
-      vector<CStdString> tokens;
-      CStdString strDirectory;
+		CStdString strDirectory;
       CUtil::GetDirectory(strDest,strDirectory);
-      CUtil::RemoveSlashAtEnd(strDirectory);  // for the test below
-      if (!(strDirectory.size() == 2 && strDirectory[1] == ':'))
-      {
-        CURL url(strDirectory);
-        CStdString pathsep;
-#ifndef _LINUX        
-        pathsep = "\\";
-#else
-        pathsep = "/";
-#endif
-        CUtil::Tokenize(url.GetFileName(),tokens,pathsep.c_str());
-        CStdString strCurrPath;
-        // Handle special
-        if (!url.GetProtocol().IsEmpty()) {
-          pathsep = "/";
-          strCurrPath += url.GetProtocol() + "://";
-        } // If the directory has a / at the beginning, don't forget it
-        else if (strDirectory[0] == pathsep[0])
-          strCurrPath += pathsep;
-        for (vector<CStdString>::iterator iter=tokens.begin();iter!=tokens.end();++iter)
-        {
-          strCurrPath += *iter+pathsep;
-          CDirectory::Create(strCurrPath);
-        }
-      }
+      CDirectory::CreateRecursive(strDirectory);
     }
     if (CFile::Exists(strDest))
       CFile::Delete(strDest);
@@ -209,8 +184,6 @@ bool CFile::Cache(const CStdString& _strFileName, const CStdString& _strDest, XF
     float start = 0.0f;
     while (!finishedReading)
     {
-      g_application.ResetScreenSaver();
-
       iRead = file.Read(buffer.get(), iBufferSize);
       if (iRead == 0) 
       {
@@ -299,10 +272,10 @@ bool CFile::Open(const CStdString& strFileName, unsigned int flags)
   {
     CFileItem fileItem;
     fileItem.m_strPath = strFileName;
-    if ( (flags & READ_NO_CACHE) == 0 && fileItem.IsInternetStream() && !fileItem.IsMMS() && !fileItem.IsPicture())
+    if ( (flags & READ_NO_CACHE) == 0 && (fileItem.IsInternetStream() ) && !fileItem.IsMMS() && !fileItem.IsPicture())
       m_flags |= READ_CACHED;
 
-    CURL url(strFileName);
+    CURI url(strFileName);
     if (m_flags & READ_CACHED)
     {
       m_pFile = new CFileCache();
@@ -347,13 +320,10 @@ bool CFile::Open(const CStdString& strFileName, unsigned int flags)
       return false;
     }
 
-    if (m_flags & READ_BUFFERED)
+    if( m_pFile->GetChunkSize() && !(m_flags & READ_CHUNKED))
     {
-      if (m_pFile->GetChunkSize())
-      {
-        m_pBuffer = new CFileStreamBuffer(0);
-        m_pBuffer->Attach(m_pFile);
-      }
+      m_pBuffer = new CFileStreamBuffer(0);
+      m_pBuffer->Attach(m_pFile);
     }
 
     m_bitStreamStats.Start();
@@ -376,13 +346,10 @@ bool CFile::Open(const CStdString& strFileName, unsigned int flags)
 void CFile::Attach(IFile *pFile, unsigned int flags) {
   m_pFile = pFile;
   m_flags = flags;
-  if (m_flags & READ_BUFFERED)
+  if( m_pFile->GetChunkSize() && !(m_flags & READ_CHUNKED))
   {
-    if (m_pFile->GetChunkSize())
-    {
-      m_pBuffer = new CFileStreamBuffer(0);
-      m_pBuffer->Attach(m_pFile);
-    }
+    m_pBuffer = new CFileStreamBuffer(0);
+    m_pBuffer->Attach(m_pFile);
   }
 }
 
@@ -401,7 +368,7 @@ bool CFile::OpenForWrite(const CStdString& strFileName, bool bOverWrite)
 {
   try 
   {
-    CURL url(strFileName);
+    CURI url(strFileName);
 
     m_pFile = CFileFactory::CreateLoader(url);
     if (m_pFile && m_pFile->OpenForWrite(url, bOverWrite))
@@ -441,7 +408,7 @@ bool CFile::Exists(const CStdString& strFileName)
         return false;
     }
     
-    CURL url(strFileName);
+    CURI url(strFileName);
 
     auto_ptr<IFile> pFile(CFileFactory::CreateLoader(url));
     if (!pFile.get()) return false;
@@ -471,7 +438,7 @@ int CFile::Stat(const CStdString& strFileName, struct __stat64* buffer)
 {
   try
   {
-    CURL url(strFileName);
+    CURI url(strFileName);
 
     auto_ptr<IFile> pFile(CFileFactory::CreateLoader(url));
     if (!pFile.get()) return false;
@@ -793,7 +760,7 @@ bool CFile::Delete(const CStdString& strFileName)
 {
   try
   {
-    CURL url(strFileName);
+    CURI url(strFileName);
 
     auto_ptr<IFile> pFile(CFileFactory::CreateLoader(url));
     if (!pFile.get()) return false;
@@ -826,8 +793,8 @@ bool CFile::Rename(const CStdString& strFileName, const CStdString& strNewFileNa
 {
   try
   {
-    CURL url(strFileName);
-    CURL urlnew(strNewFileName);
+    CURI url(strFileName);
+    CURI urlnew(strNewFileName);
 
     auto_ptr<IFile> pFile(CFileFactory::CreateLoader(url));
     if (!pFile.get()) return false;
@@ -874,9 +841,8 @@ void CFileStreamBuffer::Attach(IFile *file)
 {
   m_file = file;
 
-  m_frontsize = m_file->GetChunkSize();
-  if(!m_frontsize)
-    m_frontsize = 1024;
+  // TODO tune the buffer size here
+  m_frontsize = CFile::GetChunkSize(m_file->GetChunkSize(), 64*1024);
 
   m_buffer = new char[m_frontsize+m_backsize];
   setg(0,0,0);
@@ -889,6 +855,7 @@ void CFileStreamBuffer::Detach()
   setp(0,0);
   delete[] m_buffer;
   m_buffer = NULL;
+  m_file = NULL;
 }
 
 CFileStreamBuffer::int_type CFileStreamBuffer::underflow()
@@ -933,25 +900,26 @@ CFileStreamBuffer::pos_type CFileStreamBuffer::seekoff(
   ios_base::openmode mode)
 {  
   // calculate relative offset
+  off_type pos  = m_file->GetPosition() - (egptr() - gptr());
   off_type offset2;
   if(way == ios_base::cur)
     offset2 = offset;
   else if(way == ios_base::beg)
-    offset2 = offset - m_file->GetPosition();
+    offset2 = offset - pos;
   else if(way == ios_base::end)
-    offset2 = m_file->GetLength() + offset - 1;
+    offset2 = offset + m_file->GetLength() - pos;
   else
-    offset2 = 0;
+    return streampos(-1);
 
   // a non seek shouldn't modify our buffer
   if(offset2 == 0)
-    return m_file->GetPosition() - (egptr() - gptr());
+    return pos;
 
   // try to seek within buffer
   if(gptr()+offset2 >= eback() && gptr()+offset2 < egptr())
   {
     gbump(offset2);
-    return m_file->GetPosition() - (egptr() - gptr());
+    return pos + offset2;
   }
 
   // reset our buffer pointer, will
@@ -1011,7 +979,7 @@ CFileStream::~CFileStream()
 }
 
 
-bool CFileStream::Open(const CURL& filename)
+bool CFileStream::Open(const CURI& filename)
 {
   Close();
 
@@ -1042,5 +1010,5 @@ void CFileStream::Close()
 
 bool CFileStream::Open(const CStdString& filename)
 { 
-  return Open(CURL(filename));
+  return Open(CURI(filename));
 }

@@ -42,6 +42,17 @@
 #include "utils/log.h"
 #include "tinyXML/tinyxml.h"
 #include "FileSystem/File.h"
+#include "HalServices.h"
+#include "RenderSystem.h"
+#include "BoxeeUtils.h"
+#ifdef HAS_INTEL_SMD
+#include <ismd_audio.h>
+#include <ismd_audio_ac3.h>
+#include <ismd_audio_ddplus.h>
+#include <ismd_audio_truehd.h>
+#include <ismd_audio_dts.h>
+#include "IntelSMDGlobals.h"
+#endif
 
 using namespace std;
 
@@ -263,24 +274,24 @@ void CGUISettings::Initialize()
   // My Weather settings
   AddGroup(2, 8);
   AddCategory(2, "weather", 16000);
-  AddString(1, "weather.areacode1", 14019, "USNY0996 - New York, NY", BUTTON_CONTROL_STANDARD);
-  AddString(0, "weather.areacode2", 14020, "UKXX0085 - London, United Kingdom", BUTTON_CONTROL_STANDARD);
-  AddString(0, "weather.areacode3", 14021, "JAXX0085 - Tokyo, Japan", BUTTON_CONTROL_STANDARD);
+  AddString(1, "weather.areacode1", 14019, "", BUTTON_CONTROL_STANDARD);
+  AddString(0, "weather.areacode2", 14020, "", BUTTON_CONTROL_STANDARD);
+  AddString(0, "weather.areacode3", 14021, "", BUTTON_CONTROL_STANDARD);
   AddSeparator(0, "weather.sep1");
   AddString(0, "weather.plugin", 23000, "", SPIN_CONTROL_TEXT, true);
   AddSeparator(0, "weather.sep2");
   AddString(0, "weather.jumptolocale", 20026, "", BUTTON_CONTROL_STANDARD);
+  AddString(0, "weather.settings", 20254, "", BUTTON_CONTROL_STANDARD);
+  AddBool(0,   "weather.autoset", 54750, "", BUTTON_CONTROL_STANDARD);
 
   // My Music Settings
   AddGroup(3, 2);
   AddCategory(3, "mymusic", 16000);
-#ifdef HAS_EMBEDDED
-  AddString(1, "mymusic.visualisation", 250, "opengl_spectrum.vis", SPIN_CONTROL_TEXT);
-#elif defined(_LINUX)
+#if defined(_LINUX)
   AddString(1, "mymusic.visualisation", 250, "ProjectM.vis", SPIN_CONTROL_TEXT);
 #elif defined(_WIN32)
 #ifdef HAS_DX
-  AddString(1, "mymusic.visualisation", 250, "MilkDrop.vis", SPIN_CONTROL_TEXT);
+  AddString(1, "mymusic.visualisation", 250, "MilkDrop_win32dx.vis", SPIN_CONTROL_TEXT);
 #else
   AddString(1, "mymusic.visualisation", 250, "ProjectM.vis", SPIN_CONTROL_TEXT);
 #endif
@@ -291,6 +302,12 @@ void CGUISettings::Initialize()
   AddBool(0, "mymusic.clearplaylistsonend",239,false);
   AddSeparator(0, "mymusic.sep2");
   AddString(0,"mymusic.recordingpath",20005,"select writable folder",BUTTON_CONTROL_PATH_INPUT,false,657);
+
+  AddCategory(3, "locale", 20026);
+  AddBool(0, "filelists.filtergeoip2", 53293, true);
+  AddCategory(3, "server", 54739);
+  //AddString(0, "server.environment",90100,"Production", BUTTON_CONTROL_STANDARD);
+  AddString(1, "server.environment2",90106,"", EDIT_CONTROL_INPUT);
 
   AddCategory(0,"musiclibrary",14022);
   AddBool(0, "musiclibrary.albumartistsonly", 13414, false);
@@ -367,12 +384,26 @@ void CGUISettings::Initialize()
   AddGroup(4, 13000);
 
   AddCategory(4, "version", 51950);
-  AddString(0,   "version.version", 51950, "", BUTTON_CONTROL_STANDARD);
+  AddString(0,   "version.version", 51951, "", BUTTON_CONTROL_STANDARD);
   AddString(0,   "version.builddate", 51949, "", BUTTON_CONTROL_STANDARD);
   AddString(0,   "version.ipaddress", 150, "", BUTTON_CONTROL_STANDARD);
   AddString(0,   "version.totalmemory", 51952, "", BUTTON_CONTROL_STANDARD);
   AddString(0,   "version.screenresolution", 13287, " ", BUTTON_CONTROL_STANDARD);
   AddString(0,   "version.macaddress", 149, " ", BUTTON_CONTROL_STANDARD);
+
+#ifdef HAS_EMBEDDED
+  AddString(0,   "version.wiredmacaddress", 54725, " ", BUTTON_CONTROL_STANDARD);
+  AddString(0,   "version.wirelessmacaddress", 54724, " ", BUTTON_CONTROL_STANDARD);
+  AddString(0,   "version.device", 54726, " ", BUTTON_CONTROL_STANDARD);
+  AddString(0,   "version.devicesn", 54727, " ", BUTTON_CONTROL_STANDARD);
+  AddString(0,   "version.firmware", 54728, " ", BUTTON_CONTROL_STANDARD);
+#endif
+
+#ifdef HAS_EMBEDDED
+  AddCategory(4, "timezone", 54720);
+  AddString(0, "timezone.country", 54722, "", SPIN_CONTROL_TEXT);
+  AddString(1, "timezone.city", 54723, "", SPIN_CONTROL_TEXT);
+#endif
 
   // advanced only configuration
   AddBool(1, "system.debuglogging", 20191, false);
@@ -441,6 +472,7 @@ void CGUISettings::Initialize()
 
   AddBool(3, "boxee.showpostplay", 51524, true);
 
+#ifdef  HAS_DVD_DRIVE
   AddCategory(4, "autorun", 447);
   if (CSysInfo::IsAppleTV())
   {
@@ -454,6 +486,7 @@ void CGUISettings::Initialize()
     AddBool(2, "autorun.vcd", 241, true);
     AddBool(3, "autorun.cdda", 242, true);    
   }
+#endif
   
   AddCategory(4, "cache", 439);
   AddInt(0, "cache.harddisk", 14025, 256, 0, 256, 4096, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
@@ -491,20 +524,30 @@ void CGUISettings::Initialize()
 #if defined(_LINUX) && !defined(__APPLE__)
   AddInt(0, "audiooutput.library", 53266, AUDIO_LIBRARY_ALSA, AUDIO_LIBRARY_ALSA, 1, AUDIO_LIBRARY_PULSEAUDIO, SPIN_CONTROL_TEXT);
 #endif
-  AddInt(3, "audiooutput.mode", 337, AUDIO_ANALOG, AUDIO_ANALOG, 1, AUDIO_DIGITAL, SPIN_CONTROL_TEXT);  
-  AddBool(4, "audiooutput.ac3passthrough", 364, true);
-  AddBool(5, "audiooutput.dtspassthrough", 254, true);
+
+#if defined(HAS_INTEL_SMD)
+  AddInt(3, "audiooutput.mode", 337, AUDIO_ALL_OUTPUTS, AUDIO_ANALOG, 1, AUDIO_ALL_OUTPUTS, SPIN_CONTROL_TEXT);
+#elif defined(HAS_AUDIO_HDMI)
+  AddInt(3, "audiooutput.mode", 337, AUDIO_DIGITAL_HDMI, AUDIO_ANALOG, 1, AUDIO_DIGITAL_HDMI, SPIN_CONTROL_TEXT);
+#else
+  AddInt(3, "audiooutput.mode", 337, AUDIO_ANALOG, AUDIO_ANALOG, 1, AUDIO_DIGITAL_SPDIF, SPIN_CONTROL_TEXT);
+#endif
+
+  AddBool(4, "audiooutput.ac3passthrough", 364, false);
+  AddBool(5, "audiooutput.dtspassthrough", 254, false);
+  
 #if defined(_WIN32)
-  //AddBool(6, "audiooutput.eac3passthrough", 54120, false); // don't show as this doesn't work yet.
-  AddBool(7, "audiooutput.truehdpassthrough", 54121, false);
-  AddBool(8, "audiooutput.dtshdpassthrough", 54122, false);
+  AddBool(6, "audiooutput.eac3passthrough", 54120, false);    // DD+
+  AddBool(7, "audiooutput.truehdpassthrough", 54121, false);  // TrueHD
+  AddBool(8, "audiooutput.dtshdpassthrough", 54122, false);   // DTS-HD
+  AddBool(9, "audiooutput.lpcm71passthrough", 54124, false);  // LPCM 7.1
 #endif
   
 #ifdef __APPLE__
   AddString(6, "audiooutput.audiodevice", 545, "Default", SPIN_CONTROL_TEXT);
-  //AddString(7, "audiooutput.passthroughdevice", 546, "S/PDIF", BUTTON_CONTROL_INPUT);
   AddBool(7, "audiooutput.downmixmultichannel", 548, true);
-#elif defined(_LINUX)
+  AddBool(8,"audiooutput.controlmastervolume", 549, true);
+#elif defined(HAS_ALSA)
   AddSeparator(6, "audiooutput.sep1");
   AddString(7, "audiooutput.audiodevice", 545, "default", SPIN_CONTROL_TEXT);
   AddString(8, "audiooutput.customdevice", 1300, "", EDIT_CONTROL_INPUT);
@@ -513,15 +556,43 @@ void CGUISettings::Initialize()
   AddString(11, "audiooutput.custompassthrough", 1301, "", EDIT_CONTROL_INPUT);
   AddSeparator(12, "audiooutput.sep3");
   AddBool(13, "audiooutput.downmixmultichannel", 548, true);
+  AddBool(14,"audiooutput.controlmastervolume", 549, true);
 #elif defined(_WIN32)
   AddString(9, "audiooutput.audiodevice", 545, "Default", SPIN_CONTROL_TEXT);
   AddBool(10, "audiooutput.downmixmultichannel", 548, true);
   AddBool(11,"audiooutput.controlmastervolume", 549, true);
+#elif defined(HAS_INTEL_SMD)
+  AddBool(6, "audiooutput.eac3passthrough", 54120, false);    // DD+
+  AddBool(7, "audiooutput.truehdpassthrough", 54121, false);  // TrueHD
+  AddBool(8, "audiooutput.dtshdpassthrough", 54122, false);   // DTS-HD
+  AddBool(9, "audiooutput.lpcm71passthrough", 54124, false);  // LPCM 7.1
+  AddBool(0,"audiooutput.controlmastervolume", 549, false);
+#endif
+
+  AddBool(15,"audiooutput.controlvolume", 54156, false);
+
+#ifdef HAS_INTEL_SMD
+  AddInt(16, "audiooutput.dd_truehd_drc", 54157, DD_TRUEHD_DRC_AUTO, DD_TRUEHD_DRC_AUTO, 1, DD_TRUEHD_DRC_ON, SPIN_CONTROL_TEXT);
+  AddInt(17, "audiooutput.dd_truehd_drc_percentage", 54161, DD_TRUEHD_DRC_PRC_MIN, DD_TRUEHD_DRC_PRC_MIN, 1, DD_TRUEHD_DRC_PRC_MAX, SPIN_CONTROL_INT);
+  AddInt(18, "audiooutput.downmix", 54162, (int)ISMD_AUDIO_DOWNMIX_DEFAULT, (int)ISMD_AUDIO_DOWNMIX_DEFAULT, 1, (int)ISMD_AUDIO_DOWNMIX_2_0_DOLBY_PRO_LOGIC_II, SPIN_CONTROL_INT);
+  AddInt(20, "audiooutput.ddplus_output_config", 54163, (int)ISMD_AUDIO_DDPLUS_OUTPUT_CONFIGURATION_2_0_LR, (int)ISMD_AUDIO_DDPLUS_OUTPUT_CONFIGURATION_1_0_C, 1, (int)ISMD_AUDIO_DDPLUS_OUTPUT_CONFIGURATION_2_0_LR, SPIN_CONTROL_INT);
+  AddInt(21, "audiooutput.ddplus_lfe_channel_config", 54164, (int)ISMD_AUDIO_DDPLUS_LFE_CHANNEL_OUTPUT_NONE, (int)ISMD_AUDIO_DDPLUS_LFE_CHANNEL_OUTPUT_NONE, 1, (int)ISMD_AUDIO_DDPLUS_LFE_CHANNEL_OUTPUT_DUAL, SPIN_CONTROL_INT);
+  AddBool(22, "audiooutput.enable_audio_output_delay", 54165, true);
 #endif
 
   AddCategory(4, "debug", 54080);
+#ifdef HAS_EMBEDDED
+  AddInt(1,  "debug.loglevel", 54081, LOGNONE, LOGDEBUG, 1, LOGNONE, SPIN_CONTROL_TEXT);  
+#else
   AddInt(1,  "debug.loglevel", 54081, LOGINFO, LOGDEBUG, 1, LOGNONE, SPIN_CONTROL_TEXT);  
-  AddBool(2, "debug.showinfoline",54082,false);
+#endif
+#ifndef _WIN32
+  AddBool(2, "debug.syslogenabled", 54085, false);
+  AddString(3, "debug.syslogaddr", 54084, "", EDIT_CONTROL_INPUT);
+#else
+  AddBool(0, "debug.syslogenabled", 54085, false);
+  AddString(0, "debug.syslogaddr", 54084, "", EDIT_CONTROL_INPUT);
+#endif
     
   AddCategory(4, "masterlock", 12360);
   AddString(1, "masterlock.lockcode"       , 20100, "-", BUTTON_CONTROL_STANDARD);
@@ -534,6 +605,12 @@ void CGUISettings::Initialize()
   // hidden masterlock settings
   AddInt(0,"masterlock.maxretries", 12364, 3, 3, 1, 100, SPIN_CONTROL_TEXT);
 
+#ifdef HAS_EMBEDDED
+  AddCategory(4, "update", 53251);
+  AddString(0, "update.status", 53252, "", BUTTON_CONTROL_STANDARD);
+  AddString(0, "update.check.for.update", 53253, "", BUTTON_CONTROL_STANDARD);
+  AddBool(0, "update.allow_beta", 53298, false);
+#endif
   AddCategory(4, "advanced", 16005);
 
   // video settings
@@ -541,9 +618,13 @@ void CGUISettings::Initialize()
   AddCategory(5, "myvideos", 16000);
   AddBool(0, "myvideos.treatstackasfile", 20051, true);
   AddInt(0, "myvideos.resumeautomatically", 12017, RESUME_ASK, RESUME_NO, 1, RESUME_ASK, SPIN_CONTROL_TEXT);
-  AddBool(1,"myvideos.pausewhenexit",12026, false);
+  //AddBool(1,"myvideos.pausewhenexit",12026, false);
+  AddBool(1,"myvideos.showmessagewhenexit",54772, true);
+
   AddBool(2, "myvideos.autothumb",12024, true);
   AddInt(3, "myvideos.videosize", 12025, 50, 0, 10, 700, SPIN_CONTROL_INT);
+  //AddBool(4, "filelists.showhidden", 21330, false);
+  AddBool(5, "sort.showstarter",51958, false);
   AddBool(0, "myvideos.cleanstrings", 20418, false);
   AddBool(0, "myvideos.extractflags",20433,false);
 
@@ -570,16 +651,15 @@ void CGUISettings::Initialize()
 #else
   AddBool(2, "videoplayer.hwaccel", 53269, false);
 #endif
-#ifdef HAVE_LIBVDPAU  
-  AddInt(1, "videoplayer.rendermethod", 13415, RENDER_METHOD_AUTO, RENDER_METHOD_AUTO, 1, RENDER_METHOD_VDPAU, SPIN_CONTROL_TEXT);
-#elif defined(__APPLE__)
+#if defined(__APPLE__)
   bool bATV = g_sysinfo.IsAppleTV();
-  AddInt(1, "videoplayer.rendermethod", 13415, bATV?RENDER_METHOD_ARB:RENDER_METHOD_AUTO, RENDER_METHOD_AUTO, 1, RENDER_METHOD_SOFTWARE, SPIN_CONTROL_TEXT);
+  AddInt(1, "videoplayer.rendermethod", 13415, bATV?RENDER_METHOD_ARB:RENDER_METHOD_GLSL, RENDER_METHOD_AUTO, 1, RENDER_METHOD_SOFTWARE, SPIN_CONTROL_TEXT);
 #elif defined(HAS_DX) || defined(HAS_EMBEDDED)
   AddInt(0, "videoplayer.rendermethod", 13415, RENDER_METHOD_AUTO, RENDER_METHOD_AUTO, 1, RENDER_METHOD_AUTO, SPIN_CONTROL_TEXT);
 #else
-  AddInt(1, "videoplayer.rendermethod", 13415, RENDER_METHOD_AUTO, RENDER_METHOD_AUTO, 1, RENDER_METHOD_SOFTWARE, SPIN_CONTROL_TEXT);
+  AddInt(1, "videoplayer.rendermethod", 13415, RENDER_METHOD_AUTO, RENDER_METHOD_GLSL, 1, RENDER_METHOD_SOFTWARE, SPIN_CONTROL_TEXT);
 #endif
+
   AddInt(0, "videoplayer.displayresolution", 169, (int)RES_DESKTOP, (int)RES_WINDOW, 1, (int)RES_CUSTOM+MAX_RESOLUTIONS, SPIN_CONTROL_TEXT);
   AddBool(0, "videoplayer.adjustrefreshrate", 170, false);
 #ifdef HAVE_LIBVDPAU
@@ -624,12 +704,24 @@ void CGUISettings::Initialize()
   AddSeparator(23, "videoplayer.sep5");
   AddBool(0, "videoplayer.teletextenabled", 23050, true);
 
-  AddCategory(5, "subtitles", 287);
+#ifdef HAS_INTEL_SMD
+  AddCategory(4, "videoplayback", 291);
+  AddInt(1, "videoplayback.interlacemode", 57300, INTERLACE_MODE_AUTO, INTERLACE_MODE_AUTO, 1, INTERLACE_MODE_NEVER, SPIN_CONTROL_TEXT);
+  AddBool(2, "videoplayback.deringing", 57310, true);
+  AddBool(3, "videoplayback.gaussian", 57315, true);
+#endif
+
+  AddCategory(5, "audioplayback", 291);
+  AddString(7, "audioplayback.preferredlanguage", 57290, "Default", SPIN_CONTROL_TEXT);
+
+  AddCategory(6, "subtitles", 287);
   AddString(1, "subtitles.font", 288, "boxee.ttf", SPIN_CONTROL_TEXT);
   AddInt(2, "subtitles.height", 289, 30, 16, 2, 74, SPIN_CONTROL_TEXT); // use text as there is a disk based lookup needed
   AddInt(3, "subtitles.style", 736, FONT_STYLE_BOLD, FONT_STYLE_NORMAL, 1, FONT_STYLE_BOLD_ITALICS, SPIN_CONTROL_TEXT);
   AddInt(4, "subtitles.color", 737, 1 /* default white */, SUBTITLE_COLOR_START, 1, SUBTITLE_COLOR_END, SPIN_CONTROL_TEXT);
   AddString(5, "subtitles.charset", 735, "DEFAULT", SPIN_CONTROL_TEXT);
+  AddBool(6, "subtitles.enablesubtitlesbydefault", 13248, false);
+  AddString(7, "subtitles.preferredlanguage", 57290, "Default", SPIN_CONTROL_TEXT);
   AddSeparator(0, "subtitles.sep1");
   AddBool(0, "subtitles.searchrars", 13249, false);
   AddSeparator(0,"subtitles.sep2");
@@ -661,7 +753,7 @@ void CGUISettings::Initialize()
 
   if (g_application.IsStandAlone())
   {
-#ifndef __APPLE__
+#ifdef HAS_EMBEDDED
     AddString(1, "network.interface",775,"", SPIN_CONTROL_TEXT);
     AddInt(2, "network.assignment", 715, NETWORK_DHCP, NETWORK_DHCP, 1, NETWORK_DISABLED, SPIN_CONTROL_TEXT);
     AddString(3, "network.ipaddress", 719, "0.0.0.0", EDIT_CONTROL_IP_INPUT);
@@ -670,11 +762,9 @@ void CGUISettings::Initialize()
     AddString(6, "network.dns", 722, "0.0.0.0", EDIT_CONTROL_IP_INPUT);
     AddString(7, "network.dnssuffix", 22002, "", EDIT_CONTROL_INPUT, true);
     AddString(8, "network.essid", 776, "0.0.0.0", BUTTON_CONTROL_STANDARD);
-    AddInt(9, "network.enc", 778, ENC_NONE, ENC_NONE, 1, ENC_WPA2, SPIN_CONTROL_TEXT);
-    AddString(10, "network.key", 777, "0.0.0.0", EDIT_CONTROL_INPUT);
-#ifndef _WIN32
+    AddInt(0, "network.enc", 778, AUTH_DONTCARE, AUTH_DONTCARE, 1, AUTH_WPA2PSK, SPIN_CONTROL_TEXT);
+    AddString(0, "network.key", 777, "0.0.0.0", EDIT_CONTROL_INPUT);
     AddString(11, "network.save", 779, "", BUTTON_CONTROL_STANDARD);
-#endif
     AddSeparator(12, "network.sep1");
 #endif
   }
@@ -702,6 +792,7 @@ void CGUISettings::Initialize()
 #endif
 #ifdef HAS_WEB_SERVER
   AddBool(6,  "servers.webserver",        263, true);
+  AddString(10,"server.hostname",1052, BoxeeUtils::GetPlatformDefaultHostName(), EDIT_CONTROL_INPUT);
   AddString(7,"servers.webserverport",    730, "8800", EDIT_CONTROL_NUMBER_INPUT, false, 730);
   AddString(0,"servers.webserverusername",1048, "boxee", EDIT_CONTROL_INPUT);
   AddString(9,"servers.webserverpassword",733, "", EDIT_CONTROL_HIDDEN_INPUT, true, 733);
@@ -720,19 +811,41 @@ void CGUISettings::Initialize()
   AddString(3, "smb.winsserver",  1207,   "",  EDIT_CONTROL_IP_INPUT);
   AddString(4, "smb.workgroup",   1202,   "WORKGROUP", EDIT_CONTROL_INPUT, false, 1202);
 #endif
+#if(defined(_WIN32))
+  AddBool(5, "smb.agressivescan2", 1205, false);
+#else
+  AddBool(5, "smb.agressivescan2", 1205, true);
+#endif
 #ifdef _LINUX
   AddBool  (0, "smb.mountshares", 1208,   false);
 #endif
   AddBool  (0, "smb.singleconnection", 1209,   false);
 
+#ifdef HAS_EMBEDDED
+  AddCategory(6, "smbd", 54700);
+  AddBool(0,  "smbd.enable",      54702, false);
+  AddString(1, "smbd.password",    54703,   "", EDIT_CONTROL_HIDDEN_INPUT, true, 54703);
+  AddString(1, "smbd.workgroup",    54704,   "WORKGROUP", EDIT_CONTROL_INPUT, true, 54704);
+  //AddString(1, "smbd.hostname",    54705,   "boxeebox", EDIT_CONTROL_INPUT, true, 54705);
+#endif
+
+#ifdef HAS_AIRPLAY
+  AddCategory(7, "airplay", 54700);
+  AddBool(1, "airplay2.enable", 54753, true);
+#endif
+
+  //AddCategory(6, "afp", 57500);
+  //AddString(1, "afp.username",    1203,   "", EDIT_CONTROL_INPUT, true, 1203);
+  //AddString(2, "afp.password",    1204,   "", EDIT_CONTROL_HIDDEN_INPUT, true, 1204);
+
   AddCategory(0, "upnp", 20110);
-  AddBool(0,     "upnp.client", 20111, true);
-  AddBool(0,     "upnp.renderer", 21881, false);
+  AddBool(0,    "upnp.client", 20111, true);
+  AddBool(0, "upnp.renderer", 21881, false);
   AddSeparator(0,"upnp.sep1");
-  AddBool(0,     "upnp.server", 21360, false);  
-  AddString(0,   "upnp.musicshares", 21361, "", BUTTON_CONTROL_STANDARD);
-  AddString(0,   "upnp.videoshares", 21362, "", BUTTON_CONTROL_STANDARD);
-  AddString(0,   "upnp.pictureshares", 21363, "", BUTTON_CONTROL_STANDARD);
+  AddBool(0, "upnp.server", 21360, false);  
+  AddString(0, "upnp.musicshares", 21361, "", BUTTON_CONTROL_STANDARD);
+  AddString(0, "upnp.videoshares", 21362, "", BUTTON_CONTROL_STANDARD);
+  AddString(0, "upnp.pictureshares", 21363, "", BUTTON_CONTROL_STANDARD);
 
   // remote events settings
 #ifdef HAS_EVENT_SERVER
@@ -766,11 +879,11 @@ void CGUISettings::Initialize()
   AddBool(0, "lookandfeel.enablerssfeeds",13305,  true);
   AddString(0, "lookandfeel.rssedit", 21435, "", BUTTON_CONTROL_STANDARD);
   AddSeparator(0, "lookandfeel.sep3");
-  AddBool(12, "lookandfeel.enablemouse", 21369, true);
+  AddBool(12, "lookandfeel.enablemouse", 21369, false);
 
   AddCategory(7, "locale", 20026);
   AddString(1, "locale.country", 20026, "USA", SPIN_CONTROL_TEXT);
-  AddString(2, "locale.language",248,"english", SPIN_CONTROL_TEXT);
+  AddString(2, "locale.language",248,"english", BUTTON_CONTROL_STANDARD);
   AddString(3, "locale.charset",802,"DEFAULT", SPIN_CONTROL_TEXT); // charset is set by the language file
   AddSeparator(4, "locale.sep1");
   AddString(5, "locale.keyboard1",54071,"n/a", SPIN_CONTROL_TEXT);
@@ -805,6 +918,12 @@ void CGUISettings::Initialize()
     AddInt(1, "videoscreen.resolution",169,(int)RES_DESKTOP, (int)RES_WINDOW, 1, (int)RES_CUSTOM+MAX_RESOLUTIONS, SPIN_CONTROL_TEXT);
     AddString(2, "videoscreen.testresolution",13109,"", BUTTON_CONTROL_STANDARD);    
   }
+
+  // save the actual resulotion since the order is not always saved
+  AddInt(0, "videoscreen.width", 0, 0, 0, 1, 1920, SPIN_CONTROL_INT);
+  AddInt(0, "videoscreen.height", 0, 0, 0, 1, 1080, SPIN_CONTROL_INT);
+  AddFloat(0, "videoscreen.refresh", 0, 0, 0, 1, 60, SPIN_CONTROL_FLOAT);
+  AddBool(9, "videoscreen.interlace", 0, false);
 
 #if defined (__APPLE__) || defined(_WIN32) 
   if (CSysInfo::IsAppleTV())
@@ -841,8 +960,26 @@ void CGUISettings::Initialize()
 #endif
   AddBool(showSetting ? 2 : 0, "videoscreen.fakefullscreen", 14083, fakeFullScreen);
   AddSeparator(4, "videoscreen.sep1");
-#endif
+#endif  
+#ifdef HAS_EMBEDDED
+  AddInt(0, "videoscreen.vsync", 13105, VSYNC_ALWAYS, VSYNC_DISABLED, 1, VSYNC_ALWAYS, SPIN_CONTROL_TEXT);
+#else
   AddInt(8, "videoscreen.vsync", 13105, DEFAULT_VSYNC, VSYNC_DISABLED, 1, VSYNC_ALWAYS, SPIN_CONTROL_TEXT);
+#endif
+  AddBool(9, "videoscreen.hiresrendering", 13622, true);
+#ifdef HAS_GL
+  AddString(10, "videoscreen.testbadpixels",54850,"", BUTTON_CONTROL_STANDARD);
+#else
+  AddString(0, "videoscreen.testbadpixels",54850,"", BUTTON_CONTROL_STANDARD);
+#endif
+#ifdef HAS_EMBEDDED
+  AddInt(11,"videoscreen.hdmioutput",54874, HDMI_OUTPUT_RGB_LOW, HDMI_OUTPUT_RGB_LOW, 1, HDMI_OUTPUT_COUNT - 1, SPIN_CONTROL_TEXT);
+  AddInt(11,"videoscreen.hdmipixeldepth",54875, HDMI_PIXEL_DEPTH_24, HDMI_PIXEL_DEPTH_24, 1, HDMI_PIXEL_DEPTH_COUNT - 1, SPIN_CONTROL_TEXT);
+  AddBool(12,"videoscreen.tv3dfc", 54884, false);
+  AddInt(13,"videoscreen.mode3d",54880, MODE_3D_NONE, MODE_3D_NONE, 1, MODE_3D_OU, SPIN_CONTROL_TEXT);
+  AddBool(0, "videoscreen.forceedid", 54873, false);
+#endif
+
   AddCategory(7, "filelists", 14018);
   AddBool(0, "filelists.hideparentdiritems", 13306, true);
   AddBool(2, "filelists.hideextensions", 497, false);
@@ -852,12 +989,15 @@ void CGUISettings::Initialize()
   AddBool(0, "filelists.allowfiledeletion", 14071, false);
   AddBool(0, "filelists.disableaddsourcebuttons", 21382,  true);
   AddSeparator(9, "filelists.sep2");
-  AddBool(10, "filelists.showhidden", 21330, false);
   AddSeparator(11, "filelists.sep3");
-  AddBool(12, "filelists.filtergeoip", 53293, true);
   AddSeparator(13, "filelists.sep4");
   AddBool(14, "filelists.filteradult", 53290, true);
   AddString(15, "filelists.setadultcode", 53292, "", BUTTON_CONTROL_STANDARD);      
+
+  AddCategory(7, "menu", 54830);
+  AddString(1, "menu.showsdefault", 54831,"Favorites", SPIN_CONTROL_TEXT);
+  AddString(2, "menu.moviesdefault", 54832, "Files", SPIN_CONTROL_TEXT);
+  AddString(3, "menu.appsdefault", 54833, "All", SPIN_CONTROL_TEXT);
 
   AddCategory(7, "screensaver", 360);
   AddString(1, "screensaver.mode", 356, "SlideShow", SPIN_CONTROL_TEXT);
@@ -868,14 +1008,14 @@ void CGUISettings::Initialize()
   AddBool(0, "screensaver.uselock",20140,false);
   // Note: Application.cpp might hide powersaving settings if not supported.
   AddSeparator(6, "screensaver.sep_powersaving");
+#ifdef HAS_EMBEDDED
+  AddInt(7, "screensaver.powersavingtime", 1450, 60, 0, 5, 4 * 60, SPIN_CONTROL_INT_PLUS, MASK_MINS, TEXT_OFF);
+#else
   AddInt(7, "screensaver.powersavingtime", 1450, 0, 0, 5, 4 * 60, SPIN_CONTROL_INT_PLUS, MASK_MINS, TEXT_OFF);
+#endif
   AddSeparator(8, "screensaver.sep1");
   AddInt(9, "screensaver.dimlevel", 362, 20, 0, 10, 80, SPIN_CONTROL_INT_PLUS, MASK_PERCENT);
-#ifndef HAS_EMBEDDED
   AddPath(10, "screensaver.slideshowpath", 774, "special://xbmc/media/boxee_screen_saver", BUTTON_CONTROL_PATH_INPUT, false, 657);
-#else
-  AddPath(0, "screensaver.slideshowpath", 774, "special://xbmc/media/boxee_screen_saver", BUTTON_CONTROL_PATH_INPUT, false, 657);
-#endif
 
   AddCategory(7, "window", 0);
   AddInt(0, "window.width",  0, 854, 10, 1, INT_MAX, SPIN_CONTROL_INT);
@@ -883,10 +1023,10 @@ void CGUISettings::Initialize()
 
   AddPath(0,"system.playlistspath",20006,"set default",BUTTON_CONTROL_PATH_INPUT,false);
 
-  AddCategory(7, "background", 53130);
+  /*AddCategory(7, "background", 53130);
   AddPath(0,   "background.imagefile", 51946, "", BUTTON_CONTROL_PATH_INPUT, false, 657);
   AddPath(0,   "background.imagefolder", 51947, "", BUTTON_CONTROL_PATH_INPUT, false, 657);
-  AddString(0,   "background.remark", 53131, "", BUTTON_CONTROL_STANDARD);
+  AddString(0,   "background.remark", 53131, "", BUTTON_CONTROL_STANDARD);*/
 
   // My Weather settings
   AddGroup(2, 8);
@@ -895,18 +1035,72 @@ void CGUISettings::Initialize()
   AddString(0, "weather.areacode2", 14020, "UKXX0085 - London, United Kingdom", BUTTON_CONTROL_STANDARD);
   AddString(0, "weather.areacode3", 14021, "CAXX0343 - Ottawa, Canada", BUTTON_CONTROL_STANDARD);
   AddSeparator(0, "weather.sep1");
-  AddString(0, "weather.jumptolocale", 20026, "", BUTTON_CONTROL_STANDARD);
+  AddString(0, "weather.jumptolocale", 20026, "", BUTTON_CONTROL_STANDARD);  
 
   AddCategory(7, "advanced", 16005);
 
-  AddString(0, "background.reset", 51957, "", BUTTON_CONTROL_STANDARD);
+  //AddString(0, "background.reset", 51957, "", BUTTON_CONTROL_STANDARD);
 
   AddString(0, "personal.feeds", 801, "", BUTTON_CONTROL_STANDARD);
 
   AddPath(0,   "erase.db", 51944, "", BUTTON_CONTROL_STANDARD);
   AddPath(0,   "erase.thumb", 51956, "", BUTTON_CONTROL_STANDARD);
+  AddPath(0,   "erase.settings", 51577, "", BUTTON_CONTROL_STANDARD);
 
+#ifdef HAS_EMBEDDED
+  AddPath(0,   "ftu.run", 54750, "", BUTTON_CONTROL_STANDARD);
+#endif
 
+#ifdef HAS_DVB
+  AddBool(0,   "ota.run", "", false, BUTTON_CONTROL_STANDARD);
+  AddString(0, "ota.country", "", "", BUTTON_CONTROL_STANDARD);
+  AddString(0,   "ota.countrycode", "", "", BUTTON_CONTROL_STANDARD);
+  AddString(0,   "ota.city", "", "", BUTTON_CONTROL_STANDARD);
+  AddString(0,   "ota.state", "", "", BUTTON_CONTROL_STANDARD);
+  AddString(0,   "ota.statecode", "", "", BUTTON_CONTROL_STANDARD);
+  AddString(0,   "ota.zipcode", "", "", BUTTON_CONTROL_STANDARD);
+  AddString(0,   "ota.providercode", "", "", BUTTON_CONTROL_STANDARD);
+  AddString(0,   "ota.provider", "", "", BUTTON_CONTROL_STANDARD);
+  AddBool(0,   "ota.selectedcable", "", "", BUTTON_CONTROL_STANDARD);
+  AddBool(0,   "ota.scanned", "", false, BUTTON_CONTROL_STANDARD);
+  AddBool(0,   "ota.showmessagewhenexit", 58085, true);
+
+  AddString(0, "ota.rescan",58020,"", BUTTON_CONTROL_STANDARD);
+  AddBool(0, "ota.share", 58021, true);
+  AddString(0, "ota.reconfigure",58022,"", BUTTON_CONTROL_STANDARD);
+  AddBool(0, "ota.keep43ar", 58057, false);
+  AddString(0, "ota.status",58025,"", BUTTON_CONTROL_STANDARD);
+  AddString(0, "ota.device",58028,"", BUTTON_CONTROL_STANDARD);
+  AddString(0, "ota.location",58029,"", BUTTON_CONTROL_STANDARD);
+#endif
+
+#ifdef HAS_EMBEDDED
+  AddCategory(8, "vpn", 54736);
+  AddInt(0, "vpn.type", 54737, (int) CHalVpnPPTP, (int) CHalVpnPPTP, 1, (int) CHalVpnPPTP, SPIN_CONTROL_TEXT);
+  AddString(0, "vpn.server", 54739, "", EDIT_CONTROL_INPUT, false, 54739);
+  AddString(0, "vpn.account", 54740, "", EDIT_CONTROL_INPUT, false, 54740);
+  AddString(0, "vpn.password", 54741, "", EDIT_CONTROL_HIDDEN_INPUT, false, 54741);
+  AddBool(0, "vpn.encryption", 54742, false);
+  AddPath(0, "vpn.operation", 54745, "", BUTTON_CONTROL_STANDARD);
+#endif
+
+#ifdef HAS_EMBEDDED
+  AddCategory(9, "services", 54887);
+  AddString(1, "services.netflixclear",54885,"", BUTTON_CONTROL_STANDARD);
+  AddString(2, "services.netflixesn",54890,"", BUTTON_CONTROL_STANDARD);
+  AddString(3, "services.vuduclear",54886,"", BUTTON_CONTROL_STANDARD);
+  AddString(3, "services.spotifyclear",54891,"", BUTTON_CONTROL_STANDARD);
+  AddString(4, "services.none",54888,"", BUTTON_CONTROL_STANDARD);
+  AddInt(5, "services.netflixplaypause", 54865, (int) NRDPP_DEFAULT, (int) NRDPP_DEFAULT, 1, (int) NRDPP_PLAYPAUSE, SPIN_CONTROL_TEXT);
+#endif
+
+  AddCategory(10, "browser", 54897);
+  AddString(1, "browser.clearcookies",54895,"", BUTTON_CONTROL_STANDARD);
+  AddString(2, "browser.clearcache",54896,"", BUTTON_CONTROL_STANDARD);
+  AddString(3, "browser.clearlocalstorage", 90210, "", BUTTON_CONTROL_STANDARD);
+#ifdef HAS_EMBEDDED
+  AddString(3, "browser.clearflashsharedobjects",54778,"", BUTTON_CONTROL_STANDARD);
+#endif
 }
 
 CGUISettings::~CGUISettings(void)
@@ -1220,6 +1414,18 @@ CSetting *CGUISettings::GetSetting(const char *strSetting)
     return NULL;
 }
 
+bool CGUISettings::HasSetting(const char *strSetting)
+{
+  ASSERT(settingsMap.size());
+  constMapIter it = settingsMap.find(CStdString(strSetting).ToLower());
+  if (it != settingsMap.end())
+  {
+    return true;
+  }
+
+  return false;
+}
+
 // get all the settings beginning with the term "strGroup"
 void CGUISettings::GetSettingsGroup(const char *strGroup, vecSettings &settings)
 {
@@ -1261,18 +1467,44 @@ void CGUISettings::LoadXML(TiXmlElement *pRootElement, bool hideSettings /* = fa
   
   // setup logging...
   CLog::m_logLevel    = GetInt("debug.loglevel");
-  CLog::m_showLogLine = GetBool("debug.showinfoline");
-  
+  CLog::m_showLogLine = (CLog::m_logLevel == LOGDEBUG);
+  CLog::ResetSyslogServer();
+
   // Get hardware based stuff...
   CLog::Log(LOGNOTICE, "Getting hardware information now...");
-  if (GetInt("audiooutput.mode") == AUDIO_DIGITAL && !g_audioConfig.HasDigitalOutput())
+  if ((GetInt("audiooutput.mode") == AUDIO_DIGITAL_SPDIF || GetInt("audiooutput.mode") == AUDIO_DIGITAL_HDMI) && !g_audioConfig.HasDigitalOutput())
     SetInt("audiooutput.mode", AUDIO_ANALOG);
   // FIXME: Check if the hardware supports it (if possible ;)
   //SetBool("audiooutput.ac3passthrough", g_audioConfig.GetAC3Enabled());
   //SetBool("audiooutput.dtspassthrough", g_audioConfig.GetDTSEnabled());
-  CLog::Log(LOGINFO, "Using %s output", GetInt("audiooutput.mode") == AUDIO_ANALOG ? "analog" : "digital");
+
+  int output_mode = GetInt("audiooutput.mode");
+  const char* outstr = "";
+
+  if( output_mode == AUDIO_ANALOG )
+    outstr = "analog output";
+  else if( output_mode == AUDIO_DIGITAL_SPDIF )
+    outstr = "digital s/pdif output";
+#ifdef HAS_AUDIO_HDMI
+  else if( output_mode == AUDIO_DIGITAL_HDMI )
+    outstr = "digital hdmi output";
+#endif
+#ifdef HAS_INTEL_SMD
+  else if( output_mode == AUDIO_ALL_OUTPUTS )
+    outstr = "all outputs";
+#endif
+
+  CLog::Log(LOGINFO, "Using %s", outstr);
+
   CLog::Log(LOGINFO, "AC3 pass through is %s", GetBool("audiooutput.ac3passthrough") ? "enabled" : "disabled");
   CLog::Log(LOGINFO, "DTS pass through is %s", GetBool("audiooutput.dtspassthrough") ? "enabled" : "disabled");
+#if defined(HAS_INTEL_SMD) || defined(_WIN32)
+  CLog::Log(LOGINFO, "EAC3 pass through is %s", GetBool("audiooutput.eac3passthrough") ? "enabled" : "disabled");
+  CLog::Log(LOGINFO, "TrueHD pass through is %s", GetBool("audiooutput.truehdpassthrough") ? "enabled" : "disabled");
+  CLog::Log(LOGINFO, "DTS-HD pass through is %s", GetBool("audiooutput.dtshdpassthrough") ? "enabled" : "disabled");
+  CLog::Log(LOGINFO, "LPCM71 pass through is %s", GetBool("audiooutput.lpcm71passthrough") ? "enabled" : "disabled");
+#endif
+
 #if defined(_LINUX) && !defined(__APPLE__)
   CLog::Log(LOGINFO, "Audio library is %s", GetInt("audiooutput.library") == AUDIO_LIBRARY_ALSA ? "ALSA" : "PulseAudio");
 #endif
@@ -1323,7 +1555,7 @@ void CGUISettings::LoadXML(TiXmlElement *pRootElement, bool hideSettings /* = fa
     SetString("locale.timezone", timezone);
   }
   g_timezone.SetTimezone(timezone);
-#endif  
+#endif
 }
 
 void CGUISettings::LoadFromXML(TiXmlElement *pRootElement, mapIter &it, bool advanced /* = false */)
@@ -1418,7 +1650,7 @@ void CGUISettings::LoadCustomSettingsOrder()
   TiXmlDocument xmlDoc;
   CStdString fileName = "special://xbmc/system/settingsmap.xml";
   fileName = _P(fileName);
- 
+  
   if (!XFILE::CFile::Exists(fileName))
   {
     CLog::Log(LOGINFO, "No settingsmap.xml to load (%s). Using default settings.", fileName.c_str());
@@ -1444,14 +1676,15 @@ void CGUISettings::LoadCustomSettingsOrder()
     // Read group
     const char* groupId = pGroup->Attribute("id");
     const char* groupWindow = pGroup->Attribute("window");
-    if (groupId == NULL || groupWindow == NULL)
+    const char* groupTitle = pGroup->Attribute("title");
+    if (groupId == NULL || groupWindow == NULL || groupTitle == NULL)
     {
-      CLog::Log(LOGERROR, "%s: <group> has no id or window", fileName.c_str());
+      CLog::Log(LOGERROR, "%s: <group> has no id, window or title", fileName.c_str());
       continue;
     }
     
     // Create group object
-    CSettingsGroup* group = new CSettingsGroup(atoi(groupId), atoi(groupWindow));
+    CSettingsGroup* group = new CSettingsGroup(atoi(groupId), atoi(groupWindow), 0, atoi(groupTitle));
     
     const TiXmlElement *pCategory = pGroup->FirstChildElement("category");
     while (pCategory)
@@ -1500,8 +1733,8 @@ void CGUISettings::LoadCustomSettingsOrder()
           
           if (platform != NULL && !CUtil::MatchesPlatform(platform))
           {
-              pSetting = pSetting->NextSiblingElement();
-              continue;
+            pSetting = pSetting->NextSiblingElement();
+            continue;
           }
       
           if (settingsMap.find(settingId) == settingsMap.end())

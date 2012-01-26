@@ -96,8 +96,9 @@ XBPyThread::XBPyThread(XBPython *pExecuter, int id)
 XBPyThread::~XBPyThread()
 {
   stop();
-  m_ThreadHandle = NULL;
-  m_bStop = true;
+  g_pythonParser.PulseGlobalEvent();
+  StopThread();
+  CLog::Log(LOGDEBUG,"python thread %d destructed", m_id);
   if (m_source) delete []m_source;
   if (m_argv)
   {
@@ -105,8 +106,6 @@ XBPyThread::~XBPyThread()
       delete [] m_argv[i];
     delete [] m_argv;
   }
-  StopThread(false);
-  CLog::Log(LOGDEBUG,"python thread %d destructed", m_id);
 }
 
 int XBPyThread::evalFile(const char *src)
@@ -261,16 +260,9 @@ void XBPyThread::Process()
   // look waiting for the running threads to end
   PyRun_SimpleString(
                      "import threading\n"
-                     "import sys\n"
-                     "try:\n"
-                     "\tthreads = list(threading.enumerate())\n"
-                     "except:\n"
-                     "\tprint 'error listing threads'\n"
-                     "while threading.activeCount() > 1:\n"
-                     "\tfor thread in threads:\n"
-                     "\t\tif thread <> threading.currentThread():\n"
-                     "\t\t\tprint 'waiting for thread - ' + thread.getName()\n"
-                     "\t\t\tthread.join(1000)\n"
+                     "for thread in threading.enumerate():\n"
+                     "\tif thread <> threading.currentThread():\n"
+                     "\t\tthread.join(1000)\n"
                      );
   
   m_pExecuter->DeInitializeInterpreter();

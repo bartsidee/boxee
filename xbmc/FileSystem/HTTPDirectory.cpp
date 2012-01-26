@@ -38,7 +38,7 @@ CHTTPDirectory::~CHTTPDirectory(void){}
 bool CHTTPDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items)
 {
   CFileCurl http;
-  CURL url(strPath);
+  CURI url(strPath);
 
   CStdString strName, strLink;
   CStdString strBasePath = url.GetFileName();
@@ -86,7 +86,7 @@ bool CHTTPDirectory::GetDirectory(const CStdString& strPath, CFileItemList &item
           pItem->m_bIsFolder = true;
 
         url.SetFileName(pItem->m_strPath);
-        url.GetURL(pItem->m_strPath);
+        pItem->m_strPath = url.Get();
 
         if (!pItem->m_bIsFolder && g_advancedSettings.m_bHTTPDirectoryStatFilesize)
         {

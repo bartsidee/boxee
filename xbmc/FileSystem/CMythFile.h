@@ -20,6 +20,10 @@
  *
  */
 
+#include "system.h"
+
+#ifdef HAS_FILESYSTEM_MYTH
+
 #include "IFile.h"
 #include "ILiveTV.h"
 #include "CMythSession.h"
@@ -46,18 +50,18 @@ class CCMythFile
 public:
   CCMythFile();
   virtual ~CCMythFile();
-  virtual bool          Open(const CURL& url);
+  virtual bool          Open(const CURI& url);
   virtual int64_t       Seek(int64_t pos, int whence=SEEK_SET);
   virtual int64_t       GetPosition();
   virtual int64_t       GetLength();
-  virtual int           Stat(const CURL& url, struct __stat64* buffer) { return -1; }
+  virtual int           Stat(const CURI& url, struct __stat64* buffer) { return -1; }
   virtual void          Close();
   virtual unsigned int  Read(void* buffer, int64_t size);
   virtual CStdString    GetContent() { return ""; }
   virtual bool          SkipNext();
 
-  virtual bool          Delete(const CURL& url);
-  virtual bool          Exists(const CURL& url);
+  virtual bool          Delete(const CURI& url);
+  virtual bool          Exists(const CURI& url);
 
   virtual ILiveTVInterface* GetLiveTV() {return (ILiveTVInterface*)this;}
 
@@ -84,10 +88,10 @@ protected:
   bool HandleEvents();
   bool ChangeChannel(int direction, const CStdString &channel);
 
-  bool SetupConnection(const CURL& url, bool control, bool event, bool database);
-  bool SetupRecording(const CURL& url);
-  bool SetupLiveTV(const CURL& url);
-  bool SetupFile(const CURL& url);
+  bool SetupConnection(const CURI& url, bool control, bool event, bool database);
+  bool SetupRecording(const CURI& url);
+  bool SetupLiveTV(const CURI& url);
+  bool SetupFile(const CURI& url);
 
   CStdString GetValue(char* str) { return m_session->GetValue(str); }
 
@@ -112,4 +116,4 @@ protected:
 
 }
 
-
+#endif

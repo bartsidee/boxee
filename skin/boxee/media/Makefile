@@ -5,7 +5,13 @@ XBMCTEX=../../../tools/TexturePacker/TexturePacker
 
 all: $(TARGET)
 
-.PHONY: force
+.PHONY: force nocompress
+
+nocompress: $(XBMCTEX)
+	$(XBMCTEX) -input . -output $(TARGET) -nocompress
+
+pvr: $(XBMCTEX)
+	$(XBMCTEX) -input . -output $(TARGET) -pvr
 
 $(TARGET): $(XBMCTEX) 
 	$(XBMCTEX) -input . -output $(TARGET)

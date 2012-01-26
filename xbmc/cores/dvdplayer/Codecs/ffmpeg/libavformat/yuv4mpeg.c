@@ -169,7 +169,7 @@ static int yuv4_write_header(AVFormatContext *s)
     return 0;
 }
 
-AVOutputFormat yuv4mpegpipe_muxer = {
+AVOutputFormat ff_yuv4mpegpipe_muxer = {
     "yuv4mpegpipe",
     NULL_IF_CONFIG_SMALL("YUV4MPEG pipe format"),
     "",
@@ -316,7 +316,7 @@ static int yuv4_read_header(AVFormatContext *s, AVFormatParameters *ap)
             pix_fmt = alt_pix_fmt;
     }
 
-    if (raten == 0 && rated == 0) {
+    if (raten <= 0 || rated <= 0) {
         // Frame rate unknown
         raten = 25;
         rated = 1;
@@ -335,7 +335,7 @@ static int yuv4_read_header(AVFormatContext *s, AVFormatParameters *ap)
     av_reduce(&raten, &rated, raten, rated, (1UL<<31)-1);
     av_set_pts_info(st, 64, rated, raten);
     st->codec->pix_fmt = pix_fmt;
-    st->codec->codec_type = CODEC_TYPE_VIDEO;
+    st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
     st->codec->codec_id = CODEC_ID_RAWVIDEO;
     st->sample_aspect_ratio= (AVRational){aspectn, aspectd};
     st->codec->chroma_sample_location = chroma_sample_location;
@@ -390,7 +390,7 @@ static int yuv4_probe(AVProbeData *pd)
 }
 
 #if CONFIG_YUV4MPEGPIPE_DEMUXER
-AVInputFormat yuv4mpegpipe_demuxer = {
+AVInputFormat ff_yuv4mpegpipe_demuxer = {
     "yuv4mpegpipe",
     NULL_IF_CONFIG_SMALL("YUV4MPEG pipe format"),
     sizeof(struct frame_attributes),

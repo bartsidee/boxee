@@ -21,7 +21,7 @@
  */
 
 /**
- * @file libavcodec/h261_parser.c
+ * @file
  * h261codec.
  */
 
@@ -81,7 +81,7 @@ static int h261_parse(AVCodecParserContext *s,
     return next;
 }
 
-AVCodecParser h261_parser = {
+AVCodecParser ff_h261_parser = {
     { CODEC_ID_H261 },
     sizeof(ParseContext),
     NULL,

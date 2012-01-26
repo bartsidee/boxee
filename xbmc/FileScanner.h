@@ -6,7 +6,7 @@
 
 #include <time.h>
 #include "lib/libBoxee/bxmetadataengine.h"
-
+#include <SDL/SDL.h>
 #include "FileItem.h"
 #include "utils/Thread.h"
 #include "Settings.h"
@@ -27,23 +27,33 @@ class CMetadataResolver;
 class CFileScanner : public CThread
 {
 public:
-	CFileScanner();
-	virtual ~CFileScanner();
-	
-	bool Init();
-	void Start();
-	void Stop();
+  CFileScanner();
+  virtual ~CFileScanner();
 
+  bool Init();
+  void Start();
+  void Stop();
+  void Pause();
+  void Resume();
+  void CheckPause();
+	
 	void AddUserPath(const CStdString& strPath);
-	bool IsScanning(const CStdString& strPath);
-
-	int GetFolderStatus(const CStdString& strPath, std::vector<CStdString>& vecTypes);
+	bool IsScanning(const CStdString& _strPath);
 		
-	void InformRemoveShare(const CStdString sharePath);
+  int GetFolderStatus(const CStdString& strPath, std::vector<CStdString>& vecTypes);
+		
+  void InformRemoveShare(const CStdString sharePath);
+
+  static bool ShowSourcesStatusKaiDialog(int messageId, const CStdString& sourceName, const CStdString& sourcePath = "", const CStdString& sourceType = "");
+
 private:
-  
-	void Reset();
+
+  void InitSourcesOnStart();
+
+  void Reset();
 	
+  void InterruptibleSleep(unsigned int milliseconds);
+
   void Process();
   
   void ScanShares(VECSOURCES * pVecShares, const CStdString& strShareType);
@@ -57,6 +67,8 @@ private:
   bool PathInPrivateShare(const CStdString& strPath);
   bool IsScannable(const CStdString& strPath);
   
+  void UpdateScanLabel(const CStdString& path);
+
   // Local cache that maps folder path to the last modification time
   std::map<std::string, time_t> m_mapScannedFolders;
     
@@ -68,16 +80,20 @@ private:
   CCriticalSection m_lock;
   std::set<std::pair<CStdString, CStdString> > m_setUserPaths;
 
+  bool    m_bPaused;
+  SDL_mutex  *m_pPauseLock;
+  SDL_cond   *m_pPauseCond;
+
   BOXEE::BXMetadataEngine* m_MDE; 
   CMetadataResolver* m_pResolver;
 
   bool m_bExtendedLog;
-
+  
   CCriticalSection m_shareLock;
   CStdString       m_currenlyScannedShare;
   bool             m_currentShareValid;
-  
-  HANDLE m_WakeEvent;
+
+  HANDLE           m_hStopEvent;
 };
 
 #endif /*FILESCANNER_H_*/

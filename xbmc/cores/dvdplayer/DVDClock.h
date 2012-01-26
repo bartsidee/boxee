@@ -33,17 +33,9 @@
 #define DVD_SEC_TO_TIME(x)  ((double)(x) * DVD_TIME_BASE)
 #define DVD_MSEC_TO_TIME(x) ((double)(x) * DVD_TIME_BASE / 1000)
 
-#define DVD_PLAYSPEED_RW_2X       -2000
-#define DVD_PLAYSPEED_REVERSE     -1000
 #define DVD_PLAYSPEED_PAUSE       0       // frame stepping
 #define DVD_PLAYSPEED_NORMAL      1000
-#define DVD_PLAYSPEED_FF_2X       2000
-
-enum ClockDiscontinuityType
-{
-  CLOCK_DISC_FULL,  // pts is starting form 0 again
-  CLOCK_DISC_NORMAL // after a pause
-};
+#define DVD_PLAYSPEED_STOP        -1
 
 class CDVDClock
 {
@@ -53,25 +45,29 @@ public:
 
   double GetClock();
 
-  /* delay should say how long in the future we expect to display this frame */
-  void Discontinuity(ClockDiscontinuityType type, double currentPts = 0LL, double delay = 0LL);
-  
-  /* will return how close we are to a discontinuity */
-  double DistanceToDisc();
+  void Discontinuity(double currentPts = 0LL);
 
+  void Reset() { m_bReset = true; }
   void Pause();
   void Resume();
   void SetSpeed(int iSpeed);
 
   /* tells clock at what framerate video is, to  *
    * allow it to adjust speed for a better match */
-  int UpdateFramerate(double fps);
+  int UpdateFramerate(double fps, double* interval = NULL);
 
   bool   SetMaxSpeedAdjust(double speed);
 
   static double GetAbsoluteClock();
   static double GetFrequency() { return (double)m_systemFrequency ; }
   static double WaitAbsoluteClock(double target);
+
+  //when m_ismasterclock is true, CDVDPlayerAudio synchronizes the clock to the audio stream
+  //when it's false, CDVDPlayerAudio synchronizes the audio stream to the clock
+  //the rendermanager needs to know about that because it can synchronize the videoreferenceclock to the video timestamps
+  static void SetMasterClock(bool ismasterclock) { m_ismasterclock = ismasterclock; }
+  static bool IsMasterClock()                    { return m_ismasterclock;          }
+
 protected:
   CSharedSection m_critSection;
   int64_t m_systemUsed;
@@ -79,7 +75,7 @@ protected:
   int64_t m_pauseClock;
   double m_iDisc;
   bool m_bReset;
-  
+
   static int64_t m_systemFrequency;
   static int64_t m_systemOffset;
   static CCriticalSection m_systemsection;
@@ -87,4 +83,5 @@ protected:
   double           m_maxspeedadjust;
   bool             m_speedadjust;
   CCriticalSection m_speedsection;
+  static bool      m_ismasterclock;
 };

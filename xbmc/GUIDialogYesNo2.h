@@ -37,8 +37,10 @@ public:
   static bool ShowAndGetInput(int heading, int line, int iNoLabel, int iYesLabel, bool& bCanceled, unsigned int autoCloseTime = 0, int defaultButton=-1);
   static bool ShowAndGetInput(const CStdString& heading, const CStdString& line);
   static bool ShowAndGetInput(const CStdString& heading, const CStdString& line, bool &bCanceled);
+  static bool ShowAndGetInput(const CStdString& heading, const CStdString& line, int defaultButton);
   static bool ShowAndGetInput(const CStdString& heading, const CStdString& line, const CStdString& noLabel, const CStdString& yesLabel);
-  static bool ShowAndGetInput(const CStdString& heading, const CStdString& line, const CStdString& noLabel, const CStdString& yesLabel, bool &bCanceled);
+  static bool ShowAndGetInput(const CStdString& heading, const CStdString& line, const CStdString& noLabel, const CStdString& yesLabel, bool &bCanceled, int defaultButton = -1);
+
 protected:
   bool m_bCanceled;
 };

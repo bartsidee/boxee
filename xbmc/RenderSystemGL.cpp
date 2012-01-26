@@ -22,15 +22,17 @@
 
 #include "system.h"
 
-#ifdef HAS_GL
+#if defined(HAS_GL) || defined(HAS_GL2)
 
 #include "GraphicContext.h"
 #include "AdvancedSettings.h"
 #include "RenderSystemGL.h"
 #include "utils/log.h"
 #include "utils/TimeUtils.h"
+#include "TextureGL.h"
+#include "GUITextureGL.h"
 #include "utils/SystemInfo.h"
-
+#include "MathUtils.h"
 
 CRenderSystemGL::CRenderSystemGL() : CRenderSystemBase()
 {
@@ -52,13 +54,13 @@ void CRenderSystemGL::CheckOpenGLQuirks()
     const char *arr[]= { "7300", "7600", "9400M", NULL };
     int j;	
     for(j=0; arr[j]; j++)
-    {
+      {
       if(m_RenderRenderer.find(arr[j]) != CStdString::npos && (m_renderCaps & RENDER_CAPS_DXT_NPOT))
       {
-        m_renderCaps &= ~ RENDER_CAPS_DXT_NPOT;
-        break;
+          m_renderCaps &= ~ RENDER_CAPS_DXT_NPOT;
+          break;
       }		  
-    }
+  }
   }
   else if (m_RenderVendor.find("ATI") != CStdString::npos) // ATI drivers.
   {             
@@ -86,7 +88,8 @@ bool CRenderSystemGL::InitRenderSystem()
   m_bVsyncInit = false;
   m_maxTextureSize = 2048;
   m_renderCaps = 0;
-  
+ 
+#ifdef HAS_GLEW 
   // init glew library
   GLenum err = glewInit();
   if (GLEW_OK != err)
@@ -94,6 +97,7 @@ bool CRenderSystemGL::InitRenderSystem()
     // Problem: glewInit failed, something is seriously wrong
     return false;
   }
+#endif
  
   // Get the GL version number 
   m_RenderVersionMajor = 0;
@@ -111,7 +115,8 @@ bool CRenderSystemGL::InitRenderSystem()
     m_RenderVendor = vendor;
   if (renderer)
     m_RenderRenderer = renderer;
-  
+ 
+#ifdef HAS_GLEW 
   // grab our capabilities
   if (glewIsSupported("GL_EXT_texture_compression_s3tc"))
     m_renderCaps |= RENDER_CAPS_DXT;
@@ -122,9 +127,11 @@ bool CRenderSystemGL::InitRenderSystem()
     if (m_renderCaps & RENDER_CAPS_DXT  && !g_sysinfo.IsAppleTV())    // This may not be correct on all hardware, Apple Tv(Nvidia 7300) having problems with this 
       m_renderCaps |= RENDER_CAPS_DXT_NPOT;
   }
+#endif
+
   //Check OpenGL quirks and revert m_renderCaps as needed
   CheckOpenGLQuirks();
-	
+
   const char *ext = (const char*) glGetString(GL_EXTENSIONS);
   m_RenderExtensions  = " ";
   if (ext)
@@ -132,7 +139,7 @@ bool CRenderSystemGL::InitRenderSystem()
   m_RenderExtensions += " ";
 
   LogGraphicsInfo();
-  
+
   m_bRenderCreated = true;
   
   return true;
@@ -140,30 +147,21 @@ bool CRenderSystemGL::InitRenderSystem()
 
 bool CRenderSystemGL::ResetRenderSystem(int width, int height, bool fullScreen, float refreshRate)
 {
-  m_width = width;
-  m_height = height;
- 
+  CRenderSystemBase::ResetRenderSystem(width, height, fullScreen, refreshRate);
+
   glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
- 
+
   CalculateMaxTexturesize();
- 
+
   glViewport(0, 0, width, height);
   glScissor(0, 0, width, height);
 
-  glEnable(GL_TEXTURE_2D);
-  glEnable(GL_SCISSOR_TEST);
+  glEnable(GL_TEXTURE_2D); 
+  glDisable(GL_SCISSOR_TEST);
 
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
+  g_graphicsContext.EndPaint();
 
-  glOrtho(0.0f, width-1, height-1, 0.0f, -1.0f, 1.0f);
-
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
- 
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-  glEnable(GL_BLEND);          // Turn Blending On
-  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_DEPTH_TEST);  
 
   return true;
 }
@@ -196,6 +194,13 @@ bool CRenderSystemGL::ClearBuffers(color_t color)
   if (!m_bRenderCreated)
     return false;
 
+  float r = (GLfloat)GET_R(color) / 255.0f;
+  float g = (GLfloat)GET_G(color) / 255.0f;
+  float b = (GLfloat)GET_B(color) / 255.0f;
+  float a = (GLfloat)GET_A(color) / 255.0f;
+
+  ClearBuffers(r, g, b, a);
+
   return true;
 }
 
@@ -205,11 +210,15 @@ bool CRenderSystemGL::ClearBuffers(float r, float g, float b, float a)
     return false;
   
   glClearColor(r, g, b, a);
-
-  GLbitfield flags = GL_COLOR_BUFFER_BIT;
-  glClear(flags);
+  glClear(GL_COLOR_BUFFER_BIT);
 
   return true;
+}
+
+void CRenderSystemGL::ClearStencilBuffer(int val)
+{
+  glClearStencil(val);
+  glClear(GL_STENCIL_BUFFER_BIT);
 }
 
 bool CRenderSystemGL::IsExtSupported(const char* extension)
@@ -220,13 +229,6 @@ bool CRenderSystemGL::IsExtSupported(const char* extension)
   name += " ";
 
   return m_RenderExtensions.find(name) != std::string::npos;;
-}
-
-static int64_t abs(int64_t a)
-{
-  if(a < 0)
-    return -a;
-  return a;
 }
 
 bool CRenderSystemGL::PresentRender()
@@ -266,7 +268,7 @@ bool CRenderSystemGL::PresentRender()
     diff = curr - m_iSwapStamp;
     m_iSwapStamp = curr;
 
-    if (abs(diff - m_iSwapRate) < abs(diff))
+    if (MathUtils::abs(diff - m_iSwapRate) < abs(diff))
       CLog::Log(LOGDEBUG, "%s - missed requested swap",__FUNCTION__);
   }
   
@@ -282,9 +284,9 @@ void CRenderSystemGL::SetVSync(bool enable)
     return;
   
   if (enable)
-    CLog::Log(LOGINFO, "GL: Enabling VSYNC");
+    CLog::Log(LOGDEBUG, "GL: Enabling VSYNC");
   else
-    CLog::Log(LOGINFO, "GL: Disabling VSYNC");
+    CLog::Log(LOGDEBUG, "GL: Disabling VSYNC");
 
   m_iVSyncMode   = 0;
   m_iVSyncErrors = 0;
@@ -313,7 +315,7 @@ void CRenderSystemGL::SetVSync(bool enable)
       m_iSwapRate   = (int64_t)((double)freq / rate);
       m_iSwapTime   = (int64_t)(0.001 * g_advancedSettings.m_ForcedSwapTime * freq);
       m_iSwapStamp  = 0;
-      CLog::Log(LOGINFO, "GL: Using artificial vsync sleep with rate %f", rate);
+      CLog::Log(LOGDEBUG, "GL: Using artificial vsync sleep with rate %f", rate);
       if(!m_iVSyncMode)
         m_iVSyncMode = 1;
     }
@@ -322,72 +324,17 @@ void CRenderSystemGL::SetVSync(bool enable)
   if (!m_iVSyncMode)
     CLog::Log(LOGERROR, "GL: Vertical Blank Syncing unsupported");
   else
-    CLog::Log(LOGINFO, "GL: Selected vsync mode %d", m_iVSyncMode);  
+    CLog::Log(LOGDEBUG, "GL: Selected vsync mode %d", m_iVSyncMode);
 }
 
 void CRenderSystemGL::CaptureStateBlock()
 {
-  if (!m_bRenderCreated)
-    return;
-  
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-  glMatrixMode(GL_TEXTURE);
-  glPushMatrix();
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-  glDisable(GL_SCISSOR_TEST); // fixes FBO corruption on Macs
-  if (glActiveTextureARB)
-    glActiveTextureARB(GL_TEXTURE0_ARB);
-  glDisable(GL_TEXTURE_2D);
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-  glColor3f(1.0, 1.0, 1.0);  
+  return;
 }
 
 void CRenderSystemGL::ApplyStateBlock()
 {
-  if (!m_bRenderCreated)
-    return;
-  
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-  glMatrixMode(GL_TEXTURE);
-  glPopMatrix();
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
-  if (glActiveTextureARB)
-    glActiveTextureARB(GL_TEXTURE0_ARB);
-  glEnable(GL_TEXTURE_2D);
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-  glEnable(GL_BLEND);
-  glEnable(GL_SCISSOR_TEST);  
-}
-
-void CRenderSystemGL::SetCameraPosition(const CPoint &camera, int screenWidth, int screenHeight)
-{ 
-  if (!m_bRenderCreated)
-    return;
-  
-  g_graphicsContext.BeginPaint();
-  
-  CPoint offset = camera - CPoint(screenWidth*0.5f, screenHeight*0.5f);
-  
-  GLint viewport[4];
-  glGetIntegerv(GL_VIEWPORT, viewport);
-
-  float w = (float)viewport[2]*0.5f;
-  float h = (float)viewport[3]*0.5f;
-
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glTranslatef(-(viewport[0] + w + offset.x), +(viewport[1] + h + offset.y), 0);
-  gluLookAt(0.0, 0.0, -2.0*h, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glFrustum( (-w - offset.x)*0.5f, (w - offset.x)*0.5f, (-h + offset.y)*0.5f, (h + offset.y)*0.5f, h, 100*h);
-  glMatrixMode(GL_MODELVIEW);
-  
-  g_graphicsContext.EndPaint();
+  return; 
 }
 
 bool CRenderSystemGL::TestRender()
@@ -411,34 +358,21 @@ bool CRenderSystemGL::TestRender()
   return true;
 }
 
-void CRenderSystemGL::ApplyHardwareTransform(const TransformMatrix &finalMatrix)
-{ 
-  if (!m_bRenderCreated)
-    return;
-  
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-  GLfloat matrix[4][4];
-
-  for(int i=0;i<3;i++)
-    for(int j=0;j<4;j++)
-      matrix[j][i] = finalMatrix.m[i][j];
-
-  matrix[0][3] = 0.0f;
-  matrix[1][3] = 0.0f;
-  matrix[2][3] = 0.0f;
-  matrix[3][3] = 1.0f;
-
-  glMultMatrixf(&matrix[0][0]);
+void CRenderSystemGL::ApplyClippingRect(CRect& clipRect)
+{
+  glScissor((GLint) clipRect.x1, (GLint) (m_height - clipRect.y1 - clipRect.Height()), (GLsizei) clipRect.Width(), (GLsizei) clipRect.Height());
+  glEnable(GL_SCISSOR_TEST);
 }
 
-void CRenderSystemGL::RestoreHardwareTransform()
+void CRenderSystemGL::GetClipRect(CRect& clipRect)
 {
-  if (!m_bRenderCreated)
-    return;
-  
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();  
+  GLint box[4];
+  glGetIntegerv(GL_SCISSOR_BOX, box);
+
+  clipRect.x1 = (float)box[0];
+  clipRect.y1 = (float)box[1];
+  clipRect.x2 = (float)(box[0] + box[2]);
+  clipRect.y2 = (float)(box[1] + box[3]);
 }
 
 void CRenderSystemGL::CalculateMaxTexturesize()
@@ -468,21 +402,21 @@ void CRenderSystemGL::CalculateMaxTexturesize()
     }
   }
 
-  CLog::Log(LOGINFO, "GL: Maximum texture width: %u", m_maxTextureSize);
+  CLog::Log(LOGDEBUG, "GL: Maximum texture width: %u", m_maxTextureSize);
 }
 
 void CRenderSystemGL::GetViewPort(CRect& viewPort)
-{
+ {
   if (!m_bRenderCreated)
     return;
   
   GLint glvp[4];
   glGetIntegerv(GL_VIEWPORT, glvp);
   
-  viewPort.x1 = glvp[0];
-  viewPort.y1 = m_height - glvp[1] - glvp[3];
-  viewPort.x2 = glvp[0] + glvp[2];
-  viewPort.y2 = viewPort.y1 + glvp[3];
+  viewPort.x1 = (float)glvp[0];
+  viewPort.y1 = (float)(m_height - glvp[1] - glvp[3]);
+  viewPort.x2 = (float)(glvp[0] + glvp[2]);
+  viewPort.y2 = (float)(viewPort.y1 + glvp[3]);
 }
 
 void CRenderSystemGL::SetViewPort(CRect& viewPort)
@@ -490,8 +424,187 @@ void CRenderSystemGL::SetViewPort(CRect& viewPort)
   if (!m_bRenderCreated)
     return;
   
-  glScissor((GLint) viewPort.x1, (GLint) (m_height - viewPort.y1 - viewPort.Height()), (GLsizei) viewPort.Width(), (GLsizei) viewPort.Height());
   glViewport((GLint) viewPort.x1, (GLint) (m_height - viewPort.y1 - viewPort.Height()), (GLsizei) viewPort.Width(), (GLsizei) viewPort.Height());
+}
+
+void CRenderSystemGL::EnableTexture(bool bEnable)
+{
+  if(bEnable)
+    glEnable(GL_TEXTURE_2D);
+  else
+    glDisable(GL_TEXTURE_2D);
+}
+
+void CRenderSystemGL::EnableBlending(bool bEnableRGB, bool bEnableAlpha)
+{
+  GLenum srcRGB = GL_SRC_ALPHA;
+  GLenum dstRGB = bEnableRGB ? GL_ONE_MINUS_SRC_ALPHA : GL_DST_ALPHA;
+  GLenum srcAlpha = GL_SRC_ALPHA;
+  GLenum dstAlpha = bEnableAlpha ? GL_SRC_ALPHA : GL_ONE;
+
+#ifdef HAS_GLEW
+  if (GLEW_EXT_blend_func_separate)
+    glBlendFuncSeparateEXT(srcRGB, dstRGB, srcAlpha, dstAlpha);
+  else
+    glBlendFunc(srcRGB, dstRGB);
+#else
+  glBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
+#endif
+
+  if(bEnableRGB || bEnableAlpha)
+    glEnable(GL_BLEND);
+  else
+    glDisable(GL_BLEND);
+}
+
+
+void CRenderSystemGL::EnableStencil(bool bEnable)
+{
+  if(bEnable)
+    glEnable(GL_STENCIL_TEST);
+  else
+    glDisable(GL_STENCIL_TEST);
+}
+
+void CRenderSystemGL::SetColorMask(bool r, bool g, bool b, bool a)
+{
+  glColorMask(r, g, b, a);
+}
+
+void CRenderSystemGL::SetStencilFunc(StencilFunc func, int ref, unsigned int mask)
+{
+  GLenum glFunc = 0;
+
+  switch(func)
+  {
+    case STENCIL_FUNC_NEVER:
+      glFunc = GL_NEVER;
+      break;
+    case STENCIL_FUNC_LESS:
+      glFunc = GL_LESS;
+      break;
+    case STENCIL_FUNC_EQUAL:
+      glFunc = GL_EQUAL;
+      break;
+    case STENCIL_FUNC_LEQUAL:
+      glFunc = GL_LEQUAL;
+      break;
+    case STENCIL_FUNC_GREATER:
+      glFunc = GL_GREATER;
+      break;
+    case STENCIL_FUNC_NOTEQUAL:
+      glFunc = GL_NOTEQUAL;
+      break;
+    case STENCIL_FUNC_GEQUAL:
+      glFunc = GL_GEQUAL;
+      break;
+    case STENCIL_FUNC_ALWAYS:
+      glFunc = GL_ALWAYS;
+      break;
+  }
+
+  glStencilFunc(glFunc, ref, mask);
+};
+
+void CRenderSystemGL::SetStencilOp (StencilOp fail_op, StencilOp fail, StencilOp pass)
+{
+  GLenum glFail_op = 0;
+  GLenum glFail = 0;
+  GLenum glPass = 0;
+
+  switch(fail_op)
+  {
+    case STENCIL_OP_KEEP:
+      glFail_op = GL_KEEP;
+      break;
+    case STENCIL_OP_REPLACE:
+      glFail_op = GL_REPLACE;
+      break;
+    case STENCIL_OP_INCR:
+      glFail_op = GL_INCR;
+      break;
+    case STENCIL_OP_DECR:
+      glFail_op = GL_DECR;
+      break;
+    case STENCIL_OP_INVERT:
+      glFail_op = GL_INVERT;
+      break;
+    case STENCIL_OP_INCR_WRAP:
+      glFail_op = GL_INCR_WRAP;
+      break;
+    case STENCIL_OP_DECR_WRAP:
+      glFail_op = GL_DECR_WRAP;
+      break;
+  }
+
+  switch(fail)
+  {
+  case STENCIL_OP_KEEP:
+    glFail = GL_KEEP;
+    break;
+  case STENCIL_OP_REPLACE:
+    glFail = GL_REPLACE;
+    break;
+  case STENCIL_OP_INCR:
+    glFail = GL_INCR;
+    break;
+  case STENCIL_OP_DECR:
+    glFail = GL_DECR;
+    break;
+  case STENCIL_OP_INVERT:
+    glFail = GL_INVERT;
+    break;
+  case STENCIL_OP_INCR_WRAP:
+    glFail = GL_INCR_WRAP;
+    break;
+  case STENCIL_OP_DECR_WRAP:
+    glFail = GL_DECR_WRAP;
+    break;
+  }
+
+  switch(pass)
+  {
+  case STENCIL_OP_KEEP:
+    glPass = GL_KEEP;
+    break;
+  case STENCIL_OP_REPLACE:
+    glPass = GL_REPLACE;
+    break;
+  case STENCIL_OP_INCR:
+    glPass = GL_INCR;
+    break;
+  case STENCIL_OP_DECR:
+    glPass = GL_DECR;
+    break;
+  case STENCIL_OP_INVERT:
+    glPass = GL_INVERT;
+    break;
+  case STENCIL_OP_INCR_WRAP:
+    glPass = GL_INCR_WRAP;
+    break;
+  case STENCIL_OP_DECR_WRAP:
+    glPass = GL_DECR_WRAP;
+    break;
+  }
+
+
+  glStencilOp(glFail_op, glFail, glPass);
+}
+
+void CRenderSystemGL::EnableClipping(bool bEnable)
+{
+  if(bEnable)
+    glEnable(GL_SCISSOR_TEST);
+  else
+    glDisable(GL_SCISSOR_TEST);
+}
+
+void CRenderSystemGL::EnableDepthTest(bool bEnable)
+{
+  if(bEnable)
+    glEnable(GL_DEPTH_TEST);
+  else
+    glDisable(GL_DEPTH_TEST);
 }
 
 #endif

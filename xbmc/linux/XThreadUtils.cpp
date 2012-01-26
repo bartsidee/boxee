@@ -81,8 +81,12 @@ HANDLE WINAPI CreateThread(
   }
   pthread_attr_destroy(&attr);
   if (h && lpThreadId)
+  {
     // WARNING: This can truncate thread IDs on x86_64.
-    *lpThreadId = (DWORD)h->m_hThread;
+#ifndef __LP64__
+    *lpThreadId = (ThreadIdentifier)h->m_hThread;
+#endif
+  }
   return h;
 }
 

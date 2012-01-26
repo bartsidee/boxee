@@ -63,6 +63,7 @@ public:
   void SetTransistionTime(int iType, int iTime);
 
   int SlideNumber() const { return m_iSlideNumber;};
+  void EnableBlend(bool enable) { m_bBlend = enable; }
 
   void Zoom(int iZoomAmount, bool immediate = false);
   void Rotate(int iRotateAmount);
@@ -75,14 +76,16 @@ public:
 
   void Move(float dX, float dY);
   float GetZoom() const { return m_fZoomAmount;};
-
+  
   void SetScreenSaverMode(bool bMode) { m_bScreenSaverMode = bMode; }
+  void CopyLocationAndZoom(const CSlideShowPic& pic);
   
   bool m_bIsComic;
-private:
+protected:
   void Process();
-
   void Render(float *x, float *y, CBaseTexture* pTexture, color_t color);
+
+private:
   CBaseTexture *m_pImage;
 
   int m_iOriginalWidth;
@@ -119,5 +122,17 @@ private:
   bool m_bNoEffect;
   bool m_bFullSize;
   bool m_bTransistionImmediately;
+  bool m_bBlend;
+#if defined(HAS_GLES) || defined(HAS_GL)
+  GLint m_uniMatModelView;
+  GLint m_uniMatProjection;
+
+  GLint m_uniTexture0;
+  GLint m_uniColor;
+  GLint m_attribVertex;
+  GLint m_attribTextureCoord0;
+#endif
   bool m_bScreenSaverMode;
+
+  CCriticalSection m_textureAccess;
 };

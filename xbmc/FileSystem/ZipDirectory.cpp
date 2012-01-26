@@ -51,7 +51,7 @@ namespace DIRECTORY
     else
       strPath = strPathOrig;
 
-    CURL url(strPath);
+    CURI url(strPath);
 
     CStdString strArchive = url.GetHostName();
     CStdString strOptions = url.GetOptions();
@@ -60,8 +60,7 @@ namespace DIRECTORY
     url.SetOptions(""); // delete options to have a clean path to add stuff too
     url.SetFileName(""); // delete filename too as our names later will contain it
 
-    CStdString strSlashPath;
-    url.GetURL(strSlashPath);
+    CStdString strSlashPath = url.Get();
 
     CStdString strBuffer;
 

@@ -1,8 +1,11 @@
-AR=ar
+AR=@AR@
+RANLIB=@RANLIB@
 ARFLAGS=crus
+LD=@LD@
 RM=rm -rf
 SHELL=/bin/bash
 ARCH=@ARCH@
+PLATFORM=@PLATFORM@
 abs_top_srcdir=@abs_top_srcdir@
 prefix=@prefix@
 CXX=@CXX@
@@ -12,6 +15,7 @@ CXXFLAGS+=@DEBUG_FLAGS@
 CFLAGS+=@CFLAGS@
 CFLAGS+=@DEBUG_FLAGS@
 INCLUDES+=@INCLUDES@
+LDFLAGS=@LDFLAGS@
 DEFINES+= \
 	-D_LINUX \
 	-D_FILE_DEFINED \
@@ -24,7 +28,7 @@ DEFINES+= \
 	@DEFS@ \
 
 ifeq ($(findstring osx,$(ARCH)), osx)
-	export MACOSX_DEPLOYMENT_TARGET=10.4
+	export MACOSX_DEPLOYMENT_TARGET=@OSX@
 endif
 
 ifeq ($(ARCH), powerpc-osx)
@@ -33,7 +37,12 @@ endif
 
 .cpp.o:
 	@rm -f ${<:.cpp=.o}
+ifeq ($(V), 1)
 	$(CXX) -MD -c $(CXXFLAGS) $(DEFINES) $(INCLUDES) $< -o ${<:.cpp=.o}
+else
+	@echo " CXX ${<:.cpp=.o}"
+	@$(CXX) -MD -c $(CXXFLAGS) $(DEFINES) $(INCLUDES) $< -o ${<:.cpp=.o}
+endif
 	@cp $*.d $*.P; \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
@@ -41,7 +50,12 @@ endif
 
 .cc.o:
 	@rm -f ${<:.cc=.o}
+ifeq ($(V), 1)
 	$(CXX) -MD -c $(CXXFLAGS) $(DEFINES) $(INCLUDES) $< -o ${<:.cc=.o}
+else
+	@echo " CXX ${<:.cpp=.o}"
+	@$(CXX) -MD -c $(CXXFLAGS) $(DEFINES) $(INCLUDES) $< -o ${<:.cc=.o}
+endif
 	@cp $*.d $*.P; \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
@@ -49,7 +63,12 @@ endif
 
 .c.o:
 	@rm -f ${<:.c=.o}
+ifeq ($(V), 1)
 	$(CC) -MD -c $(CFLAGS) $(DEFINES) $(INCLUDES) $< -o ${<:.c=.o}
+else
+	@echo " CC ${<:.cpp=.o}"
+	@$(CC) -MD -c $(CFLAGS) $(DEFINES) $(INCLUDES) $< -o ${<:.c=.o}
+endif
 	@cp $*.d $*.P; \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
@@ -57,7 +76,12 @@ endif
 
 .C.o:
 	@rm -f ${<:.C=.o}
+ifeq ($(V), 1)
 	$(CC) -MD -c $(CFLAGS) $(DEFINES) $(INCLUDES) $< -o ${<:.C=.o}
+else
+	@echo " CC ${<:.cpp=.o}"
+	@$(CC) -MD -c $(CFLAGS) $(DEFINES) $(INCLUDES) $< -o ${<:.C=.o}
+endif
 	@cp $*.d $*.P; \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
@@ -65,14 +89,24 @@ endif
 
 .S.o:
 	rm -f ${<:.S=.o}
+ifeq ($(V), 1)
 	$(CC) -c $(CFLAGS) $(DEFINES) $(INCLUDES) $< -o ${<:.S=.o}
+else
+	@echo " CC ${<:.cpp=.o}"
+	@$(CC) -c $(CFLAGS) $(DEFINES) $(INCLUDES) $< -o ${<:.S=.o}
+endif
 
 %.h.gch : %.h
 	$(CXX) -c $(CFLAGS) $(DEFINES) $(INCLUDES) $< -o $@
 
 .m.o:
 	@rm -f ${<:.m=.o}
+ifeq ($(V), 1)
 	$(CXX) -MD -c $(CXXFLAGS) $(DEFINES) $(INCLUDES) $< -o ${<:.m=.o}
+else
+	@echo " OBJC ${<:.cpp=.o}"
+	@$(CXX) -MD -c $(CXXFLAGS) $(DEFINES) $(INCLUDES) $< -o ${<:.m=.o}
+endif
 	@cp $*.d $*.P; \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
@@ -80,7 +114,12 @@ endif
 
 .mm.o:
 	@rm -f ${<:.mm=.o}
+ifeq ($(V), 1)
 	$(CXX) -MD -c $(CXXFLAGS) $(DEFINES) $(INCLUDES) $< -o ${<:.mm=.o}
+else
+	@echo " OBJC ${<:.cpp=.o}"
+	@$(CXX) -MD -c $(CXXFLAGS) $(DEFINES) $(INCLUDES) $< -o ${<:.mm=.o}
+endif
 	@cp $*.d $*.P; \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
@@ -95,7 +134,12 @@ OBJS+=$(filter %.o,$(SRCS:.m=.o))
 .PHONY : lib pch clean distclean distclean_evil
 
 $(LIB): $(OBJS)
-	$(AR) $(ARFLAGS) $(LIB) $(OBJS)
+ifeq ($(V), 1)
+	-$(AR) $(ARFLAGS) $(LIB) $(OBJS)
+else
+	@echo " AR ${LIB}"
+	-$(AR) $(ARFLAGS) $(LIB) $(OBJS)
+endif
 
 pch: $(PCH:.h=.h.gch)
 	for d in $(DIRS); do (cd "$$d"; $(MAKE) pch ); done

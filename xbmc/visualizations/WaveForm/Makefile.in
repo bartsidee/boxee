@@ -8,9 +8,11 @@ SLIB=../../../visualisations/Waveform.vis
 
 $(SLIB): $(OBJS)
 ifeq ($(findstring osx,$(ARCH)), osx)
-	@export MACOSX_DEPLOYMENT_TARGET=10.4
-	$(CXX) -dynamiclib -shared -flat_namespace -undefined suppress -o $(SLIB) $(OBJS)
-	../../../tools/Mach5/wrapper.rb $@;mv output.so $@
+	@export MACOSX_DEPLOYMENT_TARGET=@OSX@
+	$(CXX) -dynamiclib -shared -undefined dynamic_lookup -o $(SLIB) \
+		-Wl,-alias_list,../../cores/DllLoader/exports/wrapper_mach_alias \
+		../../cores/DllLoader/exports/wrapper.o \
+		$(OBJS)
 else
 	$(CXX) $(CFLAGS) -shared -g -o $(SLIB) $(OBJS)
 endif

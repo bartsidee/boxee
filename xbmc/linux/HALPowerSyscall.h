@@ -39,6 +39,7 @@ public:
   virtual bool CanHibernate();
   virtual bool CanReboot();
 
+  virtual bool IsSuspended();
 private:
   bool QueryCapability(const char *capability);
   bool doPowerCall(const char *powerstate);

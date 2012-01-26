@@ -20,33 +20,44 @@
  */
 
 #include "WIN32Util.h"
-#include "../Util.h"
-#include "FileSystem/cdioSupport.h"
+#include "GUISettings.h"
+#include "Util.h"
+#include "cdioSupport.h"
 #include "PowrProf.h"
 #include "WindowHelper.h"
 #include "Application.h"
 #include <shlobj.h>
-#include "SpecialProtocol.h"
+#include "filesystem/SpecialProtocol.h"
 #include "my_ntddscsi.h"
 #if _MSC_VER > 1400
 #include "Setupapi.h"
 #endif
 #include "MediaManager.h"
 #include "WindowingFactory.h"
-#include "LocalizeStrings.h"
-#include "log.h"
-#include "../URL.h"
+#include "guilib/LocalizeStrings.h"
+#include "utils/log.h"
 #include "StringUtils.h"
+#include "DllPaths_win32.h"
+#include "FileSystem/File.h"
 #include "Registry.h"
 
-#define DLL_ENV_PATH "special://xbmc/system/;special://xbmc/system/players/dvdplayer/;special://xbmc/system/players/paplayer/;special://xbmc/system/python/"
+// default Broadcom registy bits (setup when installing a CrystalHD card)
+#define BC_REG_PATH       "Software\\Broadcom\\MediaPC"
+#define BC_REG_PRODUCT    "CrystalHD" // 70012/70015
+#define BC_BCM_DLL        "bcmDIL.dll"
+#define BC_REG_INST_PATH  "InstallPath"
+
+#define DLL_ENV_PATH "special://xbmc/system/;" \
+                     "special://xbmc/system/players/dvdplayer/;" \
+                     "special://xbmc/system/players/paplayer/;" \
+                     "special://xbmc/system/cdrip/;" \
+                     "special://xbmc/system/python/;" \
+                     "special://xbmc/"
 
 extern HWND g_hWnd;
 
 using namespace std;
 using namespace MEDIA_DETECT;
-
-DWORD CWIN32Util::dwDriveMask = 0;
 
 CWIN32Util::CWIN32Util(void)
 {
@@ -56,70 +67,7 @@ CWIN32Util::~CWIN32Util(void)
 {
 }
 
-
-const CStdString CWIN32Util::GetNextFreeDriveLetter()
-{
-  for(int iDrive='a';iDrive<='z';iDrive++)
-  {
-    CStdString strDrive;
-    strDrive.Format("%c:",iDrive);
-    int iType = GetDriveType(strDrive);
-    if(iType == DRIVE_NO_ROOT_DIR && iDrive != 'a' && iDrive != 'b')
-      return strDrive;
-  }
-  return StringUtils::EmptyString;
-}
-
-CStdString CWIN32Util::MountShare(const CStdString &smbPath, const CStdString &strUser, const CStdString &strPass, DWORD *dwError)
-{
-  NETRESOURCE nr;
-  memset(&nr,0,sizeof(nr));
-  CStdString strRemote = smbPath;
-  CStdString strDrive = CWIN32Util::GetNextFreeDriveLetter();
-
-  if(strDrive == StringUtils::EmptyString)
-    return StringUtils::EmptyString;
-
-  strRemote.Replace('/', '\\');
-
-  nr.lpRemoteName = (LPTSTR)(LPCTSTR)strRemote.c_str();
-  nr.lpLocalName  = (LPTSTR)(LPCTSTR)strDrive.c_str();
-  nr.dwType       = RESOURCETYPE_DISK;
-
-  DWORD dwRes = WNetAddConnection2(&nr,(LPCTSTR)strPass.c_str(), (LPCTSTR)strUser.c_str(), NULL);
-
-  if(dwError != NULL)
-    *dwError = dwRes;
-
-  if(dwRes != NO_ERROR)
-  {
-    CLog::Log(LOGERROR, "Can't mount %s to %s. Error code %d",strRemote.c_str(), strDrive.c_str(),dwRes);
-    return StringUtils::EmptyString;
-  }
-
-  return strDrive;
-}
-
-DWORD CWIN32Util::UmountShare(const CStdString &strPath)
-{
-  return WNetCancelConnection2((LPCTSTR)strPath.c_str(),NULL,true);
-}
-
-CStdString CWIN32Util::MountShare(const CStdString &strPath, DWORD *dwError)
-{
-  CStdString strURL = strPath;
-  CURL url(strURL);
-  url.GetURL(strURL);
-  CStdString strPassword = url.GetPassWord();
-  CStdString strUserName = url.GetUserName();
-  CStdString strPathToShare = "\\\\"+url.GetHostName() + "\\" + url.GetShareName();
-  if(!url.GetUserName().IsEmpty())
-    return CWIN32Util::MountShare(strPathToShare, strUserName, strPassword, dwError);
-  else
-    return CWIN32Util::MountShare(strPathToShare, "", "", dwError);
-}
-
-CStdString CWIN32Util::URLEncode(const CURL &url)
+CStdString CWIN32Util::URLEncode(const CURI &url)
 {
   /* due to smb wanting encoded urls we have to build it manually */
 
@@ -140,16 +88,6 @@ CStdString CWIN32Util::URLEncode(const CURL &url)
     flat += url.GetPassWord();
     flat += "@";
   }
-  else if( !url.GetHostName().IsEmpty() && !g_guiSettings.GetString("smb.username").IsEmpty() )
-  {
-    /* okey this is abit uggly to do this here, as we don't really only url encode */
-    /* but it's the simplest place to do so */
-    flat += g_guiSettings.GetString("smb.username");
-    flat += ":";
-    flat += g_guiSettings.GetString("smb.password");
-    flat += "@";
-  }
-
   flat += url.GetHostName();
 
   /* okey sadly since a slash is an invalid name we have to tokenize */
@@ -176,27 +114,27 @@ int CWIN32Util::GetDriveStatus(const CStdString &strPath)
   T_SPDT_SBUF sptd_sb;  //SCSI Pass Through Direct variable.
   byte DataBuf[16];  //Buffer for holding data to/from drive.
 
-  hDevice = CreateFile(strPath.c_str(),  // drive
-                    0,                // no access to the drive
-                    FILE_SHARE_READ,  // share mode
-                    NULL,             // default security attributes
-                    OPEN_EXISTING,    // disposition
-                    FILE_ATTRIBUTE_READONLY,                // file attributes
+  hDevice = CreateFile( strPath.c_str(),                  // drive
+                        0,                                // no access to the drive
+                        FILE_SHARE_READ,                  // share mode
+                        NULL,                             // default security attributes
+                        OPEN_EXISTING,                    // disposition
+                        FILE_ATTRIBUTE_READONLY,          // file attributes
                         NULL);
 
-  if (hDevice == INVALID_HANDLE_VALUE) // cannot open the drive
+  if (hDevice == INVALID_HANDLE_VALUE)                    // cannot open the drive
   {
     return -1;
   }
 
   iResult = DeviceIoControl((HANDLE) hDevice,             // handle to device
-                    IOCTL_STORAGE_CHECK_VERIFY2,  // dwIoControlCode
-                    NULL,                        // lpInBuffer
-                    0,                           // nInBufferSize
-                    &ulChanges,                  // lpOutBuffer
-                    sizeof(ULONG),               // nOutBufferSize
+                             IOCTL_STORAGE_CHECK_VERIFY2, // dwIoControlCode
+                             NULL,                        // lpInBuffer
+                             0,                           // nInBufferSize
+                             &ulChanges,                  // lpOutBuffer
+                             sizeof(ULONG),               // nOutBufferSize
                              &dwBytesReturned ,           // number of bytes returned
-                    NULL );                      // OVERLAPPED structure
+                             NULL );                      // OVERLAPPED structure
 
   CloseHandle(hDevice);
 
@@ -214,7 +152,7 @@ int CWIN32Util::GetDriveStatus(const CStdString &strPath)
   if (hDevice == INVALID_HANDLE_VALUE)
   {
     return -1;
-}
+  }
 
   sptd_sb.sptd.Length=sizeof(SCSI_PASS_THROUGH_DIRECT);
   sptd_sb.sptd.PathId=0; 
@@ -272,7 +210,7 @@ int CWIN32Util::GetDriveStatus(const CStdString &strPath)
 
 CStdString CWIN32Util::GetLocalPath(const CStdString &strPath)
 {
-  CURL url(strPath);
+  CURI url(strPath);
   CStdString strLocalPath = url.GetFileName();
   strLocalPath.Replace(url.GetShareName()+"/","");
   return strLocalPath;
@@ -288,30 +226,6 @@ char CWIN32Util::FirstDriveFromMask (ULONG unitmask)
     }
     return (i + 'A');
 }
-
-
-// Workaround to get the added and removed drives
-// Seems to be that the lParam in SDL is empty
-// MS way: http://msdn.microsoft.com/en-us/library/aa363215(VS.85).aspx
-
-void CWIN32Util::UpdateDriveMask()
-{
-  dwDriveMask = GetLogicalDrives();
-}
-
-CStdString CWIN32Util::GetChangedDrive()
-{
-  CStdString strDrive;
-  DWORD dwDriveMask2 = GetLogicalDrives();
-  DWORD dwDriveMaskResult = dwDriveMask ^ dwDriveMask2;
-  if(dwDriveMaskResult == 0)
-    return "";
-  dwDriveMask = dwDriveMask2;
-  strDrive.Format("%c:",FirstDriveFromMask(dwDriveMaskResult));
-  return strDrive;
-}
-
-// End Workaround
 
 bool CWIN32Util::PowerManagement(PowerState State)
 {
@@ -399,23 +313,28 @@ bool CWIN32Util::XBMCShellExecute(const CStdString &strPath, bool bWaitForScript
     strWorkingDir[iIndex+1] = '\0'; 
   } 
 
+  CStdStringW WstrExe, WstrParams, WstrWorkingDir;
+  g_charsetConverter.utf8ToW(strExe, WstrExe);
+  g_charsetConverter.utf8ToW(strParams, WstrParams);
+  g_charsetConverter.utf8ToW(strWorkingDir, WstrWorkingDir);
+
   bool ret;
-  SHELLEXECUTEINFO ShExecInfo = {0};
-  ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
+  SHELLEXECUTEINFOW ShExecInfo = {0};
+  ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFOW);
   ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
   ShExecInfo.hwnd = NULL;
   ShExecInfo.lpVerb = NULL;
-  ShExecInfo.lpFile = strExe.c_str();		
-  ShExecInfo.lpParameters = strParams.c_str();	
-  ShExecInfo.lpDirectory = strWorkingDir.c_str();
+  ShExecInfo.lpFile = WstrExe.c_str();
+  ShExecInfo.lpParameters = WstrParams.c_str();
+  ShExecInfo.lpDirectory = WstrWorkingDir.c_str();
   ShExecInfo.nShow = SW_SHOW;
-  ShExecInfo.hInstApp = NULL;	
+  ShExecInfo.hInstApp = NULL;
 
   g_windowHelper.StopThread();
 
   LockSetForegroundWindow(LSFW_UNLOCK);
   ShowWindow(g_hWnd,SW_MINIMIZE);
-  ret = ShellExecuteEx(&ShExecInfo) == TRUE;
+  ret = ShellExecuteExW(&ShExecInfo) == TRUE;
   g_windowHelper.SetHANDLE(ShExecInfo.hProcess);
 
   // ShellExecute doesn't return the window of the started process
@@ -435,7 +354,6 @@ bool CWIN32Util::XBMCShellExecute(const CStdString &strPath, bool bWaitForScript
 
 std::vector<CStdString> CWIN32Util::GetDiskUsage()
 {
-  CStdString strRet;
   vector<CStdString> result;
   ULARGE_INTEGER ULTotal= { { 0 } };
   ULARGE_INTEGER ULTotalFree= { { 0 } };
@@ -444,6 +362,8 @@ std::vector<CStdString> CWIN32Util::GetDiskUsage()
   DWORD dwStrLength= GetLogicalDriveStrings( 0, pcBuffer );
   if( dwStrLength != 0 )
   {
+    CStdString strRet;
+    
     dwStrLength+= 1;
     pcBuffer= new char [dwStrLength];
     GetLogicalDriveStrings( dwStrLength, pcBuffer );
@@ -482,19 +402,34 @@ int CWIN32Util::GetDesktopColorDepth()
   devmode.dmSize = sizeof(devmode);
   EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &devmode);
   return (int)devmode.dmBitsPerPel;
-} 
+}
 
-CStdString CWIN32Util::GetProfilePath()
+CStdString CWIN32Util::GetSpecialFolder(int csidl)
 {
   CStdString strProfilePath;
   WCHAR szPath[MAX_PATH];
 
-  if(SUCCEEDED(SHGetFolderPathW(NULL,CSIDL_APPDATA|CSIDL_FLAG_CREATE,NULL,0,szPath)))
+  if(SUCCEEDED(SHGetFolderPathW(NULL,csidl,NULL,0,szPath)))
   {
     g_charsetConverter.wToUTF8(szPath, strProfilePath);
     strProfilePath = UncToSmb(strProfilePath);
   }  
   else
+    strProfilePath = "";
+
+  return strProfilePath;
+}
+
+CStdString CWIN32Util::GetSystemPath()
+{
+  return GetSpecialFolder(CSIDL_SYSTEM);
+}
+
+CStdString CWIN32Util::GetProfilePath()
+{
+  CStdString strProfilePath = GetSpecialFolder(CSIDL_APPDATA|CSIDL_FLAG_CREATE);
+  
+  if (strProfilePath.length() == 0)
     CUtil::GetHomePath(strProfilePath);
 
   return strProfilePath;
@@ -534,22 +469,6 @@ CStdString CWIN32Util::GetMyPicturesPath()
   WCHAR szPath[MAX_PATH];
 
   if(SUCCEEDED(SHGetFolderPathW(NULL,CSIDL_MYPICTURES,NULL,0,szPath)))
-  {
-    g_charsetConverter.wToUTF8(szPath, strProfilePath);
-    strProfilePath = UncToSmb(strProfilePath);
-  }  
-  
-  return strProfilePath;
-}
-
-
-
-CStdString CWIN32Util::GetSystemPath()
-{
-  CStdString strProfilePath;
-  WCHAR szPath[MAX_PATH];
-
-  if(SUCCEEDED(SHGetFolderPathW(NULL,CSIDL_SYSTEM,NULL,0,szPath)))
   {
     g_charsetConverter.wToUTF8(szPath, strProfilePath);
     strProfilePath = UncToSmb(strProfilePath);
@@ -598,10 +517,10 @@ HRESULT CWIN32Util::ToggleTray(const char cDriveLetter)
   char cDL = cDriveLetter;
   if( !cDL )
   {
-    char* dvdDevice = CLibcdio::GetInstance()->GetDeviceFileName();
+    CStdString dvdDevice = g_mediaManager.TranslateDevicePath("");
     if(dvdDevice == "")
       return S_FALSE;
-    cDL = dvdDevice[4];
+    cDL = dvdDevice[0];
   }
   
   CStdString strVolFormat; 
@@ -633,10 +552,10 @@ HRESULT CWIN32Util::EjectTray(const char cDriveLetter)
   char cDL = cDriveLetter;
   if( !cDL )
   {
-    char* dvdDevice = CLibcdio::GetInstance()->GetDeviceFileName();
+    CStdString dvdDevice = g_mediaManager.TranslateDevicePath("");
     if(dvdDevice == "")
       return S_FALSE;
-    cDL = dvdDevice[4];
+    cDL = dvdDevice[0];
   }
   
   CStdString strVolFormat; 
@@ -653,10 +572,10 @@ HRESULT CWIN32Util::CloseTray(const char cDriveLetter)
   char cDL = cDriveLetter;
   if( !cDL )
   {
-    char* dvdDevice = CLibcdio::GetInstance()->GetDeviceFileName();
+    CStdString dvdDevice = g_mediaManager.TranslateDevicePath("");
     if(dvdDevice == "")
       return S_FALSE;
-    cDL = dvdDevice[4];
+    cDL = dvdDevice[0];
   }
   
   CStdString strVolFormat; 
@@ -807,13 +726,13 @@ void CWIN32Util::CheckGLVersion()
 {
   if(CWIN32Util::HasGLDefaultDrivers())
   {
-    MessageBox(NULL, "Windows default OpenGL driver detected. This driver is not supported. Please configure the OpenGL driver supplied by your video card vendor", "BOXEE: Fatal Error", MB_OK|MB_ICONERROR);
+    MessageBox(NULL, "MS default OpenGL drivers detected. Please get OpenGL drivers from your video card vendor", "XBMC: Fatal Error", MB_OK|MB_ICONERROR);
     exit(1);
   }
 
   if(!CWIN32Util::HasReqGLVersion())
   {
-    if(MessageBox(NULL, "Your OpenGL version doesn't meet the XBMC requirements", "BOXEE: Warning", MB_OKCANCEL|MB_ICONWARNING) == IDCANCEL)
+    if(MessageBox(NULL, "Your OpenGL version doesn't meet the XBMC requirements", "XBMC: Warning", MB_OKCANCEL|MB_ICONWARNING) == IDCANCEL)
     {
       exit(1);
     }
@@ -869,25 +788,36 @@ BOOL CWIN32Util::IsCurrentUserLocalAdministrator()
   return(b);
 }
 
-void CWIN32Util::GetDrivesByType(VECSOURCES &localDrives, Drive_Types eDriveType)
+void CWIN32Util::GetDrivesByType(VECSOURCES &localDrives, Drive_Types eDriveType, bool bonlywithmedia)
 {
-  CMediaSource share;
-  char* pcBuffer= NULL;
-  DWORD dwStrLength= GetLogicalDriveStrings( 0, pcBuffer );
+  WCHAR* pcBuffer= NULL;
+  DWORD dwStrLength= GetLogicalDriveStringsW( 0, pcBuffer );
   if( dwStrLength != 0 )
   {
+    CMediaSource share;
+    
     dwStrLength+= 1;
-    pcBuffer= new char [dwStrLength];
-    GetLogicalDriveStrings( dwStrLength, pcBuffer );
+    pcBuffer= new WCHAR [dwStrLength];
+    GetLogicalDriveStringsW( dwStrLength, pcBuffer );
 
-    UINT uDriveType;
-    int iPos= 0, nResult;
-    char cVolumeName[100];
+    int iPos= 0;
+    WCHAR cVolumeName[100];
     do{
-      cVolumeName[0]= '\0';
-      uDriveType= GetDriveType( pcBuffer + iPos  );
-      if(uDriveType != DRIVE_REMOVABLE)
-        nResult= GetVolumeInformation( pcBuffer + iPos, cVolumeName, 100, 0, 0, 0, NULL, 25);
+      int nResult = 0;
+      cVolumeName[0]= L'\0';
+
+      CStdStringW strWdrive = pcBuffer + iPos;
+      
+      UINT uDriveType= GetDriveTypeW( strWdrive.c_str()  );
+      // don't use GetVolumeInformation on fdd's as the floppy controller may be enabled in Bios but
+      // no floppy HW is attached which causes huge delays.
+      if(!strWdrive.Left(2).Equals(L"A:") && !strWdrive.Left(2).Equals(L"B:"))
+        nResult= GetVolumeInformationW( strWdrive.c_str() , cVolumeName, 100, 0, 0, 0, NULL, 25);
+      if(nResult == 0 && bonlywithmedia)
+      {
+        iPos += (wcslen( pcBuffer + iPos) + 1 );
+        continue;
+      }
       share.strPath= share.strName= "";
 
       bool bUseDCD= false;
@@ -897,8 +827,10 @@ void CWIN32Util::GetDrivesByType(VECSOURCES &localDrives, Drive_Types eDriveType
          ( eDriveType == REMOVABLE_DRIVES && ( uDriveType == DRIVE_REMOVABLE )) ||
          ( eDriveType == DVD_DRIVES && ( uDriveType == DRIVE_CDROM ))))
       {
-        share.strPath= pcBuffer + iPos;
-        if( cVolumeName[0] != '\0' ) share.strName= cVolumeName;
+        //share.strPath = strWdrive;
+        g_charsetConverter.wToUTF8(strWdrive, share.strPath);
+        if( cVolumeName[0] != L'\0' )
+          g_charsetConverter.wToUTF8(cVolumeName, share.strName);
         if( uDriveType == DRIVE_CDROM && nResult)
         {
           // Has to be the same as auto mounted devices
@@ -943,12 +875,11 @@ void CWIN32Util::GetDrivesByType(VECSOURCES &localDrives, Drive_Types eDriveType
              CMediaSource::SOURCE_TYPE_UNKNOWN );
         }
 
-        localDrives.push_back(share);
+        AddOrReplace(localDrives, share);
       }
-      iPos += (strlen( pcBuffer + iPos) + 1 );
-    } while( strlen( pcBuffer + iPos ) > 0 );
-    if( pcBuffer != NULL)
-      delete[] pcBuffer;
+      iPos += (wcslen( pcBuffer + iPos) + 1 );
+    } while( wcslen( pcBuffer + iPos ) > 0 );
+    delete[] pcBuffer;
   }
 }
 
@@ -990,6 +921,34 @@ CStdString CWIN32Util::GetDiskLabel(const CStdString& strPath)
     return "";
   return CStdString(cVolumenName).TrimRight(" ");
 }
+
+// Add the registry value to start boxee on windows login
+void CWIN32Util::RunAtLogin(bool run)
+{
+  HKEY hKeyRoot;
+  LPCTSTR pszSubKey;
+  bool bSuccess;
+
+  CStdString strExecutablePath;
+  CUtil::GetHomePath(strExecutablePath);
+
+  hKeyRoot = HKEY_CURRENT_USER;
+  pszSubKey = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
+
+  strExecutablePath = '"' + strExecutablePath + PATH_SEPARATOR_CHAR + "Boxee.exe" + '"' + " -startup";
+
+  if(run)
+  {
+    bSuccess = Set_StringRegistryValue(hKeyRoot, pszSubKey, "Boxee", strExecutablePath);
+    CLog::Log(LOGINFO, "Setting Boxee to start on system login: %s", bSuccess ? "OK" : "Failed");
+  }
+  else
+  {
+    bSuccess = DeleteRegistryValue(hKeyRoot, pszSubKey, "Boxee");
+    CLog::Log(LOGINFO, "Removing Boxee from start on system login: %s", bSuccess ? "OK" : "Failed");
+  }
+}
+
 
 extern "C"
 {
@@ -1401,46 +1360,115 @@ extern "C" {
   }
 }
 
-void CWIN32Util::GetGLVersion(int& major, int& minor)
+
+bool CWIN32Util::Is64Bit()
 {
-#ifdef HAS_GL
-	const char* ver = (const char*)glGetString(GL_VERSION);
-    if (ver != 0)
-      sscanf(ver, "%d.%d", &major, &minor);
-	else {
-		// try to understand the error
-		GLenum err = glGetError();
-		if (err == GL_INVALID_OPERATION) {
-			CLog::Log(LOGERROR, "Error, could not get OpenGL version, (GL_INVALID_OPERATION)");
-		}
-	}
-#endif
+  bool bRet= false;
+  typedef VOID (WINAPI *LPFN_GETNATIVESYSTEMINFO) (LPSYSTEM_INFO);
+  LPFN_GETNATIVESYSTEMINFO fnGetNativeSystemInfo= ( LPFN_GETNATIVESYSTEMINFO ) GetProcAddress( GetModuleHandle( TEXT( "kernel32" ) ), "GetNativeSystemInfo" );
+  SYSTEM_INFO sSysInfo;
+  memset( &sSysInfo, 0, sizeof( sSysInfo ) );
+  if (fnGetNativeSystemInfo != NULL)
+  {
+    fnGetNativeSystemInfo(&sSysInfo);
+    if (sSysInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) bRet= true;
+  }
+  return bRet;
 }
 
-// Add the registry value to start boxee on windows login
-void CWIN32Util::RunAtLogin(bool run)
+LONG CWIN32Util::UtilRegGetValue( const HKEY hKey, const char *const pcKey, DWORD *const pdwType, char **const ppcBuffer, DWORD *const pdwSizeBuff, const DWORD dwSizeAdd )
 {
-  HKEY hKeyRoot;
-  LPCTSTR pszSubKey;
-  bool bSuccess;
-
-  CStdString strExecutablePath;
-  CUtil::GetHomePath(strExecutablePath);
-
-  hKeyRoot = HKEY_CURRENT_USER;
-  pszSubKey = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
-
-  strExecutablePath = '"' + strExecutablePath + PATH_SEPARATOR_CHAR + "Boxee.exe" + '"' + " -startup";
-
-  if(run)
+  DWORD dwSize;
+  LONG lRet= RegQueryValueEx(hKey, pcKey, NULL, pdwType, NULL, &dwSize );
+  if (lRet == ERROR_SUCCESS)
   {
-    bSuccess = Set_StringRegistryValue(hKeyRoot, pszSubKey, "Boxee", strExecutablePath);
-    CLog::Log(LOGINFO, "Setting Boxee to start on system login: %s", bSuccess ? "OK" : "Failed");
+    if (ppcBuffer)
+    {
+      char *pcValue=*ppcBuffer;
+      if (!pcValue || !pdwSizeBuff || dwSize +dwSizeAdd > *pdwSizeBuff) pcValue= (char*)realloc(pcValue, dwSize +dwSizeAdd);
+      lRet= RegQueryValueEx(hKey,pcKey,NULL,NULL,(LPBYTE)pcValue,&dwSize);
+
+      if ( lRet == ERROR_SUCCESS || *ppcBuffer ) *ppcBuffer= pcValue;
+      else free( pcValue );
+    }
+    if (pdwSizeBuff) *pdwSizeBuff= dwSize +dwSizeAdd;
+  }
+  return lRet;
+}
+
+bool CWIN32Util::UtilRegOpenKeyEx( const HKEY hKeyParent, const char *const pcKey, const REGSAM rsAccessRights, HKEY *hKey, const bool bReadX64 )
+{
+  const REGSAM rsAccessRightsTmp= ( Is64Bit() ? rsAccessRights | ( bReadX64 ? KEY_WOW64_64KEY : KEY_WOW64_32KEY ) : rsAccessRights );
+  bool bRet= ( ERROR_SUCCESS == RegOpenKeyEx(hKeyParent, pcKey, 0, rsAccessRightsTmp, hKey));
+  return bRet;
+}
+
+bool CWIN32Util::GetCrystalHDLibraryPath(CStdString &strPath)
+{
+    return false;
+#if 0
+  // support finding library by windows registry
+  HKEY hKey;
+  CStdString strRegKey;
+
+  CLog::Log(LOGDEBUG, "CrystalHD: detecting CrystalHD installation path");
+  strRegKey.Format("%s\\%s", BC_REG_PATH, BC_REG_PRODUCT );
+
+  if( CWIN32Util::UtilRegOpenKeyEx( HKEY_LOCAL_MACHINE, strRegKey.c_str(), KEY_READ, &hKey ))
+  {
+    DWORD dwType;
+    char *pcPath= NULL;
+    if( CWIN32Util::UtilRegGetValue( hKey, BC_REG_INST_PATH, &dwType, &pcPath, NULL, sizeof( pcPath ) ) == ERROR_SUCCESS )
+    {
+      strPath = CUtil::AddFileToFolder(pcPath, BC_BCM_DLL);
+      CLog::Log(LOGDEBUG, "CrystalHD: got CrystalHD installation path (%s)", strPath.c_str());
+      return true;
+    }
+    else
+    {
+      CLog::Log(LOGDEBUG, "CrystalHD: getting CrystalHD installation path failed");
+    }
   }
   else
   {
-    bSuccess = DeleteRegistryValue(hKeyRoot, pszSubKey, "Boxee");
-    CLog::Log(LOGINFO, "Removing Boxee from start on system login: %s", bSuccess ? "OK" : "Failed");
+    CLog::Log(LOGDEBUG, "CrystalHD: CrystalHD software seems to be not installed.");
   }
+  // check for dll in system dir
+  if(XFILE::CFile::Exists(DLL_PATH_LIBCRYSTALHD))
+    return true;
+  else
+    return false;
+#endif
 }
 
+void CWinIdleTimer::StartZero()
+{
+  SetThreadExecutionState(ES_SYSTEM_REQUIRED);
+  CStopWatch::StartZero();
+}
+
+extern "C"
+{
+  /* case-independent string matching, similar to strstr but
+  * matching */
+  char * strcasestr(const char* haystack, const char* needle) 
+  {
+    int i;
+    int nlength = (int) strlen (needle);
+    int hlength = (int) strlen (haystack);
+
+    if (nlength > hlength) return NULL;
+    if (hlength <= 0) return NULL;
+    if (nlength <= 0) return (char *)haystack;
+    /* hlength and nlength > 0, nlength <= hlength */
+    for (i = 0; i <= (hlength - nlength); i++) 
+    {
+      if (strncasecmp (haystack + i, needle, nlength) == 0) 
+      {
+        return (char *)haystack + i;
+      }
+    }
+    /* substring not found */
+    return NULL;
+  }
+}

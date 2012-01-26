@@ -58,11 +58,18 @@ void CGUIProgressControl::SetPosition(float posX, float posY)
 
 void CGUIProgressControl::Render()
 {
+  bool clip;
+
   if (!IsDisabled())
   {
     if (m_iInfoCode )
     {
       m_fPercent = (float)g_infoManager.GetInt(m_iInfoCode);
+      if(m_iInfoCode ==  PLAYER_PROGRESS_TIME || m_iInfoCode == PLAYER_PROGRESS_WITH_CACHE_TIME)
+      {
+        m_fPercent = g_infoManager.GetInt(m_iInfoCode) / 100.0;
+      }
+
       if ((m_RangeMax - m_RangeMin)> 0 && (m_RangeMax != 100 && m_RangeMin != 0) )
       {
         if (m_fPercent > m_RangeMax)
@@ -106,9 +113,10 @@ void CGUIProgressControl::Render()
         if (m_bReveal)
         {
           m_guiMid.SetWidth(m_width);
-          g_graphicsContext.SetClipRegion(posX, posY+offset, width, fScaleY * m_guiMid.GetTextureHeight());
+          clip = g_graphicsContext.SetClipRegion(posX, posY+offset, width, fScaleY * m_guiMid.GetTextureHeight());
           m_guiMid.Render();
-          g_graphicsContext.RestoreClipRegion();
+          if(clip)
+            g_graphicsContext.RestoreClipRegion();
         }
         else
         {
@@ -122,7 +130,7 @@ void CGUIProgressControl::Render()
     {
 
       float fWidth = m_fPercent;
-      float fFullWidth = m_guiBackground.GetTextureWidth() - m_guiLeft.GetTextureWidth() - m_guiRight.GetTextureWidth();
+      float fFullWidth = m_guiBackground.GetTextureWidth() - (m_guiLeft.GetTextureWidth() / fScaleX) - (m_guiRight.GetTextureWidth() / fScaleX);
       fWidth /= 100.0f;
       fWidth *= fFullWidth;
 
@@ -132,10 +140,10 @@ void CGUIProgressControl::Render()
       else
         m_guiLeft.SetPosition(posX, posY);
       m_guiLeft.SetHeight(fScaleY*m_guiLeft.GetTextureHeight());
-      m_guiLeft.SetWidth(fScaleX*m_guiLeft.GetTextureWidth());
+      m_guiLeft.SetWidth(m_guiLeft.GetTextureWidth());
       m_guiLeft.Render();
 
-      posX += fScaleX*m_guiLeft.GetTextureWidth();
+      posX += m_guiLeft.GetTextureWidth();
       if (m_fPercent && (int)(fScaleX * fWidth) > 1)
       {
         float offset = fabs(fScaleY * 0.5f * (m_guiMid.GetTextureHeight() - m_guiBackground.GetTextureHeight()));
@@ -147,9 +155,10 @@ void CGUIProgressControl::Render()
         if (m_bReveal)
         {
           m_guiMid.SetWidth(fScaleX * fFullWidth);
-          g_graphicsContext.SetClipRegion(posX, posY+offset, fScaleX * fWidth, fScaleY * m_guiMid.GetTextureHeight());
+          clip = g_graphicsContext.SetClipRegion(posX, posY+offset, fScaleX * fWidth, fScaleY * m_guiMid.GetTextureHeight());
           m_guiMid.Render();
-          g_graphicsContext.RestoreClipRegion();
+          if(clip)
+            g_graphicsContext.RestoreClipRegion();
         }
         else
         {
@@ -165,7 +174,7 @@ void CGUIProgressControl::Render()
       else
         m_guiRight.SetPosition(posX, posY);
       m_guiRight.SetHeight(fScaleY * m_guiRight.GetTextureHeight());
-      m_guiRight.SetWidth(fScaleX * m_guiRight.GetTextureWidth());
+      m_guiRight.SetWidth(m_guiRight.GetTextureWidth());
       m_guiRight.Render();
     }
     float offset = fabs(fScaleY * 0.5f * (m_guiOverlay.GetTextureHeight() - m_guiBackground.GetTextureHeight()));
@@ -201,14 +210,14 @@ float CGUIProgressControl::GetPercentage() const
 {
   return m_fPercent;
 }
-void CGUIProgressControl::FreeResources()
+void CGUIProgressControl::FreeResources(bool immediately)
 {
-  CGUIControl::FreeResources();
-  m_guiBackground.FreeResources();
-  m_guiMid.FreeResources();
-  m_guiRight.FreeResources();
-  m_guiLeft.FreeResources();
-  m_guiOverlay.FreeResources();
+  CGUIControl::FreeResources(immediately);
+  m_guiBackground.FreeResources(immediately);
+  m_guiMid.FreeResources(immediately);
+  m_guiRight.FreeResources(immediately);
+  m_guiLeft.FreeResources(immediately);
+  m_guiOverlay.FreeResources(immediately);
 }
 
 void CGUIProgressControl::DynamicResourceAlloc(bool bOnOff)

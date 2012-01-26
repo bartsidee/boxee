@@ -68,8 +68,9 @@ struct _x509_ctx
 {
     char *ca_cert_dn[X509_NUM_DN_TYPES];
     char *cert_dn[X509_NUM_DN_TYPES];
-    time_t not_before;
-    time_t not_after;
+    char **subject_alt_dnsnames;
+    SSL_DateTime not_before;
+    SSL_DateTime not_after;
     uint8_t *signature;
     uint16_t sig_len;
     uint8_t sig_type;
@@ -94,7 +95,7 @@ typedef struct
 int x509_new(const uint8_t *cert, int *len, X509_CTX **ctx);
 void x509_free(X509_CTX *x509_ctx);
 #ifdef CONFIG_SSL_CERT_VERIFICATION
-int x509_verify(const CA_CERT_CTX *ca_cert_ctx, const X509_CTX *cert);
+int x509_verify(const CA_CERT_CTX *ca_cert_ctx, const X509_CTX *cert, const SSL_DateTime* now);
 #endif
 #ifdef CONFIG_SSL_FULL_MODE
 void x509_print(const X509_CTX *cert, CA_CERT_CTX *ca_cert_ctx);
@@ -109,15 +110,22 @@ const char * x509_display_error(int error);
 #define ASN1_OCTET_STRING       0x04
 #define ASN1_NULL               0x05
 #define ASN1_OID                0x06
+#define ASN1_UTF8_STR           0x0C /* GBG */
+#define ASN1_UNIVERSAL_STR      0x1C /* GBG */
 #define ASN1_PRINTABLE_STR      0x13
 #define ASN1_TELETEX_STR        0x14
 #define ASN1_IA5_STR            0x16
 #define ASN1_UTC_TIME           0x17
+#define ASN1_GENERALIZED_TIME   0x18
 #define ASN1_UNICODE_STR        0x1e
 #define ASN1_SEQUENCE           0x30
+#define ASN1_CONTEXT_DNSNAME	0x82
 #define ASN1_SET                0x31
+#define ASN1_V3_DATA			0xa3
 #define ASN1_IMPLICIT_TAG       0x80
+#define ASN1_CONTEXT_DNSNAME	0x82
 #define ASN1_EXPLICIT_TAG       0xa0
+#define ASN1_V3_DATA			0xa3
 
 #define SIG_TYPE_MD2            0x02
 #define SIG_TYPE_MD5            0x04
@@ -134,8 +142,9 @@ int asn1_name(const uint8_t *cert, int *offset, char *dn[]);
 int asn1_public_key(const uint8_t *cert, int *offset, X509_CTX *x509_ctx);
 #ifdef CONFIG_SSL_CERT_VERIFICATION
 int asn1_signature(const uint8_t *cert, int *offset, X509_CTX *x509_ctx);
+int asn1_find_subjectaltname(const uint8_t* cert, int offset);
 int asn1_compare_dn(char * const dn1[], char * const dn2[]);
-#endif
+#endif /* CONFIG_SSL_CERT_VERIFICATION */
 int asn1_signature_type(const uint8_t *cert, 
                                 int *offset, X509_CTX *x509_ctx);
 

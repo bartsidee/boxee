@@ -248,9 +248,9 @@ void CRegExp::DumpOvector(int iLog /* = LOGDEBUG */)
 void CRegExp::AddDateEx()
 {
   // yyyy/mm/dd  yy/mm/dd  yyyy.mm.dd  yy-mm-dd etc ...
-  m_datesExp.push_back(CRegExpDateFormat("(?:19|20)?(\\d\\d)[- /.](0?[1-9]|1[012])[- /.](0?[1-9]|[12][0-9]|3[01])","\\1","\\2","\\3"));
+  m_datesExp.push_back(CRegExpDateFormat("(?:19|20)?(\\d\\d)[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])","\\1","\\2","\\3"));
   // mm/dd/yyyy  mm.dd.yyyy mm-dd-yyyy etc ...
-  m_datesExp.push_back(CRegExpDateFormat("(0?[1-9]|1[012])[- /.](0?[1-9]|[12][0-9]|3[01])[- /.]((?:19|20)?\\d\\d)","\\3","\\1","\\2"));
+  m_datesExp.push_back(CRegExpDateFormat("(0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])[- /.]((?:19|20)?\\d\\d)","\\3","\\1","\\2"));
 
 }
 

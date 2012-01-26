@@ -18,7 +18,7 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
-
+ 
 #include "DVDSubtitleStream.h"
 #include "DVDInputStreams/DVDFactoryInputStream.h"
 #include "DVDInputStreams/DVDInputStream.h"
@@ -54,9 +54,9 @@ bool CDVDSubtitleStream::Open(const string& strFile)
     }
     else
       pInputStream->Seek(0, SEEK_SET);
-
+  
     if (isUTF16)
-    {
+{
       std::wstringstream wstringstream;
       memset(buffer,0,sizeof(buffer));
       while( (size_read = pInputStream->Read(buffer, sizeof(buffer)-2) ) > 0 )
@@ -64,7 +64,7 @@ bool CDVDSubtitleStream::Open(const string& strFile)
         CStdStringW temp;
         g_charsetConverter.utf16LEtoW(CStdString16((uint16_t*)buffer),temp);
         wstringstream << temp;
-      }
+}
       delete pInputStream;
 
       CStdString strUTF8;
@@ -73,14 +73,14 @@ bool CDVDSubtitleStream::Open(const string& strFile)
       m_stringstream << strUTF8;
     }
     else
-    {
+{
       while( (size_read = pInputStream->Read(buffer, sizeof(buffer)-1) ) > 0 )
-      {
+  {
         buffer[size_read] = '\0';
         m_stringstream << buffer;
       }
       delete pInputStream;
-
+      
       if (!isUTF8)
         isUTF8 = g_charsetConverter.isValidUtf8(m_stringstream.str());
 
@@ -93,14 +93,14 @@ bool CDVDSubtitleStream::Open(const string& strFile)
         m_stringstream.str("");
         m_stringstream << strUTF8;
       }
-    }
+      }
     return true;
-  }
-
+    }
+    
   delete pInputStream;
   return false;
-}
-
+  }
+  
 int CDVDSubtitleStream::Read(char* buf, int buf_size)
 {
   return m_stringstream.readsome(buf, buf_size);
@@ -108,32 +108,32 @@ int CDVDSubtitleStream::Read(char* buf, int buf_size)
 
 long CDVDSubtitleStream::Seek(long offset, int whence)
 {
-  switch (whence)
-  {
-    case SEEK_CUR:
+    switch (whence)
     {
+      case SEEK_CUR:
+      {
       m_stringstream.seekg(offset, ios::cur);
-      break;
-    }
-    case SEEK_END:
-    {
+        break;
+      }
+      case SEEK_END:
+      {
       m_stringstream.seekg(offset, ios::end);
       break;
-    }
-    case SEEK_SET:
-    {
+      }
+      case SEEK_SET:
+      {
       m_stringstream.seekg(offset, ios::beg);
-      break;
+        break;
+      }
     }
-  }
   return m_stringstream.tellg();
-}
+  }
 
 char* CDVDSubtitleStream::ReadLine(char* buf, int iLen)
 {
   if (m_stringstream.getline(buf, iLen))
-    return buf;
-  else
-    return NULL;
-}
-
+        return buf;
+      else
+          return NULL;
+        }
+        

@@ -1,21 +1,25 @@
-Microsoft Visual Studio Solution File, Format Version 8.00
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opengl_spectrum", "opengl_spectrum.vcproj", "{0D91724A-E6F6-4708-AF47-9F88BBE2114B}"
-	ProjectSection(ProjectDependencies) = postProject
-	EndProjectSection
 EndProject
 Global
-	GlobalSection(SolutionConfiguration) = preSolution
-		Debug = Debug
-		Release = Release
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug (GL)|Win32 = Debug (GL)|Win32
+		Debug (GLES)|Win32 = Debug (GLES)|Win32
+		Release (GL)|Win32 = Release (GL)|Win32
+		Release (GLES)|Win32 = Release (GLES)|Win32
 	EndGlobalSection
-	GlobalSection(ProjectConfiguration) = postSolution
-		{0D91724A-E6F6-4708-AF47-9F88BBE2114B}.Debug.ActiveCfg = Debug|Win32
-		{0D91724A-E6F6-4708-AF47-9F88BBE2114B}.Debug.Build.0 = Debug|Win32
-		{0D91724A-E6F6-4708-AF47-9F88BBE2114B}.Release.ActiveCfg = Release|Win32
-		{0D91724A-E6F6-4708-AF47-9F88BBE2114B}.Release.Build.0 = Release|Win32
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0D91724A-E6F6-4708-AF47-9F88BBE2114B}.Debug (GL)|Win32.ActiveCfg = Debug (GL)|Win32
+		{0D91724A-E6F6-4708-AF47-9F88BBE2114B}.Debug (GL)|Win32.Build.0 = Debug (GL)|Win32
+		{0D91724A-E6F6-4708-AF47-9F88BBE2114B}.Debug (GLES)|Win32.ActiveCfg = Debug (GLES)|Win32
+		{0D91724A-E6F6-4708-AF47-9F88BBE2114B}.Debug (GLES)|Win32.Build.0 = Debug (GLES)|Win32
+		{0D91724A-E6F6-4708-AF47-9F88BBE2114B}.Release (GL)|Win32.ActiveCfg = Release (GL)|Win32
+		{0D91724A-E6F6-4708-AF47-9F88BBE2114B}.Release (GL)|Win32.Build.0 = Release (GL)|Win32
+		{0D91724A-E6F6-4708-AF47-9F88BBE2114B}.Release (GLES)|Win32.ActiveCfg = Release (GLES)|Win32
+		{0D91724A-E6F6-4708-AF47-9F88BBE2114B}.Release (GLES)|Win32.Build.0 = Release (GLES)|Win32
 	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-	EndGlobalSection
-	GlobalSection(ExtensibilityAddIns) = postSolution
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal

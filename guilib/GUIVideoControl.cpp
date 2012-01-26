@@ -46,6 +46,10 @@ void CGUIVideoControl::Render()
   // don't render if we aren't playing video, or if the renderer isn't started
   // (otherwise the lock we have from CApplication::Render() may clash with the startup
   // locks in the RenderManager.)
+
+  // When we render video on a different layer,
+  // just render a transparent window in the renderer.
+
   if (g_application.IsPlayingVideo() && g_renderManager.IsStarted())
   {
 #else
@@ -55,6 +59,7 @@ void CGUIVideoControl::Render()
     if (!g_application.m_pPlayer->IsPaused())
       g_application.ResetScreenSaver();
 
+    //printf("CGUIVideoControl::Render: %f %f %f %f\n", m_posX, m_posY, m_posX + m_width, m_posY + m_height);
     g_graphicsContext.SetViewWindow(m_posX, m_posY, m_posX + m_width, m_posY + m_height);
 
 #ifdef HAS_VIDEO_PLAYBACK

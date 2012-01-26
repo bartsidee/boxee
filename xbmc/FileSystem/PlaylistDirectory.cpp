@@ -39,7 +39,7 @@ CPlaylistDirectory::~CPlaylistDirectory()
 
 bool CPlaylistDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items)
 {
-  CURL url(strPath);
+  CURI url(strPath);
 
   int playlistTyp=PLAYLIST_NONE;
   if (url.GetProtocol()=="playlistmusic")

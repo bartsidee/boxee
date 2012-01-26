@@ -55,24 +55,24 @@ static int encode_frame(AVCodecContext *avctx, unsigned char *buf,
     p->pict_type = FF_I_TYPE;
     p->key_frame = 1;
 
-    width = avctx->width;
+    width  = avctx->width;
     height = avctx->height;
 
     switch (avctx->pix_fmt) {
-        case PIX_FMT_GRAY8:
-            dimension = SGI_SINGLE_CHAN;
-            depth = SGI_GRAYSCALE;
-            break;
-        case PIX_FMT_RGB24:
-            dimension = SGI_MULTI_CHAN;
-            depth = SGI_RGB;
-            break;
-        case PIX_FMT_RGBA:
-            dimension = SGI_MULTI_CHAN;
-            depth = SGI_RGBA;
-            break;
-        default:
-            return AVERROR_INVALIDDATA;
+    case PIX_FMT_GRAY8:
+        dimension = SGI_SINGLE_CHAN;
+        depth     = SGI_GRAYSCALE;
+        break;
+    case PIX_FMT_RGB24:
+        dimension = SGI_MULTI_CHAN;
+        depth     = SGI_RGB;
+        break;
+    case PIX_FMT_RGBA:
+        dimension = SGI_MULTI_CHAN;
+        depth     = SGI_RGBA;
+        break;
+    default:
+        return AVERROR_INVALIDDATA;
     }
 
     tablesize = depth * height * 4;
@@ -109,39 +109,39 @@ static int encode_frame(AVCodecContext *avctx, unsigned char *buf,
     offsettab = buf;
 
     if (avctx->coder_type  != FF_CODER_TYPE_RAW) {
-    /* Skip RLE offset table. */
-    buf += tablesize;
-    lengthtab = buf;
+        /* Skip RLE offset table. */
+        buf += tablesize;
+        lengthtab = buf;
 
-    /* Skip RLE length table. */
-    buf += tablesize;
+        /* Skip RLE length table. */
+        buf += tablesize;
 
-    /* Make an intermediate consecutive buffer. */
+        /* Make an intermediate consecutive buffer. */
         if (!(encode_buf = av_malloc(width)))
-        return -1;
+            return -1;
 
-    for (z = 0; z < depth; z++) {
-        in_buf = p->data[0] + p->linesize[0] * (height - 1) + z;
+        for (z = 0; z < depth; z++) {
+            in_buf = p->data[0] + p->linesize[0] * (height - 1) + z;
 
-        for (y = 0; y < height; y++) {
-            bytestream_put_be32(&offsettab, buf - orig_buf);
+            for (y = 0; y < height; y++) {
+                bytestream_put_be32(&offsettab, buf - orig_buf);
 
-            for (x = 0; x < width; x++)
-                encode_buf[x] = in_buf[depth * x];
+                for (x = 0; x < width; x++)
+                    encode_buf[x] = in_buf[depth * x];
 
-            if((length = ff_rle_encode(buf, end_buf - buf - 1, encode_buf, 1, width, 0, 0, 0x80, 0)) < 1) {
-                av_free(encode_buf);
-                return -1;
+                if ((length = ff_rle_encode(buf, end_buf - buf - 1, encode_buf, 1, width, 0, 0, 0x80, 0)) < 1) {
+                    av_free(encode_buf);
+                    return -1;
+                }
+
+                buf += length;
+                bytestream_put_byte(&buf, 0);
+                bytestream_put_be32(&lengthtab, length + 1);
+                in_buf -= p->linesize[0];
             }
-
-            buf += length;
-            bytestream_put_byte(&buf, 0);
-            bytestream_put_be32(&lengthtab, length + 1);
-            in_buf -= p->linesize[0];
         }
-    }
 
-    av_free(encode_buf);
+        av_free(encode_buf);
     } else {
         for (z = 0; z < depth; z++) {
             in_buf = p->data[0] + p->linesize[0] * (height - 1) + z;
@@ -159,9 +159,9 @@ static int encode_frame(AVCodecContext *avctx, unsigned char *buf,
     return buf - orig_buf;
 }
 
-AVCodec sgi_encoder = {
+AVCodec ff_sgi_encoder = {
     "sgi",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_SGI,
     sizeof(SgiContext),
     encode_init,

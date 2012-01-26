@@ -13,7 +13,7 @@
 
 #include <string>
 #include <map>
-
+#include "system.h"
 namespace BOXEE {
 
 /**

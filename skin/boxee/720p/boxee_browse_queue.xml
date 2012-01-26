@@ -1,32 +1,16 @@
-﻿<?xml version="1.0"?>
+<?xml version="1.0"?>
+<!-- Watch Later / Queue -->
 <window id="10489">
-	<defaultcontrol>52</defaultcontrol>
+	<defaultcontrol always="true">-</defaultcontrol>
 	<allowoverlay>yes</allowoverlay>
 	<controls>
-		<include>Common_Background</include>
-		<include>Common_Status</include>
-		<control type="label">
-			<include>BrowseMainTitle</include>
-			<label>54038</label>
-		</control>
-		<control type="label">
-			<include>BrowseSubTitle</include>
-			<label>[UPPERCASE][COLOR grey]$INFO[Container.NumItems, (, $LOCALIZE[54059])][/COLOR][/UPPERCASE]</label>
-		</control>
-		<control type="group" id="9000">
-			<include>BrowseQueueView</include>
-			<control type="image" platformClass="pc">
-				<posx>605</posx>
-				<posy>100</posy>
-				<width>67</width>
-				<height>680</height>
-				<texture>home_line_vertical.png</texture>
-				<colordiffuse>80FFFFFF</colordiffuse>
+		<control type="group">
+			<control type="group" id="9070">
+				<include>BrowseQueueView</include>
+				<include>BrowseWatchLaterEmptyList</include>
 			</control>
-			<include>BrowseEmptyList</include>
+			<include>BrowseLoadingAnimation</include>
 		</control>
-		<include>Bottom_Feather</include>
-		<include>BrowseLoadingAnimation</include>
-		<include>Common_Now_Playing</include>
+		<!-- include>Window_Transition</include -->
 	</controls>
 </window>

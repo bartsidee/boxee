@@ -23,7 +23,8 @@
 #include "GUIListItem.h"
 #include "GUIInfoManager.h"
 #include "Key.h"
-#include "utils/log.h"`
+#include "utils/log.h"
+#include "../FileItem.h"
 
 CGUIListContainer::CGUIListContainer(int dwParentID, int dwControlId, float posX, float posY, float width, float height, ORIENTATION orientation, int scrollTime, int preloadItems, ListSelectionMode selectionMode)
     : CGUIBaseContainer(dwParentID, dwControlId, posX, posY, width, height, orientation, scrollTime, preloadItems, selectionMode)
@@ -108,6 +109,7 @@ bool CGUIListContainer::OnAction(const CAction &action)
     }
     break;
   }
+
   return CGUIBaseContainer::OnAction(action);
 }
 
@@ -134,10 +136,34 @@ bool CGUIListContainer::OnMessage(CGUIMessage& message)
     }
     else if (message.GetMessage() == GUI_MSG_SETFOCUS && message.GetParam1() >= 0)
     {
+      int iVisibleItem = 0;
+      int iSelectItem = message.GetParam1();
+
+      //param1 may have the id or the index of the item
+
+      for (size_t i = 0 ; i < m_staticItems.size() ; i++)
+      {
+        CGUIListItemPtr pItem = m_staticItems[i];
+
+        if (pItem.get())
+        {
+          UpdateVisibility(pItem.get());
+          CFileItemPtr item = boost::static_pointer_cast<CFileItem>(pItem);
+
+          if (pItem->HasProperty("controlId") && (pItem->GetPropertyInt("controlId") == message.GetParam1()))
+          {
+            iSelectItem = iVisibleItem;
+            break;
+          }
+
+          if (!item->m_idepth || g_infoManager.GetBool(item->m_idepth, GetParentID()))
+            iVisibleItem++;
+        }
+      }
+
       CGUIBaseContainer::OnMessage(message);
       UpdateVisibility();
-
-      SelectItem(message.GetParam1()); // subfocus item is specified, so set the offset appropriately
+      SelectItem(iSelectItem); // subfocus item is specified, so set the offset appropriately
 
       return true;
     }
@@ -181,7 +207,7 @@ bool CGUIListContainer::MoveUp(bool wrapAround)
   else
     return false;
 
-  if (m_items.size() > (m_offset +m_cursor) && m_items[m_offset +m_cursor]->GetPropertyBOOL("isseparator"))
+  if (m_items.size() > (size_t) (m_offset +m_cursor) && m_items[m_offset +m_cursor]->GetPropertyBOOL("isseparator"))
     MoveUp(wrapAround);
 
   return true;
@@ -209,7 +235,7 @@ bool CGUIListContainer::MoveDown(bool wrapAround)
   else
     return false;
 
-  if (m_items.size() > (m_offset +m_cursor) && m_items[m_offset +m_cursor]->GetPropertyBOOL("isseparator"))
+  if (m_items.size() > (size_t) (m_offset +m_cursor) && m_items[m_offset +m_cursor]->GetPropertyBOOL("isseparator"))
       MoveDown(wrapAround);
 
   return true;

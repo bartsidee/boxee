@@ -22,7 +22,7 @@
  */
 #include "system.h"
 
-#ifdef HAS_GL
+#if defined(HAS_GL) || defined(HAS_GLES)
 
 #include "OverlayRenderer.h"
 #include "OverlayRendererUtil.h"
@@ -32,11 +32,58 @@
 #include "cores/dvdplayer/DVDCodecs/Overlay/DVDOverlayImage.h"
 #include "cores/dvdplayer/DVDCodecs/Overlay/DVDOverlaySpu.h"
 #include "cores/dvdplayer/DVDCodecs/Overlay/DVDOverlaySSA.h"
-#include "WindowingFactory.h"
+#include "WindowingFactory.h" 
+#include "Shader.h"
 
 #define USE_PREMULTIPLIED_ALPHA 1
 
 using namespace OVERLAY;
+
+static std::string g_OverlayVertexShader = 
+"uniform mat4 u_matModelView;\n"
+"uniform mat4 u_matProjection;\n"
+"// Input vertex parameters\n"
+"attribute vec3 a_vertex;\n"
+"attribute vec4 a_color;\n"
+"attribute vec2 a_texCoord;\n"
+"varying vec4 v_colorVar;\n"
+"varying vec2 v_texCoord;\n"
+"void main() \n"
+"{\n"
+"v_texCoord = a_texCoord;\n"
+"v_colorVar = a_color;\n"
+"gl_Position = u_matProjection * u_matModelView * vec4(a_vertex,1.0);\n"
+"}\n";
+
+
+static std::string g_OverlayPixelShader =
+#ifndef HAS_GL2
+"precision mediump float;\n"
+#endif
+"varying vec2 v_texCoord;\n"
+"varying vec4 v_colorVar;\n"
+"uniform sampler2D u_texture\n;"
+"void main()\n"
+"{\n"
+"gl_FragColor = v_colorVar;\n"
+"gl_FragColor.a = texture2D(u_texture, v_texCoord).a * v_colorVar.a;\n"
+"}\n";
+
+static std::string g_OverlayTexturePixelShader =
+#ifndef HAS_GL2
+"precision mediump float;\n"
+#endif
+"varying vec2 v_texCoord;\n"
+"uniform vec4 v_colorVar;\n"
+"uniform sampler2D u_texture\n;"
+"void main()\n"
+"{\n"
+"gl_FragColor.rgb = texture2D(u_texture, v_texCoord).rgb * v_colorVar.rgb;\n"
+"gl_FragColor.a = texture2D(u_texture, v_texCoord).a;\n"
+"}\n";
+
+static Shaders::CGLSLShaderProgram* g_pOverlayShadersProgram = NULL;
+static Shaders::CGLSLShaderProgram* g_pOverlayTextureShadersProgram = NULL;
 
 static void LoadTexture(GLenum target
                       , GLsizei width, GLsizei height, GLsizei stride
@@ -46,7 +93,25 @@ static void LoadTexture(GLenum target
   int width2  = NP2(width);
   int height2 = NP2(height);
 
+#ifdef HAS_EMBEDDED
+  width2 = width;
+  height2 = height;
+#endif
+
   glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+
+#ifdef HAS_GLES
+
+  glTexImage2D( GL_TEXTURE_2D, 0, format, width2, height2, 0, format, GL_UNSIGNED_BYTE, NULL );
+
+  for( int y = 0; y < height; y++ )
+  {
+      char *row = (char *)pixels + y * stride;
+      glTexSubImage2D( GL_TEXTURE_2D, 0, 0, y, width, 1, format, GL_UNSIGNED_BYTE, row );
+  }
+
+#else
+
   if(format == GL_RGBA)
     glPixelStorei(GL_UNPACK_ROW_LENGTH, stride / 4);
   else if(format == GL_RGB)
@@ -77,6 +142,8 @@ static void LoadTexture(GLenum target
 
   glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
+#endif
+
   *u = (GLfloat)width  / width2;
   *v = (GLfloat)height / height2;
 }
@@ -97,8 +164,8 @@ COverlayTextureGL::COverlayTextureGL(CDVDOverlayImage* o)
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, m_texture);
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
@@ -170,8 +237,8 @@ COverlayTextureGL::COverlayTextureGL(CDVDOverlaySpu* o)
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, m_texture);
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
@@ -212,13 +279,13 @@ COverlayGlyphGL::COverlayGlyphGL(CDVDOverlaySSA* o, double pts)
   SQuads quads;
   if(!convert_quad(o, pts, (int)m_width, (int)m_height, quads))
     return;
-
+    
   glGenTextures(1, &m_texture);
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, m_texture);
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
@@ -238,26 +305,28 @@ COverlayGlyphGL::COverlayGlyphGL(CDVDOverlaySSA* o, double pts)
   float scale_y = 1.0f / m_height;
 
   m_count  = quads.count;
-  m_vertex = (VERTEX*)calloc(m_count * 4, sizeof(VERTEX));
+  m_vertex = (VERTEX*)calloc(m_count * 6, sizeof(VERTEX));
 
   VERTEX* vt = m_vertex;
   SQuad*  vs = quads.quad;
 
-  for(int i=0; i < quads.count; i++)
+
+  for(int i = 0; i < quads.count; i++)
   {
-    for(int s = 0; s < 4; s++)
+    for(int s = 0; s < 6; s++)
     {
       vt[s].a = vs->a;
       vt[s].r = vs->r;
       vt[s].g = vs->g;
       vt[s].b = vs->b;
 
+      vt[s].z = 0.0f;
       vt[s].x = scale_x;
       vt[s].y = scale_y;
-      vt[s].z = 0.0f;
       vt[s].u = scale_u;
       vt[s].v = scale_v;
     }
+
 
     vt[0].x *= vs->x;
     vt[0].u *= vs->u;
@@ -269,18 +338,22 @@ COverlayGlyphGL::COverlayGlyphGL(CDVDOverlaySSA* o, double pts)
     vt[1].y *= vs->y;
     vt[1].v *= vs->v;
 
-    vt[2].x *= vs->x + vs->w;
-    vt[2].u *= vs->u + vs->w;
+    vt[2].x *= vs->x;
+    vt[2].u *= vs->u;
     vt[2].y *= vs->y + vs->h;
     vt[2].v *= vs->v + vs->h;
 
-    vt[3].x *= vs->x;
-    vt[3].u *= vs->u;
-    vt[3].y *= vs->y + vs->h;
-    vt[3].v *= vs->v + vs->h;
+    vt[3] = vt[1];
+
+    vt[4].x *= vs->x + vs->w;
+    vt[4].u *= vs->u + vs->w;
+    vt[4].y *= vs->y + vs->h;
+    vt[4].v *= vs->v + vs->h;
+
+    vt[5] = vt[2];
 
     vs += 1;
-    vt += 4;
+    vt += 6;
   }
 
   glBindTexture(GL_TEXTURE_2D, 0);
@@ -299,46 +372,88 @@ void COverlayGlyphGL::Render(SRenderState& state)
     return;
 
   glEnable(GL_TEXTURE_2D);
-  glEnable(GL_BLEND);
+  g_Windowing.EnableBlending(true);
+
+  m_uniMatModelView = -1;
+  m_uniMatProjection = -1;
+  m_uniTexture = -1;
+  m_attribVertex = -1;
+  m_attribTextureCoord = -1;
+  m_attribColor = -1;
+
+  if(g_pOverlayShadersProgram == NULL)
+  {
+    g_pOverlayShadersProgram = new Shaders::CGLSLShaderProgram();
+    g_pOverlayShadersProgram->VertexShader()->SetSource(g_OverlayVertexShader);
+    g_pOverlayShadersProgram->PixelShader()->SetSource(g_OverlayPixelShader);
+    g_pOverlayShadersProgram->CompileAndLink();
+  }
+
+  g_pOverlayShadersProgram->Enable();
+
+  GLuint progObj = g_pOverlayShadersProgram->ProgramHandle();
+  m_uniMatProjection  = glGetUniformLocation(progObj, "u_matProjection");
+  m_uniMatModelView  = glGetUniformLocation(progObj, "u_matModelView");
+  m_uniTexture = glGetUniformLocation(progObj, "u_texture");
+  m_attribVertex = glGetAttribLocation(progObj, "a_vertex");
+  m_attribTextureCoord = glGetAttribLocation(progObj, "a_texCoord");
+  m_attribColor = glGetAttribLocation(progObj, "a_color");
+
+  glActiveTexture(GL_TEXTURE0);
+  if(m_attribVertex != -1)
+    glEnableVertexAttribArray(m_attribVertex); 
+  if(m_attribTextureCoord != -1)
+    glEnableVertexAttribArray(m_attribTextureCoord);
+  if(m_attribColor != -1)
+    glEnableVertexAttribArray(m_attribColor);
+
+  TransformMatrix* matProjection = g_Windowing.GetHardwareTransform(MATRIX_TYPE_PROJECTION);
+
+  g_graphicsContext.PushTransform(TransformMatrix(), true);
+
+  TransformMatrix transMat = TransformMatrix::CreateTranslation(state.x, state.y);
+  g_graphicsContext.PushTransform(transMat);
+  TransformMatrix scaleMat = TransformMatrix::CreateScaler(state.width, state.height);
+  g_graphicsContext.PushTransform(scaleMat);
+
+  TransformMatrix* matModelView = g_Windowing.GetHardwareTransform(MATRIX_TYPE_MODEL_VIEW);
+
+  if(m_uniMatModelView != -1)
+    glUniformMatrix4fv(m_uniMatModelView, 1, GL_FALSE, (GLfloat *)matModelView->m);
+  if(m_uniMatProjection != -1)
+    glUniformMatrix4fv(m_uniMatProjection, 1, GL_FALSE, (GLfloat *)matProjection->m); 
 
   glBindTexture(GL_TEXTURE_2D, m_texture);
-  glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-  glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
-  glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_PRIMARY_COLOR);
-  glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
 
-  glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
-  glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA, GL_TEXTURE0);
-  glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA, GL_PRIMARY_COLOR);
-  glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
-  glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
+  if(m_uniTexture != -1)
+    glUniform1i(m_uniTexture, 0);
 
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-  glTranslatef(state.x    , state.y     , 0.0);
-  glScalef    (state.width, state.height, 1.0f);
+  if(m_attribVertex != -1)
+    glVertexAttribPointer(m_attribVertex, 3, GL_FLOAT, GL_FALSE, sizeof(VERTEX), (char*)m_vertex + offsetof(VERTEX, x));
+  if(m_attribTextureCoord != -1)
+    glVertexAttribPointer(m_attribTextureCoord, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), (char*)m_vertex + offsetof(VERTEX, u)); 
+  if(m_attribColor != -1)
+    glVertexAttribPointer(m_attribColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(VERTEX), (char*)m_vertex + offsetof(VERTEX, r)); 
 
-  VerifyGLState();
-
-  glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-
-  glColorPointer   (4, GL_UNSIGNED_BYTE, sizeof(VERTEX), (char*)m_vertex + offsetof(VERTEX, r));
-  glVertexPointer  (3, GL_FLOAT        , sizeof(VERTEX), (char*)m_vertex + offsetof(VERTEX, x));
-  glTexCoordPointer(2, GL_FLOAT        , sizeof(VERTEX), (char*)m_vertex + offsetof(VERTEX, u));
-  glEnableClientState(GL_COLOR_ARRAY);
-  glEnableClientState(GL_VERTEX_ARRAY);
-  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-  glDrawArrays(GL_QUADS, 0, m_count * 4);
-  glPopClientAttrib();
-
-  glPopMatrix();
-
-  glDisable(GL_BLEND);
-  glDisable(GL_TEXTURE_2D);
+  glDrawArrays(GL_TRIANGLES, 0, 6 * m_count);
 
   glBindTexture(GL_TEXTURE_2D, 0);
+
+  if(m_attribVertex != -1)
+    glDisableVertexAttribArray(m_attribVertex);
+  if(m_attribTextureCoord != -1)
+    glDisableVertexAttribArray(m_attribTextureCoord);
+  if(m_attribColor != -1)
+    glDisableVertexAttribArray(m_attribColor);
+
+  g_Windowing.EnableBlending(false);
+
+  glActiveTexture(GL_TEXTURE0);
+  glDisable(GL_TEXTURE_2D);
+
+  g_graphicsContext.PopTransform();
+  g_graphicsContext.PopTransform();
+  g_graphicsContext.PopTransform();
 }
 
 
@@ -349,20 +464,7 @@ COverlayTextureGL::~COverlayTextureGL()
 
 void COverlayTextureGL::Render(SRenderState& state)
 {
-  glEnable(GL_TEXTURE_2D);
-  glEnable(GL_BLEND);
-
-  glBindTexture(GL_TEXTURE_2D, m_texture);
-#if USE_PREMULTIPLIED_ALPHA
-  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-#else
-  glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-#endif
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-  glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-  VerifyGLState();
+  VERTEX m_vertex[4];
 
   DRAWRECT rd;
   if(m_pos == POSITION_RELATIVE)
@@ -380,19 +482,122 @@ void COverlayTextureGL::Render(SRenderState& state)
     rd.right   = state.x + state.width;
   }
 
-  glBegin(GL_QUADS);
-  glTexCoord2f(0.0f, 0.0f);
-  glVertex2f(rd.left , rd.top);
+  if(rd.bottom - rd.top < 0 || rd.right - rd.left < 0)
+  {
+    return;
+  }
 
-  glTexCoord2f(m_u , 0.0f);
-  glVertex2f(rd.right, rd.top);
+  m_vertex[0].x = rd.left;
+  m_vertex[0].y = rd.top;
+  m_vertex[0].z = 0;
+  m_vertex[0].u = 0.0;
+  m_vertex[0].v = 0.0;
 
-  glTexCoord2f(m_u , m_v);
-  glVertex2f(rd.right, rd.bottom);
+  m_vertex[1].x = rd.right;
+  m_vertex[1].y = rd.top;
+  m_vertex[1].z = 0;
+  m_vertex[1].u = m_u;
+  m_vertex[1].v = 0.0;
 
-  glTexCoord2f(0.0f, m_v);
-  glVertex2f(rd.left , rd.bottom);
-  glEnd();
+  m_vertex[2].x = rd.right;
+  m_vertex[2].y = rd.bottom;
+  m_vertex[2].z = 0;
+  m_vertex[2].u = m_u;
+  m_vertex[2].v = m_v;
+
+  m_vertex[3].x = rd.left;
+  m_vertex[3].y = rd.bottom;
+  m_vertex[3].z = 0;
+  m_vertex[3].u = 0;
+  m_vertex[3].v = m_v;
+
+  if (m_texture == ~GLuint(0))
+    return;
+
+  glEnable(GL_TEXTURE_2D);
+
+#if USE_PREMULTIPLIED_ALPHA
+  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+#else
+  glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+#endif
+
+  m_uniMatModelView = -1;
+  m_uniMatProjection = -1;
+  m_uniTexture = -1;
+  m_attribVertex = -1;
+  m_attribTextureCoord = -1;
+
+  if(g_pOverlayTextureShadersProgram == NULL)
+  {
+    g_pOverlayTextureShadersProgram = new Shaders::CGLSLShaderProgram();
+    g_pOverlayTextureShadersProgram->VertexShader()->SetSource(g_OverlayVertexShader);
+    g_pOverlayTextureShadersProgram->PixelShader()->SetSource(g_OverlayTexturePixelShader);
+    g_pOverlayTextureShadersProgram->CompileAndLink();
+  }
+
+  g_pOverlayTextureShadersProgram->Enable();
+
+  GLuint progObj = g_pOverlayTextureShadersProgram->ProgramHandle();
+  m_uniMatProjection  = glGetUniformLocation(progObj, "u_matProjection");
+  m_uniMatModelView  = glGetUniformLocation(progObj, "u_matModelView");
+  m_uniTexture = glGetUniformLocation(progObj, "u_texture");
+  m_attribVertex = glGetAttribLocation(progObj, "a_vertex");
+  m_attribTextureCoord = glGetAttribLocation(progObj, "a_texCoord");
+
+  // Set diffuse color
+  GLint uniColor = glGetUniformLocation(progObj, "v_colorVar");
+  GLfloat diffuseColor[4];
+  diffuseColor[0] = 1.0;
+  diffuseColor[1] = 1.0;
+  diffuseColor[2] = 1.0;
+  diffuseColor[3] = 1.0;
+  glUniform4fv(uniColor, 1, diffuseColor);
+
+  glActiveTexture(GL_TEXTURE0);
+  if(m_attribVertex != -1)
+    glEnableVertexAttribArray(m_attribVertex);
+  if(m_attribTextureCoord != -1)
+    glEnableVertexAttribArray(m_attribTextureCoord);
+
+  TransformMatrix* matProjection = g_Windowing.GetHardwareTransform(MATRIX_TYPE_PROJECTION);
+  TransformMatrix finalMat;
+
+  if(m_uniMatModelView != -1)
+    glUniformMatrix4fv(m_uniMatModelView, 1, GL_FALSE, (GLfloat *)finalMat.m);
+  if(m_uniMatProjection != -1)
+    glUniformMatrix4fv(m_uniMatProjection, 1, GL_FALSE, (GLfloat *)matProjection->m);
+
+  glBindTexture(GL_TEXTURE_2D, m_texture);
+
+  if(m_uniTexture != -1)
+    glUniform1i(m_uniTexture, 0);
+
+  if(m_attribVertex != -1)
+    glVertexAttribPointer(m_attribVertex, 3, GL_FLOAT, GL_FALSE, sizeof(VERTEX), (char*)m_vertex + offsetof(VERTEX, x));
+  if(m_attribTextureCoord != -1)
+    glVertexAttribPointer(m_attribTextureCoord, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), (char*)m_vertex + offsetof(VERTEX, u));
+
+  // Draw
+  GLuint indices[6] =
+  {
+    0, 1, 2,
+    2, 3, 0,
+  };
+
+  glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_INT, indices);
+
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  if(m_attribVertex != -1)
+    glDisableVertexAttribArray(m_attribVertex);
+  if(m_attribTextureCoord != -1)
+    glDisableVertexAttribArray(m_attribTextureCoord);
+
+  g_Windowing.EnableBlending(false);
+
+  glActiveTexture(GL_TEXTURE0);
+  glDisable(GL_TEXTURE_2D);
 
   glDisable(GL_BLEND);
   glDisable(GL_TEXTURE_2D);

@@ -24,24 +24,36 @@
 #include "FileItem.h"
 #include "LocalizeStrings.h"
 
-#define CONTROL_HEADING       1
-#define CONTROL_LIST          3
-#define CONTROL_NUMBEROFFILES 2
-#define CONTROL_BUTTON        5
+#define CONTROL_HEADING       141
+#define CONTROL_LIST          341
+#define CONTROL_NUMBEROFFILES 241
+#define CONTROL_BUTTON        541
 
 CGUIDialogSelect::CGUIDialogSelect(void)
     : CGUIDialogBoxBase(WINDOW_DIALOG_SELECT, "DialogSelect.xml")
 {
-  m_bButtonEnabled = false;
-  m_vecListInternal = new CFileItemList;
-  m_selectedItem = new CFileItem;
-  m_vecList = m_vecListInternal;
+  InitSelectDialog();
+}
+
+CGUIDialogSelect::CGUIDialogSelect(int id, const CStdString &xmlFile)
+   : CGUIDialogBoxBase(id, xmlFile)
+{
+  InitSelectDialog();
 }
 
 CGUIDialogSelect::~CGUIDialogSelect(void)
 {
   delete m_vecListInternal;
   delete m_selectedItem;
+}
+
+void CGUIDialogSelect::InitSelectDialog()
+{
+  m_bButtonEnabled = false;
+  m_vecListInternal = new CFileItemList;
+  m_selectedItem = new CFileItem;
+  m_vecList = m_vecListInternal;
+  m_headerId = CONTROL_HEADING;
 }
 
 bool CGUIDialogSelect::OnMessage(CGUIMessage& message)
@@ -59,6 +71,7 @@ bool CGUIDialogSelect::OnMessage(CGUIMessage& message)
   case GUI_MSG_WINDOW_INIT:
     {
       m_bButtonPressed = false;
+      m_bConfirmed = false;
       CGUIDialog::OnMessage(message);
       m_iSelected = -1;
       CGUIMessage msg(GUI_MSG_LABEL_BIND, GetID(), CONTROL_LIST, 0, 0, m_vecList);
@@ -97,6 +110,7 @@ bool CGUIDialogSelect::OnMessage(CGUIMessage& message)
           if(m_iSelected >= 0 && m_iSelected < (int)m_vecList->Size())
           {
             *m_selectedItem = *m_vecList->Get(m_iSelected);
+            m_bConfirmed = true;
             Close();
           }
           else

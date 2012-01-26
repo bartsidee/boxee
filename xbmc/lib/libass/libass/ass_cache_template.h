@@ -7,7 +7,7 @@
 #define FTVECTOR(member) \
         FT_Vector member;
 #define BITMAPHASHKEY(member) \
-        bitmap_hash_key_t member;
+        BitmapHashKey member;
 #define END(typedefnamename) \
     } typedefnamename;
 
@@ -54,9 +54,9 @@
 
 
 // describes a bitmap; bitmaps with equivalents structs are considered identical
-START(bitmap, bipmap_hash_key)
+START(bitmap, bitmap_hash_key)
     GENERIC(char, bitmap) // bool : true = bitmap, false = outline
-    GENERIC(ass_font_t *, font)
+    GENERIC(ASS_Font *, font)
     GENERIC(double, size) // font size
     GENERIC(uint32_t, ch) // character code
     FTVECTOR(outline) // border width, 16.16 fixed point value
@@ -79,11 +79,13 @@ START(bitmap, bipmap_hash_key)
     FTVECTOR(advance) // subpixel shift vector
     FTVECTOR(shadow_offset) // shadow subpixel shift
     GENERIC(unsigned, drawing_hash) // hashcode of a drawing
-END(bitmap_hash_key_t)
+    GENERIC(unsigned, flags)    // glyph decoration
+    GENERIC(unsigned, border_style)
+END(BitmapHashKey)
 
 // describes an outline glyph
 START(glyph, glyph_hash_key)
-    GENERIC(ass_font_t *, font)
+    GENERIC(ASS_Font *, font)
     GENERIC(double, size) // font size
     GENERIC(uint32_t, ch) // character code
     GENERIC(int, bold)
@@ -93,7 +95,8 @@ START(glyph, glyph_hash_key)
     FTVECTOR(outline) // border width, 16.16
     GENERIC(unsigned, drawing_hash) // hashcode of a drawing
     GENERIC(unsigned, flags)    // glyph decoration flags
-END(glyph_hash_key_t)
+    GENERIC(unsigned, border_style)
+END(GlyphHashKey)
 
 // Cache for composited bitmaps
 START(composite, composite_hash_key)
@@ -105,9 +108,11 @@ START(composite, composite_hash_key)
     GENERIC(int, ay)
     GENERIC(int, bx)
     GENERIC(int, by)
-    BITMAPHASHKEY(a)
-    BITMAPHASHKEY(b)
-END(composite_hash_key_t)
+    GENERIC(int, as)
+    GENERIC(int, bs)
+    GENERIC(unsigned char *, a)
+    GENERIC(unsigned char *, b)
+END(CompositeHashKey)
 
 
 #undef START

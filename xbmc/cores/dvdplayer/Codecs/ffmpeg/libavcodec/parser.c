@@ -74,7 +74,7 @@ AVCodecParserContext *av_parser_init(int codec_id)
     s->fetch_timestamp=1;
     s->pict_type = FF_I_TYPE;
     s->key_frame = -1;
-    s->convergence_duration = AV_NOPTS_VALUE;
+    s->convergence_duration = 0;
     s->dts_sync_point       = INT_MIN;
     s->dts_ref_dts_delta    = INT_MIN;
     s->pts_dts_delta        = INT_MIN;
@@ -91,7 +91,7 @@ void ff_fetch_timestamp(AVCodecParserContext *s, int off, int remove){
         if (   s->cur_offset + off >= s->cur_frame_offset[i]
             && (s->frame_offset < s->cur_frame_offset[i] ||
               (!s->frame_offset && !s->next_frame_offset)) // first field/frame
-            //check is disabled  becausue mpeg-ts doesnt send complete PES packets
+            //check is disabled  because mpeg-ts doesnt send complete PES packets
             && /*s->next_frame_offset + off <*/  s->cur_frame_end[i]){
             s->dts= s->cur_frame_dts[i];
             s->pts= s->cur_frame_pts[i];
@@ -150,6 +150,12 @@ int av_parser_parse2(AVCodecParserContext *s,
     int index, i;
     uint8_t dummy_buf[FF_INPUT_BUFFER_PADDING_SIZE];
 
+    if(!(s->flags & PARSER_FLAG_FETCHED_OFFSET)) {
+        s->next_frame_offset =
+        s->cur_offset        = pos;
+        s->flags |= PARSER_FLAG_FETCHED_OFFSET;
+    }
+
     if (buf_size == 0) {
         /* padding is always necessary even if EOF, so we add it here */
         memset(dummy_buf, 0, sizeof(dummy_buf));
@@ -164,7 +170,7 @@ int av_parser_parse2(AVCodecParserContext *s,
             s->cur_frame_pts[i] = pts;
             s->cur_frame_dts[i] = dts;
             s->cur_frame_pos[i] = pos;
-        }
+    }
 
     if (s->fetch_timestamp){
         s->fetch_timestamp=0;
@@ -244,7 +250,7 @@ void av_parser_close(AVCodecParserContext *s)
 
 /**
  * combines the (truncated) bitstream to a complete frame
- * @returns -1 if no complete frame could be created, AVERROR(ENOMEM) if there was a memory allocation error
+ * @return -1 if no complete frame could be created, AVERROR(ENOMEM) if there was a memory allocation error
  */
 int ff_combine_frame(ParseContext *pc, int next, const uint8_t **buf, int *buf_size)
 {

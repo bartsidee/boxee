@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/rv34.c
+ * @file
  * RV30/40 decoder common data
  */
 
@@ -103,8 +103,8 @@ static void rv34_gen_vlc(const uint8_t *bits, int size, VLC *vlc, const uint8_t 
 {
     int i;
     int counts[17] = {0}, codes[17];
-    uint16_t cw[size], syms[size];
-    uint8_t bits2[size];
+    uint16_t cw[MAX_VLC_SIZE], syms[MAX_VLC_SIZE];
+    uint8_t bits2[MAX_VLC_SIZE];
     int maxbits = 0, realsize = 0;
 
     for(i = 0; i < size; i++){
@@ -145,8 +145,8 @@ static av_cold void rv34_init_tables(void)
             rv34_gen_vlc(rv34_table_intra_thirdpat [i][j], OTHERBLK_VLC_SIZE, &intra_vlcs[i].third_pattern[j],  NULL, 19*i + 4 + j);
             for(k = 0; k < 4; k++){
                 rv34_gen_vlc(rv34_table_intra_cbp[i][j+k*2],  CBP_VLC_SIZE,   &intra_vlcs[i].cbp[j][k],         rv34_cbp_code, 19*i + 6 + j*4 + k);
+            }
         }
-    }
         for(j = 0; j < 4; j++){
             rv34_gen_vlc(rv34_table_intra_firstpat[i][j], FIRSTBLK_VLC_SIZE, &intra_vlcs[i].first_pattern[j], NULL, 19*i + 14 + j);
         }
@@ -393,7 +393,7 @@ static inline void rv34_dequant4x4_16x16(DCTELEM *block, int Qdc, int Q)
 
 
 /**
- * @defgroup bitstream RV30/40 bitstream parsing
+ * @defgroup rv3040_bitstream RV30/40 bitstream parsing
  * @{
  */
 
@@ -592,7 +592,7 @@ static void rv34_pred_mv_b(RV34DecContext *r, int block_type, int dir)
     }
     if(block_type == RV34_MB_B_BACKWARD || block_type == RV34_MB_B_FORWARD){
         ZERO8x2(cur_pic->motion_val[!dir][mv_pos], s->b8_stride);
-}
+    }
 }
 
 /**
@@ -718,12 +718,12 @@ static inline void rv34_mc(RV34DecContext *r, const int block_type,
         uint8_t *uvbuf= s->edge_emu_buffer + 22 * s->linesize;
 
         srcY -= 2 + 2*s->linesize;
-        ff_emulated_edge_mc(s->edge_emu_buffer, srcY, s->linesize, (width<<3)+6, (height<<3)+6,
+        s->dsp.emulated_edge_mc(s->edge_emu_buffer, srcY, s->linesize, (width<<3)+6, (height<<3)+6,
                             src_x - 2, src_y - 2, s->h_edge_pos, s->v_edge_pos);
         srcY = s->edge_emu_buffer + 2 + 2*s->linesize;
-        ff_emulated_edge_mc(uvbuf     , srcU, s->uvlinesize, (width<<2)+1, (height<<2)+1,
+        s->dsp.emulated_edge_mc(uvbuf     , srcU, s->uvlinesize, (width<<2)+1, (height<<2)+1,
                             uvsrc_x, uvsrc_y, s->h_edge_pos >> 1, s->v_edge_pos >> 1);
-        ff_emulated_edge_mc(uvbuf + 16, srcV, s->uvlinesize, (width<<2)+1, (height<<2)+1,
+        s->dsp.emulated_edge_mc(uvbuf + 16, srcV, s->uvlinesize, (width<<2)+1, (height<<2)+1,
                             uvsrc_x, uvsrc_y, s->h_edge_pos >> 1, s->v_edge_pos >> 1);
         srcU = uvbuf;
         srcV = uvbuf + 16;
@@ -1142,7 +1142,7 @@ static int rv34_set_deblock_coef(RV34DecContext *r)
     MpegEncContext *s = &r->s;
     int hmvmask = 0, vmvmask = 0, i, j;
     int midx = s->mb_x * 2 + s->mb_y * 2 * s->b8_stride;
-    int16_t (*motion_val)[2] = s->current_picture_ptr->motion_val[0][midx];
+    int16_t (*motion_val)[2] = &s->current_picture_ptr->motion_val[0][midx];
     for(j = 0; j < 16; j += 8){
         for(i = 0; i < 2; i++){
             if(is_mv_diff_gt_3(motion_val + i, 1))
@@ -1287,6 +1287,7 @@ static int rv34_decode_slice(RV34DecContext *r, int end, const uint8_t* buf, int
             MPV_common_end(s);
             s->width  = r->si.width;
             s->height = r->si.height;
+            avcodec_set_dimensions(s->avctx, s->width, s->height);
             if(MPV_common_init(s) < 0)
                 return -1;
             r->intra_types_stride = s->mb_width*4 + 4;

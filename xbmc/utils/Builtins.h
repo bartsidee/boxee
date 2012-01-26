@@ -29,5 +29,7 @@ public:
   static bool HasCommand(const CStdString& execString);
   static void GetHelp(CStdString &help);
   static int Execute(const CStdString& execString);
+private:
+  static int GetRealActiveWindow();
 };
 

@@ -19,15 +19,18 @@
  *
  */
 
+#ifdef HAS_DX
+
 #include "GUIFont.h"
 #include "GUIFontTTFDX.h"
 #include "GUIFontManager.h"
 #include "Texture.h"
 #include "gui3d.h"
 #include "WindowingFactory.h"
+#include "utils/log.h"
 
 // stuff for freetype
-#include "ft2build.h"
+#include <ft2build.h>
 
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
@@ -35,44 +38,31 @@
 
 using namespace std;
 
-#ifdef HAS_DX
-
-struct CUSTOMVERTEX 
+struct SVertex
 {
-  FLOAT x, y, z;
-  DWORD color;
-  FLOAT tu, tv;   // Texture coordinates
+  float x, y, z;
+  unsigned char b, g, r, a;
+  float u, v;
 };
-
 
 CGUIFontTTFDX::CGUIFontTTFDX(const CStdString& strFileName)
 : CGUIFontTTFBase(strFileName)
 {
- 
+  m_speedupTexture = NULL;
+  m_index      = NULL;
+  m_index_size = 0;
 }
 
 CGUIFontTTFDX::~CGUIFontTTFDX(void)
 {
-  
-}
-
-void CGUIFontTTFDX::RenderInternal(SVertex* v)
-{
-  CUSTOMVERTEX verts[4] =  {
-  { v[0].x-0.5f, v[0].y-0.5f, v[0].z, m_color, v[0].u, v[0].v},
-  { v[1].x-0.5f, v[1].y-0.5f, v[1].z, m_color, v[1].u, v[1].v},
-  { v[2].x-0.5f, v[2].y-0.5f, v[2].z, m_color, v[2].u, v[2].v},
-  { v[3].x-0.5f, v[3].y-0.5f, v[3].z, m_color, v[3].u, v[3].v}
-  };
-
-  g_Windowing.Get3DDevice()->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, verts, sizeof(CUSTOMVERTEX));
+  SAFE_DELETE(m_speedupTexture);
+  free(m_index);
 }
 
 void CGUIFontTTFDX::Begin()
 {
   LPDIRECT3DDEVICE9 pD3DDevice = g_Windowing.Get3DDevice();
 
-  if (m_nestedBeginCount == 0)
   {
     // just have to blit from our texture.
     pD3DDevice->SetTexture( 0, m_texture->GetTextureObject() );
@@ -89,6 +79,7 @@ void CGUIFontTTFDX::Begin()
 
     // no other texture stages needed
     pD3DDevice->SetTextureStageState( 1, D3DTSS_COLOROP, D3DTOP_DISABLE);
+    pD3DDevice->SetTextureStageState( 1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
 
     pD3DDevice->SetRenderState( D3DRS_ZENABLE, FALSE );
     pD3DDevice->SetRenderState( D3DRS_FOGENABLE, FALSE );
@@ -101,63 +92,214 @@ void CGUIFontTTFDX::Begin()
 
     pD3DDevice->SetFVF(D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1);
   }
-  // Keep track of the nested begin/end calls.
-  m_vertex_count = 0;
-  m_nestedBeginCount++;
+
+  TransformMatrix* matModelView = g_Windowing.GetHardwareTransform(MATRIX_TYPE_MODEL_VIEW);
+  TransformMatrix* matProjection = g_Windowing.GetHardwareTransform(MATRIX_TYPE_PROJECTION);
+
+  pD3DDevice->SetTransform(D3DTS_VIEW, &D3DXMATRIX((float *)matModelView->m));
+  pD3DDevice->SetTransform(D3DTS_PROJECTION, &D3DXMATRIX((float *)matProjection->m));
 }
 
 void CGUIFontTTFDX::End()
 {
   LPDIRECT3DDEVICE9 pD3DDevice = g_Windowing.Get3DDevice();
 
-  if (m_nestedBeginCount == 0)
-    return;
 
-  if (--m_nestedBeginCount > 0)
-    return;
+  /*
+  unsigned index_size = m_vertex_size * 6 / 4;
+  if(m_index_size < index_size)
+  {
+    uint16_t* id  = (uint16_t*)calloc(index_size, sizeof(uint16_t));
+    if(id == NULL)
+      return;
+
+    for(int i = 0, b = 0; i < m_vertex_size; i += 4, b += 6)
+    {
+      id[b+0] = i + 0;
+      id[b+1] = i + 1;
+      id[b+2] = i + 2;
+      id[b+3] = i + 2;
+      id[b+4] = i + 3;
+      id[b+5] = i + 0;
+    }
+    free(m_index);
+    m_index      = id;
+    m_index_size = index_size;
+  }
+
+  D3DXMATRIX orig;
+  pD3DDevice->GetTransform(D3DTS_WORLD, &orig);
+
+  D3DXMATRIX world = orig;
+  D3DXMATRIX trans;
+
+  D3DXMatrixTranslation(&trans, - 0.5f
+                              , - 0.5f
+                              ,   0.0f);
+  D3DXMatrixMultiply(&world, &world, &trans);
+
+  pD3DDevice->SetTransform(D3DTS_WORLD, &world);
+
+  pD3DDevice->DrawIndexedPrimitiveUP(D3DPT_TRIANGLELIST
+                                    , 0
+                                    , m_vertex_count
+                                    , m_vertex_count / 2
+                                    , m_index
+                                    , D3DFMT_INDEX16
+                                    , m_vertex
+                                    , sizeof(SVertex));
+  pD3DDevice->SetTransform(D3DTS_WORLD, &orig);
+  */
 
   pD3DDevice->SetTexture(0, NULL);
   pD3DDevice->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_MODULATE );
 }
 
+void CGUIFontTTFDX::Render(FontCoordsIndiced& coords, bool useShadow)
+{
+  LPDIRECT3DDEVICE9 pD3DDevice = g_Windowing.Get3DDevice();
+  FontVertex* v = (FontVertex *)&coords.m_pCoord[0];
+
+  unsigned short* index = &coords.m_nIndices[0];
+  unsigned int elem_count = coords.m_pCoord.size();
+  unsigned int vertex_count = elem_count * 4;
+
+  SVertex* pVertex = new SVertex[vertex_count];
+  
+  for(int i = 0; i < vertex_count; i++)
+  {
+    pVertex[i].x = v[i].x;
+    pVertex[i].y = v[i].y;
+    pVertex[i].z = v[i].z;
+    pVertex[i].r = v[i].r;
+    pVertex[i].g = v[i].g;
+    pVertex[i].b = v[i].b;
+    pVertex[i].a = v[i].a;
+    pVertex[i].u = v[i].u1;
+    pVertex[i].v = v[i].v1;
+  }
+
+  pD3DDevice->DrawIndexedPrimitiveUP(D3DPT_TRIANGLELIST
+                                    , 0
+                                    , vertex_count
+                                    , vertex_count / 2
+                                    , index
+                                    , D3DFMT_INDEX16
+                                    , pVertex
+                                    , sizeof(SVertex));
+
+
+  delete[] pVertex;
+}
+
 CBaseTexture* CGUIFontTTFDX::ReallocTexture(unsigned int& newHeight)
 {
-  CBaseTexture* pNewTexture = new CTexture(m_textureWidth, newHeight, XB_FMT_A8);
-
-  if(pNewTexture == NULL)
-    return NULL;
-
+  CBaseTexture* pNewTexture = new CDXTexture(m_textureWidth, newHeight, XB_FMT_A8);
   pNewTexture->CreateTextureObject();
-
   LPDIRECT3DTEXTURE9 newTexture = pNewTexture->GetTextureObject();
 
-  if(newTexture == NULL)
+  if (newTexture == NULL)
+  {
+    CLog::Log(LOGERROR, __FUNCTION__" - failed to create the new texture h=%d w=%d", m_textureWidth, newHeight);
+    SAFE_DELETE(pNewTexture);
     return NULL;
-
-  // correct texture sizes
-  D3DSURFACE_DESC desc;
-  newTexture->GetLevelDesc(0, &desc);
-  m_textureHeight = desc.Height;
-  m_textureWidth = desc.Width;
-
-  D3DLOCKED_RECT rect;
-  newTexture->LockRect(0, &rect, NULL, 0);
-  memset(rect.pBits, 0, rect.Pitch * m_textureHeight);
-  newTexture->UnlockRect(0);
-
-  if (m_texture)
-  { // copy across from our current one using gpu
-    LPDIRECT3DSURFACE9 pTarget, pSource;
-    newTexture->GetSurfaceLevel(0, &pTarget);
-    m_texture->GetTextureObject()->GetSurfaceLevel(0, &pSource);
-
-    // TODO:DIRECTX - this is probably really slow, but UpdateSurface() doesn't like rendering from non-system textures
-    D3DXLoadSurfaceFromSurface(pTarget, NULL, NULL, pSource, NULL, NULL, D3DX_FILTER_NONE, 0);
-
-    SAFE_RELEASE(pTarget);
-    SAFE_RELEASE(pSource);
-    SAFE_DELETE(m_texture);
   }
+
+  // Use a speedup texture in system memory when main texture in default pool+dynamic
+  // Otherwise the texture would have to be copied from vid mem to sys mem, which is too slow for subs while playing video.
+  CD3DTexture* newSpeedupTexture = NULL;
+  if (g_Windowing.DefaultD3DPool() == D3DPOOL_DEFAULT && g_Windowing.DefaultD3DUsage() == D3DUSAGE_DYNAMIC)
+  {
+    newSpeedupTexture = new CD3DTexture();
+
+    if (!newSpeedupTexture->Create(m_textureWidth, newHeight, 1, 0, D3DFMT_A8, D3DPOOL_SYSTEMMEM))
+    {
+      SAFE_DELETE(newSpeedupTexture);
+      SAFE_DELETE(pNewTexture);
+      return NULL;
+    }
+  }
+
+  LPDIRECT3DSURFACE9 pSource, pTarget;
+  HRESULT hr;
+  // There might be data to copy from the previous texture
+  if ((newSpeedupTexture && m_speedupTexture) || (newTexture && m_texture))
+  {
+    if (m_speedupTexture)
+    {
+      m_speedupTexture->GetSurfaceLevel(0, &pSource);
+      newSpeedupTexture->GetSurfaceLevel(0, &pTarget);
+    }
+    else
+    {
+      m_texture->GetTextureObject()->GetSurfaceLevel(0, &pSource);
+      newTexture->GetSurfaceLevel(0, &pTarget);
+    }
+
+    D3DLOCKED_RECT srclr, dstlr;
+    if(FAILED(pSource->LockRect( &srclr, NULL, 0 ))
+    || FAILED(pTarget->LockRect( &dstlr, NULL, 0 )))
+    {
+      CLog::Log(LOGERROR, __FUNCTION__" - failed to lock surfaces");
+      SAFE_DELETE(newSpeedupTexture);
+      SAFE_DELETE(pNewTexture);
+      pSource->Release();
+      pTarget->Release();
+      return NULL;
+    }
+
+    unsigned char *dst = (unsigned char *)dstlr.pBits;
+    unsigned char *src = (unsigned char *)srclr.pBits;
+    unsigned int dstPitch = dstlr.Pitch;
+    unsigned int srcPitch = srclr.Pitch;
+    unsigned int minPitch = std::min(srcPitch, dstPitch);
+
+    if (srcPitch == dstPitch)
+    {
+      memcpy(dst, src, srcPitch * m_textureHeight);
+    }
+    else
+    {
+      for (unsigned int y = 0; y < m_textureHeight; y++)
+      {
+        memcpy(dst, src, minPitch);
+        src += srcPitch;
+        dst += dstPitch;
+      }
+    }
+    pSource->UnlockRect();
+    pTarget->UnlockRect();
+
+    pSource->Release();
+    pTarget->Release();
+  }
+
+  // Upload from speedup texture to main texture
+  if (newSpeedupTexture && m_speedupTexture)
+  {
+    LPDIRECT3DSURFACE9 pSource, pTarget;
+    newSpeedupTexture->GetSurfaceLevel(0, &pSource);
+    newTexture->GetSurfaceLevel(0, &pTarget);
+    const RECT rect = { 0, 0, m_textureWidth, m_textureHeight };
+    const POINT point = { 0, 0 };
+
+    hr = g_Windowing.Get3DDevice()->UpdateSurface(pSource, &rect, pTarget, &point);
+    SAFE_RELEASE(pSource);
+    SAFE_RELEASE(pTarget);
+
+    if (FAILED(hr))
+    {
+      CLog::Log(LOGERROR, __FUNCTION__": Failed to upload from sysmem to vidmem (0x%08X)", hr);
+      SAFE_DELETE(newSpeedupTexture);
+      SAFE_DELETE(pNewTexture);
+      return NULL;
+    }
+  }
+
+  SAFE_DELETE(m_texture);
+  SAFE_DELETE(m_speedupTexture);
+  m_textureHeight = newHeight;
+  m_speedupTexture = newSpeedupTexture;
 
   return pNewTexture;
 }
@@ -166,14 +308,11 @@ bool CGUIFontTTFDX::CopyCharToTexture(FT_BitmapGlyph bitGlyph, Character* ch)
 {
   FT_Bitmap bitmap = bitGlyph->bitmap;
 
-  // render this onto our normal texture using gpu
   LPDIRECT3DSURFACE9 target;
-  LPDIRECT3DTEXTURE9 pTexture = NULL;
-  pTexture = m_texture->GetTextureObject();
-  if(FAILED (pTexture->GetSurfaceLevel(0, &target)))
-  {
-    return false;
-  }
+  if (m_speedupTexture)
+    m_speedupTexture->GetSurfaceLevel(0, &target);
+  else
+    m_texture->GetTextureObject()->GetSurfaceLevel(0, &target);
 
   RECT sourcerect = { 0, 0, bitmap.width, bitmap.rows };
   RECT targetrect;
@@ -181,20 +320,40 @@ bool CGUIFontTTFDX::CopyCharToTexture(FT_BitmapGlyph bitGlyph, Character* ch)
   targetrect.left = m_posX + bitGlyph->left;
   targetrect.bottom = targetrect.top + bitmap.rows;
   targetrect.right = targetrect.left + bitmap.width;
-
-  D3DXLoadSurfaceFromMemory( target, NULL, &targetrect,
-    bitmap.buffer, D3DFMT_LIN_A8, bitmap.pitch, NULL, &sourcerect,
-    D3DX_FILTER_NONE, 0x00000000);
+  
+  HRESULT hr = D3DXLoadSurfaceFromMemory( target, NULL, &targetrect,
+                                          bitmap.buffer, D3DFMT_LIN_A8, bitmap.pitch, NULL, &sourcerect,
+                                          D3DX_FILTER_NONE, 0x00000000);
 
   SAFE_RELEASE(target);
 
+  if (FAILED(hr))
+  {
+    CLog::Log(LOGERROR, __FUNCTION__": Failed to copy the new character (0x%08X)", hr);
+    return false;
+  }
+
+  if (m_speedupTexture)
+  {
+    // Upload to GPU - the automatic dirty region tracking takes care of the rect.
+    HRESULT hr = g_Windowing.Get3DDevice()->UpdateTexture(m_speedupTexture->Get(), m_texture->GetTextureObject());
+    if (FAILED(hr))
+    {
+      CLog::Log(LOGERROR, __FUNCTION__": Failed to upload from sysmem to vidmem (0x%08X)", hr);
+      return false;
+    }
+  }
   return TRUE;
 }
 
 
 void CGUIFontTTFDX::DeleteHardwareTexture()
 {
-  
+  if (m_bTextureLoaded)
+  {
+    SAFE_DELETE(m_texture);
+    m_bTextureLoaded = false;
+  }
 }
 
 

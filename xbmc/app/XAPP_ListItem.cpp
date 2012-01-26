@@ -1,12 +1,11 @@
-
 #include "XAPP_ListItem.h"
 #include "Util.h"
 #include "Settings.h"
 #include "FileItem.h"
 #include "Tag.h"
 #include "VideoInfoTag.h"
-#include "lib/libPython/XBPython.h"
 #include "StringUtils.h"
+#include "AppManager.h"
 
 static const char* MEDIA_TYPE_STRINGS[] =
 { 
@@ -22,7 +21,7 @@ static const char* MEDIA_TYPE_STRINGS[] =
   "MEDIA_VIDEO_CLIP", 
   "MEDIA_VIDEO_OTHER",
   "MEDIA_PICTURE", 
-  "MEDIA_FILE"
+  "MEDIA_FILE",
 };
   
 namespace XAPP
@@ -34,13 +33,11 @@ ListItem::ListItem(XAPP::ListItem::MediaType mediaType)
   SetMediaType(mediaType);
 
   // set app id
-  PyObject *app = PySys_GetObject((char*)"app-id");
-  if (app)
+  const char *strAppId = CAppManager::GetInstance().GetCurrentContextAppId();
+  if (strAppId)
   {
-    const char *id = PyString_AsString(app);
-    m_fileItem->SetProperty("appid",id);
+    m_fileItem->SetProperty("appid", strAppId);
   }
-  
 }
 
 ListItem::ListItem(CFileItemPtr item)
@@ -50,11 +47,10 @@ ListItem::ListItem(CFileItemPtr item)
   if (m_fileItem.get() == NULL)
     m_fileItem.reset(new CFileItem());
 
-  PyObject *app = PySys_GetObject((char*)"app-id");
-  if (app)
+  const char *strAppId = CAppManager::GetInstance().GetCurrentContextAppId();
+  if (strAppId)
   {
-    const char *id = PyString_AsString(app);
-    m_fileItem->SetProperty("appid",id);
+    m_fileItem->SetProperty("appid", strAppId);
   }
 }
 
@@ -111,7 +107,13 @@ void ListItem::SetMediaType(XAPP::ListItem::MediaType mediaType)
 void ListItem::SetLabel(const std::string& label)
 {
   if (m_fileItem)
-    m_fileItem->SetLabel(label);
+  m_fileItem->SetLabel(label);
+}
+
+void ListItem::SetLabel2(const std::string& label2)
+{
+  if (m_fileItem)
+  m_fileItem->SetLabel2(label2);
 }
 
 void ListItem::SetContentType(const std::string& contentType)
@@ -600,6 +602,26 @@ void ListItem::SetProperty(const std::string& key, const std::string& value)
   m_fileItem->SetProperty(customKey, value);
 }
 
+void ListItem::SetArbitratyProperty(const std::string& key, void* value)
+{
+  if (!m_fileItem)
+    return;
+
+  std::string customKey = "custom:";
+  customKey += key;
+  m_fileItem->SetProperty(customKey, (unsigned long) value);
+}
+
+void* ListItem::GetArbitratyProperty(const std::string& key)
+{
+  if (!m_fileItem)
+    return NULL;
+
+  std::string customKey = "custom:";
+  customKey += key;
+  return (void*) m_fileItem->GetPropertyULong(customKey);
+}
+
 std::string ListItem::GetLabel() const
 {
   if (!m_fileItem)
@@ -665,7 +687,7 @@ std::string ListItem::GetArtist() const
     return StringUtils::EmptyString;
 
   if (m_fileItem->HasMusicInfoTag())
-    return m_fileItem->GetMusicInfoTag()->GetArtist();
+  return m_fileItem->GetMusicInfoTag()->GetArtist();  
   if (m_fileItem->HasVideoInfoTag())
     return m_fileItem->GetVideoInfoTag()->m_strArtist;
 
@@ -695,8 +717,8 @@ std::string ListItem::GetDate()
     return m_fileItem->m_dateTime.GetAsLocalizedDate();
   }
   
-  return StringUtils::EmptyString;
-}
+    return StringUtils::EmptyString;
+  }
 
 std::string ListItem::GetGenre() const
 {
@@ -896,7 +918,7 @@ CFileItemPtr ListItem::GetFileItem()
 void ListItem::Dump()
 {
   if (m_fileItem)
-    m_fileItem->Dump();
+  m_fileItem->Dump();
 }
 
 bool ListItem::GetReportToServer()
@@ -1021,6 +1043,104 @@ std::string ListItem::GetImage(int id) const
   CStdString propName;
   propName.Format("Image%d", id);
   return m_fileItem->GetProperty(propName);    
+}
+
+void ListItem::SetMusicOSDButton(int id, const std::string thumbFocus, const std::string thumbNoFocus)
+{
+  if (!m_fileItem)
+    return;
+
+  char keyPrefix[32];
+  sprintf(keyPrefix, "music-osd-ext-%d-", id);
+
+  std::string key = keyPrefix;
+  key += "on";
+  m_fileItem->SetProperty(key, true);
+
+  key = keyPrefix;
+  key += "thumb-nofocus";
+  m_fileItem->SetProperty(key, thumbNoFocus);
+
+  key = keyPrefix;
+  key += "thumb-focus";
+  m_fileItem->SetProperty(key, thumbFocus);
+}
+
+void ListItem::ClearProperty(const std::string &strKey)
+{
+  if (!m_fileItem)
+    return;
+
+  std::string customKey = "custom:";
+  customKey += strKey;
+  m_fileItem->ClearProperty(customKey);
+}
+
+void ListItem::DeleteMusicOSDButton(int id)
+{
+  if (!m_fileItem)
+    return;
+
+  char keyPrefix[32];
+  sprintf(keyPrefix, "music-osd-ext-%d-", id);
+
+  std::string key = keyPrefix;
+  key += "on";
+  m_fileItem->ClearProperty(key);
+
+  key = keyPrefix;
+  key += "thumb-nofocus";
+  m_fileItem->ClearProperty(key);
+
+  key = keyPrefix;
+  key += "thumb-focus";
+  m_fileItem->ClearProperty(key);
+}
+
+void ListItem::SetCanShuffle(bool canShuffle)
+{
+  if (!m_fileItem)
+    return;
+
+  if (canShuffle)
+  {
+    if (m_fileItem->HasProperty("disable-shuffle"))
+      m_fileItem->ClearProperty("disable-shuffle");
+  }
+  else
+    m_fileItem->SetProperty("disable-shuffle", "true");
+}
+
+void ListItem::SetCanRepeat(bool canRepeat)
+{
+  if (!m_fileItem)
+    return;
+
+  if (canRepeat)
+  {
+    if (m_fileItem->HasProperty("disable-repeat"))
+      m_fileItem->ClearProperty("disable-repeat");
+  }
+  else
+    m_fileItem->SetProperty("disable-repeat", "true");
+}
+
+void ListItem::SetPauseOnSeek(bool pauseOnSeek)
+{
+  if (!m_fileItem)
+    return;
+
+  if (pauseOnSeek)
+  {
+    m_fileItem->SetProperty("pause-on-seek", "true");
+  }
+  else
+  {
+    if (m_fileItem->HasProperty("pause-on-seek"))
+    {
+      m_fileItem->ClearProperty("pause-on-seek");
+    }
+  }
 }
 
 }

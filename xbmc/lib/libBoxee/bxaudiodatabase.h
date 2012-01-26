@@ -45,8 +45,8 @@ public:
   
   // NOT USED, DELETE WHEN NO LONGER REQUIRED
   int GetAlbums2(std::vector<BXMetadata*> &vecMediaFiles, const std::vector<std::string>& vecPathFilter, int iItemLimit);
-
-
+ 
+ 
   int GetSongsFromAlbum(int iAlbumId, std::vector<BXMetadata*> &vecMediaFiles);
   
   bool GetArtistByName(const std::string& strName, BXArtist* pArtist);
@@ -57,7 +57,7 @@ public:
 
   int GetAlbumByPath(const std::string& strPath, BXAlbum* pAlbum, bool bGetDropped = false);
   int GetAlbumsByArtist(int iArtistId, std::vector<BXMetadata*> &vecMediaFiles, const std::vector<std::string>& vecPathFilter);
-
+  
   bool GetAlbum(const std::string& strAlbum, const std::string& strArtist, BXMetadata* pMetadata,  bool bGetDropped = false);
 
   int GetMusicGenres(std::vector<std::string>& vecGenres);
@@ -74,6 +74,7 @@ public:
   
   int RemoveAudioByPath(const std::string& strPath);
   int RemoveAudioByFolder(const std::string& strFolderPath);
+  int RemoveAlbumById(int iId);
   
   bool DropAlbumById(int iId);
 	

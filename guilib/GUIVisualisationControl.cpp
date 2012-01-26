@@ -83,7 +83,7 @@ CGUIVisualisationControl::CGUIVisualisationControl(int parentID, int controlID, 
 }
 
 CGUIVisualisationControl::CGUIVisualisationControl(const CGUIVisualisationControl &from)
-: CGUIControl(from)
+: CGUIControl(from), IAudioCallback(from)
 {
   m_pVisualisation = NULL;
   m_bInitialized = false;
@@ -163,11 +163,19 @@ void CGUIVisualisationControl::LoadVisualisation()
   }
   if (m_pVisualisation)
   {
+    float z = 0;
+
     g_graphicsContext.CaptureStateBlock();
-    float x = g_graphicsContext.ScaleFinalXCoord(GetXPosition(), GetYPosition());
-    float y = g_graphicsContext.ScaleFinalYCoord(GetXPosition(), GetYPosition());
-    float w = g_graphicsContext.ScaleFinalXCoord(GetXPosition() + GetWidth(), GetYPosition() + GetHeight()) - x;
-    float h = g_graphicsContext.ScaleFinalYCoord(GetXPosition() + GetWidth(), GetYPosition() + GetHeight()) - y;
+
+    
+    float x = GetXPosition();
+    float y = GetYPosition();
+    float w = GetXPosition() + GetWidth();
+    float h = GetYPosition() + GetHeight() - y;
+
+    g_graphicsContext.ScaleFinalCoords(x, y, z);
+    g_graphicsContext.ScaleFinalCoords(w, h, z);
+    
     if (x < 0) x = 0;
     if (y < 0) y = 0;
     if (x + w > g_graphicsContext.GetWidth()) w = g_graphicsContext.GetWidth() - x;
@@ -211,6 +219,10 @@ void CGUIVisualisationControl::Render()
     {
       LoadVisualisation();
     }
+
+    // just clear if we don't have any visual
+    g_graphicsContext.Clear();
+
     CGUIControl::Render();
 
     return;
@@ -240,19 +252,24 @@ void CGUIVisualisationControl::Render()
       // set the viewport - note: We currently don't have any control over how
       // the visualisation renders, so the best we can do is attempt to define
       // a viewport??
-      g_graphicsContext.SetViewPort(m_posX, m_posY, m_width, m_height);
+      TransformMatrix mat = g_graphicsContext.GetGuiTransform();
+
+      g_graphicsContext.PushTransform(mat, true);
+      g_graphicsContext.PushViewPort(m_posX, m_posY, m_width, m_height);
+      bool clip = g_graphicsContext.SetClipRegion(m_posX, m_posY, m_width, m_height);
       try
       {
-        g_graphicsContext.CaptureStateBlock();
         m_pVisualisation->Render();
-        g_graphicsContext.ApplyStateBlock();
       }
       catch (...)
       {
         CLog::Log(LOGERROR, "Exception in Visualisation::Render()");
       }
       // clear the viewport
-      g_graphicsContext.RestoreViewPort();
+      g_graphicsContext.PopTransform();
+      g_graphicsContext.PopViewPort();
+      if(clip)
+        g_graphicsContext.RestoreClipRegion();
     }
   }
 
@@ -453,10 +470,10 @@ void CGUIVisualisationControl::ClearBuffers()
   }
 }
 
-void CGUIVisualisationControl::FreeResources()
+void CGUIVisualisationControl::FreeResources(bool immediately)
 {
   FreeVisualisation();
-  CGUIControl::FreeResources();
+  CGUIControl::FreeResources(immediately);
 }
 
 CVisualisation *CGUIVisualisationControl::GetVisualisation()

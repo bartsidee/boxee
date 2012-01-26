@@ -41,6 +41,7 @@ public:
   virtual bool PresentRender();
   virtual bool ClearBuffers(color_t color);
   virtual bool ClearBuffers(float r, float g, float b, float a);
+  virtual void ClearStencilBuffer(int val);
   virtual bool IsExtSupported(const char* extension);
 
   virtual void SetVSync(bool vsync);
@@ -51,14 +52,22 @@ public:
   virtual void CaptureStateBlock();
   virtual void ApplyStateBlock();
 
-  virtual void SetCameraPosition(const CPoint &camera, int screenWidth, int screenHeight);
-
-  virtual void ApplyHardwareTransform(const TransformMatrix &matrix);
-  virtual void RestoreHardwareTransform();
+  virtual void ApplyClippingRect(CRect& clipRect);
+  virtual void GetClipRect(CRect& clipRect);
   
   bool IsDeviceReady() const { return true; };
   
   virtual bool TestRender();
+
+  virtual void EnableTexture(bool bEnable);
+  virtual void EnableBlending(bool bEnableRGB, bool bEnableAlpha = false);
+  virtual void EnableStencil(bool bEnable);
+  virtual void SetStencilFunc(StencilFunc func, int ref, unsigned int mask);
+  virtual void SetStencilOp(StencilOp fail_op, StencilOp fail, StencilOp pass);
+  virtual void SetColorMask(bool r, bool g, bool b, bool a);
+
+  virtual void EnableClipping(bool bEnable);
+  virtual void EnableDepthTest(bool bEnable);
   
 protected:
   virtual void SetVSyncImpl(bool enable) = 0;
@@ -71,9 +80,7 @@ protected:
   int64_t    m_iSwapRate;
   int64_t    m_iSwapTime;
   bool       m_bVsyncInit;
-  int        m_width;
-  int        m_height;
-
+  
   CStdString m_RenderExtensions;
 };
 

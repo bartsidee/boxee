@@ -18,7 +18,10 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
-
+#ifndef WIN32
+#include <config.h>
+#endif
+#ifdef HAS_WAVPACK_CODEC
 #include "MusicInfoTagLoaderWavPack.h"
 #include "cores/paplayer/WAVPackcodec.h"
 
@@ -46,3 +49,4 @@ bool CMusicInfoTagLoaderWAVPack::PrioritiseAPETags() const
   // WAVPack files always prioritize APEv2 tags over ID3 tags.
   return true;
 }
+#endif

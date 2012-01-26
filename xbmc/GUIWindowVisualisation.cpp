@@ -38,6 +38,10 @@
 #include "GUIWindowMusicInfo.h"
 #include "GUIDialogBoxeeMusicCtx.h"
 
+#ifdef HAS_EMBEDDED
+#include "ItemLoader.h"
+#endif 
+
 using namespace MUSIC_INFO;
 using namespace PLAYLIST;
 
@@ -48,7 +52,8 @@ using namespace PLAYLIST;
 #define CONTROL_VIS          2
 
 //Boxee
-#define CONTROL_OSD_INFO     100
+#define CONTROL_OSD_INFO    100
+#define DEFAULT_FPS         60
 //end Boxee
 
 CGUIWindowVisualisation::CGUIWindowVisualisation(void)
@@ -63,46 +68,51 @@ CGUIWindowVisualisation::~CGUIWindowVisualisation(void)
 {
 }
 
+void CGUIWindowVisualisation::ShowOSD()
+{
+  CGUIDialogBoxeeMusicCtx* pDlgInfo = (CGUIDialogBoxeeMusicCtx*)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_MUSIC_CTX);
+  CPlayList& pl = g_playlistPlayer.GetPlaylist(g_playlistPlayer.GetCurrentPlaylist());
+  int nSong = g_playlistPlayer.GetCurrentSong();
+  CFileItem *pItem = NULL;
+  if ( nSong < pl.size() && nSong >= 0)
+    pItem = pl[nSong].get();
+
+  if (pItem == NULL)
+    pItem = &g_application.CurrentFileItem();
+
+  if (pDlgInfo && pItem )
+  {
+    if (pItem->GetThumbnailImage().IsEmpty())
+      pItem->SetThumbnailImage(g_infoManager.GetImage(MUSICPLAYER_COVER,0));
+    pDlgInfo->SetItem(*pItem);
+    pDlgInfo->DoModal();
+  }
+  g_infoManager.SetShowInfo(false);
+}
+
 bool CGUIWindowVisualisation::OnAction(const CAction &action)
 {
   switch (action.id)
   {
   case ACTION_SHOW_INFO:
-    {
-//Boxee
-      CGUIDialogBoxeeMusicCtx* pDlgInfo = (CGUIDialogBoxeeMusicCtx*)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_MUSIC_CTX);
-      CPlayList& pl = g_playlistPlayer.GetPlaylist(g_playlistPlayer.GetCurrentPlaylist());
-      int nSong = g_playlistPlayer.GetCurrentSong();
-      CFileItem *pItem = NULL;
-      if ( nSong < pl.size() && nSong >= 0)
-        pItem = pl[nSong].get();
-      
-      if (pItem == NULL)
-        pItem = &g_application.CurrentFileItem();
-     
-      if (pDlgInfo && pItem )
-      {
-        if (pItem->GetThumbnailImage().IsEmpty())
-          pItem->SetThumbnailImage(g_infoManager.GetImage(MUSICPLAYER_COVER,0));
-        pDlgInfo->SetItem(*pItem);
-        pDlgInfo->DoModal();
-      }
-      g_infoManager.SetShowInfo(false);
-      
-//end Boxee
-      if (!m_initTimer || g_stSettings.m_bMyMusicSongThumbInVis)
-        g_stSettings.m_bMyMusicSongThumbInVis = !g_stSettings.m_bMyMusicSongThumbInVis;
-      g_infoManager.SetShowInfo(g_stSettings.m_bMyMusicSongThumbInVis);
-      return true;
-    }
-    break;
+  {
+    ShowOSD();
+    return true;
+  }
+  break;
   case ACTION_PARENT_DIR:
-    {
-      g_windowManager.PreviousWindow();
-      return true;
-    }
-    break;
+  {
+    g_windowManager.PreviousWindow();
+    return true;
+  }
+  break;
   case ACTION_SHOW_GUI:
+#ifdef HAS_EMBEDDED
+    if(g_application.IsPlaying())
+    {
+      g_application.GetItemLoader().Resume();
+    }
+#endif
     // save the settings
     g_settings.Save();
     g_windowManager.PreviousWindow();
@@ -110,47 +120,47 @@ bool CGUIWindowVisualisation::OnAction(const CAction &action)
     break;
 
   case ACTION_VIS_PRESET_LOCK:
-    { // show the locked icon + fall through so that the vis handles the locking
-      CGUIMessage msg(GUI_MSG_GET_VISUALISATION, 0, 0);
-      g_windowManager.SendMessage(msg);
-      if (msg.GetPointer())
-      {
-        CVisualisation *pVis = (CVisualisation *)msg.GetPointer();
-        char** pPresets=NULL;
-        int currpreset=0, numpresets=0;
-        bool locked;
-
-        pVis->GetPresets(&pPresets,&currpreset,&numpresets,&locked);
-        if (numpresets == 1 || !pPresets)
-          return true;
-      }
-      if (!m_bShowPreset)
-      {
-        m_lockedTimer = START_FADE_LENGTH;
-        g_infoManager.SetShowCodec(true);
-      }
-    }
-    break;
-  case ACTION_VIS_PRESET_SHOW:
+  { // show the locked icon + fall through so that the vis handles the locking
+    CGUIMessage msg(GUI_MSG_GET_VISUALISATION, 0, 0);
+    g_windowManager.SendMessage(msg);
+    if (msg.GetPointer())
     {
-      if (!m_lockedTimer || m_bShowPreset)
-        m_bShowPreset = !m_bShowPreset;
-      g_infoManager.SetShowCodec(m_bShowPreset);
-      return true;
+      CVisualisation *pVis = (CVisualisation *)msg.GetPointer();
+      char** pPresets=NULL;
+      int currpreset=0, numpresets=0;
+      bool locked;
+
+      pVis->GetPresets(&pPresets,&currpreset,&numpresets,&locked);
+      if (numpresets == 1 || !pPresets)
+        return true;
     }
-    break;
+    if (!m_bShowPreset)
+    {
+      m_lockedTimer = START_FADE_LENGTH;
+      g_infoManager.SetShowCodec(true);
+    }
+  }
+  break;
+  case ACTION_VIS_PRESET_SHOW:
+  {
+    if (!m_lockedTimer || m_bShowPreset)
+      m_bShowPreset = !m_bShowPreset;
+    g_infoManager.SetShowCodec(m_bShowPreset);
+    return true;
+  }
+  break;
 
   case ACTION_DECREASE_RATING:
   case ACTION_INCREASE_RATING:
-    {
-      // actual action is taken care of in CApplication::OnAction()
-      m_initTimer = g_advancedSettings.m_songInfoDuration * (int)g_infoManager.GetFPS();
-      g_infoManager.SetShowInfo(true);
-    }
-    break;
-    // TODO: These should be mapped to it's own function - at the moment it's overriding
-    // the global action of fastforward/rewind and OSD.
-/*  case KEY_BUTTON_Y:
+  {
+    // actual action is taken care of in CApplication::OnAction()
+    m_initTimer = g_advancedSettings.m_songInfoDuration * (int)g_infoManager.GetFPS();
+    g_infoManager.SetShowInfo(true);
+  }
+  break;
+  // TODO: These should be mapped to it's own function - at the moment it's overriding
+  // the global action of fastforward/rewind and OSD.
+  /*  case KEY_BUTTON_Y:
     g_application.m_CdgParser.Pause();
     return true;
     break;
@@ -167,35 +177,35 @@ bool CGUIWindowVisualisation::OnAction(const CAction &action)
 
   case ACTION_NEXT_ITEM:
   case ACTION_PREV_ITEM:
-    {
-      //////////////////////////////////////////////////////////////////////////////////////////////////
-      // In case of SHOUTCAST we want to disable the options of ACTION_NEXT_ITEM and ACTION_PREV_ITEM //
-      //////////////////////////////////////////////////////////////////////////////////////////////////
-      
-      CPlayList& playlist = g_playlistPlayer.GetPlaylist(g_playlistPlayer.GetCurrentPlaylist());
-      int currentSongIndex = g_playlistPlayer.GetCurrentSong();
+  {
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    // In case of SHOUTCAST we want to disable the options of ACTION_NEXT_ITEM and ACTION_PREV_ITEM //
+    //////////////////////////////////////////////////////////////////////////////////////////////////
 
-      CFileItem *pItem = NULL;
-      if ((currentSongIndex < playlist.size()) && (currentSongIndex >= 0))
+    CPlayList& playlist = g_playlistPlayer.GetPlaylist(g_playlistPlayer.GetCurrentPlaylist());
+    int currentSongIndex = g_playlistPlayer.GetCurrentSong();
+
+    CFileItem *pItem = NULL;
+    if ((currentSongIndex < playlist.size()) && (currentSongIndex >= 0))
+    {
+      pItem = playlist[currentSongIndex].get();
+    }
+
+    if (pItem == NULL)
+    {
+      pItem = &g_application.CurrentFileItem();
+    }
+
+    if(pItem)
+    {
+      if((pItem->m_strPath).Left(8) == "shout://")
       {
-        pItem = playlist[currentSongIndex].get();
-      }
-      
-      if (pItem == NULL)
-      {
-        pItem = &g_application.CurrentFileItem();
-      }
-      
-      if(pItem)
-      {
-        if((pItem->m_strPath).Left(8) == "shout://")
-        {
-          CLog::Log(LOGDEBUG,"CGUIWindowVisualisation::OnAction - Not handling action [action.id=%d] in SHOUTCAST [path=%s]",action.id,(pItem->m_strPath).c_str());
-          return true;
-        }
+        CLog::Log(LOGDEBUG,"CGUIWindowVisualisation::OnAction - Not handling action [action.id=%d] in SHOUTCAST [path=%s]",action.id,(pItem->m_strPath).c_str());
+        return true;
       }
     }
-    break;
+  }
+  break;
   }
   // default action is to send to the visualisation first
   CGUIVisualisationControl *pVisControl = (CGUIVisualisationControl *)GetControl(CONTROL_VIS);
@@ -210,9 +220,18 @@ bool CGUIWindowVisualisation::OnMessage(CGUIMessage& message)
   {
   case GUI_MSG_PLAYBACK_STARTED:
     {
-      CGUIVisualisationControl *pVisControl = (CGUIVisualisationControl *)GetControl(CONTROL_VIS);
-      if (pVisControl)
-        return pVisControl->OnMessage(message);
+      CGUIDialogBoxeeMusicCtx* pDlgInfo = (CGUIDialogBoxeeMusicCtx*)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_MUSIC_CTX);
+      if(!pDlgInfo->IsActive())
+      {
+        CGUIVisualisationControl *pVisControl = (CGUIVisualisationControl *)GetControl(CONTROL_VIS);
+        if (pVisControl)
+          return pVisControl->OnMessage(message);
+      }
+      else
+      {
+        pDlgInfo->DoModal();
+      }
+
     }
     break;
   case GUI_MSG_GET_VISUALISATION:
@@ -287,9 +306,12 @@ bool CGUIWindowVisualisation::OnMessage(CGUIMessage& message)
       }
       else
       {
-        // start display init timer (fade out after 3 secs...)
+      // start display init timer (fade out after 3 secs...)
         m_initTimer = g_advancedSettings.m_songInfoDuration * (int)g_infoManager.GetFPS();
       }
+
+      ShowOSD();
+
       return true;
     }
   }
@@ -331,8 +353,17 @@ void CGUIWindowVisualisation::Render()
   if (tag && *tag != m_tag)
   { // need to fade in then out again
     m_tag = *tag;
+
     // fade in
-    m_initTimer = g_advancedSettings.m_songInfoDuration * (int)g_infoManager.GetFPS();
+    if((int)g_infoManager.GetFPS() == 0)
+    {
+      m_initTimer  = g_advancedSettings.m_songInfoDuration * DEFAULT_FPS;
+    }
+    else
+    {
+      m_initTimer = g_advancedSettings.m_songInfoDuration * (int)g_infoManager.GetFPS();
+    }
+
     g_infoManager.SetShowInfo(true);
   }
   if (m_initTimer)

@@ -26,7 +26,7 @@ CBoxeeFriendsDirectory::~CBoxeeFriendsDirectory()
 
 bool CBoxeeFriendsDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items)
 {
-	CURL url(strPath);
+	CURI url(strPath);
 	CStdString protocol = url.GetProtocol();
   CStdString hostname = url.GetHostName();
   CStdString filename = url.GetFileName();

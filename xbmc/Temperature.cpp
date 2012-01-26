@@ -30,7 +30,7 @@ CTemperature::CTemperature()
   m_state=invalid;
 }
 
-CTemperature::CTemperature(const CTemperature& temperature)
+CTemperature::CTemperature(const CTemperature& temperature) : IArchivable(temperature)
 {
   m_value=temperature.m_value;
   m_state=temperature.m_state;
@@ -378,7 +378,7 @@ CTemperature CTemperature::CreateFromCelsius(double value)
   return CTemperature(value*1.8f+32.0f);
 }
 
-void CTemperature::Serialize(CArchive& ar)
+void CTemperature::Archive(CArchive& ar)
 {
   if (ar.IsStoring())
   {

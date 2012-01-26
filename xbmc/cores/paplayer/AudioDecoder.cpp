@@ -38,6 +38,8 @@ CAudioDecoder::CAudioDecoder()
 
   m_gaplessBufferSize = 0;
   m_blockSize = 4;
+
+  m_outputUnitSize = sizeof(float);
 }
 
 CAudioDecoder::~CAudioDecoder()
@@ -82,15 +84,21 @@ bool CAudioDecoder::Create(const CFileItem &file, __int64 seekOffset, unsigned i
     filecache = g_guiSettings.GetInt("cacheaudio.internet");
 
   // create our codec
-  m_codec=CodecFactory::CreateCodecDemux(file.m_strPath, file.GetContentType(), filecache * 1024);
+  bool codecInitialized = false;
+  m_codec=CodecFactory::CreateCodecDemux(file.m_strPath, file.GetContentType(), filecache * 1024, codecInitialized);
 
-  if (!m_codec || !m_codec->Init(file.m_strPath, filecache * 1024))
+  if (!m_codec || (!codecInitialized && !m_codec->Init(file.m_strPath, filecache * 1024)))
   {
     CLog::Log(LOGERROR, "CAudioDecoder: Unable to Init Codec while loading file %s", file.m_strPath.c_str());
     Destroy();
     return false;
   }
   m_blockSize = m_codec->m_Channels * m_codec->m_BitsPerSample / 8;
+
+  if( m_codec->UseHWDecoding() || m_codec->UsePassthrough() )
+    m_outputUnitSize = sizeof(char);
+  else
+    m_outputUnitSize = sizeof(float);
 
   if (seekOffset)
     m_codec->Seek(seekOffset);
@@ -100,14 +108,16 @@ bool CAudioDecoder::Create(const CFileItem &file, __int64 seekOffset, unsigned i
   return true;
 }
 
-void CAudioDecoder::GetDataFormat(unsigned int *channels, unsigned int *samplerate, unsigned int *bitspersample)
+void CAudioDecoder::GetDataFormat(unsigned int *channels, unsigned int *samplerate, unsigned int *bitspersample, AudioMediaFormat* format, bool* isPassthrough)
 {
   if (!m_codec)
     return;
 
-  if (channels) *channels = m_codec->m_Channels;
-  if (samplerate) *samplerate = m_codec->m_SampleRate;
+  if (channels)      *channels = m_codec->m_Channels;
+  if (samplerate)    *samplerate = m_codec->m_SampleRate;
   if (bitspersample) *bitspersample = m_codec->m_BitsPerSample;
+  if (format)        *format = m_codec->GetDataFormat();
+  if (isPassthrough) *isPassthrough = m_codec->UsePassthrough();
 }
 
 __int64 CAudioDecoder::Seek(__int64 time)
@@ -134,17 +144,23 @@ unsigned int CAudioDecoder::GetDataSize()
   // check for end of file and end of buffer
   if (m_status == STATUS_ENDING && m_pcmBuffer.GetMaxReadSize() < PACKET_SIZE)
     m_status = STATUS_ENDED;
-  return m_pcmBuffer.GetMaxReadSize() / sizeof(float);
+
+  return m_pcmBuffer.GetMaxReadSize() / m_outputUnitSize;
 }
 
 void *CAudioDecoder::GetData(unsigned int size)
 {
-  if (size > OUTPUT_SAMPLES)
+  // calculate the maxsize in units
+  unsigned int bufsize = OUTPUT_SAMPLES * (m_outputUnitSize == 1 ? 4 : 1);
+  unsigned int maxsize = std::min<unsigned int>(bufsize, GetDataSize());
+
+  if (size > maxsize)
   {
-    CLog::Log(LOGWARNING, "CAudioDecoder::GetData() more bytes/samples (%i) requested than we have to give (%i)!", size, OUTPUT_SAMPLES);
-    size = OUTPUT_SAMPLES;
+    CLog::Log(LOGWARNING, "CAudioDecoder::GetData() more bytes/samples (%i) requested than we have to give (%i)!", size, maxsize);
+    size = maxsize;
   }
   // first copy anything from our gapless buffer
+  // this is always a no-op in passthrough or hw decode modes
   if (m_gaplessBufferSize > size)
   {
     memcpy(m_outputBuffer, m_gaplessBuffer, size*sizeof(float));
@@ -155,29 +171,30 @@ void *CAudioDecoder::GetData(unsigned int size)
   if (m_gaplessBufferSize)
     memcpy(m_outputBuffer, m_gaplessBuffer, m_gaplessBufferSize*sizeof(float));
 
-  if (m_pcmBuffer.ReadBinary( (char *)(m_outputBuffer + m_gaplessBufferSize), (size - m_gaplessBufferSize) * sizeof(float)))
+  if (m_pcmBuffer.ReadData( (char *)(m_outputBuffer + m_gaplessBufferSize), (size - m_gaplessBufferSize) * m_outputUnitSize))
   {
     m_gaplessBufferSize = 0;
     // check for end of file + end of buffer
-    if ( m_status == STATUS_ENDING && m_pcmBuffer.GetMaxReadSize() < (int) (OUTPUT_SAMPLES * sizeof(float)))
+    if ( m_status == STATUS_ENDING && m_pcmBuffer.GetMaxReadSize() < (maxsize * m_outputUnitSize))
     {
-      CLog::Log(LOGINFO, "CAudioDecoder::GetData() ending track - only have %lu samples left", (unsigned long)(m_pcmBuffer.GetMaxReadSize() / sizeof(float)));
+      CLog::Log(LOGINFO, "CAudioDecoder::GetData() ending track - only have %lu samples left", (unsigned long)(m_pcmBuffer.GetMaxReadSize() / m_outputUnitSize));
       m_status = STATUS_ENDED;
     }
     return m_outputBuffer;
   }
-  CLog::Log(LOGERROR, "CAudioDecoder::GetData() ReadBinary failed with %i samples", size - m_gaplessBufferSize);
+  CLog::Log(LOGERROR, "CAudioDecoder::GetData() ReadData failed with %i samples", size - m_gaplessBufferSize);
   return NULL;
 }
 
 void CAudioDecoder::PrefixData(void *data, unsigned int size)
 {
+  // this is never called in passthrough or hw decode modes
   if (!data)
   {
     CLog::Log(LOGERROR, "CAudioDecoder::PrefixData() failed - null data pointer");
     return;
   }
-  m_gaplessBufferSize = std::min<unsigned int>(PACKET_SIZE, size);
+  m_gaplessBufferSize = std::min<unsigned int>(OUTPUT_SAMPLES, size);
   memcpy(m_gaplessBuffer, data, m_gaplessBufferSize*sizeof(float));
   if (m_gaplessBufferSize != size)
     CLog::Log(LOGWARNING, "CAudioDecoder::PrefixData - losing %i bytes of audio data in track transistion", size - m_gaplessBufferSize);
@@ -195,31 +212,57 @@ int CAudioDecoder::ReadSamples(int numsamples)
   // grab a lock to ensure the codec is created at this point.
   CSingleLock lock(m_critSection);
 
+  bool encoded = m_codec->UseHWDecoding() || m_codec->UsePassthrough();
+
   // Read in more data
-  int maxsize = std::min<int>(INPUT_SAMPLES,
-                  (m_pcmBuffer.GetMaxWriteSize() / (int)(sizeof (float))));
-  numsamples = std::min<int>(numsamples, maxsize);
-  numsamples -= (numsamples % m_codec->m_Channels);  // make sure it's divisible by our number of channels
+  if( encoded )
+  {
+    numsamples = m_pcmBuffer.GetMaxWriteSize() / m_outputUnitSize;
+    numsamples = std::min<int>(numsamples, INPUT_SIZE);
+  }
+  else
+  {
+    int maxsize = std::min<int>(INPUT_SAMPLES,
+                    (m_pcmBuffer.GetMaxWriteSize() / (int)(m_outputUnitSize)));
+    numsamples = std::min<int>(numsamples, maxsize);
+    numsamples -= (numsamples % m_codec->m_Channels);  // make sure it's divisible by our number of channels
+  }
+
   if ( numsamples )
   {
     int actualsamples = 0;
     // if our codec sends floating point, then read it
     int result = READ_ERROR;
+
+    // to avoid deadlock when trying to cancel blocking read (e.q XFILE::Pipe::Read)
+    lock.Unlock();
+
     if (m_codec->HasFloatData())
       result = m_codec->ReadSamples(m_inputBuffer, numsamples, &actualsamples);
+    else if(encoded)
+      result = m_codec->ReadData(m_pcmInputBuffer, numsamples, &actualsamples);
     else
       result = ReadPCMSamples(m_inputBuffer, numsamples, &actualsamples);
+
+    lock.Lock();
 
     if ( result != READ_ERROR && actualsamples ) 
     {
       // do any post processing of the audio (eg replaygain etc.)
-      ProcessAudio(m_inputBuffer, actualsamples);
+      if( !encoded )
+      {
+        ProcessAudio(m_inputBuffer, actualsamples);
 
-      // move it into our buffer
-      m_pcmBuffer.WriteBinary((char *)m_inputBuffer, actualsamples * sizeof(float));
+        // move it into our buffer
+        m_pcmBuffer.WriteData((char *)m_inputBuffer, actualsamples * m_outputUnitSize);
+      }
+      else
+      {
+        m_pcmBuffer.WriteData((char*)m_pcmInputBuffer, actualsamples * m_outputUnitSize);
+      }
 
       // update status
-      if (m_status == STATUS_QUEUING && m_pcmBuffer.GetMaxReadSize() > m_pcmBuffer.Size() * 0.9)
+      if (m_status == STATUS_QUEUING && m_pcmBuffer.GetMaxReadSize() > m_pcmBuffer.getSize() * 0.9)
       {
         CLog::Log(LOGINFO, "AudioDecoder: File is queued");
         m_status = STATUS_QUEUED;

@@ -27,13 +27,13 @@
 #undef SetPort // WIN32INCLUDES this is defined as SetPortA in WinSpool.h which is being included _somewhere_
 #endif
 
-class CURL
+class CURI
 {
 public:
-  CURL(const CStdString& strURL);
-  CURL(const CURL& url);
-  CURL();
-  virtual ~CURL(void);
+  CURI(const CStdString& strURL);
+  CURI(const CURI& url);
+  CURI();
+  virtual ~CURI(void);
   void SetFileName(const CStdString& strFileName);
   void SetHostName(const CStdString& strHostName);
   void SetUserName(const CStdString& strUserName);
@@ -60,10 +60,10 @@ public:
 
   char GetDirectorySeparator() const;
 
-  void GetURL(CStdString& strURL) const;
-  void GetURLWithoutUserDetails(CStdString& strURL) const;
-  void GetURLWithoutFilename(CStdString& strURL) const;
-  CURL& operator= (const CURL& source);
+  CStdString Get() const;
+  CStdString GetWithoutUserDetails() const;
+  CStdString GetWithoutFilename() const;
+  CURI& operator= (const CURI& source);
   bool IsLocal() const;
   static bool IsFileOnly(const CStdString &url); ///< return true if there are no directories in the url.
   static bool IsFullPath(const CStdString &url); ///< return true if the url includes the full path

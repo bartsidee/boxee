@@ -2,7 +2,6 @@
 #define __LINUX_INPUT__H_
 
 #include "../system.h"
-#include "LIRC.h"
 #include "../StdString.h" 
 
 #define LINUX_INPUT_EVENT_WHEEL  8

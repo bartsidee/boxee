@@ -9,14 +9,12 @@
 // Copyright: See COPYING file that comes with this distribution
 //
 //
-#ifndef GUIDIALOGBOXEEFRIENDSMENU_H
-#define GUIDIALOGBOXEEFRIENDSMENU_H
+#ifndef GUIDIALOGBOXEESHARE_H
+#define GUIDIALOGBOXEESHARE_H
 
 #include "GUIDialog.h"
-#include "lib/libBoxee/bxfriendslist.h"
-#include "PictureThumbLoader.h"
-
-#include <vector>
+#include "../lib/libjson/include/json/value.h"
+#include "Thread.h"
 
 /**
 */
@@ -28,14 +26,21 @@ public:
 
   virtual bool OnMessage(CGUIMessage &message);
   virtual void OnInitWindow();
+  virtual void OnDeinitWindow(int nextWindowID);
 
   void SetItem(const CFileItem *item);
-  
-protected:
-  CStdString GetShareText();
+  void UpdateShareDialog();
 
-  CStdString   m_strText;
-  CFileItem    m_item;
+protected:
+  
+  CStdString GetDefaultShareText();
+  bool GetDefaultMusicShareText(CStdString& defaultMusicShareText);
+  bool GetDefaultTvShowShareText(CStdString& defaultTvShowShareText);
+
+  CStdString    m_strText;
+  CFileItem     m_item;
+  CFileItemList m_servicesList;
+  Json::Value   m_jsonServiceList;
 };
 
 #endif

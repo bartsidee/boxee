@@ -31,6 +31,8 @@
 #include "GUIWindowManager.h"
 #include "Application.h"
 
+#include "../../../placement_new.h"
+
 using namespace std;
 
 #define ACTIVE_WINDOW	g_windowManager.GetActiveWindow()
@@ -165,11 +167,11 @@ namespace PYXBMC
     {
     case CGUIControl::GUICONTROL_BUTTON:
       pControl = (Control*)ControlButton_Type.tp_alloc(&ControlButton_Type, 0);
-      new(&((ControlButton*)pControl)->strFont) string();    
-      new(&((ControlButton*)pControl)->strText) string();    
-      new(&((ControlButton*)pControl)->strText2) string();    
-      new(&((ControlButton*)pControl)->strTextureFocus) string();    
-      new(&((ControlButton*)pControl)->strTextureNoFocus) string(); 
+     PLACEMENT_NEW(&((ControlButton*)pControl)->strFont) string();    
+     PLACEMENT_NEW(&((ControlButton*)pControl)->strText) string();    
+     PLACEMENT_NEW(&((ControlButton*)pControl)->strText2) string();    
+     PLACEMENT_NEW(&((ControlButton*)pControl)->strTextureFocus) string();    
+     PLACEMENT_NEW(&((ControlButton*)pControl)->strTextureNoFocus) string(); 
 
       li = ((CGUIButtonControl *)pGUIControl)->GetLabelInfo();
 
@@ -183,10 +185,10 @@ namespace PYXBMC
       break;
     case CGUIControl::GUICONTROL_CHECKMARK:
       pControl = (Control*)ControlCheckMark_Type.tp_alloc(&ControlCheckMark_Type, 0);
-      new(&((ControlCheckMark*)pControl)->strFont) string();    
-      new(&((ControlCheckMark*)pControl)->strText) string();    
-      new(&((ControlCheckMark*)pControl)->strTextureFocus) string();    
-      new(&((ControlCheckMark*)pControl)->strTextureNoFocus) string();    
+     PLACEMENT_NEW(&((ControlCheckMark*)pControl)->strFont) string();    
+     PLACEMENT_NEW(&((ControlCheckMark*)pControl)->strText) string();    
+     PLACEMENT_NEW(&((ControlCheckMark*)pControl)->strTextureFocus) string();    
+     PLACEMENT_NEW(&((ControlCheckMark*)pControl)->strTextureNoFocus) string();    
 
       li = ((CGUICheckMarkControl *)pGUIControl)->GetLabelInfo();
 
@@ -199,55 +201,55 @@ namespace PYXBMC
       break;
     case CGUIControl::GUICONTROL_LABEL:
       pControl = (Control*)ControlLabel_Type.tp_alloc(&ControlLabel_Type, 0);
-      new(&((ControlLabel*)pControl)->strText) string();
-      new(&((ControlLabel*)pControl)->strFont) string();
+     PLACEMENT_NEW(&((ControlLabel*)pControl)->strText) string();
+     PLACEMENT_NEW(&((ControlLabel*)pControl)->strFont) string();
       break;
     case CGUIControl::GUICONTROL_SPIN:
       pControl = (Control*)ControlSpin_Type.tp_alloc(&ControlSpin_Type, 0);
-      new(&((ControlSpin*)pControl)->strTextureUp) string();    
-      new(&((ControlSpin*)pControl)->strTextureDown) string();    
-      new(&((ControlSpin*)pControl)->strTextureUpFocus) string();    
-      new(&((ControlSpin*)pControl)->strTextureDownFocus) string();      
+     PLACEMENT_NEW(&((ControlSpin*)pControl)->strTextureUp) string();    
+     PLACEMENT_NEW(&((ControlSpin*)pControl)->strTextureDown) string();    
+     PLACEMENT_NEW(&((ControlSpin*)pControl)->strTextureUpFocus) string();    
+     PLACEMENT_NEW(&((ControlSpin*)pControl)->strTextureDownFocus) string();      
       break;
     case CGUIControl::GUICONTROL_FADELABEL:
       pControl = (Control*)ControlFadeLabel_Type.tp_alloc(&ControlFadeLabel_Type, 0);
-      new(&((ControlFadeLabel*)pControl)->strFont) string();
-      new(&((ControlFadeLabel*)pControl)->vecLabels) std::vector<string>();    
+     PLACEMENT_NEW(&((ControlFadeLabel*)pControl)->strFont) string();
+     PLACEMENT_NEW(&((ControlFadeLabel*)pControl)->vecLabels) std::vector<string>();    
       break;
     case CGUIControl::GUICONTROL_TEXTBOX:
       pControl = (Control*)ControlTextBox_Type.tp_alloc(&ControlTextBox_Type, 0);
-         new(&((ControlTextBox*)pControl)->strFont) string();        
+        PLACEMENT_NEW(&((ControlTextBox*)pControl)->strFont) string();        
       break;
     case CGUIControl::GUICONTROL_IMAGE:
       pControl = (Control*)ControlImage_Type.tp_alloc(&ControlImage_Type, 0);
-      new(&((ControlImage*)pControl)->strFileName) string();    
+     PLACEMENT_NEW(&((ControlImage*)pControl)->strFileName) string();    
       break;
     case CGUIControl::GUICONTROL_LIST:
       pControl = (Control*)ControlList_Type.tp_alloc(&ControlList_Type, 0);
-      new(&((ControlList*)pControl)->strFont) string();    
-      new(&((ControlList*)pControl)->strTextureButton) string();    
-      new(&((ControlList*)pControl)->strTextureButtonFocus) string();
-      new(&((ControlList*)pControl)->vecItems) std::vector<PYXBMC::ListItem*>();
+     PLACEMENT_NEW(&((ControlList*)pControl)->strFont) string();    
+     PLACEMENT_NEW(&((ControlList*)pControl)->strTextureButton) string();    
+     PLACEMENT_NEW(&((ControlList*)pControl)->strTextureButtonFocus) string();
+     PLACEMENT_NEW(&((ControlList*)pControl)->vecItems) std::vector<PYXBMC::ListItem*>();
       // create a python spin control
       ((ControlList*)pControl)->pControlSpin = (ControlSpin*)ControlSpin_New();
       break;
     case CGUIControl::GUICONTROL_PROGRESS:
       pControl = (Control*)ControlProgress_Type.tp_alloc(&ControlProgress_Type, 0);
-      new(&((ControlProgress*)pControl)->strTextureLeft) string();    
-      new(&((ControlProgress*)pControl)->strTextureMid) string();    
-      new(&((ControlProgress*)pControl)->strTextureRight) string();    
-      new(&((ControlProgress*)pControl)->strTextureBg) string();     
-      new(&((ControlProgress*)pControl)->strTextureOverlay) string();     
+     PLACEMENT_NEW(&((ControlProgress*)pControl)->strTextureLeft) string();    
+     PLACEMENT_NEW(&((ControlProgress*)pControl)->strTextureMid) string();    
+     PLACEMENT_NEW(&((ControlProgress*)pControl)->strTextureRight) string();    
+     PLACEMENT_NEW(&((ControlProgress*)pControl)->strTextureBg) string();     
+     PLACEMENT_NEW(&((ControlProgress*)pControl)->strTextureOverlay) string();     
       break;
     case CGUIControl::GUICONTAINER_LIST:
     case CGUIControl::GUICONTAINER_WRAPLIST:
     case CGUIControl::GUICONTAINER_FIXEDLIST:
     case CGUIControl::GUICONTAINER_PANEL:
       pControl = (Control*)ControlList_Type.tp_alloc(&ControlList_Type, 0);
-      new(&((ControlList*)pControl)->strFont) string();    
-      new(&((ControlList*)pControl)->strTextureButton) string();    
-      new(&((ControlList*)pControl)->strTextureButtonFocus) string();
-      new(&((ControlList*)pControl)->vecItems) std::vector<PYXBMC::ListItem*>();
+     PLACEMENT_NEW(&((ControlList*)pControl)->strFont) string();    
+     PLACEMENT_NEW(&((ControlList*)pControl)->strTextureButton) string();    
+     PLACEMENT_NEW(&((ControlList*)pControl)->strTextureButtonFocus) string();
+     PLACEMENT_NEW(&((ControlList*)pControl)->vecItems) std::vector<PYXBMC::ListItem*>();
       // create a python spin control
       ((ControlList*)pControl)->pControlSpin = (ControlSpin*)ControlSpin_New();
       break;
@@ -256,12 +258,12 @@ namespace PYXBMC
       break;
     case CGUIControl::GUICONTROL_RADIO:
       pControl = (Control*)ControlRadioButton_Type.tp_alloc(&ControlRadioButton_Type, 0);
-      new(&((ControlRadioButton*)pControl)->strFont) string();    
-      new(&((ControlRadioButton*)pControl)->strText) string();    
-      new(&((ControlRadioButton*)pControl)->strTextureFocus) string();
-      new(&((ControlRadioButton*)pControl)->strTextureNoFocus) string();
-      new(&((ControlRadioButton*)pControl)->strTextureRadioFocus) string();
-      new(&((ControlRadioButton*)pControl)->strTextureRadioNoFocus) string();
+     PLACEMENT_NEW(&((ControlRadioButton*)pControl)->strFont) string();    
+     PLACEMENT_NEW(&((ControlRadioButton*)pControl)->strText) string();    
+     PLACEMENT_NEW(&((ControlRadioButton*)pControl)->strTextureFocus) string();
+     PLACEMENT_NEW(&((ControlRadioButton*)pControl)->strTextureNoFocus) string();
+     PLACEMENT_NEW(&((ControlRadioButton*)pControl)->strTextureRadioFocus) string();
+     PLACEMENT_NEW(&((ControlRadioButton*)pControl)->strTextureRadioNoFocus) string();
 
       li = ((CGUIRadioButtonControl *)pGUIControl)->GetLabelInfo();
 
@@ -315,9 +317,9 @@ namespace PYXBMC
 
     self = (Window*)type->tp_alloc(type, 0);
     if (!self) return NULL;
-    new(&self->sXMLFileName) string();
-    new(&self->sFallBackPath) string();
-    new(&self->vecControls) std::vector<Control*>();
+   PLACEMENT_NEW(&self->sXMLFileName) string();
+   PLACEMENT_NEW(&self->sFallBackPath) string();
+   PLACEMENT_NEW(&self->vecControls) std::vector<Control*>();
 
     self->iWindowId = -1;
 

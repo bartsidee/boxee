@@ -37,6 +37,15 @@
 #import <OpenGL/OpenGL.h>
 #import <OpenGL/gl.h>
 
+static void HideMenuBar() 
+{
+  [NSMenu setMenuBarVisible:NO];
+}
+
+static void ShowMenuBar() 
+{
+  [NSMenu setMenuBarVisible:YES];
+}
 
 #define MAX_DISPLAYS 32
 static NSWindow* blankingWindows[MAX_DISPLAYS];
@@ -366,8 +375,8 @@ bool CWinSystemOSX::SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, bool bl
   }
   else  
   {
-    m_nWidth      = res.iWidth;
-    m_nHeight     = res.iHeight;
+  m_nWidth      = res.iWidth;
+  m_nHeight     = res.iHeight;
   }
   
   m_bFullScreen = fullScreen;
@@ -390,7 +399,7 @@ bool CWinSystemOSX::SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, bool bl
     if (res.iScreen >= numDisplays)
       screen_index = g_settings.m_ResInfo[RES_DESKTOP].iScreen;
     else
-      screen_index = res.iScreen;
+    screen_index = res.iScreen;
     
     if (g_advancedSettings.m_osx_GLFullScreen)
     {
@@ -589,8 +598,10 @@ void CWinSystemOSX::UpdateResolutions()
   double fps;
   
   std::vector<RESOLUTION_INFO> m_tempResInfo;
-  m_tempResInfo.insert(m_tempResInfo.begin(), g_settings.m_ResInfo.begin()+RES_DESKTOP,g_settings.m_ResInfo.end());
-	
+
+  if (g_settings.m_ResInfo.size() >= RES_DESKTOP)
+    m_tempResInfo.insert(m_tempResInfo.begin(), g_settings.m_ResInfo.begin()+RES_DESKTOP,g_settings.m_ResInfo.end());
+  
   g_settings.m_ResInfo.erase(g_settings.m_ResInfo.begin()+RES_DESKTOP,g_settings.m_ResInfo.end());
   
   // Add full screen settings for additional monitors
@@ -612,11 +623,11 @@ void CWinSystemOSX::UpdateResolutions()
      CLog::Log(LOGINFO, "Extra display %d is %dx%d\n", i, w, h);
 
      RESOLUTION_INFO res;
-     UpdateDesktopResolution(res, i, w, h, fps);
+    UpdateDesktopResolution(res, i, w, h, fps);
      //g_graphicsContext.ResetOverscan(res);
      g_settings.m_ResInfo.push_back(res);
-  }
-	
+  }  
+  
 	std::vector<RESOLUTION_INFO>::iterator it1 = g_settings.m_ResInfo.begin()+RES_DESKTOP;
 	std::vector<RESOLUTION_INFO>::iterator it2 = m_tempResInfo.begin();
 	
@@ -733,14 +744,14 @@ void CWinSystemOSX::EnableVSync(bool enable)
   GLint swapInterval;
   
   swapInterval = enable ? 1 : 0;
-  [[NSOpenGLContext currentContext] setValues:(const long*)&swapInterval forParameter:NSOpenGLCPSwapInterval];
+  [[NSOpenGLContext currentContext] setValues:(const GLint*)&swapInterval forParameter:NSOpenGLCPSwapInterval];
 }
 
 bool CWinSystemOSX::SwitchToVideoMode(int width, int height, double refreshrate)
 {
   CGDirectDisplayID displayID = kCGDirectMainDisplay;
   CFDictionaryRef dispMode = NULL;
-  int match = 0;
+  boolean_t match = 0;
 
   // find mode that matches the desired size
   dispMode = CGDisplayBestModeForParametersAndRefreshRate(

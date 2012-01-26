@@ -50,6 +50,7 @@ Export win32_exports[] =
   { "CreateFileA",                                  -1, (void*)dllCreateFileA,                               NULL },
   { "LoadLibraryExA",                               -1, (void*)dllLoadLibraryExA,                            (void*)track_LoadLibraryExA }, 
   { "GetModuleFileNameA",                           -1, (void*)dllGetModuleFileNameA,                        NULL },
+  { "CreateProcessA",                               -1, (void*)dllCreateProcessA,                            NULL },
 // potential vfs stuff
 //  { "CreateDirectoryA",                             -1, (void*)dllCreateDirectoryA,                          NULL },
 //  { "LockFile",                                     -1, (void*)dllLockFile,                                  NULL },
@@ -122,6 +123,9 @@ Export win32_exports[] =
 
   // libdvdnav + python need this (due to us using dll_putenv() to put stuff only?)
   { "getenv",                     -1, (void*)dll_getenv,                    NULL },
+
+  { "_beginthread",               -1, (void*)dll_beginthread,               NULL },
+  { "_endthread",                 -1, (void*)dll_endthread,                 NULL },
 
   { NULL,                          -1, NULL,                                NULL }
 };
@@ -448,4 +452,3 @@ extern "C" FARPROC __stdcall dllWin32GetProcAddress(HMODULE hModule, LPCSTR func
   // Nope
   return GetProcAddress(hModule, function);
 }
-

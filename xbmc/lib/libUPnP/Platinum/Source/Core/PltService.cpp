@@ -2,7 +2,7 @@
 |
 |   Platinum - Service
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -29,7 +29,7 @@
 | 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 | http://www.gnu.org/licenses/gpl-2.0.html
 |
- ****************************************************************/
+****************************************************************/
 
 /*----------------------------------------------------------------------
 |   includes
@@ -48,15 +48,17 @@ NPT_SET_LOCAL_LOGGER("platinum.core.service")
 PLT_Service::PLT_Service(PLT_DeviceData* device,
                          const char*     type, 
                          const char*     id,
+                         const char*     name,
                          const char*     last_change_namespace /* = NULL */) :  
     m_Device(device),
     m_ServiceType(type),
     m_ServiceID(id),
+	m_ServiceName(name),
     m_EventTask(NULL),
     m_EventingPaused(false),
-    m_LastChangeNamespace(last_change_namespace),
-    m_RefCount(1)
+    m_LastChangeNamespace(last_change_namespace)
 {
+    if (name) InitURLs(name);
 }
 
 /*----------------------------------------------------------------------
@@ -65,31 +67,6 @@ PLT_Service::PLT_Service(PLT_DeviceData* device,
 PLT_Service::~PLT_Service()
 {
     Cleanup();
-}
-
-/*----------------------------------------------------------------------
- |   PLT_Service::Release
- +---------------------------------------------------------------------*/
-void PLT_Service::Release()
-{
-  m_Lock.Lock();
-  m_RefCount--;
-  if (m_RefCount == 0)
-  {
-    m_Lock.Unlock();
-    delete this;
-    return;
-  }
-  m_Lock.Unlock();
-}
-
-/*----------------------------------------------------------------------
- |   PLT_Service::AddRef
- +---------------------------------------------------------------------*/
-void PLT_Service::AddRef()
-{
-  NPT_AutoLock lock(m_Lock);
-  m_RefCount++;
 }
 
 /*----------------------------------------------------------------------
@@ -145,7 +122,7 @@ PLT_Service::GetSCPDXML(NPT_String& scpd)
         NPT_UntilResultNotEquals(NPT_SUCCESS)), cleanup);
 
     // serialize node
-    NPT_CHECK_LABEL_SEVERE(res = PLT_XmlHelper::Serialize(*top, scpd), cleanup);
+    NPT_CHECK_LABEL_SEVERE(res = PLT_XmlHelper::Serialize(*top, scpd, true, 2), cleanup);
     
 cleanup:
     delete top;
@@ -176,15 +153,14 @@ PLT_Service::GetDescription(NPT_XmlElementNode* parent, NPT_XmlElementNode** ser
 |   PLT_Service::InitURLs
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_Service::InitURLs(const char* service_name, 
-                      const char* device_uuid)
+PLT_Service::InitURLs(const char* service_name)
 {
-    m_SCPDURL  = service_name;
-    m_SCPDURL += "/" + NPT_String(device_uuid) + NPT_String("/scpd.xml");
-    m_ControlURL  = service_name;
-    m_ControlURL += "/" + NPT_String(device_uuid) + NPT_String("/control.xml");
+    m_SCPDURL      = service_name;
+    m_SCPDURL     += "/" + m_Device->GetUUID() + NPT_String("/scpd.xml");
+    m_ControlURL   = service_name;
+    m_ControlURL  += "/" + m_Device->GetUUID() + NPT_String("/control.xml");
     m_EventSubURL  = service_name;
-    m_EventSubURL += "/" + NPT_String(device_uuid) + NPT_String("/event.xml");
+    m_EventSubURL += "/" + m_Device->GetUUID() + NPT_String("/event.xml");
     
     return NPT_SUCCESS;
 }
@@ -214,29 +190,29 @@ PLT_Service::SetSCPDXML(const char* scpd)
     // make sure root tag is right
     root = tree->AsElementNode();
     if (!root || NPT_String::Compare(root->GetTag(), "scpd")) {
+        NPT_LOG_SEVERE("Invalid scpd root tag name");
         NPT_CHECK_LABEL_SEVERE(NPT_ERROR_INVALID_SYNTAX, failure);
     }
 
     // make sure we have required children presents
     stateTable = PLT_XmlHelper::GetChild(root, "serviceStateTable");
-    if (!stateTable || stateTable->GetChildren().GetItemCount() == 0) {
-        NPT_CHECK_LABEL_SEVERE(NPT_ERROR_INVALID_SYNTAX, failure);
-    }
-
-    // stateVariable table
-    if (NPT_FAILED(PLT_XmlHelper::GetChildren(stateTable,
+    if (!stateTable || 
+        stateTable->GetChildren().GetItemCount() == 0 ||
+        NPT_FAILED(PLT_XmlHelper::GetChildren(stateTable,
                                               stateVariables, 
                                               "stateVariable"))) {
+        NPT_LOG_SEVERE("No state variables found");
         NPT_CHECK_LABEL_SEVERE(NPT_ERROR_INVALID_SYNTAX, failure);
     }
 
-    for( int k = 0 ; k < (int)stateVariables.GetItemCount(); k++) {
+    for (int k = 0 ; k < (int)stateVariables.GetItemCount(); k++) {
         NPT_String name, type, send;
         PLT_XmlHelper::GetChildText(stateVariables[k], "name", name);
         PLT_XmlHelper::GetChildText(stateVariables[k], "dataType", type);
         PLT_XmlHelper::GetAttribute(stateVariables[k], "sendEvents", send);
 
         if (name.GetLength() == 0 || type.GetLength() == 0) {
+            NPT_LOG_SEVERE_1("Invalid state variable name or type at position %d", k+1);
             NPT_CHECK_LABEL_SEVERE(NPT_ERROR_INVALID_SYNTAX, failure);
         }
 
@@ -245,14 +221,14 @@ PLT_Service::SetSCPDXML(const char* scpd)
 
         variable->m_Name = name;
         variable->m_DataType = type;
-        variable->m_IsSendingEvents = IsTrue(send); // could it be true/false ?
+        variable->m_IsSendingEvents = IsTrue(send);
         PLT_XmlHelper::GetChildText(stateVariables[k], "defaultValue", variable->m_DefaultValue);
 
         NPT_XmlElementNode* allowedValueList = PLT_XmlHelper::GetChild(stateVariables[k], "allowedValueList");
         if (allowedValueList) {
             NPT_Array<NPT_XmlElementNode*> allowedValues;
             PLT_XmlHelper::GetChildren(allowedValueList, allowedValues, "allowedValue");
-            for( int l = 0 ; l < (int)allowedValues.GetItemCount(); l++) {
+            for (int l = 0 ; l < (int)allowedValues.GetItemCount(); l++) {
                 const NPT_String* text = allowedValues[l]->GetText();
                 if (text) {
                     variable->m_AllowedValues.Add(new NPT_String(*text));
@@ -266,8 +242,43 @@ PLT_Service::SetSCPDXML(const char* scpd)
                 PLT_XmlHelper::GetChildText(allowedValueRange, "maximum", max);
                 PLT_XmlHelper::GetChildText(allowedValueRange, "step", step);
 
-                if (min.GetLength() == 0 || max.GetLength() == 0) {
-                    NPT_CHECK_LABEL_SEVERE(NPT_ERROR_INVALID_SYNTAX, failure);
+                // these are required but try to be nice
+                // in case bad devices provide nothing
+                if (min.GetLength() == 0) {
+                    if (variable->m_DataType == "ui1" ||
+                        variable->m_DataType == "ui2" ||
+                        variable->m_DataType == "ui4") {
+                        min = NPT_String::FromInteger(0);
+                    } else if (variable->m_DataType == "i1") {
+                        min = NPT_String::FromInteger(-128);
+                    } else if (variable->m_DataType == "i2") {
+                        min = NPT_String::FromInteger(-32768);
+                    } else if (variable->m_DataType == "i4" ||
+                               variable->m_DataType == "int") {
+                        min = NPT_String::FromInteger(-2147483647 - 1);
+                    } else {
+                        NPT_LOG_SEVERE_1("Invalid variable data type %s", variable->m_DataType.GetChars());
+                        NPT_CHECK_LABEL_SEVERE(NPT_ERROR_INVALID_SYNTAX, failure);
+                    }
+                }
+                if (max.GetLength() == 0) {
+                    if (variable->m_DataType == "ui1") {
+                        max = NPT_String::FromInteger(0xff);
+                    } else if (variable->m_DataType == "ui2") {
+                        max = NPT_String::FromInteger(0xffff);
+                    } else if (variable->m_DataType == "ui4") {
+                        max = NPT_String::FromInteger(0xffffffff);
+                    } else if (variable->m_DataType == "i1") {
+                        max = NPT_String::FromInteger(0x7f);
+                    } else if (variable->m_DataType == "i2") {
+                        max = NPT_String::FromInteger(0x7fff);
+                    } else if (variable->m_DataType == "i4" ||
+                               variable->m_DataType == "int") {
+                        max = NPT_String::FromInteger(0x7fffffff);
+                    } else {
+                        NPT_LOG_SEVERE_1("Invalid variable data type %s", variable->m_DataType.GetChars());
+                        NPT_CHECK_LABEL_SEVERE(NPT_ERROR_INVALID_SYNTAX, failure);
+                    }
                 }
 
                 variable->m_AllowedValueRange = new NPT_AllowedValueRange;
@@ -285,59 +296,62 @@ PLT_Service::SetSCPDXML(const char* scpd)
     // actions
     actionList = PLT_XmlHelper::GetChild(root, "actionList");
     if (actionList) {
-    if (NPT_FAILED(PLT_XmlHelper::GetChildren(actionList, actions, "action"))) {
-            NPT_CHECK_LABEL_SEVERE(NPT_ERROR_INVALID_SYNTAX, failure);
-    }
+        res = PLT_XmlHelper::GetChildren(actionList, actions, "action");
+        NPT_CHECK_LABEL_SEVERE(res, failure);
 
-    for( int i = 0 ; i < (int)actions.GetItemCount(); i++) {
-        NPT_String action_name;
-        PLT_XmlHelper::GetChildText(actions[i],  "name", action_name);
+        for (int i = 0 ; i < (int)actions.GetItemCount(); i++) {
+            NPT_String action_name;
+            PLT_XmlHelper::GetChildText(actions[i],  "name", action_name);
             if (action_name.GetLength() == 0) {
+                NPT_LOG_SEVERE_1("Invalid action name for action number %d", i+1);
                 NPT_CHECK_LABEL_SEVERE(NPT_ERROR_INVALID_SYNTAX, failure);
-        }
+            }
 
-        PLT_ActionDesc* action_desc = new PLT_ActionDesc(action_name, this);
-        m_ActionDescs.Add(action_desc);
-
+            PLT_ActionDesc* action_desc = new PLT_ActionDesc(action_name, this);
+            m_ActionDescs.Add(action_desc);        
+            
             // action arguments
             NPT_XmlElementNode* argumentList = PLT_XmlHelper::GetChild(actions[i], "argumentList");
             if (argumentList == NULL || !argumentList->GetChildren().GetItemCount())
                 continue; // no arguments is ok I guess
 
-        NPT_Array<NPT_XmlElementNode*> arguments;
+            NPT_Array<NPT_XmlElementNode*> arguments;
             NPT_CHECK_LABEL_SEVERE(PLT_XmlHelper::GetChildren(argumentList, arguments, "argument"), failure);
 
             bool ret_value_found = false;
-        for( int j = 0 ; j < (int)arguments.GetItemCount(); j++) {
-            NPT_String name, direction, relatedStateVar;
-            PLT_XmlHelper::GetChildText(arguments[j], "name", name);
-            PLT_XmlHelper::GetChildText(arguments[j], "direction", direction);
-            PLT_XmlHelper::GetChildText(arguments[j], "relatedStateVariable", relatedStateVar);
+            for (int j = 0 ; j < (int)arguments.GetItemCount(); j++) {
+                NPT_String name, direction, relatedStateVar;
+                PLT_XmlHelper::GetChildText(arguments[j], "name", name);
+                PLT_XmlHelper::GetChildText(arguments[j], "direction", direction);
+                PLT_XmlHelper::GetChildText(arguments[j], "relatedStateVariable", relatedStateVar);
 
-            if (name.GetLength() == 0 || direction.GetLength() == 0 || relatedStateVar.GetLength() == 0) {
+                if (name.GetLength() == 0 || direction.GetLength() == 0 || relatedStateVar.GetLength() == 0) {
+                    NPT_LOG_SEVERE_1("Invalid argument for action %s", (const char*)action_name);
                     NPT_CHECK_LABEL_SEVERE(NPT_ERROR_INVALID_SYNTAX, failure);
-            }
+                }
 
-            // make sure the related state variable exists
-            PLT_StateVariable* variable = FindStateVariable(relatedStateVar);
-            if (variable == NULL) {
+                // make sure the related state variable exists
+                PLT_StateVariable* variable = FindStateVariable(relatedStateVar);
+                if (variable == NULL) {
+                    NPT_LOG_SEVERE_1("State variable not found %s", (const char*)relatedStateVar);
                     NPT_CHECK_LABEL_SEVERE(NPT_ERROR_INVALID_SYNTAX, failure);
-            }
+                }
 
                 bool ret_value = false;
                 NPT_XmlElementNode* ret_val_node = PLT_XmlHelper::GetChild(arguments[j], "retVal");
                 if (ret_val_node) {
-                // verify this is the only retVal we've had
+                    // verify this is the only retVal we've had
                     if (ret_value_found) {
+                        NPT_LOG_SEVERE("Return argument already found");
                         NPT_CHECK_LABEL_SEVERE(NPT_ERROR_INVALID_SYNTAX, failure);
-                } else {
+                    } else {
                         ret_value = true;
                         ret_value_found = true;
+                    }
                 }
-            }
                 action_desc->GetArgumentDescs().Add(new PLT_ArgumentDesc(name, j, direction, variable, ret_value));
+            }
         }
-    }
     }
 
     // delete the tree
@@ -346,7 +360,7 @@ PLT_Service::SetSCPDXML(const char* scpd)
 
 failure:
     NPT_LOG_FATAL_1("Failed to parse scpd: %s", scpd);
-    delete tree;
+    if (tree) delete tree;
     return NPT_FAILURE;
 }
 
@@ -357,7 +371,7 @@ NPT_String
 PLT_Service::GetSCPDURL(bool absolute /* = false */)
 { 
     NPT_HttpUrl url = GetDevice()->NormalizeURL(m_SCPDURL);   
-    return absolute?url.ToString():url.GetPath();
+    return absolute?url.ToString():url.ToRequestString();
 }
 
 /*----------------------------------------------------------------------
@@ -367,7 +381,7 @@ NPT_String
 PLT_Service::GetControlURL(bool absolute /* = false */)   
 { 
     NPT_HttpUrl url = GetDevice()->NormalizeURL(m_ControlURL);    
-    return absolute?url.ToString():url.GetPath(); 
+    return absolute?url.ToString():url.ToRequestString(); 
 }
 
 /*----------------------------------------------------------------------
@@ -377,7 +391,7 @@ NPT_String
 PLT_Service::GetEventSubURL(bool absolute /* = false */)   
 { 
     NPT_HttpUrl url = GetDevice()->NormalizeURL(m_EventSubURL);    
-    return absolute?url.ToString():url.GetPath();
+    return absolute?url.ToString():url.ToRequestString();
 }
 
 /*----------------------------------------------------------------------
@@ -575,8 +589,6 @@ PLT_Service::ProcessNewSubscription(PLT_TaskManager*         task_manager,
 
     PLT_UPnPMessageHelper::SetSID(response, subscriber->GetSID());
     PLT_UPnPMessageHelper::SetTimeOut(response, timeout);
-    // DLNA 7.2.18.1
-    PLT_HttpHelper::SetContentLength(response, 0);
 
     {
         NPT_AutoLock lock(m_Lock);
@@ -584,14 +596,16 @@ PLT_Service::ProcessNewSubscription(PLT_TaskManager*         task_manager,
         // new subscriber should get all vars in the LastChange var
         UpdateLastChange(m_StateVars);
 
-        // send all state vars to sub
+        // send all state vars to sub immediately
         NPT_Result res = subscriber->Notify(m_StateVars);
 
         // reset LastChange var to what was really just changed
-            UpdateLastChange(m_StateVarsChanged);
+        UpdateLastChange(m_StateVarsChanged);
 
+        // make sure the event worked before spawning our recurrent task
         NPT_CHECK_LABEL_FATAL(res, cleanup);
 
+        // schedule a recurring event notification task if not running already
         if (!m_EventTask) {
             m_EventTask = new PLT_ServiceEventTask(this);
             task_manager->StartTask(m_EventTask);
@@ -614,7 +628,7 @@ cleanup:
 NPT_Result
 PLT_Service::ProcessRenewSubscription(const NPT_SocketAddress& addr, 
                                       const NPT_String&        sid, 
-                                      int                      timeout, 
+                                      int                      timeout_secs, 
                                       NPT_HttpResponse&        response)
 {
     NPT_AutoLock lock(m_Lock);
@@ -635,19 +649,18 @@ PLT_Service::ProcessRenewSubscription(const NPT_SocketAddress& addr,
 
         // renew subscriber if it has not expired
         if (expiration > now ) {
-        // update local interface and timeout
-        subscriber->SetLocalIf(addr);
-        subscriber->SetTimeout(timeout);
+            // update local interface and timeout
+            subscriber->SetLocalIf(addr);
+            subscriber->SetTimeout(timeout_secs);
 
-        PLT_UPnPMessageHelper::SetSID(response, subscriber->GetSID());
-        PLT_UPnPMessageHelper::SetTimeOut(response, timeout);
-            PLT_HttpHelper::SetContentLength(response, 0);
-        return NPT_SUCCESS;
+            PLT_UPnPMessageHelper::SetSID(response, subscriber->GetSID());
+            PLT_UPnPMessageHelper::SetTimeOut(response, timeout_secs);
+            return NPT_SUCCESS;
         } else {
             NPT_LOG_FINE_1("Subscriber \"%s\" didn't renew in time", (const char*)subscriber->GetSID());
             m_Subscribers.Remove(subscriber);
             delete subscriber;
-    }
+        }
     }
 
     NPT_LOG_WARNING_1("Failed to renew subscription for %s!", sid.GetChars());
@@ -667,15 +680,14 @@ PLT_Service::ProcessCancelSubscription(const NPT_SocketAddress& /* addr */,
 {
     NPT_AutoLock lock(m_Lock);
 
-    NPT_LOG_FINE_2("Cancelling subscription for %s (sub=%s)", 
-        m_EventSubURL.GetChars(),
-        sid.GetChars());
-
     // first look if we don't have a subscriber with same callbackURL
     PLT_EventSubscriber* sub = NULL;
     if (NPT_SUCCEEDED(NPT_ContainerFind(m_Subscribers, 
                                         PLT_EventSubscriberFinderBySID(sid), 
                                         sub))) {
+        NPT_LOG_FINE_2("Cancelling subscription for %s (sub=%s)", 
+            m_EventSubURL.GetChars(),
+            sid.GetChars());
 
         // remove sub
         m_Subscribers.Remove(sub);
@@ -683,7 +695,7 @@ PLT_Service::ProcessCancelSubscription(const NPT_SocketAddress& /* addr */,
         return NPT_SUCCESS;
     }
 
-    NPT_LOG_WARNING_1("Cancelling subscription for unknown %s!", sid.GetChars());
+    NPT_LOG_WARNING_1("Cancelling subscription for unknown subscriber %s!", sid.GetChars());
 
     // didn't find a valid Subscriber in our list
     response.SetStatus(412, "Precondition Failed");
@@ -704,11 +716,10 @@ PLT_Service::AddChanged(PLT_StateVariable* var)
     if (!m_EventTask) return NPT_SUCCESS;
     
     if (var->IsSendingEvents()) {
-        if (!m_StateVarsToPublish.Contains(var)) 
-            m_StateVarsToPublish.Add(var);
+        if (!m_StateVarsToPublish.Contains(var)) m_StateVarsToPublish.Add(var);
     } else if (var->IsSendingEvents(true)) {
-        if (!m_StateVarsChanged.Contains(var)) 
-            m_StateVarsChanged.Add(var);
+        if (!m_StateVarsChanged.Contains(var)) m_StateVarsChanged.Add(var);
+
         UpdateLastChange(m_StateVarsChanged);
     }
 
@@ -732,7 +743,7 @@ PLT_Service::UpdateLastChange(NPT_List<PLT_StateVariable*>& vars)
         return NPT_SUCCESS;
     }
 
-    NPT_XmlElementNode* top = new NPT_XmlElementNode("Event");
+    NPT_Reference<NPT_XmlElementNode> top(new NPT_XmlElementNode("Event"));
     NPT_CHECK_SEVERE(top->SetNamespaceUri("", m_LastChangeNamespace));
 
     NPT_XmlElementNode* instance = new NPT_XmlElementNode("InstanceID");
@@ -740,16 +751,19 @@ PLT_Service::UpdateLastChange(NPT_List<PLT_StateVariable*>& vars)
     NPT_CHECK_SEVERE(instance->SetAttribute("val", "0"));
 
     // build list of changes
-    NPT_CHECK_SEVERE(vars.Apply(PLT_LastChangeXMLIterator(instance)));
+    NPT_CHECK_SEVERE(vars.ApplyUntil(
+        PLT_LastChangeXMLIterator(instance),
+        NPT_UntilResultNotEquals(NPT_SUCCESS)));
 
     // serialize node
     NPT_String value;
     NPT_CHECK_SEVERE(PLT_XmlHelper::Serialize(*top, value, false));
-    delete top;
 
-    // set the state change direcly instead of calling SetValue
-    // to avoid recursive lock, instead add var to publish here directly
+    // set the state change directly instead of calling SetValue
+    // to avoid recursive lock, instead add LastChange var directly
     var->m_Value = value;
+
+    // add to list of vars scheduled to be published next time if not already there
     if (!m_StateVarsToPublish.Contains(var)) m_StateVarsToPublish.Add(var);
     return NPT_SUCCESS;
 }
@@ -758,10 +772,10 @@ PLT_Service::UpdateLastChange(NPT_List<PLT_StateVariable*>& vars)
 |   PLT_Service::PauseEventing
 +---------------------------------------------------------------------*/
 NPT_Result
-PLT_Service::PauseEventing(bool paused)
+PLT_Service::PauseEventing(bool pause /* = TRUE */)
 {
     NPT_AutoLock lock(m_Lock);
-    m_EventingPaused = paused;
+    m_EventingPaused = pause;
     return NPT_SUCCESS;
 }
 
@@ -792,34 +806,36 @@ PLT_Service::NotifyChanged()
             continue;
         }
             
-            iter++;
-        }
+        ++iter;
+    }
     
     // if nothing to publish then bail out now
     // we'll clean up expired subscribers when we have something to publish
     if (vars_ready.GetItemCount() == 0) return NPT_SUCCESS;
     
-    // send vars that are ready to go and remove old subscribers
+    // send vars that are ready to go and remove old subscribers 
     NPT_List<PLT_EventSubscriber*>::Iterator sub_iter = m_Subscribers.GetFirstItem();
     while (sub_iter) {
         PLT_EventSubscriber* sub = *sub_iter;
 
-                NPT_TimeStamp now, expiration;
-                NPT_System::GetCurrentTimeStamp(now);
-                expiration = sub->GetExpirationTime();
+        NPT_TimeStamp now, expiration;
+        NPT_System::GetCurrentTimeStamp(now);
+        expiration = sub->GetExpirationTime();
 
-                // forget sub if it didn't renew in time or if notification failed
-            if (expiration == NPT_TimeStamp() || expiration > now ) {
-                NPT_Result res = vars_ready.GetItemCount()?sub->Notify(vars_ready):NPT_SUCCESS;
-                if (NPT_SUCCEEDED(res)) {
-                sub_iter++;
-                    continue;
-                }
+        // forget sub if it didn't renew subscription in time or if notification failed
+        if (expiration == NPT_TimeStamp() || now < expiration + NPT_TimeStamp(30.f)) {
+            // TODO: Notification is asynchronous, so we won't know if it failed until
+            // the subscriber m_SubscriberTask is done
+            NPT_Result res = vars_ready.GetItemCount()?sub->Notify(vars_ready):NPT_SUCCESS;
+            if (NPT_SUCCEEDED(res)) {
+                ++sub_iter;
+                continue;
             }
+        }
             
         m_Subscribers.Erase(sub_iter++);
-            delete sub;
-        }
+        delete sub;
+    }
 
     return NPT_SUCCESS;
 }
@@ -831,7 +847,7 @@ bool
 PLT_ServiceSCPDURLFinder::operator()(PLT_Service* const & service) const 
 {
     return m_URL.Compare(service->GetSCPDURL(m_URL.StartsWith("http://")?true:false), true)?false:true;
-    }
+}
 
 /*----------------------------------------------------------------------
 |   PLT_ServiceControlURLFinder::operator()
@@ -840,7 +856,7 @@ bool
 PLT_ServiceControlURLFinder::operator()(PLT_Service* const & service) const 
 {
     return m_URL.Compare(service->GetControlURL(m_URL.StartsWith("http://")?true:false), true)?false:true;
-    }
+}
 
 /*----------------------------------------------------------------------
 |   PLT_ServiceEventSubURLFinder::operator()
@@ -849,7 +865,7 @@ bool
 PLT_ServiceEventSubURLFinder::operator()(PLT_Service* const & service) const 
 {
     return m_URL.Compare(service->GetEventSubURL(m_URL.StartsWith("http://")?true:false), true)?false:true;
-    }
+}
 
 /*----------------------------------------------------------------------
 |   PLT_ServiceIDFinder::operator()
@@ -872,6 +888,15 @@ PLT_ServiceTypeFinder::operator()(PLT_Service* const & service) const
     }
 
     return m_Type.Compare(service->GetServiceType(), true) ? false : true;
+}
+
+/*----------------------------------------------------------------------
+|   PLT_ServiceNameFinder::operator()
++---------------------------------------------------------------------*/
+bool 
+PLT_ServiceNameFinder::operator()(PLT_Service* const & service) const 
+{
+    return m_Name.Compare(service->GetServiceName(), true) ? false : true;
 }
 
 /*----------------------------------------------------------------------

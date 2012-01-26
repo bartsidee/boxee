@@ -10,6 +10,9 @@
 #include "AppDescriptor.h"
 #include "Thread.h"
 
+#include "app/XAPP_Control.h"
+#include "app/XAPP_Window.h"
+
 class CWindowAppStateControl
 {
 public:
@@ -17,6 +20,7 @@ public:
   
   int controlId;
   bool isVisible;
+  CGUIInfoLabel label;
 };
 
 class CWindowAppStateContainer
@@ -68,6 +72,15 @@ public:
   int GetNumberOfLoadingContainers() const;
   void SetContainerPath(DWORD controlId, CStdString& path);
   
+  virtual void Render();
+
+  void AddActionListener(XAPP::ActionListener* listener);
+  void RemoveActionListener(XAPP::ActionListener* listener);
+  void AddWindowListener(XAPP::WindowListener* listener);
+  void RemoveWindowListener(XAPP::WindowListener* listener);
+  void AddKeyListener(XAPP::KeyListener* listener);
+  void RemoveKeyListener(XAPP::KeyListener* listener);
+
 protected:
   void PopWindowState(bool restoreState);
   void PopToWindowState(bool restoreState, int numberInStack);
@@ -93,6 +106,10 @@ protected:
   int m_loadingContainers;
   
   CCriticalSection m_loadingContainersLock;
+
+  std::vector<XAPP::ActionListener*> m_actionListeners;
+  std::vector<XAPP::WindowListener*> m_windowListeners;
+  std::vector<XAPP::KeyListener*> m_keyListeners;
 };
 
 class CGUIWindowAppWaitLoading : public IRunnable

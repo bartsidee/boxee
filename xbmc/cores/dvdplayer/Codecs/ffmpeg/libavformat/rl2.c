@@ -21,7 +21,7 @@
 
 /**
  * RL2 file demuxer
- * @file libavformat/rl2.c
+ * @file
  * @author Sascha Sommer (saschasommer@freenet.de)
  * For more information regarding the RL2 file format, visit:
  *   http://wiki.multimedia.cx/index.php?title=RL2
@@ -96,7 +96,7 @@ static av_cold int rl2_read_header(AVFormatContext *s,
     int ret = 0;
 
     url_fskip(pb,4);          /* skip FORM tag */
-    back_size = get_le32(pb); /** get size of the background frame */
+    back_size = get_le32(pb); /**< get size of the background frame */
     signature = get_be32(pb);
     data_size = get_be32(pb);
     frame_count = get_le32(pb);
@@ -116,7 +116,7 @@ static av_cold int rl2_read_header(AVFormatContext *s,
     if(!st)
          return AVERROR(ENOMEM);
 
-    st->codec->codec_type = CODEC_TYPE_VIDEO;
+    st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
     st->codec->codec_id = CODEC_ID_RL2;
     st->codec->codec_tag = 0;  /* no fourcc */
     st->codec->width = 320;
@@ -145,7 +145,7 @@ static av_cold int rl2_read_header(AVFormatContext *s,
         st = av_new_stream(s, 0);
         if (!st)
             return AVERROR(ENOMEM);
-        st->codec->codec_type = CODEC_TYPE_AUDIO;
+        st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
         st->codec->codec_id = CODEC_ID_PCM_U8;
         st->codec->codec_tag = 1;
         st->codec->channels = channels;
@@ -287,7 +287,7 @@ static int rl2_read_seek(AVFormatContext *s, int stream_index, int64_t timestamp
     return 0;
 }
 
-AVInputFormat rl2_demuxer = {
+AVInputFormat ff_rl2_demuxer = {
     "rl2",
     NULL_IF_CONFIG_SMALL("RL2 format"),
     sizeof(Rl2DemuxContext),

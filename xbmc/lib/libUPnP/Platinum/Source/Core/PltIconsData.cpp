@@ -2,7 +2,7 @@
 |
 |   Platinum - AV Media Server Device SCPDs
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |

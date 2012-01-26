@@ -23,7 +23,7 @@
  */
 
 /**
- * @file libavcodec/roqvideoenc.c
+ * @file
  * id RoQ encoder by Vitor. Based on the Switchblade3 library and the
  * Switchblade3 FFmpeg glue by Eric Lasota.
  */
@@ -165,7 +165,7 @@ static int eval_motion_dist(RoqContext *enc, int x, int y, motion_vect vect,
 }
 
 /**
- * Returns distortion between two macroblocks
+ * @return distortion between two macroblocks
  */
 static inline int squared_diff_macroblock(uint8_t a[], uint8_t b[], int size)
 {
@@ -240,7 +240,7 @@ typedef struct RoqTempData
 } RoqTempdata;
 
 /**
- * Initializes cel evaluators and sets their source coordinates
+ * Initialize cel evaluators and set their source coordinates
  */
 static void create_cel_evals(RoqContext *enc, RoqTempdata *tempData)
 {
@@ -393,7 +393,7 @@ static void motion_search(RoqContext *enc, int blocksize)
 }
 
 /**
- * Gets distortion for all options available to a subcel
+ * Get distortion for all options available to a subcel
  */
 static void gather_data_for_subcel(SubcelEvaluation *subcel, int x,
                                    int y, RoqContext *enc, RoqTempdata *tempData)
@@ -457,7 +457,7 @@ static void gather_data_for_subcel(SubcelEvaluation *subcel, int x,
 }
 
 /**
- * Gets distortion for all options available to a cel
+ * Get distortion for all options available to a cel
  */
 static void gather_data_for_cel(CelEvaluation *cel, RoqContext *enc,
                                 RoqTempdata *tempData)
@@ -773,7 +773,7 @@ static inline void frame_block_to_cell(uint8_t *block, uint8_t **data,
 }
 
 /**
- * Creates YUV clusters for the entire image
+ * Create YUV clusters for the entire image
  */
 static void create_clusters(AVFrame *frame, int w, int h, uint8_t *yuvClusters)
 {
@@ -939,12 +939,6 @@ static int roq_encode_init(AVCodecContext *avctx)
     if (((avctx->width)&(avctx->width-1))||((avctx->height)&(avctx->height-1)))
         av_log(avctx, AV_LOG_ERROR, "Warning: dimensions not power of two\n");
 
-    if (avcodec_check_dimensions(avctx, avctx->width, avctx->height)) {
-        av_log(avctx, AV_LOG_ERROR, "Invalid dimensions (%dx%d)\n",
-               avctx->width, avctx->height);
-        return -1;
-    }
-
     enc->width = avctx->width;
     enc->height = avctx->height;
 
@@ -1060,10 +1054,10 @@ static int roq_encode_end(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec roq_encoder =
+AVCodec ff_roq_encoder =
 {
     "roqvideo",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_ROQ,
     sizeof(RoqContext),
     roq_encode_init,

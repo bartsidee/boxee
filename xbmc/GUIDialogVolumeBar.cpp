@@ -22,6 +22,7 @@
 #include "GUIDialogVolumeBar.h"
 #include "GUISliderControl.h"
 #include "utils/TimeUtils.h"
+#include "Application.h"
 
 #define VOLUME_BAR_DISPLAY_TIME 1000L
 
@@ -74,6 +75,12 @@ void CGUIDialogVolumeBar::ResetTimer()
 
 void CGUIDialogVolumeBar::Render()
 {
+  if (g_application.m_pPlayer && g_application.m_pPlayer->OSDDisabled())
+  {
+    Close(true);
+    return;
+  }
+  
   // and render the controls
   CGUIDialog::Render();
   // now check if we should exit

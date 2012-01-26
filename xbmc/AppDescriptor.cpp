@@ -35,6 +35,7 @@
 #include "FileItem.h"
 #include "Directory.h"
 #include "Crc32.h"
+#include "lib/libBoxee/bxoemconfiguration.h"
 
 CAppDescriptor::CAppDescriptor(void)
 {
@@ -67,7 +68,7 @@ CAppDescriptor::CAppDescriptor(const CStdString& urlString)
 void CAppDescriptor::Load(const CStdString& urlString)
 {
   m_isLoaded = false;
-  CURL url(urlString);
+  CURI url(urlString);
 
   if (url.GetProtocol() != "app")
   {
@@ -93,7 +94,7 @@ void CAppDescriptor::Load(const CStdString& urlString)
 
 bool CAppDescriptor::Exists(const CStdString& urlString)
 {
-  CURL url(urlString);
+  CURI url(urlString);
 
   if (url.GetProtocol() != "app")
   {
@@ -320,7 +321,7 @@ bool CAppDescriptor::LoadDescriptorFile(TiXmlElement* rootElement)
     m_type = "url";
   }
   
-  if (m_type == "skin")
+  if (m_type == "skin" || m_type == "skin-native")
   {
     element = rootElement->FirstChildElement("startWindow");
     if (!element)
@@ -358,10 +359,10 @@ bool CAppDescriptor::LoadDescriptorFile(TiXmlElement* rootElement)
   }
   }
 
-  element = rootElement->FirstChildElement("security-level");
+  element = rootElement->FirstChildElement("partner-id");
   if (element && element->FirstChild() && element->FirstChild()->Value())
   {
-    m_securityLevel = element->FirstChild()->Value();
+    m_partnerId = element->FirstChild()->Value();
   }
 
   element = rootElement->FirstChildElement("handler");
@@ -369,17 +370,52 @@ bool CAppDescriptor::LoadDescriptorFile(TiXmlElement* rootElement)
   {
     m_globalHandler = element->FirstChild()->Value();
   }
-  
-#ifdef __APPLE__
-  element = rootElement->FirstChildElement("signature-osx");
+
+  CStdString elementName = "signature-";
+#if defined(DEVICE_PLATFORM)
+  if (BOXEE::BXOEMConfiguration::GetInstance().HasParam("Boxee.Device.Name"))
+    elementName += BOXEE::BXOEMConfiguration::GetInstance().GetStringParam("Boxee.Device.Name");
+  else
+    elementName += DEVICE_PLATFORM;
+#elif defined(__APPLE__)
+  elementName += "osx";
 #elif defined(_WIN32)
-  element = rootElement->FirstChildElement("signature-win32");
+  elementName += "win32";
 #else
-  element = rootElement->FirstChildElement("signature-linux");
+  elementName += "linux";
 #endif
+
+  element = rootElement->FirstChildElement(elementName);
   if (element && element->FirstChild() && element->FirstChild()->Value())
   {
     m_boxeeSig = element->FirstChild()->Value();
+  }
+
+  element = rootElement->FirstChildElement("is-persistent");
+  if (element && element->FirstChild() && element->FirstChild()->Value())
+  {
+    m_persistent = true;
+  }
+  else 
+  {
+    m_persistent = false;
+  }
+
+  element = rootElement->FirstChildElement("sharedlib");
+  while (element)
+  {
+    if (element->FirstChild() && element->FirstChild()->Value() && element->Attribute("platform"))
+    {
+      const char* library = element->FirstChild()->Value();
+      const char* platform = element->Attribute("platform");
+
+      if (CUtil::MatchesPlatform(platform))
+      {
+        m_additionalSharedLibraries.push_back(library);
+      }
+    }
+
+    element = element->NextSiblingElement("sharedlib");
   }
 
   return true;
@@ -387,7 +423,7 @@ bool CAppDescriptor::LoadDescriptorFile(TiXmlElement* rootElement)
 
 bool CAppDescriptor::GenerateSignature()
 {
-  static char* knownExtensions[] = {".py", ".pyo", ".pyc", ".xml"};
+  static const char* knownExtensions[] = {".py", ".pyo", ".pyc", ".xml"};
   CFileItemList items;
   CStdString localPath = "special://home/apps";
   CStdString appSignature;
@@ -615,9 +651,9 @@ bool CAppDescriptor::IsCountryAllowed() const
   return CUtil::IsCountryAllowed(m_countries, m_countriesAllow);
 }
 
-const CStdString& CAppDescriptor::GetSecurityLevel() const
+const CStdString& CAppDescriptor::GetPartnerId() const
 {
-  return m_securityLevel;
+  return m_partnerId;
 }
 
 const CStdString& CAppDescriptor::GetGlobalHandler() const
@@ -630,3 +666,12 @@ const CStdString& CAppDescriptor::GetSignature() const
   return m_boxeeSig;
 }
 
+bool CAppDescriptor::IsPersistent() const
+{
+  return m_persistent;
+}
+
+const std::vector<CStdString>& CAppDescriptor::GetAdditionalSharedLibraries() const
+{
+  return m_additionalSharedLibraries;
+}

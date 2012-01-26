@@ -6,10 +6,10 @@
 #include "Util.h"
 #include "BoxeeUtils.h"
 #include "GUIWindowBoxeeBrowseTvEpisodes.h"
-#include "GUIDialogBoxeeDropdown.h"
 #include "utils/log.h"
 #include "LocalizeStrings.h"
 #include "GUIDialogBoxeeMainMenu.h"
+#include "GUIDialogBoxeeBrowseMenu.h"
 #include "boxee.h"
 #include "bxvideodatabase.h"
 #include "lib/libBoxee/boxee.h"
@@ -17,6 +17,15 @@
 #include "BoxeeDatabaseDirectory.h"
 #include "GUIDialogBoxeeNetworkNotification.h"
 #include "Application.h"
+#include "Picture.h"
+#include "FileSystem/File.h"
+#include "GUIUserMessages.h"
+#include "MediaSource.h"
+#include "GUISettings.h"
+#include "GUIWindowStateDatabase.h"
+#include "GUIDialogYesNo.h"
+#include "GUIDialogBoxeeChannelFilter.h"
+#include "BoxeeBrowseMenuManager.h"
 
 using namespace std;
 using namespace BOXEE;
@@ -26,583 +35,769 @@ using namespace BOXEE;
 #define BUTTON_ALL     130
 #define BUTTON_SHOW_LIBRARY 131
 #define BUTTON_GENRES  150
-#define BUTTON_FREE    151
-#define BUTTON_UNWATCHED 152
+#define BUTTON_FREE 151
 #define BUTTON_SOURCES  153
-#define BUTTON_SEARCH  160
+
+//#define BUTTON_UNWATCHED 152
+//#define BUTTON_SEARCH  160
+//#define BUTTON_SEARCH_SHOW  161
+//#define BUTTON_BROWSE_SOURCES 7002
+
+#define BROWSE_MENU 9001
+
+#define DROP_DOWN_READY	9010
+#define DROP_DOWN_STORE 9011
+
+#define LABEL_ITEMS_COUNT   9019
+
+#define THUMB_VIEW_LIST       50
+#define LINE_VIEW_LIST        51
+
+#define HIDDEN_CONTAINER      5000
 
 #define SORT_LABEL_FLAG "sort-label"
 #define GENRE_LABEL_FLAG "genre-label"
 #define GENRE_SET_FLAG "genre-set"
 #define SOURCE_LABEL_FLAG "source-label"
 #define SOURCE_SET_FLAG "source-set"
-#define SHOW_SOURCE_FLAG "show_source"
 #define FREE_LABEL_FLAG "free-label"
 #define FREE_SET_FLAG "free-set"
 #define SEARCH_LABEL_FLAG "search-label"
 #define UNWATCHED_SET_FLAG "unwatched-set"
 #define UNWATCHED_LABEL_FLAG "unwatched-label"
 #define SCANNING_FLAG "scanning-label"
+#define READY_LABEL_FLAG "ready-to-watch-label"
+#define READY_SET_FLAG "ready-to-watch-set"
+#define STORE_FLAG "movies-store"
+#define STORE_LABEL_FLAG "movies-store-label"
+#define SEARCH_BUTTON_FLAG "search-button"
 
-#define CUSTOM_GENRE_FILTER 600
-#define CUSTOM_UNWATCHED_FILTER 601
-#define CUSTOM_SOURCE_FILTER 602
+#define GENRE_FILTER_ID   600
+#define GENRE_FILTER_NAME "genre"
+
+#define UNWATCHED_FILTER_ID   601
+#define UNWATCHED_FILTER_NAME "unwatched"
+
+#define READY_TO_WATCH_FILTER_ID 602
+#define READY_TO_WATCH_FILTER_NAME "ready"
+
+#define SWITCH_VIEW_THUMBS   8001
+#define SWITCH_VIEW_LIST   8002
+#define SWITCH_VIEW_FLAG "show-thumbnails"
+//#define SORT_DROPDOWN_BUTTON 8014
 
 #define SCANNING_LABEL          501
 #define RESOLVED_VIDEO_LABEL    502
 
-// IMPLEMENTATION OF THE CBrowseWindowState ///////////////////////////
+#define ITEM_SUMMARY    9018
+#define ITEM_SUMMARY_FLAG "item-summary"
 
-CTvShowsWindowState::CTvShowsWindowState(CGUIWindow* pWindow) : CBrowseWindowState(pWindow)
+#define ITEM_COUNT_LABEL "item-summary-count"
+
+#define LETTER_SCROLLBAR 7000
+
+#define USERNAME_DROPDOWN_POS_X                          0.0
+#define USERNAME_DROPDOWN_POS_Y                          15.0
+
+#define EMPTY_FAVORITES_CANCEL_BTN   7191
+#define EMPTY_STATE_LOCAL_BTN        7193
+
+// Sources for the TV shows window ///////////////////////////
+
+CRemoteTVShowsSource::CRemoteTVShowsSource(int iWindowID) : CBrowseWindowSource("remotetvsource", "boxee://tvshows/shows/", iWindowID)
 {
-  SetSearchType("tvshows");
-
-  m_bUnwatched = false;
-  m_bFree = false;
-  m_bInShow = false;
+  SetPageSize(CURRENT_PAGE_SIZE);
 }
 
-void CTvShowsWindowState::RestoreWindowState()
-{
-  CBrowseWindowState::RestoreWindowState();
+CRemoteTVShowsSource::~CRemoteTVShowsSource(){}
 
-  // we clear the genre when going back from search
-  if (InSearchMode())
-    ResetFilters();
+void CRemoteTVShowsSource::AddStateParameters(std::map <CStdString, CStdString>& mapOptions)
+{
+  if (!m_sourceSort.m_id.IsEmpty())
+  {
+    CStdString strSortMethod = m_sourceSort.m_id;
+    CUtil::URLEncode(strSortMethod);
+    CUtil::URLEncode(strSortMethod); //the CURL GetOptionsAsMap is doing url decode, it may leave us without encoding
+    mapOptions["sort"] = strSortMethod;
+  }
+
+  if (!m_mapFilters["genre"].empty())
+  {
+    CStdString strGenre = m_mapFilters["genre"];
+    CUtil::URLEncode(strGenre);
+    mapOptions["genre"] = strGenre;
+  }
+
+  CStdString excludedChannels = BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().GetExcludedSources();
+  if (!excludedChannels.IsEmpty())
+  {
+    CUtil::URLEncode(excludedChannels);
+    mapOptions["provider_exclude"] = excludedChannels;
+  }
+
+  //mapOptions["free"] = "true";
+
+  CBrowseWindowSource::AddStateParameters(mapOptions);
+}
+
+CTVShowsStoreSource::CTVShowsStoreSource(int iWindowID) : CBrowseWindowSource("store", "boxee://tvshows/shows/", iWindowID)
+{
+  SetPageSize(CURRENT_PAGE_SIZE);
+}
+
+CTVShowsStoreSource::~CTVShowsStoreSource(){}
+
+void CTVShowsStoreSource::AddStateParameters(std::map <CStdString, CStdString>& mapOptions)
+{
+  if (!m_sourceSort.m_id.IsEmpty())
+  {
+    CStdString strSortMethod = m_sourceSort.m_id;
+    CUtil::URLEncode(strSortMethod);
+    CUtil::URLEncode(strSortMethod); //the CURL GetOptionsAsMap is doing url decode, it may leave us without encoding
+    mapOptions["sort"] = strSortMethod;
+  }
+
+  if (!m_mapFilters["genre"].empty())
+  {
+    CStdString strGenre = m_mapFilters["genre"];
+    CUtil::URLEncode(strGenre);
+    mapOptions["genre"] = strGenre;
+  }
+
+  if (!m_mapFilters["provider"].empty())
+  {
+    CStdString strProvider = m_mapFilters["provider"];
+    CUtil::URLEncode(strProvider);
+    mapOptions["provider"] = strProvider;
+  }
+
+  CBrowseWindowSource::AddStateParameters(mapOptions);
+}
+
+
+CLocalTVShowsSource::CLocalTVShowsSource(int iWindowID) : CBrowseWindowSource("localtvsource", "boxeedb://tvshows/", iWindowID)
+{
+
+}
+
+CLocalTVShowsSource::~CLocalTVShowsSource(){}
+
+void CLocalTVShowsSource::AddStateParameters(std::map <CStdString, CStdString>& mapOptions)
+{
+  if (!m_mapFilters["genre"].empty())
+  {
+    mapOptions["genre"] = m_mapFilters["genre"];
+  }
+
+  if (m_mapFilters.find("unwatched") != m_mapFilters.end() && m_mapFilters["unwatched"].Compare("true") == 0)
+    mapOptions["unwatched"] = "true";
+
+  CBrowseWindowSource::AddStateParameters(mapOptions);
+}
+
+void CLocalTVShowsSource::BindItems(CFileItemList& items)
+{
+  // Perform post processing here
+  CBrowseWindowTvShowUnwatchedFilter* filter = NULL;
+
+  if (m_mapFilters.find("unwatched") != m_mapFilters.end())
+  {
+    CStdString strShowUnwatched = m_mapFilters["unwatched"];
+
+    if (strShowUnwatched == "true")
+    {
+      filter = new CBrowseWindowTvShowUnwatchedFilter(UNWATCHED_FILTER_ID,UNWATCHED_FILTER_NAME, true);
+
+      if (filter != NULL)
+      {
+        int i = 0;
+
+        while (i < items.Size())
+        {
+          if (filter->Apply(&*items[i]) != true)
+          {//need to remove this item
+            items.Remove(i);
+          }
+          else
+          {
+            i++;
+          }
+        }
+
+        delete filter;
+      }
+    }
+  }
+
+  CBrowseWindowSource::BindItems(items);
+}
+
+CTVShowsSubscriptionsSource::CTVShowsSubscriptionsSource(int iWindowID) : CBrowseWindowSource("subscriptionstvsource", "boxee://subscriptions/", iWindowID)
+{
+}
+
+CTVShowsSubscriptionsSource::~CTVShowsSubscriptionsSource(){}
+
+void CTVShowsSubscriptionsSource::AddStateParameters(std::map <CStdString, CStdString>& mapOptions)
+{
+  if (!m_sourceSort.m_id.IsEmpty())
+  {
+    CStdString strSortMethod = m_sourceSort.m_id;
+    CUtil::URLEncode(strSortMethod);
+    CUtil::URLEncode(strSortMethod); //the CURL GetOptionsAsMap is doing url decode, it may leave us without encoding
+    mapOptions["sort"] = strSortMethod;
+  }
+}
+
+////////////////////////////////////////////////////
+// TV Shows window state ///////////////////////////
+
+CTvShowsWindowState::CTvShowsWindowState(CGUIWindowBoxeeBrowse* pWindow) : CBrowseWindowState(pWindow)
+{
+  m_sourceController.RemoveAllSources();
+  m_sourceController.AddSource(new CRemoteTVShowsSource(m_pWindow->GetID()));
+  m_sourceController.AddSource(new CLocalTVShowsSource(m_pWindow->GetID()));
+  m_sourceController.AddSource(new CTVShowsStoreSource(m_pWindow->GetID()));
+  m_sourceController.AddSource(new CTVShowsSubscriptionsSource(m_pWindow->GetID()));
+
+  m_iLastSelectedItem = 0;
+  m_bUnwatched = false;
 }
 
 void CTvShowsWindowState::ResetFilters()
 {
-  SetGenre(g_localizeStrings.Get(53511));
-  SetSource(g_localizeStrings.Get(53512), g_localizeStrings.Get(53512));
-  SetFree(false);
-  SetUnwatchedFilter(false);
+  GenreItem defaultGenre;
+
+  SetGenre(defaultGenre); // all
+  //SetSource(g_localizeStrings.Get(53512), g_localizeStrings.Get(53512));
 }
 
-void CTvShowsWindowState::Reset()
+// /////////////////////////////////////////////////////////
+// Filter functions
+void CTvShowsWindowState::SetGenre(const GenreItem& genre)
 {
-  CBrowseWindowState::Reset();
+  m_currentGenre = genre;
 
-  ResetFilters();
-}
-
-CStdString CTvShowsWindowState::CreatePath()
-{
-  CStdString strPath = "boxee://tvshows/shows";
-  strPath = AddGuiStateParameters(strPath);
-
-  CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseTvShows::CreatePath, created path = %s (browse)", strPath.c_str());
-  return strPath;
-
-}
-
-CStdString CTvShowsWindowState::AddGuiStateParameters(const CStdString& _strPath)
-{
-  CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseTvShows::AddGuiStateParameters, path = %s (browse)", _strPath.c_str());
-  CStdString strPath = _strPath;
-
-  std::map<CStdString, CStdString> mapOptions;
-
-  if (InSearchMode())
+  // If All Genres is selected, genre filter should be disabled
+  if (m_currentGenre.m_genreId != "all")
   {
-    if (!m_strSearchString.IsEmpty())
-    {
-      mapOptions["remote"] = "true";
-      mapOptions["local"] = "true";
-      mapOptions["search"] = GetSearchString();
-    }
+    m_sourceController.SetFilter("genre", m_currentGenre.m_genreId);
   }
   else
   {
+    m_sourceController.ClearFilter("genre");
+  }
+}
 
-    // Add sort options
-    mapOptions["sort"] = m_sort.m_id;
+void CTvShowsWindowState::SetUnwatched(bool unwatched)
+{
+  m_bUnwatched = unwatched;
 
-    // Add genre parameter only if specific genre is selected
-    if (m_strGenre.CompareNoCase(g_localizeStrings.Get(53511)) != 0)
+  if (m_bUnwatched)
+  {
+    m_sourceController.SetFilter("unwatched", "true");
+  }
+  else
+  {
+    m_sourceController.ClearFilter("unwatched");
+  }
+}
+
+void CTvShowsWindowState::SetStore(const CStdString& strStoreId)
+{
+  m_strStoreId = strStoreId;
+
+  if (strStoreId.CompareNoCase(g_localizeStrings.Get(54911)) != 0)
+  {
+    std::vector<BXSourcesItem> vecSources;
+
+    BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().GetTvSources(vecSources);
+
+    for (std::vector<BXSourcesItem>::iterator it = vecSources.begin() ; it != vecSources.end() ; ++it)
     {
-      CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseTvShows::AddGuiStateParameters, add genre: [%s] (browse)", m_strGenre.c_str());
-      mapOptions["genre"] = m_strGenre;
-    }
-
-    if (m_bFree)
-    {
-      mapOptions["free"] = "true";
-
-      std::vector<std::string> servicesIdsVec;
-      bool succeeded = BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().GetServicesIds(servicesIdsVec);
-
-      CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseTvShows::AddGuiStateParameters, Got [%d] serviceId's. [succeeded=%d] (browse)",(int)servicesIdsVec.size(),succeeded);
-
-      if (succeeded)
+      if (strStoreId == it->GetSourceId())
       {
-        CStdString servicesIds = "";
-
-        for (size_t i=0; i<servicesIdsVec.size(); i++)
-        {
-          if (i>0)
-          {
-            servicesIds += ",";
-          }
-
-          servicesIds += servicesIdsVec[i];
-        }
-
-        if (!servicesIds.IsEmpty())
-        {
-          CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseTvShows::AddGuiStateParameters, Going to add [services=%s] (browse)",servicesIds.c_str());
-          mapOptions["services"] = servicesIds;
-        }
-      }
-      {
-        CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseTvShows::AddGuiStateParameters, FAILED to get services id's (browse)");
+        m_strStoreName = it->GetSourceName();
+        break;
       }
     }
-  }
 
-  strPath += BoxeeUtils::BuildParameterString(mapOptions);
-
-  CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseTvShows::AddGuiStateParameters, return path = %s (browse)", strPath.c_str());
-  return strPath;
-}
-
-void CTvShowsWindowState::SetGenre(const CStdString& strGenre)
-{
-  m_strGenre = strGenre;
-  //m_configuration.ClearActiveFilters();
-  m_configuration.RemoveCustomFilter(CUSTOM_GENRE_FILTER);
-  
-  if (strGenre.CompareNoCase(g_localizeStrings.Get(53511)) != 0)
-  {
-    m_pWindow->SetProperty(GENRE_LABEL_FLAG, strGenre);
-    m_pWindow->SetProperty(GENRE_SET_FLAG, true);
-    m_configuration.AddCustomFilter(new CBrowseWindowTvShowGenreFilter(CUSTOM_GENRE_FILTER, "Tv Show Genre Filter", strGenre));
+    m_pWindow->SetProperty(STORE_LABEL_FLAG, strStoreId);
+    m_pWindow->SetProperty(STORE_FLAG, true);
+    m_sourceController.SetFilter("provider", strStoreId);
   }
   else
   {
-    m_pWindow->SetProperty(GENRE_LABEL_FLAG, "");
-    m_pWindow->SetProperty(GENRE_SET_FLAG, false);
+    m_pWindow->SetProperty(STORE_LABEL_FLAG, "");
+    m_pWindow->SetProperty(STORE_FLAG, false);
+    m_sourceController.ClearFilter("provider");
+    m_strStoreName = "";
   }
 }
 
-void CTvShowsWindowState::SetSource(const CStdString& strSourceId, const CStdString& strSourceName)
+
+
+CStdString CTvShowsWindowState::GetItemSummary()
 {
-  m_strSource = strSourceId;
+  std::map<CStdString , CStdString> mapTitleItemValue;
+  CStdString strSummary = "";
 
-  //m_configuration.RemoveCustomFilter(CUSTOM_SOURCE_FILTER);
-
-  if (strSourceId.CompareNoCase(g_localizeStrings.Get(53512)) != 0)
+  if (!m_sort.m_sortName.empty())
   {
-    m_pWindow->SetProperty(SOURCE_LABEL_FLAG, strSourceName);
-    m_pWindow->SetProperty(SOURCE_SET_FLAG, true);
-    //m_configuration.AddCustomFilter(new CBrowseWindowTvShowSourceFilter(CUSTOM_SOURCE_FILTER, "Tv Show Source Filter", strSourceId));
+    if (m_sort.m_id == VIEW_SORT_METHOD_RELEASE)
+    {
+      mapTitleItemValue["sort"] = g_localizeStrings.Get(53534);
+    }
+    else if (m_sort.m_id == VIEW_SORT_METHOD_RELEASE_REVERSE)
+    {
+      mapTitleItemValue["sort"] = g_localizeStrings.Get(53533);
+    }
+    else if ( m_sort.m_id != VIEW_SORT_METHOD_ATOZ && m_sort.m_id != VIEW_SORT_METHOD_ZTOA)
+    {//show the sort only if its not A TO Z
+      mapTitleItemValue["sort"] = m_sort.m_sortName;
+    }
+
+    //if there is a prefix in our language and we have a sort in the title, append the relevant prefix
+    if (!g_localizeStrings.Get(90006).IsEmpty() && mapTitleItemValue.find("sort") != mapTitleItemValue.end())
+      mapTitleItemValue["sortprefix"] = g_localizeStrings.Get(90006);
+  }
+
+  /*
+  if (m_bUnwatched)
+  {
+    mapTitleItemValue["filter"] = g_localizeStrings.Get(53714);
+  }
+  */
+
+  if (m_currentGenre.m_genreId != "all")
+  {
+    mapTitleItemValue["filter"] = m_currentGenre.m_genreText;
+  }
+
+  if (!m_strStoreName.empty())
+  { //append the string
+    mapTitleItemValue["channel"] = m_strStoreName;
+
+    if (!g_localizeStrings.Get(90007).IsEmpty())
+      mapTitleItemValue["channelprefix"] = g_localizeStrings.Get(90007);
+  }
+
+  if (GetCategory().CompareNoCase("favorite")==0)
+  {
+    mapTitleItemValue["source"] = g_localizeStrings.Get(53729);
+  }
+
+  if (GetCategory().CompareNoCase("local")==0)
+  {
+    mapTitleItemValue["source"] = g_localizeStrings.Get(53753);
+  }
+
+  mapTitleItemValue["media"] = g_localizeStrings.Get(20343); //should have "Shows"
+
+  if (!CUtil::ConstructStringFromTemplate(g_localizeStrings.Get(90002), mapTitleItemValue,strSummary))
+  {
+    strSummary = g_localizeStrings.Get(20343);
+    CLog::Log(LOGERROR,"CTvShowsWindowState::GetItemSummary, Error in Strings.xml for the current language [id=90002], the template is bad. (browse)");
+  }
+
+  return strSummary;
+}
+
+void CTvShowsWindowState::SetCategory(const CStdString& strCategory)
+{
+  // Activate relevant sources according to selected category
+  m_sourceController.ActivateAllSources(false, true);
+  m_pWindow->SetProperty("is-category-favorites", false);
+  m_pWindow->SetProperty("is-category-local", false);
+
+
+  if (strCategory.CompareNoCase("local")==0)
+  {
+    bool IgnorePrefix = g_guiSettings.GetBool("sort.showstarter");
+    m_vecSortMethods.clear();
+    m_vecSortMethods.push_back(CBoxeeSort(VIEW_SORT_METHOD_ATOZ, IgnorePrefix?SORT_METHOD_LABEL_IGNORE_THE:SORT_METHOD_LABEL, SORT_ORDER_ASC , g_localizeStrings.Get(53535), ""));
+    m_vecSortMethods.push_back(CBoxeeSort(VIEW_SORT_METHOD_ZTOA, IgnorePrefix?SORT_METHOD_LABEL_IGNORE_THE:SORT_METHOD_LABEL, SORT_ORDER_DESC , g_localizeStrings.Get(53536), ""));
+    m_vecSortMethods.push_back(CBoxeeSort(VIEW_SORT_METHOD_DATE, SORT_METHOD_DATE_ADDED, SORT_ORDER_DESC, g_localizeStrings.Get(51402), ""));
+
+    m_sourceController.ActivateSource("localtvsource", true, true);
+    m_pWindow->SetProperty("is-category-local", true);
+
+    SetPageSize(DISABLE_PAGING);
   }
   else
   {
-    m_pWindow->SetProperty(SOURCE_LABEL_FLAG, "");
-    m_pWindow->SetProperty(SOURCE_SET_FLAG, false);
+    m_vecSortMethods.clear();
+    m_vecSortMethods.push_back(CBoxeeSort(VIEW_SORT_METHOD_POPULARITY, SORT_METHOD_NONE, SORT_ORDER_NONE, g_localizeStrings.Get(53504), ""));
+    m_vecSortMethods.push_back(CBoxeeSort(VIEW_SORT_METHOD_RELEASE, SORT_METHOD_NONE, SORT_ORDER_NONE, g_localizeStrings.Get(53537), ""));
+
+    if (strCategory.CompareNoCase("all")==0)
+    {
+      m_sourceController.ActivateSource("remotetvsource", true, true);
+      SetPageSize(CURRENT_PAGE_SIZE);
+    }
+    else if (strCategory.CompareNoCase("store")==0)
+    {
+      m_sourceController.ActivateSource("store", true, true);
+      SetPageSize(CURRENT_PAGE_SIZE);
+    }
+    else if (strCategory.CompareNoCase("favorite")==0)
+    {
+      m_vecSortMethods.clear();
+      m_sourceController.ActivateSource("subscriptionstvsource", true, true);
+      m_pWindow->SetProperty("is-category-favorites", true);
+      SetPageSize(DISABLE_PAGING);
+    }
   }
+
+  CBrowseWindowState::SetCategory(strCategory);
+
+  m_pWindow->SetProperty("is-category-default", !m_pWindow->GetPropertyBOOL("is-category-favorites") && !m_pWindow->GetPropertyBOOL("is-category-local"));
 }
 
-void CTvShowsWindowState::SortItems(CFileItemList &items)
+void CTvShowsWindowState::SetDefaultView()
 {
-  if (InSearchMode())
+  m_iCurrentView = THUMB_VIEW_LIST;
+}
+
+void CTvShowsWindowState::SetDefaultCategory()
+{
+  CStdString strCategory;
+
+  CGUIWindowStateDatabase sdb;
+  sdb.GetDefaultCategory(m_pWindow->GetID(), strCategory);
+
+  if (!strCategory.IsEmpty())
   {
-    items.Sort(SORT_METHOD_LABEL_EXACT, SORT_ORDER_ASC);
+    SetCategory(strCategory.ToLower());
   }
   else
   {
-    CBrowseWindowState::SortItems(items);
+    SetCategory("all");
   }
 }
 
-bool CTvShowsWindowState::OnBack()
+void CTvShowsWindowState::Refresh(bool bResetSelected)
 {
-  return OnSearchEnd();
-}
+  CBrowseWindowState::Refresh(bResetSelected);
 
-void CTvShowsWindowState::OnFree()
-{
-  SetFree(!m_bFree);
-}
+  if (bResetSelected)
+    m_iSelectedItem = 0;
 
-void CTvShowsWindowState::SetFree(bool bFree)
-{
-  m_bFree = bFree;
-  m_pWindow->SetProperty(FREE_SET_FLAG, m_bFree);
-  if (m_bFree)
-  {
-    m_pWindow->SetProperty(FREE_LABEL_FLAG, g_localizeStrings.Get(53525));
-  }
-  else
-  {
-    m_pWindow->SetProperty(FREE_LABEL_FLAG, "");
-  }
-}
-
-void CTvShowsWindowState::OnUnwatched()
-{
-  m_bUnwatched = !m_bUnwatched;
-  SetUnwatchedFilter(m_bUnwatched);
-}
-
-void CTvShowsWindowState::SetUnwatchedFilter(bool bOn)
-{
-  //m_configuration.ClearActiveFilters();
-  m_configuration.RemoveCustomFilter(CUSTOM_UNWATCHED_FILTER);
-
-  if (bOn)
-  {
-    m_pWindow->SetProperty(UNWATCHED_SET_FLAG, true);
-    m_pWindow->SetProperty(UNWATCHED_LABEL_FLAG, g_localizeStrings.Get(53526));
-    m_configuration.AddCustomFilter(new CBrowseWindowTvShowUnwatchedFilter(CUSTOM_UNWATCHED_FILTER, "Tv Show Genre Filter", true));
-  }
-  else
-  {
-    m_pWindow->SetProperty(UNWATCHED_SET_FLAG, false);
-    m_pWindow->SetProperty(UNWATCHED_LABEL_FLAG, "");
-  }
-}
-
-CMyShowsWindowState::CMyShowsWindowState(CGUIWindow* pWindow) : CTvShowsWindowState(pWindow)
-{
-  // Initialize sort vector
-  m_vecSortMethods.push_back(CBoxeeSort("title", SORT_METHOD_LABEL, SORT_ORDER_ASC, g_localizeStrings.Get(53505), ""));
-  m_vecSortMethods.push_back(CBoxeeSort("release", SORT_METHOD_DATE, SORT_ORDER_DESC, g_localizeStrings.Get(53506), ""));
-
-  SetSort(m_vecSortMethods[0]);
-}
-
-void CMyShowsWindowState::Reset()
-{
-  CTvShowsWindowState::Reset();
-
-  m_pWindow->SetProperty(SHOW_SOURCE_FLAG, false);
-  m_pWindow->SetProperty("all-set", false);
-  m_pWindow->SetProperty("my-set", true);
-}
-
-CStdString CMyShowsWindowState::AddGuiStateParameters(const CStdString& _strPath)
-{
-  CLog::Log(LOGDEBUG,"CMyShowsWindowState::AddGuiStateParameters, input path = %s (browse)", _strPath.c_str());
-  CStdString strPath = CTvShowsWindowState::AddGuiStateParameters(_strPath);
-
-  if (InSearchMode())
-  {
-    return strPath;
-  }
-
-  std::map<CStdString, CStdString> mapOptions;
-
-  mapOptions["local"] = "true";
-  mapOptions["subscribed"] = "true";
-
-  strPath = BoxeeUtils::AppendParameters(strPath, mapOptions);
-
-  CLog::Log(LOGDEBUG,"CMyShowsWindowState::AddGuiStateParameters, return path = %s (browse)", strPath.c_str());
-  return strPath;
-}
-
-CAllShowsWindowState::CAllShowsWindowState(CGUIWindow* pWindow) : CTvShowsWindowState(pWindow)
-{
-  m_vecSortMethods.push_back(CBoxeeSort("popular", SORT_METHOD_DEFAULT, SORT_ORDER_ASC, g_localizeStrings.Get(53504), ""));
-  m_vecSortMethods.push_back(CBoxeeSort("release", SORT_METHOD_DATE, SORT_ORDER_DESC, g_localizeStrings.Get(53506), ""));
-
-  SetSort(m_vecSortMethods[0]);
-}
-
-void CAllShowsWindowState::Reset()
-{
-  CTvShowsWindowState::Reset();
-
-  m_pWindow->SetProperty(SHOW_SOURCE_FLAG, true);
-  m_pWindow->SetProperty("all-set", true);
-  m_pWindow->SetProperty("my-set", false);
-}
-
-CStdString CAllShowsWindowState::AddGuiStateParameters(const CStdString& _strPath)
-{
-  CLog::Log(LOGDEBUG,"CAllShowsWindowState::AddGuiStateParameters, return path = %s (browse)", _strPath.c_str());
-  CStdString strPath = CTvShowsWindowState::AddGuiStateParameters(_strPath);
-
-  if (InSearchMode())
-  {
-    return strPath;
-  }
-
-  std::map<CStdString, CStdString> mapOptions;
-
-  mapOptions["remote"] = "true";
-
-  if (!m_strSource.empty() && m_strSource != g_localizeStrings.Get(53512))
-  {
-	mapOptions["provider"] = m_strSource;
-  }
-
-  strPath = BoxeeUtils::AppendParameters(strPath, mapOptions);
-
-  CLog::Log(LOGDEBUG,"CAllShowsWindowState::AddGuiStateParameters, return path = %s (browse)", strPath.c_str());
-  return strPath;
+  m_pWindow->SetProperty(ITEM_SUMMARY_FLAG,GetItemSummary());
 }
 
 // ///////////////////////////////////////////////////////////////////////
+// IMPLEMENTATION OF THE CGUIWindowBoxeeBrowseTvShows ////////////////////
 
-// IMPLEMENTATION OF THE CGUIWindowBoxeeBrowseTvShows ///////////////////////////
-
-CGUIWindowBoxeeBrowseTvShows::CGUIWindowBoxeeBrowseTvShows()
-: CGUIWindowBoxeeBrowseWithPanel(WINDOW_BOXEE_BROWSE_TVSHOWS, "boxee_browse_tvshows.xml"),m_renderCount(0)
+CGUIWindowBoxeeBrowseTvShows::CGUIWindowBoxeeBrowseTvShows(): CGUIWindowBoxeeBrowse(WINDOW_BOXEE_BROWSE_TVSHOWS, "boxee_browse_tvshows.xml"), m_renderCount(0)
 {
-  myShowsState = new CMyShowsWindowState(this);
-  allShowsState = new CAllShowsWindowState(this);
+  m_strItemDescription = g_localizeStrings.Get(90042);
 
-  SetWindowState(myShowsState);
+  SetWindowState(new CTvShowsWindowState(this));
 }
 
-CGUIWindowBoxeeBrowseTvShows::CGUIWindowBoxeeBrowseTvShows(DWORD dwID, const CStdString &xmlFile)
-: CGUIWindowBoxeeBrowseWithPanel(dwID, xmlFile)
+CGUIWindowBoxeeBrowseTvShows::CGUIWindowBoxeeBrowseTvShows(DWORD dwID, const CStdString &xmlFile) : CGUIWindowBoxeeBrowse(dwID, xmlFile)
 {
-  myShowsState = new CMyShowsWindowState(this);
-  allShowsState = new CAllShowsWindowState(this);
-
-  SetWindowState(myShowsState);
+  SetWindowState(new CTvShowsWindowState(this));
 }
 
 CGUIWindowBoxeeBrowseTvShows::~CGUIWindowBoxeeBrowseTvShows()
 {
-  delete myShowsState;
-  delete allShowsState;
 }
 
 void CGUIWindowBoxeeBrowseTvShows::OnInitWindow()
 {
 
-  // Initialize genres list
-  SetGenres();
+  UpdateVideoCounters(true);
 
-  SetSources();
+  SetProperty(SEARCH_BUTTON_FLAG, false);
 
-  // Filter sources by geo location and hide sources button if nothing is left
-  std::vector<BOXEE::BXSourcesItem>::iterator it = m_vecSources.begin();
-  while(it != m_vecSources.end())
+  CGUIWindowBoxeeBrowse::OnInitWindow();
+
+  //if we were in local sorted by a-z, we're not refreshing the window and we should use the currently items which are already in the view
+  if (((m_windowState->GetSort().m_id == VIEW_SORT_METHOD_ATOZ) ||
+       (m_windowState->GetSort().m_id == VIEW_SORT_METHOD_ZTOA)) &&
+       (m_windowState->GetCategory() == "local" || m_windowState->GetCategory() == "favorite"))
+  { //if the sort is A to Z and we're in local content, we should update the A to Z scroll
+    GenerateAlphabetScrollbar(m_vecViewItems);
+  }
+}
+
+bool CGUIWindowBoxeeBrowseTvShows::HandleEmptyState()
+{
+  bool isEmpty = false;
+
+  if (m_vecViewItems.Size() == 0)
   {
-	  if (!it->GetSourceGeo().empty() && !CUtil::IsCountryAllowed(it->GetSourceGeo(), true))
+    isEmpty = true;
+
+    SetProperty("empty", isEmpty);
+
+    if (!GetPropertyBOOL("is-category-local"))
     {
-		it = m_vecSources.erase(it);
-	}
-	else
-	{
-		it++;
-	}
-  }
+      SET_CONTROL_FOCUS(BROWSE_SETTINGS,0);
 
-  if (m_vecSources.size() == 0)
-  {
-	  SetProperty(SHOW_SOURCE_FLAG, false);
-  }
+      if (GetPropertyBOOL("is-category-favorites"))
+      {
+        SET_CONTROL_FOCUS(EMPTY_FAVORITES_CANCEL_BTN,0);
+      }
 
-  // We came back from the episodes screen, should return to the previous state
-  if (((CTvShowsWindowState*)m_windowState)->m_bInShow)
-  {
-    ((CTvShowsWindowState*)m_windowState)->m_bInShow = false;
+      if (!g_application.IsConnectedToInternet())
+      {
+        SET_CONTROL_FOCUS(EMPTY_STATE_LOCAL_BTN,0);
+      }
+    }
+    else
+    {
+      isEmpty &= CGUIWindowBoxeeBrowse::HandleEmptyState();
+    }
   }
   else
   {
-    m_windowState->Reset();
+    SetProperty("empty",isEmpty);
   }
 
-  // Reset Audio Counters
-  SetVideoCounters(true);
-
-  CGUIWindowBoxeeBrowseWithPanel::OnInitWindow();
+  return isEmpty;
 }
 
-bool CGUIWindowBoxeeBrowseTvShows::ProcessPanelMessages(CGUIMessage& message)
+void CGUIWindowBoxeeBrowseTvShows::ConfigureState(const CStdString& param)
 {
-  switch ( message.GetMessage() )
+  CGUIWindowBoxeeBrowse::ConfigureState(param);
+
+  std::map<CStdString, CStdString> optionsMap;
+  CURI properties(param);
+
+  if (properties.GetProtocol().compare("boxeeui") == 0)
   {
+    optionsMap = properties.GetOptionsAsMap();
+
+    GenreItem foundGenre;
+
+    if (optionsMap.find("genre") != optionsMap.end())
+    {
+      CStdString strGenreId = optionsMap["genre"];
+
+      std::vector<GenreItem> vecGenres;
+
+      BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().GetTvGenres(vecGenres);
+
+      for (std::vector<GenreItem>::iterator it = vecGenres.begin() ; it != vecGenres.end() ; ++it)
+      {
+        if (strGenreId == it->m_genreId)
+        {
+          foundGenre = (*it);
+          break;
+        }
+      }
+    }
+
+    ((CTvShowsWindowState*)m_windowState)->SetGenre(foundGenre);
+    UpdateUIGenre(foundGenre.m_genreText);
+
+    CStdString strUnwatched = "false";
+    if (optionsMap.find("unwatched") != optionsMap.end())
+    {
+      strUnwatched = optionsMap["unwatched"];
+    }
+
+    if (strUnwatched == "true")
+      ((CTvShowsWindowState*)m_windowState)->SetUnwatched(true);
+    else
+      ((CTvShowsWindowState*)m_windowState)->SetUnwatched(false);
+
+    if (optionsMap.find("provider") != optionsMap.end())
+    {
+      ((CTvShowsWindowState*)m_windowState)->SetCategory("store");
+      ((CTvShowsWindowState*)m_windowState)->SetStore(optionsMap["provider"]);
+    }
+    else
+    {
+      ((CTvShowsWindowState*)m_windowState)->SetStore(g_localizeStrings.Get(54911));
+    }
+  }
+}
+
+void CGUIWindowBoxeeBrowseTvShows::UpdateUIGenre(const CStdString& strValue)
+{
+  SetProperty(GENRE_LABEL_FLAG, strValue);
+  SetProperty(GENRE_SET_FLAG, strValue != "all" );
+}
+
+void CGUIWindowBoxeeBrowseTvShows::ShowItems(CFileItemList& list, bool append)
+{
+  CGUIWindowBoxeeBrowse::ShowItems(list,append);
+
+  SetProperty(SWITCH_VIEW_FLAG, (m_windowState->GetCurrentView() != THUMB_VIEW_LIST));
+
+  if (((m_windowState->GetSort().m_id == VIEW_SORT_METHOD_ATOZ) ||
+       (m_windowState->GetSort().m_id == VIEW_SORT_METHOD_ZTOA)) &&
+       (m_windowState->GetCategory() == "local" || m_windowState->GetCategory() == "favorite"))
+  {
+    //if the sort is A to Z and we're in local content, we should update the A to Z scroll
+    GenerateAlphabetScrollbar(list);
+  }
+}
+
+bool CGUIWindowBoxeeBrowseTvShows::OnMessage(CGUIMessage& message)
+{
+  switch (message.GetMessage())
+  {
+  case GUI_MSG_UPDATE:
+  {
+    if (message.GetSenderId() == WINDOW_INVALID && message.GetControlId() == GUI_MSG_MEDIA_CHANNELS_UPDATE)
+    {
+      //CBoxeeBrowseMenuManager::GetInstance().ClearMenu("mn_library_shows_providers");
+      return true;
+    }
+
+    CStdString param = message.GetStringParam();
+
+    //we want to avoid refreshing on paged windows unless we're on local content
+    if (param.Equals("sort.showstarter") && m_windowState->GetCategory() != "local")
+      return true;
+    //geo lock is not relevant on local content, so we do not refresh
+    else if (param.Equals("filelists.filtergeoip2") && m_windowState->GetCategory() == "local")
+      return true;
+
+    m_windowState->ClearCachedSources();
+  }
+  break;
+  case GUI_MSG_WINDOW_INIT:
+  {
+    //don't refresh the window if we got the message from the window manager (previous window) and we're not in the favorite category
+    if (message.GetParam1() == WINDOW_INVALID && m_windowState->GetCategory() != "favorite")
+    {
+      CGUIWindow::OnMessage(message);
+
+      // Update current view type
+      m_viewControl.SetCurrentView(m_windowState->GetCurrentView());
+      m_viewControl.SetSelectedItem(m_windowState->GetSelectedItem());
+
+      ApplyBrowseMenuFromStack();
+
+      //call made from previous window, we should not reset our items because we are paged
+      //continue as we were before
+      return true;
+    }
+  }
+  break;
   case GUI_MSG_CLICKED:
   {
     int iControl = message.GetSenderId();
 
-    if (message.GetControlId() == 0 || message.GetControlId() != GetID())
-      break;
-
-    CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseTvShows::ProcessPanelMessages, GUI_MSG_CLICKED, control = %d (browse)", iControl);
-
-    if (iControl == BUTTON_MY)
+    if (iControl == SWITCH_VIEW_LIST || iControl == SWITCH_VIEW_THUMBS)
     {
-      m_windowState = myShowsState;
-      m_windowState->Reset();
-      Refresh(true);
+      SetProperty(SWITCH_VIEW_FLAG, !GetPropertyBOOL(SWITCH_VIEW_FLAG));
       return true;
     }
-    else if (iControl == BUTTON_ALL || iControl == BUTTON_SHOW_LIBRARY)
+    else if (iControl == BROWSE_SETTINGS)
     {
-      if (!g_application.IsConnectedToInternet())
-      {
-        CGUIDialogBoxeeNetworkNotification::ShowAndGetInput(53743,53744);
-        return true;
-      }
-
-      m_windowState = allShowsState;
-      m_windowState->Reset();
-      Refresh(true);
-      return true;
+      return CGUIDialogBoxeeChannelFilter::Show();
     }
-    else if (iControl == BUTTON_FREE)
-    {
-      ((CTvShowsWindowState*)m_windowState)->OnFree();
-      Refresh(true);
-      return true;
-    }
-    else if (iControl == BUTTON_UNWATCHED)
-    {
-      ((CTvShowsWindowState*)m_windowState)->OnUnwatched();
-      UpdateFileList();
-    }
-    else if (iControl == BUTTON_GENRES)
-    {
-      CFileItemList genres;
-      FillGenresList(genres);
+  }
+  break;
+  }
 
-      CStdString value = ((CTvShowsWindowState*)m_windowState)->GetGenre();
-      if (CGUIDialogBoxeeDropdown::Show(genres, g_localizeStrings.Get(53561), value))
-      {
-        ((CTvShowsWindowState*)m_windowState)->SetGenre(value);
-        Refresh(true);
-      }
-
-      return true;
-    }
-    else if (iControl == BUTTON_SOURCES)
-    {
-      CFileItemList sources;
-      FillSourcesList(sources);
-
-      CStdString value = ((CTvShowsWindowState*)m_windowState)->GetSource();
-      if (CGUIDialogBoxeeDropdown::Show(sources, g_localizeStrings.Get(53565), value))
-      {
-        CStdString sourceName;
-        for (int i = 0; i < sources.Size(); i++)
-        {
-          if (sources.Get(i)->GetProperty("value") == value)
-          {
-            ((CTvShowsWindowState*)m_windowState)->SetSource(value, sources.Get(i)->GetLabel());
-            Refresh(true);
-          }
-        }
-      }
-
-      return true;
-    }
-    else if (iControl == BUTTON_SEARCH)
-    {
-      if (m_windowState->OnSearchStart())
-      {
-        ClearView();
-        SET_CONTROL_FOCUS(50,0);
-
-        Refresh(true);
-      }
-
-      return true;
-    }
-
-    // else - break from switch and return false
-    break;
-  } // case GUI_MSG_CLICKED
-
-  } // switch
-
-  return CGUIWindowBoxeeBrowseWithPanel::ProcessPanelMessages(message);
+  return CGUIWindowBoxeeBrowse::OnMessage(message);
 }
 
 
 bool CGUIWindowBoxeeBrowseTvShows::OnAction(const CAction &action)
 {
-  switch (action.id)
-  {
-  case ACTION_PARENT_DIR:
-  case ACTION_PREVIOUS_MENU:
-  {
-    if (m_windowState->OnBack())
-    {
-      Refresh();
-      return true;
-    }
-    else
-    {
-      // Open a main menu
-      CGUIDialogBoxeeMainMenu* pMenu = (CGUIDialogBoxeeMainMenu*)g_windowManager.GetWindow(WINDOW_BOXEE_DIALOG_MAIN_MENU);
-      pMenu->DoModal();
-      return true;
-    }
-  }
-  };
-
   return CGUIWindowBoxeeBrowse::OnAction(action);
-}
-void CGUIWindowBoxeeBrowseTvShows::Render()
-{
-  CGUIWindow::Render();
-
-  m_renderCount ++;
-  if (m_renderCount == 120) {
-    SetVideoCounters(true);
-    m_renderCount = 0;
-  }
 }
 
 bool CGUIWindowBoxeeBrowseTvShows::OnClick(int iItem)
 {
-  ((CTvShowsWindowState*)m_windowState)->m_bInShow = true;
+  ((CTvShowsWindowState*)m_windowState)->m_iLastSelectedItem = iItem;
+
+  CFileItem item;
+  if (!GetClickedItem(iItem, item))
+      return true;
+
+  CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseTvShows::OnClick, item clicked, path = %s (browse)", item.m_strPath.c_str());
+  item.Dump();
+
+  if (item.GetPropertyBOOL("istvshowfolder") && !item.GetProperty("boxeeid").IsEmpty())
+  {
+    CStdString strSeriesUrl;
+    CStdString strTitle = item.GetLabel();
+    CStdString strBoxeeId = item.GetProperty("boxeeid").c_str();
+
+    CUtil::URLEncode(strBoxeeId);
+    CUtil::URLEncode(strTitle);
+
+    CStdString episodesCategory = "remote";
+
+    if (m_windowState->GetCategory().CompareNoCase("local") == 0)
+      episodesCategory = "local";
+
+    strSeriesUrl.Format("boxeeui://tvshows/?category=%s&seriesId=%s&title=%s",episodesCategory.c_str(),strBoxeeId.c_str(),strTitle.c_str());
+
+    if (!item.GetProperty("parentPath").IsEmpty())
+    {
+      std::map<CStdString, CStdString> optionsMap;
+      CURI parentPath(item.GetProperty("parentPath"));
+      optionsMap = parentPath.GetOptionsAsMap();
+
+      if (optionsMap.find("provider") != optionsMap.end())
+      {
+        CStdString allowProviders = optionsMap["provider"];
+        CUtil::URLEncode(allowProviders);
+        strSeriesUrl += "&allowProviders=";
+        strSeriesUrl += allowProviders;
+      }
+    }
+
+    CGUIWindowBoxeeBrowseTvEpisodes* pEpisodeWindow = (CGUIWindowBoxeeBrowseTvEpisodes*)g_windowManager.GetWindow(WINDOW_BOXEE_BROWSE_TVEPISODES);
+    if (pEpisodeWindow)
+    {
+      pEpisodeWindow->SetTvShowItem(item);
+    }
+    else
+    {
+      CLog::Log(LOGWARNING,"CGUIWindowBoxeeBrowseTvShows::OnClick - FAILED to get BROWSE_TVEPISODE window in order to set TvShow item. [label=%s][path=%s] (browse)",item.GetLabel().c_str(),item.m_strPath.c_str());
+    }
+
+    g_windowManager.ActivateWindow(WINDOW_BOXEE_BROWSE_TVEPISODES, strSeriesUrl);
+
+    return true;
+  }
+
   return CGUIWindowBoxeeBrowse::OnClick(iItem);
 }
-
-void CGUIWindowBoxeeBrowseTvShows::SetGenres()
-{
-  BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().GetTvGenres(m_vecGenres);
-}
-
-void CGUIWindowBoxeeBrowseTvShows::SetSources()
-{
-  m_vecSources.clear();
-  BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().GetTvSources(m_vecSources);
-}
-
+/*
 void CGUIWindowBoxeeBrowseTvShows::FillGenresList(CFileItemList& genres)
 {
   CFileItemPtr allItem (new CFileItem(g_localizeStrings.Get(53511)));
   allItem->SetProperty("type", "genre");
-  allItem->SetProperty("value", g_localizeStrings.Get(53511));
+  allItem->SetProperty("value", g_localizeStrings.Get(54901));
   genres.Add(allItem);
 
   for (size_t i = 0; i < m_vecGenres.size(); i++) 
   {
     CFileItemPtr genreItem (new CFileItem(m_vecGenres[i].m_genreText));
     genreItem->SetProperty("type", "genre");
-    genreItem->SetProperty("value", m_vecGenres[i].m_genreText);
+    genreItem->SetProperty("value", m_vecGenres[i].m_genreId);
     genres.Add(genreItem);
   }
 }
 
-void CGUIWindowBoxeeBrowseTvShows::FillSourcesList(CFileItemList& sources)
+void CGUIWindowBoxeeBrowseTvShows::FillReadyToWatchList(CFileItemList& ready)
 {
-  CFileItemPtr allItem (new CFileItem(g_localizeStrings.Get(53512)));
-  allItem->SetProperty("type", "source");
-  allItem->SetProperty("value", g_localizeStrings.Get(53512));
-  sources.Add(allItem);
-
-  for (size_t i = 0; i < m_vecSources.size(); i++)
+  for (size_t i = 0; i < 4; i++)
   {
-    CFileItemPtr sourceItem (new CFileItem(m_vecSources[i].GetSourceName()));
-    sourceItem->SetProperty("type", "source");
-    sourceItem->SetProperty("value", m_vecSources[i].GetSourceId());
-    sources.Add(sourceItem); 
+    CFileItemPtr item (new CFileItem(g_localizeStrings.Get(54901+i)));
+    item->SetProperty("type", "ready_to_watch");
+    item->SetProperty("value", (g_localizeStrings.Get(54901+i)));
+    ready.Add(item);
   }
 }
-
-void CGUIWindowBoxeeBrowseTvShows::SetVideoCounters(bool bOn)
+*/
+/**
+ * The purpose of this function is to update the local media resolver status in the TVshows and Movies screens
+ */
+void CGUIWindowBoxeeBrowseTvShows::UpdateVideoCounters(bool bOn)
 {
   int total_count = 0;
   int resolved_count = 0;
@@ -677,3 +872,49 @@ void CGUIWindowBoxeeBrowseTvShows::SetVideoCounters(bool bOn)
     }
   }
 }
+
+void CGUIWindowBoxeeBrowseTvShows::GetStartMenusStructure(std::list<CFileItemList>& browseMenuLevelList)
+{
+  CStdString category = m_windowState->GetCategory();
+
+  CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseTvShows::GetStartMenusStructure - enter function [category=%s] (bm)",category.c_str());
+
+  CStdString startMenuId = "";
+
+  if (category == "all")
+  {
+    CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseTvShows::GetStartMenusStructure - handle [category=%s=all] -> set library_shows menu (bm)",category.c_str());
+    startMenuId = "mn_library_shows";
+  }
+  else if (category == "local")
+  {
+    CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseTvShows::GetStartMenusStructure - handle [category=%s=local] -> set local_shows menu (bm)",category.c_str());
+    startMenuId = "mn_local_shows";
+  }
+  else if (category == "store")
+  {
+    CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseTvShows::GetStartMenusStructure - handle [category=%s] -> set library_shows_provider menu (bm)",category.c_str());
+    startMenuId = "mn_library_shows_providers";
+  }
+  else if (category == "favorite")
+  {
+    CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseTvShows::GetStartMenusStructure - handle [category=%s] -> set mn_favorites_shows menu (bm)",category.c_str());
+    startMenuId = "mn_favorites_shows";
+  }
+  else
+  {
+    CLog::Log(LOGERROR,"CGUIWindowBoxeeBrowseTvShows::GetStartMenusStructure - FAILED to set menu since [category=%s] is unknown (bm)",category.c_str());
+  }
+
+  if (!startMenuId.IsEmpty())
+  {
+    CBoxeeBrowseMenuManager::GetInstance().GetFullMenuStructure(startMenuId,browseMenuLevelList);
+  }
+
+  CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseTvShows::GetStartMenusStructure - after set [browseMenuLevelListSize=%zu]. [category=%s] (bm)",browseMenuLevelList.size(),category.c_str());
+
+  return CGUIWindowBoxeeBrowse::GetStartMenusStructure(browseMenuLevelList);
+
+  //CLog::Log(LOGDEBUG,"CGUIWindowBoxeeBrowseTvShows::GetStartMenusStructure - exit function with [browseMenuLevelStackSize=%zu]. [category=%s] (bm)",browseMenuLevelStack.size(),category.c_str());
+}
+

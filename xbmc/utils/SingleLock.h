@@ -33,8 +33,8 @@
 class CSingleLock
 {
 public:
-  void Unlock();
-  void Lock();
+  void Unlock() { Leave(); }
+  void Lock() { Enter(); }
 
   CSingleLock(CCriticalSection& cs);
   CSingleLock(const CCriticalSection& cs);

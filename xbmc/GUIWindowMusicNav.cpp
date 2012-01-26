@@ -30,7 +30,9 @@
 #include "Picture.h"
 #include "FileSystem/MusicDatabaseDirectory.h"
 #include "FileSystem/VideoDatabaseDirectory.h"
+#ifndef _BOXEE_
 #include "PartyModeManager.h"
+#endif
 #include "PlayListFactory.h"
 #include "GUIDialogMusicScan.h"
 #include "VideoDatabase.h"
@@ -190,6 +192,7 @@ bool CGUIWindowMusicNav::OnMessage(CGUIMessage& message)
   case GUI_MSG_CLICKED:
     {
       int iControl = message.GetSenderId();
+#ifndef _BOXEE_
       if (iControl == CONTROL_BTNPARTYMODE)
       {
         if (g_partyModeManager.IsEnabled())
@@ -209,7 +212,9 @@ bool CGUIWindowMusicNav::OnMessage(CGUIMessage& message)
         }
         UpdateButtons();
       }
-      else if (iControl == CONTROL_BTNMANUALINFO)
+      else 
+#endif        
+      if (iControl == CONTROL_BTNMANUALINFO)
       {
         OnManualAlbumInfo();
         return true;
@@ -255,7 +260,9 @@ bool CGUIWindowMusicNav::OnMessage(CGUIMessage& message)
   case GUI_MSG_PLAYLISTPLAYER_STOPPED:
   case GUI_MSG_PLAYBACK_STARTED:
     {
+#ifndef _BOXEE_
       SET_CONTROL_SELECTED(GetID(),CONTROL_BTNPARTYMODE, g_partyModeManager.IsEnabled());
+#endif
     }
     break;
   case GUI_MSG_NOTIFY_ALL:
@@ -476,9 +483,9 @@ void CGUIWindowMusicNav::UpdateButtons()
   }
 
   SET_CONTROL_LABEL(CONTROL_FILTER, strLabel);
-
+#ifndef _BOXEE_
   SET_CONTROL_SELECTED(GetID(),CONTROL_BTNPARTYMODE, g_partyModeManager.IsEnabled());
-
+#endif
   SET_CONTROL_SELECTED(GetID(),CONTROL_BTN_FILTER, !m_filter.IsEmpty());
   SET_CONTROL_LABEL2(CONTROL_BTN_FILTER, m_filter);
   }

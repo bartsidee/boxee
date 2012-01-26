@@ -108,7 +108,9 @@ bool CGUIPythonWindowXML::OnMessage(CGUIMessage& message)
     case GUI_MSG_WINDOW_DEINIT:
     {
       if (pCallbackWindow)
+      {
         Py_DECREF(pCallbackWindow);
+      }
       pCallbackWindow = NULL;
       
       return CGUIMediaWindow::OnMessage(message);
@@ -391,7 +393,9 @@ int Py_XBMC_Event_OnFocus(void* arg)
     PyXBMCAction* action = (PyXBMCAction*)arg;
     PyObject *ret = PyObject_CallMethod(action->pCallbackWindow, (char*)"onFocus", (char*)"(i)", action->controlId);
     if (ret)
-	  Py_DECREF(ret);
+    {
+      Py_DECREF(ret);
+    }
     Py_DECREF(action->pCallbackWindow);
     delete action;
   }
@@ -405,7 +409,9 @@ int Py_XBMC_Event_OnInit(void* arg)
     PyXBMCAction* action = (PyXBMCAction*)arg;
     PyObject *ret = PyObject_CallMethod(action->pCallbackWindow, (char*)"onInit", (char*)"()"); //, (char*)"O", &self);
     if (ret)
-	  Py_DECREF(ret);
+    {
+      Py_DECREF(ret);
+    }
     Py_DECREF(action->pCallbackWindow);
     delete action;
   }
@@ -415,7 +421,9 @@ int Py_XBMC_Event_OnInit(void* arg)
 void CGUIPythonWindowXML::SetCallbackWindow(PyObject *object)
 {
   if (pCallbackWindow)
+  {
     Py_DECREF(pCallbackWindow);
+  }
   
   pCallbackWindow = object;
   

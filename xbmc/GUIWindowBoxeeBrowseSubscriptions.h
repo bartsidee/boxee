@@ -17,7 +17,7 @@ protected:
    * Creates the updated path that will be sent to BoxeeServerDirectory
    * according to the current state of the buttons
    */
-  virtual CStdString CreatePath();
+//  virtual CStdString CreatePath();
 
 };
 

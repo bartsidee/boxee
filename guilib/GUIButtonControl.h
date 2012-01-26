@@ -55,9 +55,10 @@ public:
   virtual bool OnMouseClick(int button, const CPoint &point);
   virtual bool OnMessage(CGUIMessage& message);
   virtual void AllocResources();
-  virtual void FreeResources();
+  virtual void FreeResources(bool immediately = false);
   virtual void DynamicResourceAlloc(bool bOnOff);
   virtual void SetPosition(float posX, float posY);
+  virtual void SetWidth(float width);
   virtual void SetLabel(const std::string & aLabel);
   virtual void SetLabel2(const std::string & aLabel2);
   void SetClickActions(const std::vector<CGUIActionDescriptor>& clickActions) { m_clickActions = clickActions; };

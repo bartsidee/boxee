@@ -47,7 +47,6 @@
 #include "ShoutcastRipFile.h"
 #include "utils/GUIInfoManager.h"
 
-using namespace std;
 using namespace XFILE;
 using namespace MUSIC_INFO;
 
@@ -120,19 +119,19 @@ void rip_callback(int message, void *data)
 extern "C" {
 error_code filelib_write_show(char *buf, u_long size)
 {
-  if ((int)size > m_ringbuf.Size())
+  if (size > m_ringbuf.getSize())
   {
     CLog::Log(LOGERROR, "Shoutcast chunk too big: %lu", size);
     return SR_ERROR_BUFFER_FULL;
   }
-  while (m_ringbuf.GetMaxWriteSize() < (int)size) Sleep(10);
-  m_ringbuf.WriteBinary(buf, size);
+  while (m_ringbuf.GetMaxWriteSize() < size) Sleep(10);
+  m_ringbuf.WriteData(buf, size);
   m_ripFile.Write( buf, size ); //will only write, if it has to
   if (m_fileState.bBuffering)
   {
     if (rip_manager_get_content_type() == CONTENT_TYPE_OGG)
     {
-      if (m_ringbuf.GetMaxReadSize() > (m_ringbuf.Size() / 8) )
+      if (m_ringbuf.GetMaxReadSize() > (m_ringbuf.getSize() / 8) )
       {
         // hack because ogg streams are very broke, force it to go.
         m_fileState.bBuffering = false;
@@ -213,7 +212,7 @@ int64_t CFileShoutcast::GetLength()
 }
 
 
-bool CFileShoutcast::Open(const CURL& url)
+bool CFileShoutcast::Open(const CURI& url)
 {
   m_lastTime = CTimeUtils::GetTimeMS();
   int ret;
@@ -246,12 +245,11 @@ bool CFileShoutcast::Open(const CURL& url)
 #endif
   }
 
-  CURL copy = url;
+  CURI copy = url;
   int nPort = copy.GetPort();
   if (nPort == 0)
     copy.SetPort(80);
-  CStdString strUrl;
-  copy.GetURL(strUrl);
+  CStdString strUrl = copy.Get();
   strUrl.Replace("shout://", "http://");
   strncpy(m_opt->url, strUrl.c_str(), MAX_URL_LEN);
   sprintf(m_opt->useragent, "x%s", url.GetFileName().c_str());
@@ -385,10 +383,21 @@ unsigned int CFileShoutcast::Read(void* lpBuf, int64_t uiBufSize)
     OutputDebugString("Read done\n");
     return 0;
   }
-  while (m_ringbuf.GetMaxReadSize() <= 0) Sleep(10);
+
+  int slept=0;
+  while (m_ringbuf.GetMaxReadSize() <= 0)
+  {
+    Sleep(10); slept += 10;
+    if (slept > SHOUTCASTTIMEOUT*100)
+    {
+      CLog::Log(LOGERROR, "CFileShoutcast::Read - timeout");
+      return -1;
+    }
+  }
+
   int iRead = m_ringbuf.GetMaxReadSize();
   if (iRead > uiBufSize) iRead = (int)uiBufSize;
-  m_ringbuf.ReadBinary((char*)lpBuf, iRead);
+  m_ringbuf.ReadData((char*)lpBuf, iRead);
 
   if (CTimeUtils::GetTimeMS() - m_lastTime > 500)
   {

@@ -96,6 +96,7 @@ public:
 
   int GetActiveSubtitleStream();
   std::string GetSubtitleStreamLanguage(int iId);
+  std::string GetSubtitleStreamName(int iId);
   int GetSubTitleStreamCount();
 
   bool SetActiveSubtitleStream(int iId);
@@ -104,6 +105,7 @@ public:
 
   int GetActiveAudioStream();
   std::string GetAudioStreamLanguage(int iId);
+  std::string GetAudioStreamName(int iId);
   int GetAudioStreamCount();
   bool SetActiveAudioStream(int iId);
 

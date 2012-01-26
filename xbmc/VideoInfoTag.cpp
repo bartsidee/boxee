@@ -26,6 +26,8 @@
 #include "utils/log.h"
 #include "utils/CharsetConverter.h"
 #include "Picture.h"
+#include "utils/Variant.h"
+#include "lib/libBoxee/bxutils.h"
 
 #include <sstream>
 
@@ -75,6 +77,11 @@ void CVideoInfoTag::Reset()
   m_streamDetails.Reset();
   m_playCount = 0;
   m_iRating = 0;
+  m_strCountry="";
+  m_strShowLink="";
+  m_strNFOPath="";
+  m_iNfoAccessTime=-1;
+  m_iNfoModifiedTime=-1;
 }
 
 bool CVideoInfoTag::Save(TiXmlNode *node, const CStdString &tag, bool savePathInfo)
@@ -216,15 +223,16 @@ bool CVideoInfoTag::Load(const TiXmlElement *movie, bool chained /* = false */)
   // reset our details if we aren't chained.
   if (!chained) Reset();
 
-  if (CStdString("Title").Equals(movie->Value())) // mymovies.xml
+/*  if (CStdString("Title").Equals(movie->Value())) // mymovies.xml
     ParseMyMovies(movie);
   else
-    ParseNative(movie);
+  */
+  ParseNative(movie);
 
   return true;
 }
 
-void CVideoInfoTag::Serialize(CArchive& ar)
+void CVideoInfoTag::Archive(CArchive& ar)
 {
   if (ar.IsStoring())
   {
@@ -232,7 +240,7 @@ void CVideoInfoTag::Serialize(CArchive& ar)
     int nMark = -1;
     ar << nMark;
     
-    int nDumpVersion = 2;
+    int nDumpVersion = 3;
     ar << nDumpVersion;
     
     ar << m_strDirector;
@@ -286,6 +294,7 @@ void CVideoInfoTag::Serialize(CArchive& ar)
     ar << m_iSpecialSortEpisode;
     ar << m_iBookmarkId;
     ar << m_iTrack;
+    m_streamDetails.m_nVersion = nDumpVersion;
     ar << m_streamDetails;
   }
   else
@@ -381,8 +390,56 @@ void CVideoInfoTag::Serialize(CArchive& ar)
     if (nVersion > 1)
       ar >> m_iTrack;
     if (nVersion > 1)
+    {
+      m_streamDetails.m_nVersion = nVersion;
       ar >> m_streamDetails;
+    }
   }
+}
+
+void CVideoInfoTag::Serialize(CVariant& value)
+{
+  value["director"] = m_strDirector;
+  value["writingcredits"] = m_strWritingCredits;
+  value["genre"] = m_strGenre;
+  value["tagline"] = m_strTagLine;
+  value["plotoutline"] = m_strPlotOutline;
+  value["plot"] = m_strPlot;
+  value["title"] = m_strTitle;
+  value["votes"] = m_strVotes;
+  value["studio"] = m_strStudio;
+  value["trailer"] = m_strTrailer;
+  for (unsigned int i = 0; i < m_cast.size(); ++i)
+  {
+    value["cast"][i]["name"] = m_cast[i].strName;
+    value["cast"][i]["role"] = m_cast[i].strRole;
+  }
+  value["set"] = m_strSet;
+  value["runtime"] = m_strRuntime;
+  value["file"] = m_strFile;
+  value["path"] = m_strPath;
+  value["imdbnumber"] = m_strIMDBNumber;
+  value["filenameandpath"] = m_strFileNameAndPath;
+  value["originaltitle"] = m_strOriginalTitle;
+  value["episodeguide"] = m_strEpisodeGuide;
+  value["premiered"] = m_strPremiered;
+  value["status"] = m_strStatus;
+  value["productioncode"] = m_strProductionCode;
+  value["firstaired"] = m_strFirstAired;
+  value["showtitle"] = m_strShowTitle;
+  value["album"] = m_strAlbum;
+  value["artist"] = m_strArtist;
+  value["playcount"] = m_playCount;
+  value["lastPlayed"] = m_lastPlayed;
+  value["top250"] = m_iTop250;
+  value["year"] = m_iYear;
+  value["season"] = m_iSeason;
+  value["episode"] = m_iEpisode;
+  value["rating"] = m_fRating;
+  value["dbid"] = m_iDbId;
+  value["fileid"] = m_iFileId;
+  value["track"] = m_iTrack;
+  m_streamDetails.Serialize(value["streamDetails"]);
 }
 
 const CStdString CVideoInfoTag::GetCast(bool bIncludeRole /*= false*/) const
@@ -406,6 +463,7 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie)
   XMLUtils::GetString(movie, "originaltitle", m_strOriginalTitle);
   XMLUtils::GetString(movie, "sorttitle", m_strSortTitle);
   XMLUtils::GetFloat(movie, "rating", m_fRating);
+  XMLUtils::GetInt(movie, "rating", m_iRating);
   XMLUtils::GetInt(movie, "year", m_iYear);
   XMLUtils::GetInt(movie, "top250", m_iTop250);
   XMLUtils::GetInt(movie, "season", m_iSeason);
@@ -425,6 +483,31 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie)
   XMLUtils::GetString(movie, "plot", m_strPlot);
   XMLUtils::GetString(movie, "tagline", m_strTagLine);
   XMLUtils::GetString(movie, "runtime", m_strRuntime);
+
+  int seconds=0;
+  int minutes= BOXEE::BXUtils::StringToInt(m_strRuntime); //we assume its in xxx mins format
+
+  if (m_strRuntime.Find(":") > 0)
+  { // support for mm:ss
+    std::vector<std::string> tokenizedRuntime = BOXEE::BXUtils::StringTokenize(m_strRuntime,":");
+
+    if (tokenizedRuntime.size() == 2)
+    {
+      minutes = BOXEE::BXUtils::StringToInt(tokenizedRuntime[0]);
+      seconds = BOXEE::BXUtils::StringToInt(tokenizedRuntime[1]);
+    }
+  }
+
+  int timeInSeconds = (minutes*60+seconds);
+  if (timeInSeconds > 0)
+  {
+    m_strRuntime = BOXEE::BXUtils::IntToString(timeInSeconds);
+  }
+  else
+  { //if its 0 or negative, store it as "" to merge properly
+    m_strRuntime.clear();
+  }
+
   XMLUtils::GetString(movie, "mpaa", m_strMPAARating);
   XMLUtils::GetInt(movie, "playcount", m_playCount);
   XMLUtils::GetString(movie, "lastplayed", m_lastPlayed);
@@ -439,16 +522,18 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie)
   XMLUtils::GetString(movie, "album", m_strAlbum);
   XMLUtils::GetString(movie, "trailer", m_strTrailer);
 
-    const TiXmlElement *thumb = movie->FirstChildElement("thumb");
+  const TiXmlElement *thumb = movie->FirstChildElement("thumb");
   while (thumb)
-    {
-          m_strPictureURL.ParseElement(thumb);
+  {
+    m_strPictureURL.ParseElement(thumb);
     thumb = thumb->NextSiblingElement("thumb");
-      }
+  }
 
   XMLUtils::GetAdditiveString(movie,"genre",g_advancedSettings.m_videoItemSeparator,m_strGenre);
+  XMLUtils::GetAdditiveString(movie,"country",g_advancedSettings.m_videoItemSeparator,m_strCountry);
   XMLUtils::GetAdditiveString(movie,"credits",g_advancedSettings.m_videoItemSeparator,m_strWritingCredits);
   XMLUtils::GetAdditiveString(movie,"director",g_advancedSettings.m_videoItemSeparator,m_strDirector);
+  XMLUtils::GetAdditiveString(movie,"showlink",g_advancedSettings.m_videoItemSeparator,m_strShowLink);
 
   // cast
   const TiXmlElement* node = movie->FirstChildElement("actor");
@@ -525,6 +610,7 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie)
         XMLUtils::GetFloat(nodeDetail, "aspect", p->m_fAspect);
         XMLUtils::GetInt(nodeDetail, "width", p->m_iWidth);
         XMLUtils::GetInt(nodeDetail, "height", p->m_iHeight);
+        XMLUtils::GetInt(nodeDetail, "durationinseconds", p->m_iDuration);
         p->m_strCodec.MakeLower();
         m_streamDetails.AddStream(p);
       }
@@ -714,7 +800,6 @@ void CVideoInfoTag::Dump() const
   CLog::Log(LOGDEBUG,"m_iEpisode: %d", m_iEpisode);
   CLog::Log(LOGDEBUG,"m_fRating: %f", m_fRating);
   CLog::Log(LOGDEBUG,"m_iRating: %d", m_iRating);
-  CLog::Log(LOGDEBUG,"m_iEpisode: %d", m_iEpisode);
   CLog::Log(LOGDEBUG,"m_iDbId: %d", m_iDbId);
   CLog::Log(LOGDEBUG,"m_iSpecialSortSeason: %d", m_iSpecialSortSeason);
   CLog::Log(LOGDEBUG,"m_iSpecialSortEpisode: %d", m_iSpecialSortEpisode);
@@ -731,3 +816,142 @@ bool CVideoInfoTag::HasStreamDetails() const
   return m_streamDetails.HasItems();
 }
 
+bool CVideoInfoTag::IsEmpty() const
+{
+  return (m_strTitle.IsEmpty() &&
+          m_strFile.IsEmpty() &&
+          m_strPath.IsEmpty());
+}
+
+void CVideoInfoTag::MergeFieldsFrom(const CVideoInfoTag& other)
+{
+  if (!other.m_strDirector.IsEmpty() && m_strDirector.IsEmpty())
+    m_strDirector = other.m_strDirector;
+
+  if (!other.m_strWritingCredits.IsEmpty() && m_strWritingCredits.IsEmpty())
+    m_strWritingCredits = other.m_strWritingCredits;
+
+  if (!other.m_strGenre.IsEmpty() && m_strGenre.IsEmpty())
+    m_strGenre = other.m_strGenre;
+
+  if (!other.m_strTagLine.IsEmpty() && m_strTagLine.IsEmpty())
+    m_strTagLine = other.m_strTagLine;
+
+  if (!other.m_strPlotOutline.IsEmpty() && m_strPlotOutline.IsEmpty())
+    m_strPlotOutline = other.m_strPlotOutline;
+
+  if (!other.m_strPlot.IsEmpty() && m_strPlot.IsEmpty())
+    m_strPlot = other.m_strPlot;
+
+  if (!other.m_strTitle.IsEmpty() && m_strTitle.IsEmpty())
+    m_strTitle = other.m_strTitle;
+
+  if (!other.m_strVotes.IsEmpty() && m_strVotes.IsEmpty())
+    m_strVotes = other.m_strVotes;
+
+  if (!other.m_strStudio.IsEmpty() && m_strStudio.IsEmpty())
+    m_strStudio = other.m_strStudio;
+
+  if (!other.m_strTrailer.IsEmpty() && m_strTrailer.IsEmpty())
+    m_strTrailer = other.m_strTrailer;
+
+  if (!other.m_strSet.IsEmpty() && m_strSet.IsEmpty())
+    m_strSet = other.m_strSet;
+
+  if (!other.m_strRuntime.IsEmpty() && (m_strRuntime.IsEmpty() || BOXEE::BXUtils::StringToInt(m_strRuntime) <= 0))
+    m_strRuntime = other.m_strRuntime;
+
+  if (!other.m_strFile.IsEmpty() && m_strFile.IsEmpty())
+    m_strFile = other.m_strFile;
+
+  if (!other.m_strPath.IsEmpty() && m_strPath.IsEmpty())
+    m_strPath = other.m_strPath;
+
+  if (!other.m_strIMDBNumber.IsEmpty() && (m_strIMDBNumber.IsEmpty() || m_strIMDBNumber.substr(0,2).compare("tt")==0))
+    m_strIMDBNumber = other.m_strIMDBNumber;
+
+  if (!other.m_strFileNameAndPath.IsEmpty() && m_strFileNameAndPath.IsEmpty())
+    m_strFileNameAndPath = other.m_strFileNameAndPath;
+
+  if (!other.m_strOriginalTitle.IsEmpty() && m_strOriginalTitle.IsEmpty())
+    m_strOriginalTitle = other.m_strOriginalTitle;
+
+  if (!other.m_strEpisodeGuide.IsEmpty() && m_strEpisodeGuide.IsEmpty())
+    m_strEpisodeGuide = other.m_strEpisodeGuide;
+
+  if (!other.m_strPremiered.IsEmpty() && m_strPremiered.IsEmpty())
+    m_strPremiered = other.m_strPremiered;
+
+  if (!other.m_strStatus.IsEmpty() && m_strStatus.IsEmpty())
+    m_strStatus = other.m_strStatus;
+
+  if (!other.m_strProductionCode.IsEmpty() && m_strProductionCode.IsEmpty())
+    m_strProductionCode = other.m_strProductionCode;
+
+  if (!other.m_strFirstAired.IsEmpty() && m_strFirstAired.IsEmpty())
+    m_strFirstAired = other.m_strFirstAired;
+
+  if (!other.m_strShowTitle.IsEmpty() && m_strShowTitle.IsEmpty())
+    m_strShowTitle = other.m_strShowTitle;
+
+  if (!other.m_strAlbum.IsEmpty() && m_strAlbum.IsEmpty())
+    m_strAlbum = other.m_strAlbum;
+
+  if (!other.m_strArtist.IsEmpty() && m_strArtist.IsEmpty())
+    m_strArtist = other.m_strArtist;
+
+  if (!other.m_strShowTitle.IsEmpty() && m_strShowTitle.IsEmpty())
+    m_strShowTitle = other.m_strShowTitle;
+
+  if (!other.m_cast.empty() && (m_cast.size() == 0))
+    m_cast = other.m_cast;
+
+  if ((m_playCount == 0) && (m_playCount != other.m_playCount))
+    m_playCount = other.m_playCount;
+
+  if (!other.m_lastPlayed.IsEmpty() && m_lastPlayed.IsEmpty())
+    m_lastPlayed = other.m_lastPlayed;
+
+  if ((m_iTop250 == 0) && (m_iTop250 != other.m_iTop250))
+    m_iTop250 = other.m_iTop250;
+
+  if ((m_iYear == 0) && (m_iYear != other.m_iYear))
+    m_iYear = other.m_iYear;
+
+  if ((m_iSeason == -1) && (m_iSeason != other.m_iSeason))
+    m_iSeason = other.m_iSeason;
+
+  if ((m_iEpisode == -1) && (m_iEpisode != other.m_iEpisode))
+    m_iEpisode = other.m_iEpisode;
+
+  if ((m_fRating == 0.0f) && (m_fRating != other.m_fRating))
+    m_fRating = other.m_fRating;
+
+  if ((m_iRating == 0) && (m_iRating != other.m_iRating))
+    m_iRating = other.m_iRating;
+
+  if ((m_iDbId == -1) && (m_iDbId != other.m_iDbId))
+    m_iDbId = other.m_iDbId;
+
+  if ((m_iFileId == -1) && (m_iFileId != other.m_iFileId))
+    m_iFileId = other.m_iFileId;
+
+  if ((m_iTrack == -1) && (m_iTrack != other.m_iTrack))
+    m_iTrack = other.m_iTrack;
+
+  if (!other.m_strShowLink.IsEmpty() && m_strShowLink.IsEmpty())
+    m_strShowLink = other.m_strShowLink;
+
+  if (!other.m_strCountry.IsEmpty() && m_strCountry.IsEmpty())
+    m_strCountry = other.m_strCountry;
+
+  if (!other.m_strMPAARating.IsEmpty() && m_strMPAARating.IsEmpty())
+    m_strMPAARating = other.m_strMPAARating;
+
+  //if other tag has more valid values than ours, copy it
+  if (other.m_rottenTomatoDetails.bValidAudienceDetails && other.m_rottenTomatoDetails.bValidCriticsDetails &&
+      (!m_rottenTomatoDetails.bValidAudienceDetails || !m_rottenTomatoDetails.bValidCriticsDetails))
+  {
+    m_rottenTomatoDetails = other.m_rottenTomatoDetails;
+  }
+}

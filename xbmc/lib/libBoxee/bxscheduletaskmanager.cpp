@@ -110,7 +110,7 @@ void BoxeeScheduleTask::ResetTaskExecutionTimeForRepeat()
   {
     // in case executionDelayInMS=0 -> need reset it so it won't be execute again immediately
     m_executionDelayInMS = m_executionTimeInMS;
-  }
+}
 }
 
 std::string BoxeeScheduleTask::GetName()
@@ -139,7 +139,7 @@ CBoxeeScheduleTaskManager::CBoxeeScheduleTaskManager(const std::string& name, un
   m_ScheduleProcessMutex = SDL_CreateMutex();
   m_ScheduleProcessCond = SDL_CreateCond();
   m_running = false;
-  m_schedulerThread = NULL;
+  m_schedulerThread = NULL;  
   m_minSleepTimeInMs = minSleepTimeInMs;
   m_name = name;
 }
@@ -302,7 +302,7 @@ bool CBoxeeScheduleTaskManager::AddScheduleTask(BoxeeScheduleTask* newTask)
   unsigned long newTaskTimeToBeExecute = newTask->GetExecutionTimeInMS();
   
   SDL_LockMutex(m_pListLock);
-
+  
   std::list<BoxeeScheduleTask*>::iterator it;
   it = m_scheduleTaskList.begin();
   bool taskWasInsertToList = false;
@@ -381,18 +381,25 @@ int CBoxeeScheduleTaskManager::ScheduleTaskProcess(void *pParam)
 
     if(!pCaller->IsRunning())
     {
-      // If after SemWait the thread ISN'T Initialize -> Thread was closed -> Call continue in order to exit
+      // If after SemWait the thread ISN'T Initialize -> Thread was closed -> Call break in order to exit
       break;
     }
     
     SDL_LockMutex(pCaller->m_pListLock);
+
+    if (pCaller->m_scheduleTaskList.empty())
+    {
+      // If there are no tasks in the list -> Call continue in order to wait for new tasks
+      SDL_UnlockMutex(pCaller->m_pListLock);
+      continue;
+    }
 
     // Get the first BoxeeScheduleTask in the list
     firstTaskInList = (pCaller->m_scheduleTaskList).front();
 
     if(!firstTaskInList)
     {
-      LOG(LOG_LEVEL_ERROR,"CBoxeeScheduleTaskManager::ScheduleTaskProcess - First task in the list is NULL -> continue. [name=%s] (bstm)",pCaller->m_name.c_str());
+      //LOG(LOG_LEVEL_ERROR,"CBoxeeScheduleTaskManager::ScheduleTaskProcess - First task in the list is NULL -> continue. [name=%s] (bstm)",pCaller->m_name.c_str());
 
       pCaller->m_scheduleTaskList.pop_front();
       SDL_UnlockMutex(pCaller->m_pListLock);
@@ -407,7 +414,7 @@ int CBoxeeScheduleTaskManager::ScheduleTaskProcess(void *pParam)
     unsigned long currentTimeInMS = CTimeUtils::GetTimeMS();
     long delayToExecuteTimeInMS = taskExecuteTimeInMS - currentTimeInMS;
     
-    if((delayToExecuteTimeInMS > 0) && (delayToExecuteTimeInMS > pCaller->m_minSleepTimeInMs))
+    if((delayToExecuteTimeInMS > 0) && (delayToExecuteTimeInMS > (long) pCaller->m_minSleepTimeInMs))
     {
       //LOG(LOG_LEVEL_DEBUG,"CBoxeeScheduleTaskManager::ScheduleTaskProcess - Going to call CondWaitTimeout with [delay=%ld] for [name=%s][jobId=%d]. [taskExecuteTimeInMS=%lu][currentTimeInMS=%lu]. [ScheduleTaskListSize=%d]. [name=%s] (bstm)",delayToExecuteTimeInMS,firstTaskInList->GetName().c_str(),firstTaskInList->GetId(),taskExecuteTimeInMS,currentTimeInMS,pCaller->m_scheduleTaskList.size(),pCaller->m_name.c_str());
 
@@ -420,13 +427,13 @@ int CBoxeeScheduleTaskManager::ScheduleTaskProcess(void *pParam)
       {
         wokeUpReason = -1;
         
-        LOG(LOG_LEVEL_WARNING,"CBoxeeScheduleTaskManager::ScheduleTaskProcess - After CondWaitTimeout, the first CBoxeeScheduleTaskContainer in the list is NULL. wokeUpReason was set to [%d] for ERROR. [ScheduleTaskListSize=%d]. [name=%s] (bstm)",wokeUpReason,pCaller->m_scheduleTaskList.size(),pCaller->m_name.c_str());
+        //LOG(LOG_LEVEL_WARNING,"CBoxeeScheduleTaskManager::ScheduleTaskProcess - After CondWaitTimeout, the first CBoxeeScheduleTaskContainer in the list is NULL. wokeUpReason was set to [%d] for ERROR. [ScheduleTaskListSize=%d]. [name=%s] (bstm)",wokeUpReason,pCaller->m_scheduleTaskList.size(),pCaller->m_name.c_str());
       }
-      else
-      {
-        LOG(LOG_LEVEL_DEBUG,"CBoxeeScheduleTaskManager::ScheduleTaskProcess - After CondWaitTimeout, going to handle [name=%s][jobId=%d][taskExecuteTimeInMS=%lu]. [currentTimeInMS=%lu][ScheduleTaskListSize=%d]. [name=%s] (bstm)",firstTaskInList->GetName().c_str(),firstTaskInList->GetId(),firstTaskInList->GetExecutionTimeInMS(),CTimeUtils::GetTimeMS(),pCaller->m_scheduleTaskList.size(),pCaller->m_name.c_str());
+      //else
+      //{
+        //LOG(LOG_LEVEL_DEBUG,"CBoxeeScheduleTaskManager::ScheduleTaskProcess - After CondWaitTimeout, going to handle [name=%s][jobId=%d][taskExecuteTimeInMS=%lu]. [currentTimeInMS=%lu][ScheduleTaskListSize=%d]. [name=%s] (bstm)",firstTaskInList->GetName().c_str(),firstTaskInList->GetId(),firstTaskInList->GetExecutionTimeInMS(),CTimeUtils::GetTimeMS(),pCaller->m_scheduleTaskList.size(),pCaller->m_name.c_str());
+      //}
       }
-    }
     else
     {
       //LOG(LOG_LEVEL_DEBUG,"CBoxeeScheduleTaskManager::ScheduleTaskProcess - [delay=%ld <= %lu] for task [name=%s][jobId=%d] -> Going to execute it NOW by set [wokeUpReason=SDL_MUTEX_TIMEDOUT]. [taskExecuteTimeInMS=%lu][currentTimeInMS=%lu]. [ScheduleTaskListSize=%d]. [name=%s] (bstm)",delayToExecuteTimeInMS,pCaller->m_minSleepTimeInMs,firstTaskInList->GetName().c_str(),firstTaskInList->GetId(),taskExecuteTimeInMS,currentTimeInMS,pCaller->m_scheduleTaskList.size(),pCaller->m_name.c_str());

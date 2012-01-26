@@ -22,28 +22,28 @@
  */
 
 #include "DVDVideoCodec.h"
-#include "cores/ffmpeg/DllAvCodec.h"
-#include "cores/ffmpeg/DllAvFormat.h"
-#include "cores/ffmpeg/DllSwScale.h"
-#include "cores/ffmpeg/vdpau.h"
+#include "DVDVideoCodecFFmpeg.h"
+#include "libavcodec/vdpau.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #define GL_GLEXT_PROTOTYPES
 #define GLX_GLXEXT_PROTOTYPES
 #include <GL/gl.h>
 #include <GL/glx.h>
+#include <queue>
 #include "utils/CriticalSection.h"
+#include "settings/VideoSettings.h"
 namespace Surface { class CSurface; }
 
 #define NUM_OUTPUT_SURFACES                4
 #define NUM_VIDEO_SURFACES_MPEG2           10  // (1 frame being decoded, 2 reference)
-#define NUM_VIDEO_SURFACES_H264            32 // (1 frame being decoded, up to 16 references) 
+#define NUM_VIDEO_SURFACES_H264            32 // (1 frame being decoded, up to 16 references)
 #define NUM_VIDEO_SURFACES_VC1             10  // (same as MPEG-2)
-#define NUM_VIDEO_SURFACES_MAX_TRIES       100
 #define NUM_OUTPUT_SURFACES_FOR_FULLHD     2
 #define FULLHD_WIDTH                       1920
 
 class CVDPAU
+ : public CDVDVideoCodecFFmpeg::IHardwareDecoder
 {
 public:
 
@@ -60,11 +60,27 @@ public:
     uint32_t aux; /* optional extra parameter... */
   };
 
-
-  CVDPAU(int width, int height, CodecID codec);
+  CVDPAU();
   virtual ~CVDPAU();
+  
+  virtual bool Open      (AVCodecContext* avctx, const enum PixelFormat);
+  virtual int  Decode    (AVCodecContext* avctx, AVFrame* frame);
+  virtual bool GetPicture(AVCodecContext* avctx, AVFrame* frame, DVDVideoPicture* picture);
+  virtual void Reset();
+  virtual void Close();
+
+  virtual int  Check(AVCodecContext* avctx) 
+  { 
+    if(CheckRecover(false))
+      return VC_FLUSHED;
+    else
+      return 0;
+  }
+  virtual const std::string Name() { return "vdpau"; }
 
   bool MakePixmap(int width, int height);
+  bool MakePixmapGL();
+
   void ReleasePixmap();
   void BindPixmap();
 
@@ -72,62 +88,58 @@ public:
   PFNGLXRELEASETEXIMAGEEXTPROC glXReleaseTexImageEXT;
   GLXPixmap  m_glPixmap;
   Pixmap  m_Pixmap;
-  GLuint   m_glPixmapTexture;
   GLXContext m_glContext;
 
   static void             FFReleaseBuffer(AVCodecContext *avctx, AVFrame *pic);
   static void             FFDrawSlice(struct AVCodecContext *s,
                                const AVFrame *src, int offset[4],
                                int y, int type, int height);
-  static enum PixelFormat FFGetFormat(struct AVCodecContext * avctx,
-                                         const enum PixelFormat * pix_fmt);
   static int              FFGetBuffer(AVCodecContext *avctx, AVFrame *pic);
 
   static void             VDPPreemptionCallbackFunction(VdpDevice device, void* context);
 
-  void Create(int width, int height);
-  void PrePresent(AVCodecContext *avctx, AVFrame *pFrame);
   void Present();
-  int  ConfigVDPAU(AVCodecContext *avctx, int ref_frames);
+  bool ConfigVDPAU(AVCodecContext *avctx, int ref_frames);
   void SpewHardwareAvailable();
   void InitCSCMatrix(int Height);
-  void CheckStatus(VdpStatus vdp_st, int line);
+  bool CheckStatus(VdpStatus vdp_st, int line);
 
-  void CheckRecover(bool force = false);
+  bool CheckRecover(bool force = false);
   void CheckFeatures();
-  void SetColor(int Height);
+  void SetColor();
   void SetNoiseReduction();
   void SetSharpness();
   void SetDeinterlacing();
   void SetHWUpscaling();
-  bool VDPAURecovered, VDPAUSwitching;
 
-  VdpTime    lastSwapTime, frameLagTime, frameLagTimeRunning, frameLagAverage;
-  VdpTime    previousTime;
-
-  INT64      frameCounter;
   pictureAge picAge;
   bool       recover;
-  VdpVideoSurface past[2], current, future;
+  vdpau_render_state *past[2], *current, *future;
   int        tmpDeint;
   float      tmpNoiseReduction, tmpSharpness;
   float      tmpBrightness, tmpContrast;
-  bool       interlaced,m_bPixmapCreated;
   int        OutWidth, OutHeight;
-  int        lastDisplayedSurface;
+  bool       upScale;
+  std::queue<DVDVideoPicture> m_DVDVideoPics;
+
+  static inline void ClearUsedForRender(vdpau_render_state **st)
+  {
+    if (*st) {
+      (*st)->state &= ~FF_VDPAU_STATE_USED_FOR_RENDER;
+      *st = NULL;
+    }
+  }
 
   VdpProcamp    m_Procamp;
   VdpCSCMatrix  m_CSCMatrix;
-  VdpDevice     GetVdpDevice() { return vdp_device; };
+  VdpDevice     HasDevice() { return vdp_device != VDP_INVALID_HANDLE; };
   VdpChromaType vdp_chroma_type;
-  VdpVideoMixerPictureStructure structure;
 
 
   //  protected:
   void      InitVDPAUProcs();
-  VdpStatus FiniVDPAUProcs();
-  void      InitVDPAUOutput();
-  VdpStatus FiniVDPAUOutput();
+  void      FiniVDPAUProcs();
+  void      FiniVDPAUOutput();
 
   VdpDevice                            vdp_device;
   VdpGetProcAddress *                  vdp_get_proc_address;
@@ -185,7 +197,7 @@ public:
   VdpRect       outRect;
   VdpRect       outRectVid;
 
-  void*    dl_handle;
+  static void* dl_handle;
   VdpStatus (*dl_vdp_device_create_x11)(Display* display, int screen, VdpDevice* device, VdpGetProcAddress **get_proc_address);
   VdpStatus (*dl_vdp_get_proc_address)(VdpDevice device, VdpFuncId function_id, void** function_pointer);
   VdpStatus (*dl_vdp_preemption_callback_register)(VdpDevice device, VdpPreemptionCallback callback, void* context);
@@ -197,7 +209,16 @@ public:
   uint32_t max_references;
   Display* m_Display;
   bool     vdpauConfigured;
-  bool     vdpauInited;
+
+
+  VdpVideoMixerPictureStructure m_mixerfield;
+  int                           m_mixerstep;
+
+  bool Supports(VdpVideoMixerFeature feature);
+  bool Supports(EINTERLACEMETHOD method);
+
+  VdpVideoMixerFeature m_features[10];
+  int                  m_feature_count;
 
   static bool IsVDPAUFormat(PixelFormat fmt);
   static void ReadFormatOf( PixelFormat fmt
@@ -206,5 +227,3 @@ public:
 
   std::vector<vdpau_render_state*> m_videoSurfaces;
 };
-
-extern CVDPAU*          g_VDPAU;

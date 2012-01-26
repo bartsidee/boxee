@@ -31,14 +31,19 @@
 
 
 #include "StringUtils.h"
+#include "utils/RegExp.h"
+#include "utils/fstrcmp.h"
 
 #include <math.h>
 #include <sstream>
 
 using namespace std;
 
+const char* ADDON_GUID_RE = "^(\\{){0,1}[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}(\\}){0,1}$";
+
 /* empty string for use in returns by ref */
 const CStdString StringUtils::EmptyString = "";
+CStdString StringUtils::m_lastUUID = "";
 
 void StringUtils::JoinString(const CStdStringArray &strings, const CStdString& delimiter, CStdString& result)
 {
@@ -244,6 +249,14 @@ void StringUtils::SecondsToTimeString(long lSeconds, CStdString& strHMS, TIME_FO
     strHMS.AppendFormat(strHMS.IsEmpty() ? "%02.2i" : ":%02.2i", hh * 60 + mm);
 }
 
+void StringUtils::MilisecondsToTimeString( long mSeconds, CStdString& strHMS)
+{
+  SecondsToTimeString(mSeconds / 1000, strHMS, TIME_FORMAT_HH_MM_SS);
+  mSeconds = mSeconds % 3600;
+  int ms = mSeconds % 1000;
+  strHMS.AppendFormat(strHMS.IsEmpty() ? "%02.2i" : ":%02.2i", ms);
+}
+
 bool StringUtils::IsNaturalNumber(const CStdString& str)
 {
   if (0 == (int)str.size())
@@ -406,3 +419,81 @@ CStdString StringUtils::FormatNumber(__int64 number)
   return result;
 }
 
+CStdString StringUtils::CreateUUID()
+{
+  /* This function generate a DCE 1.1, ISO/IEC 11578:1996 and IETF RFC-4122
+  * Version 4 conform local unique UUID based upon random number generation.
+  */
+  char UuidStrTmp[40];
+  char *pUuidStr = UuidStrTmp;
+  int i;
+
+  /* generate hash from last generated UUID string */
+  unsigned seed = 0;
+  for (unsigned i = 0; i < m_lastUUID.length(); i++) {
+    seed = 31*seed + m_lastUUID[i];
+  }
+
+  /* use hash as the seed for rand()*/
+  srand(seed);
+
+  /*Data1 - 8 characters.*/
+  for(i = 0; i < 8; i++, pUuidStr++)
+    ((*pUuidStr = (rand() % 16)) < 10) ? *pUuidStr += 48 : *pUuidStr += 55;
+
+  /*Data2 - 4 characters.*/
+  *pUuidStr++ = '-';
+  for(i = 0; i < 4; i++, pUuidStr++)
+    ((*pUuidStr = (rand() % 16)) < 10) ? *pUuidStr += 48 : *pUuidStr += 55;
+
+  /*Data3 - 4 characters.*/
+  *pUuidStr++ = '-';
+  for(i = 0; i < 4; i++, pUuidStr++)
+    ((*pUuidStr = (rand() % 16)) < 10) ? *pUuidStr += 48 : *pUuidStr += 55;
+
+  /*Data4 - 4 characters.*/
+  *pUuidStr++ = '-';
+  for(i = 0; i < 4; i++, pUuidStr++)
+    ((*pUuidStr = (rand() % 16)) < 10) ? *pUuidStr += 48 : *pUuidStr += 55;
+
+  /*Data5 - 12 characters.*/
+  *pUuidStr++ = '-';
+  for(i = 0; i < 12; i++, pUuidStr++)
+    ((*pUuidStr = (rand() % 16)) < 10) ? *pUuidStr += 48 : *pUuidStr += 55;
+
+  *pUuidStr = '\0';
+
+  m_lastUUID = UuidStrTmp;
+  return UuidStrTmp;
+}
+
+bool StringUtils::ValidateUUID(const CStdString &uuid)
+{
+  CRegExp guidRE;
+  guidRE.RegComp(ADDON_GUID_RE);
+  return (guidRE.RegFind(uuid.c_str()) == 0);
+}
+
+double StringUtils::CompareFuzzy(const CStdString &left, const CStdString &right)
+{
+  return (0.5 + fstrcmp(left.c_str(), right.c_str(), 0.0) * (left.length() + right.length())) / 2.0;
+}
+
+int StringUtils::FindBestMatch(const CStdString &str, const CStdStringArray &strings, double &matchscore)
+{
+  int best = -1;
+  matchscore = 0;
+
+  int i = 0;
+  for (CStdStringArray::const_iterator it = strings.begin(); it != strings.end(); it++, i++)
+  {
+    int maxlength = max(str.length(), it->length());
+    double score = StringUtils::CompareFuzzy(str, *it) / maxlength;
+    if (score > matchscore)
+    {
+      matchscore = score;
+      best = i;
+    }
+  }
+  return best;
+}

@@ -24,6 +24,9 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "FileRTV.h"
+
+#ifdef HAS_FILESYSTEM_RTV
+
 #include "SectionLoader.h"
 #include "URL.h"
 #include "utils/log.h"
@@ -108,17 +111,17 @@ bool CFileRTV::Open(const char* strHostName, const char* strFileName, int iport)
   return true;
 }
 
-bool CFileRTV::Open(const CURL& url)
+bool CFileRTV::Open(const CURI& url)
 {
   return Open(url.GetHostName(), url.GetFileName(), url.GetPort());
 }
 
-bool CFileRTV::Exists(const CURL& url)
+bool CFileRTV::Exists(const CURI& url)
 {
   return true;
 }
 
-int CFileRTV::Stat(const CURL& url, struct __stat64* buffer)
+int CFileRTV::Stat(const CURI& url, struct __stat64* buffer)
 {
   errno = ENOENT;
   return -1;
@@ -229,3 +232,5 @@ int64_t CFileRTV::GetPosition()
   if (!m_bOpened) return 0;
   return m_filePos;
 }
+
+#endif

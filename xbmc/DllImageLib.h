@@ -104,6 +104,7 @@ public:
   
     // boxee
     virtual bool DecodeFromMemory(BYTE *buffer, unsigned int size, ImageInfo *info) = 0;
+    virtual bool GetBackgroundColor(ImageInfo *info, RGBQUAD* rgbQuad, long*  nBkgndIndex) = 0;
 };
 
 class DllImageLib : public DllDynamic, DllImageLibInterface
@@ -119,6 +120,7 @@ class DllImageLib : public DllDynamic, DllImageLibInterface
   DEFINE_METHOD5(bool, CreateThumbnailFromSurface, (BYTE * p1, unsigned int p2, unsigned int p3, unsigned int p4, const char * p5))
   DEFINE_METHOD7(int, ConvertFile, (const char * p1, const char * p2, float p3, int p4, int p5, unsigned int p6, bool p7))
   DEFINE_METHOD3(bool, DecodeFromMemory, (BYTE * p1, unsigned int p2, ImageInfo * p3))
+  DEFINE_METHOD3(bool, GetBackgroundColor, (ImageInfo *p1, RGBQUAD* p2, long*  p3))
   BEGIN_METHOD_RESOLVE()
     RESOLVE_METHOD(ReleaseImage)
     RESOLVE_METHOD(LoadImage)
@@ -130,5 +132,6 @@ class DllImageLib : public DllDynamic, DllImageLibInterface
     RESOLVE_METHOD(CreateThumbnailFromSurface)
     RESOLVE_METHOD(ConvertFile)
     RESOLVE_METHOD(DecodeFromMemory)
+    RESOLVE_METHOD(GetBackgroundColor)
   END_METHOD_RESOLVE()
 };

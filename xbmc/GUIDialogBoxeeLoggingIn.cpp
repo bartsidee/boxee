@@ -13,8 +13,7 @@
 #define USER_NAME_LABEL 1222
 #define WINDOW_MSG_CLOSE_LOGGING_IN (GUI_MSG_USER + 101)
 
-CGUIDialogBoxeeLoggingIn::CGUIDialogBoxeeLoggingIn(void)
-    : CGUIDialog(WINDOW_DIALOG_BOXEE_LOGGING_IN, "boxee_logging_in.xml")
+CGUIDialogBoxeeLoggingIn::CGUIDialogBoxeeLoggingIn(void) : CGUIDialog(WINDOW_DIALOG_BOXEE_LOGGING_IN, "boxee_logging_in.xml")
 {
   Reset();
   BOXEE::Boxee::GetInstance().AddListener(this);
@@ -105,7 +104,7 @@ void CGUIDialogBoxeeLoggingIn::LoginDone()
 void CGUIDialogBoxeeLoggingIn::OnLoginEnded(const BOXEE::BXCredentials &creds, BOXEE::BXLoginStatus eResult, const BOXEE::BXObject &userObj) 
 {
   BOXEE::BXCredentials credsTmp = creds;
-  CLog::Log(LOGDEBUG,"CGUIDialogBoxeeLoggingIn::OnLoginEnded - Enter function with [creds.UserName=%s][creds.Pass=%s][LoginStatus=%d=%s]. [m_nProfileToLoad=%d] (login)",credsTmp.GetUserName().c_str(),credsTmp.GetPassword().c_str(),(int)eResult,BOXEE::Boxee::CBoxeeLoginStatusEnumAsString(eResult),m_nProfileToLoad);
+  //CLog::Log(LOGDEBUG,"CGUIDialogBoxeeLoggingIn::OnLoginEnded - Enter function with [creds.UserName=%s][creds.Pass=%s][LoginStatus=%d=%s]. [m_nProfileToLoad=%d] (login)",credsTmp.GetUserName().c_str(),credsTmp.GetPassword().c_str(),(int)eResult,BOXEE::Boxee::CBoxeeLoginStatusEnumAsString(eResult),m_nProfileToLoad);
 
   m_eLoginStat = eResult; 
   m_userObj = userObj;

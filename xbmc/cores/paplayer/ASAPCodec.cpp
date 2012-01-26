@@ -87,6 +87,10 @@ bool ASAPCodec::CanInit()
 bool ASAPCodec::IsSupportedFormat(const CStdString &strExt)
 {
   CStdString ext = strExt;
+
+  if(ext.IsEmpty())
+    return false;
+
   if (ext[0] == '.')
     ext.erase(0, 1);
   return ext == "sap"

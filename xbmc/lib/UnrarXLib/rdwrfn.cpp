@@ -36,6 +36,7 @@ void ComprDataIO::Init()
   ProcessedArcSize=TotalArcSize=0;
   bQuit = false;
   m_pDlgProgress = NULL;
+  hBufferFilled=hBufferEmpty=hSeek=hSeekDone=hQuit=NULL;
  }
 
 int ComprDataIO::UnpRead(byte *Addr,uint Count)
@@ -145,9 +146,8 @@ int ComprDataIO::UnpRead(byte *Addr,uint Count)
       CurUnpStart = CurUnpRead;
       if (m_pDlgProgress)
       {
-        CURL url(SrcArc->FileName);
-        CStdString strDisplay;
-        url.GetURLWithoutUserDetails(strDisplay);
+        CURI url(SrcArc->FileName);
+        CStdString strDisplay = url.GetWithoutUserDetails();
         m_pDlgProgress->SetLine(2,strDisplay); // update currently extracted rar file
         m_pDlgProgress->Progress();
       }

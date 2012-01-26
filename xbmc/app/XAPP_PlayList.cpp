@@ -3,6 +3,7 @@
 #include "PlayListPlayer.h"
 #include "Application.h"
 #include "utils/log.h"
+#include "PlayList.h"
 
 using namespace PLAYLIST;
 
@@ -32,7 +33,7 @@ namespace XAPP
     g_playlistPlayer.SetCurrentPlaylist(iPlayList);
     g_playlistPlayer.SetCurrentSong(iItem);
     
-    ThreadMessage tMsg = {TMSG_PLAYLISTPLAYER_PLAY, iItem};
+    ThreadMessage tMsg (TMSG_PLAYLISTPLAYER_PLAY, iItem);
     g_application.getApplicationMessenger().SendMessage(tMsg, false);
   }
 
@@ -85,4 +86,9 @@ namespace XAPP
       return -1;
   }
   
+  bool PlayList::IsShuffle()
+  {
+    return m_playList->IsShuffled();
+  }
+
 }

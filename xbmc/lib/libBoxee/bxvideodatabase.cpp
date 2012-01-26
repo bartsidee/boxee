@@ -4,28 +4,32 @@
 #include "bxmetadata.h"
 #include "logger.h"
 #include "bxutils.h"
+#include "../../BoxeeUtils.h"
 #include "bxconfiguration.h"
 #include "bxobject.h"
 #include "bxmessages.h"
 #include "boxee.h"
 #include "bxexceptions.h"
 #include <time.h>
+#include "../../MetadataResolverVideo.h"
 
 #define GET_VIDEOS_QUERY "select v1.*, s1.strTitle \"sTitle\", s1.strBoxeeId \"sBoxeeId\", s1.strDescription \"sDescription\", s1.strCover \"sCover\", "\
     "s1.idSeries \"sIdSeries\", s1.strPath \"sPath\", s1.strLanguage \"sLanguage\", "\
     "s1.strGenre \"sGenre\", "\
-    "s1.iYear \"sYear\", s1.iVirtual \"sVirtual\" "\
+    "s1.iYear \"sYear\", s1.iVirtual \"sVirtual\" , s1.strNfoPath \"sNfoPath\" , s1.iNfoAccessTime \"sNfoAccessTime\", s1.iNfoModifiedTime \"sNfoModifiedTime\" "\
     "from video_files v1 left outer join series s1 on v1.strSeriesId=s1.strBoxeeId where v1.idFile = 1 and v1.iDropped=0 "
 
 #define GET_SERIES_QUERY "select s1.strTitle \"sTitle\", s1.strBoxeeId \"sBoxeeId\", s1.strDescription \"sDescription\", s1.strCover \"sCover\", "\
     "s1.idSeries \"sIdSeries\", s1.strPath \"sPath\", s1.strLanguage \"sLanguage\", s1.strGenre \"sGenre\", "\
-    "s1.iYear \"sYear\", s1.iVirtual \"sVirtual\" from series s1 "
+    "s1.iYear \"sYear\", s1.iVirtual \"sVirtual\" , s1.strNfoPath \"sNfoPath\" , s1.iNfoAccessTime \"sNfoAccessTime\", s1.iNfoModifiedTime \"sNfoModifiedTime\", s1.iLatestLocalEpisodeDate \"sLatestEpisodeDate\" from series s1 "
 
 
 using namespace dbiplus;
 
 namespace BOXEE
 {
+
+CCriticalSection BOXEE::BXVideoDatabase::m_lock;
 
 BXVideoDatabase::BXVideoDatabase()
 {
@@ -40,9 +44,8 @@ BXVideoDatabase::~BXVideoDatabase()
 /*
  * Returns real videos located right under the specific folder
  */
-int BXVideoDatabase::GetVideosByFolder(std::map<std::string, BXMetadata*> &mapMediaFiles, const std::string& _strFolderPath)
+int BXVideoDatabase::GetVideosByFolder(std::map<std::string, BXMetadata*> &mapMediaFiles, const std::string& _strFolderPath, bool bGetFiles)
 {
-
   std::map<int, std::string> mapDirectors;
   MapDirectorsByVideoId(mapDirectors);
 
@@ -64,24 +67,48 @@ int BXVideoDatabase::GetVideosByFolder(std::map<std::string, BXMetadata*> &mapMe
         std::string strPath = pDSa->fv("v1.strPath").get_asString();
         std::string strType = pDSa->fv("v1.strType").get_asString();
         std::string strParentPath = BXUtils::GetParentPath(strPath);
+        BXUtils::RemoveSlashAtEnd(strPath);
         BXUtils::RemoveSlashAtEnd(strParentPath);
 
-        // Take only the files that are immediately under the specified folder
-        if (strParentPath != strFolderPath)
+        // In case of multipart video, the path of the item will be the path of the folder
+        if (strPath != strFolderPath || strType != "part")
         {
-          pDSa->next();
-          continue;
-        }
-        else if ((strParentPath == strFolderPath) && strType == "part")
-        {
-          pDSa->next();
-          continue;
+          // Take only the files that are immediately under the specified folder
+          if (strParentPath != strFolderPath)
+          {
+            pDSa->next();
+            continue;
+          }
+          else if ((strParentPath == strFolderPath) && strType == "part")
+          {
+            pDSa->next();
+            continue;
+          }
         }
 
         BXMetadata* pMetadata = new BXMetadata(MEDIA_ITEM_TYPE_VIDEO);
         if (CreateVideoFromDataset(pDSa, pMetadata, mapDirectors, mapActors))
         {
-          mapMediaFiles[pMetadata->GetPath()] = pMetadata;
+          if (strType == "part" && bGetFiles)
+          {
+            BXVideo* pVideo = (BXVideo*) pMetadata->GetDetail(MEDIA_DETAIL_VIDEO);
+
+            std::vector<std::string> vecVideoParts;
+            if (GetVideoParts(pVideo->m_iId, vecVideoParts))
+            {
+              for (unsigned int i = 0; i < vecVideoParts.size(); i++)
+              {
+                BXMetadata* pPart = new BXMetadata(*pMetadata);
+                pPart->SetPath(vecVideoParts[i]);
+                mapMediaFiles[pPart->GetPath()] = pPart;
+              }
+              delete pMetadata;
+            }
+          }
+          else
+          {
+            mapMediaFiles[pMetadata->GetPath()] = pMetadata;
+          }
         }
         else
         {
@@ -128,6 +155,7 @@ int BXVideoDatabase::GetUnresolvedVideoFilesByFolder(std::map<std::string, BXMet
 
           pVideo->m_strPath = strPath;
           pVideo->m_iId = pDS->fv("idVideo").get_asInt();
+          pVideo->m_iDateAdded = pDS->fv("iDateAdded").get_asUInt();
 
           // The the path of the audio as path of the whole item
           pMetadata->SetPath(pVideo->m_strPath);
@@ -322,12 +350,19 @@ int BXVideoDatabase::GetVideoByIMDBId(const std::string& strId, BXMetadata* pMet
 */
 int BXVideoDatabase::GetVideoByBoxeeIdAndPath(const std::string& strId, const std::string& strPath, BXMetadata* pMetadata)
 {
+  CStdString _strPath = strPath;
+  //look for path in db with userName and apssword if exists
+  if(CUtil::IsSmb(_strPath))
+  {
+    _strPath = g_passwordManager.GetCifsPathCredentials(strPath);
+  }
+
   if (!pMetadata || !(pMetadata->GetType() == MEDIA_ITEM_TYPE_VIDEO)) return MEDIA_DATABASE_ERROR;
 
    BXVideo* pVideo = (BXVideo*) pMetadata->GetDetail(MEDIA_DETAIL_VIDEO);
 
    int iResult = MEDIA_DATABASE_ERROR;
-   Dataset* pDSa = Query("select * from video_files where strBoxeeId='%s' and strPath = '%s' and iDropped=0", strId.c_str(), strPath.c_str());
+   Dataset* pDSa = Query("select * from video_files where strBoxeeId='%s' and strPath = '%s' and iDropped=0", strId.c_str(), _strPath.c_str());
    if (pDSa) {
      if (pDSa->num_rows() != 0)
      {
@@ -425,6 +460,9 @@ int BXVideoDatabase::AddActor(std::string strName)
   if (strName.empty())
     return MEDIA_DATABASE_ERROR;
 
+  //lock to avoid race condition between the select (checking if there's existing record) and the insert query
+  CSingleLock lock (m_lock);
+
   int iID = GetActorIdByName(strName);
 
   if (iID == MEDIA_DATABASE_NOT_FOUND)
@@ -474,6 +512,10 @@ bool BXVideoDatabase::LoadSeriesFromDataset(Dataset* pDS, BXSeries* pSeries)
   pSeries->m_strLanguage = pDS->fv("sLanguage").get_asString();
   pSeries->m_strGenre = pDS->fv("sGenre").get_asString();
   pSeries->m_iVirtual = pDS->fv("sVirtual").get_asInt();
+  pSeries->m_strNfoPath = pDS->fv("sNfoPath").get_asString();
+  pSeries->m_iNfoAccessedTime = pDS->fv("sNfoAccessTime").get_asInt();
+  pSeries->m_iNfoModifiedTime = pDS->fv("sNfoModifiedTime").get_asInt();
+  pSeries->m_iRecentlyAired = pDS->fv("sLatestEpisodeDate").get_asUInt();
 
   return true;
 }
@@ -506,7 +548,7 @@ int BXVideoDatabase::GetSeriesById(int iSeriesId, BXSeries* pSeries)
 bool BXVideoDatabase::GetSeriesByBoxeeId(const std::string& strBoxeeId, BXSeries* pSeries)
 {
   bool bResult = true;
-  Dataset* pDS = Query(GET_SERIES_QUERY "where strBoxeeId=%s", strBoxeeId.c_str());
+  Dataset* pDS = Query(GET_SERIES_QUERY "where strBoxeeId='%s'", strBoxeeId.c_str());
   if (pDS) {
     try {
       if (pDS->num_rows() != 0)
@@ -555,7 +597,7 @@ int BXVideoDatabase::GetSeriesByName(const std::string& strSeriesName, BXSeries*
   return iResult;
 }
 
-unsigned long BXVideoDatabase::GetLatestEdpisodeDate(const std::string& strBoxeeId)
+unsigned long BXVideoDatabase::GetLatestEpisodeDate(const std::string& strBoxeeId)
 {
   unsigned long iResult = 0;
   Dataset* pDS = Query("select * from video_files where strSeriesId='%s' and iDropped=0 order by iDateAdded desc", strBoxeeId.c_str());
@@ -589,6 +631,9 @@ int BXVideoDatabase::AddDirector(std::string strName)
     return MEDIA_DATABASE_ERROR;
   }
 
+  //lock to avoid race condition between the select (checking if there's existing record) and the insert query
+  CSingleLock lock (m_lock);
+
   int iID = GetDirectorIdByName(strName);
 
   if (iID == MEDIA_DATABASE_ERROR) {
@@ -609,6 +654,10 @@ int BXVideoDatabase::AddDirector(std::string strName)
 int BXVideoDatabase::AddActorToVideo(int iActorId, int iVideoId)
 {
   int iID = MEDIA_DATABASE_ERROR;
+
+  //lock to avoid race condition between the select (checking if there's existing record) and the insert query
+  CSingleLock lock (m_lock);
+
   Dataset* pDS = Query("select * from actor_to_video where idActor=%i and idVideo=%i", iActorId, iVideoId);
   if (pDS) {
     if (pDS->num_rows() == 0) {
@@ -623,6 +672,10 @@ int BXVideoDatabase::AddActorToVideo(int iActorId, int iVideoId)
 int BXVideoDatabase::AddDirectorToVideo(int iDirectorId, int iVideoId)
 {
   int iID = MEDIA_DATABASE_ERROR;
+
+  //lock to avoid race condition between the select (checking if there's existing record) and the insert query
+  CSingleLock lock (m_lock);
+
   Dataset* pDS = Query("select * from director_to_video where idDirector=%i and idVideo=%i", iDirectorId, iVideoId);
   if (pDS) {
     if (pDS->num_rows() == 0) {
@@ -641,13 +694,16 @@ int BXVideoDatabase::AddSeries(const BXSeries* pSeries)
     return MEDIA_DATABASE_ERROR;
   }
 
-  LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::AddSeries, Adding series, %s (videodb)", pSeries->m_strTitle.c_str());
+  LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::AddSeries - Adding series [title=%s][boxeeId=%s] (videodb)",pSeries->m_strTitle.c_str(),pSeries->m_strBoxeeId.c_str());
 
   int iID = MEDIA_DATABASE_ERROR;
   int iVirtual = -1;
 
-  // Check if the series with this name exists
+  // Check if the series with this name exists, lock to avoid race condition between the select (checking if there's existing episode) and the insert query
+  CSingleLock lock (m_lock);
+
   Dataset* pDS = Query("select * from series where strBoxeeId='%s'", pSeries->m_strBoxeeId.c_str());
+  time_t now = time(NULL);
 
   if (pDS)
   {
@@ -656,42 +712,51 @@ int BXVideoDatabase::AddSeries(const BXSeries* pSeries)
       // series already exists, check if existing series is virtual
       iVirtual = pDS->fv("iVirtual").get_asInt();
 
-
       if (iVirtual == 1 && pSeries->m_iVirtual == 0)
       {
-        LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::AddSeries, Update virtual series, %s (videodb)", pSeries->m_strTitle.c_str());
-        Dataset* pDS2 = Exec("update series set iVirtual=0 where strBoxeeId='%s'", pSeries->m_strBoxeeId.c_str());
+        LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::AddSeries - Update virtual series [title=%s][boxeeId=%s] (videodb)", pSeries->m_strTitle.c_str(),pSeries->m_strBoxeeId.c_str());
+        Dataset* pDS2 = Exec("update series set iVirtual=0 , iLatestLocalEpisodeDate=%i where strBoxeeId='%s'", now, pSeries->m_strBoxeeId.c_str());
         if (pDS2)
         {
           delete pDS2;
+          delete pDS; //there was a leak here
           return MEDIA_DATABASE_OK;
         }
         else
         {
+          delete pDS; //there was a leak here
           return MEDIA_DATABASE_ERROR;
         }
       }
-      else
+
+      Dataset* pDS3 = Exec("update series set iLatestLocalEpisodeDate=%i where strBoxeeId='%s'", now, pSeries->m_strBoxeeId.c_str());
+
+      if (pDS3)
       {
-        LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::AddSeries, Series already exists, %s (videodb)", pSeries->m_strTitle.c_str());
-        delete pDS;
-        return MEDIA_DATABASE_OK;
+        delete pDS3;
       }
+
+      //TODO: check if there's difference between the modified time of the metadata, update the db accordingly
+
+      LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::AddSeries - Series already exists [title=%s][boxeeId=%s] (videodb)", pSeries->m_strTitle.c_str(),pSeries->m_strBoxeeId.c_str());
+      delete pDS;
+      return MEDIA_DATABASE_OK;
     }
+
     delete pDS;
   }
 
-  LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::AddSeries, New series will be added, %s (videodb)", pSeries->m_strTitle.c_str());
+  LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::AddSeries - Going to add new series [title=%s][boxeeId=%s] (videodb)",pSeries->m_strTitle.c_str(),pSeries->m_strBoxeeId.c_str());
+
   iID = Insert("insert into series (idSeries, strTitle, strPath, strBoxeeId, strCover, strDescription, strLanguage, "
-      "strGenre, iYear, iVirtual) "
-      "values( NULL, '%s', '%s', '%s', '%s', '%s', '%s', '%s', %i, %i)", pSeries->m_strTitle.c_str(),
+      "strGenre, iYear, iVirtual, strNfoPath, iNfoAccessTime, iNfoModifiedTime, iLatestLocalEpisodeDate) "
+      "values( NULL, '%s', '%s', '%s', '%s', '%s', '%s', '%s', %i, %i , '%s', %i, %i, %i)", pSeries->m_strTitle.c_str(),
       pSeries->GetPath().c_str(), pSeries->m_strBoxeeId.c_str(), pSeries->m_strCover.c_str(), pSeries->m_strDescription.c_str(), pSeries->m_strLanguage.c_str(),
-      pSeries->m_strGenre.c_str(), pSeries->m_iYear, pSeries->m_iVirtual);
+      pSeries->m_strGenre.c_str(), pSeries->m_iYear, pSeries->m_iVirtual , pSeries->m_strNfoPath.c_str(), pSeries->m_iNfoAccessedTime , pSeries->m_iNfoModifiedTime, now);
 
   if (iID == MEDIA_DATABASE_ERROR)
   {
-    LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::AddSeries, Could not insert series, %s (videodb)", pSeries->m_strTitle.c_str());
-
+    LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::AddSeries - Could not add new series [title=%s][boxeeId=%s] (videodb)",pSeries->m_strTitle.c_str(),pSeries->m_strBoxeeId.c_str());
   }
 
   return iID;
@@ -708,6 +773,7 @@ int BXVideoDatabase::AddSeason(const BXSeason* pSeason)
 
   int iID = MEDIA_DATABASE_ERROR;
 
+  CSingleLock lock (m_lock);
   // Check if the series with this name exists
   Dataset* pDS = Query("select * from seasons where idSeries=%i and iSeasonNum=%i", pSeason->m_iSeriesId, pSeason->m_iSeasonNum);
 
@@ -741,6 +807,8 @@ int BXVideoDatabase::AddPart(int iVideoId, int iPartNumber, const std::string& s
   int iID = MEDIA_DATABASE_ERROR;
 
   //LOG(LOG_LEVEL_DEBUG, "LIBRARY, VIDEO DATABASE, LIB1: Adding video part, path =  %s, video = %d, part = %d", strPath.c_str(), iVideoId, iPartNumber);
+  //lock to avoid race condition between the select (checking if there's existing record) and the insert query
+  CSingleLock lock (m_lock);
 
   // Check if the series with this name exists
   Dataset* pDS = Query("select * from video_parts where strPath='%s'", strPath.c_str());
@@ -761,7 +829,6 @@ int BXVideoDatabase::AddPart(int iVideoId, int iPartNumber, const std::string& s
   if (iID == MEDIA_DATABASE_ERROR)
   {
     LOG(LOG_LEVEL_DEBUG, "LIBRARY: Could not insert video part , %s", strPath.c_str());
-
   }
 
   return iID;
@@ -775,6 +842,9 @@ int BXVideoDatabase::RemoveFeedVideo(const BXMetadata* pMetadata)
   {
     return MEDIA_DATABASE_ERROR;
   }
+
+  //lock to avoid race condition between the select (checking if there's existing record) and the delete query
+  CSingleLock lock (m_lock);
 
   // Get video details
   BXVideo* pVideo = (BXVideo*)pMetadata->GetDetail(MEDIA_DETAIL_VIDEO);
@@ -793,7 +863,7 @@ int BXVideoDatabase::RemoveFeedVideo(const BXMetadata* pMetadata)
           {
             int iVideoId = pDS->fv("idVideo").get_asInt();
             // We found a virtual video with the same name, delete it
-            LOG(LOG_LEVEL_ERROR, "LIBRARY, BXVideoDatabase::AddVideo, ERASE virtual video %d, ", iVideoId);
+            LOG(LOG_LEVEL_DEBUG, "removing video from database id: [%d]", iVideoId);
             Dataset* pDS_t = Exec("delete from video_files where idVideo=%i", iVideoId);
             if (pDS_t)
             {
@@ -851,8 +921,10 @@ int BXVideoDatabase::AddVideoFile(const std::string& strPath, const std::string&
   if (iID != MEDIA_DATABASE_ERROR)
     return iID;
 
-  iID = Insert("insert into unresolved_video_files (idVideoFile, strPath, strSharePath, idFolder, iStatus, idVideo, iSize) values (NULL, '%s', '%s', %i, %i, %i ,%lld)",
-      strPath.c_str(), strSharePath.c_str(), FolderId, STATUS_NEW, -1, size);
+  time_t now = time(NULL);
+
+  iID = Insert("insert into unresolved_video_files (idVideoFile, strPath, strSharePath, idFolder, iStatus, idVideo, iSize, iDateAdded) values (NULL, '%s', '%s', %i, %i, %i ,%lld , %i)",
+      strPath.c_str(), strSharePath.c_str(), FolderId, STATUS_NEW, -1, size , now);
 
   if (iID == MEDIA_DATABASE_ERROR)
   {
@@ -886,7 +958,7 @@ int BXVideoDatabase::MarkNewFolderFilesAsProcessing(int FolderId)
 
 bool BXVideoDatabase::GetUnresolvedVideoFiles(std::vector<BXMetadata*> &vecUnresolvedVideos, const std::vector<std::string>& vecPathFilter, int iItemLimit)
 {
-  Dataset* pDS = Query("select * from unresolved_video_files where iStatus=%d", STATUS_UNRESOLVED);
+  Dataset* pDS = Query("select * from unresolved_video_files where iStatus=%d limit %d", STATUS_UNRESOLVED, iItemLimit);
   if (pDS)
   {
     try
@@ -907,7 +979,9 @@ bool BXVideoDatabase::GetUnresolvedVideoFiles(std::vector<BXMetadata*> &vecUnres
           // idVideo integer primary key autoincrement, strPath text, strSharePath text, idFolder integer, iStatus integer, idVideo integer
           pMetadata->SetPath(pDS->fv(1).get_asString()); // strPath
           pMetadata->SetFolder(pDS->fv(2).get_asString()); // strSharePath
-          pMetadata->SetFileSize(pDS->fv("iSize").get_asDouble());
+          pMetadata->SetFileSize((uint64_t) pDS->fv("iSize").get_asDouble());
+          pMetadata->m_iDateAdded = pDS->fv("iDateAdded").get_asUInt();
+
           vecUnresolvedVideos.push_back(pMetadata);
 
           pDS->next();
@@ -965,7 +1039,7 @@ int  BXVideoDatabase::GetShareUnresolvedVideoFilesCount(const std::string& iStrS
 
   if (pDS)
   {
-	  count = pDS->fv("count(*)").get_asInt();
+	count = pDS->fv("count(*)").get_asInt();
     delete pDS;
   }
   return count;
@@ -987,7 +1061,7 @@ int BXVideoDatabase::GetUserUnresolvedVideoFilesCount(const std::string& iShares
 
   if (pDS)
   {
-    count = pDS->fv("count(*)").get_asInt();
+        count = pDS->fv("count(*)").get_asInt();
     delete pDS;
   }
 
@@ -1035,10 +1109,10 @@ bool BXVideoDatabase::AreVideoFilesBeingScanned(const std::string& iSharesList)
 
 int BXVideoDatabase::AddVideo(const BXMetadata* pMetadata)
 {
-  // We only handle audio files here that have at least title
+  // We only handle video files here that have at least title
   if (!pMetadata || pMetadata->GetType() != "video" || (pMetadata->GetDetail(MEDIA_DETAIL_VIDEO) == NULL))
   {
-    LOG(LOG_LEVEL_ERROR, "BXVideoDatabase::AddVideo, Could not add video, invalid type (videodb)");
+    LOG(LOG_LEVEL_ERROR, "BXVideoDatabase::AddVideo - FAILED not add video. invalid type (videodb)");
     return MEDIA_DATABASE_ERROR;
   }
 
@@ -1054,8 +1128,9 @@ int BXVideoDatabase::AddVideo(const BXMetadata* pMetadata)
 
   if (strBoxeeId.empty())
   {
-    LOG(LOG_LEVEL_ERROR, "BXVideoDatabase::AddVideo, DESIGN ERROR, Could not add video, no boxee id, path = %s (videodb)", pMetadata->GetPath().c_str());
-    pMetadata->Dump();
+    LOG(LOG_LEVEL_INFO, "BXVideoDatabase::AddVideo, added video without boxee id, path = %s (videodb)", pMetadata->GetPath().c_str());
+    //LOG(LOG_LEVEL_ERROR, "BXVideoDatabase::AddVideo, DESIGN ERROR, Could not add video, no boxee id, path = %s (videodb)", pMetadata->GetPath().c_str());
+    //pMetadata->Dump();
 
     // for now we do not really enforce this
     //return MEDIA_DATABASE_ERROR;
@@ -1077,6 +1152,9 @@ int BXVideoDatabase::AddVideo(const BXMetadata* pMetadata)
 
   int iResult = MEDIA_DATABASE_ERROR;
 
+  //lock to avoid race condition between the select (checking if there's existing record) and the insert query
+  CSingleLock lock (m_lock);
+
   if (strBoxeeId.empty())
   {
     iResult = GetVideoByPath(pMetadata->GetPath(), &existingVideoMetadata);
@@ -1088,10 +1166,12 @@ int BXVideoDatabase::AddVideo(const BXMetadata* pMetadata)
 
   if (iResult == MEDIA_DATABASE_OK)
   {
-    // Check if the existing video has the same path
+    BXVideo* pExistingVideo = (BXVideo*)existingVideoMetadata.GetDetail(MEDIA_DETAIL_VIDEO);
 
-    LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::AddVideo, video exists, path %s (videodb)", pVideo->m_strTitle.c_str(), pMetadata->GetPath().c_str());
-    return ((BXVideo*)existingVideoMetadata.GetDetail(MEDIA_DETAIL_VIDEO))->m_iId;
+    //Todo: check if there's difference between the modified time of the metadata, update the db accordingly
+    // Check if the existing video has the same path
+    LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::AddVideo, video exists, path %s (videodb)", pMetadata->GetPath().c_str());
+    return (pExistingVideo)->m_iId;
   }
 
   // Add series
@@ -1127,16 +1207,22 @@ int BXVideoDatabase::AddVideo(const BXMetadata* pMetadata)
   }
 
   time_t now = time(NULL);
+  //make sure path saves in db with user name and password if exists
+  CStdString strPath = pMetadata->GetPath();
+  if(CUtil::IsSmb(strPath))
+  {
+    strPath = g_passwordManager.GetCifsPathCredentials(strPath);
+  }
 
   iID = Insert("insert into video_files (idVideo, idFile, strPath, idFolder, strTitle, strBoxeeId, "
       "iDuration, strType, strSeriesId, iSeason, iEpisode, strDescription, strExtDescription, strIMDBKey, "
       "strMPAARating, strCredits, strStudio, strTagLine, strCover, strLanguage, "
       "strGenre, iReleaseDate, iYear, strTrailerUrl, strShowTitle, "
-      "iDateAdded, iHasMetadata, iRating, iPopularity, iDateModified, iDropped) "
+      "iDateAdded, iHasMetadata, iRating, iPopularity, iDateModified, iDropped, strNfoPath, iNfoAccessTime, iNfoModifiedTime, strOriginalCover, iRTCriticsScore, strRTCriticsRating, iRTAudienceScore, strRTAudienceRating) "
       "values( NULL, %i, '%s', %i, '%s', '%s', %i, '%s', '%s', %i, %i, '%s', '%s', '%s', '%s', '%s', '%s', '%s', "
-      "'%s', '%s', '%s', %i, %i, '%s', '%s', %i, %i, %i, %i, %i, 0)",
+      "'%s', '%s', '%s', %i, %i, '%s', '%s', %i, %i, %i, %i, %i, 0, '%s', %i, %i, '%s', %i, '%s', %i, '%s')",
       pMetadata->GetMediaFileId(), 
-      pMetadata->GetPath().c_str(), 
+      strPath.c_str(),
       pVideo->m_iFolderId,
       pVideo->m_strTitle.c_str(), 
       pVideo->m_strBoxeeId.c_str(),
@@ -1163,7 +1249,8 @@ int BXVideoDatabase::AddVideo(const BXMetadata* pMetadata)
       pMetadata->m_bResolved ? 1 : 0, 
           pVideo->m_iRating,
           pVideo->m_iPopularity,
-          pVideo->m_iDateModified);
+          pVideo->m_iDateModified, pVideo->m_strNfoPath.c_str() , pVideo->m_iNfoAccessedTime, pVideo->m_iNfoModifiedTime, pVideo->m_strOriginalCover.c_str() ,
+          pVideo->m_iCriticsScore, pVideo->m_strCriticsRating.c_str(), pVideo->m_iAudienceScore, pVideo->m_strAudienceRating.c_str());
 
   if (iID == MEDIA_DATABASE_ERROR)
   {
@@ -1179,6 +1266,21 @@ int BXVideoDatabase::AddVideo(const BXMetadata* pMetadata)
   {
     int iActorId = AddActor(pVideo->m_vecActors[i]);
     AddActorToVideo(iActorId, iID);
+  }
+
+  //update the metadataresolver
+  if (!pVideo->m_bMovie)
+  {
+    CMetadataResolverVideo::AddLocalShowsGenres(pSeries->m_strGenre);
+  }
+  else
+  {
+    CMetadataResolverVideo::AddLocalMoviesGenres(pVideo->m_strGenre);
+  }
+
+  for (std::vector<BXVideoLink>::iterator it = pVideo->m_vecVideoLinks.begin() ; it != pVideo->m_vecVideoLinks.end() ; it++)
+  {
+    AddVideoLink(pVideo->m_strBoxeeId, *it);
   }
 
   return iID;
@@ -1203,8 +1305,14 @@ bool BXVideoDatabase::LoadVideoFromDataset(Dataset* pDSa, BXVideo* pVideo)
     pVideo->m_strShowId = pDSa->fv(8).get_asString(); // m_strShowId text,
     pVideo->m_iSeason = pDSa->fv(9).get_asInt();  // iSeason integer,
     pVideo->m_iEpisode = pDSa->fv(10).get_asInt();  // iEpisode integer,
-    pVideo->m_strDescription = pDSa->fv(11).get_asString();  // strDescription text,
-    pVideo->m_strExtDescription = pDSa->fv(12).get_asString();  // strExtDescription text,
+
+    //////////////////////////////////////////////////////////////////////
+    // Description and ExtDescription are entered in reverse to the DB, //
+    // so switch read for backwards compatibility                       //
+    //////////////////////////////////////////////////////////////////////
+    pVideo->m_strDescription = pDSa->fv(12).get_asString();  // strDescription text,
+    pVideo->m_strExtDescription = pDSa->fv(11).get_asString();  // strExtDescription text,
+
     pVideo->m_strIMDBKey = pDSa->fv(13).get_asString();  // strIMDBKey text,
     pVideo->m_strMPAARating = pDSa->fv(14).get_asString(); // strMPAARating text, "
     pVideo->m_strCredits = pDSa->fv(15).get_asString();   // strCredits text,
@@ -1213,7 +1321,7 @@ bool BXVideoDatabase::LoadVideoFromDataset(Dataset* pDSa, BXVideo* pVideo)
     pVideo->m_strCover = pDSa->fv(18).get_asString(); // strCover text,
     pVideo->m_strLanguageId = pDSa->fv(19).get_asString(); // strLanguage text, "
     pVideo->m_strGenre = pDSa->fv(20).get_asString(); // strGenre
-    pVideo->m_iReleaseDate = pDSa->fv(21).get_asInt();
+    pVideo->m_iReleaseDate = pDSa->fv(21).get_asUInt();
     pVideo->m_iYear = pDSa->fv(22).get_asInt(); // iYear integer,
     pVideo->m_strTrailerUrl = pDSa->fv(23).get_asString(); // strTrailerUrl text,
     pVideo->m_strShowTitle = pDSa->fv(24).get_asString();  // strShowTitle text, "
@@ -1222,7 +1330,17 @@ bool BXVideoDatabase::LoadVideoFromDataset(Dataset* pDSa, BXVideo* pVideo)
     pVideo->m_iRating = pDSa->fv(27).get_asInt();  //iRating integer,
     pVideo->m_iPopularity = pDSa->fv(28).get_asInt();  //iPopularity integer,
     pVideo->m_iDateModified = pDSa->fv(29).get_asUInt();  //iDateModified integer,
-    // 33.  iDropped integer
+    // 30.  iDropped integer
+    pVideo->m_strNfoPath = pDSa->fv(31).get_asString();
+    pVideo->m_iNfoAccessedTime = pDSa->fv(32).get_asInt();
+    pVideo->m_iNfoModifiedTime = pDSa->fv(33).get_asInt();
+    pVideo->m_strOriginalCover = pDSa->fv(34).get_asString();
+
+    //rotten tomato columns
+    pVideo->m_iCriticsScore = pDSa->fv(35).get_asInt();
+    pVideo->m_strCriticsRating = pDSa->fv(36).get_asString();
+    pVideo->m_iAudienceScore = pDSa->fv(37).get_asInt();
+    pVideo->m_strAudienceRating = pDSa->fv(38).get_asString();
 
     return true;
   }
@@ -1335,7 +1453,7 @@ void BXVideoDatabase::MapActorsByVideoId(std::map<int, std::vector<std::string> 
   }  
 }
 
-bool BXVideoDatabase::GetMovies(std::vector<BXMetadata*> &vecMediaFiles, const std::string& strGenre, const std::string& strPrefix, const std::vector<std::string>& vecPathFilter, int iItemLimit)
+bool BXVideoDatabase::GetMovies(std::vector<BXMetadata*> &vecMediaFiles, const std::string& strGenre, const std::string& strPrefix, const std::vector<std::string>& vecPathFilter, int iItemLimit , bool bLoadOnlyFirstTrailerLink /* = false (by default) */)
 {
   // Get all movies files appropriately ordered
   // We only want real ones, those that are located on one of the shares, therefore we check for idFile = 1
@@ -1345,18 +1463,18 @@ bool BXVideoDatabase::GetMovies(std::vector<BXMetadata*> &vecMediaFiles, const s
   {
     if (strPrefix == "#")
     {
-      pDS = Query("select * from video_files where idFile = 1 and iDropped=0 and iSeason=-1 and ORD(s1.sTitle) < 65 and (strGenre LIKE '%s%%')",
+      pDS = Query("select * from video_files where idFile = 1 and iDropped=0 and iSeason=-1 and ORD(s1.sTitle) < 65 and (strGenre LIKE '%%%s%%')",
           strPrefix.c_str(), strGenre.c_str());
     }
     else
     {
-      pDS = Query("select * from video_files where idFile = 1 and iDropped=0 and iSeason=-1 and strTitle LIKE '%s%%' and (strGenre LIKE '%s%%')",
+      pDS = Query("select * from video_files where idFile = 1 and iDropped=0 and iSeason=-1 and strTitle LIKE '%s%%' and (strGenre LIKE '%%%s%%')",
           strPrefix.c_str(), strGenre.c_str());
     }
   }
   else if ( (strGenre != "") && (strPrefix == ""))
   {
-    pDS = Query("select * from video_files where idFile = 1 and iDropped=0 and iSeason=-1 and (strGenre LIKE '%s%%')", strGenre.c_str());
+    pDS = Query("select * from video_files where idFile = 1 and iDropped=0 and iSeason=-1 and (strGenre LIKE '%%%s%%')", strGenre.c_str());
   }
   else if ( (strGenre == "") && (strPrefix != ""))
   {
@@ -1371,13 +1489,18 @@ bool BXVideoDatabase::GetMovies(std::vector<BXMetadata*> &vecMediaFiles, const s
 
     pDS = Query("select * from video_files where idFile = 1 and iDropped=0 and iSeason=-1 and strTitle LIKE '%s%%'", strPrefix.c_str());
   }
+  else if ( (strGenre == "") && (strPrefix == "") && bLoadOnlyFirstTrailerLink)
+  {
+    pDS = Query("select * from video_files as files left outer join (select * from video_links as links where idLink = (select min(idLink) from video_links as l where l.strBoxeeId = links.strBoxeeId and strBoxeeType='trailer') and strBoxeeType='trailer') as firstLink on firstLink.strBoxeeId = files.strBoxeeId where (idFile = 1 AND iDropped=0 AND iSeason=-1 AND iEpisode = -1)");
+  }
   else if ( (strGenre == "") && (strPrefix == ""))
   {
     pDS = Query("select * from video_files where idFile = 1 and iDropped=0 and iSeason=-1");
   }
 
-  return CreateVideosFromDataset(pDS, vecMediaFiles, vecPathFilter, iItemLimit);
+  CreateVideosFromDataset(pDS, vecMediaFiles, vecPathFilter, iItemLimit , bLoadOnlyFirstTrailerLink);
 
+  return true;
 }
 
 bool BXVideoDatabase::SearchMoviesByTitle( const std::string& strTitle, std::vector<BXMetadata*> &vecMediaFiles, const std::vector<std::string>& vecPathFilter, int iItemLimit)
@@ -1402,7 +1525,7 @@ bool BXVideoDatabase::GetEpisodes(const std::string& strTvShowBoxeeId, int iSeas
   Dataset* pDS = NULL;
   if (iSeason == -1)
   {
-    pDS = Query("select * from video_files where strSeriesId='%s' and idFile=1 and iDropped=0", strTvShowBoxeeId.c_str(), iSeason);
+    pDS = Query("select * from video_files where strSeriesId='%s' and idFile=1 and iDropped=0", strTvShowBoxeeId.c_str());
   }
   else
   {
@@ -1418,12 +1541,12 @@ bool BXVideoDatabase::GetEpisodes(const std::string& strTvShowBoxeeId, int iSeas
     BXSeries* pSeries = (BXSeries*)pMetadata->GetDetail(MEDIA_DETAIL_SERIES);
 
     *pSeries = series;
-  }
+}
 
   return result;
 }
 
-bool BXVideoDatabase::CreateVideosFromDataset(Dataset* pDS, std::vector<BXMetadata*> &vecMediaFiles, const std::vector<std::string>& vecPathFilter, int iItemLimit)
+bool BXVideoDatabase::CreateVideosFromDataset(Dataset* pDS, std::vector<BXMetadata*> &vecMediaFiles, const std::vector<std::string>& vecPathFilter, int iItemLimit , bool bLoadOnlyFirstTrailerLink)
 {
   bool bResult = true;
 
@@ -1548,6 +1671,32 @@ bool BXVideoDatabase::CreateVideosFromDataset(Dataset* pDS, std::vector<BXMetada
               // Add created movie to the map by boxee id
               mapMovieIndexByBoxeeId[strBoxeeId] = vecMediaFiles.size();
 
+              if (bLoadOnlyFirstTrailerLink)
+              {
+                BXVideo* pVideo = (BXVideo*)pMetadata->GetDetail(MEDIA_DETAIL_VIDEO);
+
+                if (pVideo)
+                {
+                  BXVideoLink link;
+
+                  link.m_strURL = pDS->fv(37).get_asString();
+                  link.m_strProvider = pDS->fv(38).get_asString();
+                  link.m_strProviderName = pDS->fv(39).get_asString();
+                  link.m_strProviderThumb = pDS->fv(40).get_asString();
+                  link.m_strTitle = pDS->fv(41).get_asString();
+                  link.m_strQuality = pDS->fv(42).get_asString();
+                  link.m_strQualityLabel = pDS->fv(43).get_asString();
+                  link.m_bIsHD = pDS->fv(44).get_asBool();
+                  link.m_strType = pDS->fv(45).get_asString();
+                  link.m_strBoxeeType = pDS->fv(46).get_asString();
+                  link.m_strCountryCodes = pDS->fv(47).get_asString();
+                  link.m_strCountryRel = pDS->fv(48).get_asString();
+                  link.m_strOffer = pDS->fv(49).get_asString();
+
+                  pVideo->m_vecVideoLinks.push_back(link);
+                }
+              }
+
               // Add movie to output vector
               vecMediaFiles.push_back(pMetadata);
               iItemLimit--;
@@ -1557,8 +1706,6 @@ bool BXVideoDatabase::CreateVideosFromDataset(Dataset* pDS, std::vector<BXMetada
               delete pMetadata;
             }
           }
-
-
           else
           {
 
@@ -1653,7 +1800,7 @@ bool BXVideoDatabase::HasEpisodes(const std::string& strBoxeeId, int iSeason, co
   return false;
 }
 
-unsigned int BXVideoDatabase::GetLatestEpisodeDate(const std::string& strTvShowId, int iSeason)
+unsigned int BXVideoDatabase::GetLatestEpisodeReleaseDate(const std::string& strTvShowId, int iSeason)
 {
   Dataset* pDS = NULL;
   if (iSeason == -1)
@@ -1688,12 +1835,43 @@ unsigned int BXVideoDatabase::GetLatestEpisodeDate(const std::string& strTvShowI
 
 bool BXVideoDatabase::GetTvShows(std::vector<BXMetadata*> &vecMediaFiles, const std::string& strGenre, const std::string& strPrefix, const std::vector<std::string>& vecPathFilter, int iItemLimit)
 {
-
   LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::GetTvShows, genre = %s, strPrefix = %s (videodb)", strGenre.c_str(), strPrefix.c_str());
 
   int bResult = false;
-  Dataset* pDS = NULL;
 
+  //find all the series available for this user by the episodes according to the shares
+  std::set<std::string> setAvailableSeries;
+  Dataset* pDS2 = Query("select strSeriesId, strPath from video_files where strSeriesId!=''");
+  if (pDS2)
+  {
+    try
+    {
+      if (pDS2->num_rows() != 0)
+      {
+        while (!pDS2->eof())
+        {
+          if (BXUtils::CheckPathFilter(vecPathFilter, pDS2->fv("strPath").get_asString()))
+          {
+            setAvailableSeries.insert(pDS2->fv("strSeriesId").get_asString());
+            bResult = true;
+          }
+          pDS2->next();
+        }
+      }
+    }
+    catch (dbiplus::DbErrors& e)
+    {
+      LOG(LOG_LEVEL_ERROR, "Exception caught. Error = %s, msg= %s", GetLastErrorMessage(), e.getMsg());
+      bResult = false;
+    }
+    delete pDS2;
+  }
+
+  //there are no episodes available for this user
+  if (!bResult)
+    return false;
+
+  Dataset* pDS = NULL;
   if ( (!strGenre.empty()) && (!strPrefix.empty()))
   {
     if (strPrefix == "#")
@@ -1728,42 +1906,38 @@ bool BXVideoDatabase::GetTvShows(std::vector<BXMetadata*> &vecMediaFiles, const 
     pDS = Query(GET_SERIES_QUERY "where s1.iVirtual=0");
   }
 
-  if (pDS) {
-    try {
+  if (pDS)
+  {
+    try
+    {
       if (pDS->num_rows() != 0)
       {
         while (!pDS->eof() && iItemLimit > 0)
         {
-          // Since we have retrieved only non virtual series, there should be at least one episode in each
-          if (!HasEpisodes(pDS->fv("sBoxeeId").get_asString(), -1, vecPathFilter))
+          //determine if this series is allowed according to if it has any episodes
+          if (setAvailableSeries.find(pDS->fv("sBoxeeId").get_asString()) != setAvailableSeries.end())
           {
-            pDS->next();
-            continue;
+            BXMetadata* pMetadata = new BXMetadata(MEDIA_ITEM_TYPE_SERIES);
+            BXSeries* pSeries = (BXSeries*) pMetadata->GetDetail(MEDIA_DETAIL_SERIES);
+
+            if (LoadSeriesFromDataset(pDS, pSeries) == MEDIA_DATABASE_OK)
+            {
+              std::string strSeriesPath = "boxeedb://series/";
+              strSeriesPath += pSeries->m_strBoxeeId;
+              strSeriesPath += "/";
+
+              pMetadata->SetPath(strSeriesPath);
+              pMetadata->m_iDateAdded = pSeries->m_iRecentlyAired;
+
+              vecMediaFiles.push_back(pMetadata);
+              iItemLimit--;
+              bResult = true;
+            }
+            else
+            {
+              delete pMetadata;
+            }
           }
-
-          BXMetadata* pMetadata = new BXMetadata(MEDIA_ITEM_TYPE_SERIES);
-          BXSeries* pSeries = (BXSeries*)pMetadata->GetDetail(MEDIA_DETAIL_SERIES);
-
-          if (LoadSeriesFromDataset(pDS, pSeries) == MEDIA_DATABASE_OK)
-          {
-            std::string strSeriesPath = "boxeedb://series/";
-            strSeriesPath += pSeries->m_strBoxeeId;
-            strSeriesPath += "/";
-
-            pMetadata->SetPath(strSeriesPath);
-
-            pMetadata->m_iDateAdded = GetLatestEdpisodeDate(pSeries->m_strBoxeeId);
-
-            pSeries->m_iRecentlyAired = GetLatestEdpisodeDate(pSeries->m_strBoxeeId);
-
-            vecMediaFiles.push_back(pMetadata);
-            iItemLimit--;
-          }
-          else
-          {
-            delete pMetadata;
-          }
-
           pDS->next();
         }
       }
@@ -1777,6 +1951,74 @@ bool BXVideoDatabase::GetTvShows(std::vector<BXMetadata*> &vecMediaFiles, const 
   else {
     bResult = false;
   }
+
+  return bResult;
+}
+
+bool BXVideoDatabase::ConvertDatasetToUniqueSet(std::set<std::string>& output, dbiplus::Dataset* pDS , const std::vector<std::string>& vecPathFilter)
+{
+  if (pDS && pDS->num_rows() != 0)
+  {
+    while (!pDS->eof())
+    {
+      std::string rowGenreValue = pDS->fv(0).get_asString();
+      std::string rowPathValue = pDS->fv(1).get_asString();
+
+      if (BXUtils::CheckPathFilter(vecPathFilter, rowPathValue))
+      {
+        std::vector<std::string> genres = BXUtils::StringTokenize(rowGenreValue,",");
+
+        for (std::vector<std::string>::iterator it = genres.begin(); it != genres.end() ; it++)
+        {
+          BXUtils::StringTrim((*it));
+          BXUtils::StringToLower((*it));
+          output.insert((*it));
+        }
+      }
+
+      pDS->next();
+    }
+    return true;
+  }
+  return false;
+}
+
+bool BXVideoDatabase::GetTvShowsGenres (std::set<std::string> &setGenres , const std::vector<std::string>& vecPathFilter)
+{
+  bool bResult = false;
+  Dataset* pDS = Query(" select sr.strGenre, vf.strPath from video_files vf, series sr where (sr.strBoxeeId == vf.strSeriesId AND iDropped == 0 AND idFile == 1) ");
+
+  try
+  {
+    if (pDS && pDS->num_rows() != 0)
+      bResult = ConvertDatasetToUniqueSet(setGenres , pDS, vecPathFilter);
+  }
+  catch(dbiplus::DbErrors& e)
+  {
+    LOG(LOG_LEVEL_ERROR, "Exception caught. Error = %s, msg= %s", GetLastErrorMessage(), e.getMsg());
+  }
+
+  delete pDS;
+
+  return bResult;
+}
+
+bool BXVideoDatabase::GetMoviesGenres (std::set<std::string> &setGenres , const std::vector<std::string>& vecPathFilter)
+{
+  bool bResult = false;
+  Dataset* pDS = Query(" select distinct strGenre, strPath from video_files where (strGenre <> '' AND iSeason == -1 AND iEpisode == -1 AND iDropped == 0 AND idFile == 1) ");
+
+  try
+  {
+    if (pDS && pDS->num_rows() != 0)
+      bResult = ConvertDatasetToUniqueSet(setGenres , pDS, vecPathFilter);
+  }
+  catch(dbiplus::DbErrors& e)
+  {
+    LOG(LOG_LEVEL_ERROR, "Exception caught. Error = %s, msg= %s", GetLastErrorMessage(), e.getMsg());
+  }
+
+  delete pDS;
 
   return bResult;
 }
@@ -1816,7 +2058,7 @@ bool BXVideoDatabase::SearchTvShowsByTitle(const std::string& strTitle, std::vec
 
             pMetadata->SetPath(strSeriesPath);
 
-            pMetadata->m_iDateAdded = GetLatestEdpisodeDate(pSeries->m_strBoxeeId);
+            pMetadata->m_iDateAdded = pSeries->m_iRecentlyAired;// GetLatestEpisodeDate(pSeries->m_strBoxeeId);
 
             vecMediaFiles.push_back(pMetadata);
             iItemLimit--;
@@ -1885,7 +2127,7 @@ bool BXVideoDatabase::GetVideoParts(int iVideoId, std::vector<std::string> &vecV
   return bResult;
 }
 
-bool BXVideoDatabase::GetLinks(const std::string& strBoxeeId, std::vector<BXPath> &vecLinks)
+bool BXVideoDatabase::GetLinks(const std::string& strBoxeeId, std::vector<BXPath> &vecLinks, const std::vector<std::string>& vecPathFilter)
 {
   bool bResult = true;
   Dataset* pDSa = Query("select idVideo, strType, strPath from video_files where idFile=1 and iDropped=0 and strBoxeeId = '%s'", strBoxeeId.c_str());
@@ -1902,20 +2144,22 @@ bool BXVideoDatabase::GetLinks(const std::string& strBoxeeId, std::vector<BXPath
           std::string strType =pDSa->fv(1).get_asString(); //   strType
           std::string strPath = pDSa->fv(2).get_asString(); // strPath
 
-          BXPath path;
-          if (strType == "part")
+          if (BXUtils::CheckPathFilter(vecPathFilter,strPath))
           {
-            GetVideoParts(id, path.m_vecParts);
+            BXPath path;
+            if (strType == "part")
+            {
+              GetVideoParts(id, path.m_vecParts);
+            }
+            else
+            {
+              path.m_strPath = strPath;
+            }
+
+            vecLinks.push_back(path);
+
+            LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::GetLinks, added %d paths (ri)", vecLinks.size());
           }
-          else
-          {
-            path.m_strPath = strPath;
-          }
-
-          vecLinks.push_back(path);
-
-          LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::GetLinks, added %d paths (ri)", vecLinks.size());
-
           pDSa->next();
         }
       }
@@ -2012,11 +2256,13 @@ std::string BXVideoDatabase::GetDirectorByVideoId(int iVideoId)
 
 int BXVideoDatabase::RemoveVideoByPath(const std::string& strPath)
 {
-  LOG(LOG_LEVEL_ERROR, "BXVideoDatabase::RemoveVideoByPath, !!! ERASE VIDEO: path = %s", strPath.c_str());
+  LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::RemoveVideoByPath, removing video from database: path = %s", strPath.c_str());
   Dataset* pDS_t = Exec("delete from video_files where strPath='%s'", strPath.c_str());
   if (pDS_t)
     delete pDS_t;
 
+  //lock to avoid race condition between the select (checking if there's existing record) and the delete query
+  CSingleLock lock (m_lock);
 
   // Check if this is a part
   Dataset* pDS = Query("select * from video_parts where strPath='%s'", strPath.c_str());
@@ -2027,13 +2273,13 @@ int BXVideoDatabase::RemoveVideoByPath(const std::string& strPath)
         int iVideoId = pDS->fv("idVideo").get_asInt();
 
         // Delete all parts related to this video
-        LOG(LOG_LEVEL_ERROR, "BXVideoDatabase::RemoveVideoByPath, !!! ERASE parts: id = %d", iVideoId);
+        LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::RemoveVideoByPath, removing video from database parts: id = %d", iVideoId);
         pDS_t = Exec("delete from video_parts where idVideo=%d", iVideoId);
         if (pDS_t)
           delete pDS_t;
 
         // Delete all parts related to the video itself
-        LOG(LOG_LEVEL_ERROR, "BXVideoDatabase::RemoveVideoByPath, !!! ERASE video_files: id = %d", iVideoId);
+        LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::RemoveVideoByPath, removing video from database video_files: id = %d", iVideoId);
         pDS_t = Exec("delete from video_files where idVideo=%d", iVideoId);
         if (pDS_t)
           delete pDS_t;
@@ -2049,13 +2295,13 @@ int BXVideoDatabase::RemoveVideoByPath(const std::string& strPath)
 
 int BXVideoDatabase::RemoveVideoByFolder(const std::string& strFolderPath)
 {
-  LOG(LOG_LEVEL_ERROR, "BXVideoDatabase::RemoveVideoByFolder, !!! ERASE ALL VIDEOS FROM FOLDER: path = %s", strFolderPath.c_str());
+  LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::RemoveVideoByFolder, erasing all video by folder path = %s", strFolderPath.c_str());
   Dataset* pDS_t = Exec("delete from video_files where strPath LIKE '%s%%'", strFolderPath.c_str());
   if (pDS_t) {
     delete pDS_t;
   }
 
-  LOG(LOG_LEVEL_ERROR, "BXVideoDatabase::RemoveVideoByFolder, !!! ERASE ALL PARTS FROM FOLDER: path = %s", strFolderPath.c_str());
+  LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::RemoveVideoByFolder, erasing all video parts by folder path = %s", strFolderPath.c_str());
   pDS_t = Exec("delete from video_parts where strPath LIKE '%s%%'", strFolderPath.c_str());
   if (pDS_t) {
     delete pDS_t;
@@ -2071,7 +2317,8 @@ int BXVideoDatabase::RemoveSeries(int iSeriesId, int iSeason)
   bool bRemoveSeason = true;
   bool bRemoveSeries = true;
 
-
+  //lock to avoid race condition between the select (checking if there's existing record) and the delete query
+  CSingleLock lock (m_lock);
 
   // Get all vido files that belong to the series
   Dataset* pDS = Query("select * from video_files where idSeries=%d", iSeriesId);
@@ -2098,7 +2345,7 @@ int BXVideoDatabase::RemoveSeries(int iSeriesId, int iSeason)
   }
 
   if (bRemoveSeason) {
-    LOG(LOG_LEVEL_ERROR, "!!! ERASE season, id= %d, series = %d", iSeason, iSeriesId);
+    LOG(LOG_LEVEL_DEBUG, "removing season, id= %d, series = %d", iSeason, iSeriesId);
     Dataset* pDS_t = Exec("delete from seasons where idSeries=%d and iSeasonNum=%d", iSeriesId, iSeason);
     if (pDS_t) {
       delete pDS_t;
@@ -2106,7 +2353,7 @@ int BXVideoDatabase::RemoveSeries(int iSeriesId, int iSeason)
   }
 
   if (bRemoveSeries) {
-    LOG(LOG_LEVEL_ERROR, "!!! ERASE,  series = %d", iSeriesId);
+    LOG(LOG_LEVEL_DEBUG, "removing series,  series = %d", iSeriesId);
     Dataset* pDS_t = Exec("delete from series where idSeries=%d", iSeriesId);
     if (pDS_t) {
       delete pDS_t;
@@ -2133,6 +2380,160 @@ std::string BXVideoDatabase::GetActorById(int iActorId)
     delete pDSb;
   }
   return strActor;
+}
+
+int BXVideoDatabase::AddVideoLink(const std::string& strBoxeeId , const BXVideoLink& videoLink)
+{
+  int iID = -1;
+
+  //lock to avoid race condition between the select (checking if there's existing record) and the insert query
+  CSingleLock lock (m_lock);
+
+  Dataset* pDS = Query("select 1 from video_files where strBoxeeId='%s'", strBoxeeId.c_str());
+  if (pDS)
+  {
+    if (pDS->num_rows() > 0)
+    {
+      //lets query the db instead of getting an sql error while trying to create a duplicate entry
+      Dataset* pDS2 = Query("select 1 from video_links where (strBoxeeId='%s' and strURL='%s')",strBoxeeId.c_str(),videoLink.m_strURL.c_str());
+
+      if (pDS2)
+      {
+        if (pDS2->num_rows() < 1)
+        {
+          LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::AddVideoLink, creating video link : [videoLink=%s] for [strBoxeeId=%s]",videoLink.m_strURL.c_str(),strBoxeeId.c_str());
+
+          iID = Insert("insert into video_links (idLink, strBoxeeId, strURL, strProvider, strProviderName, strProviderThumb, strTitle,"
+                                          "strQuality, strQualityLabel, bIsHD, strType, strBoxeeType, strCountryCodes, strCountryRel, strOffer )"
+                                          "values( NULL, '%s', '%s', '%s', '%s', '%s' , '%s' , '%s' ,'%s' , '%d' , '%s', '%s', '%s', '%s' ,'%s' )",
+                                          strBoxeeId.c_str(), videoLink.m_strURL.c_str(), videoLink.m_strProvider.c_str(), videoLink.m_strProviderName.c_str(),
+                                          videoLink.m_strProviderThumb.c_str(), videoLink.m_strTitle.c_str(), videoLink.m_strQuality.c_str(),
+                                          videoLink.m_strQualityLabel.c_str(), videoLink.m_bIsHD?1:0, videoLink.m_strType.c_str(), videoLink.m_strBoxeeType.c_str(),
+                                          videoLink.m_strCountryCodes.c_str(), videoLink.m_strCountryRel.c_str(), videoLink.m_strOffer.c_str());
+        }
+        else
+        {
+          LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::AddVideoLink, found existing video link for: [strBoxeeId=%s][videoLink=%s]",strBoxeeId.c_str(),videoLink.m_strURL.c_str());
+        }
+
+        delete pDS2;
+      }
+      else
+      {
+        LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::AddVideoLink, Error while trying to find specific video link for: [strBoxeeId=%s][videoLink=%s]",strBoxeeId.c_str(),videoLink.m_strURL.c_str());
+      }
+    }
+    else
+    {
+      LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::AddVideoLink, Didn't find relevant BoxeeID in video files: [strBoxeeId=%s].",strBoxeeId.c_str());
+    }
+    delete pDS;
+  }
+  else
+  {
+    LOG(LOG_LEVEL_DEBUG, "BXVideoDatabase::AddVideoLink, Error while trying to find relevant BoxeeID in video files: [strBoxeeId=%s].",strBoxeeId.c_str());
+  }
+
+  return iID;
+}
+
+int BXVideoDatabase::RemoveVideoLinkByURL(const std::string& strURL)
+{
+  LOG(LOG_LEVEL_DEBUG, "removing video link with path = %s", strURL.c_str());
+  Dataset* pDS = Exec("delete from video_links where strURL='%s'" , strURL.c_str());
+  if (pDS)
+  {
+    delete pDS;
+    return MEDIA_DATABASE_OK;
+  }
+  return MEDIA_DATABASE_ERROR;
+}
+
+int BXVideoDatabase::RemoveVideoLinksByBoxeeId(const std::string& strBoxeeId)
+{
+  LOG(LOG_LEVEL_DEBUG, "removing video link with BoxeeID = %s", strBoxeeId.c_str());
+  Dataset* pDS = Exec("delete from video_links where strBoxeeId='%s'" , strBoxeeId.c_str());
+  if (pDS)
+  {
+    delete pDS;
+    return MEDIA_DATABASE_OK;
+  }
+  return MEDIA_DATABASE_ERROR;
+}
+
+int BXVideoDatabase::GetVideoLinks(std::vector<BXVideoLink>& videoLinks, const std::string& strBoxeeId, const std::string& strBoxeeType , int iCount)
+{
+  if (strBoxeeId.empty() && strBoxeeType.empty())
+  {
+    LOG(LOG_LEVEL_ERROR,"BXVideoDatabase::GetVideoLinks - enter function with EMPTY parameters. [boxeeId=%s][strBoxeeType=%s]",strBoxeeId.c_str(),strBoxeeType.c_str());
+    return MEDIA_DATABASE_ERROR;
+  }
+
+  LOG(LOG_LEVEL_DEBUG, "reading video links BoxeeId: %s , strBoxeeType: %s", strBoxeeId.c_str(), strBoxeeType.c_str());
+  std::string strSQL = "select * from video_links";
+
+  if (!strBoxeeId.empty() || !strBoxeeType.empty())
+  {
+    strSQL += " where ";
+
+    if (!strBoxeeId.empty())
+    {
+      std::string strBoxeeIdQuery = "strBoxeeId='" + strBoxeeId + "'";
+      strSQL += strBoxeeIdQuery;
+    }
+
+    if (!strBoxeeType.empty())
+    {
+      if (!strBoxeeId.empty())
+      {
+        strSQL += " AND ";
+      }
+
+      std::string strTypeQuery = "strBoxeeType='" + strBoxeeType + "'";
+      strSQL += strTypeQuery;
+    }
+
+    if (iCount > 0)
+    {
+      strSQL += " order by idLink asc limit " + BXUtils::IntToString(iCount);
+    }
+  }
+
+  Dataset* pDS = Query(strSQL.c_str());
+
+  if (pDS)
+  {
+    if (pDS->num_rows() > 0)
+    {
+      while (!pDS->eof())
+      {
+        BXVideoLink link;
+
+        link.m_strURL = pDS->fv(2).get_asString();
+        link.m_strProvider = pDS->fv(3).get_asString();
+        link.m_strProviderName = pDS->fv(4).get_asString();
+        link.m_strProviderThumb = pDS->fv(5).get_asString();
+        link.m_strTitle = pDS->fv(6).get_asString();
+        link.m_strQuality = pDS->fv(7).get_asString();
+        link.m_strQualityLabel = pDS->fv(8).get_asString();
+        link.m_bIsHD = pDS->fv(9).get_asBool();
+        link.m_strType = pDS->fv(10).get_asString();
+        link.m_strBoxeeType = pDS->fv(11).get_asString();
+        link.m_strCountryCodes = pDS->fv(12).get_asString();
+        link.m_strCountryRel = pDS->fv(13).get_asString();
+        link.m_strOffer = pDS->fv(14).get_asString();
+
+        videoLinks.push_back(link);
+
+        pDS->next();
+      }
+    }
+  }
+  else
+  {
+    return MEDIA_DATABASE_ERROR;
+  }
+  return MEDIA_DATABASE_OK;
 }
 
 int BXVideoDatabase::DropVideoByPath(const std::string& strPath)

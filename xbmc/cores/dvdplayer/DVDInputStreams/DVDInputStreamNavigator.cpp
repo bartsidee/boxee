@@ -414,7 +414,7 @@ int CDVDInputStreamNavigator::ProcessBlock(BYTE* dest_buffer, int* read)
     case DVDNAV_HIGHLIGHT:
       {
         if (m_pDVDPlayer)
-          iNavresult = m_pDVDPlayer->OnDVDNavResult(buf, DVDNAV_HIGHLIGHT);
+        iNavresult = m_pDVDPlayer->OnDVDNavResult(buf, DVDNAV_HIGHLIGHT);
       }
       break;
 
@@ -470,6 +470,7 @@ int CDVDInputStreamNavigator::ProcessBlock(BYTE* dest_buffer, int* read)
 
         dvdnav_cell_change_event_t* cell_change_event = (dvdnav_cell_change_event_t*)buf;
         m_iCellStart = cell_change_event->cell_start; // store cell time as we need that for time later
+        m_iTime      = m_iCellStart / 90;
         m_iTotalTime = (int) (cell_change_event->pgc_length / 90);
         m_icurrentGroupId = cell_change_event->pgN * 1000 + cell_change_event->cellN;
         
@@ -504,7 +505,7 @@ int CDVDInputStreamNavigator::ProcessBlock(BYTE* dest_buffer, int* read)
           break;
         }
         
-        /* if we have any buttons or are not in vts domain we assume we are in meny */
+        /* if we have any buttons or are not in vts domain we assume we are in menu */
         m_bInMenu = pci->hli.hl_gi.hli_ss || (0 == m_dll.dvdnav_is_domain_vts(m_dvdnav));
 
         /* check for any gap in the stream, this is likely a discontinuity */
@@ -840,7 +841,7 @@ std::string CDVDInputStreamNavigator::GetSubtitleStreamLanguage(int iId)
 {
   if (!m_dvdnav) return NULL;
 
-  CStdString strLanguage;  
+  CStdString strLanguage = "Unknown";
 
   subp_attr_t subp_attributes;
   int streamId = ConvertSubtitleStreamId_XBMCToExternal(iId);
@@ -850,8 +851,30 @@ std::string CDVDInputStreamNavigator::GetSubtitleStreamLanguage(int iId)
     if (subp_attributes.type == DVD_SUBPICTURE_TYPE_Language ||
         subp_attributes.type == DVD_SUBPICTURE_TYPE_NotSpecified)
     {
-      if (!g_LangCodeExpander.Lookup(strLanguage, subp_attributes.lang_code)) strLanguage = "Unknown";
+      if (!g_LangCodeExpander.CodeToStr(strLanguage, subp_attributes.lang_code))
+        strLanguage = "Unknown";
 
+      printf("GetSubtitleStreamLanguage %d -> %s\n", subp_attributes.lang_code, strLanguage.c_str());
+    }
+  }
+
+  return strLanguage;
+}
+
+std::string CDVDInputStreamNavigator::GetSubtitleStreamName(int iId)
+{
+  if (!m_dvdnav) return NULL;
+
+  CStdString strLanguage = "";
+
+  subp_attr_t subp_attributes;
+  int streamId = ConvertSubtitleStreamId_XBMCToExternal(iId);
+  if( m_dll.dvdnav_get_stitle_info(m_dvdnav, streamId, &subp_attributes) == DVDNAV_STATUS_OK )
+  {
+
+    if (subp_attributes.type == DVD_SUBPICTURE_TYPE_Language ||
+        subp_attributes.type == DVD_SUBPICTURE_TYPE_NotSpecified)
+    {
       switch (subp_attributes.lang_extension)
       {
         case DVD_SUBPICTURE_LANG_EXT_NotSpecified:
@@ -877,7 +900,7 @@ std::string CDVDInputStreamNavigator::GetSubtitleStreamLanguage(int iId)
     }
     else
     {
-      strLanguage = "Unknown";
+      strLanguage = "";
     }
   }
 
@@ -943,14 +966,31 @@ std::string CDVDInputStreamNavigator::GetAudioStreamLanguage(int iId)
 {
   if (!m_dvdnav) return NULL;
   
-  CStdString strLanguage;
+  CStdString strLanguage = "Unknown";
 
   audio_attr_t audio_attributes;
   int streamId = ConvertAudioStreamId_XBMCToExternal(iId);
   if( m_dll.dvdnav_get_audio_info(m_dvdnav, streamId, &audio_attributes) == DVDNAV_STATUS_OK )
   {
-    if (!g_LangCodeExpander.Lookup(strLanguage, audio_attributes.lang_code)) strLanguage = "Unknown";
+    if (!g_LangCodeExpander.CodeToStr(strLanguage, audio_attributes.lang_code))
+      strLanguage = "Unknown";
 
+    printf("GetAudioStreamLanguage %d -> %s\n", audio_attributes.lang_code, strLanguage.c_str());
+  }
+
+  return strLanguage;
+}
+
+std::string CDVDInputStreamNavigator::GetAudioStreamName(int iId)
+{
+  if (!m_dvdnav) return NULL;
+
+  CStdString strLanguage = "";
+
+  audio_attr_t audio_attributes;
+  int streamId = ConvertAudioStreamId_XBMCToExternal(iId);
+  if( m_dll.dvdnav_get_audio_info(m_dvdnav, streamId, &audio_attributes) == DVDNAV_STATUS_OK )
+  {
     switch( audio_attributes.lang_extension )
     {
       case DVD_AUDIO_LANG_EXT_VisuallyImpaired:

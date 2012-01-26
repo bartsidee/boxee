@@ -69,7 +69,7 @@ long cas(volatile long* pAddr, long expectedVal, long swapVal)
   return prev;
 }
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__mips__)
 
 long cas(volatile long* pAddr, long expectedVal, long swapVal)
 {
@@ -122,7 +122,7 @@ long long cas2(volatile long long* pAddr, long long expectedVal, long long swapV
   return prev; 
 }
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__mips__)
 
 long long cas2(volatile long long* pAddr, long long expectedVal, long long swapVal)
 {
@@ -177,7 +177,7 @@ long AtomicIncrement(volatile long* pAddr)
   return val;
 }
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__mips__)
 
 long AtomicIncrement(volatile long* pAddr)
 {
@@ -255,7 +255,7 @@ long AtomicAdd(volatile long* pAddr, long amount)
   return amount;
 }
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__mips__)
 
 long AtomicAdd(volatile long* pAddr, long amount)
 {
@@ -317,7 +317,7 @@ long AtomicDecrement(volatile long* pAddr)
   return val;
 }
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__mips__)
 
 long AtomicDecrement(volatile long* pAddr)
 {
@@ -381,7 +381,7 @@ long AtomicSubtract(volatile long* pAddr, long amount)
   return amount;
 }
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__mips__)
 
 long AtomicSubtract(volatile long* pAddr, long amount)
 {

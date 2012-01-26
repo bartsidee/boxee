@@ -15,7 +15,7 @@ public:
 
   virtual void Update();
 
-  void SetItem(const CFileItem &item);
+  virtual void SetItem(const CFileItem &item);
 
   virtual void OnMoreInfo() = 0;
   virtual void OnPlay();

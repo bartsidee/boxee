@@ -42,6 +42,8 @@
 #include "control.h"
 #include "pyutil.h"
 
+#include "../../../placement_new.h"
+
 using namespace std;
 
 #ifndef __GNUC__
@@ -83,12 +85,12 @@ namespace PYXBMC
 
     self = (ControlRadioButton*)type->tp_alloc(type, 0);
     if (!self) return NULL;
-    new(&self->strFont) string();    
-    new(&self->strText) string();    
-    new(&self->strTextureFocus) string();    
-    new(&self->strTextureNoFocus) string(); 
-    new(&self->strTextureRadioFocus) string();    
-    new(&self->strTextureRadioNoFocus) string(); 
+   PLACEMENT_NEW(&self->strFont) string();    
+   PLACEMENT_NEW(&self->strText) string();    
+   PLACEMENT_NEW(&self->strTextureFocus) string();    
+   PLACEMENT_NEW(&self->strTextureNoFocus) string(); 
+   PLACEMENT_NEW(&self->strTextureRadioFocus) string();    
+   PLACEMENT_NEW(&self->strTextureRadioNoFocus) string(); 
     
     // set up default values in case they are not supplied
     self->textOffsetX = CONTROL_TEXT_OFFSET_X;

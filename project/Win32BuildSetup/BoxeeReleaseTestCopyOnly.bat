@@ -12,7 +12,7 @@ rem If Winrar isn't installed under standard programs, SET the path for WinRAR's
 rem and finally set the options for the final rar.
 rem -------------------------------------------------------------
 
-set EXE= "..\VS2008Express\XBMC\Release Tests (SDL)\BOXEE.exe"
+set EXE= "..\VS2010Express\XBMC\Release Tests (SDL)\BOXEE.exe"
   
   
 ECHO	 MMMMMMMMMMMMMMMMMMMMMMMNmddhhhhddmNMMMMMMMMMMMMMMMMMMMMMMMMM

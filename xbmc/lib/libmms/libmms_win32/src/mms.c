@@ -1067,16 +1067,16 @@ int static mms_choose_best_streams(mms_io_t *io, mms_t *this) {
       /* forces the asf demuxer to not choose this stream */
       if (this->streams[i].bitrate_pos) {
         if (this->streams[i].bitrate_pos+3 <= ASF_HEADER_LEN) {
-          this->asf_header[this->streams[i].bitrate_pos    ] = 0;
-          this->asf_header[this->streams[i].bitrate_pos + 1] = 0;
-          this->asf_header[this->streams[i].bitrate_pos + 2] = 0;
-          this->asf_header[this->streams[i].bitrate_pos + 3] = 0;
+        this->asf_header[this->streams[i].bitrate_pos    ] = 0;
+        this->asf_header[this->streams[i].bitrate_pos + 1] = 0;
+        this->asf_header[this->streams[i].bitrate_pos + 2] = 0;
+        this->asf_header[this->streams[i].bitrate_pos + 3] = 0;
         } else {
           lprintf("***LOG:*** -- "
                   "libmms: attempt to write beyond asf header limit");
-        }
       }
     }
+  }
   }
 
   if (!send_command (io, this, 0x33, this->num_stream_ids, 

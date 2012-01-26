@@ -61,7 +61,7 @@ public:
   virtual bool OnMessage(CGUIMessage& message);
   virtual void SetFocus(bool bOnOff);
   virtual void AllocResources();
-  virtual void FreeResources();
+  virtual void FreeResources(bool immediately = false);
   virtual void UpdateVisibility(const CGUIListItem *item = NULL);
   virtual void SetVisible(bool bVisible);
 
@@ -84,8 +84,10 @@ public:
   VIEW_TYPE GetType() const { return m_type; };
   const CStdString &GetLabel() const { return m_label; };
   void SetType(VIEW_TYPE type, const CStdString &label);
+  void SetScrollTimeMin(int scrollTimeMin);
 
   virtual bool IsContainer() const { return true; };
+  bool IsScrolling() const;
   CGUIListItemPtr GetListItem(int offset, unsigned int flag = 0) const;
 
   virtual bool GetCondition(int condition, int data) const;
@@ -139,6 +141,7 @@ protected:
   virtual void Reset();
   virtual int GetCurrentPage() const;
   bool InsideLayout(const CGUIListItemLayout *layout, const CPoint &point);
+  CStdString GetCorrectLabel(const CGUIListItemPtr item);
 
   inline float Size() const;
   void MoveToRow(int row);
@@ -153,11 +156,14 @@ protected:
   int m_cursor;
   float m_analogScrollCount;
   unsigned int m_lastHoldTime;
+  float m_itemsPerFrame;
+  CCriticalSection m_actionsLock;
 
   ORIENTATION m_orientation;
   int m_itemsPerPage;
 
   std::vector< CGUIListItemPtr > m_items;
+  std::vector< CGUIListItem*   > m_itemsToLoad;
   std::map< CStdString, CGUIListItemPtr > m_itemsIndex;
   
   typedef std::vector<CGUIListItemPtr> ::iterator iItems;
@@ -179,6 +185,8 @@ protected:
 
   unsigned int m_scrollLastTime;
   int   m_scrollTime;
+  int   m_scrollTimeMin;
+  int   m_currentScrollTime;
   float m_scrollOffset;
 
   VIEW_TYPE m_type;
@@ -194,6 +202,7 @@ protected:
   bool m_hasStaticContent;
   bool m_hasStaticActions;
   std::vector<CGUIActionDescriptor> m_staticActions;
+  std::queue<CAction>  m_deferredActions;
   unsigned int m_staticUpdateTime;
   std::vector<CGUIListItemPtr> m_staticItems;
   bool m_wasReset;  // true if we've received a Reset message until we've rendered once.  Allows
@@ -234,7 +243,7 @@ private:
   CStopWatch m_autoScrollTimer;
   
   bool m_clickAnimationStarted;
-  CAction m_clickAction;
+  CAction m_clickAction;  
   
   CCriticalSection m_itemsLock;
 };

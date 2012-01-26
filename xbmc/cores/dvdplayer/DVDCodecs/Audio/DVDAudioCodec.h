@@ -39,10 +39,18 @@ extern "C" {
     #include <ffmpeg/avcodec.h>
   #endif
 #else
-  #include "avcodec.h"
+  #include "ffmpeg/libavcodec/avcodec.h"
 #endif
 }
 #endif
+
+#include "../../../../utils/PCMRemap.h"
+
+// Possible flags returned from GetFlags()
+#define FFLAG_PASSTHROUGH 0x01
+#define FFLAG_HDFORMAT    0x02
+#define FFLAG_HWDECODE    0x04
+
 
 struct AVStream;
 
@@ -90,6 +98,11 @@ public:
   virtual int GetChannels() = 0;
   
   /*
+   * returns the channel mapping
+   */
+  virtual enum PCMChannels* GetChannelMap() = 0;
+
+  /*
    * returns the samplerate for the decoded audio stream
    */
   virtual int GetSampleRate() = 0;
@@ -114,3 +127,4 @@ public:
    */
   virtual int GetBufferSize() { return 0; }
 };
+

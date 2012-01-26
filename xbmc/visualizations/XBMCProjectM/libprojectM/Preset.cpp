@@ -226,13 +226,13 @@ void Preset::evalPerFrameEquations()
   for (std::map<std::string, InitCond*>::iterator pos = init_cond_tree.begin(); pos != init_cond_tree.end(); ++pos)
   {
     if (pos->second)
-      pos->second->evaluate();
+    pos->second->evaluate();
   }
 
   for (std::vector<PerFrameEqn*>::iterator pos = per_frame_eqn_tree.begin(); pos != per_frame_eqn_tree.end(); ++pos)
   {
     if (*pos)
-      (*pos)->evaluate();
+    (*pos)->evaluate();
   }
 
 }

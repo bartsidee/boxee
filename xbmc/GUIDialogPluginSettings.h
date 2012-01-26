@@ -38,7 +38,7 @@ public:
   void SetSettings(const CBasicSettings &settings);
   CStdString GetValue(const CStdString &strKey);
 
-  static void ShowAndGetInput(CURL& url);
+  static void ShowAndGetInput(CURI& url);
   static void ShowAndGetInput(SScraperInfo& info);
   static void ShowAndGetInput(CStdString& path);
 
@@ -62,7 +62,7 @@ private:
   
   bool SaveSettings(void);
   bool ShowVirtualKeyboard(int iControl);
-  static CURL m_url;
+  static CURI m_url;
   bool TranslateSingleString(const CStdString &strCondition, std::vector<CStdString> &enableVec);
   CBasicSettings m_settings;
   CStdString m_strHeading;

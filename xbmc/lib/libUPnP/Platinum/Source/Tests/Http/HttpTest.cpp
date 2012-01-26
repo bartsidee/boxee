@@ -2,7 +2,7 @@
 |
 |   Platinum - HTTP tests
 |
-| Copyright (c) 2004-2008, Plutinosoft, LLC.
+| Copyright (c) 2004-2010, Plutinosoft, LLC.
 | All rights reserved.
 | http://www.plutinosoft.com
 |
@@ -29,7 +29,7 @@
 | 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 | http://www.gnu.org/licenses/gpl-2.0.html
 |
- ****************************************************************/
+****************************************************************/
 
 /*----------------------------------------------------------------------
 |   includes
@@ -79,7 +79,7 @@ public:
         if (entity == NULL) return NPT_ERROR_INVALID_STATE;
 
         entity->SetContentType(m_MimeType);
-        entity->SetInputStream(m_Body);
+        entity->SetInputStream(m_Body, true);
 
         return NPT_SUCCESS;
     }
@@ -113,7 +113,7 @@ Test1(PLT_TaskManager* task_manager, const char* url, NPT_Size& size)
                 return false;
 
             default:
-                NPT_System::Sleep(NPT_TimeInterval(0, 10000));
+                NPT_System::Sleep(NPT_TimeInterval(.1f));
                 break;
         }
     };
@@ -156,7 +156,7 @@ ReadBody(PLT_Downloader& downloader, NPT_InputStreamReference& stream, NPT_Size&
                  return NPT_ERROR_EOS;
 
              default:
-                 NPT_System::Sleep(NPT_TimeInterval(0, 10000));
+                 NPT_System::Sleep(NPT_TimeInterval(.1f));
                  break;
          }
      }
@@ -201,7 +201,7 @@ Test2(PLT_TaskManager* task_manager, const char* url, NPT_Size& size)
                 return false;
 
             default:
-                NPT_System::Sleep(NPT_TimeInterval(0, 10000));
+                NPT_System::Sleep(NPT_TimeInterval(.1f));
                 break;
         }
     };
@@ -242,7 +242,7 @@ Test3(PLT_TaskManager* task_manager, const char* url, PLT_RingBufferStreamRefere
                 return false;
 
             default:
-                NPT_System::Sleep(NPT_TimeInterval(0, 10000));
+                NPT_System::Sleep(NPT_TimeInterval(.1f));
                 break;
         }
     };
@@ -363,7 +363,7 @@ main(int argc, char** argv)
     PLT_TaskManager task_manager;
 
     /* small delay to let the server start */
-    NPT_System::Sleep(NPT_TimeInterval(1, 0));
+    NPT_System::Sleep(NPT_TimeInterval(1.f));
     
     /* execute tests */
     result = Test1(&task_manager, url.GetChars(), size);
@@ -375,7 +375,7 @@ main(int argc, char** argv)
     result = Test3(&task_manager, custom_url.GetChars(), ringbuffer_stream, size);
     if (!result) return -1;
 
-    NPT_System::Sleep(NPT_TimeInterval(1, 0));
+    NPT_System::Sleep(NPT_TimeInterval(1.f));
 
     http_server.Stop();
     delete handler;

@@ -34,7 +34,7 @@ protected:
 private:
 
   void OnPartListClick();
-
+  
   CFileItemPtr m_videoItem;
   CFileItemList m_fileItems;
   CFileItemList m_partItems;

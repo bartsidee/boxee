@@ -217,7 +217,7 @@ bool CGUIWindowVideoInfo::OnMessage(CGUIMessage& message)
         if (CGUIDialogBoxeeRate::ShowAndGetInput(bLike))
         {
           BoxeeUtils::Rate(m_movieItem.get(), bLike);
-          g_application.m_guiDialogKaiToast.QueueNotification("", "", g_localizeStrings.Get(51034), 5000);
+          g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::ICON_STAR, "", g_localizeStrings.Get(51034), 5000 , KAI_YELLOW_COLOR, KAI_GREY_COLOR);
         }
         return true;
       }

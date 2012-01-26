@@ -13,6 +13,9 @@
 #include "Crc32.h"
 #include "GUIWindowManager.h"
 #include "SpecialProtocol.h"
+#include "TimeUtils.h"
+#include "SingleLock.h"
+#include "guilib/LocalizeStrings.h"
 
 #ifdef _LINUX
 #include "linux/PlatformDefs.h"
@@ -22,19 +25,36 @@ using namespace XFILE;
 using namespace DIRECTORY;
 using namespace BOXEE;
 
+#define REQUEST_WAIT_PERIOD 120000 //2 minutes
+
 CRSSDirectory::CRSSDirectory()
 {
-  m_Finished = false;
+  m_pOpFinishedMutex = SDL_CreateMutex();
+  m_pOpFinishedCond = SDL_CreateCond();
+
   BOXEE::Boxee::GetInstance().AddListener(this);
 }
 
 CRSSDirectory::~CRSSDirectory()
 {
+  // first remove us from the listeners list, then delete the cond and mutex
   BOXEE::Boxee::GetInstance().RemoveListener(this);
+
+  if (m_pOpFinishedCond)
+  {
+    SDL_DestroyCond(m_pOpFinishedCond);
+  }
+
+  if (m_pOpFinishedMutex)
+  {
+    SDL_DestroyMutex(m_pOpFinishedMutex);
+  }
 }
 
 bool CRSSDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items)
 {
+  CLog::Log(LOGDEBUG,"CRSSDirectory::GetDirectory - path [%s]", strPath.c_str());
+
   m_cacheDirectory = DIR_CACHE_ALWAYS;
 
   CStdString strURL = strPath;
@@ -70,7 +90,7 @@ bool CRSSDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
     }
     newURL = newURL + strURL;
   }
-
+  
   // Remove the last slash
   if (CUtil::HasSlashAtEnd(newURL))
   {
@@ -80,14 +100,15 @@ bool CRSSDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
   // Create new thread and run the feed retreival from it
   // In order to allow progress dialog and cancel operation
 
-  m_Finished = false;
   m_strUrl = newURL;
 
   Crc32 crc;
   crc.ComputeFromLowerCase(newURL);
 
   CStdString strLocalFile;
-  strLocalFile.Format("special://temp/rss-%08x-%lu.xml", (unsigned __int32)crc, time(NULL));
+  strLocalFile.Format("special://temp/rss-%08x-%lu.xml", (unsigned __int32)crc, CTimeUtils::GetTimeMS());
+
+  CLog::Log(LOGDEBUG,"CRSSDirectory::GetDirectory - going to load url [%s] to file [%s]", newURL.c_str(), strLocalFile.c_str());
 
   if (!BOXEE::Boxee::GetInstance().AsyncLoadUrl(newURL, _P(strLocalFile), "rss-load", NULL))
   {
@@ -95,14 +116,21 @@ bool CRSSDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items
     return false;
   }
 
-  int nRounds =0;
-  while (!g_application.m_bStop && nRounds < 150 && !m_Finished) // wait max 15 sec for answer
-  {
-    Sleep(100);
-    nRounds++;
-  }
+  SDL_LockMutex(m_pOpFinishedMutex);
+  int result = SDL_CondWaitTimeout(m_pOpFinishedCond,m_pOpFinishedMutex,REQUEST_WAIT_PERIOD);
+  SDL_UnlockMutex(m_pOpFinishedMutex);
 
   m_feed.GetItemList(items);
+
+  if (result != 0)
+  {
+    m_cacheDirectory = DIR_CACHE_NEVER;
+    // set this property so that the UI will handle the timeout
+    CLog::Log(LOGDEBUG,"CRSSDirectory::GetDirectory, loading timed out, path [%s] loaded:%d out of %d", strPath.c_str(), items.Size(),items.GetPageContext().m_itemsPerPage);
+    items.SetProperty("isRequestTimedOut",true);
+  }
+
+  CLog::Log(LOGDEBUG,"CRSSDirectory::GetDirectory - done loading url, got [%d] items (result=[%d])",items.Size(),result);
 
   if (items.Size() == 0)
   {
@@ -139,11 +167,11 @@ void CRSSDirectory::OnFileDownloaded(const std::string &strLocalFile,
 {
   if (strUrl == m_strUrl && CFile::Exists(strLocalFile))
   {
+    CLog::Log(LOGDEBUG,"CRSSDirectory::OnFileDownloaded file download finished successfully (%s)", strUrl.c_str());
     m_feed.Init(strLocalFile, strUrl);
     m_feed.ReadFeed();
     ::DeleteFile(strLocalFile.c_str());
-
-    m_Finished = true;	  
+    SignalOp();
   }
 }
 
@@ -152,8 +180,20 @@ void CRSSDirectory::OnFileDownloadFailed(const std::string &strLocalFile,
                                      const std::string &strTransactionId,
                                      void *pArg)
 {
-  CLog::Log(LOGDEBUG,"file download failed (%s)", strUrl.c_str());
-  m_Finished = true;	  
+  CLog::Log(LOGDEBUG,"CRSSDirectory::OnFileDownloadFailed file download failed (%s)", strUrl.c_str());
+  SignalOp();
+}
+
+void CRSSDirectory::OnForcedStop()
+{
+  SignalOp();
+}
+
+void CRSSDirectory::SignalOp()
+{
+  SDL_LockMutex(m_pOpFinishedMutex);
+  SDL_CondSignal(m_pOpFinishedCond);
+  SDL_UnlockMutex(m_pOpFinishedMutex);
 }
 
 DIR_CACHE_TYPE CRSSDirectory::GetCacheType(const CStdString& strPath) const

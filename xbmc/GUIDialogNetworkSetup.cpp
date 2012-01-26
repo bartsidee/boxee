@@ -155,8 +155,8 @@ void CGUIDialogNetworkSetup::OnServerBrowse()
     basePath = tempPath;
   share.strPath = basePath;
   // don't include the user details in the share name
-  CURL url(share.strPath);
-  url.GetURLWithoutUserDetails(share.strName);
+  CURI url(share.strPath);
+  share.strName = url.GetWithoutUserDetails();
   shares.push_back(share);
   if (CGUIDialogFileBrowser::ShowAndGetDirectory(shares, g_localizeStrings.Get(1015), path))
   {
@@ -263,7 +263,7 @@ void CGUIDialogNetworkSetup::UpdateButtons()
 
 CStdString CGUIDialogNetworkSetup::ConstructPath() const
 {
-  CURL url;
+  CURI url;
   if (m_protocol == NET_PROTOCOL_SMB)
     url.SetProtocol("smb");
   else if (m_protocol == NET_PROTOCOL_XBMSP)
@@ -304,14 +304,14 @@ CStdString CGUIDialogNetworkSetup::ConstructPath() const
   if (!m_path.IsEmpty())
     url.SetFileName(m_path);
   CStdString path;
-  url.GetURL(path);
+  path = url.Get();
   CUtil::AddSlashAtEnd(path);
   return path;
 }
 
 void CGUIDialogNetworkSetup::SetPath(const CStdString &path)
 {
-  CURL url(path);
+  CURI url(path);
   const CStdString &protocol = url.GetProtocol();
   if (protocol == "smb")
     m_protocol = NET_PROTOCOL_SMB;

@@ -41,17 +41,17 @@ static char *args_parse(int argc, char *argv[])
 
     while ((o = getopt(argc, argv, "m23")) != -1) {
         switch (o) {
-            case 'm':
-                cpu_caps |= SWS_CPU_CAPS_MMX;
-                break;
-            case '2':
-                cpu_caps |= SWS_CPU_CAPS_MMX2;
-                break;
-            case '3':
-                cpu_caps |= SWS_CPU_CAPS_3DNOW;
-                break;
-            default:
-                av_log(NULL, AV_LOG_ERROR, "Unknown option %c\n", o);
+        case 'm':
+            cpu_caps |= SWS_CPU_CAPS_MMX;
+            break;
+        case '2':
+            cpu_caps |= SWS_CPU_CAPS_MMX2;
+            break;
+        case '3':
+            cpu_caps |= SWS_CPU_CAPS_3DNOW;
+            break;
+        default:
+            av_log(NULL, AV_LOG_ERROR, "Unknown option %c\n", o);
         }
     }
 
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
     av_log(NULL, AV_LOG_INFO, "CPU capabilities forced to %x\n", cpu_caps);
     sws_rgb2rgb_init(cpu_caps);
 
-    for(funcNum=0; ; funcNum++){
+    for(funcNum=0; ; funcNum++) {
         struct func_info_s {
             int src_bpp;
             int dst_bpp;
@@ -108,7 +108,7 @@ int main(int argc, char **argv)
             FUNC(4, 2, rgb32tobgr15),
             FUNC(4, 2, rgb32tobgr16),
             FUNC(4, 3, rgb32tobgr24),
-            FUNC(4, 4, rgb32tobgr32),
+            FUNC(4, 4, shuffle_bytes_2103), /* rgb32tobgr32 */
             FUNC(0, 0, NULL)
         };
         int width;
@@ -121,13 +121,13 @@ int main(int argc, char **argv)
         av_log(NULL, AV_LOG_INFO,".");
         memset(srcBuffer, srcByte, SIZE);
 
-        for(width=63; width>0; width--){
+        for(width=63; width>0; width--) {
             int dstOffset;
-            for(dstOffset=128; dstOffset<196; dstOffset+=4){
+            for(dstOffset=128; dstOffset<196; dstOffset+=4) {
                 int srcOffset;
                 memset(dstBuffer, dstByte, SIZE);
 
-                for(srcOffset=128; srcOffset<196; srcOffset+=4){
+                for(srcOffset=128; srcOffset<196; srcOffset+=4) {
                     uint8_t *src= srcBuffer+srcOffset;
                     uint8_t *dst= dstBuffer+dstOffset;
                     const char *name=NULL;
@@ -142,24 +142,24 @@ int main(int argc, char **argv)
 
                     if(!srcBpp) break;
 
-                    for(i=0; i<SIZE; i++){
-                        if(srcBuffer[i]!=srcByte){
+                    for(i=0; i<SIZE; i++) {
+                        if(srcBuffer[i]!=srcByte) {
                             av_log(NULL, AV_LOG_INFO, "src damaged at %d w:%d src:%d dst:%d %s\n",
                                    i, width, srcOffset, dstOffset, name);
                             failed=1;
                             break;
                         }
                     }
-                    for(i=0; i<dstOffset; i++){
-                        if(dstBuffer[i]!=dstByte){
+                    for(i=0; i<dstOffset; i++) {
+                        if(dstBuffer[i]!=dstByte) {
                             av_log(NULL, AV_LOG_INFO, "dst damaged at %d w:%d src:%d dst:%d %s\n",
                                    i, width, srcOffset, dstOffset, name);
                             failed=1;
                             break;
                         }
                     }
-                    for(i=dstOffset + width*dstBpp; i<SIZE; i++){
-                        if(dstBuffer[i]!=dstByte){
+                    for(i=dstOffset + width*dstBpp; i<SIZE; i++) {
+                        if(dstBuffer[i]!=dstByte) {
                             av_log(NULL, AV_LOG_INFO, "dst damaged at %d w:%d src:%d dst:%d %s\n",
                                    i, width, srcOffset, dstOffset, name);
                             failed=1;

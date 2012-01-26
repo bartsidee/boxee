@@ -21,26 +21,34 @@
 
 #include <math.h>
 #include "StreamDetails.h"
+#include "Variant.h"
 
-void CStreamDetail::Serialize(CArchive &ar)
+void CStreamDetail::Archive(CArchive &ar)
+{
+  // there's nothing to do here, the type is stored externally and parent isn't stored
+}
+void CStreamDetail::Serialize(CVariant &value)
 {
   // there's nothing to do here, the type is stored externally and parent isn't stored
 }
 
 CStreamDetailVideo::CStreamDetailVideo() :
-  CStreamDetail(CStreamDetail::VIDEO), m_iWidth(0), m_iHeight(0), m_fAspect(0.0)
+  CStreamDetail(CStreamDetail::VIDEO), m_iWidth(0), m_iHeight(0), m_fAspect(0.0), m_iDuration(0)
 {
 }
 
-void CStreamDetailVideo::Serialize(CArchive& ar)
+void CStreamDetailVideo::Archive(CArchive& ar)
 {
-  CStreamDetail::Serialize(ar);
+  CStreamDetail::Archive(ar);
   if (ar.IsStoring())
   {
     ar << m_strCodec;
     ar << m_fAspect;
     ar << m_iHeight;
     ar << m_iWidth;
+
+    if (m_nVersion > 2)
+      ar << m_iDuration;
   }
   else
   {
@@ -48,7 +56,18 @@ void CStreamDetailVideo::Serialize(CArchive& ar)
     ar >> m_fAspect;
     ar >> m_iHeight;
     ar >> m_iWidth;
+
+    if (m_nVersion > 2)
+      ar >> m_iDuration;
   }
+}
+void CStreamDetailVideo::Serialize(CVariant& value)
+{
+  value["codec"] = m_strCodec;
+  value["aspect"] = m_fAspect;
+  value["height"] = m_iHeight;
+  value["width"] = m_iWidth;
+  value["duration"] = m_iDuration;
 }
 
 bool CStreamDetailVideo::IsWorseThan(CStreamDetail *that)
@@ -66,9 +85,9 @@ CStreamDetailAudio::CStreamDetailAudio() :
 {
 }
 
-void CStreamDetailAudio::Serialize(CArchive& ar)
+void CStreamDetailAudio::Archive(CArchive& ar)
 {
-  CStreamDetail::Serialize(ar);
+  CStreamDetail::Archive(ar);
   if (ar.IsStoring())
   {
     ar << m_strCodec;
@@ -82,9 +101,22 @@ void CStreamDetailAudio::Serialize(CArchive& ar)
     ar >> m_iChannels;
   }
 }
+void CStreamDetailAudio::Serialize(CVariant& value)
+{
+  value["codec"] = m_strCodec;
+  value["language"] = m_strLanguage;
+  value["channels"] = m_iChannels;
+}
 
 int CStreamDetailAudio::GetCodecPriority() const
 {
+  // technically, truehd, dtsma, and flac are equivalently good (they're all lossless)
+  if (m_strCodec == "flac")
+    return 6;
+  if (m_strCodec == "dtsma")
+    return 5;
+  if (m_strCodec == "truehd")
+    return 4;
   if (m_strCodec == "eac3")
     return 3;
   if (m_strCodec == "dca")
@@ -106,7 +138,7 @@ bool CStreamDetailAudio::IsWorseThan(CStreamDetail *that)
   if (m_iChannels > sda->m_iChannels)
     return false;
 
-  // In case of a tie, eac3 > dts > ac3 > all else.
+  // In case of a tie, flac > eac3 > dts > ac3 > all else.
   return sda->GetCodecPriority() > GetCodecPriority();
 }
 
@@ -115,9 +147,9 @@ CStreamDetailSubtitle::CStreamDetailSubtitle() :
 {
 }
 
-void CStreamDetailSubtitle::Serialize(CArchive& ar)
+void CStreamDetailSubtitle::Archive(CArchive& ar)
 {
-  CStreamDetail::Serialize(ar);
+  CStreamDetail::Archive(ar);
   if (ar.IsStoring())
   {
     ar << m_strLanguage;
@@ -126,6 +158,10 @@ void CStreamDetailSubtitle::Serialize(CArchive& ar)
   {
     ar >> m_strLanguage;
   }
+}
+void CStreamDetailSubtitle::Serialize(CVariant& value)
+{
+  value["language"] = m_strLanguage;
 }
 
 bool CStreamDetailSubtitle::IsWorseThan(CStreamDetail *that)
@@ -152,7 +188,7 @@ CStreamDetails& CStreamDetails::operator=(const CStreamDetails &that)
     std::vector<CStreamDetail *>::const_iterator iter;
     for (iter = that.m_vecItems.begin(); iter != that.m_vecItems.end(); iter++)
     {
-      switch ((*iter)->m_eType) 
+      switch ((*iter)->m_eType)
       {
       case CStreamDetail::VIDEO:
         AddStream(new CStreamDetailVideo((const CStreamDetailVideo &)(**iter)));
@@ -165,7 +201,7 @@ CStreamDetails& CStreamDetails::operator=(const CStreamDetails &that)
         break;
       }
     }
-  
+
     DetermineBestStreams();
   }  /* if this != that */
 
@@ -219,7 +255,7 @@ int CStreamDetails::GetSubtitleStreamCount(void) const
   return GetStreamCount(CStreamDetail::SUBTITLE);
 }
 
-CStreamDetails::CStreamDetails(const CStreamDetails &that)
+CStreamDetails::CStreamDetails(const CStreamDetails &that) : IArchivable(that), ISerializable(that)
 {
   *this = that;
 }
@@ -249,13 +285,13 @@ const CStreamDetail* CStreamDetails::GetNthStream(CStreamDetail::StreamType type
     switch (type)
     {
     case CStreamDetail::VIDEO:
-      return m_pBestVideo; 
+      return m_pBestVideo;
       break;
     case CStreamDetail::AUDIO:
-      return m_pBestAudio; 
+      return m_pBestAudio;
       break;
     case CStreamDetail::SUBTITLE:
-      return m_pBestSubtitle; 
+      return m_pBestSubtitle;
       break;
     default:
       return NULL;
@@ -311,6 +347,15 @@ int CStreamDetails::GetVideoHeight(int idx) const
     return 0;
 }
 
+int CStreamDetails::GetVideoDuration(int idx) const
+{
+  CStreamDetailVideo *item = (CStreamDetailVideo *)GetNthStream(CStreamDetail::VIDEO, idx);
+  if (item)
+    return item->m_iDuration;
+  else
+    return 0;
+}
+
 CStdString CStreamDetails::GetAudioCodec(int idx) const
 {
   CStreamDetailAudio *item = (CStreamDetailAudio *)GetNthStream(CStreamDetail::AUDIO, idx);
@@ -347,7 +392,7 @@ CStdString CStreamDetails::GetSubtitleLanguage(int idx) const
     return "";
 }
 
-void CStreamDetails::Serialize(CArchive& ar)
+void CStreamDetails::Archive(CArchive& ar)
 {
   if (ar.IsStoring())
   {
@@ -356,6 +401,7 @@ void CStreamDetails::Serialize(CArchive& ar)
     std::vector<CStreamDetail *>::const_iterator iter;
     for (iter = m_vecItems.begin(); iter != m_vecItems.end(); iter++)
     {
+      (*iter)->m_nVersion = this->m_nVersion;
       // the type goes before the actual item.  When loading we need
       // to know the type before we can construct an instance to serialize
       ar << (int)(*iter)->m_eType;
@@ -376,10 +422,35 @@ void CStreamDetails::Serialize(CArchive& ar)
       ar >> type;
       p = NewStream(CStreamDetail::StreamType(type));
       if (p)
+      {
+        p->m_nVersion = this->m_nVersion;
         ar >> (*p);
+      }
     }
 
     DetermineBestStreams();
+  }
+}
+void CStreamDetails::Serialize(CVariant& value)
+{
+  std::vector<CStreamDetail *>::const_iterator iter;
+  CVariant v;
+  for (iter = m_vecItems.begin(); iter != m_vecItems.end(); iter++)
+  {
+    v.clear();
+    (*iter)->Serialize(v);
+    switch ((*iter)->m_eType)
+    {
+    case CStreamDetail::AUDIO:
+      value["audio"].push_back(v);
+      break;
+    case CStreamDetail::VIDEO:
+      value["video"].push_back(v);
+      break;
+    case CStreamDetail::SUBTITLE:
+      value["subtitle"].push_back(v);
+      break;
+    }
   }
 }
 
@@ -396,13 +467,13 @@ void CStreamDetails::DetermineBestStreams(void)
     switch ((*iter)->m_eType)
     {
     case CStreamDetail::VIDEO:
-      champion = (CStreamDetail **)&m_pBestVideo; 
+      champion = (CStreamDetail **)&m_pBestVideo;
       break;
     case CStreamDetail::AUDIO:
-      champion = (CStreamDetail **)&m_pBestAudio; 
+      champion = (CStreamDetail **)&m_pBestAudio;
       break;
     case CStreamDetail::SUBTITLE:
-      champion = (CStreamDetail **)&m_pBestSubtitle; 
+      champion = (CStreamDetail **)&m_pBestSubtitle;
       break;
     default:
       champion = NULL;
@@ -418,21 +489,24 @@ void CStreamDetails::DetermineBestStreams(void)
 
 const float VIDEOASPECT_EPSILON = 0.025f;
 
-CStdString CStreamDetails::VideoWidthToResolutionDescription(int iWidth)
+CStdString CStreamDetails::VideoDimsToResolutionDescription(int iWidth, int iHeight)
 {
-  if (iWidth == 0)
+  if (iWidth == 0 || iHeight == 0)
     return "";
 
-  else if (iWidth < 721)
+  else if (iWidth <= 720 && iHeight <= 480)
     return "480";
-  // 960x540
-  else if (iWidth < 961)
+  // 720x576 (PAL) (768 when rescaled for square pixels)
+  else if (iWidth <= 768 && iHeight <= 576)
+    return "576";
+  // 960x540 (sometimes 544 which is multiple of 16)
+  else if (iWidth <= 960 && iHeight <= 544)
     return "540";
   // 1280x720
-  else if (iWidth < 1281)
+  else if (iWidth <= 1280 && iHeight <= 720)
     return "720";
   // 1920x1080
-  else 
+  else
     return "1080";
 }
 

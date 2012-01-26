@@ -44,6 +44,7 @@
 #else
 #include <sys/sysinfo.h>
 #include <inttypes.h>
+#include <sys/syscall.h>
 #endif
 #include <sys/time.h>
 #include <time.h>
@@ -114,6 +115,10 @@
 #define INSTALL_PATH    "/usr/share/xbmc"
 #endif
 
+#ifndef gettid
+#define gettid() syscall(__NR_gettid)
+#endif
+
 #define CONST   const
 #define FALSE   0
 #define TRUE    1
@@ -136,7 +141,7 @@
 #define __int64   long long
 #define __uint64  unsigned long long
 
-#if defined(__x86_64__) || defined(__powerpc__) || defined(__ppc__) || defined(__arm__) // should this be powerpc64 only?
+#if defined(__x86_64__) || defined(__powerpc__) || defined(__ppc__) || defined(__arm__) || defined(__mips__) // should this be powerpc64 only?
 #define __stdcall
 #else /* !__x86_64__ */
 #define __stdcall   __attribute__((__stdcall__))
@@ -588,7 +593,7 @@ WORD    wBitsPerSample;
 WORD    cbSize;
 } __attribute__((__packed__)) WAVEFORMATEX, *PWAVEFORMATEX, *LPWAVEFORMATEX;
 
-#define WAVE_FORMAT_PCM 0x0001
+#define WAVE_FORMAT_PCM               0x0001
 #define WAVE_FORMAT_EXTENSIBLE        0xFFFE
 
 #define SPEAKER_FRONT_LEFT            0x00001

@@ -24,14 +24,12 @@
 #pragma once
 #include "OverlayRenderer.h"
 
-#include <GL/glew.h>
-
 class CDVDOverlay;
 class CDVDOverlayImage;
 class CDVDOverlaySpu;
 class CDVDOverlaySSA;
 
-#ifdef HAS_GL
+#if defined(HAS_GL) || defined(HAS_GLES)
 
 namespace OVERLAY {
 
@@ -45,9 +43,22 @@ namespace OVERLAY {
 
     void Render(SRenderState& state);
 
+    struct VERTEX
+    {
+      GLfloat x, y, z;
+      GLfloat u, v;
+    };
+
     GLuint m_texture;
     float  m_u;
     float  m_v;
+
+    GLint m_uniMatModelView;
+    GLint m_uniMatProjection;
+
+    GLint m_uniTexture;
+    GLint m_attribVertex;
+    GLint m_attribTextureCoord;
   };
 
   class COverlayGlyphGL
@@ -60,18 +71,26 @@ namespace OVERLAY {
    void Render(SRenderState& state);
 
     struct VERTEX
-    {
-       GLfloat u, v;
-       GLubyte r, g, b, a;    
-       GLfloat x, y, z;
-    };
+   {
+     GLfloat u, v;
+     GLubyte r, g, b, a;    
+     GLfloat x, y, z;
+   };
 
    VERTEX* m_vertex;
-   int     m_count;
+   int      m_count;
 
    GLuint m_texture;
    float  m_u;
    float  m_v;
+
+   GLint m_uniMatModelView;
+   GLint m_uniMatProjection;
+
+   GLint m_uniTexture;
+   GLint m_attribVertex;
+   GLint m_attribTextureCoord;
+   GLint m_attribColor;
   }; 
 
 }

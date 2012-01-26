@@ -20,12 +20,13 @@
  */
 
 /**
- * @file libavcodec/wnv1.c
+ * @file
  * Winnov WNV1 codec.
  */
 
 #include "avcodec.h"
 #include "get_bits.h"
+#include "libavutil/common.h"
 
 
 typedef struct WNV1Context{
@@ -51,7 +52,7 @@ static inline int wnv1_get_code(WNV1Context *w, int base_value)
     int v = get_vlc2(&w->gb, code_vlc.table, CODE_VLC_BITS, 1);
 
     if(v==15)
-        return ff_reverse[ get_bits(&w->gb, 8 - w->shift) ];
+        return av_reverse[ get_bits(&w->gb, 8 - w->shift) ];
     else
         return base_value + ((v - 7)<<w->shift);
 }
@@ -87,7 +88,7 @@ static int decode_frame(AVCodecContext *avctx,
     p->key_frame = 1;
 
     for(i=8; i<buf_size; i++)
-        rbuf[i]= ff_reverse[ buf[i] ];
+        rbuf[i]= av_reverse[ buf[i] ];
     init_get_bits(&l->gb, rbuf+8, (buf_size-8)*8);
 
     if (buf[2] >> 4 == 6)
@@ -136,21 +137,31 @@ static av_cold int decode_init(AVCodecContext *avctx){
 
     code_vlc.table = code_table;
     code_vlc.table_allocated = 1 << CODE_VLC_BITS;
-        init_vlc(&code_vlc, CODE_VLC_BITS, 16,
-                    &code_tab[0][1], 4, 2,
+    init_vlc(&code_vlc, CODE_VLC_BITS, 16,
+             &code_tab[0][1], 4, 2,
              &code_tab[0][0], 4, 2, INIT_VLC_USE_NEW_STATIC);
 
     return 0;
 }
 
-AVCodec wnv1_decoder = {
+static av_cold int decode_end(AVCodecContext *avctx){
+    WNV1Context * const l = avctx->priv_data;
+    AVFrame *pic = &l->pic;
+
+    if (pic->data[0])
+        avctx->release_buffer(avctx, pic);
+
+    return 0;
+}
+
+AVCodec ff_wnv1_decoder = {
     "wnv1",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_WNV1,
     sizeof(WNV1Context),
     decode_init,
     NULL,
-    NULL,
+    decode_end,
     decode_frame,
     CODEC_CAP_DR1,
     .long_name = NULL_IF_CONFIG_SMALL("Winnov WNV1"),

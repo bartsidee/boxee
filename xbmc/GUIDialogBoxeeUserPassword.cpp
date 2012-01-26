@@ -11,13 +11,14 @@
 #define CONTROL_OK        9004
 #define CONTROL_CANCEL    9005
 
-CGUIDialogBoxeeUserPassword::CGUIDialogBoxeeUserPassword(void)
-    : CGUIDialog(WINDOW_DIALOG_BOXEE_USER_PASSWORD, "boxee_user_password.xml")
+CGUIDialogBoxeeUserPassword::CGUIDialogBoxeeUserPassword(void) : CGUIDialog(WINDOW_DIALOG_BOXEE_USER_PASSWORD, "boxee_user_password.xml")
 {
+
 }
 
 CGUIDialogBoxeeUserPassword::~CGUIDialogBoxeeUserPassword(void)
 {
+
 }
 
 bool CGUIDialogBoxeeUserPassword::OnAction(const CAction &action)
@@ -48,7 +49,7 @@ bool CGUIDialogBoxeeUserPassword::OnMessage(CGUIMessage& message)
 
     if(senderId == CONTROL_OK)
     {
-      CLog::Log(LOGDEBUG,"CGUIWindowBoxeeMediaSourceAddFolder::OnMessage - Enter GUI_MSG_CLICKED case with [SenderId=CONTROL_OK] (msmk)");
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeUserPassword::OnMessage - GUI_MSG_CLICKED - case [CONTROL_OK] (msmk)");
 
       CGUIEditControl* textButton = (CGUIEditControl*) GetControl(CONTROL_USER);
       m_user = textButton->GetLabel2();
@@ -61,7 +62,7 @@ bool CGUIDialogBoxeeUserPassword::OnMessage(CGUIMessage& message)
     }
     else if(senderId == CONTROL_CANCEL)
     {
-      CLog::Log(LOGDEBUG,"CGUIWindowBoxeeMediaSourceAddFolder::OnMessage - Enter GUI_MSG_CLICKED case with [SenderId=CONTROL_CANCEL] (msmk)");
+      CLog::Log(LOGDEBUG,"CGUIDialogBoxeeUserPassword::OnMessage - GUI_MSG_CLICKED - case [CONTROL_CANCEL] (msmk)");
 
       m_IsConfirmed = false;
       Close();
@@ -77,7 +78,25 @@ bool CGUIDialogBoxeeUserPassword::OnMessage(CGUIMessage& message)
 void CGUIDialogBoxeeUserPassword::OnInitWindow()
 {
   CGUIWindow::OnInitWindow();
-}  
+
+  if(!m_password.IsEmpty())
+  {
+    CGUIEditControl* textButton = (CGUIEditControl*)GetControl(CONTROL_PASSWORD);
+    if (textButton)
+    {
+      textButton->SetLabel2(m_password);
+    }
+  }
+  if(!m_user.IsEmpty())
+  {
+    CGUIEditControl* textButton = (CGUIEditControl*)GetControl(CONTROL_USER);
+    if (textButton)
+    {
+      textButton->SetLabel2(m_user);
+    }
+  }
+}
+
 
 bool CGUIDialogBoxeeUserPassword::IsConfirmed()
 {
@@ -86,17 +105,29 @@ bool CGUIDialogBoxeeUserPassword::IsConfirmed()
 
 bool CGUIDialogBoxeeUserPassword::ShowAndGetUserAndPassword(CStdString& strUser, CStdString& strPassword, const CStdString& strURL)
 {
-  CGUIDialogBoxeeUserPassword *dialog = (CGUIDialogBoxeeUserPassword *)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_USER_PASSWORD);
-  if (!dialog) return false;
+  CGUIDialogBoxeeUserPassword* dialog = (CGUIDialogBoxeeUserPassword*)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_USER_PASSWORD);
+  if (!dialog)
+  {
+    CLog::Log(LOGERROR,"CGUIDialogBoxeeUserPassword::ShowAndGetUserAndPassword - FAILED to get dialog");
+    return false;
+  }
+
   dialog->SetUser(strUser);
   dialog->SetPassword(strPassword);
   dialog->DoModal();
+
+  bool retVal = false;
+
   if (dialog->IsConfirmed())
   {
     strUser = dialog->GetUser();
     strPassword = dialog->GetPassword();
-    return true;
+    retVal = true;
   }
 
-  return false;
+  // reset
+  dialog->SetUser("");
+  dialog->SetPassword("");
+
+  return retVal;
 }

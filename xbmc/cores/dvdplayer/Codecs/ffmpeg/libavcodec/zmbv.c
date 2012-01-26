@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/zmbv.c
+ * @file
  * Zip Motion Blocks Video decoder
  */
 
@@ -397,7 +397,6 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
     const uint8_t *buf = avpkt->data;
     int buf_size = avpkt->size;
     ZmbvContext * const c = avctx->priv_data;
-    uint8_t *outptr;
     int zret = Z_OK; // Zlib return code
     int len = buf_size;
     int hi_ver, lo_ver;
@@ -411,8 +410,6 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return -1;
     }
-
-    outptr = c->pic.data[0]; // Output image pointer
 
     /* parse header */
     c->flags = buf[0];
@@ -434,6 +431,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
         }
         if(c->bw == 0 || c->bh == 0) {
             av_log(avctx, AV_LOG_ERROR, "Unsupported block size %ix%i\n", c->bw, c->bh);
+            return -1;
         }
         if(c->comp != 0 && c->comp != 1) {
             av_log(avctx, AV_LOG_ERROR, "Unsupported compression type %i\n", c->comp);
@@ -602,9 +600,6 @@ static av_cold int decode_init(AVCodecContext *avctx)
     c->width = avctx->width;
     c->height = avctx->height;
 
-    if (avcodec_check_dimensions(avctx, avctx->width, avctx->height) < 0) {
-        return 1;
-    }
     c->bpp = avctx->bits_per_coded_sample;
 
     // Needed if zlib unused or init aborted before inflateInit
@@ -655,9 +650,9 @@ static av_cold int decode_end(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec zmbv_decoder = {
+AVCodec ff_zmbv_decoder = {
     "zmbv",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_ZMBV,
     sizeof(ZmbvContext),
     decode_init,

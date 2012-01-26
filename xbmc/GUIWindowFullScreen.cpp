@@ -49,10 +49,24 @@
 #include "utils/SingleLock.h"
 #include "utils/log.h"
 #include "utils/TimeUtils.h"
+#include "GUIDialogBoxeeExitVideo.h"
+#include "Builtins.h"
 
 #include <stdio.h>
 
-#include "GUIDialogBoxeeVideoCtx.h"
+#include "GUIDialogBoxeeSeekBar.h"
+
+#ifdef HAS_INTEL_SMD
+#include "IntelSMDGlobals.h"
+#endif
+
+#ifdef HAS_EMBEDDED
+#include "ItemLoader.h"
+#endif
+
+#ifndef DVD_NOPTS_VALUE
+#define DVD_NOPTS_VALUE    (-1LL<<52) // should be possible to represent in both double and __int64
+#endif
 
 #define BLUE_BAR                          0
 #define LABEL_ROW1                       10
@@ -102,11 +116,18 @@
 //Progressbar used for buffering status and after seeking
 #define CONTROL_PROGRESS                 23
 
+#define CONTROL_PAUSE_INDICATOR          9000
+
+#define SHOW_SUDIO_CODEC_LOGO_IN_MS      5000
+
 #ifdef __APPLE__
 static CLinuxResourceCounter m_resourceCounter;
 #endif
 
 static color_t color[6] = { 0xFFFFFF00, 0xFFFFFFFF, 0xFF0099FF, 0xFF00FF00, 0xFFCCFF00, 0xFF00FFFF };
+
+static CRect flashSrc;
+static CRect flashDst;
 
 CGUIWindowFullScreen::CGUIWindowFullScreen(void)
     : CGUIWindow(WINDOW_FULLSCREEN_VIDEO, "VideoFullScreen.xml")
@@ -152,15 +173,28 @@ void CGUIWindowFullScreen::PreloadDialog(unsigned int windowID)
   }
 }
 
-void CGUIWindowFullScreen::OnDeinitWindow(int nextWindow) {
+void CGUIWindowFullScreen::OnDeinitWindow(int nextWindow)
+{
   g_windowManager.CloseDialogs(true);
-}; 
+}
 
 void CGUIWindowFullScreen::UnloadDialog(unsigned int windowID)
 {
   CGUIWindow *pWindow = g_windowManager.GetWindow(windowID);
   if (pWindow) {
     pWindow->FreeResources(pWindow->GetLoadOnDemand());
+  }
+}
+
+void CGUIWindowFullScreen::ShowOSD(CSeekDirection::SeekDirectionEnums seekDirection)
+{
+  CGUIDialogBoxeeVideoCtx* pDlgInfo = (CGUIDialogBoxeeVideoCtx*)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_VIDEO_CTX);
+  const CFileItem &item = g_application.CurrentFileItem();
+  if (pDlgInfo)
+  {
+    pDlgInfo->SetItem(item);
+    pDlgInfo->SetSeekDirectionOnOpen(seekDirection);
+    pDlgInfo->DoModal();
   }
 }
 
@@ -172,6 +206,8 @@ void CGUIWindowFullScreen::AllocResources(bool forceLoad)
   PreloadDialog(WINDOW_DIALOG_VIDEO_OSD_SETTINGS);
   PreloadDialog(WINDOW_DIALOG_AUDIO_OSD_SETTINGS);
   PreloadDialog(WINDOW_DIALOG_SUBTITLE_OSD_SETTINGS);
+  PreloadDialog(WINDOW_DIALOG_BOXEE_VIDEO_CTX);
+
   // No need to preload these here, as they're preloaded by our app
 //  PreloadDialog(WINDOW_DIALOG_SEEK_BAR);
 //  PreloadDialog(WINDOW_DIALOG_VOLUME_BAR);
@@ -185,6 +221,8 @@ void CGUIWindowFullScreen::FreeResources(bool forceUnload)
   UnloadDialog(WINDOW_OSD);
   UnloadDialog(WINDOW_DIALOG_VIDEO_OSD_SETTINGS);
   UnloadDialog(WINDOW_DIALOG_AUDIO_OSD_SETTINGS);
+  UnloadDialog(WINDOW_DIALOG_BOXEE_VIDEO_CTX);
+
   // No need to unload these here, as they're preloaded by our app
 //  UnloadDialog(WINDOW_DIALOG_SEEK_BAR);
 //  UnloadDialog(WINDOW_DIALOG_VOLUME_BAR);
@@ -199,43 +237,95 @@ bool CGUIWindowFullScreen::OnAction(const CAction &action)
   
   switch (action.id)
   {
+  case ACTION_MOVE_UP:
+  case ACTION_MOVE_DOWN:
   case ACTION_SHOW_INFO:
-    {
-//Boxee
-      CGUIDialogBoxeeVideoCtx* pDlgInfo = (CGUIDialogBoxeeVideoCtx*)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_VIDEO_CTX);
-      const CFileItem &item = g_application.CurrentFileItem();
-      if (pDlgInfo)
-      {
-        pDlgInfo->SetItem(item);
-        pDlgInfo->DoModal();
-      }
-      return true;
-//end Boxee
-    }
-  case ACTION_PARENT_DIR:
-    {
-      g_windowManager.PreviousWindow();
-      return true;
-    }
-    break;
-  case ACTION_SHOW_GUI:
-    {
-      if (g_guiSettings.GetBool("myvideos.pausewhenexit"))
-      {
-        if ((g_application.m_pPlayer != NULL) && (!(g_application.m_pPlayer)->IsPaused()))
-        {
-          (g_application.m_pPlayer)->Pause();
-        }
-      }
-      
-      // switch back to the menu
-      OutputDebugString("Switching to GUI\n");
-      g_windowManager.PreviousWindow();
-      OutputDebugString("Now in GUI\n");
-      return true;
-    }
-    break;
+  {
+    //as requested in http://jira.boxee.tv/browse/BOXEE-9125 -- begin
+    ShowOSD();
+    return true;
+    //as requested in http://jira.boxee.tv/browse/BOXEE-9125 -- end
 
+//Boxee
+    /*bool showOSD = g_application.CurrentFileItem().GetPropertyBOOL("browsercansetfullscreen");
+    if (showOSD)
+    { //if we're in the browser, show the OSD
+      ShowOSD();
+      return true;
+    }
+    else*/
+
+    /* //un comment to revert http://jira.boxee.tv/browse/BOXEE-9125 -- begin
+    { //if we're in playback, act as play/pause
+      CLog::Log(LOGDEBUG,"CGUIWindowFullScreen::OnAction - TogglePlayPause (ev)");
+      g_application.TogglePlayPause();
+
+      //if (g_application.IsPaused())
+        //ShowOSD();
+
+      return true;
+    }*/ //un comment to revert http://jira.boxee.tv/browse/BOXEE-9125 -- end
+//end Boxee
+  }
+  break;
+  case ACTION_PARENT_DIR:
+  case ACTION_SHOW_GUI:
+  {
+    //show exit dialog if browser is active
+    /*bool showExitDialog = g_application.CurrentFileItem().GetPropertyBOOL("browsercansetfullscreen");
+    CLog::Log(LOGDEBUG,"CGUIWindowFullScreen::OnAction - [browsercansetfullscreen=%d] (ev)",g_application.CurrentFileItem().GetPropertyBOOL("browsercansetfullscreen"));
+    if (showExitDialog)
+    {
+      if (!CGUIDialogBoxeeExitVideo::ShowAndGetInput())
+      {
+        CLog::Log(LOGDEBUG,"CGUIWindowFullScreen::OnAction - Call to CGUIDialogBoxeeExitVideo return FALSE. return to video. (ev)");
+        return true;
+      }
+
+      CLog::Log(LOGDEBUG,"CGUIWindowFullScreen::OnAction - Call to CGUIDialogBoxeeExitVideo return TRUE. Going to stop the video (ev)");
+      g_application.StopPlaying();
+      // switch back to the menu
+      g_windowManager.PreviousWindow();
+      return true;
+    }
+    else*//*  //uncomment the code below to revert http://jira.boxee.tv/browse/BOXEE-9125 -- begin
+    {
+      CLog::Log(LOGDEBUG,"CGUIWindowFullScreen::OnAction - Showing OSD. (ev)");
+      ShowOSD();
+      return true;
+              //uncomment the code below to revert http://jira.boxee.tv/browse/BOXEE-9125 -- begin
+    }*/
+
+    //as requested in http://jira.boxee.tv/browse/BOXEE-9125 -- begin
+    bool showExitDialog = (g_application.CurrentFileItem().GetPropertyBOOL("browsercansetfullscreen") || g_guiSettings.GetBool("myvideos.showmessagewhenexit"));
+    CLog::Log(LOGDEBUG,"CGUIWindowFullScreen::OnAction - [showExitDialog=%d]. [browsercansetfullscreen=%d][showmessagewhenexit=%d] (ev)",showExitDialog,g_application.CurrentFileItem().GetPropertyBOOL("browsercansetfullscreen"),g_guiSettings.GetBool("myvideos.showmessagewhenexit"));
+
+    CLog::Log(LOGDEBUG,"CGUIWindowFullScreen::OnAction - [showExitDialog=%d]. [browsercansetfullscreen=%d] (ev)",showExitDialog,g_application.CurrentFileItem().GetPropertyBOOL("browsercansetfullscreen"));
+
+    if (showExitDialog)
+    {
+      if (!CGUIDialogBoxeeExitVideo::ShowAndGetInput())
+      {
+        CLog::Log(LOGDEBUG,"CGUIWindowFullScreen::OnAction - Call to CGUIDialogBoxeeExitVideo return FALSE. return to video. [ShowMessageWhenExit=%d] (ev)",g_guiSettings.GetBool("myvideos.showmessagewhenexit"));
+        return true;
+      }
+
+      CLog::Log(LOGDEBUG,"CGUIWindowFullScreen::OnAction - Call to CGUIDialogBoxeeExitVideo return TRUE. [ShowMessageWhenExit=%d] (ev)",g_guiSettings.GetBool("myvideos.showmessagewhenexit"));
+    }
+    else
+    {
+      CLog::Log(LOGDEBUG,"CGUIWindowFullScreen::OnAction - Not showing exit dialog. [ShowMessageWhenExit=%d] (ev)",g_guiSettings.GetBool("myvideos.showmessagewhenexit"));
+    }
+
+    CLog::Log(LOGDEBUG,"CGUIWindowFullScreen::OnAction - Going to stop the video (ev)");
+    g_application.StopPlaying();
+
+    // switch back to the menu
+    g_windowManager.PreviousWindow();
+    return true;
+    //as requested in http://jira.boxee.tv/browse/BOXEE-9125 -- end
+  }
+  break;
   case ACTION_STEP_BACK:
     Seek(false, false);
     return true;
@@ -501,6 +591,10 @@ bool CGUIWindowFullScreen::OnMessage(CGUIMessage& message)
       // switch resolution
       g_graphicsContext.SetFullScreenVideo(true);
 
+#ifdef HAS_EMBEDDED
+      g_Windowing.ClearBuffers(0, 0, 0, 1.0);
+#endif
+
 #ifdef HAS_VIDEO_PLAYBACK
       // make sure renderer is uptospeed
       g_renderManager.Update(false);
@@ -515,13 +609,23 @@ bool CGUIWindowFullScreen::OnMessage(CGUIMessage& message)
         CSingleLock lock (m_fontLock);
 
         CStdString fontPath = "special://xbmc/media/Fonts/";
+#ifndef HAS_EMBEDDED
         fontPath += g_guiSettings.GetString("subtitles.font");
+#else
+        CStdString charset = g_guiSettings.GetString("subtitles.charset");
+        if(charset.IsEmpty() || charset == "DEFAULT")
+        {
+          charset = "CP1250";
+        }
+        fontPath += g_charsetConverter.getSubtitleFontByCharsetName(charset);
+#endif
 
         // We scale based on PAL4x3 - this at least ensures all sizing is constant across resolutions.
         // it doesn't preserve aspect, however, so make sure we choose aspect as 1/scalingpixelratio
-        g_graphicsContext.SetScalingResolution(RES_PAL_4x3, 0, 0, true);
+        g_graphicsContext.SetSkinResolution(RES_PAL_4x3);
         float aspect = 1.0f / g_graphicsContext.GetScalingPixelRatio();
         CGUIFont *subFont = g_fontManager.LoadTTF("__subtitle__", fontPath, color[g_guiSettings.GetInt("subtitles.color")], 0, g_guiSettings.GetInt("subtitles.height"), g_guiSettings.GetInt("subtitles.style"), 1.0f, aspect, RES_PAL_4x3);
+        g_graphicsContext.SetSkinResolution(RES_HDTV_720p);
         if (!subFont)
           CLog::Log(LOGERROR, "CGUIWindowFullScreen::OnMessage(WINDOW_INIT) - Unable to load subtitle font");
         else
@@ -543,6 +647,8 @@ bool CGUIWindowFullScreen::OnMessage(CGUIMessage& message)
       pDialog = (CGUIDialog *)g_windowManager.GetWindow(WINDOW_OSD);
       if (pDialog) pDialog->Close(true);
       pDialog = (CGUIDialog *)g_windowManager.GetWindow(WINDOW_DIALOG_FULLSCREEN_INFO);
+      if (pDialog) pDialog->Close(true);
+      pDialog = (CGUIDialog *)g_windowManager.GetWindow(WINDOW_DIALOG_BOXEE_VIDEO_CTX);
       if (pDialog) pDialog->Close(true);
 
       FreeResources(true);
@@ -644,12 +750,14 @@ bool CGUIWindowFullScreen::NeedRenderFullScreen()
   if (m_timeCodeShow) return true;
   if (g_infoManager.GetBool(PLAYER_SHOWCODEC)) return true;
   if (g_infoManager.GetBool(PLAYER_SHOWINFO)) return true;
+  if (g_infoManager.GetBool(PLAYER_SHOWAUDIOCODECLOGO)) return true;
   if (IsAnimating(ANIM_TYPE_HIDDEN)) return true; // for the above info conditions
   if (m_bShowViewModeInfo) return true;
   if (m_bShowCurrentTime) return true;
   if (g_infoManager.GetDisplayAfterSeek()) return true;
   if (g_infoManager.GetBool(PLAYER_SEEKBAR, GetID())) return true;
-  if (CUtil::IsUsingTTFSubtitles() && g_application.m_pPlayer && g_application.m_pPlayer->GetSubtitleVisible() && m_subsLayout)
+  if (CUtil::IsUsingTTFSubtitles() && g_application.m_pPlayer &&
+      (g_application.m_pPlayer->GetSubtitleVisible() || g_application.m_pPlayer->GetSubtitleForced()) && m_subsLayout)
     return true;
   if (m_bLastRender)
   {
@@ -661,6 +769,21 @@ bool CGUIWindowFullScreen::NeedRenderFullScreen()
 
 void CGUIWindowFullScreen::RenderFullScreen()
 {
+  static Uint32 lastRender = SDL_GetTicks();
+
+  bool renderLabel = false;
+  unsigned now = SDL_GetTicks();
+  if (now - lastRender > 500)
+  {
+    renderLabel = true;
+    lastRender = now;
+  }
+
+ #ifndef HAS_EMBEDDED
+       renderLabel = true;
+ #endif
+
+
   if (g_application.GetPlaySpeed() != 1)
     g_infoManager.SetDisplayAfterSeek();
   if (m_bShowCurrentTime)
@@ -681,7 +804,7 @@ void CGUIWindowFullScreen::RenderFullScreen()
 
   //------------------------
   bool bShowCodec = g_infoManager.GetBool(PLAYER_SHOWCODEC);
-  if (bShowCodec)
+  if (bShowCodec && renderLabel)
   {
     // show audio codec info
     CStdString strAudio, strVideo, strGeneral;
@@ -721,12 +844,55 @@ void CGUIWindowFullScreen::RenderFullScreen()
                        , missedvblanks
                        , clockspeed - 100.0
                        , g_renderManager.GetVSyncState().c_str());
-      
+
       strGeneralFPS.Format("%s\nW( fps:%02.2f %s ) %s"
                          , strGeneral.c_str()
                          , g_infoManager.GetFPS()
                          , strCores.c_str(), strClock.c_str() );
-       
+#ifdef HAS_INTEL_SMD
+      unsigned int videoCur, videoMax, audioCur, audioMax;
+      videoCur = videoMax = audioCur = audioMax = 0;
+
+      if(g_application.m_pPlayer->IsDirectRendering())
+        g_IntelSMDGlobals.GetPortStatus(g_IntelSMDGlobals.GetVidDecInput(), videoCur, videoMax);
+      else
+      {
+        videoCur = 0;
+        videoMax = 0;
+      }
+
+      ismd_port_handle_t audio_input;
+      audio_input = g_IntelSMDGlobals.GetAudioDevicePort(g_IntelSMDGlobals.GetPrimaryAudioDevice());
+      g_IntelSMDGlobals.GetPortStatus(audio_input, audioCur, audioMax);
+
+      CStdString playerTimeStr = "N/A";
+      CStdString audioTimeStr = "N/A";
+      CStdString videoTimeStr = "N/A";
+
+      __int64 playerTime = g_application.m_pPlayer->GetTime();
+
+      double audioTime = g_IntelSMDGlobals.IsmdToDvdPts(g_IntelSMDGlobals.GetAudioCurrentTime());
+      double videoTime = g_IntelSMDGlobals.IsmdToDvdPts(g_IntelSMDGlobals.GetVideoCurrentTime());
+
+      StringUtils::MilisecondsToTimeString((int)playerTime, playerTimeStr);
+
+      if(audioTime != DVD_NOPTS_VALUE)
+        StringUtils::MilisecondsToTimeString((int)(audioTime/1000.0), audioTimeStr);
+
+      if(videoTime != DVD_NOPTS_VALUE)
+        StringUtils::MilisecondsToTimeString((int)(videoTime/1000.0), videoTimeStr);
+
+      strGeneralFPS.Format("%s\nW( DVDPlayer: %s SMD Audio: %s %d/%d SMD Video %s %d/%d %s ) %s"
+                               , strGeneral.c_str()
+                               , playerTimeStr.c_str()
+                               ,  audioTimeStr.c_str()
+                               ,  audioCur, audioMax
+                               ,  videoTimeStr.c_str()
+                               ,  videoCur, videoMax
+                               , strCores.c_str()
+                               , strClock.c_str() );
+#endif
+
       CGUIMessage msg(GUI_MSG_LABEL_SET, GetID(), LABEL_ROW3);
       msg.SetLabel(strGeneralFPS);
       OnMessage(msg);
@@ -779,6 +945,8 @@ void CGUIWindowFullScreen::RenderFullScreen()
     }
   }
 
+  g_graphicsContext.ApplyGuiTransform();
+
   RenderTTFSubtitles();
 
   if (m_timeCodeShow && m_timeCodePosition != 0)
@@ -803,6 +971,24 @@ void CGUIWindowFullScreen::RenderFullScreen()
     OnMessage(msg);
   }
 
+  if(g_application.m_pPlayer && g_application.m_pPlayer->IsPaused() && !g_application.m_pPlayer->IsCaching() && !g_infoManager.m_performingSeek)
+  {
+    SET_CONTROL_VISIBLE(CONTROL_PAUSE_INDICATOR);
+  }
+  else
+  {
+    SET_CONTROL_HIDDEN(CONTROL_PAUSE_INDICATOR);
+  }
+
+  // show audio codec logo
+  if(g_infoManager.IsShowPlaybackAudioCodecLogo())
+  {
+    if ( (CTimeUtils::GetTimeMS() - g_infoManager.GetAudioCodecLogoStartTime()) >= SHOW_SUDIO_CODEC_LOGO_IN_MS)
+    {
+      g_infoManager.SetShowAudioCodecLogo(false);
+    }
+  }
+
   if (bShowCodec || m_bShowViewModeInfo)
   {
     SET_CONTROL_VISIBLE(LABEL_ROW1);
@@ -824,13 +1010,20 @@ void CGUIWindowFullScreen::RenderFullScreen()
     SET_CONTROL_HIDDEN(LABEL_ROW3);
     SET_CONTROL_HIDDEN(BLUE_BAR);
   }
+
   CGUIWindow::Render();
+  
+  g_graphicsContext.RestoreGuiTransform();
 }
 
 void CGUIWindowFullScreen::RenderTTFSubtitles()
 {
+  if (!g_application.m_pPlayer)
+    return;
+
   if ((g_application.GetCurrentPlayer() == EPC_MPLAYER || g_application.GetCurrentPlayer() == EPC_DVDPLAYER) &&
-      CUtil::IsUsingTTFSubtitles() && g_application.m_pPlayer->GetSubtitleVisible())
+      CUtil::IsUsingTTFSubtitles()
+      && (g_application.m_pPlayer->GetSubtitleVisible() || g_application.m_pPlayer->GetSubtitleForced()))
   {
     CSingleLock lock (m_fontLock);
 
@@ -861,17 +1054,25 @@ void CGUIWindowFullScreen::RenderTTFSubtitles()
       subtitleText.Replace("</u", "");
 
       RESOLUTION res = g_graphicsContext.GetVideoResolution();
-      g_graphicsContext.SetRenderingResolution(res, 0, 0, false);
+
+      int iStyle = g_guiSettings.GetInt("subtitles.style");
+      if ((iStyle & FONT_STYLE_BOLD) == FONT_STYLE_BOLD)
+        subtitleText = CStdString("[B]") + subtitleText + CStdString("[/B]");
+
+      if ((iStyle & FONT_STYLE_ITALICS) == FONT_STYLE_ITALICS)
+        subtitleText = CStdString("[I]") + subtitleText + CStdString("[/I]");
 
       float maxWidth = (float) g_settings.m_ResInfo[res].Overscan.right - g_settings.m_ResInfo[res].Overscan.left;
       m_subsLayout->Update(subtitleText, maxWidth * 0.9f, false, true); // true to force LTR reading order (most Hebrew subs are this format)
       
       float textWidth, textHeight;
       m_subsLayout->GetTextExtent(textWidth, textHeight);
+      textWidth /= g_graphicsContext.GetGUIScaleX();
+      textHeight /= g_graphicsContext.GetGUIScaleY();
       float x = maxWidth * 0.5f + g_settings.m_ResInfo[res].Overscan.left;
       float y = g_settings.m_ResInfo[res].iSubtitles - textHeight;
 
-      m_subsLayout->RenderOutline(x, y, 0, 0xFF000000, 3, XBFONT_CENTER_X, maxWidth);
+       m_subsLayout->RenderOutline(x, y, 0, 0xFF000000, 3, XBFONT_CENTER_X, maxWidth);
     }
   }
 }
@@ -913,14 +1114,12 @@ void CGUIWindowFullScreen::Seek(bool bPlus, bool bLargeStep)
 {
   if(g_application.m_pPlayer->CanSeek())
   {
-    g_application.m_pPlayer->Seek(bPlus, bLargeStep);
+    //g_application.m_pPlayer->Seek(bPlus, bLargeStep);
+
+    ShowOSD(bPlus ? CSeekDirection::FORWARD : CSeekDirection::BACKWARD);
 
     // Make sure gui items are visible.
     g_infoManager.SetDisplayAfterSeek();    
-  }
-  else
-  {
-    g_application.m_guiDialogKaiToast.QueueNotification("skip_not_available.png", "", g_localizeStrings.Get(51672), 2000);
   }
 }
 
@@ -932,10 +1131,6 @@ void CGUIWindowFullScreen::SeekChapter(int iChapter)
  
     // Make sure gui items are visible.
     g_infoManager.SetDisplayAfterSeek();    
-  }
-  else
-  {
-    g_application.m_guiDialogKaiToast.QueueNotification("skip_not_available.png", "", g_localizeStrings.Get(51672), 2000);    
   }
 }
 

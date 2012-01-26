@@ -1,13 +1,17 @@
-INCLUDES=-I. -I../ -I../cores -I../linux -I../../guilib -I../lib/UnrarXLib -I../utils -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include
+INCLUDES=-I. -I../ -I../cores -I../linux -I../../guilib -I../lib/UnrarXLib -I../utils
 INCLUDES+=-I../lib/libcdio/libcdio/include
 INCLUDES+=-I../lib/libBoxee
+INCLUDES+=-I../lib/libjson/include
 
 CXXFLAGS+=-D__STDC_FORMAT_MACROS \
 
-SRCS=ASAPFileDirectory.cpp \
+SRCS=AfpDirectory.cpp \
+     ASAPFileDirectory.cpp \
+     BMSDirectory.cpp \
      CacheMemBuffer.cpp \
      CacheStrategy.cpp \
      CDDADirectory.cpp \
+     CIFSDirectory.cpp \
      cddb.cpp \
      cdioSupport.cpp \
      CMythDirectory.cpp \
@@ -19,12 +23,16 @@ SRCS=ASAPFileDirectory.cpp \
      DirectoryHistory.cpp \
      DirectoryTuxBox.cpp \
      DllLibCurl.cpp \
+     DVBFile.cpp \
      FactoryDirectory.cpp \
      FactoryFileDirectory.cpp \
+     FileAfp.cpp \
      FileCache.cpp \
      FileCDDA.cpp \
      File.cpp \
+     FileBms.cpp \
      FileCurl.cpp \
+     FileCifs.cpp \
      FileDAAP.cpp \
      FileFactory.cpp \
      FileFileReader.cpp \
@@ -38,11 +46,15 @@ SRCS=ASAPFileDirectory.cpp \
      FileSpecialProtocol.cpp \
      FileSmb.cpp \
      FileTuxBox.cpp \
+     FileUPnP.cpp \
+     FileUPnPAv.cpp \
      FileXBMSP.cpp \
      FileZip.cpp \
      FilePlaylist.cpp \
      FTPDirectory.cpp \
      FTPParse.cpp \
+     FileUDF.cpp \
+     FileNfs.cpp \
      HTTPDirectory.cpp \
      HTSPDirectory.cpp \
      HTSPSession.cpp \
@@ -50,6 +62,7 @@ SRCS=ASAPFileDirectory.cpp \
      HDHomeRun.cpp \
      IDirectory.cpp \
      IFile.cpp \
+     udf25.cpp \
      iso9660.cpp \
      ISO9660Directory.cpp \
      LastFMDirectory.cpp \
@@ -59,6 +72,7 @@ SRCS=ASAPFileDirectory.cpp \
      MusicFileDirectory.cpp \
      MusicSearchDirectory.cpp \
      NptXbmcFile.cpp \
+     NfsDirectory.cpp \
      NSFFileDirectory.cpp \
      OGGFileDirectory.cpp \
      PlaylistDirectory.cpp \
@@ -74,11 +88,14 @@ SRCS=ASAPFileDirectory.cpp \
      ShoutcastRipFile.cpp \
      SIDFileDirectory.cpp \
      SmartPlaylistDirectory.cpp \
+	 SMBUtils.cpp \
      SMBDirectory.cpp \
      SpecialProtocol.cpp \
      SpecialProtocolDirectory.cpp \
      StackDirectory.cpp \
+     UDFDirectory.cpp \
      UPnPDirectory.cpp \
+     UPnPAvDirectory.cpp \
      UPnPVirtualPathDirectory.cpp \
      VideoDatabaseDirectory.cpp \
      VirtualDirectory.cpp \
@@ -91,7 +108,9 @@ SRCS=ASAPFileDirectory.cpp \
      ZipDirectory.cpp \
      ZipManager.cpp
 
-SRCS+= RingBuffer.cpp AppsDirectory.cpp BoxeeDatabaseDirectory.cpp BoxeeFeedDirectory.cpp ScriptDirectory.cpp BoxeeFriendsDirectory.cpp BoxeeUserActionsDirectory.cpp BoxeeItemsHistoryDirectory.cpp SourcesDirectory.cpp BoxeeShortcutsDirectory.cpp BoxeeServerDirectory.cpp RepositoriesDirectory.cpp NetworkDirectory.cpp AppBoxDirectory.cpp FilePipe.cpp PipesManager.cpp
+SRCS += RingBuffer.cpp AppsDirectory.cpp BoxeeDatabaseDirectory.cpp BoxeeFeedDirectory.cpp ScriptDirectory.cpp BoxeeFriendsDirectory.cpp BoxeeUserActionsDirectory.cpp BoxeeItemsHistoryDirectory.cpp SourcesDirectory.cpp BoxeeShortcutsDirectory.cpp BoxeeServerOTADirectory.cpp BoxeeServerDirectory.cpp RepositoriesDirectory.cpp NetworkDirectory.cpp AppBoxDirectory.cpp FilePipe.cpp PipesManager.cpp
+
+SRCS += BoxeeBrowseMenuDirectory.cpp
 
 INCLUDES+=-I../lib/libUPnP/Platinum/Source/Core \
           -I../lib/libUPnP/Platinum/Source/Platinum \

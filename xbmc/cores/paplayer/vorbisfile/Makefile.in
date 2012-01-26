@@ -26,11 +26,11 @@ endif
 $(SLIB): $(SLIBS)
 ifeq (,$(findstring 1,@USE_EXTERNAL_LIBVORBIS@ @USE_EXTERNAL_LIBOGG@))
 ifeq ($(findstring osx,$(ARCH)), osx)
-	ld -bundle -flat_namespace -undefined suppress -o $@ \
-		libvorbis/lib/.libs/vorbisfile.o \
+	$(CC) -bundle -undefined dynamic_lookup -o $@ \
+		-Wl,-alias_list,../../DllLoader/exports/wrapper_mach_alias \
+		../../DllLoader/exports/wrapper.o \
 		ogg/src/.libs/libogg.a \
 		libvorbis/lib/.libs/libvorbis.a $(BUNDLE1_O)
-	../../../../tools/Mach5/wrapper.rb $@;mv output.so $@
 	chmod +x $@
 else
 	$(CC) -shared -o $@ $(VORBIS_LINK_OPTS) $(OGG_LINK_OPTS) \

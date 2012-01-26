@@ -41,10 +41,10 @@ CXXFLAGS +=-ISource/Shared -DPIC -fPIC -ISource/MACLib -pedantic -D__GNUC_IA32__
 ARCH=@ARCH@
 
 ifeq ($(findstring osx,$(ARCH)), osx)
-	CFLAGS+=-fno-common -isysroot /Developer/SDKs/MacOSX10.4u.sdk -mmacosx-version-min=10.4
+	CFLAGS+=-fno-common @ARCH_DEFINES@
 	CFLAGS+=-UHAVE_WCSCASECMP
 	CFLAGS+=-w
-	CXXFLAGS+=-fno-common -isysroot /Developer/SDKs/MacOSX10.4u.sdk -mmacosx-version-min=10.4
+	CXXFLAGS+=-fno-common @ARCH_DEFINES@
 	CXXFLAGS+=-UHAVE_WCSCASECMP
 	CXXFLAGS+=-w
 else
@@ -58,11 +58,10 @@ SLIB=$(SYSDIR)/$(SO)
 
 $(SLIB): $(OBJS)
 ifeq ($(findstring osx,$(ARCH)), osx)
-	$(CC) -dynamiclib -flat_namespace -undefined suppress -shared \
-		-isysroot /Developer/SDKs/MacOSX10.4u.sdk \
-		--mmacosx-version-min=10.4 \
-		-o $@ $(OBJS)
-	../../../../tools/Mach5/wrapper.rb $@;mv output.so $@
+	$(CC) -dynamiclib -undefined dynamic_lookup -shared \
+		 -Wl,-alias_list,../../DllLoader/exports/wrapper_mach_alias \
+		@ARCH_DEFINES@ \
+		-o $@ ../../DllLoader/exports/wrapper.o $(OBJS)
 	chmod +x $@
 else
 	$(CC) -fPIC -shared -o $@ $(OBJS) \

@@ -44,6 +44,14 @@ class CZeroconfDummy : public CZeroconf
   {
     return false;
   }
+  virtual bool doPublishService(const std::string& fcr_identifier,
+                                  const std::string& fcr_type,
+                                  const std::string& fcr_name,
+                                  unsigned int f_port,
+                                  const std::map<std::string, std::string>& fcr_txt)
+  {
+    return false;
+  }
   virtual bool doRemoveService(const std::string& fcr_ident){return false;}
   virtual void doStop(){}
 };
@@ -64,15 +72,16 @@ CZeroconf::~CZeroconf()
 bool CZeroconf::PublishService(const std::string& fcr_identifier,
                                const std::string& fcr_type,
                                const std::string& fcr_name,
-                               unsigned int f_port)
+                               unsigned int f_port,
+                               const std::map<std::string, std::string>& f_txt)
 {
   CSingleLock lock(*mp_crit_sec);
-  CZeroconf::PublishInfo info = {fcr_type, fcr_name, f_port};
+  CZeroconf::PublishInfo info = {fcr_type, fcr_name, f_port, f_txt};
   std::pair<tServiceMap::const_iterator, bool> ret = m_service_map.insert(std::make_pair(fcr_identifier, info));
   if(!ret.second) //identifier exists
     return false;
   if(m_started)
-    return doPublishService(fcr_identifier, fcr_type, fcr_name, f_port);
+    return doPublishService(fcr_identifier, fcr_type, fcr_name, f_port, f_txt);
   //not yet started, so its just queued
   return true;
 }
@@ -102,7 +111,7 @@ void CZeroconf::Start()
     return;
   m_started = true;
   for(tServiceMap::const_iterator it = m_service_map.begin(); it != m_service_map.end(); ++it){
-    doPublishService(it->first, it->second.type, it->second.name, it->second.port);
+    doPublishService(it->first, it->second.type, it->second.name, it->second.port, it->second.txt);
   }
 }
 

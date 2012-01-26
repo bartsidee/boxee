@@ -4,11 +4,10 @@
 #include "MusicInfoTag.h"
 #include "utils/log.h"
 #include "boxee.h"
+#include "Util.h"
 
-CBrowseWindowFilter::CBrowseWindowFilter() {
-	// TODO Auto-generated constructor stub
-
-}
+#define WINDOWS_FOLDER_SEPARATOR '\\'
+#define LINUX_FOLDER_SEPARATOR '/'
 
 CBrowseWindowFilter::CBrowseWindowFilter(int id, const CStdString& strName)
 {
@@ -16,12 +15,12 @@ CBrowseWindowFilter::CBrowseWindowFilter(int id, const CStdString& strName)
 	m_strName = strName;
 }
 
-CBrowseWindowFilter::~CBrowseWindowFilter() {
-	// TODO Auto-generated destructor stub
+CBrowseWindowFilter::~CBrowseWindowFilter()
+{
 }
 
 CBrowseWindowPropertyFilter::CBrowseWindowPropertyFilter(int id, const CStdString& strName, const CStdString& strProperty) :
-	CBrowseWindowFilter(id, strName)
+CBrowseWindowLocalFilter(id, strName)
 {
 	m_strProperty = strProperty;
 }
@@ -31,11 +30,11 @@ bool CBrowseWindowPropertyFilter::Apply(const CFileItem *pItem)
 	if (!pItem->GetPropertyBOOL(m_strProperty))
 		return false;
 
-	return CBrowseWindowFilter::Apply(pItem);
+	return true;
 }
 
 CBrowseWindowPropertyValueFilter::CBrowseWindowPropertyValueFilter(int id, const CStdString& strName, const CStdString& strProperty, const CStdString& strPropertyValue) :
-  CBrowseWindowFilter(id, strName)
+CBrowseWindowLocalFilter(id, strName)
 {
   m_strProperty = strProperty;
   m_strPropertyValue = strPropertyValue;
@@ -48,11 +47,11 @@ bool CBrowseWindowPropertyValueFilter::Apply(const CFileItem *pItem)
     return false;
   }
 
-  return CBrowseWindowFilter::Apply(pItem);
+  return true;
 }
 
 CBrowseWindowVideoGenreFilter::CBrowseWindowVideoGenreFilter(int id, const CStdString& strName, const CStdString& strGenre) :
-	CBrowseWindowFilter(id, strName)
+CBrowseWindowLocalFilter(id, strName)
 {
 	m_strGenre = strGenre;
 }
@@ -73,11 +72,11 @@ bool CBrowseWindowVideoGenreFilter::Apply(const CFileItem *pItem)
     }
     return false;
   }
-	return CBrowseWindowFilter::Apply(pItem);
+	return true;
 }
 
 CBrowseWindowMediaItemFilter::CBrowseWindowMediaItemFilter(int id, const CStdString& strName) :
-  CBrowseWindowFilter(id, strName)
+CBrowseWindowLocalFilter(id, strName)
 {
   
 }
@@ -90,13 +89,13 @@ bool CBrowseWindowMediaItemFilter::Apply(const CFileItem *pItem)
   if (!pItem->IsVideo() && !pItem->IsAudio() && !pItem->IsPicture() && !pItem->m_bIsFolder)
     return false;
   
-  return CBrowseWindowFilter::Apply(pItem);
+  return true;
 }
 
 // video filter
 
 CBrowseWindowVideoFilter::CBrowseWindowVideoFilter(int id, const CStdString& strName) :
-  CBrowseWindowFilter(id, strName)
+CBrowseWindowLocalFilter(id, strName)
 {
   
 }
@@ -109,13 +108,13 @@ bool CBrowseWindowVideoFilter::Apply(const CFileItem *pItem)
   if (!pItem->IsVideo() && !pItem->m_bIsFolder)
     return false;
   
-  return CBrowseWindowFilter::Apply(pItem);
+  return true;
 }
 
 // audio filter
 
 CBrowseWindowAudioFilter::CBrowseWindowAudioFilter(int id, const CStdString& strName) :
-  CBrowseWindowFilter(id, strName)
+CBrowseWindowLocalFilter(id, strName)
 {
   
 }
@@ -128,13 +127,13 @@ bool CBrowseWindowAudioFilter::Apply(const CFileItem *pItem)
   if (!pItem->IsAudio() && !pItem->m_bIsFolder)
     return false;
   
-  return CBrowseWindowFilter::Apply(pItem);
+  return true;
 }
 
 // picture filter
 
 CBrowseWindowPictureFilter::CBrowseWindowPictureFilter(int id, const CStdString& strName) :
-  CBrowseWindowFilter(id, strName)
+CBrowseWindowLocalFilter(id, strName)
 {
   
 }
@@ -154,11 +153,11 @@ bool CBrowseWindowPictureFilter::Apply(const CFileItem *pItem)
     return false;
   }
 
-  return CBrowseWindowFilter::Apply(pItem);
+  return true;
 }
 
 CBrowseWindowAlbumGenreFilter::CBrowseWindowAlbumGenreFilter(int id, const CStdString& strName, const CStdString& strGenreValue) :
-  CBrowseWindowFilter(id, strName)
+  CBrowseWindowLocalFilter(id, strName)
 {
   m_strGenreValue = strGenreValue;
 }
@@ -174,15 +173,16 @@ bool CBrowseWindowAlbumGenreFilter::Apply(const CFileItem *pItem)
     return false;
   }
 
-  return CBrowseWindowFilter::Apply(pItem);
+  return true;
 }
 
 CBrowseWindowTvShowGenreFilter::CBrowseWindowTvShowGenreFilter(int id, const CStdString& strName, const CStdString& strGenreValue) :
-  CBrowseWindowFilter(id, strName)
+CBrowseWindowLocalFilter(id, strName)
 {
   m_strGenreValue = strGenreValue;
   m_strGenreValue.ToLower();
 }
+
 
 bool CBrowseWindowTvShowGenreFilter::Apply(const CFileItem *pItem)
 {
@@ -197,7 +197,7 @@ bool CBrowseWindowTvShowGenreFilter::Apply(const CFileItem *pItem)
     return false;
   }
 
-  return CBrowseWindowFilter::Apply(pItem);
+  return true;
 }
 
 CBrowseWindowTvShowSourceFilter::CBrowseWindowTvShowSourceFilter(int id, const CStdString& strName, const CStdString& strSourceValue) :
@@ -227,27 +227,26 @@ bool CBrowseWindowTvShowSourceFilter::Apply(const CFileItem *pItem)
 
   return false;
 
-  return CBrowseWindowFilter::Apply(pItem);
 }
 
-CBrowseWindowFirstLetterFilter::CBrowseWindowFirstLetterFilter(int id, const CStdString& strName, const CStdString& strLetter) :
-  CBrowseWindowFilter(id, strName)
-{
-  m_strLetter = strLetter;
-}
-
-bool CBrowseWindowFirstLetterFilter::Apply(const CFileItem *pItem)
-{
-  // Check if the item label begins with the provided letter
-  if (pItem->GetLabel().Left(1).CompareNoCase(m_strLetter) != 0)
-    return false;
-
-
-  return CBrowseWindowFilter::Apply(pItem);
-}
+//CBrowseWindowFirstLetterFilter::CBrowseWindowFirstLetterFilter(int id, const CStdString& strName, const CStdString& strLetter) :
+//  CBrowseWindowFilter(id, strName)
+//{
+//  m_strLetter = strLetter;
+//}
+//
+//bool CBrowseWindowFirstLetterFilter::Apply(const CFileItem *pItem)
+//{
+//  // Check if the item label begins with the provided letter
+//  if (pItem->GetLabel().Left(1).CompareNoCase(m_strLetter) != 0)
+//    return false;
+//
+//
+//  return true;
+//}
 
 CBrowseWindowTvShowUnwatchedFilter::CBrowseWindowTvShowUnwatchedFilter(int id, const CStdString& strName, bool bUnwatched) :
-  CBrowseWindowFilter(id, strName)
+CBrowseWindowLocalFilter(id, strName)
 {
   m_bUnwatched = bUnwatched;
 }
@@ -257,11 +256,102 @@ bool CBrowseWindowTvShowUnwatchedFilter::Apply(const CFileItem *pItem)
   if (m_bUnwatched && pItem->GetPropertyBOOL("watched"))
     return false;
 
-  return CBrowseWindowFilter::Apply(pItem);
+  return true;
+}
+
+CBrowseWindowLocalSourceFilter::CBrowseWindowLocalSourceFilter(int id, const CStdString& strName, const CStdString& sourcePath) :
+CBrowseWindowLocalFilter(id, strName)
+{
+  m_sourcePath = sourcePath;
+}
+
+bool CBrowseWindowLocalSourceFilter::Apply(const CFileItem *pItem)
+{
+  CStdString cleanPath = pItem->m_strPath;
+
+  //in case the path is a DVD folder, use only the first path since they are all under the same source
+  int iCommaPos = cleanPath.Find(" , ");
+  if (iCommaPos != -1)
+  {
+    cleanPath = cleanPath.Left(iCommaPos);
+  }
+
+  cleanPath.Replace(WINDOWS_FOLDER_SEPARATOR, LINUX_FOLDER_SEPARATOR);
+
+  int protocolIndex;
+  CStdString protocol;
+  bool RemovingProtocols = true;
+
+  do
+  {
+    protocolIndex = cleanPath.Find("://");
+    if (protocolIndex > 0 && protocolIndex < (int)cleanPath.size())
+    {
+      protocol = cleanPath.substr(0,protocolIndex);
+    }
+    else
+    {
+      protocol.clear();
+      RemovingProtocols = false;
+      break; //just quit the loop, we don't need to continue in that case
+    }
+
+    //allow only smb or locally attached storage such as USB
+    if (protocol == "smb" || protocol == "upnp" || protocol == "nfs" || protocol == "afp" || protocol.IsEmpty())
+    {
+      if (protocol == "upnp")
+        CUtil::UrlDecode(cleanPath);
+
+      RemovingProtocols = false;
+      break; //we're done here
+    }
+    else if (protocol == "rar")
+    { // for some reason, resolved rar media has an encoded filename
+      CUtil::UrlDecode(cleanPath);
+    }
+
+    if (RemovingProtocols)
+    {
+      cleanPath.Delete(0,protocol.size()+3);
+    }
+
+  }while (RemovingProtocols);
+
+  if (protocol.IsEmpty())
+  {
+    //we need to add slash
+#ifdef _WIN32
+        char folderSeparator = WINDOWS_FOLDER_SEPARATOR;
+#else
+        char folderSeparator = LINUX_FOLDER_SEPARATOR;
+#endif
+    if (cleanPath[0] != folderSeparator)
+      cleanPath = folderSeparator + cleanPath;
+  }
+
+  if (CUtil::IsPasswordHidden(m_sourcePath))
+  {
+    CUtil::RemovePasswordFromPath(cleanPath,false);
+  }
+
+  bool retVal = (cleanPath.Find(m_sourcePath,0)==0);
+
+  CUtil::RemovePasswordFromPath(cleanPath,false);
+
+  if (retVal)
+  {
+    CLog::Log(LOGDEBUG, "CBrowseWindowLocalSourceFilter::Apply, %s was passed through the filter. (filter)",cleanPath.c_str());
+  }
+  else
+  {
+    CLog::Log(LOGDEBUG, "CBrowseWindowLocalSourceFilter::Apply, %s was NOT passed through the filter. (filter)",cleanPath.c_str());
+  }
+
+  return retVal;
 }
 
 CBrowseWindowTvEpisodeFreeFilter::CBrowseWindowTvEpisodeFreeFilter(int id, const CStdString& strName, bool bFreeOnly) :
-  CBrowseWindowFilter(id, strName)
+CBrowseWindowLocalFilter(id, strName)
 {
   m_bFreeOnly = bFreeOnly;
 }
@@ -281,15 +371,15 @@ bool CBrowseWindowTvEpisodeFreeFilter::Apply(const CFileItem *pItem)
     }
   }
 
-  if (m_bFreeOnly && !hasServiceLink && !pItem->GetPropertyBOOL("free-play") && !pItem->GetPropertyBOOL("free-play-local"))
+  if (m_bFreeOnly && !hasServiceLink && !pItem->GetPropertyBOOL("haslink-free") && !pItem->GetPropertyBOOL("haslink-free-local"))
   {
     return false;
   }
 
-  return CBrowseWindowFilter::Apply(pItem);
+  return true;
 }
 
-CBrowseWindowAllowFilter::CBrowseWindowAllowFilter(int id, const CStdString& strName) : CBrowseWindowFilter(id, strName)
+CBrowseWindowAllowFilter::CBrowseWindowAllowFilter(int id, const CStdString& strName) : CBrowseWindowLocalFilter(id, strName)
 {
 
 }
@@ -298,7 +388,7 @@ bool CBrowseWindowAllowFilter::Apply(const CFileItem* pItem)
 {
   bool isAllow = pItem->IsAllowed();
 
-  CLog::Log(LOGDEBUG,"CBrowseWindowAllowFilter::Apply - For item [label=%s] going to return [isAllow=%d] (iaf)(filter)",pItem->GetLabel().c_str(),isAllow);
+  //CLog::Log(LOGDEBUG,"CBrowseWindowAllowFilter::Apply - For item [label=%s] going to return [isAllow=%d] (iaf)(filter)",pItem->GetLabel().c_str(),isAllow);
 
   return isAllow;
 }

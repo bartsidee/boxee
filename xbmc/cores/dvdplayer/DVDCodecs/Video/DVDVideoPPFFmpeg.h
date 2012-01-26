@@ -21,6 +21,12 @@
  *
  */
 
+#if (defined HAVE_CONFIG_H) && (!defined WIN32)
+  #include "config.h"
+#endif
+
+#ifndef DISABLE_FFMPEG_POSTPROC
+
 #include "DVDVideoCodec.h"
 #include "cores/ffmpeg/DllPostProc.h"
 
@@ -55,4 +61,5 @@ protected:
   DllPostProc m_dll;
 };
 
+#endif
 

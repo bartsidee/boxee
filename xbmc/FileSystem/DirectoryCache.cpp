@@ -99,6 +99,7 @@ bool CDirectoryCache::GetDirectory(const CStdString& strPath, CFileItemList &ite
        (dir->m_cacheType == DIRECTORY::DIR_CACHE_ONCE && retrieveAll)) )
     {
       items.Copy(*dir->m_Items);
+      CLog::Log(LOGDEBUG,"CDirectoryCache::GetDirectory, returning %d CACHED items for path %s",items.Size(),storedPath.c_str());
       dir->SetLastAccess(m_accessCounter);
 #ifdef _DEBUG
       m_cacheHits+=items.Size();
@@ -114,22 +115,26 @@ bool CDirectoryCache::GetDirectory(const CStdString& strPath, CFileItemList &ite
 bool CDirectoryCache::UpdateItem(const CFileItem& fileItem)
 {
   CSingleLock lock (m_cs);
+
   CStdString strDirPath = fileItem.GetProperty("directoryPath");
   CStdString strCacheId = fileItem.GetProperty("cacheId");
   CStdString strItemPath = fileItem.m_strPath;
-  
-  //CLog::Log(LOGDEBUG,"CDirectoryCache::UpdateItem, CACHE updating item = %s, path = %s", fileItem.GetLabel().c_str(), fileItem.m_strPath.c_str());
+
+  CStdString strPathNoPassword = strItemPath;
+  CUtil::RemovePasswordFromPath(strPathNoPassword);
+  CLog::Log(LOGDEBUG,"CDirectoryCache::UpdateItem, CACHE updating dirPath = %s , cacheId = %s , item = %s, path = %s (dircache)", strDirPath.c_str() ,strCacheId.c_str(), fileItem.GetLabel().c_str(), strPathNoPassword.c_str());
 
   if  (strDirPath == "" || strItemPath == "") {
     return false;
   }
 
-  if (CUtil::HasSlashAtEnd(strDirPath))
+  if (CUtil::HasSlashAtEnd(strDirPath)) //remove the slash at the end
     strDirPath.Delete(strDirPath.size() - 1);
 
   ciCache i = m_cache.find(strDirPath);
   if (i != m_cache.end())
   {
+    CLog::Log(LOGDEBUG,"CDirectoryCache::UpdateItem, found the relevant dir - strDirPath = %s (dircache)", strDirPath.c_str());
     CDir* dir = i->second;
     
     for (int j = 0; j < (int) dir->m_Items->Size(); ++j)
@@ -138,6 +143,7 @@ bool CDirectoryCache::UpdateItem(const CFileItem& fileItem)
       if (strCacheId != "" && strCacheId == currentItem->GetProperty("cacheId"))
       {
         *(currentItem) = fileItem;
+        CLog::Log(LOGDEBUG,"CDirectoryCache::UpdateItem, found the item - strCacheId = %s (dircache)", strCacheId.c_str());
         return true;
       }
       else
@@ -145,10 +151,15 @@ bool CDirectoryCache::UpdateItem(const CFileItem& fileItem)
         if (currentItem->m_strPath == strItemPath) 
         {
           *(currentItem) = fileItem;
+          CLog::Log(LOGDEBUG,"CDirectoryCache::UpdateItem, found the item - strItemPath = %s (dircache)", strItemPath.c_str());
           return true;
         }
       }
     }
+  }
+  else
+  {
+    CLog::Log(LOGDEBUG,"CDirectoryCache::UpdateItem, could not find the relevant dir - strDirPath = %s (dircache)", strDirPath.c_str());
   }
 
   return false;
@@ -209,28 +220,23 @@ void CDirectoryCache::ClearDirectory(const CStdString& strPath)
 void CDirectoryCache::ClearDirectoriesThatIncludeUrl(const CStdString& url)
 {
   CSingleLock lock (m_cs);
-  
-  CURL cacheUrl(url);
-  CStdString urlToClear;
-  urlToClear = cacheUrl.GetUrlWithoutOptions();
 
-  if (CUtil::HasSlashAtEnd(urlToClear))
-  {
-    urlToClear.Delete(urlToClear.size() - 1);
-  }
+  CStdString trimUrl = url;
 
-  if(!urlToClear.Equals(""))
+  /* trim the last slash */
+  if (CUtil::HasSlashAtEnd(trimUrl))
+    trimUrl.Delete(trimUrl.size() - 1);
+
+  if(!trimUrl.Equals(""))
   {
     iCache i = m_cache.begin();
     while (i != m_cache.end())
     {
-      if (i->first.Find(urlToClear) >= 0)
+      //CLog::Log(LOGDEBUG,"CDirectoryCache, comparing cached dir: %s with base URL: %s",i->first.c_str(),trimUrl.c_str());
+      if (i->first.Find(trimUrl) >= 0)
       {
-        CDir* dir = i->second;
-        dir->m_Items->Clear(); // will clean up everything
-        delete dir->m_Items;
-        delete dir;
-        m_cache.erase(i++);
+        //CLog::Log(LOGDEBUG,"CDirectoryCache, removing cached dir: %s",i->first.c_str());
+        Delete(i++);
       }
       else
       {
@@ -528,9 +534,21 @@ bool CDirectoryCache::IsPathExpired(const CStdString& strPath, time_t timestamp)
     if (now - timestamp > 120)  //seconds
       return true;
   }
+  else if (strPath.Left(6).Equals("bms://")) {
+    if (now - timestamp > 120)  //seconds
+      return true;
+  }
   else if (strPath == "smb:/" || strPath == "upnp:/" || strPath == "network:/")
       return true;
   else if (strPath.Left(6).Equals("smb://")) {
+    if (now - timestamp > 60)  //seconds
+      return true;
+  }
+  else if (strPath.Left(6).Equals("nfs://")) {
+    if (now - timestamp > 60)  //seconds
+      return true;
+  }
+  else if (strPath.Left(6).Equals("afp://")) {
     if (now - timestamp > 60)  //seconds
       return true;
   }
@@ -547,7 +565,7 @@ bool CDirectoryCache::IsPathExpired(const CStdString& strPath, time_t timestamp)
       return true;
   }
   else if (strPath.Left(7).Equals("feed://")) {
-    CURL url(strPath);
+    CURI url(strPath);
     if (url.GetHostName() == "queue")
     {
       return true; // don't use cache for queue

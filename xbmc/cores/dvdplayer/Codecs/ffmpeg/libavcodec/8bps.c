@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/8bps.c
+ * @file
  * QT 8BPS Video Decoder by Roberto Togni
  * For more information about the 8BPS format, visit:
  *   http://www.pcisys.net/~melanson/codecs/
@@ -100,7 +100,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
                 for(row = 0; row < height; row++) {
                         pixptr = c->pic.data[0] + row * c->pic.linesize[0] + planemap[p];
                         pixptr_end = pixptr + c->pic.linesize[0];
-                        dlen = be2me_16(*(const unsigned short *)(lp+row*2));
+                        dlen = av_be2ne16(*(const unsigned short *)(lp+row*2));
                         /* Decode a row of this plane */
                         while(dlen > 0) {
                                 if(dp + 1 >= buf+buf_size) return -1;
@@ -158,10 +158,6 @@ static av_cold int decode_init(AVCodecContext *avctx)
         c->avctx = avctx;
 
         c->pic.data[0] = NULL;
-
-    if (avcodec_check_dimensions(avctx, avctx->width, avctx->height) < 0) {
-        return 1;
-    }
 
         switch (avctx->bits_per_coded_sample) {
                 case 8:
@@ -223,9 +219,9 @@ static av_cold int decode_end(AVCodecContext *avctx)
 
 
 
-AVCodec eightbps_decoder = {
+AVCodec ff_eightbps_decoder = {
         "8bps",
-        CODEC_TYPE_VIDEO,
+        AVMEDIA_TYPE_VIDEO,
         CODEC_ID_8BPS,
         sizeof(EightBpsContext),
         decode_init,

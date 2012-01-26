@@ -103,7 +103,7 @@ bool CRTMP::Connect(const std::string &strRTMPLink, double dTime)
 
   Close();
 
-  CURL url(strRTMPLink.c_str());
+  CURI url(strRTMPLink.c_str());
 
   sockaddr_in service;
   memset(&service, 0, sizeof(sockaddr_in));
@@ -322,7 +322,7 @@ bool CRTMP::Connect()
 
 bool CRTMP::SendConnectPacket()
 {
-  CURL url(m_strLink);
+  CURI url(m_strLink);
   CStdString app = url.GetFileName();
 
   CStdString::size_type slistPos = url.GetFileName().Find("slist=");
@@ -339,7 +339,7 @@ bool CRTMP::SendConnectPacket()
   CStdString tcURL;
   if (m_strTcUrl.empty())
   {
-  url.GetURLWithoutFilename(tcURL);
+  tcURL = url.GetWithoutFilename();
   tcURL += app;
   }
   else
@@ -536,7 +536,7 @@ bool CRTMP::SendCheckBWResult()
 
 bool CRTMP::SendPlay()
 {
-  CURL url(m_strLink);
+  CURI url(m_strLink);
   RTMPPacket packet;
   packet.m_nChannel = 0x08;   // we make 8 our stream channel
   packet.m_headerType = RTMP_PACKET_SIZE_LARGE;

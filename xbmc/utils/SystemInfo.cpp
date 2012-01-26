@@ -36,6 +36,9 @@
 #include "LocalizeStrings.h"
 #include "CPUInfo.h"
 #include "utils/TimeUtils.h"
+#include "xbmc/Util.h"
+#include "libBoxee/bxoemconfiguration.h"
+#include "VersionInfo.h"
 
 CSysInfo g_sysinfo;
 
@@ -108,8 +111,8 @@ CSysInfo::~CSysInfo()
 bool CSysInfo::GetDiskSpace(const CStdString drive,int& iTotal, int& iTotalFree, int& iTotalUsed, int& iPercentFree, int& iPercentUsed)
   {
   bool bRet= false;
-  ULARGE_INTEGER ULTotal= { { 0 } };
-  ULARGE_INTEGER ULTotalFree= { { 0 } };
+  ULARGE_INTEGER ULTotal = { { 0, 0 } };
+  ULARGE_INTEGER ULTotalFree= { { 0, 0 } };
 
   if( !drive.IsEmpty() && !drive.Equals("*") ) 
   { 
@@ -119,15 +122,15 @@ bool CSysInfo::GetDiskSpace(const CStdString drive,int& iTotal, int& iTotalFree,
 #endif
       bRet= ( 0 != GetDiskFreeSpaceEx( ( drive + ":\\" ), NULL, &ULTotal, &ULTotalFree) );
   }
-    else
-{
-    ULARGE_INTEGER ULTotalTmp= { { 0 } };
-    ULARGE_INTEGER ULTotalFreeTmp= { { 0 } };
+  else 
+  {
+    ULARGE_INTEGER ULTotalTmp= { { 0, 0 } };
+    ULARGE_INTEGER ULTotalFreeTmp= { { 0, 0 } };
 #ifdef _WIN32 
     char* pcBuffer= NULL;
     DWORD dwStrLength= GetLogicalDriveStrings( 0, pcBuffer );
     if( dwStrLength != 0 )
-  {
+    {
       dwStrLength+= 1;
       pcBuffer= new char [dwStrLength];
       GetLogicalDriveStrings( dwStrLength, pcBuffer );
@@ -135,32 +138,32 @@ bool CSysInfo::GetDiskSpace(const CStdString drive,int& iTotal, int& iTotalFree,
       do {
         if( DRIVE_FIXED == GetDriveType( pcBuffer + iPos  ) &&
             GetDiskFreeSpaceEx( ( pcBuffer + iPos ), NULL, &ULTotal, &ULTotalFree ) )
-    {
+        {
           ULTotalTmp.QuadPart+= ULTotal.QuadPart;
           ULTotalFreeTmp.QuadPart+= ULTotalFree.QuadPart;
-    }
+        }
         iPos += (strlen( pcBuffer + iPos) + 1 );
       }while( strlen( pcBuffer + iPos ) > 0 );
-  }
+    }
     delete[] pcBuffer;
 #else // for linux and osx
     static const char *drv_letter[] = { "C:\\", "E:\\", "F:\\", "G:\\", "X:\\", "Y:\\", "Z:\\", NULL };
     for( int i = 0; drv_letter[i]; i++)
-  {
+    {
       if( GetDiskFreeSpaceEx( drv_letter[i], NULL, &ULTotal, &ULTotalFree ) )
-{
+      {
         ULTotalTmp.QuadPart+= ULTotal.QuadPart;
         ULTotalFreeTmp.QuadPart+= ULTotalFree.QuadPart;
-}
-  }
+      }
+    }
 #endif
     if( ULTotalTmp.QuadPart || ULTotalFreeTmp.QuadPart )
-  {
+    {
       ULTotal.QuadPart= ULTotalTmp.QuadPart;
       ULTotalFree.QuadPart= ULTotalFreeTmp.QuadPart;
       bRet= true;
+    }
   }
-      }
 
   if( bRet )
   {
@@ -172,7 +175,7 @@ bool CSysInfo::GetDiskSpace(const CStdString drive,int& iTotal, int& iTotalFree,
   }
 
   return bRet;
-  }
+}
 
 double CSysInfo::GetCPUFrequency()
 {
@@ -247,6 +250,22 @@ bool CSysInfo::IsAeroDisabled()
   return false;
 }
 
+bool CSysInfo::IsVistaOrHigher()
+{
+#ifdef _WIN32
+  OSVERSIONINFOEX osvi;
+  ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
+  osvi.dwOSVersionInfoSize = sizeof(osvi);
+
+  if (GetVersionEx((OSVERSIONINFO *)&osvi))
+  {
+    if (osvi.dwMajorVersion >= 6)
+      return true; 
+  }
+#endif
+  return false;
+}
+
 CStdString CSysInfo::GetKernelVersion()
 {
 #if defined (_LINUX)
@@ -257,6 +276,16 @@ CStdString CSysInfo::GetKernelVersion()
 #ifdef __APPLE__    
     // too much info in apple's "version" field
     strKernel.Format("%s %s %s", un.sysname, un.release, un.machine);
+#elif defined (DEVICE_PLATFORM)
+    if (BOXEE::BXOEMConfiguration::GetInstance().HasParam("Boxee.Device.Name"))
+    {
+      strKernel.Format("%s %s %s %s %s",
+          un.sysname, un.release, DEVICE_PLATFORM, BOXEE::BXOEMConfiguration::GetInstance().GetStringParam("Boxee.Device.Name", "").c_str() , un.machine);
+    }
+    else
+    {
+      strKernel.Format("%s %s %s %s", un.sysname, un.release, DEVICE_PLATFORM, un.machine);
+    }
 #else    
     strKernel.Format("%s %s %s %s", un.sysname, un.release, un.version, un.machine);
 #endif    
@@ -300,8 +329,8 @@ CStdString CSysInfo::GetKernelVersion()
           }
           else 
           {
-        strKernel.append(", 32-bit");
-    }
+            strKernel.append(", 32-bit");
+          }
         }
         else
           strKernel.append(", 32-bit");
@@ -325,7 +354,7 @@ CStdString CSysInfo::GetKernelVersion()
     else if ( osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 0 )
     {
       strKernel.append("2000");
-  }
+    }
 
     if( _tcslen(osvi.szCSDVersion) > 0 )
     {
@@ -474,7 +503,7 @@ CStdString CSysInfo::GetHddSpaceInfo(int& percent, int drive, bool shortText)
         if (strDrive.IsEmpty())
           strRet.Format("%i MB %s", totalFree, g_localizeStrings.Get(160));
         else
-        strRet.Format("%s: %i MB %s", strDrive, totalFree, g_localizeStrings.Get(160));
+          strRet.Format("%s: %i MB %s", strDrive, totalFree, g_localizeStrings.Get(160));
         break;
       case SYSTEM_USED_SPACE:
       case SYSTEM_USED_SPACE_C:
@@ -487,7 +516,7 @@ CStdString CSysInfo::GetHddSpaceInfo(int& percent, int drive, bool shortText)
         if (strDrive.IsEmpty())
           strRet.Format("%i MB %s", totalUsed, g_localizeStrings.Get(20162));
         else
-        strRet.Format("%s: %i MB %s", strDrive, totalUsed, g_localizeStrings.Get(20162));
+          strRet.Format("%s: %i MB %s", strDrive, totalUsed, g_localizeStrings.Get(20162));
         break;
       case SYSTEM_TOTAL_SPACE:
       case SYSTEM_TOTAL_SPACE_C:
@@ -497,7 +526,7 @@ CStdString CSysInfo::GetHddSpaceInfo(int& percent, int drive, bool shortText)
         if (strDrive.IsEmpty())
           strRet.Format("%i MB %s", total, g_localizeStrings.Get(20161));
         else
-        strRet.Format("%s: %i MB %s", strDrive, total, g_localizeStrings.Get(20161));
+          strRet.Format("%s: %i MB %s", strDrive, total, g_localizeStrings.Get(20161));
         break;
       case SYSTEM_FREE_SPACE_PERCENT:
       case SYSTEM_FREE_SPACE_PERCENT_C:
@@ -607,7 +636,7 @@ CStdString CSysInfo::GetLinuxDistro()
 {
   CStdString result = "unknown";
   struct stat buf;
-  
+ 
   if (stat("/usr/bin/lsb_release", &buf) == 0)
   {
     FILE* pipe = popen("unset PYTHONHOME; unset PYTHONPATH; /usr/bin/lsb_release -d | cut -f2", "r");
@@ -668,7 +697,7 @@ CStdString CSysInfo::GetUserAgent()
 #endif
 #ifdef SVN_REV
   CStdString strRevision; 
-  strRevision.Format("; SVN r%s", SVN_REV);
+  strRevision.Format("; %s", SVN_REV);
   result += strRevision;
 #endif
   result += "; http://www.boxee.tv)";
@@ -677,3 +706,16 @@ CStdString CSysInfo::GetUserAgent()
 }
 
 
+PLATFORM_TYPE CSysInfo::GetPlatform() {
+#if defined(_WIN32)
+	return PLATFORM_WINDOWS;
+#elif defined(__APPLE__)
+	return PLATFORM_MACOS;
+#elif defined(CANMORE)
+	return PLATFORM_CANMORE;
+#elif defined(_LINUX)
+	return PLATFORM_LINUX;
+#else
+	return PLATFORM_UNKNOWN;
+#endif
+}

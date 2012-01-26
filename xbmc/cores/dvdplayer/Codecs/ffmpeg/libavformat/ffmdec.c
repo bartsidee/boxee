@@ -97,7 +97,7 @@ static int ffm_resync(AVFormatContext *s, int state)
         }
         state = (state << 8) | get_byte(s->pb);
     }
-        return 0;
+    return 0;
 }
 
 /* first is true if we read the frame header */
@@ -252,6 +252,17 @@ static void adjust_write_index(AVFormatContext *s)
 }
 
 
+static int ffm_close(AVFormatContext *s)
+{
+    int i;
+
+    for (i = 0; i < s->nb_streams; i++)
+        av_freep(&s->streams[i]->codec->rc_eq);
+
+    return 0;
+}
+
+
 static int ffm_read_header(AVFormatContext *s, AVFormatParameters *ap)
 {
     FFMContext *ffm = s->priv_data;
@@ -273,7 +284,7 @@ static int ffm_read_header(AVFormatContext *s, AVFormatParameters *ap)
     if (!url_is_streamed(pb)) {
         ffm->file_size = url_fsize(pb);
         if (ffm->write_index)
-        adjust_write_index(s);
+            adjust_write_index(s);
     } else {
         ffm->file_size = (UINT64_C(1) << 63) - 1;
     }
@@ -301,7 +312,7 @@ static int ffm_read_header(AVFormatContext *s, AVFormatParameters *ap)
         codec->debug = get_be32(pb);
         /* specific info */
         switch(codec->codec_type) {
-        case CODEC_TYPE_VIDEO:
+        case AVMEDIA_TYPE_VIDEO:
             codec->time_base.num = get_be32(pb);
             codec->time_base.den = get_be32(pb);
             codec->width = get_be16(pb);
@@ -336,11 +347,25 @@ static int ffm_read_header(AVFormatContext *s, AVFormatParameters *ap)
             codec->rc_buffer_aggressivity = av_int2dbl(get_be64(pb));
             codec->codec_tag = get_be32(pb);
             codec->thread_count = get_byte(pb);
+            codec->coder_type = get_be32(pb);
+            codec->me_cmp = get_be32(pb);
+            codec->partitions = get_be32(pb);
+            codec->me_subpel_quality = get_be32(pb);
+            codec->me_range = get_be32(pb);
+            codec->keyint_min = get_be32(pb);
+            codec->scenechange_threshold = get_be32(pb);
+            codec->b_frame_strategy = get_be32(pb);
+            codec->qcompress = av_int2dbl(get_be64(pb));
+            codec->qblur = av_int2dbl(get_be64(pb));
+            codec->max_qdiff = get_be32(pb);
+            codec->refs = get_be32(pb);
+            codec->directpred = get_be32(pb);
             break;
-        case CODEC_TYPE_AUDIO:
+        case AVMEDIA_TYPE_AUDIO:
             codec->sample_rate = get_be32(pb);
             codec->channels = get_le16(pb);
             codec->frame_size = get_le16(pb);
+            codec->sample_fmt = (int16_t) get_le16(pb);
             break;
         default:
             goto fail;
@@ -367,12 +392,7 @@ static int ffm_read_header(AVFormatContext *s, AVFormatParameters *ap)
     ffm->first_packet = 1;
     return 0;
  fail:
-    for(i=0;i<s->nb_streams;i++) {
-        st = s->streams[i];
-        if (st) {
-            av_free(st);
-        }
-    }
+    ffm_close(s);
     return -1;
 }
 
@@ -388,7 +408,7 @@ static int ffm_read_packet(AVFormatContext *s, AVPacket *pkt)
         if ((ret = ffm_is_avail_data(s, FRAME_HEADER_SIZE+4)) < 0)
             return ret;
 
-        dprintf(s, "pos=%08"PRIx64" spos=%"PRIx64", write_index=%"PRIx64" size=%"PRIx64"\n",
+        av_dlog(s, "pos=%08"PRIx64" spos=%"PRIx64", write_index=%"PRIx64" size=%"PRIx64"\n",
                url_ftell(s->pb), s->pb->pos, ffm->write_index, ffm->file_size);
         if (ffm_read_data(s, ffm->header, FRAME_HEADER_SIZE, 1) !=
             FRAME_HEADER_SIZE)
@@ -418,7 +438,7 @@ static int ffm_read_packet(AVFormatContext *s, AVPacket *pkt)
         }
         pkt->pos = url_ftell(s->pb);
         if (ffm->header[1] & FLAG_KEY_FRAME)
-            pkt->flags |= PKT_FLAG_KEY;
+            pkt->flags |= AV_PKT_FLAG_KEY;
 
         ffm->read_state = READ_HEADER;
         if (ffm_read_data(s, pkt->data, size, 0) != size) {
@@ -498,13 +518,13 @@ static int ffm_probe(AVProbeData *p)
     return 0;
 }
 
-AVInputFormat ffm_demuxer = {
+AVInputFormat ff_ffm_demuxer = {
     "ffm",
     NULL_IF_CONFIG_SMALL("FFM (FFserver live feed) format"),
     sizeof(FFMContext),
     ffm_probe,
     ffm_read_header,
     ffm_read_packet,
-    NULL,
+    ffm_close,
     ffm_seek,
 };

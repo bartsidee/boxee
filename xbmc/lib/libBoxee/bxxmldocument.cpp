@@ -59,18 +59,20 @@ std::string BXXMLDocument::GetRespHeader(const std::string &strHeader)
   return m_curl.GetHttpHeader(strHeader);
 }
 
-bool BXXMLDocument::LoadFromURL(const std::string &strURL, const std::string &postData){
+bool BXXMLDocument::LoadFromURL(const std::string &strURL, const std::string &postData, bool bUseCache)
+{
   ListHttpHeaders listHeaders;
-  return LoadFromURL(strURL, listHeaders, postData);
+  return LoadFromURL(strURL, listHeaders, postData, bUseCache);
 }
 
-bool BXXMLDocument::LoadFromURL(const std::string &strURL, const ListHttpHeaders &listHeaders, const std::string &postData) {
+bool BXXMLDocument::LoadFromURL(const std::string &strURL, const ListHttpHeaders &listHeaders, const std::string &postData, bool bUseCache)
+{
   if (strURL.substr(0,5) == "file:")
     return LoadFromFile(strURL);
 
   m_curl.SetVerbose(m_bVerbose);
   m_curl.SetCredentials(m_credentials);
-  
+
   ListHttpHeaders headers;
   headers.push_back("Connection: keep-alive");
   m_curl.HttpSetHeaders(headers);
@@ -80,7 +82,7 @@ bool BXXMLDocument::LoadFromURL(const std::string &strURL, const ListHttpHeaders
   std::string strDoc;
 
   if (postData.empty())
-    strDoc = m_curl.HttpGetString(strURL.c_str());
+    strDoc = m_curl.HttpGetString(strURL.c_str(), bUseCache);
   else
     strDoc = m_curl.HttpPostString(strURL.c_str(), postData);
 

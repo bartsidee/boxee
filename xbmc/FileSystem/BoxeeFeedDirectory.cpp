@@ -9,8 +9,15 @@
 #include "utils/log.h"
 #include "URL.h"
 #include "bxcscmanager.h"
+#include "LocalizeStrings.h"
+#include "RssSourceManager.h"
+#include "Util.h"
 
 #define QUEUE_MAX_SIZE 250
+
+#define BOXEE_SOURCE "boxee"
+#define BOOKLET_SOURCE "booklet"
+#define SUBSCRIPTION_SOURCE "subscription"
 
 using namespace BOXEE;
 
@@ -32,23 +39,23 @@ CBoxeeFeedDirectory::~CBoxeeFeedDirectory()
 bool CBoxeeFeedDirectory::GetDirectory(const CStdString& strPath,CFileItemList &items)
 {
   CLog::Log(LOGDEBUG,"CBoxeeFeedDirectory::GetDirectory - Enter function with [strPath=%s] (bf)",strPath.c_str());
-
-  CStdString strParams;
-  CStdString strDir;
-  CStdString strFile;
-  std::map<std::string, std::string> mapParams;
-
-  // Parse boxeedb url
-  if( !BoxeeUtils::ParseBoxeeDbUrl( strPath, strDir, strFile, mapParams ) )
-  {
+	
+	CStdString strParams;
+	CStdString strDir;
+	CStdString strFile;
+	std::map<std::string, std::string> mapParams;
+	
+	// Parse boxeedb url
+	if (!BoxeeUtils::ParseBoxeeDbUrl(strPath, strDir, strFile, mapParams))
+	{
     CLog::Log(LOGERROR,"CBoxeeFeedDirectory::GetDirectory - FAILED to parse [path=%s] (bf)",strPath.c_str());
-    return false;
-  }
-
+	  return false;
+	}
+	
   CLog::Log(LOGDEBUG,"CBoxeeFeedDirectory::GetDirectory - [strPath=%s] was parsed to [dir=%s][file=%s] (bf)",strPath.c_str(),strDir.c_str(), strFile.c_str());
-
+  
   bool retVal = false;
-
+  
   if (strDir == "recommend" || strDir == "share")
   {
     retVal = HandleRequestWithLimit("recommend",items,mapParams);
@@ -62,26 +69,26 @@ bool CBoxeeFeedDirectory::GetDirectory(const CStdString& strPath,CFileItemList &
     retVal = HandleRequestWithLimit("featured",items,mapParams);
   }
   else if (strDir == "activity")
-  {
+ 	{
     CLog::Log(LOGERROR,"CBoxeeFeedDirectory::GetDirectory - [%s] is not being handle by this class (bf)",strPath.c_str());
     //retVal = HandleRequestWithLimit("activity",items,listItems,mapParams);
-  }
+ 	}
   else if (strDir == "user" || strDir == "user") 
   {
-  //////////////////////////////////////////////////////////////////////////////
-  // bUser is not supported via this class, use boxee user activity directory //
-  //////////////////////////////////////////////////////////////////////////////
+ 	  //////////////////////////////////////////////////////////////////////////////
+    // bUser is not supported via this class, use boxee user activity directory //
+ 	  //////////////////////////////////////////////////////////////////////////////
     CLog::Log(LOGERROR,"CBoxeeFeedDirectory::GetDirectory - [%s] is not being handle by this class (bf)",strPath.c_str());
     //retVal = HandleRequestWithLimit("user",items,listItems,mapParams);
-  }
-  else 
+ 	}
+ 	else 
   {
     CLog::Log(LOGERROR,"CBoxeeFeedDirectory::GetDirectory - Unrecognized feed path [%s]. Exit function and return FALSE (bf)",strPath.c_str());
-  }
-
+ 	}
+    
   CLog::Log( LOGDEBUG, "Going to return list with size [%d] for type [%s] (bf)",items.Size(), strDir.c_str() );
-
-  return retVal;
+      
+	return retVal;
 }
 
 
@@ -89,14 +96,14 @@ bool CBoxeeFeedDirectory::HandleRequestWithLimit(const CStdString& typeToRetriev
 {   
   CLog::Log(LOGDEBUG,"CBoxeeFeedDirectory::HandleRequestWithLimit - [%s] - Going to retrieve objects from the server (bf)",typeToRetrieveForLog.c_str());
   
-  bool bResult = GetItemsFromServer(typeToRetrieveForLog);  
+  bool bResult = GetItemsFromServer(typeToRetrieveForLog, mapParams);
   
   if (bResult)
   {
     CFileItemList listItems;
 
     bool succeeded = ConvertServerResponse(typeToRetrieveForLog,listItems);
-
+    
     if(succeeded)
     {
       CLog::Log(LOGDEBUG,"CBoxeeFeedDirectory::HandleRequestWithLimit - [%s] - Call to HandleServerResponse returned [listItemsSize=%d] (bf)",typeToRetrieveForLog.c_str(),listItems.Size());
@@ -137,13 +144,12 @@ bool CBoxeeFeedDirectory::HandleRequestWithLimit(const CStdString& typeToRetriev
     else
     {
       // Error log will be written in HandleServerResponse()
-      return false;      
+      return true;
     }
   }
   else
   {
     CLog::Log(LOGDEBUG,"CBoxeeFeedDirectory::HandleRequestWithLimit - [%s] - FAILED to retrieve objects from the server (bf)",typeToRetrieveForLog.c_str());
-    return false;
   }
   
   CLog::Log(LOGDEBUG,"CBoxeeQueueDirectory::HandleRequestWithLimit - Exit function and returning list with size [%d] (bf)",items.Size());
@@ -158,7 +164,7 @@ bool CBoxeeFeedDirectory::HandleQueueRequest(CFileItemList& items,std::map<std::
   // reset ValidQueueSize before handling
   BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().SetValidQueueSize(0);
 
-  bool bResult = GetItemsFromServer("queue");
+  bool bResult = GetItemsFromServer("queue", mapParams);
   
   if (bResult)
   {
@@ -185,7 +191,7 @@ bool CBoxeeFeedDirectory::HandleQueueRequest(CFileItemList& items,std::map<std::
       if(!lastItemId.IsEmpty())
       {
         i = GetTheLastItemIndexById(lastItemId);
-
+        
         if(i < 0)
         {
           CLog::Log(LOGDEBUG,"CBoxeeQueueDirectory::GetDirectory - Exit function and returning list with size [%d] (bq)",items.Size());
@@ -232,12 +238,16 @@ bool CBoxeeFeedDirectory::ConvertServerResponse(const CStdString& typeToRetrieve
 
   CLog::Log(LOGDEBUG,"CBoxeeFeedDirectory::ConvertServerResponse - [%s] - Enter function after retrieve from server [numOfItemsFromServer=%d] for type [%s]. [timestamp=%lu] (bf)",typeToRetrieveForLog.c_str(),numOfItems,typeToRetrieveForLog.c_str(),m_boxeeFeed.GetTimeStamp());
  
+/*
+  //we're using Empty screen messages, no need to check for empty lists
+  //this is a fix for BOXEE-6278 and many other screens that have empty screens
   if(numOfItems == 0)
   {
     CLog::Log(LOGWARNING,"CBoxeeFeedDirectory::ConvertServerResponse - [%s] - Got from server [numOfItemsFromServer=%d=0] for type [%s], therefore going to return FALSE (bf)",typeToRetrieveForLog.c_str(),numOfItems,typeToRetrieveForLog.c_str());
     return false;
   }
-  
+*/
+
   for (int i=0; i < numOfItems; i++)
   {
     BOXEE::BXGeneralMessage msg = m_boxeeFeed.GetAction(i);
@@ -245,7 +255,7 @@ bool CBoxeeFeedDirectory::ConvertServerResponse(const CStdString& typeToRetrieve
     CStdString strDesc = BoxeeUtils::GetFormattedDesc(msg, false);
     CStdString strOriginalDesc = BoxeeUtils::StripDesc(strDesc);
     int nTimeStamp = msg.GetTimestamp();
-
+        
     CFileItemPtr item(new CFileItem);
         
     item->SetProperty("IsFeedItem", true);
@@ -293,7 +303,7 @@ bool CBoxeeFeedDirectory::ConvertServerResponse(const CStdString& typeToRetrieve
         BoxeeUtils::ObjToFileItem(obj, item.get());
       }
     }
-
+        
     if (!itemIsValid)
     {
       item.reset();
@@ -333,7 +343,7 @@ bool CBoxeeFeedDirectory::ConvertServerResponse(const CStdString& typeToRetrieve
     {
       item->SetProperty("referral",msg.GetReferral());
     }
-
+        
     if((msg.GetSource()).empty() == false)
     {
       CStdString feedSourceStr = msg.GetSource();
@@ -354,17 +364,40 @@ bool CBoxeeFeedDirectory::ConvertServerResponse(const CStdString& typeToRetrieve
       item->SetProperty("user_message",userText);
     }
 
+    // clean description
+    if (!item->GetProperty("description").IsEmpty())
+    {
+      CStdString dirtyDescription = item->GetProperty("description");
+      CStdString description = CRssFeed::CleanDescription(dirtyDescription);
+      CUtil::UrlDecode(description);
+      item->SetProperty("description", description);
+    }
+
+    item->SetProperty("FeedTypeItem", msg.GetMessageType());
+
     bool IsAllowedPath = IsAllowed(item->m_strPath);
     bool IsAllowedItem = item->IsAllowed();
-    bool filePassMask = (IsAllowedPath && IsAllowedItem);
+        
+    bool IsAllowedAppItem = true;
+    if (item->IsApp())
+    {
+      CStdString appId = item->GetProperty("appid");
+      if (!appId.IsEmpty())
+      {
+        IsAllowedAppItem = BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().IsAppIdInAppBoxApplicationsList(appId);
+      }
+    }
+
+    bool filePassMask = (IsAllowedPath && IsAllowedItem && IsAllowedAppItem);
         
     if(filePassMask)
     {
+      UpdateItemProperties(msg,item);
       listItems.Add(item);
     }
     else
     {
-      CLog::Log(LOGDEBUG,"CBoxeeFeedDirectory::ConvertServerResponse - [%s] - [%d/%d] - Not adding item [label=%s][path=%s] - [IsAllowedPath=%d][IsAllowedItem=%d] (bf)",typeToRetrieveForLog.c_str(),i+1,numOfItems,item->GetLabel().c_str(),item->m_strPath.c_str(),IsAllowedPath,IsAllowedItem);
+      CLog::Log(LOGDEBUG,"CBoxeeFeedDirectory::ConvertServerResponse - [%s] - [%d/%d] - Not adding item [label=%s][path=%s] - [IsAllowedPath=%d][IsAllowedItem=%d][IsAllowedAppItem=%d] (bf)",typeToRetrieveForLog.c_str(),i+1,numOfItems,item->GetLabel().c_str(),item->m_strPath.c_str(),IsAllowedPath,IsAllowedItem,IsAllowedAppItem);
     }
   }
   
@@ -373,7 +406,7 @@ bool CBoxeeFeedDirectory::ConvertServerResponse(const CStdString& typeToRetrieve
   return true;
 }
 
-bool CBoxeeFeedDirectory::GetItemsFromServer(const CStdString& typeToRetrieveForLog)
+bool CBoxeeFeedDirectory::GetItemsFromServer(const CStdString& typeToRetrieveForLog, std::map<std::string, std::string>& mapParams)
 {
   bool retVal = false;
   
@@ -387,9 +420,11 @@ bool CBoxeeFeedDirectory::GetItemsFromServer(const CStdString& typeToRetrieveFor
   }
   else if(typeToRetrieveForLog == "queue")
   {
-    CLog::Log(LOGDEBUG,"CBoxeeFeedDirectory::GetItemsFromServer - Going to call BoxeeClientServerComManager::GetQueueList() (queue)");
+    CStdString queueType = mapParams["type"];
 
-    retVal = BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().GetQueue(m_boxeeFeed);
+    CLog::Log(LOGDEBUG,"CBoxeeFeedDirectory::GetItemsFromServer - Going to call BoxeeClientServerComManager::GetQueueList() with [queueType=%s] (queue)",queueType.c_str());
+
+    retVal = BOXEE::Boxee::GetInstance().GetBoxeeClientServerComManager().GetQueue(m_boxeeFeed,CQueueItemsType::GetQueueItemTypeAsEnum(queueType));
     
     CLog::Log(LOGDEBUG,"CBoxeeFeedDirectory::GetItemsFromServer - Call to BoxeeClientServerComManager::GetQueueList() returned [retVal=%d][BoxeeFeedSize=%d] (queue)",retVal,m_boxeeFeed.GetNumOfActions());
   }
@@ -403,11 +438,11 @@ bool CBoxeeFeedDirectory::GetItemsFromServer(const CStdString& typeToRetrieveFor
   }
   else if(typeToRetrieveForLog == "apps")
   {
-    CLog::Log(LOGWARNING,"CBoxeeFeedDirectory::GetItemsFromServer - NOT suported for type [%s] (bf)",typeToRetrieveForLog.c_str());
+    CLog::Log(LOGWARNING,"CBoxeeFeedDirectory::GetItemsFromServer - NOT supported for type [%s] (bf)",typeToRetrieveForLog.c_str());
   }  
   else if(typeToRetrieveForLog == "subscriptions")
   {
-    CLog::Log(LOGWARNING,"CBoxeeFeedDirectory::GetItemsFromServer - NOT suported for type [%s] (bf)",typeToRetrieveForLog.c_str());
+    CLog::Log(LOGWARNING,"CBoxeeFeedDirectory::GetItemsFromServer - NOT supported for type [%s] (bf)",typeToRetrieveForLog.c_str());
   }
   else if(typeToRetrieveForLog == "activity")
   {
@@ -449,6 +484,87 @@ bool CBoxeeFeedDirectory::Exists(const char* strPath)
 {
 	// NOT IMPLEMENTED
 	return true;
+}
+
+void CBoxeeFeedDirectory::UpdateItemProperties(const BOXEE::BXGeneralMessage& msg,CFileItemPtr item)
+{
+  CStdString messageType = msg.GetMessageType();
+
+  if (messageType == MSG_ACTION_TYPE_QUEUE)
+  {
+    CLog::Log(LOGDEBUG,"CBoxeeFeedDirectory::UpdateItemProperties - handling message [type=%s]. call UpdateQueueItemProperties (bf)(queue)",messageType.c_str());
+    return UpdateQueueItemProperties(msg,item);
+  }
+  else if (messageType == MSG_ACTION_TYPE_RECOMMEND || messageType == MSG_ACTION_TYPE_SHARE || messageType == MSG_ACTION_TYPE_RATE)
+  {
+    CLog::Log(LOGDEBUG,"CBoxeeFeedDirectory::UpdateItemProperties - handling message [type=%s]. call UpdateDiscoverItemProperties (bf)(rec)",messageType.c_str());
+    return UpdateDiscoverItemProperties(msg,item);
+  }
+  else
+  {
+    //CLog::Log(LOGDEBUG,"CBoxeeFeedDirectory::UpdateItemProperties - NOT handling message [type=%s] (bf)",messageType.c_str());
+  }
+}
+
+void CBoxeeFeedDirectory::UpdateQueueItemProperties(const BOXEE::BXGeneralMessage& msg,CFileItemPtr item)
+{
+  if (msg.GetMessageType() != MSG_ACTION_TYPE_QUEUE)
+  {
+    CLog::Log(LOGDEBUG,"CBoxeeFeedDirectory::UpdateQueueItemProperties - message type [%s] ISN'T [%s] (bf)(queue)",msg.GetMessageType().c_str(),MSG_ACTION_TYPE_QUEUE);
+    return;
+  }
+
+  CStdString showId = item->GetProperty("showid");
+  if (!showId.IsEmpty() && BoxeeUtils::IsSubscribe(showId))
+  {
+    item->SetProperty("IsSubscribe",true);
+  }
+
+  CStdString source = msg.GetSource();
+
+  CStdString addToQueueDesc = "";
+
+  if (source == SUBSCRIPTION_SOURCE)
+  {
+    addToQueueDesc += g_localizeStrings.Get(57006);
+  }
+  else
+  {
+    addToQueueDesc = g_localizeStrings.Get(57000);
+
+    if (source == BOOKLET_SOURCE)
+    {
+      addToQueueDesc += g_localizeStrings.Get(57001);
+    }
+    else if (source == BOXEE_SOURCE)
+    {
+      addToQueueDesc += g_localizeStrings.Get(57002);
+    }
+    else
+    {
+      CLog::Log(LOGDEBUG,"CBoxeeFeedDirectory::UpdateQueueItemProperties - FAILED to handle queue message with [source=%s] (bf)(queue)",source.c_str());
+      return;
+    }
+
+    addToQueueDesc += BoxeeUtils::GetTimeAddedToDirectoryLabel(msg.GetTimestamp()).ToLower();
+  }
+
+  item->SetProperty("addToQueueDesc",addToQueueDesc);
+}
+
+void CBoxeeFeedDirectory::UpdateDiscoverItemProperties(const BOXEE::BXGeneralMessage& msg,CFileItemPtr item)
+{
+  CStdString messageType = msg.GetMessageType();
+
+  if (messageType != MSG_ACTION_TYPE_RECOMMEND && messageType != MSG_ACTION_TYPE_SHARE && messageType != MSG_ACTION_TYPE_RATE)
+  {
+    CLog::Log(LOGDEBUG,"CBoxeeFeedDirectory::UpdateDiscoverItemProperties - message type [%s] ISN'T [%s] or [%s] or [%s] (bf)(rec)",msg.GetMessageType().c_str(),MSG_ACTION_TYPE_RECOMMEND,MSG_ACTION_TYPE_SHARE,MSG_ACTION_TYPE_RATE);
+    return;
+  }
+
+  CStdString addToDiscoverDesc = BoxeeUtils::GetTimeAddedToDirectoryLabel(msg.GetTimestamp());
+
+  item->SetProperty("addToDiscoverDesc",addToDiscoverDesc);
 }
 
 } // namespace

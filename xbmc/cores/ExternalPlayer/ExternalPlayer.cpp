@@ -46,7 +46,7 @@
 #endif
 #endif
 #if defined(HAS_LIRC)
-  #include "common/LIRC.h"
+#include "common/LIRC.h"
 #endif
 
 // If the process ends in less than this time (ms), we assume it's a launcher
@@ -142,7 +142,7 @@ void CExternalPlayer::Process()
   if (m_args.find("{0}") == std::string::npos)
   {
     // Unwind archive names
-    CURL url(m_launchFilename);
+    CURI url(m_launchFilename);
     CStdString protocol = url.GetProtocol();
     if (protocol == "zip" || protocol == "rar"/* || protocol == "iso9660" ??*/)
     {
@@ -157,7 +157,7 @@ void CExternalPlayer::Process()
     {
       for (unsigned int i = 0; i < m_filenameReplacers.size(); i++)
       {
-        std::vector<CStdString> vecSplit;
+        CStdStringArray vecSplit;
         StringUtils::SplitString(m_filenameReplacers[i], " , ", vecSplit);
 
         // something is wrong, go to next substitution

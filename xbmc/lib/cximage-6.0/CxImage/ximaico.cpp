@@ -139,7 +139,7 @@ bool CxImageICO::Decode(CxFile *hFile)
 						}
 					}
 
-					if (bGoodMask){
+					if (bGoodMask && c != 32){
 #if CXIMAGE_SUPPORT_ALPHA
 						bool bNeedAlpha = false;
 						if (!AlphaIsValid()){
@@ -232,7 +232,7 @@ bool CxImageICO::Decode(CxFile *hFile)
 #endif //CXIMAGE_SUPPORT_ALPHA
 							}
 						}
-					} else {
+					} else if(c != 32){
 						SetTransIndex(0); //empty mask, set black as transparent color
 						Negative();
 					}

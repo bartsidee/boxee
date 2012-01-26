@@ -7,8 +7,9 @@ SLIB=../../../../system/players/paplayer/adpcm-@ARCH@.so
 
 $(SLIB): $(OBJS)
 ifeq ($(findstring osx,$(ARCH)), osx)
-	ld -bundle -flat_namespace -undefined suppress -o $@ *.o $(BUNDLE1_O)
-	../../../../tools/Mach5/wrapper.rb $@;mv output.so $@
+	$(CXX) $(LDFLAGS) -Wl,-alias_list,../../DllLoader/exports/wrapper_mach_alias \
+		-bundle -undefined dynamic_lookup -fPIC -o $@ ../../DllLoader/exports/wrapper.o \
+		*.o $(BUNDLE1_O)
 	chmod +x $@
 else
 	$(CC) -shared -o $@ *.o `cat ../../DllLoader/exports/wrapper.def` ../../DllLoader/exports/wrapper.o

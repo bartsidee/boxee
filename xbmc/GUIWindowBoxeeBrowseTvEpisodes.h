@@ -1,12 +1,15 @@
 #ifndef GUIWINDOWBOXEEBROWSETVEPISODES_H_
 #define GUIWINDOWBOXEEBROWSETVEPISODES_H_
 
-#include "GUIWindowBoxeeBrowseWithPanel.h"
+#include "GUIWindowBoxeeBrowse.h"
 #include "Thread.h"
 #include "BoxeeUtils.h"
 #include "Util.h"
 #include "lib/libBoxee/bxsubscriptionsmanager.h"
 #include <set>
+
+#define THUMB_VIEW_LIST       50
+#define LINE_VIEW_LIST        51
 
 class SubscribeJob : public IRunnable
 {
@@ -21,7 +24,6 @@ public:
   }
 
   virtual ~SubscribeJob() { }
-
   virtual void Run();
   CStdString m_id;
   CStdString m_strShowTitle;
@@ -30,33 +32,63 @@ public:
 
 };
 
+
+class CLocalEpisodesSource : public CBrowseWindowSource
+{
+public:
+  CLocalEpisodesSource(int iWindowID);
+  virtual ~CLocalEpisodesSource();
+
+  void AddStateParameters(std::map <CStdString, CStdString>& mapOptions);
+  void BindItems(CFileItemList &items);
+
+  CStdString m_strShowId;
+
+};
+
+class CRemoteEpisodesSource : public CBrowseWindowSource
+{
+public:
+  CRemoteEpisodesSource(int iWindowID);
+  virtual ~CRemoteEpisodesSource();
+
+  void AddStateParameters(std::map <CStdString, CStdString>& mapOptions);
+  void BindItems(CFileItemList &items);
+
+  void SetAllowProviders(const CStdString& strAllowProviders);
+
+  CStdString m_strShowId;
+  CStdString m_allowProviders;
+};
+
 class CEpisodesWindowState : public CBrowseWindowState
 {
 public:
-  CEpisodesWindowState(CGUIWindow* pWindow);
-  void InitState(const CStdString& strPath);
-
-  virtual void SortItems(CFileItemList &items);
-
-  CStdString CreatePath();
-
+  CEpisodesWindowState(CGUIWindowBoxeeBrowse* pWindow);
+	
   bool OnSeasons(std::set<int>& m_setSeasons);
   bool OnSubscribe();
-  bool OnShortcut();
   void OnFree();
+  
+  void SetDefaultView();
 
   void SetFree(bool bFree);
 
-  bool HasShortcut();
-
-  virtual void Reset();
-  void SetPath(const CStdString& strPath);
   void SetShowId(const CStdString& strShowId);
   void SetShowTitle(const CStdString& strShowTitle);
   void SetShowThumb(const CStdString& strShowThumb);
+  void SetSeason(const CStdString& strSeasonId);
+  void SetAllowProviders(const CStdString& strAllowProviders);
+
+  bool UpdateSubscription();
+  virtual CStdString GetItemSummary();
+
+  void Refresh(bool bResetSelected);
+
+  int GetSeason();
 
 protected:
-
+  
   virtual void UpdateFilters(const CStdString& strPath) {}
 
   int m_iSort;
@@ -64,19 +96,15 @@ protected:
   bool m_bSubscribed;
   bool m_bFreeOnly;
   bool m_bHasShortcut;
-  bool m_bLocal;
-  bool m_bRemote;
 
-
-  CStdString m_strPath;
   CStdString m_strShowId;
   CStdString m_strShowTitle;
   CStdString m_strShowThumb;
-
+  CStdString m_allowProviders;
 };
 
 
-class CGUIWindowBoxeeBrowseTvEpisodes : public CGUIWindowBoxeeBrowseWithPanel
+class CGUIWindowBoxeeBrowseTvEpisodes : public CGUIWindowBoxeeBrowse
 {
 public:
   CGUIWindowBoxeeBrowseTvEpisodes();
@@ -84,18 +112,34 @@ public:
 	
   virtual void OnInitWindow();
   virtual void OnDeinitWindow(int nextWindowID);
-  bool OnMessage(CGUIMessage& message);
-	virtual bool ProcessPanelMessages(CGUIMessage& message);
-  virtual bool OnBind(CGUIMessage& message);
+
+  virtual bool OnAction(const CAction &action);
+  virtual bool OnMessage(CGUIMessage& message);
+
   virtual void OnBack();
+
+  virtual void ShowItems(CFileItemList& list, bool append=false);
+
+  virtual void ConfigureState(const CStdString& param);
+
+  virtual CStdString GetItemDescription();
+
+  void SetTvShowItem(const CFileItem& tvShowItem);
 
 protected:
   void SetFreeOnlyFilter(bool bOn);
-  void ExtractSeasons(CFileItemList* items, std::set<int>& setSeasons);
+  void ExtractSeasons(CFileItemList* episodeList);
+
+  void AddSeparators(CFileItemList &items);
+
+  bool HandleClickOnSeasonList();
+  bool HandleClickOnOverviewButton();
 
   std::set<int> m_setSeasons;
 
+  int m_originalItemCount;
 
+  CFileItem m_tvShowItem;
 };
 
 #endif /*GUIWINDOWBOXEEBROWSETVEPISODES_H_*/

@@ -68,7 +68,7 @@ CDirectoryNode::~CDirectoryNode()
 //  Parses a given path and returns the current node of the path
 CDirectoryNode* CDirectoryNode::ParseURL(const CStdString& strPath)
 {
-  CURL url(strPath);
+  CURI url(strPath);
 
   CStdString strDirectory=url.GetFileName();
   CUtil::RemoveSlashAtEnd(strDirectory);

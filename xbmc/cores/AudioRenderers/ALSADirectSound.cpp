@@ -1,4 +1,3 @@
-#ifndef __APPLE__
 /*
 * XBMC Media Center
 * Copyright (c) 2002 d7o3g4q and RUNTiME
@@ -20,6 +19,9 @@
 */
 
 #include "ALSADirectSound.h"
+
+#ifdef HAS_ALSA
+
 #include "AudioContext.h"
 #include "FileSystem/SpecialProtocol.h"
 #include "GUISettings.h"
@@ -50,7 +52,7 @@ CALSADirectSound::CALSADirectSound()
 
 // Be carefull - function is locked - should not call other locked functions 
 // and should not exit in center.
-bool CALSADirectSound::Initialize(IAudioCallback* pCallback, int iChannels, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec, bool bIsMusic, bool bPassthrough)
+bool CALSADirectSound::Initialize(IAudioCallback* pCallback, int iChannels, enum PCMChannels* channelMap, unsigned int uiSamplesPerSec, unsigned int uiBitsPerSample, bool bResample, const char* strAudioCodec, bool bIsMusic, bool bPassthrough,  bool bTimed, AudioMediaFormat audioMediaFormat)
 {
   CSingleLock lock(m_lock);
   CStdString device, deviceuse;
@@ -456,7 +458,7 @@ unsigned int CALSADirectSound::GetSpace()
 }
 
 //***********************************************************************************************
-unsigned int CALSADirectSound::AddPackets(const void* data, unsigned int len)
+unsigned int CALSADirectSound::AddPackets(const void* data, unsigned int len, double pts, double duration)
 {
   CSingleLock lock(m_lock);
   DBG(DAUDIO,5,"Add %d bytes", len);
@@ -577,6 +579,12 @@ void CALSADirectSound::WaitCompletion()
     return;
   int retval = snd_pcm_drain(m_pPlayHandle);
   CSingleLock lock(m_lock);
+
+  // Boxee fix - while calling snd_pcm_drain deinitialized or pause function could have happend
+  // if it is the case we dont need to do any thing.
+  // lock m_lock before call snd_pcm_drain slows the significantly
+  if (!m_bIsAllocated || m_bPause)
+    return;
   FlushUnlocked();
   snd_pcm_wait(m_pPlayHandle, -1);
 }

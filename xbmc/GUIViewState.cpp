@@ -37,7 +37,6 @@
 #include "GUISettings.h"
 #include "Settings.h"
 #include "FileItem.h"
-#include "BrowseWindowConfiguration.h"
 #include "VideoInfoTag.h"
 #include "utils/log.h"
 #include "Key.h"
@@ -53,9 +52,9 @@ CGUIViewState* CGUIViewState::GetViewState(int windowId, const CFileItemList& it
   if (windowId == 0)
     return GetViewState(g_windowManager.GetActiveWindow(),items);
 
-  const CURL& url=items.GetAsUrl();
+  const CURI& url = CURI(items.m_strPath);
   CStdString strUrl;
-  url.GetURL(strUrl);
+  strUrl = url.Get();
   CLog::Log(LOGDEBUG, "CGUIViewState::GetViewState, VIEWSTATE: window id = %d, url %s, protocol = %s, host = %s, share = %s, domain = %s, filename = %s, mode = %d", 
       windowId, strUrl.c_str(), url.GetProtocol().c_str(), url.GetHostName().c_str(), url.GetShareName().c_str(), url.GetDomain().c_str(), url.GetFileName().c_str(), items.GetPropertyInt("browsemode"));
 
@@ -250,18 +249,18 @@ CGUIViewState* CGUIViewState::GetViewState(int windowId, const CFileItemList& it
   if (windowId==WINDOW_BOXEE_BROWSE && url.GetProtocol() == "plugin" && url.GetFileName() == "CNN Video/" && !CUtil::HasSlashAtEnd(strUrl))
         return new CGUIViewStateWindowMusicRssItems(items);
 
-  if (windowId== WINDOW_BOXEE_BROWSE && items.GetProperty("browsemode") == BROWSE_MODE_VIDEO)
-    return new CGUIViewStateBoxeeBrowseVideo(items);
+//  if (windowId== WINDOW_BOXEE_BROWSE && items.GetProperty("browsemode") == BROWSE_MODE_VIDEO)
+//    return new CGUIViewStateBoxeeBrowseVideo(items);
+//
+//  if (windowId== WINDOW_BOXEE_BROWSE && items.GetProperty("browsemode") == BROWSE_MODE_MUSIC)
+//    return new CGUIViewStateBoxee2(items);
+//
+//  if (windowId== WINDOW_BOXEE_BROWSE && items.GetProperty("browsemode") == BROWSE_MODE_PICTURES)
+//    return new CGUIViewStateBoxeeBrowsePictures(items);
+//
+//  if (windowId== WINDOW_BOXEE_BROWSE && items.GetProperty("browsemode") == BROWSE_MODE_OTHER)
+//    return new CGUIViewStateBoxeeBrowseOther(items);
 
-  if (windowId== WINDOW_BOXEE_BROWSE && items.GetProperty("browsemode") == BROWSE_MODE_MUSIC)
-    return new CGUIViewStateBoxee2(items);
-
-  if (windowId== WINDOW_BOXEE_BROWSE && items.GetProperty("browsemode") == BROWSE_MODE_PICTURES)
-    return new CGUIViewStateBoxeeBrowsePictures(items);
-
-  if (windowId== WINDOW_BOXEE_BROWSE && items.GetProperty("browsemode") == BROWSE_MODE_OTHER)
-    return new CGUIViewStateBoxeeBrowseOther(items);
-  
   // ======================== WINDOW_BOXEE_BROWSE views ================================================
   
   if (items.IsSmartPlayList())
@@ -677,7 +676,7 @@ void CGUIViewStateBoxeeBrowse::LoadViewState(const CFileItemList& items, int win
 CGUIViewStateBoxeeBrowseVideo::CGUIViewStateBoxeeBrowseVideo(const CFileItemList &items) : CGUIViewStateBoxeeBrowse(items)
 {
   CLog::Log(LOGDEBUG, "CGUIViewStateBoxeeBrowseVideo, VIEWSTATE");
-  const CURL& url=items.GetAsUrl();
+  const CURI& url = CURI(items.m_strPath);
 
   AddSortMethod(SORT_METHOD_LABEL_WITH_SHARES, 551, LABEL_MASKS("%L", "%I", "%L", ""));  // FileName, Size | Foldername, empty
   AddSortMethod(SORT_METHOD_DATE_WITH_SHARES, 552, LABEL_MASKS("%L", "%J", "%L", "%J"));  // FileName, Date | Foldername, Date
@@ -735,7 +734,7 @@ CGUIViewStateBoxeeBrowsePictures::CGUIViewStateBoxeeBrowsePictures(const CFileIt
 CGUIViewStateBoxeeBrowseOther::CGUIViewStateBoxeeBrowseOther(const CFileItemList &items) : CGUIViewStateBoxeeBrowse(items)
 {
   CLog::Log(LOGDEBUG, "CGUIViewStateBoxeeBrowseOther, VIEWSTATE");
-	const CURL& url=items.GetAsUrl();
+  const CURI& url = CURI(items.m_strPath);
 
   AddSortMethod(SORT_METHOD_LABEL_WITH_SHARES, 551, LABEL_MASKS("%L", "%I", "%L", ""));  // FileName, Size | Foldername, empty
   AddSortMethod(SORT_METHOD_DATE_WITH_SHARES, 552, LABEL_MASKS("%L", "%J", "%L", "%J"));  // FileName, Date | Foldername, Date

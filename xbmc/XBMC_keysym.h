@@ -110,7 +110,32 @@ typedef enum {
 	XBMCK_DELETE		= 127,
 	/* End of ASCII mapped keysyms */
 
+  // Multimedia keys
+  // These are the Windows VK_ codes. SDL doesn't define codes for
+  // these keys.
+  XBMCK_BROWSER_BACK         = 0xA6,
+  XBMCK_BROWSER_FORWARD      = 0xA7,
+  XBMCK_BROWSER_REFRESH      = 0xA8,
+  XBMCK_BROWSER_STOP         = 0xA9,
+  XBMCK_BROWSER_SEARCH       = 0xAA,
+  XBMCK_BROWSER_FAVORITES    = 0xAB,
+  XBMCK_BROWSER_HOME         = 0xAC,
+  XBMCK_VOLUME_MUTE          = 0xAD,
+  XBMCK_VOLUME_DOWN          = 0xAE,
+  XBMCK_VOLUME_UP            = 0xAF,
+  XBMCK_MEDIA_NEXT_TRACK     = 0xB0,
+  XBMCK_MEDIA_PREV_TRACK     = 0xB1,
+  XBMCK_MEDIA_STOP           = 0xB2,
+  XBMCK_MEDIA_PLAY_PAUSE     = 0xB3,
+  XBMCK_LAUNCH_MAIL          = 0xB4,
+  XBMCK_LAUNCH_MEDIA_SELECT  = 0xB5,
+  XBMCK_LAUNCH_APP1          = 0xB6,
+  XBMCK_LAUNCH_APP2          = 0xB7,
+  XBMCK_LAUNCH_FILE_BROWSER  = 0xB8,
+  XBMCK_LAUNCH_MEDIA_CENTER  = 0xB9,
+
 	/* International keyboard syms */
+  XBMCK_BACK      = 158,
 	XBMCK_WORLD_0		= 160,		/* 0xA0 */
 	XBMCK_WORLD_1		= 161,
 	XBMCK_WORLD_2		= 162,
@@ -284,40 +309,43 @@ typedef enum {
 
 	/* Media keys */
 	XBMCK_MUTE   = 330,
-	XBMCK_VOLUME_UP = 331,
-	XBMCK_VOLUME_DOWN = 332,
+	//XBMCK_VOLUME_UP = 331,
+	//XBMCK_VOLUME_DOWN = 332,
 	XBMCK_EJECT = 333,
-        XBMCK_NEXT = 334, 
-        XBMCK_PLAYPAUSE = 335, 
-        XBMCK_PREVIOUS = 336, 
-        XBMCK_STOP = 337, 
-        XBMCK_RECORD = 338,
-        XBMCK_REWIND = 339, 
-        XBMCK_PHONE = 340,	
-        XBMCK_PLAY = 341,  
-        XBMCK_SHUFFLE = 342,  
-        XBMCK_FASTFORWARD = 343,
+  XBMCK_NEXT = 334, 
+  XBMCK_PLAYPAUSE = 335, 
+  XBMCK_PREVIOUS = 336, 
+  XBMCK_STOP = 337, 
+  XBMCK_RECORD = 338,
+  XBMCK_REWIND = 339, 
+  XBMCK_PHONE = 340,	
+  XBMCK_PLAY = 341,  
+  XBMCK_SHUFFLE = 342,  
+  XBMCK_FASTFORWARD = 343,
 	
 	/* Add any other keys here */
+  XBMCK_HOME_WINDOW = 350,
 
 	XBMCK_LAST
 } XBMCKey;
 
-/* Enumeration of valid key mods (possibly OR'd together) */
+// Enumeration of valid key mods (possibly OR'd together)
 typedef enum {
-	XBMCKMOD_NONE  = 0x0000,
-	XBMCKMOD_LSHIFT= 0x0001,
-	XBMCKMOD_RSHIFT= 0x0002,
-	XBMCKMOD_LCTRL = 0x0040,
-	XBMCKMOD_RCTRL = 0x0080,
-	XBMCKMOD_LALT  = 0x0100,
-	XBMCKMOD_RALT  = 0x0200,
-	XBMCKMOD_LMETA = 0x0400,
-	XBMCKMOD_RMETA = 0x0800,
-	XBMCKMOD_NUM   = 0x1000,
-	XBMCKMOD_CAPS  = 0x2000,
-	XBMCKMOD_MODE  = 0x4000,
-	XBMCKMOD_RESERVED = 0x8000
+  XBMCKMOD_NONE     = 0x0000,
+  XBMCKMOD_LSHIFT   = 0x0001,
+  XBMCKMOD_RSHIFT   = 0x0002,
+  XBMCKMOD_LSUPER   = 0x0010,
+  XBMCKMOD_RSUPER   = 0x0020,
+  XBMCKMOD_LCTRL    = 0x0040,
+  XBMCKMOD_RCTRL    = 0x0080,
+  XBMCKMOD_LALT     = 0x0100,
+  XBMCKMOD_RALT     = 0x0200,
+  XBMCKMOD_LMETA    = 0x0400,
+  XBMCKMOD_RMETA    = 0x0800,
+  XBMCKMOD_NUM      = 0x1000,
+  XBMCKMOD_CAPS     = 0x2000,
+  XBMCKMOD_MODE     = 0x4000,
+  XBMCKMOD_RESERVED = 0x8000
 } XBMCMod;
 
 #define XBMCKMOD_CTRL	(XBMCKMOD_LCTRL|XBMCKMOD_RCTRL)

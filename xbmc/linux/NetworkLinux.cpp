@@ -165,32 +165,6 @@ CStdString CNetworkInterfaceLinux::GetMacAddress(void)
    return result;
 }
 
-void CNetworkInterfaceLinux::GetAllAddresses(std::vector<CStdString> &vecAddr)
-{
-  CStdString result = "";
-  
-  struct ifreq ifr[5];
-  struct ifconf buffers;
-  buffers.ifc_len = 5;
-  buffers.ifc_req = ifr;
-  
-  for (int i=0;i<5;i++)
-  {
-    strcpy(ifr[i].ifr_name, m_interfaceName.c_str());
-    ifr[i].ifr_addr.sa_family = AF_INET;
-  }
-  
-  if (ioctl(m_network->GetSocket(), SIOCGIFCONF, &buffers) >= 0)
-  {
-    int n =  buffers.ifc_len;
-    for (int i=0; i<n; i++)
-    {      
-      vecAddr.push_back(inet_ntoa(((struct sockaddr_in *)&(ifr[i].ifr_addr))->sin_addr));
-    }
-  }
-  
-}
-
 CStdString CNetworkInterfaceLinux::GetCurrentIPAddress(void)
 {
    CStdString result = "";
@@ -322,7 +296,7 @@ CNetworkLinux::~CNetworkLinux(void)
 {
   if (m_sock != -1)
     close(CNetworkLinux::m_sock);
-}
+  }
 
 std::vector<CNetworkInterfacePtr> CNetworkLinux::GetInterfaceList(void)
 {

@@ -120,7 +120,9 @@ void CGUIDialogSeekBar::ResetTimer()
 
 void CGUIDialogSeekBar::Render()
 {
-  if (!g_application.m_pPlayer)
+  if (!g_application.m_pPlayer || g_application.m_pPlayer->OSDDisabled() || 
+      g_application.CurrentFileItem().GetPropertyBOOL("DisableBoxeeUI")  ||
+      (g_application.GetCurrentPlayer() == EPC_FLASHPLAYER && g_application.CurrentFileItem().GetPropertyBOOL("hideseekbar")))
   {
     Close(true);
     return;

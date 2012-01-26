@@ -26,6 +26,8 @@
 
 #ifdef HAS_DX
 
+using namespace std;
+
 CD3DTexture::CD3DTexture()
 {
   m_width = 0;
@@ -36,6 +38,7 @@ CD3DTexture::CD3DTexture()
   m_pool = D3DPOOL_DEFAULT;
   m_texture = NULL;
   m_data = NULL;
+  m_pitch = 0;
 }
 
 CD3DTexture::~CD3DTexture()
@@ -54,8 +57,22 @@ bool CD3DTexture::Create(UINT width, UINT height, UINT mipLevels, DWORD usage, D
   m_pool = pool;
   // create the texture
   Release();
-  if (D3D_OK == D3DXCreateTexture(g_Windowing.Get3DDevice(), m_width, m_height, m_mipLevels, m_usage, m_format, m_pool, &m_texture))
+  HRESULT hr = D3DXCreateTexture(g_Windowing.Get3DDevice(), m_width, m_height, m_mipLevels, m_usage, m_format, m_pool, &m_texture);
+  if (FAILED(hr))
   {
+    CLog::Log(LOGERROR, __FUNCTION__" - failed 0x%08X", hr);
+  }
+  else
+  {
+    D3DSURFACE_DESC desc;
+    if( D3D_OK == m_texture->GetLevelDesc(0, &desc))
+    {
+      if(desc.Format != m_format)
+        CLog::Log(LOGWARNING, "CD3DTexture::Create - format changed from %d to %d", m_format, desc.Format);
+      if(desc.Height != m_height || desc.Width != m_width)
+        CLog::Log(LOGWARNING, "CD3DTexture::Create - size changed from %ux%u to %ux%u", m_width, m_height, desc.Width, desc.Height);
+    }
+
     g_Windowing.Register(this);
     return true;
   }
@@ -71,14 +88,19 @@ void CD3DTexture::Release()
 bool CD3DTexture::LockRect(UINT level, D3DLOCKED_RECT *lr, const RECT *rect, DWORD flags)
 {
   if (m_texture)
+  {
+    if ((flags & D3DLOCK_DISCARD) && !(m_usage & D3DUSAGE_DYNAMIC))
+      flags &= ~D3DLOCK_DISCARD;
     return (D3D_OK == m_texture->LockRect(level, lr, rect, flags));
+  }
   return false;
 }
 
-void CD3DTexture::UnlockRect(UINT level)
+bool CD3DTexture::UnlockRect(UINT level)
 {
   if (m_texture)
-    m_texture->UnlockRect(level);
+    return (D3D_OK == m_texture->UnlockRect(level));
+  return false;
 }
 
 bool CD3DTexture::GetLevelDesc(UINT level, D3DSURFACE_DESC *desc)
@@ -95,41 +117,92 @@ bool CD3DTexture::GetSurfaceLevel(UINT level, LPDIRECT3DSURFACE9 *surface)
   return false;
 }
 
-void CD3DTexture::OnDestroyDevice()
+void CD3DTexture::SaveTexture()
 {
   if (m_texture)
   {
     delete[] m_data;
     m_data = NULL;
-    D3DLOCKED_RECT lr;
-    if (LockRect( 0, &lr, NULL, 0 ))
+    if(!(m_usage & D3DUSAGE_RENDERTARGET)
+    && !(m_usage & D3DUSAGE_DEPTHSTENCIL)
+    && !(m_pool == D3DPOOL_DEFAULT && (m_usage & D3DUSAGE_DYNAMIC) == 0))
     {
-      unsigned int memUsage = GetMemoryUsage(lr.Pitch);
-      m_data = new unsigned char[memUsage];
-      memcpy(m_data, lr.pBits, memUsage);
-      UnlockRect(0);
+      D3DLOCKED_RECT lr;
+      if (LockRect( 0, &lr, NULL, D3DLOCK_READONLY ))
+      {
+        m_pitch = lr.Pitch;
+        unsigned int memUsage = GetMemoryUsage(lr.Pitch);
+        m_data = new unsigned char[memUsage];
+        memcpy(m_data, lr.pBits, memUsage);
+        UnlockRect(0);
+      }
     }
   }
   SAFE_RELEASE(m_texture);
 }
 
-void CD3DTexture::OnCreateDevice()
+void CD3DTexture::OnDestroyDevice()
+{
+  SaveTexture();
+}
+
+void CD3DTexture::OnLostDevice()
+{
+  if (m_pool == D3DPOOL_DEFAULT)
+    SaveTexture();
+}
+
+void CD3DTexture::RestoreTexture()
 {
   // yay, we're back - make a new copy of the texture
   if (!m_texture)
   {
-    D3DXCreateTexture(g_Windowing.Get3DDevice(), m_width, m_height, m_mipLevels, m_usage, m_format, m_pool, &m_texture);
-    // copy the data to the texture
-    D3DLOCKED_RECT lr;
-    if (m_texture && m_data && LockRect(0, &lr, NULL, 0 ))
+    HRESULT hr = D3DXCreateTexture(g_Windowing.Get3DDevice(), m_width, m_height, m_mipLevels, m_usage, m_format, m_pool, &m_texture);
+    if (FAILED(hr))
     {
-      memcpy(lr.pBits, m_data, GetMemoryUsage(lr.Pitch));
-      UnlockRect(0);
+      CLog::Log(LOGERROR, __FUNCTION__": D3DXCreateTexture failed 0x%08X", hr);
     }
+    else
+    {
+      // copy the data to the texture
+      D3DLOCKED_RECT lr;
+      if (m_texture && m_data && LockRect(0, &lr, NULL, D3DLOCK_DISCARD ))
+      {
+        if (lr.Pitch == m_pitch)
+          memcpy(lr.pBits, m_data, GetMemoryUsage(lr.Pitch));
+        else
+        {
+          UINT minpitch = ((UINT)lr.Pitch < m_pitch) ? lr.Pitch : m_pitch;
+        
+          for(UINT i = 0; i < m_height; ++i)
+          {
+            // Get pointers to the "rows" of pixels in texture
+            BYTE* pBits = (BYTE*)lr.pBits + i*lr.Pitch;
+            BYTE* pData = m_data + i*m_pitch;
+            memcpy(pBits, pData, minpitch);
+          }
+        }
+        UnlockRect(0);
+      }
+    }
+
     delete[] m_data;
     m_data = NULL;
+    m_pitch = 0;
   }
 }
+
+void CD3DTexture::OnCreateDevice()
+{
+  RestoreTexture();
+}
+
+void CD3DTexture::OnResetDevice()
+{
+  if (m_pool == D3DPOOL_DEFAULT)
+    RestoreTexture();
+}
+
 
 unsigned int CD3DTexture::GetMemoryUsage(unsigned int pitch) const
 {
@@ -154,11 +227,14 @@ CD3DEffect::~CD3DEffect()
   Release();
 }
 
-bool CD3DEffect::Create(const CStdString &effectString, bool bFromFile)
+bool CD3DEffect::Create(const CStdString &effectString, DefinesMap* defines)
 {
-  m_effectString = effectString;
   Release();
-  if (CreateEffect(bFromFile))
+  m_effectString = effectString;
+  m_defines.clear();
+  if (defines != NULL)
+    m_defines = *defines; //FIXME: is this a copy of all members?
+  if (CreateEffect())
   {
     g_Windowing.Register(this);
     return true;
@@ -180,6 +256,13 @@ void CD3DEffect::OnDestroyDevice()
 void CD3DEffect::OnCreateDevice()
 {
   CreateEffect();
+}
+
+bool CD3DEffect::SetFloatArray(D3DXHANDLE handle, const float* val, unsigned int count)
+{
+  if(m_effect)
+    return (D3D_OK == m_effect->SetFloatArray(handle, val, count));
+  return false;
 }
 
 bool CD3DEffect::SetMatrix(D3DXHANDLE handle, const D3DXMATRIX* mat)
@@ -217,44 +300,50 @@ bool CD3DEffect::BeginPass(UINT pass)
   return false;
 }
 
-void CD3DEffect::EndPass()
+bool CD3DEffect::EndPass()
 {
   if (m_effect)
-    m_effect->EndPass();
+    return (D3D_OK == m_effect->EndPass());
+  return false;
 }
 
-void CD3DEffect::End()
+bool CD3DEffect::End()
 {
   if (m_effect)
-    m_effect->End();
+    return (D3D_OK == m_effect->End());
+  return false;
 }
 
-void CD3DEffect::Commit()
-{
-  if (m_effect)
-    m_effect->CommitChanges();
-}
-
-bool CD3DEffect::CreateEffect(bool bFromFile)
+bool CD3DEffect::CreateEffect()
 {
   HRESULT hr;
-
   LPD3DXBUFFER pError = NULL;
-  if(bFromFile)
-    hr = D3DXCreateEffectFromFile(g_Windowing.Get3DDevice(), m_effectString, NULL, NULL, 0, NULL, &m_effect, &pError );
-  else
-    hr = D3DXCreateEffect(g_Windowing.Get3DDevice(),  m_effectString, m_effectString.length(), NULL, NULL, 0, NULL, &m_effect, &pError );
+
+  std::vector<D3DXMACRO> definemacros;
+
+  for( DefinesMap::const_iterator it = m_defines.begin(); it != m_defines.end(); ++it )
+	{
+		D3DXMACRO m;
+		m.Name = it->first.c_str();
+    if (it->second.IsEmpty())
+      m.Definition = NULL;
+    else
+		  m.Definition = it->second.c_str();
+		definemacros.push_back( m );
+	}
+
+  definemacros.push_back(D3DXMACRO());
+	definemacros.back().Name = 0;
+	definemacros.back().Definition = 0;
+
+  hr = D3DXCreateEffect(g_Windowing.Get3DDevice(),  m_effectString, m_effectString.length(), &definemacros[0], NULL, 0, NULL, &m_effect, &pError );
   if(hr == S_OK)
     return true;
   else if(pError)
   {
     CStdString error;
     error.assign((const char*)pError->GetBufferPointer(), pError->GetBufferSize());
-    CLog::Log(LOGERROR, "%s %s", __FUNCTION__, error.c_str());
-  }
-  else
-  {
-    CLog::Log(LOGERROR, "%s Failed", __FUNCTION__);
+    CLog::Log(LOGERROR, "%s", error.c_str());
   }
   return false;
 }
@@ -317,10 +406,11 @@ bool CD3DVertexBuffer::Lock(UINT level, UINT size, void **data, DWORD flags)
   return false;
 }
 
-void CD3DVertexBuffer::Unlock()
+bool CD3DVertexBuffer::Unlock()
 {
   if (m_vertex)
-    m_vertex->Unlock();
+    return (D3D_OK == m_vertex->Unlock());
+  return false;
 }
 
 void CD3DVertexBuffer::OnDestroyDevice()

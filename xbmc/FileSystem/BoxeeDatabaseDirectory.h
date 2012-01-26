@@ -13,6 +13,8 @@ public:
   virtual ~CBoxeeDatabaseDirectory();
   virtual bool GetDirectory(const CStdString& strPath, CFileItemList &items);
   virtual bool Exists(const char* strPath);
+  
+  bool GetMovies(std::map<std::string, std::string>& mapParams, CFileItemList &items, int iLimit);
 
   virtual DIR_CACHE_TYPE GetCacheType(const CStdString& strPath) const { return DIR_CACHE_ALWAYS; };
   
@@ -40,10 +42,7 @@ private:
 	void ClearMetadataVector(std::vector<BOXEE::BXMetadata*>& vecMediaItems);
 	virtual bool GetArtists(CFileItemList &items, int iLimit);
 	virtual bool GetPictures(CFileItemList &items, int iLimit);
-
 	
-
-  
 };
 
 }

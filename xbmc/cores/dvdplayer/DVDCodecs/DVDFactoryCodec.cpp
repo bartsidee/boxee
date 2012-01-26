@@ -18,39 +18,61 @@
  *  http://www.gnu.org/copyleft/gpl.html
  *
  */
-
+ 
 #include "utils/log.h"
-
+#ifndef WIN32
+#include <config.h>
+#endif
 #include "DVDFactoryCodec.h"
 #include "Video/DVDVideoCodec.h"
 #include "Audio/DVDAudioCodec.h"
 #include "Overlay/DVDOverlayCodec.h"
 
 #include "Video/DVDVideoCodecFFmpeg.h"
+#ifdef HAS_DVD_LIBMPEG2_CODEC
 #include "Video/DVDVideoCodecLibMpeg2.h"
+#endif
+#ifdef HAS_OPENMAX
+#include "Video/DVDVideoCodecOmx.h"
+#endif
 #ifdef HAS_DX
 #include "Video/DVDVideoCodecDXVA.h"
+#endif
+#ifdef CANMORE
+#include "Video/DVDVideoCodecSMD.h"
 #endif
 #ifdef __APPLE__
 #include "Video/DVDVideoCodecVDA.h"
 #endif
 #include "Audio/DVDAudioCodecFFmpeg.h"
+#ifdef HAS_DVD_LIBA52_CODEC
 #include "Audio/DVDAudioCodecLiba52.h"
+#endif
+#ifdef HAS_DVD_LIBDTS_CODEC
 #include "Audio/DVDAudioCodecLibDts.h"
+#endif
 #include "Audio/DVDAudioCodecLibMad.h"
 #include "Audio/DVDAudioCodecLibFaad.h"
 #include "Audio/DVDAudioCodecPcm.h"
 #include "Audio/DVDAudioCodecLPcm.h"
+#if defined HAS_DVD_LIBA52_CODEC && defined HAS_DVD_LIBDTS_CODEC
 #include "Audio/DVDAudioCodecPassthrough.h"
+#endif
+#if defined HAS_INTEL_SMD
+#include "Audio/DVDAudioCodecSMD.h"
+#endif
 #include "Overlay/DVDOverlayCodecSSA.h"
 #include "Overlay/DVDOverlayCodecText.h"
+#include "Overlay/DVDOverlayCodecTX3G.h"
 #include "Overlay/DVDOverlayCodecFFmpeg.h"
 
 #include "DVDStreamInfo.h"
 #include "GUISettings.h"
 
+#include "LicenseConfig.h"
+
 CDVDVideoCodec* CDVDFactoryCodec::OpenCodec(CDVDVideoCodec* pCodec, CDVDStreamInfo &hints, CDVDCodecOptions &options )
-{
+{  
   try
   {
     CLog::Log(LOGDEBUG, "FactoryCodec - Video: %s - Opening", pCodec->GetName());
@@ -72,7 +94,7 @@ CDVDVideoCodec* CDVDFactoryCodec::OpenCodec(CDVDVideoCodec* pCodec, CDVDStreamIn
 }
 
 CDVDAudioCodec* CDVDFactoryCodec::OpenCodec(CDVDAudioCodec* pCodec, CDVDStreamInfo &hints, CDVDCodecOptions &options )
-{
+{    
   try
   {
     CLog::Log(LOGDEBUG, "FactoryCodec - Audio: %s - Opening", pCodec->GetName());
@@ -94,7 +116,7 @@ CDVDAudioCodec* CDVDFactoryCodec::OpenCodec(CDVDAudioCodec* pCodec, CDVDStreamIn
 }
 
 CDVDOverlayCodec* CDVDFactoryCodec::OpenCodec(CDVDOverlayCodec* pCodec, CDVDStreamInfo &hints, CDVDCodecOptions &options )
-{
+{  
   try
   {
     CLog::Log(LOGDEBUG, "FactoryCodec - Overlay: %s - Opening", pCodec->GetName());
@@ -120,17 +142,29 @@ CDVDVideoCodec* CDVDFactoryCodec::CreateVideoCodec( CDVDStreamInfo &hint )
 {
   CDVDVideoCodec* pCodec = NULL;
   CDVDCodecOptions options;
+  CDVDCodecOptions dvdOptions;
 
   // try to decide if we want to try halfres decoding
 #if !defined(_LINUX) && !defined(_WIN32)
   float pixelrate = (float)hint.width*hint.height*hint.fpsrate/hint.fpsscale;
   if( pixelrate > 1400.0f*720.0f*30.0f )
   {
-    CLog::Log(LOGINFO, "CDVDFactoryCodec - High video resolution detected %dx%d, trying half resolution decoding ", hint.width, hint.height);
-    options.push_back(CDVDCodecOption("lowres","1"));
+    CLog::Log(LOGINFO, "CDVDFactoryCodec - High video resolution detected %dx%d, trying half resolution decoding ", hint.width, hint.height);    
+    options.push_back(CDVDCodecOption("lowres","1"));    
   }
-  else
+  else 
 #endif
+
+#ifdef HAS_INTEL_SMD
+    // for DVD use libmpeg2
+//    if(hint.width == 720 && (hint.height == 480 || hint.height == 576))
+//      if( hint.codec == CODEC_ID_MPEG2VIDEO && (pCodec = OpenCodec(new CDVDVideoCodecLibMpeg2(), hint, dvdOptions)) )
+//        return pCodec;
+
+    if( !hint.software && (pCodec = OpenCodec(new CDVDVideoCodecSMD(), hint, dvdOptions)) )
+      return pCodec;
+#endif
+
   { // non halfres mode, we can use other decoders
     if (hint.codec == CODEC_ID_MPEG2VIDEO || hint.codec == CODEC_ID_MPEG1VIDEO)
     {
@@ -144,15 +178,21 @@ CDVDVideoCodec* CDVDFactoryCodec::CreateVideoCodec( CDVDStreamInfo &hint )
       }
 #endif
 
-      if( (pCodec = OpenCodec(new CDVDVideoCodecLibMpeg2(), hint, dvdOptions)) ) return pCodec;
+#ifdef HAS_DVD_LIBMPEG2_CODEC
+      if( hint.codec == CODEC_ID_MPEG1VIDEO && (pCodec = OpenCodec(new CDVDVideoCodecLibMpeg2(), hint, dvdOptions)) ) return pCodec;
+
+      if( hint.codec == CODEC_ID_MPEG2VIDEO && (pCodec = OpenCodec(new CDVDVideoCodecLibMpeg2(), hint, dvdOptions)) ) return pCodec;
+#endif
     }
   }
 
-  CDVDCodecOptions dvdOptions;
+#ifdef HAS_OPENMAX
+  if( !hint.software && (pCodec = OpenCodec(new CDVDVideoCodecOmx(), hint, dvdOptions)) ) return pCodec;
+#endif
 
 
    // on win32 try using DXVA first
-#ifdef HAS_DX
+#ifdef HAS_DX_
   if(!hint.software && g_guiSettings.GetBool("videoplayer.hwaccel"))
     if( (pCodec = OpenCodec(new CDVDVideoCodecDXVA(), hint, dvdOptions)) )
       return pCodec;
@@ -171,28 +211,79 @@ CDVDVideoCodec* CDVDFactoryCodec::CreateVideoCodec( CDVDStreamInfo &hint )
   return NULL;
 }
 
+bool isDolbyAudioCodec(CodecID codec)
+{
+  switch(codec) {
+          case CODEC_ID_AC3:
+          case CODEC_ID_EAC3:
+          case CODEC_ID_TRUEHD:
+            return true;
+          default:
+            return false;
+  }
+}
+
+bool isDTSAudioCodec(CodecID codec)
+{
+  if(CODEC_ID_DTS == codec)
+    return true;
+  else
+     return false;
+}
+
 CDVDAudioCodec* CDVDFactoryCodec::CreateAudioCodec( CDVDStreamInfo &hint )
 {
   CDVDAudioCodec* pCodec = NULL;
   CDVDCodecOptions options;
 
-  pCodec = OpenCodec( new CDVDAudioCodecPassthrough(), hint, options );
-  if( pCodec ) return pCodec;
+#if defined(HAS_INTEL_SMD)
+  if( !hint.software )
+    pCodec = OpenCodec( new CDVDAudioCodecSMD(), hint, options );
+#elif defined HAS_DVD_LIBA52_CODEC && defined HAS_DVD_LIBDTS_CODEC
+  if( !hint.software )
+    pCodec = OpenCodec( new CDVDAudioCodecPassthrough(), hint, options );
+#endif
+  if( pCodec )
+    return pCodec;
+
+  // if this failed, we fail here
+  if( hint.bitstream )
+  {
+    CLog::Log(LOGERROR, "CDVDFactoryCodec::CreateAudioCodec failed since hint is bitstream");
+    return NULL;
+  }
+  
+#ifdef HAS_EMBEDDED
+  if (isDolbyAudioCodec(hint.codec)
+      && !(g_lic_settings.is_dolby_sw_decode_allowed()))
+  {
+    return NULL;
+  }
+  if (isDTSAudioCodec(hint.codec)
+      && !(g_lic_settings.is_dts_sw_decode_allowed()))
+  {
+    return NULL;
+  }
+#endif
 
   switch (hint.codec)
   {
+#ifdef HAS_DVD_LIBA52_CODEC
   case CODEC_ID_AC3:
     {
       pCodec = OpenCodec( new CDVDAudioCodecLiba52(), hint, options );
       if( pCodec ) return pCodec;
       break;
     }
+#endif
+#ifdef HAS_DVD_LIBDTS_CODEC
   case CODEC_ID_DTS:
     {
       pCodec = OpenCodec( new CDVDAudioCodecLibDts(), hint, options );
       if( pCodec ) return pCodec;
       break;
     }
+#endif
   case CODEC_ID_MP2:
   case CODEC_ID_MP3:
     {
@@ -268,6 +359,10 @@ CDVDOverlayCodec* CDVDFactoryCodec::CreateOverlayCodec( CDVDStreamInfo &hint )
       if( pCodec ) return pCodec;
 
       pCodec = OpenCodec(new CDVDOverlayCodecText(), hint, options);
+      if( pCodec ) return pCodec;
+
+    case CODEC_ID_MOV_TEXT:
+      pCodec = OpenCodec(new CDVDOverlayCodecTX3G(), hint, options);
       if( pCodec ) return pCodec;
 
     default:

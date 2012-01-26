@@ -20,6 +20,10 @@
  *
  */
 
+#include "system.h"
+
+#ifdef HAS_LASTFM
+
 #include "FileCurl.h"
 #include "RingBuffer.h"
 
@@ -35,3 +39,5 @@ namespace XFILE
   };
 
 }
+
+#endif

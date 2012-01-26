@@ -67,7 +67,7 @@ BXObject BXFriend::GetAsObject()
 }
 
 BXGeneralMessage BXFriend::GetAction(int nIndex) const {
-	if (nIndex > m_actions.size() || nIndex < 0) {
+	if (nIndex > (int)m_actions.size() || nIndex < 0) {
 		LOG(LOG_LEVEL_ERROR,"index %d out of bound for friend actions", nIndex);
 		return BXGeneralMessage();
 	}

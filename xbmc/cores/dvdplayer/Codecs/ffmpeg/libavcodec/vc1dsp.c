@@ -20,7 +20,7 @@
  */
 
 /**
-* @file libavcodec/vc1dsp.c
+* @file
  * VC-1 and WMV3 decoder
  *
  */
@@ -182,18 +182,19 @@ static void vc1_inv_trans_8x8_dc_c(uint8_t *dest, int linesize, DCTELEM *block)
 {
     int i;
     int dc = block[0];
-    const uint8_t *cm = ff_cropTbl + MAX_NEG_CROP;
+    const uint8_t *cm;
     dc = (3 * dc +  1) >> 1;
     dc = (3 * dc + 16) >> 5;
+    cm = ff_cropTbl + MAX_NEG_CROP + dc;
     for(i = 0; i < 8; i++){
-        dest[0] = cm[dest[0]+dc];
-        dest[1] = cm[dest[1]+dc];
-        dest[2] = cm[dest[2]+dc];
-        dest[3] = cm[dest[3]+dc];
-        dest[4] = cm[dest[4]+dc];
-        dest[5] = cm[dest[5]+dc];
-        dest[6] = cm[dest[6]+dc];
-        dest[7] = cm[dest[7]+dc];
+        dest[0] = cm[dest[0]];
+        dest[1] = cm[dest[1]];
+        dest[2] = cm[dest[2]];
+        dest[3] = cm[dest[3]];
+        dest[4] = cm[dest[4]];
+        dest[5] = cm[dest[5]];
+        dest[6] = cm[dest[6]];
+        dest[7] = cm[dest[7]];
         dest += linesize;
     }
 }
@@ -273,18 +274,19 @@ static void vc1_inv_trans_8x4_dc_c(uint8_t *dest, int linesize, DCTELEM *block)
 {
     int i;
     int dc = block[0];
-    const uint8_t *cm = ff_cropTbl + MAX_NEG_CROP;
+    const uint8_t *cm;
     dc = ( 3 * dc +  1) >> 1;
     dc = (17 * dc + 64) >> 7;
+    cm = ff_cropTbl + MAX_NEG_CROP + dc;
     for(i = 0; i < 4; i++){
-        dest[0] = cm[dest[0]+dc];
-        dest[1] = cm[dest[1]+dc];
-        dest[2] = cm[dest[2]+dc];
-        dest[3] = cm[dest[3]+dc];
-        dest[4] = cm[dest[4]+dc];
-        dest[5] = cm[dest[5]+dc];
-        dest[6] = cm[dest[6]+dc];
-        dest[7] = cm[dest[7]+dc];
+        dest[0] = cm[dest[0]];
+        dest[1] = cm[dest[1]];
+        dest[2] = cm[dest[2]];
+        dest[3] = cm[dest[3]];
+        dest[4] = cm[dest[4]];
+        dest[5] = cm[dest[5]];
+        dest[6] = cm[dest[6]];
+        dest[7] = cm[dest[7]];
         dest += linesize;
     }
 }
@@ -350,14 +352,15 @@ static void vc1_inv_trans_4x8_dc_c(uint8_t *dest, int linesize, DCTELEM *block)
 {
     int i;
     int dc = block[0];
-    const uint8_t *cm = ff_cropTbl + MAX_NEG_CROP;
+    const uint8_t *cm;
     dc = (17 * dc +  4) >> 3;
     dc = (12 * dc + 64) >> 7;
+    cm = ff_cropTbl + MAX_NEG_CROP + dc;
     for(i = 0; i < 8; i++){
-        dest[0] = cm[dest[0]+dc];
-        dest[1] = cm[dest[1]+dc];
-        dest[2] = cm[dest[2]+dc];
-        dest[3] = cm[dest[3]+dc];
+        dest[0] = cm[dest[0]];
+        dest[1] = cm[dest[1]];
+        dest[2] = cm[dest[2]];
+        dest[3] = cm[dest[3]];
         dest += linesize;
     }
 }
@@ -423,14 +426,15 @@ static void vc1_inv_trans_4x4_dc_c(uint8_t *dest, int linesize, DCTELEM *block)
 {
     int i;
     int dc = block[0];
-    const uint8_t *cm = ff_cropTbl + MAX_NEG_CROP;
+    const uint8_t *cm;
     dc = (17 * dc +  4) >> 3;
     dc = (17 * dc + 64) >> 7;
+    cm = ff_cropTbl + MAX_NEG_CROP + dc;
     for(i = 0; i < 4; i++){
-        dest[0] = cm[dest[0]+dc];
-        dest[1] = cm[dest[1]+dc];
-        dest[2] = cm[dest[2]+dc];
-        dest[3] = cm[dest[3]+dc];
+        dest[0] = cm[dest[0]];
+        dest[1] = cm[dest[1]];
+        dest[2] = cm[dest[2]];
+        dest[3] = cm[dest[3]];
         dest += linesize;
     }
 }
@@ -571,7 +575,7 @@ static void OPNAME ## vc1_mspel_mc(uint8_t *dst, const uint8_t *src, int stride,
         dst += stride;\
         src += stride;\
     }\
-            }
+}
 
 #define op_put(a, b) a = av_clip_uint8(b)
 #define op_avg(a, b) a = (a + av_clip_uint8(b) + 1) >> 1
@@ -580,10 +584,6 @@ VC1_MSPEL_MC(op_put, put_)
 VC1_MSPEL_MC(op_avg, avg_)
 
 /* pixel functions - really are entry points to vc1_mspel_mc */
-
-/* this one is defined in dsputil.c */
-void ff_put_vc1_mspel_mc00_c(uint8_t *dst, const uint8_t *src, int stride, int rnd);
-void ff_avg_vc1_mspel_mc00_c(uint8_t *dst, const uint8_t *src, int stride, int rnd);
 
 #define PUT_VC1_MSPEL(a, b)\
 static void put_vc1_mspel_mc ## a ## b ##_c(uint8_t *dst, const uint8_t *src, int stride, int rnd) { \
@@ -612,7 +612,7 @@ PUT_VC1_MSPEL(1, 3)
 PUT_VC1_MSPEL(2, 3)
 PUT_VC1_MSPEL(3, 3)
 
-void ff_vc1dsp_init(DSPContext* dsp, AVCodecContext *avctx) {
+av_cold void ff_vc1dsp_init(DSPContext* dsp, AVCodecContext *avctx) {
     dsp->vc1_inv_trans_8x8 = vc1_inv_trans_8x8_c;
     dsp->vc1_inv_trans_4x8 = vc1_inv_trans_4x8_c;
     dsp->vc1_inv_trans_8x4 = vc1_inv_trans_8x4_c;
@@ -630,7 +630,7 @@ void ff_vc1dsp_init(DSPContext* dsp, AVCodecContext *avctx) {
     dsp->vc1_v_loop_filter16 = vc1_v_loop_filter16_c;
     dsp->vc1_h_loop_filter16 = vc1_h_loop_filter16_c;
 
-    dsp->put_vc1_mspel_pixels_tab[ 0] = ff_put_vc1_mspel_mc00_c;
+    dsp->put_vc1_mspel_pixels_tab[ 0] = ff_put_pixels8x8_c;
     dsp->put_vc1_mspel_pixels_tab[ 1] = put_vc1_mspel_mc10_c;
     dsp->put_vc1_mspel_pixels_tab[ 2] = put_vc1_mspel_mc20_c;
     dsp->put_vc1_mspel_pixels_tab[ 3] = put_vc1_mspel_mc30_c;
@@ -647,7 +647,7 @@ void ff_vc1dsp_init(DSPContext* dsp, AVCodecContext *avctx) {
     dsp->put_vc1_mspel_pixels_tab[14] = put_vc1_mspel_mc23_c;
     dsp->put_vc1_mspel_pixels_tab[15] = put_vc1_mspel_mc33_c;
 
-    dsp->avg_vc1_mspel_pixels_tab[ 0] = ff_avg_vc1_mspel_mc00_c;
+    dsp->avg_vc1_mspel_pixels_tab[ 0] = ff_avg_pixels8x8_c;
     dsp->avg_vc1_mspel_pixels_tab[ 1] = avg_vc1_mspel_mc10_c;
     dsp->avg_vc1_mspel_pixels_tab[ 2] = avg_vc1_mspel_mc20_c;
     dsp->avg_vc1_mspel_pixels_tab[ 3] = avg_vc1_mspel_mc30_c;

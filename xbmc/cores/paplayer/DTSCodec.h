@@ -21,6 +21,10 @@
  *
  */
 
+#ifndef WIN32
+#include "config.h"
+#endif
+#include "system.h"
 #include "FileSystem/File.h"
 #include "ICodec.h"
 #include "CachingCodec.h"

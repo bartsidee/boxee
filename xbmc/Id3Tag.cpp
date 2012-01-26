@@ -505,7 +505,9 @@ CStdString CID3Tag::ParseMP3Genre(const CStdString& str) const
     if (i > 0) strTemp.erase(0, i);
 
     // pull off the first character
-    char p = strTemp[0];
+    char p = '\0';
+    if(!strTemp.IsEmpty())
+      p = strTemp[0];
 
     // start off looking for (something)
     if (p == '(')
@@ -513,7 +515,8 @@ CStdString CID3Tag::ParseMP3Genre(const CStdString& str) const
       strTemp.erase(0, 1);
 
       // now look for ((something))
-      p = strTemp[0];
+      if(!strTemp.IsEmpty())
+        p = strTemp[0];
       if (p == '(')
       {
         // remove ((something))
@@ -532,7 +535,8 @@ CStdString CID3Tag::ParseMP3Genre(const CStdString& str) const
       {
         strTemp.erase(0, 1);
         t.push_back(p);
-        p = strTemp[0];
+        if(!strTemp.IsEmpty())
+          p = strTemp[0];
       }
       // loop exits when terminator is found
       // be sure to remove the terminator

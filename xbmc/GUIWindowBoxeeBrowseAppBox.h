@@ -1,16 +1,17 @@
 #ifndef GUIWINDOWBOXEE_BROWSE_APPBOX_H_
 #define GUIWINDOWBOXEE_BROWSE_APPBOX_H_
 
-#include "GUIWindowBoxeeBrowseWithPanel.h"
+#include "GUIWindowBoxeeBrowse.h"
 #include "GUIWindowBoxeeBrowseApps.h"
 
 class CAppBoxWindowState : public CAppsWindowState
 {
 public:
-  CAppBoxWindowState(CGUIWindow* pWindow);
+  virtual CBrowseWindowState* Clone();
+  CAppBoxWindowState(CGUIWindowBoxeeBrowse* pWindow);
 };
 
-class CGUIWindowBoxeeBrowseAppBox : public CGUIWindowBoxeeBrowseWithPanel
+class CGUIWindowBoxeeBrowseAppBox : public CGUIWindowBoxeeBrowse
 {
 public:
   CGUIWindowBoxeeBrowseAppBox();
@@ -32,7 +33,7 @@ protected:
 
 private:
   
-  bool ProcessPanelMessages(CGUIMessage& message);
+//  bool ProcessPanelMessages(CGUIMessage& message);
 
   bool HandleBtnApplicationType();
   bool FillDropdownWithApplicationTypes(CFileItemList& applicationTypes);
