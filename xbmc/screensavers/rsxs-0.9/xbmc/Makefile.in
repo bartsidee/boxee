@@ -4,7 +4,7 @@ CXXFLAGS=-fPIC
 
 .PHONY: compile
 
-OUTDIR=../../../../screensavers
+OUTDIR=../../../screensavers
 RSXS=..
 
 DIRS=$(RSXS)
